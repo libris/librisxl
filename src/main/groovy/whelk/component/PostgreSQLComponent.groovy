@@ -15,7 +15,7 @@ import java.sql.Connection
 import java.sql.Types
 
 @Log
-class PostgreSQLComponent {
+class PostgreSQLComponent implements Storage {
 
     protected BasicDataSource connectionPool
 
@@ -114,14 +114,15 @@ class PostgreSQLComponent {
         return statusMap
     }
 
-    Document store(Document doc, boolean withVersioning = versioning) {
+    @Override
+    Document store(Document doc) {
         assert doc.dataset
         Connection connection = connectionPool.getConnection()
         connection.setAutoCommit(false)
         try {
             calculateChecksum(doc)
             Date now = new Date()
-            if (versioning && withVersioning) {
+            if (versioning) {
                 if (!saveVersion(doc, connection, now)) {
                     return doc// Same document already in storage.
                 }
@@ -185,7 +186,8 @@ class PostgreSQLComponent {
         return insvers
     }
 
-    void bulkStore(final List docs, String dataset) {
+    @Override
+    void bulkStore(final List docs) {
         if (!docs || docs.isEmpty()) {
             return
         }
@@ -207,7 +209,7 @@ class PostgreSQLComponent {
             }
             ver_batch.executeBatch()
             batch.executeBatch()
-            log.debug("Stored ${docs.size()} documents with dataset $dataset (versioning: ${versioning})")
+            log.debug("Stored ${docs.size()} documents with dataset ${docs.first().dataset} (versioning: ${versioning})")
         } catch (Exception e) {
             log.error("Failed to save batch: ${e.message}")
             throw e
@@ -242,6 +244,7 @@ class PostgreSQLComponent {
     }
 
     // TODO: Update to real locate
+    @Override
     Location locate(String uri) {
         log.debug("Locating $uri")
         if (uri) {
@@ -272,6 +275,7 @@ class PostgreSQLComponent {
         return null
     }
 
+    @Override
     Document load(String id) {
         return load(id, null)
     }
