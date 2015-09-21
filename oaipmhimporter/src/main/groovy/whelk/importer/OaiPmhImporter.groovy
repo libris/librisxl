@@ -303,8 +303,10 @@ class OaiPmhImporter {
         log.trace("Record prepared.")
 
         documentMap['record'] = record
+        if (meta) {
+            manifest['extraData'] = meta
+        }
         documentMap['manifest'] = manifest
-        documentMap['extraData'] = meta
         documentMap['originalIdentifier'] = originalIdentifier
 
         return documentMap
