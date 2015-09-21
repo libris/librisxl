@@ -17,9 +17,7 @@ import org.elasticsearch.action.delete.*
 import whelk.Document
 import whelk.JsonLd
 import whelk.exception.*
-import whelk.filter.JsonLDLinkExpander
-
-import static org.elasticsearch.index.query.QueryBuilders.termQuery
+import whelk.filter.JsonLdLinkExpander
 
 @Log
 class ElasticSearch implements Index {
@@ -33,10 +31,10 @@ class ElasticSearch implements Index {
     String defaultType = "record"
     String defaultIndex = null
 
-    JsonLDLinkExpander expander
+    JsonLdLinkExpander expander
 
 
-    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex, JsonLDLinkExpander ex) {
+    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex, JsonLdLinkExpander ex) {
         this.elastichost = elasticHost
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
