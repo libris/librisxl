@@ -5,6 +5,7 @@ import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import whelk.Document
+import whelk.JsonLd
 import whelk.Location
 
 import java.security.MessageDigest
@@ -117,6 +118,8 @@ class PostgreSQLComponent implements Storage {
     @Override
     Document store(Document doc) {
         assert doc.dataset
+        log.trace("Flattening ${doc.id}")
+        doc.data = JsonLd.flatten(doc.data)
         Connection connection = connectionPool.getConnection()
         connection.setAutoCommit(false)
         try {
@@ -197,6 +200,8 @@ class PostgreSQLComponent implements Storage {
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             docs.each { doc ->
+                log.trace("Flattening ${doc.id}")
+                doc.data = JsonLd.flatten(doc.data)
                 calculateChecksum(doc)
                 if (versioning) {
                     ver_batch = rigVersionStatement(ver_batch, doc)

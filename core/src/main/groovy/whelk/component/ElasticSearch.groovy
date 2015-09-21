@@ -15,6 +15,7 @@ import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.common.settings.*
 import org.elasticsearch.action.delete.*
 import whelk.Document
+import whelk.JsonLd
 import whelk.exception.*
 import whelk.filter.JsonLDLinkExpander
 
@@ -111,6 +112,8 @@ class ElasticSearch implements Index {
     public void bulkIndex(List<Document> docs) {
         BulkRequest bulk = new BulkRequest()
         for (doc in docs) {
+            log.trace("Framing ${doc.id}")
+            doc.data = JsonLd.frame(doc.id, doc.data)
             if (expander) {
                 doc = expander.filter(doc)
             }
@@ -129,6 +132,8 @@ class ElasticSearch implements Index {
 
     @Override
     public void index(Document doc) {
+        log.trace("Framing ${doc.id}")
+        doc.data = JsonLd.frame(doc.id, doc.data)
         if (expander) {
             doc = expander.filter(doc)
         }
