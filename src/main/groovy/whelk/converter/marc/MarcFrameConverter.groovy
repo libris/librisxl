@@ -85,7 +85,7 @@ class MarcFrameConverter implements FormatConverter {
     Document doConvert(final Object record, final Map metaentry) {
         try {
             def source = MarcJSONConverter.toJSONMap(record)
-            def result = runConvert(source, metaentry.extraData)
+            def result = runConvert(source, metaentry?.extraData)
             log.trace("Created frame: $result")
 
             return new Document(result, metaentry).withContentType(getResultContentType())
@@ -98,7 +98,7 @@ class MarcFrameConverter implements FormatConverter {
     @Override
     Document convert(final Document doc) {
         def source = doc.data
-        def meta = doc.manifest
+        def meta = doc.manifest?.extraData
         def result = runConvert(source, meta)
         log.trace("Created frame: $result")
 
