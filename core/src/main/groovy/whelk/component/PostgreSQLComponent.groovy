@@ -29,7 +29,16 @@ class PostgreSQLComponent implements Storage {
     // SQL statements
     protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT
 
+    PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
+        init(sqlUrl, sqlMaintable, null, null)
+
+    }
+
     PostgreSQLComponent(String sqlUrl, String sqlMaintable, String sqlUsername, String sqlPassword) {
+        init(sqlUrl, sqlMaintable, sqlUsername, sqlPassword)
+    }
+
+    private void init(String sqlUrl, String sqlMaintable, String sqlUsername, String sqlPassword) {
         //this.contentTypes = ["application/ld+json", "application/json", "application/x-marc-json"]
 
         String mainTableName = sqlMaintable
@@ -87,6 +96,8 @@ class PostgreSQLComponent implements Storage {
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         STATUS_OF_DOCUMENT = "SELECT created, modified, deleted FROM $mainTableName WHERE id = ?"
     }
+
+
 
     public Map status(String identifier, Connection connection = null) {
         Map statusMap = [:]
