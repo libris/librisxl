@@ -2,7 +2,7 @@ package whelk.rest
 
 import groovy.util.logging.Slf4j as Log
 import whelk.Whelk
-import whelk.filter.JsonLDLinkExpander
+import whelk.converter.JsonLDLinkExpander
 import whelk.rest.api.ISXNTool
 import whelk.rest.api.RestAPI
 
@@ -32,8 +32,6 @@ class HttpWhelk extends HttpServlet {
     HttpWhelk() {
         super()
         log.info("Setting up httpwhelk.")
-
-        Properties mainProps = new Properties()
 
         // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
         InputStream secretsConfig = ( System.getProperty("xl.secret.properties")

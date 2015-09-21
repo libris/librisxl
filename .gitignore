@@ -1,4 +1,5 @@
 .gradle
+*.properties
 /dep/locgov-*/build
 .*.swp
 /work

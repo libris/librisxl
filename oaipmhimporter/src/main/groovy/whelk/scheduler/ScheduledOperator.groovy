@@ -12,6 +12,7 @@ import whelk.importer.OaiPmhImporter
 @Log
 class ScheduledOperator {
 
+    /*
     String description = "Scheduled operator runner."
 
 
@@ -33,5 +34,6 @@ class ScheduledOperator {
         j.run()
         log.info("Test complete!")
     }
+    */
 }
 

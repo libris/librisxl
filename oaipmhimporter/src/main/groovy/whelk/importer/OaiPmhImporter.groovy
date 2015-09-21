@@ -50,22 +50,22 @@ class OaiPmhImporter {
 
     boolean cancelled = false
 
-    OaiPmhImporter(Whelk w, MarcFrameConverter mfc, String serviceUrl, String oaipmhUsername, String oaipmhPassword) {
+    OaiPmhImporter(Whelk w, MarcFrameConverter mfc, JsonLDLinkCompleterFilter jlcf, String oaipmhServiceUrl, String oaipmhUsername, String oaipmhPassword) {
         whelk = w
-        this.serviceUrl = serviceUrl
+        serviceUrl = oaipmhServiceUrl
         marcFrameConverter = mfc
         username = oaipmhUsername
         password = oaipmhPassword
-    }
-
-
-    OaiPmhImporter(Whelk w, MarcFrameConverter mfc, JsonLDLinkCompleterFilter jlcf, String serviceUrl) {
-        whelk = w
-        this.serviceUrl = serviceUrl
-        marcFrameConverter = mfc
         enhancer = jlcf
     }
+    OaiPmhImporter(Whelk w, MarcFrameConverter mfc, String oaipmhServiceUrl, String oaipmhUsername, String oaipmhPassword) {
+        whelk = w
+        serviceUrl = oaipmhServiceUrl
+        marcFrameConverter = mfc
+        username = oaipmhUsername
+        password = oaipmhPassword
 
+    }
 
     ImportResult doImport(String dataset, int nrOfDocs) {
         return doImport(dataset, null, nrOfDocs)

@@ -4,7 +4,7 @@ import groovy.util.logging.Slf4j as Log
 
 import whelk.component.Index
 import whelk.component.PostgreSQLComponent
-import whelk.filter.JsonLDLinkExpander
+import whelk.filter.JsonLdLinkExpander
 
 /**
  * Created by markus on 15-09-03.
@@ -14,9 +14,9 @@ class Whelk {
 
     PostgreSQLComponent storage
     Index elastic
-    JsonLDLinkExpander expander
+    JsonLdLinkExpander expander
 
-    public Whelk(PostgreSQLComponent pg, Index es, JsonLDLinkExpander ex) {
+    public Whelk(PostgreSQLComponent pg, Index es, JsonLdLinkExpander ex) {
         this.storage = pg
         this.elastic = es
         this.expander = ex

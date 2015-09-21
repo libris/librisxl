@@ -42,23 +42,24 @@ class OaiPmhImporterServlet extends HttpServlet {
                 ? new FileInputStream(System.getProperty("xl.secret.properties"))
                 : this.getClass().getClassLoader().getResourceAsStream("secret.properties") )
 
+        InputStream oaipmhConfig = ( System.getProperty("xl.oaipmh.properties")
+                ? new FileInputStream(System.getProperty("xl.oaipmh.properties"))
+                : this.getClass().getClassLoader().getResourceAsStream("oaipmh.properties") )
+
         Properties props = new Properties()
 
         props.load(secretsConfig)
+        props.load(oaipmhConfig)
 
         pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
 
-        pico.as(Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
-        pico.as(Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
         pico.as(Characteristics.USE_NAMES).addComponent(OaiPmhImporter.class)
         pico.addComponent(new MarcFrameConverter())
-        pico.addComponent(ScheduledOperator.class)
         pico.addComponent(Whelk.class)
 
         pico.start()
-
-        ScheduledOperator operator = pico.getComponent(ScheduledOperator.class)
-        operator.start()
 
         log.info("Started ...")
     }
@@ -76,7 +77,7 @@ class OaiPmhImporterServlet extends HttpServlet {
 
         for (dataset in ["auth", "bib", "hold"]) {
             log.info("Setting up schedule for $dataset")
-            def job = new ScheduledJob(pico.getComponent(OaiPmhImporter.class), dataset, storage)
+            def job = new ScheduledJob(pico.getComponent(OaiPmhImporter.class), dataset, pico.getComponent(PostgreSQLComponent.class))
             try {
                 ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
             } catch (RejectedExecutionException ree) {

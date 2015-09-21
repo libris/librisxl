@@ -1,4 +1,4 @@
-package whelk.converter
+package whelk.filter
 
 import groovy.transform.Synchronized
 import groovy.util.logging.Slf4j as Log
@@ -10,7 +10,7 @@ import whelk.exception.*
 
 
 @Log
-class JsonLDLinkExpander {
+class JsonLdLinkExpander {
 
     Map nodesToExpand = null
     private Map cachedDocuments = [:]
@@ -18,7 +18,7 @@ class JsonLDLinkExpander {
 
     static final ObjectMapper mapper = new ObjectMapper()
 
-    JsonLDLinkExpander(Storage s) {
+    JsonLdLinkExpander(Storage s) {
         storage = s
         try {
             nodesToExpand = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream("jsonLdNodesToExpand.json"), Map)
@@ -82,7 +82,7 @@ class JsonLDLinkExpander {
             if (mapSegment instanceof List) {
                 int i = 0
                 for (map in mapSegment) {
-                    mapSegment[i] = expandNode(map, instructions)
+                    mapSegment[i] = expandNode(map as Map, instructions)
                     i++
                 }
             } else if (mapSegment instanceof Map) {
@@ -91,7 +91,6 @@ class JsonLDLinkExpander {
                 setNestedObject(key, expandedNode, dataMap)
             } else if (mapSegment == null) {
                 log.trace("Path $key not available.")
-                return
             } else {
                 throw new WhelkRuntimeException("The path key \"$key\" does not point to a Map or a List. Please check configuration.")
             }
@@ -103,7 +102,7 @@ class JsonLDLinkExpander {
         if (cachedDocuments.containsKey(node['@id'])) {
             return cachedDocuments.get(node['@id'])
         } else if (node['@id'] && !((String)node['@id']).startsWith("/def/")) {
-            Location loc = storage.locate(node['@id'])
+            Location loc = storage.locate(node['@id'] as String)
             if (!loc) {
                 return node
             } else if (loc.getDocument()) {
@@ -115,7 +114,7 @@ class JsonLDLinkExpander {
         return node
     }
 
-    def getNestedObject(String key, Map map) {
+    static def getNestedObject(String key, Map map) {
         Map m = map
         for (k in key.split(/\./)) {
             if (m && m.containsKey(k)) {
@@ -127,7 +126,7 @@ class JsonLDLinkExpander {
         return m
     }
 
-    void setNestedObject(key, node, dataMap) {
+    static void setNestedObject(key, node, dataMap) {
         def m = dataMap
         def elems = key.split(/\./)
         for (int i=0; i < elems.size(); i++) {
