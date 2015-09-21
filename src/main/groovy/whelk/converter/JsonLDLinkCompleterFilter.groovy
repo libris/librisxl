@@ -65,19 +65,19 @@ class JsonLDLinkCompleterFilter {
     }
 
     boolean valid(Document doc) {
-        if (doc && doc.isJson() && doc.contentType == "application/ld+json") {
+        if (doc && doc.contentType == "application/ld+json") {
             return true
         }
         return false
     }
 
-    Document doFilter(Document doc) {
+    Document filter(Document doc) {
         log.trace("Running JsonLDLinkCompleterFilter on ${doc.identifier}")
         bnodeIdMap = [:]
         def changedData = false
         def relatedItemsIndex = buildRelatedItemsIndex(doc)
 
-        def json = doc.dataAsMap
+        def json = doc.data
         def resource = json.get("about")
 
         if (relatedItemsIndex.byType.size() > 0) {
