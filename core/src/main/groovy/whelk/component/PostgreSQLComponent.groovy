@@ -124,10 +124,12 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    Document store(Document doc) {
+    Document store(Document doc, boolean flatten = true) {
         assert doc.dataset
-        log.trace("Flattening ${doc.id}")
-        doc.data = JsonLd.flatten(doc.data)
+        if (flatten) {
+            log.trace("Flattening ${doc.id}")
+            doc.data = JsonLd.flatten(doc.data)
+        }
         Connection connection = connectionPool.getConnection()
         connection.setAutoCommit(false)
         try {
@@ -469,7 +471,7 @@ class PostgreSQLComponent implements Storage {
     void remove(String identifier, String dataset) {
         if (versioning) {
             log.debug("Creating tombstone record with id ${identifier}")
-            store(createTombstone(identifier, dataset))
+            store(createTombstone(identifier, dataset), false)
         } else {
             Connection connection = connectionPool.getConnection()
             PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)

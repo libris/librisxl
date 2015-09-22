@@ -157,9 +157,9 @@ war {
 }
 
 task jettyRun(type: JettyRun, overwrite: true) {
-    jettyRun.contextPath = 'whelk'
+    jettyRun.contextPath = 'oaipmhupdater'
     jettyRun.httpPort = 8180
-    jettyRun.description = "Starts a jetty instance. (USAGE: To use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:etc/whelk.json'))"
+    jettyRun.description = "Starts a jetty instance."
 
     //reload = "automatic"
     //scanIntervalSeconds = 1
