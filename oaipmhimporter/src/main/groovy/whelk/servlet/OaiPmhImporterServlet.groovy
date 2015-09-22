@@ -110,7 +110,7 @@ class ScheduledJob implements Runnable {
         def whelkState = storage.load("/sys/whelk.state")?.data ?: [:]
         log.info("Current whelkstate: $whelkState")
         try {
-            String lastImport = whelkState.get("lastImport")
+            String lastImport = whelkState.get(dataset, [:]).get("lastImport")
             Date currentSince
             Date nextSince = new Date()
             if (lastImport) {
@@ -123,7 +123,7 @@ class ScheduledJob implements Runnable {
                 def lastWeeksDate = nextSince[Calendar.DATE] - 7
                 nextSince.set(date: lastWeeksDate)
                 currentSince = nextSince
-                log.info("Whelk has no state for last import from $dataset. Setting last week (${nextSince})")
+                log.info("Importer has no state for last import from $dataset. Setting last week (${nextSince})")
             }
             log.debug("Executing OAIPMH import for $dataset since $nextSince from ${importer.serviceUrl}")
             whelkState.put("status", "RUNNING")

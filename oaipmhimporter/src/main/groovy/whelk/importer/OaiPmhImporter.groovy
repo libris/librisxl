@@ -332,7 +332,7 @@ class OaiPmhImporter {
                     try {
                         if (marcFrameConverter && it.manifest.dataset != SUPPRESSRECORD_DATASET) {
                             log.trace("Conversion starts.")
-                            def doc = marcFrameConverter.convert(it.record, it.manifest)
+                            def doc = marcFrameConverter.doConvert(it.record, it.manifest)
                             log.trace("Convestion finished.")
                             if (it.originalIdentifier) {
                                 def dataMap = doc.data

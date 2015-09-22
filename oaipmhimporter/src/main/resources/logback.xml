@@ -69,10 +69,11 @@
       <level value="info"/>
   </logger>
  <logger name="whelk.plugin.libris.security.AccessControl" level="info"/>
- <logger name="whelk.component.PostgreSQLComponent" level="trace"/>
+ <logger name="whelk.component.PostgreSQLComponent" level="debug"/>
  <logger name="whelk.component.ElasticSearch">
       <level value="info"/>
   </logger>
+    <logger name="whelk.servlet.OaiPmhImporterServlet" level="trace"/>
  <logger name="whelk.component.ElasticSearchStorage">
       <level value="info"/>
   </logger>
