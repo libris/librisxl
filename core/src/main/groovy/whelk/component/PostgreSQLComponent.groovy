@@ -30,31 +30,28 @@ class PostgreSQLComponent implements Storage {
     protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT
 
     PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
-        init(sqlUrl, sqlMaintable, null, null)
-
-    }
-
-    PostgreSQLComponent(String sqlUrl, String sqlMaintable, String sqlUsername, String sqlPassword) {
-        init(sqlUrl, sqlMaintable, sqlUsername, sqlPassword)
-    }
-
-    private void init(String sqlUrl, String sqlMaintable, String sqlUsername, String sqlPassword) {
-        //this.contentTypes = ["application/ld+json", "application/json", "application/x-marc-json"]
+        URI connURI = new URI(sqlUrl.substring(5)) // Cut the "jdbc:"-part of the sqlUrl.
 
         String mainTableName = sqlMaintable
         String versionsTableName = mainTableName + "__versions"
-        String username = sqlUsername
-        String password = sqlPassword
 
         log.info("Connecting to sql database at $sqlUrl")
         connectionPool = new BasicDataSource();
 
-        if (username != null) {
+        if (connURI.getUserInfo() != null) {
+            String username = connURI.getUserInfo().split(":")[0]
+            log.trace("Setting connectionPool username: $username")
             connectionPool.setUsername(username)
-            connectionPool.setPassword(password)
+            try {
+                String password = connURI.getUserInfo().split(":")[1]
+                log.trace("Setting connectionPool password: $password")
+                connectionPool.setPassword(password)
+            } catch (ArrayIndexOutOfBoundsException aioobe) {
+                log.debug("No password part found i connect url userinfo.")
+            }
         }
         connectionPool.setDriverClassName("org.postgresql.Driver")
-        connectionPool.setUrl(sqlUrl)
+        connectionPool.setUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/")) // Remove the password part from the url or it won't be able to connect
         connectionPool.setInitialSize(10)
         connectionPool.setMaxTotal(40)
         connectionPool.setDefaultAutoCommit(true)
