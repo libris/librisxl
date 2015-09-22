@@ -29,7 +29,7 @@ class Document {
     int version = 0
 
     Document(String id, Map data) {
-        this.id = id
+        setId(id)
         setData(data)
     }
 
@@ -41,7 +41,12 @@ class Document {
     Document(String id, Map data, Map manifest) {
         withManifest(manifest)
         setData(data)
+        setId(id)
+    }
+
+    void setId(id) {
         this.id = id
+        this.manifest[ID_KEY] = id
     }
 
     void setCreated(Date c) {
