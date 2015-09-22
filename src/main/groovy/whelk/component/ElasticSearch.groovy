@@ -72,7 +72,7 @@ class ElasticSearch implements Index {
             } catch (ArrayIndexOutOfBoundsException aioobe) {
                 throw new WhelkRuntimeException("Unable to initialize elasticsearch client. Host configuration might be missing port?")
             }
-            log.debug("... connected")
+            log.debug("... connected.")
         } else {
             throw new WhelkRuntimeException("Unable to initialize ES client.")
         }
