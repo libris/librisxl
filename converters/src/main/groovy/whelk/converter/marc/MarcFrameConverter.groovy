@@ -31,13 +31,6 @@ class MarcFrameConverter implements FormatConverter {
 
     protected MarcConversion conversion
 
-    // monkey-patch to fix bug in handy-uri-templates (issue #22)
-    static {
-        UriUtil.@RESERVED.set(('`' as char) as byte)
-        UriUtil.@RESERVED.set(('"' as char) as byte)
-        UriUtil.@RESERVED.set(('^' as char) as byte)
-    }
-
     MarcFrameConverter(uriSpacePath="ext/oldspace.json") {
         def loader = getClass().classLoader
         loader.getResourceAsStream(uriSpacePath).withStream {

@@ -97,7 +97,7 @@ dependencies {
     compile "org.apache.httpcomponents:httpclient:4.3.1"
     compile "stax:stax:1.2.0"
     compile "stax:stax-api:1.0.1"
-    compile 'com.damnhandy:handy-uri-templates:2.0.2'
+    compile 'com.damnhandy:handy-uri-templates:2.0.4'
     compile 'ch.qos.logback:logback-core:1.1.2'
     compile 'ch.qos.logback:logback-classic:1.1.2'
     compile 'org.slf4j:slf4j-api:1.7.6'
