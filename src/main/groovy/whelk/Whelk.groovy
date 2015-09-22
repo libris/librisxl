@@ -29,21 +29,25 @@ class Whelk {
         log.info("Whelk started")
     }
 
+    public Whelk(PostgreSQLComponent pg) {
+        this.storage = pg
+    }
+
     Document store(Document document) {
-        if (storage.store(document)) {
+        if (storage.store(document) && elastic) {
             elastic.index(document)
         }
         return document
     }
 
     void bulkStore(List<Document> documents, String dataset) {
-        if (storage.bulkStore(documents)) {
+        if (storage.bulkStore(documents) && elastic) {
             elastic.bulkIndex(documents)
         }
     }
 
     void remove(String id, String dataset) {
-        if (storage.remove(id, dataset)) {
+        if (storage.remove(id, dataset) && elastic) {
             elastic.remove(id, dataset)
         }
     }
