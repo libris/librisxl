@@ -208,15 +208,16 @@ class PostgreSQLComponent implements Storage {
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             docs.each { doc ->
+                Date now = new Date()
                 log.trace("Flattening ${doc.id}")
                 doc.data = JsonLd.flatten(doc.data)
                 calculateChecksum(doc)
                 if (versioning) {
-                    ver_batch = rigVersionStatement(ver_batch, doc)
+                    ver_batch = rigVersionStatement(ver_batch, doc, now)
                     ver_batch.addBatch()
                 }
 
-                batch = rigUpsertStatement(batch, doc)
+                batch = rigUpsertStatement(batch, doc, now)
 
                 batch.addBatch()
             }
