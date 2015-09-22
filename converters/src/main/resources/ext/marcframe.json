@@ -5459,6 +5459,7 @@
             {"codes": ["t"], "link": "focus", "spliceEntity": "UniformWork"}
           ],
           "link": "attributedTo",
+          "embedded": false,
           "resourceType": "Person",
           "$t": {"property": "title"}
         }
