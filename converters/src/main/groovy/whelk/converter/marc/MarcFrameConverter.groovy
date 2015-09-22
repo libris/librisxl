@@ -298,7 +298,9 @@ class MarcConversion {
         def quotedIds = new HashSet()
 
         state.quotedEntities.each { ent ->
-            def entId = ent['@id'] ?: '_:' + createKeyString(ent)
+            def entId = ent['@id']
+                //?: ent['sameAs']?.getAt(0)?.get('@id')
+                ?: makeSomeId(ent)
             if (entId) {
                 def copy = ent.clone()
                 ent.clear()
@@ -315,15 +317,40 @@ class MarcConversion {
         ]
     }
 
-    String createKeyString(ent) {
-        if (ent instanceof String) {
-            return UriUtil.encode(ent.trim())
+    // TODO: define uriTemplate in marcframe or entityshapes...
+    UriTemplate someUriTemplate = UriTemplate.fromTemplate(
+            '/some{?data*}') // {?type,q}
+    String someUriValuesVar = 'q'
+    String someUriDataVar = 'data'
+    Set someUriVars = new HashSet(someUriTemplate.getVariables() as List)
+
+    String makeSomeId(Map ent) {
+        def data = [:]
+        collectUriData(ent, data)
+        if (someUriValuesVar in someUriVars) {
+            data[someUriValuesVar] = data.findResults { k, v ->
+                k in someUriVars? null : v
+            }
         }
-        return ent.keySet().toList().sort().collect {
-            def v = ent[it]
-            return v instanceof List? v.collect { createKeyString(it) } :
-                    createKeyString(v)
-        }.join(':').toLowerCase()
+        if (someUriDataVar in someUriVars) {
+            data[someUriDataVar] = data.clone()
+        }
+        return someUriTemplate.expand(data)
+    }
+
+    void collectUriData(Map obj, Map acc, String path='') {
+        obj.each { k, v ->
+            def key = k[0] == '@'? k.substring(1) : k
+            def vs = v instanceof List? v : [v]
+            vs.each {
+                def keypath = path + key
+                if (it instanceof String) {
+                    acc[keypath] = it
+                //} else {
+                //    collectUriData(it, acc, keypath + '.')
+                }
+            }
+        }
     }
 
     Map revert(data) {
