@@ -124,7 +124,11 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    Document store(Document doc, boolean flatten = true) {
+    Document store(Document doc) {
+        return store(doc, true)
+    }
+
+    Document store(Document doc, boolean flatten) {
         assert doc.dataset
         if (flatten) {
             log.trace("Flattening ${doc.id}")
