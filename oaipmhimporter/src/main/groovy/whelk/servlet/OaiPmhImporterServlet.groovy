@@ -66,9 +66,19 @@ class OaiPmhImporterServlet extends HttpServlet {
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
+        def storage = pico.getComponent(PostgreSQLComponent)
+        def whelkState = storage.load("/sys/whelk.state")?.data ?: [:]
+
+        log.info("Current whelkstate: $whelkState")
+
+        def status = whelkState.get("status")
         def writer = response.writer
-        writer.write("oaipmhimporter online")
+        writer.write("oaipmhimporter online, state: $status")
         writer.flush()
+
+        //def writer = response.writer
+        //writer.write("oaipmhimporter online")
+        //writer.flush()
     }
 
     void init() {
@@ -151,6 +161,7 @@ class ScheduledJob implements Runnable {
             log.error("Something failed: ${e.message}", e)
         } finally {
             storage.store(new Document("/sys/whelk.state", whelkState))
+            log.info("sparar")
         }
     }
 
