@@ -1,5 +1,6 @@
 package whelk.component
 
+import groovy.transform.Synchronized
 import groovy.util.logging.Slf4j as Log
 import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
@@ -7,6 +8,7 @@ import org.postgresql.PGStatement
 import whelk.Document
 import whelk.JsonLd
 import whelk.Location
+import whelk.exception.WhelkException
 
 import java.security.MessageDigest
 import java.sql.ResultSet
@@ -129,7 +131,10 @@ class PostgreSQLComponent implements Storage {
     }
 
     Document store(Document doc, boolean flatten) {
-        assert doc.dataset
+        if (!doc.dataset) {
+            throw new WhelkException("Can't save document without dataset.")
+        }
+        log.debug("Saving ${doc.id}")
         if (flatten) {
             log.trace("Flattening ${doc.id}")
             doc.data = JsonLd.flatten(doc.data)
