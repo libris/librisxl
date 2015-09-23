@@ -1,7 +1,7 @@
 package whelk.servlet
 
 import groovy.util.logging.Slf4j as Log
-
+import org.codehaus.jackson.map.ObjectMapper
 import org.picocontainer.Characteristics
 import org.picocontainer.DefaultPicoContainer
 import org.picocontainer.PicoContainer
@@ -150,7 +150,7 @@ class ScheduledJob implements Runnable {
         } catch (Exception e) {
             log.error("Something failed: ${e.message}", e)
         } finally {
-            storage.store(new Document("/sys/whelk.state", whelkState))
+            storage.store(new Document("/sys/whelk.state", whelkState).withDataset("sys"), false)
         }
     }
 
