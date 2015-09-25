@@ -64,21 +64,24 @@ class OaiPmhImporterServlet extends HttpServlet {
         log.info("Started ...")
     }
 
+
+
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         def storage = pico.getComponent(PostgreSQLComponent)
         def whelkState = storage.load("/sys/whelk.state")?.data ?: [:]
 
+        def objectmapper = new ObjectMapper()
+        String jsonStatus = objectmapper.writeValueAsString(whelkState)
+
         log.info("Current whelkstate: $whelkState")
 
-        def status = whelkState.get("status")
-        def writer = response.writer
-        writer.write("oaipmhimporter online, state: $status")
-        writer.flush()
 
-        //def writer = response.writer
-        //writer.write("oaipmhimporter online")
-        //writer.flush()
+
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+        out.print(jsonStatus);
+        out.flush();
     }
 
     void init() {
@@ -137,6 +140,7 @@ class ScheduledJob implements Runnable {
             }
             log.debug("Executing OAIPMH import for $dataset since $nextSince from ${importer.serviceUrl}")
             whelkState.put("status", "RUNNING")
+
             whelkState.put("importOperator", dataset)
             whelkState.remove("lastImportOperator")
             def result = importer.doImport(dataset, null, -1, true, true, nextSince)
@@ -144,22 +148,24 @@ class ScheduledJob implements Runnable {
             int totalCount = result.numberOfDocuments
             if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
                 log.info("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $dataset. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
-                whelkState.put("lastImportNrImported", result.numberOfDocuments)
-                whelkState.put("lastImportNrDeleted", result.numberOfDeleted)
-                whelkState.put("lastImportNrSkipped", result.numberOfDocumentsSkipped)
-                whelkState.put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
+                whelkState[dataset].put("lastImportNrImported", result.numberOfDocuments)
+                whelkState[dataset].put("lastImportNrDeleted", result.numberOfDeleted)
+                whelkState[dataset].put("lastImportNrSkipped", result.numberOfDocumentsSkipped)
+                whelkState[dataset].put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
+
             } else {
                 log.debug("Imported ${result.numberOfDocuments} document for $dataset.")
                 whelkState.put("lastImport", currentSince.format(DATE_FORMAT))
             }
             whelkState.remove("importOperator")
-            whelkState.put("status", "IDLE")
+            whelkState.put("status", "IDLE ödla")
             whelkState.put("lastRunNrImported", result.numberOfDocuments)
             whelkState.put("lastRun", new Date().format(DATE_FORMAT))
 
         } catch (Exception e) {
             log.error("Something failed: ${e.message}", e)
         } finally {
+            whelkState["test"].put("stuff", "other stuff")
 
             storage.store(new Document("/sys/whelk.state", whelkState).withDataset("sys"), false)
 
