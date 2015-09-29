@@ -1,9 +1,10 @@
 package whelk.plugin
 
-import whelk.StandardWhelk
-import whelk.result.ImportResult
+import whelk.Whelk
+import whelk.importer.ImportResult
 
 import spock.lang.Specification
+import whelk.servlet.ScheduledJob
 
 
 class ScheduledOperatorSpec extends Specification {
@@ -11,7 +12,7 @@ class ScheduledOperatorSpec extends Specification {
     def "should update state on successful import"() {
         setup:
         def ds = "test"
-        def whelk = new StandardWhelk()
+        def whelk = new Whelk()
 
         and:
         def imports = ["2001-01-01T00:00:00Z", null, "2002-02-02T00:00:00Z"]
