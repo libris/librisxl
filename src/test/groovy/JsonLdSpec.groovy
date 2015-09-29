@@ -1,7 +1,9 @@
 package whelk.util
 
+import org.apache.commons.io.IOUtils
 import spock.lang.Specification
 import org.codehaus.jackson.map.*
+import whelk.JsonLd
 
 
 class JsonLdSpec extends Specification {
@@ -14,8 +16,8 @@ class JsonLdSpec extends Specification {
 
     def "should frame flat jsonld"() {
         given:
-        def flatJson = mapper.readValue(defaultFlatRecord, Map)
-        def framedJson = mapper.readValue(defaultFramedRecord, Map)
+        def flatJson = mapper.readValue(loadJsonLdFile("1_flat.jsonld"), Map)
+        def framedJson = mapper.readValue(loadJsonLdFile("1_framed.jsonld"), Map)
         when:
         def resultJson = JsonLd.frame("/bib/13531679", flatJson)
         then:
@@ -42,6 +44,11 @@ class JsonLdSpec extends Specification {
         expect:
         JsonLd.isFlat(flatJson) == true
         JsonLd.isFlat(framedJson) == false
+    }
+
+    static String loadJsonLdFile(String fileName) {
+        InputStream is = JsonLdSpec.class.getClassLoader().getResourceAsStream(fileName)
+        return IOUtils.toString(is, "UTF-8")
     }
 
     static String defaultFlatRecord = """
