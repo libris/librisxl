@@ -1,9 +1,8 @@
-package whelk.importer.libris
+package whelk.importer
 
-import whelk.StandardWhelk
+import whelk.Whelk
 
 import spock.lang.Specification
-
 
 class OaiPmhImporterSpec extends Specification {
 
@@ -24,14 +23,14 @@ class OaiPmhImporterSpec extends Specification {
     def importer
 
     def setup() {
-        importer = new OaiPmhImporter(serviceUrl: BASE) {
+        importer = new OaiPmhImporter(oaipmhServiceUrl: BASE) {
             def documents = []
             void addDocuments(final List documents) {
                 this.documents += documents
                 super.addDocuments(documents)
             }
         }
-        importer.whelk = Mock(StandardWhelk)
+        importer.whelk = Mock(Whelk)
     }
 
     def "should import OAI-PMH"() {
