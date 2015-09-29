@@ -5255,7 +5255,7 @@
             "controlNumber": "140482",
             "encLevel": {"@id": "/def/enum/record/CompleteAuthorityRecord"},
             "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
-            "about": {
+            "focus": {
               "@type": ["Authority"],
               "@id": "/resource/auth/140482"
             }
@@ -5404,9 +5404,9 @@
       "_spec": [
         {
           "source": {"040": {"subfields": [{"f":"barn"}]}},
-          "result": {"about": {
+          "result": {
             "inScheme":  {"@type": "ConceptScheme", "@id": "/scheme/barn", "notation": "barn"}
-          }}
+          }
         }
       ]
     },
@@ -5484,12 +5484,15 @@
               {"a": "Jansson, Tove"},
               {"t": "Anteckningar från en ö"}
           ]}},
-          "result": {"focus": {
-            "@type": "UniformWork",
-            "title": "Anteckningar från en ö",
-            "attributedTo": {"@type": "Person",
-              "familyName":  "Jansson", "givenName":  "Tove"}
-          }}
+          "result": {
+            "@type": "WorkTerm",
+            "focus": {
+              "@type": "UniformWork",
+              "title": "Anteckningar från en ö",
+              "attributedTo": {"@type": "Person",
+                "familyName":  "Jansson", "givenName":  "Tove"}
+            }
+          }
         }
       ]
     },
@@ -5540,7 +5543,7 @@
           "source": {"150": {"subfields": [{"a": "Barnpsykologi"}]}},
           "result": {
             "@type": "TopicalTerm",
-            "@id": "/resource/auth/140482",
+            "@id": "/auth/140482",
             "prefLabel": "Barnpsykologi",
             "sameAs":  [{"@id": "/topic/sao/Barnpsykologi"}]
           }
@@ -5548,6 +5551,7 @@
       ]
     },
     "151" : {
+      "aboutEntity": "?record",
       "aboutType": "GeographicalTerm",
       "$a": {"property": "prefLabel"},
       "uriTemplate": "/place/{prefLabel}"
@@ -5602,10 +5606,15 @@
     "410": {
       "inherit": "bib:610",
       "i2": null,
-      "addLink": "hasVersion"
+      "aboutEntity": "?record",
+      "addLink": "hasVersion",
+      "resourceType": "OrganizationTerm"
     },
     "411": {
-      "inherit": "bib:611", "addLink": "hasVersion"
+      "aboutEntity": "?record",
+      "inherit": "bib:611",
+      "addLink": "hasVersion",
+      "resourceType": "MeetingTerm"
     },
     "450" : {
       "aboutEntity": "?record",
@@ -5639,9 +5648,18 @@
     "550" : {
       "inherit": "150",
       "aboutEntity": "?record",
+      "aboutType": null,
       "resourceType": "TopicalTerm",
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
       "_spec": [
+        {
+          "source": {"550": {"subfields": [{"a": "Other"}]}},
+          "result": {
+            "related": [
+              {"@type": "TopicalTerm", "@id": "/topic/sao/Other", "prefLabel":  "Other"}
+            ]
+          }
+        },
         {
           "source": {"550": {"subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}]}},
           "result": {
