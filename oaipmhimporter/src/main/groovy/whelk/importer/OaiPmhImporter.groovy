@@ -3,6 +3,7 @@ package whelk.importer
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 import groovy.util.logging.Slf4j as Log
+import org.codehaus.jackson.map.ObjectMapper
 import whelk.converter.JsonLDLinkCompleterFilter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.WhelkAddException
@@ -12,6 +13,7 @@ import java.util.concurrent.*
 
 import whelk.*
 import se.kb.libris.util.marc.*
+
 import se.kb.libris.util.marc.io.*
 import whelk.converter.MarcJSONConverter
 
@@ -45,6 +47,7 @@ class OaiPmhImporter {
     Whelk whelk
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
+    static final ObjectMapper mapper = new ObjectMapper()
 
     String username, password
 

@@ -1,9 +1,13 @@
 package whelk.importer
 
+import com.sun.xml.internal.bind.annotation.OverrideAnnotationOf
+import whelk.Document
 import whelk.Whelk
 
 import spock.lang.Specification
+import groovy.util.logging.Slf4j as Log
 
+@Log
 class OaiPmhImporterSpec extends Specification {
 
     static BASE = "http://example.org/service"
@@ -21,16 +25,27 @@ class OaiPmhImporterSpec extends Specification {
     }
 
     def importer
+    def whelk
 
     def setup() {
-        importer = new OaiPmhImporter(oaipmhServiceUrl: BASE) {
+        whelk = new Whelk() {
+            @Override
+            void bulkStore(List document, String ds) {
+                documents = document
+            }
+            @Override
+            void remove(String id, String ds) {
+            }
+
+            def documents
+        }
+        importer = new OaiPmhImporter(whelk, null, BASE, null, null) {
             def documents = []
             void addDocuments(final List documents) {
                 this.documents += documents
                 super.addDocuments(documents)
             }
         }
-        importer.whelk = Mock(Whelk)
     }
 
     def "should import OAI-PMH"() {
@@ -75,14 +90,15 @@ class OaiPmhImporterSpec extends Specification {
         result.lastRecordDatestamp == date("2007-01-01T00:00:00Z")
     }
 
-    def "should skip suppressed records"() {
+    def "should put suppressed records in specified dataset"() {
         given:
         currentPageSet = suppressedPageSet
         when:
         def result = importer.doImport("dataset")
         then:
-        result.numberOfDocuments == 0
-        result.numberOfDocumentsSkipped == 1
+        result.numberOfDocuments == 1
+        result.numberOfDocumentsSkipped == 0
+        whelk.documents.first().dataset == OaiPmhImporter.SUPPRESSRECORD_DATASET
         result.lastRecordDatestamp == date("2015-05-28T12:43:00Z")
     }
 

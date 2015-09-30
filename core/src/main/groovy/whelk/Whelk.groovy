@@ -33,6 +33,9 @@ class Whelk {
         this.storage = pg
     }
 
+    public Whelk() {
+    }
+
     Document store(Document document) {
         if (storage.store(document) && elastic) {
             elastic.index(document)
