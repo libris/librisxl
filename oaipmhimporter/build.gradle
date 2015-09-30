@@ -81,7 +81,7 @@ dependencies {
     compile project(':../core')
     compile project(':../converters')
 
-    def groovyVersion="2.3.9"
+    def groovyVersion="2.3.10"
     def jettyVersion="8.1.16.v20140903"
 
     // Common tools
