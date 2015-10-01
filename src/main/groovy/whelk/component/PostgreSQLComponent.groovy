@@ -1,7 +1,7 @@
 package whelk.component
 
-import groovy.transform.Synchronized
 import groovy.util.logging.Slf4j as Log
+
 import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
