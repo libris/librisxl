@@ -16,7 +16,7 @@ class ScheduledOperatorSpec extends Specification {
         def is = [:]
 
         and:
-        def imports = ["2001-01-01T00:00:00+00", null, "2002-02-02T00:00:00+00"]
+        def imports = ["2001-01-01T00:00:00Z", null, "2002-02-02T00:00:00Z"]
         def importer = GroovyMock(OaiPmhImporter)
         importer.serviceUrl >> "http://example.org/service"
         importer.doImport(_, _, _, _, _, _) >>> imports.collect {
@@ -31,22 +31,22 @@ class ScheduledOperatorSpec extends Specification {
         def sjob = new ScheduledJob(importer, ds, null, is)
         sjob.run()
         then:
-        is[ds].lastImport == imports[0]
+        Date.parse(ScheduledJob.DATE_FORMAT, is[ds].lastImport) == Date.parse(ScheduledJob.DATE_FORMAT, imports[0])
 
         and: "none in this one"
         sjob.run()
         then:
-        is[ds].lastImport == imports[0]
+        Date.parse(ScheduledJob.DATE_FORMAT, is[ds].lastImport) == Date.parse(ScheduledJob.DATE_FORMAT, imports[0])
 
         and: "something new"
         sjob.run()
         then:
-        is[ds].lastImport == imports[2]
+        Date.parse(ScheduledJob.DATE_FORMAT, is[ds].lastImport) == Date.parse(ScheduledJob.DATE_FORMAT, imports[2])
 
         and: "nothing new"
         sjob.run()
         then:
-        is[ds].lastImport == imports[2]
+        Date.parse(ScheduledJob.DATE_FORMAT, is[ds].lastImport) == Date.parse(ScheduledJob.DATE_FORMAT, imports[2])
     }
 
 }
