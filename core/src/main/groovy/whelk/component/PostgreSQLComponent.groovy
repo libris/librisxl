@@ -20,7 +20,8 @@ import java.sql.Types
 @Log
 class PostgreSQLComponent implements Storage {
 
-    protected BasicDataSource connectionPool
+    private BasicDataSource connectionPool
+    static String driverClass = "org.postgresql.Driver"
 
     public final static mapper = new ObjectMapper()
 
@@ -32,31 +33,35 @@ class PostgreSQLComponent implements Storage {
     protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT
 
     PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
-        URI connURI = new URI(sqlUrl.substring(5)) // Cut the "jdbc:"-part of the sqlUrl.
-
         String mainTableName = sqlMaintable
         String versionsTableName = mainTableName + "__versions"
 
-        log.info("Connecting to sql database at $sqlUrl")
+
         connectionPool = new BasicDataSource();
 
-        if (connURI.getUserInfo() != null) {
-            String username = connURI.getUserInfo().split(":")[0]
-            log.trace("Setting connectionPool username: $username")
-            connectionPool.setUsername(username)
-            try {
-                String password = connURI.getUserInfo().split(":")[1]
-                log.trace("Setting connectionPool password: $password")
-                connectionPool.setPassword(password)
-            } catch (ArrayIndexOutOfBoundsException aioobe) {
-                log.debug("No password part found i connect url userinfo.")
+        if (sqlUrl) {
+            URI connURI = new URI(sqlUrl.substring(5)) // Cut the "jdbc:"-part of the sqlUrl.
+
+            log.info("Connecting to sql database at ${sqlUrl}, using driver $driverClass")
+            if (connURI.getUserInfo() != null) {
+                String username = connURI.getUserInfo().split(":")[0]
+                log.trace("Setting connectionPool username: $username")
+                connectionPool.setUsername(username)
+                try {
+                    String password = connURI.getUserInfo().split(":")[1]
+                    log.trace("Setting connectionPool password: $password")
+                    connectionPool.setPassword(password)
+                } catch (ArrayIndexOutOfBoundsException aioobe) {
+                    log.debug("No password part found in connect url userinfo.")
+                }
             }
+            connectionPool.setDriverClassName(driverClass)
+            connectionPool.setUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
+            // Remove the password part from the url or it won't be able to connect
+            connectionPool.setInitialSize(10)
+            connectionPool.setMaxTotal(40)
+            connectionPool.setDefaultAutoCommit(true)
         }
-        connectionPool.setDriverClassName("org.postgresql.Driver")
-        connectionPool.setUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/")) // Remove the password part from the url or it won't be able to connect
-        connectionPool.setInitialSize(10)
-        connectionPool.setMaxTotal(40)
-        connectionPool.setDefaultAutoCommit(true)
 
         // Setting up sql-statements
         UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ? RETURNING *) " +
@@ -103,7 +108,7 @@ class PostgreSQLComponent implements Storage {
         boolean newConnection = (connection == null)
         try {
             if (newConnection) {
-                connection = connectionPool.getConnection()
+                connection = getConnection()
             }
             PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
             statusStmt.setString(1, identifier)
@@ -139,7 +144,7 @@ class PostgreSQLComponent implements Storage {
             log.trace("Flattening ${doc.id}")
             doc.data = JsonLd.flatten(doc.data)
         }
-        Connection connection = connectionPool.getConnection()
+        Connection connection = getConnection()
         connection.setAutoCommit(false)
         try {
             calculateChecksum(doc)
@@ -209,12 +214,12 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    void bulkStore(final List docs) {
+    void bulkStore(final List<Document> docs) {
         if (!docs || docs.isEmpty()) {
             return
         }
         log.debug("Bulk storing ${docs.size()} documents.")
-        Connection connection = connectionPool.getConnection()
+        Connection connection = getConnection()
         PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT)
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
@@ -324,7 +329,7 @@ class PostgreSQLComponent implements Storage {
     private Document loadFromSql(String id, String checksum, String sql) {
         Document doc = null
         log.debug("loadFromSql $id ($sql)")
-        Connection connection = connectionPool.getConnection()
+        Connection connection = getConnection()
         log.debug("Got connection.")
         PreparedStatement selectstmt
         ResultSet rs
@@ -366,7 +371,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     List<Document> loadAllVersions(String identifier) {
-        Connection connection = connectionPool.getConnection()
+        Connection connection = getConnection()
         PreparedStatement selectstmt
         ResultSet rs
         List<Document> docList = []
@@ -403,7 +408,7 @@ class PostgreSQLComponent implements Storage {
         log.debug("Load all called with dataset: $dataset")
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
-                Connection connection = connectionPool.getConnection()
+                Connection connection = getConnection()
                 connection.setAutoCommit(false)
                 PreparedStatement loadAllStatement
                 long untilTS = until?.getTime() ?: PGStatement.DATE_POSITIVE_INFINITY
@@ -482,7 +487,7 @@ class PostgreSQLComponent implements Storage {
             log.debug("Creating tombstone record with id ${identifier}")
             store(createTombstone(identifier, dataset), false)
         } else {
-            Connection connection = connectionPool.getConnection()
+            Connection connection = getConnection()
             PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
             try {
                 delstmt.setString(1, identifier)
@@ -499,6 +504,10 @@ class PostgreSQLComponent implements Storage {
         def tombstone = new Document(id, ["@type":"Tombstone"]).withContentType("application/ld+json").withDataset(dataset)
         tombstone.setDeleted(true)
         return tombstone
+    }
+
+    Connection getConnection() {
+        return connectionPool.getConnection()
     }
 
 }
