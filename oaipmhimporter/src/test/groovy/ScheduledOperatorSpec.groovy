@@ -4,6 +4,7 @@ import whelk.Whelk
 import whelk.importer.ImportResult
 
 import spock.lang.Specification
+import whelk.importer.OaiPmhImporter
 import whelk.servlet.ScheduledJob
 
 
@@ -12,11 +13,11 @@ class ScheduledOperatorSpec extends Specification {
     def "should update state on successful import"() {
         setup:
         def ds = "test"
-        def whelk = new Whelk()
+        def is = [:]
 
         and:
-        def imports = ["2001-01-01T00:00:00Z", null, "2002-02-02T00:00:00Z"]
-        def importer = GroovyMock(Importer)
+        def imports = ["2001-01-01T00:00:00+00", null, "2002-02-02T00:00:00+00"]
+        def importer = GroovyMock(OaiPmhImporter)
         importer.serviceUrl >> "http://example.org/service"
         importer.doImport(_, _, _, _, _, _) >>> imports.collect {
             new ImportResult(
@@ -27,26 +28,25 @@ class ScheduledOperatorSpec extends Specification {
         }
 
         when: "first import"
-        def sjob = new ScheduledJob("id", importer, ds, whelk)
+        def sjob = new ScheduledJob(importer, ds, null, is)
         sjob.run()
         then:
-        whelk.state[ds].lastImport == imports[0]
-        !whelk.state[ds].lock
+        is[ds].lastImport == imports[0]
 
         and: "none in this one"
         sjob.run()
         then:
-        whelk.state[ds].lastImport == imports[0]
+        is[ds].lastImport == imports[0]
 
         and: "something new"
         sjob.run()
         then:
-        whelk.state[ds].lastImport == imports[2]
+        is[ds].lastImport == imports[2]
 
         and: "nothing new"
         sjob.run()
         then:
-        whelk.state[ds].lastImport == imports[2]
+        is[ds].lastImport == imports[2]
     }
 
 }

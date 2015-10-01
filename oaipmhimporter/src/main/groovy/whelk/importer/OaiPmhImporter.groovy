@@ -70,6 +70,8 @@ class OaiPmhImporter {
 
     }
 
+    OaiPmhImporter(){}
+
     ImportResult doImport(String dataset, int nrOfDocs) {
         return doImport(dataset, null, nrOfDocs)
     }

@@ -109,18 +109,20 @@ class ScheduledJob implements Runnable {
     String dataset
     OaiPmhImporter importer
     PostgreSQLComponent storage
+    Map initialState
 
-    ScheduledJob(OaiPmhImporter imp, String ds, PostgreSQLComponent pg) {
+    ScheduledJob(OaiPmhImporter imp, String ds, PostgreSQLComponent pg, Map is = [:]) {
         this.importer = imp
         this.dataset = ds
         this.storage = pg
+        this.initialState = is
     }
 
 
     void run() {
         assert dataset
 
-        def whelkState = storage.load("/sys/whelk.state")?.data ?: [:]
+        def whelkState = storage?.load("/sys/whelk.state")?.data ?: initialState
         log.info("Current whelkstate: $whelkState")
         try {
             String lastImport = whelkState.get(dataset, [:]).get("lastImport")
@@ -151,6 +153,7 @@ class ScheduledJob implements Runnable {
                 whelkState[dataset].put("lastImportNrImported", result.numberOfDocuments)
                 whelkState[dataset].put("lastImportNrDeleted", result.numberOfDeleted)
                 whelkState[dataset].put("lastImportNrSkipped", result.numberOfDocumentsSkipped)
+                println("lastRecordDateStamp: ${result.lastRecordDatestamp}")
                 whelkState[dataset].put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
 
             } else {
@@ -167,7 +170,7 @@ class ScheduledJob implements Runnable {
         } finally {
             whelkState["test"].put("stuff", "other stuff")
 
-            storage.store(new Document("/sys/whelk.state", whelkState).withDataset("sys"), false)
+            storage?.store(new Document("/sys/whelk.state", whelkState).withDataset("sys"), false)
 
         }
     }
