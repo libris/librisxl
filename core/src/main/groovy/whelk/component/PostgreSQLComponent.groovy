@@ -273,6 +273,7 @@ class PostgreSQLComponent implements Storage {
         // Reinsert created and modified
         doc.setCreated(created)
         doc.setModified(modified)
+        return hashtext
     }
 
     // TODO: Update to real locate
