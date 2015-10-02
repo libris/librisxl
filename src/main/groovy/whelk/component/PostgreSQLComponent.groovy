@@ -118,8 +118,9 @@ class PostgreSQLComponent implements Storage {
                 statusMap['created'] = new Date(rs.getTimestamp("created").getTime())
                 statusMap['modified'] = new Date(rs.getTimestamp("modified").getTime())
                 statusMap['deleted'] = rs.getBoolean("deleted")
+                log.info("StatusMap: $statusMap")
             } else {
-                log.trace("No results returned for $identifier")
+                log.info("No results returned for $identifier")
                 statusMap['exists'] = false
             }
         } finally {
@@ -127,6 +128,7 @@ class PostgreSQLComponent implements Storage {
                 connection.close()
             }
         }
+        log.debug("Loaded status for ${identifier}: $statusMap")
         return statusMap
     }
 
@@ -362,6 +364,7 @@ class PostgreSQLComponent implements Storage {
         } finally {
             connection.close()
         }
+
         return doc
     }
 
