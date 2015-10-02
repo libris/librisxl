@@ -83,6 +83,20 @@ class PostgreSQLComponentSpec extends Specification {
         Document r = storage.load("nonexistingid")
         then:
         r == null
+    }
+
+    def "should calculate correct checksum regardless of created, modified or previous checksum"() {
+        given:
+        String cs
+        Document doc = new Document("testid", ["key":"some data", "@id": "testid"], ["identifier": "testid", "dataset": "test", "created": 1298619287, "modified": 10284701287, "checksum": "qwudhqiuwhdiu12872"])
+        and:
+        doc = new Document("testid", ["@id": "testid", "key":"some data"], ["identifier": "testid", "dataset": "test", "created": 1298619287, "modified": 1298461982639, "checksum": "qwudhqiuwhdiu1287ssss2"])
+        when:
+        cs = storage.calculateChecksum(doc)
+        then:
+        cs == "52bfececee8e10e1ac8c19549b96811d"
+        and:
+        cs == "52bfececee8e10e1ac8c19549b96811d"
 
     }
 
