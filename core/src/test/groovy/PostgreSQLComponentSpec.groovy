@@ -43,11 +43,23 @@ class PostgreSQLComponentSpec extends Specification {
         }
         stmt.executeUpdate() >> { 1 }
 
-        Document doc = new Document("hej", ["@id": "hej"]).withDataset("test")
+        Document doc = null
         when:
+        doc = new Document("hej", ["@id": "hej"]).withDataset("test")
+        then:
+        doc.checksum == null
+        doc.id == "hej"
+        doc.dataset == "test"
+        doc.created == null
+        doc.modified == null
+        and:
         Document r = storage.store(doc)
         then:
         r.created != null
+        r.modified != null
+        r.dataset == "test"
+        r.id == "hej"
+        r.checksum != null
     }
 
     def "should load document from database"() {
@@ -72,6 +84,7 @@ class PostgreSQLComponentSpec extends Specification {
         then:
         r.id == "testid"
         r.created != null
+        r.modified != null
         r.dataset == "test"
         r.deleted == false
     }
