@@ -2,9 +2,9 @@ package whelk.rest
 
 import groovy.util.logging.Slf4j as Log
 import whelk.Whelk
-import whelk.converter.JsonLDLinkExpander
 import whelk.rest.api.ISXNTool
 import whelk.rest.api.RestAPI
+import whelk.filter.JsonLdLinkExpander
 
 import java.util.regex.*
 import javax.servlet.http.*
@@ -49,7 +49,7 @@ class HttpWhelk extends HttpServlet {
 
         pico.addComponent(Whelk.class)
 
-        pico.addComponent(Characteristics.CACHE).addComponent(JsonLDLinkExpander.class)
+        pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
 
         pico.addComponent(DocumentAPI.class)
         pico.addComponent(ISXNTool.class)

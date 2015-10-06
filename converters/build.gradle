@@ -24,7 +24,7 @@ test.testLogging {
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
-    flatDir name: 'localDir', dirs: '../dep/lib'
+    flatDir name: 'localDir', dirs: '../dependencies/lib'
 }
 
 dependencies {
@@ -32,10 +32,11 @@ dependencies {
 
     // Sibling projects
     compile project(':../core')
+    compile project(':../converters')
 
     // KB dependencies
     compile 'se.kb.libris:marc:1.2.7'
-    compile 'se.kb.libris.commons:isbntools:1.0'
+//    compile 'se.kb.libris.commons:isbntools:1.0'
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
