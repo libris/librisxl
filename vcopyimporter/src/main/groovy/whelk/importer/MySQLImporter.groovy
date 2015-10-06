@@ -1,23 +1,27 @@
-package whelk.importer.libris
+package whelk.importer
 
 import groovy.util.logging.Slf4j as Log
+import org.picocontainer.Characteristics
+import org.picocontainer.DefaultPicoContainer
+import org.picocontainer.PicoContainer
+import org.picocontainer.containers.PropertiesPicoContainer
+import whelk.component.ElasticSearch
+import whelk.component.PostgreSQLComponent
+import whelk.converter.FormatConverter
+import whelk.converter.JsonLDLinkCompleterFilter
+import whelk.converter.marc.MarcFrameConverter
+import whelk.converter.MarcJSONConverter
 
-import java.lang.management.*
 import java.sql.*
 import java.util.concurrent.*
 import java.text.*
 
 import whelk.*
-import whelk.importer.*
-import whelk.plugin.*
-import whelk.result.*
-import whelk.plugin.libris.*
-
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 
 @Log
-class MySQLImporter extends BasicPlugin implements Importer {
+class MySQLImporter {
 
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
@@ -42,7 +46,29 @@ class MySQLImporter extends BasicPlugin implements Importer {
     String lastIdentifier = null
 
 
-    MySQLImporter(Map settings) {
+    PicoContainer pico
+
+    MySQLImporter() {
+        log.info("Setting up httpwhelk.")
+
+        // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
+        InputStream secretsConfig = ( System.getProperty("xl.secret.properties")
+                ? new FileInputStream(System.getProperty("xl.secret.properties"))
+                : this.getClass().getClassLoader().getResourceAsStream("secret.properties") )
+
+        Properties props = new Properties()
+
+        props.load(secretsConfig)
+
+        pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
+        pico.addComponent(new MarcFrameConverter())
+        pico.addComponent(Whelk.class)
+
+        pico.start()
+
+        log.info("Started ...")
     }
 
     void bootstrap() {
@@ -51,7 +77,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
         assert marcFrameConverter
     }
 
-    ImportResult doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
+    void doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
         recordCount = 0
         startTime = System.currentTimeMillis()
         cancelled = false
@@ -181,7 +207,7 @@ class MySQLImporter extends BasicPlugin implements Importer {
         */
 
         log.info("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
-        return new ImportResult(numberOfDocuments: recordCount, lastRecordDatestamp: null) // TODO: Add correct last document datestamp
+        //return new ImportResult(numberOfDocuments: recordCount, lastRecordDatestamp: null) // TODO: Add correct last document datestamp
     }
 
     void buildDocument(Integer recordId, MarcRecord record, String type, String oaipmhSetSpecValue) {
@@ -244,16 +270,14 @@ class MySQLImporter extends BasicPlugin implements Importer {
 
         private Whelk whelk
         private MarcFrameConverter converter
-        private Filter filter
 
         private List recordList
 
         private Semaphore tickets
 
-        ConvertAndStoreRunner(Whelk w, FormatConverter c, Filter f, final List recList, Semaphore t) {
+        ConvertAndStoreRunner(Whelk w, FormatConverter c, final List recList, Semaphore t) {
             this.whelk = w
             this.converter = c
-            this.filter = f
 
             this.recordList = recList
             this.tickets = t
@@ -272,9 +296,6 @@ class MySQLImporter extends BasicPlugin implements Importer {
                         convertedDocs[(SUPPRESSRECORD_DATASET)] << whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.manifest, it.meta)
                     } else {
                         Document doc = converter.doConvert(it.record, ["manifest":it.manifest,"meta":it.meta])
-                        if (filter) {
-                            doc = filter.filter(doc)
-                        }
                         convertedDocs[(doc.dataset)] << doc
                     }
                 }
