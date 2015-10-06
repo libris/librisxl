@@ -1,7 +1,7 @@
 apply plugin: 'groovy'
+apply plugin: 'application'
 apply plugin: 'java'
 
-archivesBaseName = "xlconverters"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -24,19 +24,16 @@ test.testLogging {
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
-    flatDir name: 'localDir', dirs: '../dependencies/lib'
+    flatDir name: 'localDir', dirs: '../dep/lib'
 }
 
 dependencies {
-    def groovyVersion="2.3.9"
+    def activeMQVersion = "5.11.1"
+    def groovyVersion="2.3.10"
 
-    // Sibling projects
+    // LIBRISXL modules
     compile project(':../core')
     compile project(':../converters')
-
-    // KB dependencies
-    compile 'se.kb.libris:marc:1.2.7'
-//    compile 'se.kb.libris.commons:isbntools:1.0'
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
@@ -56,9 +53,7 @@ dependencies {
     compile 'org.slf4j:log4j-over-slf4j:1.7.6'
     compile 'org.apache.commons:commons-dbcp2:2.0.1'
     // Integration
-    compile "org.elasticsearch:elasticsearch:1.4.4"
-    compile "org.apache.commons:commons-lang3:3.3.2"
-    compile 'com.vividsolutions:jts:1.13'
+    compile 'mysql:mysql-connector-java:5.1.33'
     compile 'org.picocontainer:picocontainer:2.15'
 
     // profiling and test
@@ -71,33 +66,11 @@ configurations {
     all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
 }
 
-
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
     classpath = sourceSets.test.runtimeClasspath
     main = "groovy.ui.GroovyMain"
     args(System.getProperty("args", "").split() as String[])
-}
-
-task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
-    description "Convert an ISO2709 file to JSON (USAGE: -Dargs='<infile>')"
-    classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.converter.MarcJSONConverter'
-    args(System.getProperty('args', "").split() as String[])
-}
-
-task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
-    description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
-    classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.converter.marc.MarcFrameConverter'
-    args(System.getProperty('args', "").split() as String[])
-}
-
-task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
-    description "Convert a JSON-LD file to Turtle (USAGE: -Dargs='<context> <source>')"
-    classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.plugin.JsonLdToTurtle'
-    args(System.getProperty('args', "").split() as String[])
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {

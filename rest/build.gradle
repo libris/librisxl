@@ -3,9 +3,6 @@ apply plugin: 'groovy'
 apply plugin: 'jetty'
 apply plugin: 'war'
 apply plugin: 'application'
-apply plugin: 'maven'
-apply plugin: 'maven-publish'
-apply plugin: 'maven-publish-auth'
 apply plugin: 'java'
 
 
@@ -58,23 +55,11 @@ test.testLogging {
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
-    flatDir name: 'localDir', dirs: '../dep/lib'
+    flatDir name: 'localDir', dirs: '../dependencies/lib'
 }
 
 configurations {
     executableWarDeps
-}
-
-buildscript {
-  repositories {
-    jcenter()
-    mavenCentral()
-    maven { url "http://repository.jboss.org/nexus/content/groups/public/" }
-  }
-  dependencies {
-    classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
-    classpath 'junit:junit:3.8.2'
-  }
 }
 
 dependencies {
@@ -86,6 +71,8 @@ dependencies {
     def groovyVersion="2.3.10"
     def jettyVersion="8.1.16.v20140903"
 
+    // KB libs
+    compile 'se.kb.libris.commons:isbntools:1.0'
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
@@ -166,26 +153,6 @@ task(groovy, dependsOn: "classes", type: JavaExec) {
     args(System.getProperty("args", "").split() as String[])
 }
 
-task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
-    description "Convert an ISO2709 file to JSON (USAGE: -Dargs='<infile>')"
-    classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.converter.MarcJSONConverter'
-    args(System.getProperty('args', "").split() as String[])
-}
-
-task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
-    description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
-    classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.plugin.libris.MarcFrameConverter'
-    args(System.getProperty('args', "").split() as String[])
-}
-
-task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
-    description "Convert a JSON-LD file to Turtle (USAGE: -Dargs='<context> <source>')"
-    classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.plugin.JsonLdToTurtle'
-    args(System.getProperty('args', "").split() as String[])
-}
 task jettyRun(type: JettyRun, overwrite: true) {
     jettyRun.contextPath = 'whelk'
     jettyRun.httpPort = 8180
@@ -203,34 +170,4 @@ task(console, dependsOn: 'classes', type: JavaExec) {
   description "Launch a Groovy Console"
   classpath = sourceSets.main.runtimeClasspath
   main = 'groovy.ui.Console'
-}
-
-publishing {
-    publications {
-        mavenCustom(MavenPublication) {
-            groupId "se.kb.libris"
-            artifactId "librisxl-whelk"
-            version "${project.jar.version}"
-            artifacts {
-                archives jar
-            }
-            from components.java
-
-
-            pom.withXml {
-                asNode().appendNode('parent')
-                .appendNode('groupId', 'se.kb.libris').parent()
-                .appendNode('artifactId', 'super-pom').parent()
-                .appendNode('version', '1.1')
-            }
-
-        }
-    }
-
-    repositories {
-        maven {
-            name "nexus"
-            url "http://dev.libris.kb.se/nexus/content/repositories/internal/"
-        }
-    }
 }
