@@ -1,0 +1,141 @@
+{
+  "@context": "/context/libris.jsonld",
+  "@id": "http://libris.kb.se/bib/7149593",
+  "@type": "Document",
+  "controlNumber": "7149593",
+  "creator": {"@type": "Organization", "abbr": "NB"},
+  "modified": "2004-08-09T15:20:32.0",
+  "catForm": {
+      "code" : "a",
+      "label": "AACR2/KRS (normalv\u00e4rde)"
+  },
+  "encLevel": {
+    "code":"_",
+    "label": "Nationalbibliografisk niv\u00e5 (jfr KRS 1.0D3)"
+  },
+  "localSystemNumber": "9100563226",
+  "status": {
+      "code": "c",
+      "label" : "Rättad eller reviderad post (sätts maskinellt)"
+  },
+  "bibliographyCode": ["SEE", "BULB", "SLB", "NB", "KVIN"],
+  "about": {
+    "@id": "http://libris.kb.se/resource/bib/7149593",
+    "@type": ["Instance", "Book"],
+    "typeOfRecord": {
+        "code": "a",
+        "label":"Text: tryck"
+    },
+    "physicalDetails": "ill.",
+    "comment": "\u00c4ven tillg. med tryck\u00e5r: 2. uppl., 1996",
+    "dimensions": "25 cm",
+    "extent": "102, [1] s.",
+    "identifier": {
+        "@type" : "Identifier",
+        "identifierScheme" : "isbn",
+        "identifierValue" : "91-0-056322-6 (inb.)"
+    },
+    "isbn": "91-0-056322-6",
+    "isbnNote": "inb.",
+    "placeOfManufacture": {"@type": "Place", "label": "Finland"},
+    "placeOfPublication": {"@type": "Place", "label": "Stockholm"},
+    "publisher": {"@type": "Organization", "name": "Bonnier"},
+    "dateOfPublication": {"@type": "year", "@value": "1996"},
+    "termsOfAvailability": "310:00",
+    "instanceOf": {
+      "@id": "http://libris.kb.se/resource/bib/7149593#work",
+      "@type": ["Work", "Text"],
+      "bibLevel": {
+          "code" : "m",
+          "label" : "Monografisk resurs"
+      },
+      "title": "Anteckningar fr\u00e5n en \u00f6",
+      "statementOfResponsibility": "Tove Jansson, Tuulikki Pietil\u00e4",
+      "authorList": [
+        {
+          "@type": "Person",
+          "authorizedAccessPoint": "Jansson, Tove, 1914-2001",
+          "birthYear": "1914",
+          "deathYear": "2001",
+          "familyName": "Jansson",
+          "givenName": "Tove",
+          "name": "Tove Jansson",
+          "authoritativeName": "Jansson, Tove"
+        },
+        {
+          "@type": "Person",
+          "authorizedAccessPoint": "Pietil\u00e4, Tuulikki, 1917-",
+          "birthYear": "1917",
+          "familyName": "Pietil\u00e4",
+          "givenName": "Tuulikki",
+          "name": "Tuulikki Pietil\u00e4",
+          "authoritativeName": "Pietil\u00e4, Tuulikki"
+        }
+      ],
+      "language": "swe",
+      "subject": [
+        {"@id": "http://dbpedia.org/resource/Fiction"},
+        {"@id": "http://libris.kb.se/sab/Ibz/Pietil\u00e4,+Tuulikki+1917-"},
+        {"@id": "http://dbpedia.org/resource/Autobiography"},
+        {"@id": "http://libris.kb.se/sab/Gcdz/Jansson,+Tove+1914-2001"}
+      ]
+    }
+  },
+  "marc21": {
+      "fields": [
+        {
+            "600": {
+                "ind1": "1",
+                "ind2": "4",
+                "subfields": [
+                    {
+                        "a": "Jansson, Tove,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "600": {
+                "ind1": "1",
+                "ind2": "4",
+                "subfields": [
+                    {
+                        "a": "Pietilä, Tuulikki"
+                    }
+                ]
+            }
+        },
+        {
+            "976": {
+                "ind1": " ",
+                "ind2": "2",
+                "subfields": [
+                    {
+                        "a": "Gcdz"
+                    },
+                    {
+                        "b": "Litteraturhistoria Finlandssvensk"
+                    }
+                ]
+            }
+        },
+        {
+            "976": {
+                "ind1": " ",
+                "ind2": "2",
+                "subfields": [
+                    {
+                        "a": "Ibz"
+                    },
+                    {
+                        "b": "Konst Konsthistoria"
+                    }
+                ]
+            }
+        }
+      ]
+  }
+}

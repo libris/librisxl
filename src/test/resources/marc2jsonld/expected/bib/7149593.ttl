@@ -1,0 +1,121 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dc: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix bibo: <http://purl.org/ontology/bibo/> .
+@prefix el: <http://rdvocab.info/Elements/> .
+@prefix gr2: <http://rdvocab.info/ElementsGr2/> .
+@prefix ent: <http://rdvocab.info/uri/schema/FRBRentitiesRDA/> .
+@prefix rel: <http://rdvocab.info/RDARelationshipsWEMI/> .
+@prefix dbpedia: <http://dbpedia.org/resource/> .
+@prefix : <http://libris.kb.se/def/terms/> .
+@base <http://libris.kb.se/> .
+
+
+</bib/7149593> a foaf:Document; # :Record;
+  dc:identifier "7149593"; # :controlNumber
+  dc:modified "2004-08-09T15:20:32.0"^^xsd:dateTime; # :dateAndTimeOfLatestTransaction
+  dc:creator [ a foaf:Organization; foaf:nick "NB" ]; # :originalCatalogingAgency
+  :localSystemNumber "9100563226"; # isbn
+  :status "c"; # Rättad eller reviderad post (sätts maskinellt)
+  :encLevel "Nationalbibliografisk nivå (jfr KRS 1.0D3)";
+  :catForm "AACR2/KRS (normalvärde)";
+  foaf:primaryTopic </bib/7149593#manifestation> .
+
+</bib/7149593#manifestation> a ent:Manifestation, bibo:Book;
+  bibo:isbn "91-0-056322-6";
+  el:identifierForTheManifestation "91-0-056322-6 (inb.)";
+  el:termsOfAvailability [ rdf:value "310:00" ];
+
+  el:placeOfPublication [ rdfs:label "Stockholm" ];
+  el:publishersName "Bonnier";
+  el:dateOfPublication "1996"^^xsd:gYear;
+  el:placeOfManufacture [ rdfs:label "Finland" ];
+  # .. placeOfProduction//placeOfOriginOfTheWork
+  rdfs:comment "Även tillg. med tryckår: 2. uppl., 1996";
+
+  el:extentOfText "102, [1] s.";
+  el:baseMaterial "ill."; # otherPhysicalDetails
+  el:dimensions "25 cm";
+
+  rel:expressionManifested [ a ent:Expression;
+      #owl:sameAs </expr/Anteckningar-från-en-ö-Tove-Jansson-Tuulikki-Pietilä>;
+      el:titleProper "Anteckningar från en ö";
+      el:statementOfResponsibilityRelatingToTitleProper "Tove Jansson, Tuulikki Pietilä";
+      el:languageOfTheContent "swe"; #dc:language "sv";
+      :authorizedAccessPoint </auth/Jansson,+Tove+1914-2001>;
+      :accessPointList (
+          </auth/Pietilä,+Tuulikki+1917->
+        );
+      dc:creator </resource/auth/Jansson,+Tove+1914-2001>;
+      dc:contributor </resource/auth/Pietilä,+Tuulikki+1917->;
+
+      :typeOfRecord "Text: tryck"; #a <http://purl.org/dc/dcmitype/Text>;
+      :bibLevel "Monografisk resurs";
+      # TODO: are these relations from record to dataset source?
+      :bibliographyCode "BULB", "NB", "SEE", "SLB", "KVIN";
+
+      dc:subject dbpedia:Fiction; # :booksLiteraryForm "0"
+      dc:subject dbpedia:Autobiography; # :booksBiography "a"
+
+      # <http://sv.wikipedia.org/wiki/SAB:s_klassifikationssystem>
+      dc:subject </sab/Gcdz/Jansson,+Tove+1914-2001>;
+      # owl:sameAs <.../lcsh/...>; skos:broader [ = <Gcdz>; skos:broader <Gc> ]
+      dc:subject </sab/Ibz/Pietilä,+Tuulikki+1917->;
+      # owl:sameAs <lcsh/...>; skos:broader <Ibz>
+      #
+      # .. subjects based on:
+      #:subjectAddedEntryPersonalName [
+      #    :typeOfPersonalNameEntryElement "surname";
+      #    :thesaurus "System ej specificerat";
+      #    :personalName "Jansson, Tove,";
+      #    :datesAssociatedWithAName "1914-2001"
+      #  ], [
+      #    :typeOfPersonalNameEntryElement "surname";
+      #    :thesaurus "System ej specificerat";
+      #    :personalName "Pietilä, Tuulikki" ];
+      #:otherClassificationNumber [
+      #    :classificationNumber "Gcdz Jansson, Tove";
+      #    :numberSource "kssb/6"
+      #  ], [
+      #    :classificationNumber "Ibz Pietilä, Tuulikki";
+      #    :numberSource "kssb/6"
+      #  ], [
+      #    :classificationNumber "Lz" ];
+      #:sabHeading [
+      #    :sabClassification "Gcdz";
+      #    :sabHeading "Litteraturhistoria Finlandssvensk"
+      #  ], [
+      #    :sabClassification "Ibz";
+      #    :sabHeading "Konst Konsthistoria"
+      #  ]
+
+      #:localNotes [ :a "Li:S" ]; # "Litteraturhistoria svensk" (Gc), implied by Gcdz?
+
+    ] .
+
+</auth/Jansson,+Tove+1914-2001> a skos:Concept;
+  skos:prefLabel "Jansson, Tove, 1914-2001";
+  foaf:focus </resource/auth/Jansson,+Tove+1914-2001> .
+
+</resource/auth/Jansson,+Tove+1914-2001> a ent:Person;
+  #:similarTo </auth/Jansson,+Tove>;
+  foaf:name "Tove Jansson";
+  foaf:surname "Jansson";
+  foaf:givenName "Tove";
+  gr2:dateOfBirth "1914"^^xsd:gYear;
+  gr2:dateOfDeath "2001"^^xsd:gYear .
+
+</auth/Pietilä,+Tuulikki+1917-> a skos:Concept;
+  skos:prefLabel "Pietilä, Tuulikki, 1917-";
+  foaf:focus </resource/auth/Jansson,+Tove+1914-2001> .
+
+</resource/auth/Pietilä,+Tuulikki+1917-> a ent:Person; 
+  foaf:name "Tuulikki Pietilä";
+  foaf:surname "Pietilä";
+  foaf:givenName "Tuulikki";
+  gr2:dateOfBirth "1917"^^xsd:gYear .
+
