@@ -1,12 +1,7 @@
 package whelk.importer
 
 import groovy.util.logging.Slf4j as Log
-import org.picocontainer.Characteristics
-import org.picocontainer.DefaultPicoContainer
-import org.picocontainer.PicoContainer
-import org.picocontainer.containers.PropertiesPicoContainer
-import whelk.component.ElasticSearch
-import whelk.component.PostgreSQLComponent
+
 import whelk.converter.FormatConverter
 import whelk.converter.JsonLDLinkCompleterFilter
 import whelk.converter.marc.MarcFrameConverter
@@ -23,11 +18,12 @@ import se.kb.libris.util.marc.io.*
 @Log
 class MySQLImporter {
 
+    Whelk whelk
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
-    long MAX_MEMORY_THRESHOLD = 70 // In percent
+    static String SUPPRESS_RECORD_DATASET = "eplikt"
 
     boolean cancelled = false
 
@@ -45,39 +41,15 @@ class MySQLImporter {
     ConcurrentHashMap buildingMetaRecord = new ConcurrentHashMap()
     String lastIdentifier = null
 
+    String connectionUrl
 
-    PicoContainer pico
-
-    MySQLImporter() {
-        log.info("Setting up httpwhelk.")
-
-        // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
-        InputStream secretsConfig = ( System.getProperty("xl.secret.properties")
-                ? new FileInputStream(System.getProperty("xl.secret.properties"))
-                : this.getClass().getClassLoader().getResourceAsStream("secret.properties") )
-
-        Properties props = new Properties()
-
-        props.load(secretsConfig)
-
-        pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
-        pico.addComponent(new MarcFrameConverter())
-        pico.addComponent(Whelk.class)
-
-        pico.start()
-
-        log.info("Started ...")
+    MySQLImporter(Whelk w, MarcFrameConverter mfc, String mysqlConnectionUrl) {
+        whelk = w
+        marcFrameConverter = mfc
+        connectionUrl = mysqlConnectionUrl
     }
 
-    void bootstrap() {
-        marcFrameConverter = plugins.find { it instanceof MarcFrameConverter }
-        enhancer = plugins.find { it instanceof JsonLDLinkCompleterFilter }
-        assert marcFrameConverter
-    }
-
-    void doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true, URI serviceUrl = null) {
+    void doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true) {
         recordCount = 0
         startTime = System.currentTimeMillis()
         cancelled = false
@@ -313,11 +285,7 @@ class MySQLImporter {
         DriverManager.getConnection(uri.toString())
     }
 
-
-    void cancel() { cancelled = true}
-
-
-    public void close(Connection conn, PreparedStatement statement, ResultSet resultSet) {
+    private void close(Connection conn, PreparedStatement statement, ResultSet resultSet) {
         log.info("Closing down mysql connections.")
         try {
             statement.cancel()
