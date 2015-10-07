@@ -133,7 +133,7 @@ class MarcFrameConverterSpec extends Specification {
             else expected[prop] = obj
         }
         then:
-        result == expected
+        assertJsonEquals(result, expected)
         where:
         fieldSpec << fieldSpecs
     }
@@ -161,7 +161,7 @@ class MarcFrameConverterSpec extends Specification {
             expected.fields << source
         }
         then:
-        result == expected
+        assertJsonEquals(result, expected)
         where:
         fieldSpec << fieldSpecs
     }
@@ -240,6 +240,12 @@ class MarcFrameConverterSpec extends Specification {
         item << postProcStepSpecs
     }
 
+    void assertJsonEquals(result, expected) {
+        def resultJson = json(result)
+        def expectedJson = json(expected)
+        assert resultJson == expectedJson
+    }
+
     private deepcopy(orig) {
         def bos = new ByteArrayOutputStream()
         def oos = new ObjectOutputStream(bos)
@@ -247,6 +253,22 @@ class MarcFrameConverterSpec extends Specification {
         def bin = new ByteArrayInputStream(bos.toByteArray())
         def ois = new ObjectInputStream(bin)
         return ois.readObject()
+    }
+
+    private json(obj) {
+        return converter.mapper.writeValueAsString(sorted(obj))
+    }
+
+    def sorted(obj) {
+        if (obj instanceof Map) {
+            TreeMap sortedmap = new TreeMap()
+            obj.each { k, v ->
+                sortedmap[k] = (v instanceof List)?
+                    v.collect { sorted(it) } : sorted(v)
+            }
+            return sortedmap
+        }
+        return obj
     }
 
 }
