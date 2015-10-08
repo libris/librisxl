@@ -6,6 +6,7 @@ public class JsonLd {
     static final String ID_KEY = "@id"
     static final String DESCRIPTIONS_KEY = "descriptions"
 
+    // TODO: This flatten-method does not create description-based flat json (i.e. with entry, items and quoted)
     static Map flatten(Map framedJsonLd) {
         if (isFlat(framedJsonLd)) {
             return framedJsonLd
