@@ -1838,6 +1838,38 @@
     }
   ],
 
+  "patterns": {
+    "termbase": {
+      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
+      "uriTemplateDefaults": {"inScheme.notation": "_"},
+      "$a": {"property": "prefLabel"},
+      "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
+      "match-code": {
+        "v x y z": {
+          "uriTemplate": null,
+          "uriTemplate": "/topic/{+inScheme.notation}{/broader.prefLabel*}",
+          "$a": {"addLink": "broader",
+                 "resourceType": "TopicalTerm",
+                 "property": "prefLabel", "required": true},
+          "$v": {"addLink": "broader",
+               "TODO": "use /topic/saogf/{_}, but only if $2=sao",
+                 "resourceType": "GenreTerm",
+                 "property": "prefLabel"},
+          "$x": {"addLink": "broader",
+                 "resourceType": "SubdivisionTerm",
+                 "property": "prefLabel"},
+          "$y": {"addLink": "broader",
+                 "resourceType": "ChronologicalTerm",
+                 "property": "prefLabel"},
+          "$z": {"addLink": "broader",
+                 "TODO": "use /place/{_}, but only if $2=sao",
+                 "resourceType": "GeographicalTerm",
+                 "property": "prefLabel"}
+        }
+      }
+    }
+  },
+
   "bib": {
 
     "thingLink": "about",
@@ -3055,7 +3087,7 @@
         }
       },
       "[35:38]": {
-        "note:candidate:aboutEntity": "Work",
+        "NOTE:candidate:aboutEntity": "?work",
         "addLink": "language",
         "uriTemplate": "/def/languages/{_}",
         "matchUriToken": "^\\w{2,3}$",
@@ -3862,7 +3894,7 @@
     "049": {},
 
     "050": {
-      "note:candidate:aboutEntity": "Work",
+      "NOTE:candidate:aboutEntity": "?work",
       "TOOO:i1": {},
       "TOOO:i2": {},
       "$a": {"property": "classificationLcc"},
@@ -3905,7 +3937,7 @@
     "074": {},
 
     "080": {
-      "note:candidate:aboutEntity": "Work",
+      "NOTE:candidate:aboutEntity": "?work",
       "TOOO:i1": {},
       "addLink": "classification",
       "resourceType": "Concept",
@@ -3941,7 +3973,7 @@
     },
 
     "082": {
-      "note:candidate:aboutEntity": "Work",
+      "NOTE:candidate:aboutEntity": "?work",
       "TODO:$a": {"property": "classificationDdc", "note": "use this flattened form?"},
       "addLink": "classification",
       "resourceType": "Concept",
@@ -3977,7 +4009,7 @@
     },
 
     "084": {
-      "note:candidate:aboutEntity": "Work",
+      "NOTE:candidate:aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "Concept",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
@@ -4003,7 +4035,7 @@
     "099": {},
 
     "100": {
-      "note:candidate:aboutEntity": "Work",
+      "NOTE:candidate:aboutEntity": "?work",
       "resourceType": "Person",
       "match-i1": {
         "0": {
@@ -4053,7 +4085,7 @@
       ]
     },
     "110": {
-      "note:candidate:aboutEntity": "Work",
+      "NOTE:candidate:aboutEntity": "?work",
       "resourceType": "Organization",
       "link": "attributedTo",
       "TODO": [
@@ -4089,8 +4121,9 @@
       "$d": {"property": "date"}
     },
     "130": {
-      "note:candidate:aboutEntity": "Work",
-      "TODO": "very similar to 240?",
+      "link": "hasUniformWork",
+      "resourceType": "UniformWork",
+      "TODO": "Similar to 240. Could use link:exampleOfWork if 130 XOR 240",
       "$a": {"property": "uniformTitle"},
       "$d": {"property": "date"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"}
@@ -4507,7 +4540,7 @@
     "411": {},
 
     "440": {
-      "note:candidate:aboutEntity": "Work",
+      "NOTE:candidate:aboutEntity": "?work",
       "TODO:prefer": "490 or 773? See also mapping for 240",
       "addLink": "series",
       "embedded": true,
@@ -4790,7 +4823,7 @@
     "611": {
       "TOOO:i1": {},
       "TOOO:i2": {},
-      "inherit": "111", "addLink": "subject", "resourceType": "Meeting"
+      "inherit": "111", "addLink": "subject", "resourceType": "MeetingTerm"
     },
     "630": {
       "TOOO:i1": {},
@@ -4799,42 +4832,25 @@
     },
     "648": {
       "inherit": "650",
-      "resourceType": "Event",
+      "resourceType": "ChronologicalTerm",
       "$a": {
         "property": "prefLabel",
         "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
       }
     },
     "650": {
-      "note:candidate:aboutEntity": "Work",
+      "inherit": "patterns:termbase",
+      "NOTE:candidate:aboutEntity": "?work",
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-      "resourceType": "Concept",
-      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
-      "uriTemplateDefaults": {"inScheme.notation": "_"},
-      "match-code": {
-        "v x y z": {
-          "uriTemplate": null,
-          "$a": {"addLink": "broader",
-                 "resourceType": "Concept",
-                 "property": "prefLabel", "itemPos": "first", "required": true},
-          "$v": {"addLink": "broader",
-               "TODO": "use /topic/saogf/{_}, but only if $2=sao",
-                 "resourceType": "Concept",
-                 "property": "prefLabel", "itemPos": "rest"},
-          "$x": {"addLink": "broader",
-                 "resourceType": "Concept",
-                 "property": "prefLabel", "itemPos": "rest"},
-          "$y": {"addLink": "broader",
-                 "resourceType": "Event",
-                 "property": "prefLabel", "itemPos": "rest"},
-          "$z": {"addLink": "broader",
-                 "TODO": "use /place/{_}, but only if $2=sao",
-                 "resourceType": "Place",
-                 "property": "prefLabel", "itemPos": "rest"}
-        }
+      "resourceType": "TopicalTerm",
+      "TOOO:i1": {
+        "property": "level",
+        "marcDefault": "_",
+        "0": "unspecified",
+        "1": "primary",
+        "2": "secondary"
       },
-      "TOOO:i1": {},
       "i2": {
         "link": "inScheme",
         "resourceType": "ConceptScheme",
@@ -4842,15 +4858,14 @@
         "property": "notation",
         "tokenMap": "thesaurus"
       },
+      "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
+             "ignored": true},
       "$2": {
         "requires-i2": "7",
         "link": "inScheme",
         "resourceType": "ConceptScheme", "uriTemplate": "/scheme/{+_}",
         "property": "notation"
       },
-      "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
-             "ignored": true},
-      "$a": {"property": "prefLabel"},
       "_spec": [
         {
           "source": {"650": {"ind1": " ", "ind2": "0", "subfields": [
@@ -4860,14 +4875,15 @@
           "result": {"about": {
             "subject": [
               {
-                "@type": "Concept",
+                "@type": "TopicalTerm",
+                "@id":"/topic/lcsh/Information/Information%20Age",
                 "broader": [
                   {
-                    "@type": "Concept",
+                    "@type": "TopicalTerm",
                     "prefLabel": "Information"
                   },
                   {
-                    "@type": "Event",
+                    "@type": "ChronologicalTerm",
                     "prefLabel": "Information Age"
                   }
                 ],
@@ -4884,11 +4900,10 @@
     },
     "651": {
       "inherit": "650",
-      "resourceType": "Place",
+      "resourceType": "GeographicalTerm",
       "TOOO:i2": {},
       "i1": null,
-      "$a": {"property": "prefLabel"},
-      "uriTemplate": "/place/{prefLabel}"
+      "$a": {"property": "prefLabel"}
     },
     "653": {
       "TOOO:i1": {},
@@ -4896,11 +4911,15 @@
       "$a": {"aboutEntity": "?thing", "property": "keyword"}
     },
 
-    "654": {},
+    "654": {
+      "ignored": true,
+      "TODO": "facet term (i1:like 650, i2: null)"
+    },
 
     "655" : {
       "inherit": "650",
       "addLink": "genre",
+      "resourceType": "GenreTerm",
       "uriTemplate": "/topic/saogf/{prefLabel}"
     },
 
@@ -5211,7 +5230,7 @@
     },
 
     "976": {
-      "note:candidate:aboutEntity": "Work",
+      "NOTE:candidate:aboutEntity": "?work",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "addLink": "classification",
       "resourceType": "Concept",
@@ -5435,6 +5454,16 @@
         "property": "notation"
       }
     },
+
+    "073": {
+      "aboutEntity": "?record",
+      "addLink": "broader",
+      "resourceType": "TopicalTerm",
+      "$a": {"property": "prefLabel"},
+      "$z": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
+      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}"
+    },
+
     "082" : {"inherit": "bib"},
     "083" : {
       "inherit": "bib:082",
@@ -5499,18 +5528,21 @@
     "110" : {
       "inherit": "bib",
       "aboutEntity": "?record",
-      "aboutType": "OrganizationTerm", "link": "focus", "embedded": true
+      "aboutType": "OrganizationTerm",
+      "link": "focus", "embedded": true
     },
     "111" : {
       "inherit": "bib",
       "aboutEntity": "?record",
-      "aboutType": "MeetingTerm", "link": "focus", "embedded": true
+      "aboutType": "MeetingTerm",
+      "link": "focus", "embedded": true
     },
     "130" : {
       "inherit": "bib",
       "aboutEntity": "?record",
       "aboutType": "WorkTerm",
-      "link": "focus", "embedded": true, "resourceType": "UniformWork"
+      "link": "focus", "embedded": true,
+      "resourceType": "UniformWork"
     },
     "148" : {
       "aboutEntity": "?record",
@@ -5523,19 +5555,11 @@
       "uriTemplate": "/topic/sao/{prefLabel}"
     },
     "150" : {
-      "TODO:tooDifferentTo?:inherit": "bib:650",
-      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
-      "uriTemplateDefaults": {"inScheme.notation": "_"},
-      "addLink": null,
-      "computeLinks": null,
-      "resourceType": null,
+      "inherit": "patterns:termbase",
       "aboutEntity": "?record",
       "aboutType": "TopicalTerm",
-      "$a": {"property": "prefLabel"},
       "uriTemplateDefaults": {"inScheme.notation": "sao"},
       "dependsOn": ["040", "042"],
-      "$2": null,
-      "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
       "$0": null,
       "_spec": [
         {
@@ -5551,32 +5575,49 @@
       ]
     },
     "151" : {
+      "inherit": "patterns:termbase",
       "aboutEntity": "?record",
-      "aboutType": "GeographicalTerm",
-      "$a": {"property": "prefLabel"},
-      "uriTemplate": "/place/{prefLabel}"
+      "aboutType": "GeographicalTerm"
     },
     "155" : {
-      "inherit": "150",
+      "inherit": "patterns:termbase",
+      "aboutEntity": "?record",
       "aboutType": "GenreTerm",
-      "uriTemplate": "/topic/saogf/{prefLabel}"
+      "TODO:just-assert-inScheme=saogf?:uriTemplate": "/topic/saogf/{prefLabel}"
     },
-    "TODO:162" : {
-      "inherit": "150",
-      "TODO": "besättning - musik"
+    "162" : {
+      "inherit": "patterns:termbase",
+      "TODO": "besättning - musik",
+      "aboutEntity": "?record",
+      "aboutType": "OrchestraTerm"
     },
 
     "180" : {
-      "inherit": "150",
-      "aboutType": "AspectTerm",
+      "inherit": null,
+      "aboutEntity": "?record",
+      "aboutType": "SubdivisionTerm",
       "$x": {
         "property": "prefLabel",
         "defaults": {"inCollection": {"@id": "/topic/aspects/", "notation": "aspects"}}
       }
     },
     "181" : {
-      "inherit": "151",
+      "inherit": null,
+      "aboutEntity": "?record",
+      "aboutType": "GeographicalSubdivisionTerm",
       "$z": {"property": "prefLabel"}
+    },
+    "182" : {
+      "inherit": null,
+      "aboutEntity": "?record",
+      "aboutType": "ChronologicalSubdivisionTerm",
+      "$y": {"property": "prefLabel"}
+    },
+    "185" : {
+      "inherit": null,
+      "aboutEntity": "?record",
+      "aboutType": "GenreSubdivisionTerm",
+      "$v": {"property": "prefLabel"}
     },
 
     "400": {
@@ -5599,7 +5640,7 @@
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
         }
       },
-      "aboutEntity": "?record", "NOTE": "really Work - see 100",
+      "aboutEntity": "?record",
       "addLink": "attributedTo",
       "resourceType": "Person"
     },
@@ -5686,7 +5727,7 @@
       "TODO": "incomplete",
       "inherit": "180",
       "aboutType": null,
-      "resourceType": "AspectTerm"
+      "resourceType": "SubdivisionTerm"
     },
     "667" : {
       "aboutEntity": "?record",
@@ -5716,8 +5757,10 @@
       "aboutEntity": "?record",
       "$a": {"addProperty": "historyNote"}
     },
+
     "750" : {
       "inherit": "bib:650",
+      "i1": null,
       "aboutEntity": "?record",
       "computeLinks": null,
       "addLink": "closeMatch",
@@ -5727,9 +5770,39 @@
       },
       "i1": null,
       "$0": {"addProperty": "notation"},
-      "$2": null
+      "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html"
     },
-    "755" : {"inherit": "750"},
+    "755" : {
+      "inherit": "750",
+      "resourceType": "GenreTerm",
+      "uriTemplate": "/topic/saogf/{prefLabel}",
+      "$2": {
+        "requires-i2": "7",
+        "link": "inScheme",
+        "resourceType": "ConceptScheme", "uriTemplate": "/scheme/{+_}",
+        "property": "notation",
+        "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
+      }
+    },
+    "780" : {
+      "inherit": "750",
+      "$x": {"property": "prefLabel"}
+    },
+    "781" : {
+      "inherit": "750",
+      "resourceType": "GeographicalSubdivisionTerm",
+      "$z": {"property": "prefLabel"}
+    },
+    "782" : {
+      "inherit": "750",
+      "resourceType": "ChronologicalSubdivisionTerm",
+      "$y": {"property": "prefLabel"}
+    },
+    "785" : {
+      "inherit": "755",
+      "$v": {"property": "prefLabel"}
+    },
+
     "856": {
       "inherit": "bib",
       "TODO:i1": {},
