@@ -1,0 +1,684 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/4112475"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=NB"
+        },
+        {
+          "@id": "/some?type=Organization&notation=NLT"
+        }
+      ],
+      "created": "1994-01-18T00:00:00.0+01:00",
+      "technicalNote": [
+        "Indexeringslänk"
+      ],
+      "controlNumber": "4112475",
+      "@type": "Record",
+      "librisIIINumber": [
+        "11038152"
+      ],
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "_unhandled": [
+            "2"
+          ],
+          "022": {
+            "subfields": [
+              {
+                "a": "1103-8152"
+              },
+              {
+                "2": "f"
+              }
+            ],
+            "ind1": "0",
+            "ind2": " "
+          }
+        },
+        {
+          "044": {
+            "subfields": [
+              {
+                "a": "sw"
+              },
+              {
+                "a": "dk"
+              },
+              {
+                "a": "fi"
+              },
+              {
+                "a": "no"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "082": {
+            "subfields": [
+              {
+                "a": "069.0948005"
+              },
+              {
+                "2": "23/swe"
+              },
+              {
+                "q": "Smm"
+              }
+            ],
+            "ind1": "0",
+            "ind2": "4"
+          },
+          "_unhandled": [
+            "q"
+          ]
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Museologi"
+              },
+              {
+                "z": "Norden"
+              },
+              {
+                "v": "periodika"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "655": {
+            "subfields": [
+              {
+                "a": "Vetenskapliga tidskrifter"
+              },
+              {
+                "2": "sgp"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        }
+      ],
+      "sourceNote": [
+        "NLT: 1993-1999 bibliograferad för NLT. - Vid bibliografins slut 1999 utkom tidskriften med 2 nr/år. - Saknar uppgift om ansv. utg. 1993-1999"
+      ],
+      "modified": "2015-02-20T13:20:42.0+01:00",
+      "modifyingAgency": {
+        "@id": "/some?type=Organization&name=Smm"
+      },
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=NB"
+      },
+      "@id": "/bib/4112475",
+      "linked": {
+        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+      }
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=NB",
+          "@type": "Organization",
+          "name": "NB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=Smm",
+          "@type": "Organization",
+          "name": "Smm"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/swe",
+          "notation": "swe"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/dan",
+          "notation": "dan"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/nor",
+          "notation": "nor"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/eng",
+          "notation": "eng"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=NB",
+          "@type": "Organization",
+          "notation": "NB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=NLT",
+          "@type": "Organization",
+          "notation": "NLT"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Concept&notation=069",
+          "inScheme": {
+            "@id": "http://udcdata.info/udc-schema",
+            "@type": "ConceptScheme",
+            "notation": "UDC"
+          },
+          "@type": "Concept",
+          "notation": "069"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "http://dewey.info/class/069.0948005/e23/",
+          "inScheme": {
+            "@id": "http://dewey.info/scheme/edition/e23/swe/"
+          },
+          "@type": "Concept",
+          "notation": "069.0948005"
+        }
+      },
+      {
+        "@graph": {
+          "language": "swe",
+          "notation": "DDC",
+          "@id": "http://dewey.info/scheme/edition/e23/swe/",
+          "version": "23",
+          "isVersionOf": {
+            "@id": "http://dewey.info/scheme/ddc/"
+          },
+          "@type": "ConceptScheme"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/8/Bg-b%28p%29",
+          "inScheme": {
+            "@id": "/scheme/kssb/8"
+          },
+          "@type": "Concept",
+          "notation": "Bg-b(p)"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/8",
+          "@type": "ConceptScheme",
+          "notation": "kssb/8"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Ume%C3%A5",
+          "@type": "Place",
+          "label": "Umeå"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Norge",
+          "@type": "Place",
+          "label": "Norge"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Vig",
+          "@type": "Place",
+          "label": "Vig"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Sor%C3%B8",
+          "@type": "Place",
+          "label": "Sorø"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Museologi/Norden/periodika",
+          "inScheme": {
+            "@id": "/scheme/sao"
+          },
+          "@type": "TopicalTerm",
+          "broader": [
+            {
+              "@id": "/some?type=TopicalTerm&prefLabel=Museologi"
+            },
+            {
+              "@id": "/some?type=GeographicalTerm&prefLabel=Norden"
+            },
+            {
+              "@id": "/some?type=GenreTerm&prefLabel=periodika"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=TopicalTerm&prefLabel=Museologi",
+          "@type": "TopicalTerm",
+          "prefLabel": "Museologi"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=GeographicalTerm&prefLabel=Norden",
+          "@type": "GeographicalTerm",
+          "prefLabel": "Norden"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=GenreTerm&prefLabel=periodika",
+          "@type": "GenreTerm",
+          "prefLabel": "periodika"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sao",
+          "@type": "ConceptScheme",
+          "notation": "sao"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/saogf/Vetenskapliga%20tidskrifter",
+          "inScheme": {
+            "@id": "/scheme/sgp"
+          },
+          "@type": "GenreTerm",
+          "prefLabel": "Vetenskapliga tidskrifter"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sgp",
+          "@type": "ConceptScheme",
+          "notation": "sgp"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-0",
+          "familyName": "Ågren",
+          "birthYear": "1929",
+          "givenName": "Per-Uno",
+          "deathYear": "2008",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "isPartOf": {
+            "@id": "/some?type=Organization&name=Ume%C3%A5%20universitet."
+          },
+          "@id": "_:b-1",
+          "@type": "Organization",
+          "name": "Institutionen för museologi"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=Ume%C3%A5%20universitet.",
+          "@type": "Organization",
+          "name": "Umeå universitet."
+        }
+      },
+      {
+        "@graph": {
+          "isPartOf": {
+            "@id": "/some?type=Organization&name=Ume%C3%A5%20universitet."
+          },
+          "@id": "_:b-2",
+          "@type": "Organization",
+          "name": "Institutionen för kultur och medier"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-3",
+          "@type": "Organization",
+          "name": "Museumshøjskolen"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=CreativeWork&linkNote=Register%3A&title=Nordisk%20museologi%201993-2002",
+          "describedBy": [
+            {
+              "@id": "/bib/9340070"
+            }
+          ],
+          "linkNote": [
+            "Register:"
+          ],
+          "@type": "CreativeWork",
+          "title": "Nordisk museologi 1993-2002"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/9340070",
+          "@type": "Record",
+          "controlNumber": "9340070"
+        }
+      },
+      {
+        "@graph": {
+          "describedBy": [
+            {
+              "@id": "/bib/12201139"
+            }
+          ],
+          "identifier": {
+            "@id": "/some?type=Identifier&identifierValue=2002-0503"
+          },
+          "@id": "/some?type=Product&title=Nordisk%20museologi%20%28Online%29",
+          "@type": "Product",
+          "title": "Nordisk museologi (Online)"
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/issn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=2002-0503",
+          "@type": "Identifier",
+          "identifierValue": "2002-0503"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/12201139",
+          "@type": "Record",
+          "controlNumber": "12201139"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sab/Bg-b%28p%29",
+          "inScheme": {
+            "@id": "/scheme/sab"
+          },
+          "@type": "Concept",
+          "notation": "Bg-b(p)",
+          "prefLabel": "Museer Norden Periodica"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sab",
+          "@type": "ConceptScheme",
+          "notation": "sab"
+        }
+      }
+    ],
+    "items": [
+      {
+        "comment": [
+          "1994- utgiven i Danmark, Sverige, Finland och Norge",
+          "Smärre variationer i utgivaruppgiftens utformning",
+          "Varierande utgivningsorter"
+        ],
+        "@id": "/resource/bib/4112475",
+        "classification": [
+          {
+            "@id": "/some?type=Concept&notation=069"
+          },
+          {
+            "@id": "http://dewey.info/class/069.0948005/e23/"
+          },
+          {
+            "@id": "/topic/kssb/8/Bg-b%28p%29"
+          },
+          {
+            "@id": "/topic/sab/Bg-b%28p%29"
+          }
+        ],
+        "titleVariation": [
+          {
+            "titleType": "0",
+            "subtitle": "utgivare: Museumshøjskolen ...",
+            "@type": "Title",
+            "coverage": "1994:1-",
+            "titleValue": "Nordisk museologi"
+          }
+        ],
+        "publishingDirector": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "regularity": {
+          "@id": "/def/enum/content/Regular"
+        },
+        "frequency": "2 nr/år",
+        "subject": [
+          {
+            "@id": "/topic/sao/Museologi/Norden/periodika"
+          }
+        ],
+        "publication": [
+          {
+            "scopeNote": "Sammanfattad utgivningstid:",
+            "place": {
+              "@id": "/some?type=Place&label=Ume%C3%A5"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Institutionen för museologi, Umeå universitet",
+            "providerDate": "1993-"
+          },
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Ume%C3%A5"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Institutionen för museologi, Umeå universitet",
+            "providerDate": "1993"
+          },
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Vig"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Museumshøjskolen",
+            "providerDate": "1993-1996"
+          },
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Sor%C3%B8"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Museumshøjskolen",
+            "providerDate": "1997-1998"
+          },
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Sor%C3%B8"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Museumshøjskolen",
+            "providerDate": "1999-"
+          }
+        ],
+        "typeOfEntry": {
+          "@id": "/def/enum/content/SuccessiveEntry"
+        },
+        "alternateFormat": [
+          {
+            "@id": "/some?type=Product&title=Nordisk%20museologi%20%28Online%29"
+          }
+        ],
+        "alphabet": {
+          "@id": "/def/enum/content/ExtendedRoman"
+        },
+        "contains": [
+          {
+            "@id": "/some?type=CreativeWork&linkNote=Register%3A&title=Nordisk%20museologi%201993-2002"
+          }
+        ],
+        "isPrimaryTopicOf": [
+          {
+            "@id": "http://www.nordiskmuseologi.org/",
+            "@type": "Document",
+            "copyNote": [
+              "Tidskriftens webbplats"
+            ]
+          }
+        ],
+        "hasSummaryLanguage": {
+          "@id": "/some"
+        },
+        "influencedBy": [
+          {
+            "@id": "_:b-0"
+          },
+          {
+            "@id": "_:b-1"
+          },
+          {
+            "@id": "_:b-2"
+          },
+          {
+            "@id": "_:b-3"
+          }
+        ],
+        "keyTitle": [
+          {
+            "@type": "Title",
+            "titleValue": "Nordisk museologi"
+          }
+        ],
+        "manufacture": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Norge"
+            },
+            "@type": "ProviderEvent"
+          }
+        ],
+        "contentType": [
+          {
+            "@id": "/def/enum/content/Periodical"
+          }
+        ],
+        "temporalCoverageNote": "1993-",
+        "hasFormat": [
+          {
+            "@type": "Product",
+            "dimensions": "24 cm"
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "frequencyCategory": {
+          "@id": "/def/enum/content/SemiannualIncludes2NumbersAYear"
+        },
+        "genre": [
+          {
+            "@id": "/topic/saogf/Vetenskapliga%20tidskrifter"
+          }
+        ],
+        "supplementaryContentNote": [
+          "Kumulerade register för 1993-1997, 1993-2002 utgivna separat"
+        ],
+        "publisher": [
+          {
+            "@id": "_:b-1"
+          },
+          {
+            "@id": "_:b-2"
+          },
+          {
+            "@id": "_:b-3"
+          }
+        ],
+        "language": [
+          {
+            "@id": "/def/languages/swe"
+          },
+          {
+            "@id": "/def/languages/dan"
+          },
+          {
+            "@id": "/def/languages/nor"
+          },
+          {
+            "@id": "/def/languages/eng"
+          }
+        ],
+        "confPub": {
+          "@id": "/def/enum/content/NotAConferencePublication"
+        },
+        "performerNote": [
+          "Ansvarshavande red.: Per-Uno Ågren (1993-1999)"
+        ],
+        "instanceTitle": {
+          "@type": "Title",
+          "titleValue": "Nordisk museologi"
+        },
+        "issueNumber": [
+          "1993: 1-"
+        ],
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/issn"
+            },
+            "@type": "Identifier",
+            "identifierValue": "1103-8152"
+          }
+        ],
+        "@type": [
+          "Text",
+          "Serial"
+        ],
+        "languageNote": [
+          "Med sammanfattningar på engelska"
+        ]
+      }
+    ]
+  }
+}

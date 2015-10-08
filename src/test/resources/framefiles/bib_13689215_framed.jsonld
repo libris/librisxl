@@ -1,0 +1,370 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/13689215"
+      },
+      "created": "2012-12-04T00:00:00.0+01:00",
+      "encLevel": {
+        "@id": "/def/enum/record/MinimalLevel"
+      },
+      "catalogingSource": {
+        "@id": "/def/enum/content/CooperativeCatalogingProgram"
+      },
+      "controlNumber": "13689215",
+      "modified": "2014-03-19T13:16:25.0+01:00",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Elektroniska spel"
+              },
+              {
+                "x": "sociala aspekter"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Social interaction"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        }
+      ],
+      "sourceNote": [
+        "NB: I publikationen även ISBN 978-91-87235-12-2 (print)"
+      ],
+      "systemNumber": [
+        "(DiVA)urn:nbn:se:su:diva-83163e"
+      ],
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=H"
+      },
+      "@id": "/bib/13689215",
+      "@type": "Record"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Electronic",
+          "@type": [
+            "Electronic"
+          ],
+          "carrierType": [
+            {
+              "@id": "/def/enum/carrier/OnlineResource"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/identifiers/urn",
+          "notation": "urn"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=H",
+          "@type": "Organization",
+          "name": "H"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/eng",
+          "notation": "eng"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "http://dewey.info/class/306.487/e23/",
+          "inScheme": {
+            "@id": "http://dewey.info/scheme/edition/e23/swe/"
+          },
+          "@type": "Concept",
+          "notation": "306.487"
+        }
+      },
+      {
+        "@graph": {
+          "language": "swe",
+          "notation": "DDC",
+          "@id": "http://dewey.info/scheme/edition/e23/swe/",
+          "version": "23",
+          "isVersionOf": {
+            "@id": "http://dewey.info/scheme/ddc/"
+          },
+          "@type": "ConceptScheme"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1982",
+          "givenName": "Lina",
+          "familyName": "Eklund",
+          "@id": "/some?type=Person&familyName=Eklund&givenName=Lina&birthYear=1982",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Stockholm",
+          "@type": "Place",
+          "label": "Stockholm"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Elektroniska%20spel/sociala%20aspekter",
+          "inScheme": {
+            "@id": "/scheme/sao"
+          },
+          "@type": "TopicalTerm",
+          "broader": [
+            {
+              "@id": "/some?type=TopicalTerm&prefLabel=Elektroniska%20spel"
+            },
+            {
+              "@id": "/some?type=SubdivisionTerm&prefLabel=sociala%20aspekter"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=TopicalTerm&prefLabel=Elektroniska%20spel",
+          "@type": "TopicalTerm",
+          "prefLabel": "Elektroniska spel"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=SubdivisionTerm&prefLabel=sociala%20aspekter",
+          "@type": "SubdivisionTerm",
+          "prefLabel": "sociala aspekter"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sao",
+          "@type": "ConceptScheme",
+          "notation": "sao"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Social%20interaction",
+          "inScheme": {
+            "@id": "/scheme/sao"
+          },
+          "@type": "TopicalTerm",
+          "prefLabel": "Social interaction"
+        }
+      },
+      {
+        "@graph": {
+          "title": "The sociality of gaming",
+          "linkNote": [
+            "Även utgiven tryckt"
+          ],
+          "@type": "Product",
+          "identifier": [
+            {
+              "@id": "/some?type=Identifier&identifierValue=9789187235122"
+            }
+          ],
+          "@id": "/some?type=Product&linkNote=%C3%84ven%20utgiven%20tryckt&title=The%20sociality%20of%20gaming",
+          "describedBy": [
+            {
+              "@id": "/bib/13690299"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/isbn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=9789187235122",
+          "@type": "Identifier",
+          "identifierValue": "9789187235122"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/13690299",
+          "@type": "Record",
+          "controlNumber": "13690299"
+        }
+      },
+      {
+        "@graph": {
+          "volumeNumber": "N.S., 56",
+          "issn": "0491-0885",
+          "@id": "/some?type=PublicationVolume&uniformTitle=Stockholm%20studies%20in%20sociology%2C&issn=0491-0885&volumeNumber=N.S.%2C%2056",
+          "@type": "PublicationVolume",
+          "uniformTitle": "Stockholm studies in sociology,"
+        }
+      }
+    ],
+    "items": [
+      {
+        "comment": [
+          "Härtill 4 uppsatser"
+        ],
+        "mediaTerm": "Elektronisk resurs] :",
+        "classification": [
+          {
+            "@id": "http://dewey.info/class/306.487/e23/"
+          }
+        ],
+        "series": [
+          {
+            "issn": "0491-0885",
+            "volumeNumberSequentialDesignation": "N.S., 56",
+            "@type": "Serial",
+            "title": "Stockholm studies in sociology"
+          }
+        ],
+        "attributedTo": {
+          "@id": "/some?type=Person&familyName=Eklund&givenName=Lina&birthYear=1982"
+        },
+        "associatedMedia": [
+          {
+            "@id": "http://urn.kb.se/resolve?urn=urn:nbn:se:su:diva-83163",
+            "@type": "MediaObject"
+          }
+        ],
+        "subject": [
+          {
+            "@id": "/topic/sao/Elektroniska%20spel/sociala%20aspekter"
+          },
+          {
+            "@id": "/topic/sao/Social%20interaction"
+          }
+        ],
+        "festschrift": {
+          "@id": "/def/enum/content/NotAFestschrift"
+        },
+        "additionalCarrierType": {
+          "@id": "/def/enum/content/Online"
+        },
+        "@id": "/resource/bib/13689215",
+        "fileType": "Text",
+        "isPartOf": [
+          {
+            "@id": "/some?type=PublicationVolume&uniformTitle=Stockholm%20studies%20in%20sociology%2C&issn=0491-0885&volumeNumber=N.S.%2C%2056"
+          }
+        ],
+        "hasAnnotation": [
+          {
+            "note": "Diss. (sammanfattning) Stockholm : Stockholms universitet, 2013",
+            "@type": "DissertationAnnotation"
+          }
+        ],
+        "contentType": [
+          {
+            "@id": "/def/enum/content/Thesis"
+          }
+        ],
+        "responsibilityStatement": "Lina Eklund",
+        "hasFormat": [
+          {
+            "@id": "/some?type=Electronic"
+          },
+          {
+            "@type": "Product",
+            "extent": "71 s."
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "systemRequirements": [
+          "PDF"
+        ],
+        "hasSummaryLanguage": {
+          "@id": "/some"
+        },
+        "publication": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Stockholm"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Acta Universitatis Stockholmiensis",
+            "providerDate": "2012"
+          }
+        ],
+        "language": [
+          {
+            "@id": "/def/languages/eng"
+          }
+        ],
+        "confPub": {
+          "@id": "/def/enum/content/NotAConferencePublication"
+        },
+        "alternateFormat": [
+          {
+            "@id": "/some?type=Product&linkNote=%C3%84ven%20utgiven%20tryckt&title=The%20sociality%20of%20gaming"
+          }
+        ],
+        "instanceTitle": {
+          "subtitle": "a mixed methods approach to understanding digital gaming as a social leisure activity",
+          "@type": "Title",
+          "titleValue": "The sociality of gaming"
+        },
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/isbn"
+            },
+            "identifierNote": "Print",
+            "identifierStatus": "canceledInvalid",
+            "@type": "Identifier",
+            "identifierValue": "9789187235115"
+          },
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/urn"
+            },
+            "@type": "Identifier",
+            "identifierValue": "urn:nbn:se:su:diva-83163"
+          }
+        ],
+        "@type": [
+          "Text",
+          "Monograph"
+        ]
+      }
+    ]
+  }
+}

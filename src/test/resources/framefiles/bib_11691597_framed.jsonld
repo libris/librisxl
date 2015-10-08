@@ -1,0 +1,375 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/11691597"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=NB"
+        }
+      ],
+      "created": "2009-11-19T00:00:00.0+01:00",
+      "modified": "2013-08-15T12:36:55.0+02:00",
+      "controlNumber": "11691597",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Nationalstadsparker"
+              },
+              {
+                "z": "Sverige"
+              },
+              {
+                "z": "Stockholm"
+              },
+              {
+                "v": "kartor"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "651": {
+            "subfields": [
+              {
+                "a": "Kungliga nationalstadsparken"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "4"
+          }
+        }
+      ],
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=S"
+      },
+      "@id": "/bib/11691597",
+      "@type": "Record"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "index": {
+            "@id": "/def/enum/content/NoIndex"
+          },
+          "material": {
+            "@id": "/def/enum/content/SeparateMapSupplementToAnotherWork"
+          },
+          "@id": "/some?type=Cartography",
+          "@type": [
+            "Cartography"
+          ],
+          "relief": {
+            "@id": "/def/enum/content/Contour"
+          }
+        }
+      },
+      {
+        "@graph": {
+          "color": {
+            "@id": "/def/enum/carrier/Multicolored"
+          },
+          "medium": {
+            "@id": "/def/enum/carrier/Paper"
+          },
+          "@id": "/some?type=Map",
+          "@type": [
+            "Map"
+          ],
+          "carrierType": [
+            {
+              "@id": "/def/enum/carrier/MapATwoDimensionalMap"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=S",
+          "@type": "Organization",
+          "name": "S"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=NB",
+          "@type": "Organization",
+          "notation": "NB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/8/Odgm-cz%20Stockholm",
+          "inScheme": {
+            "@id": "/scheme/kssb/8"
+          },
+          "@type": "Concept",
+          "notation": "Odgm-cz Stockholm"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/8",
+          "@type": "ConceptScheme",
+          "notation": "kssb/8"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/8/Ncaa",
+          "inScheme": {
+            "@id": "/scheme/kssb/8"
+          },
+          "@type": "Concept",
+          "notation": "Ncaa"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Stockholm",
+          "@type": "Place",
+          "label": "Stockholm"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=%5BV%C3%A4ster%C3%A5s",
+          "@type": "Place",
+          "label": "[Västerås"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Nationalstadsparker/Sverige/Stockholm/kartor",
+          "inScheme": {
+            "@id": "/scheme/sao"
+          },
+          "@type": "TopicalTerm",
+          "broader": [
+            {
+              "@id": "/some?type=TopicalTerm&prefLabel=Nationalstadsparker"
+            },
+            {
+              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
+            },
+            {
+              "@id": "/some?type=GeographicalTerm&prefLabel=Stockholm"
+            },
+            {
+              "@id": "/some?type=GenreTerm&prefLabel=kartor"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=TopicalTerm&prefLabel=Nationalstadsparker",
+          "@type": "TopicalTerm",
+          "prefLabel": "Nationalstadsparker"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=GeographicalTerm&prefLabel=Sverige",
+          "@type": "GeographicalTerm",
+          "prefLabel": "Sverige"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=GeographicalTerm&prefLabel=Stockholm",
+          "@type": "GeographicalTerm",
+          "prefLabel": "Stockholm"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=GenreTerm&prefLabel=kartor",
+          "@type": "GenreTerm",
+          "prefLabel": "kartor"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sao",
+          "@type": "ConceptScheme",
+          "notation": "sao"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/_/Kungliga%20nationalstadsparken",
+          "@type": "GeographicalTerm",
+          "prefLabel": "Kungliga nationalstadsparken"
+        }
+      },
+      {
+        "@graph": {
+          "isPartOf": {
+            "@id": "/some?type=Organization&name=Stockholm."
+          },
+          "@id": "_:b-0",
+          "@type": "Organization",
+          "name": "Stadsbyggnadskontoret"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=Stockholm.",
+          "@type": "Organization",
+          "name": "Stockholm."
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=UniformWork&title=Nationalstadsparken",
+          "@type": "UniformWork",
+          "title": "Nationalstadsparken"
+        }
+      }
+    ],
+    "items": [
+      {
+        "comment": [
+          "Kartans bakgrund utgörs av information från Stadskartan, framtagen av Stockholms stadsbyggnadskontor",
+          "Med höjdkurvor",
+          "Bilaga till text med samma titel (SBK ; 2009:6)"
+        ],
+        "mediaTerm": "Kartografiskt material] :",
+        "classification": [
+          {
+            "@id": "/topic/kssb/8/Odgm-cz%20Stockholm"
+          },
+          {
+            "@id": "/topic/kssb/8/Ncaa"
+          }
+        ],
+        "cartographicCoordinates": "(Ö 18°00'52''-Ö 18°09'53''/N 59°22'49''-N 59°18'51'')",
+        "cartographicScale": "Skala 1:11 000",
+        "subject": [
+          {
+            "@id": "/topic/sao/Nationalstadsparker/Sverige/Stockholm/kartor"
+          },
+          {
+            "@id": "/topic/_/Kungliga%20nationalstadsparken"
+          }
+        ],
+        "index": {
+          "@id": "/def/enum/content/NoIndex"
+        },
+        "listOfContents": [
+          "Med hänvisningar till översiktsplanens textdel. - Infälld karta: Kungliga nationalstadsparken : Ulriksdal - Haga - Brunnsviken - Djurgården inom Solna, Stockholm och Lidingö skala ca 1:70 000"
+        ],
+        "publication": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Stockholm"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Stockholms stadsbyggnadskontor",
+            "providerDate": "2009"
+          }
+        ],
+        "influentialRelation": [
+          {
+            "@id": "/some?type=UniformWork&title=Nationalstadsparken"
+          }
+        ],
+        "influencedBy": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "manufacture": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=%5BV%C3%A4ster%C3%A5s"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Edita Västra Aros])"
+          }
+        ],
+        "hasPart": [
+          {
+            "@id": "/some?type=Cartography"
+          }
+        ],
+        "material": {
+          "@id": "/def/enum/content/SeparateMapSupplementToAnotherWork"
+        },
+        "hasFormat": [
+          {
+            "@id": "/some?type=Map"
+          },
+          {
+            "otherPhysicalDetails": "färg",
+            "@type": "Product",
+            "extent": "1 karta",
+            "dimensions": "67 x 78 cm vikt till 23 x 20 cm"
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "systemRequirements": [
+          "Läge: 10I"
+        ],
+        "@id": "/resource/bib/11691597",
+        "publisher": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "language": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "instanceTitle": {
+          "subtitle": "stockholmsdelen : antagen av kommunfullmäktige, 20 april 2009",
+          "@type": "Title",
+          "titleValue": "Översiktsplan för nationalstadsparken"
+        },
+        "relief": {
+          "@id": "/def/enum/content/Contour"
+        },
+        "@type": [
+          "Cartography",
+          "Monograph"
+        ],
+        "cartographicAscensionAndDeclination": [
+          {
+            "northernmostLatitudeCoordinates": "n0592249",
+            "westernmostLongitudeCoordinates": "e0180052",
+            "constantRatioLinearHorizontalScale": [
+              "11000"
+            ],
+            "southernmostLatitudeCoordinates": "n0591851",
+            "easternmostLongitudeCoordinates": "e0180953",
+            "cartographicScale": "a",
+            "@type": "CartographyCoordinates"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,270 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/9658145"
+      },
+      "created": "2004-10-05T00:00:00.0+02:00",
+      "encLevel": {
+        "@id": "/def/enum/record/MinimalLevel"
+      },
+      "catalogingSource": {
+        "@id": "/def/enum/content/CooperativeCatalogingProgram"
+      },
+      "controlNumber": "9658145",
+      "modified": "2015-02-20T10:49:57.0+01:00",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "655": {
+            "subfields": [
+              {
+                "a": "Ljudböcker"
+              },
+              {
+                "2": "saogf"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        }
+      ],
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=Li"
+      },
+      "@id": "/bib/9658145",
+      "@type": "Record"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "soundKindOfDisc": {
+            "@id": "/def/enum/carrier/MassProduced"
+          },
+          "soundCapture": {
+            "@id": "/def/enum/carrier/DigitalStorage"
+          },
+          "soundKindOfMaterial": {
+            "@id": "/def/enum/carrier/PlasticWithMetal"
+          },
+          "carrierType": [
+            {
+              "@id": "/def/enum/carrier/SoundDisc"
+            }
+          ],
+          "@id": "/some?type=SoundRecording",
+          "@type": [
+            "SoundRecording"
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=Li",
+          "@type": "Organization",
+          "name": "Li"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/7/Hc.01%2FLC",
+          "inScheme": {
+            "@id": "/scheme/kssb/7"
+          },
+          "@type": "Concept",
+          "notation": "Hc.01/LC"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/7",
+          "@type": "ConceptScheme",
+          "notation": "kssb/7"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1934",
+          "givenName": "P. O.",
+          "familyName": "Enquist",
+          "@id": "_:b-0",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Stockholm",
+          "@type": "Place",
+          "label": "Stockholm"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/saogf/Ljudb%C3%B6cker",
+          "inScheme": {
+            "@id": "/scheme/saogf"
+          },
+          "@type": "GenreTerm",
+          "prefLabel": "Ljudböcker"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/saogf",
+          "@type": "ConceptScheme",
+          "notation": "saogf"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Torsten",
+          "familyName": "Wahlund",
+          "@id": "_:b-1",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "placePublisherAndDateOfPublication": "1999",
+          "title": "Livläkarens besök",
+          "@type": "CreativeWork",
+          "partNumber": [
+            "2002"
+          ],
+          "identifier": [
+            {
+              "@id": "/some?type=Identifier&identifierValue=91-1-300755-6"
+            }
+          ],
+          "@id": "/some?type=CreativeWork&title=Livl%C3%A4karens%20bes%C3%B6k&placePublisherAndDateOfPublication=1999&partNumber=2002",
+          "describedBy": [
+            {
+              "@id": "/bib/8345456"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/isbn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=91-1-300755-6",
+          "@type": "Identifier",
+          "identifierValue": "91-1-300755-6"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/8345456",
+          "@type": "Record",
+          "controlNumber": "8345456"
+        }
+      }
+    ],
+    "items": [
+      {
+        "comment": [
+          "Ljudbok CD (CD-audio)"
+        ],
+        "alternateEdition": [
+          {
+            "@id": "/some?type=CreativeWork&title=Livl%C3%A4karens%20bes%C3%B6k&placePublisherAndDateOfPublication=1999&partNumber=2002"
+          }
+        ],
+        "mediaTerm": "Ljudupptagning] /",
+        "classification": [
+          {
+            "@id": "/topic/kssb/7/Hc.01%2FLC"
+          }
+        ],
+        "language": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "author": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "text": {
+          "@id": "/def/enum/content/Fiction"
+        },
+        "responsibilityStatement": "Per Olov Enquist",
+        "attributedTo": {
+          "@id": "_:b-0"
+        },
+        "@id": "/resource/bib/9658145",
+        "audience": {
+          "@id": "/def/enum/content/General"
+        },
+        "hasFormat": [
+          {
+            "@id": "/some?type=SoundRecording"
+          },
+          {
+            "@type": "Product",
+            "extent": "9 CD (11 tim.)"
+          }
+        ],
+        "genre": [
+          {
+            "@id": "/topic/saogf/Ljudb%C3%B6cker"
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "instanceTitle": {
+          "@type": "Title",
+          "titleValue": "Livläkarens besök"
+        },
+        "unspecifiedContributor": [
+          {
+            "@id": "_:b-1"
+          }
+        ],
+        "participantNote": [
+          "Inläsare: Torsten Wahlund"
+        ],
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/isbn"
+            },
+            "@type": "Identifier",
+            "identifierValue": "91-7313-094-X"
+          }
+        ],
+        "influencedBy": [
+          {
+            "@id": "_:b-1"
+          }
+        ],
+        "@type": [
+          "Audio",
+          "Monograph"
+        ],
+        "publication": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Stockholm"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Pan Hörböcker",
+            "providerDate": "2004"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,272 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/16092548"
+      },
+      "created": "2014-03-11T00:00:00.0+01:00",
+      "encLevel": {
+        "@id": "/def/enum/record/MinimalLevel"
+      },
+      "catalogingSource": {
+        "@id": "/def/enum/content/CooperativeCatalogingProgram"
+      },
+      "controlNumber": "16092548",
+      "modified": "2015-01-30T12:39:38.0+01:00",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "_unhandled": [
+            "d"
+          ],
+          "041": {
+            "subfields": [
+              {
+                "a": "swe"
+              },
+              {
+                "d": "swe"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "655": {
+            "subfields": [
+              {
+                "a": "Drama (film)"
+              },
+              {
+                "2": "saogf"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        }
+      ],
+      "modifyingAgency": {
+        "@id": "/some?type=Organization&name=Sfi"
+      },
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=Sdh"
+      },
+      "@id": "/bib/16092548",
+      "@type": "Record"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "videoSound": {
+            "@id": "/def/enum/carrier/SoundOnMedium"
+          },
+          "videoColor": {
+            "@id": "/def/enum/carrier/Multicolored"
+          },
+          "carrierType": [
+            {
+              "@id": "/def/enum/carrier/Videodisc"
+            }
+          ],
+          "@id": "/some?type=VideoRecording",
+          "@type": [
+            "VideoRecording"
+          ],
+          "videoFormat": {
+            "@id": "/def/enum/carrier/Dvd"
+          }
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/identifiers/ean",
+          "notation": "ean"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=Sdh",
+          "@type": "Organization",
+          "name": "Sdh"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=Sfi",
+          "@type": "Organization",
+          "name": "Sfi"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/swe",
+          "notation": "swe"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/8/Hc.025%2FVC",
+          "inScheme": {
+            "@id": "/scheme/kssb/8"
+          },
+          "@type": "Concept",
+          "notation": "Hc.025/VC"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/8",
+          "@type": "ConceptScheme",
+          "notation": "kssb/8"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Stockholm",
+          "@type": "Place",
+          "label": "Stockholm"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=UniformWork&uniformTitle=%C3%85tertr%C3%A4ffen%20%28SW%2C%20Anna%20Odell%2C%202013%29",
+          "@type": "UniformWork",
+          "uniformTitle": "Återträffen (SW, Anna Odell, 2013)"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/saogf/Drama%20%28film%29",
+          "inScheme": {
+            "@id": "/scheme/saogf"
+          },
+          "@type": "GenreTerm",
+          "prefLabel": "Drama (film)"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/saogf",
+          "@type": "ConceptScheme",
+          "notation": "saogf"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Anna",
+          "familyName": "Odell",
+          "@id": "_:b-0",
+          "@type": "Person"
+        }
+      }
+    ],
+    "items": [
+      {
+        "comment": [
+          "Produktionsland: Sverige"
+        ],
+        "mediaTerm": "Videoupptagning] /",
+        "classification": [
+          {
+            "@id": "/topic/kssb/8/Hc.025%2FVC"
+          }
+        ],
+        "subject": [
+          {
+            "@id": "/some?type=UniformWork&uniformTitle=%C3%85tertr%C3%A4ffen%20%28SW%2C%20Anna%20Odell%2C%202013%29"
+          }
+        ],
+        "publication": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Stockholm"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "TriArt Film",
+            "providerDate": "cop. 2014"
+          }
+        ],
+        "influencedBy": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "_providerYear": "2014",
+        "contentType": [
+          {
+            "@id": "/def/enum/content/Videorecording"
+          }
+        ],
+        "responsibilityStatement": "en film av Anna Odell",
+        "copyNote": [
+          "Svensk Filmdatabas"
+        ],
+        "director": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "runningTime": "088",
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "genre": [
+          {
+            "@id": "/topic/saogf/Drama%20%28film%29"
+          }
+        ],
+        "@id": "/resource/bib/16092548",
+        "hasFormat": [
+          {
+            "@id": "/some?type=VideoRecording"
+          },
+          {
+            "otherPhysicalDetails": "ljud, färg",
+            "@type": "Product",
+            "extent": "1 DVD-video (1 tim., 28 min.)"
+          }
+        ],
+        "_providerDateStatus": {
+          "@id": "/def/enum/content/SingleKnownDateProbableDate"
+        },
+        "language": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "instanceTitle": {
+          "@type": "Title",
+          "titleValue": "Återträffen"
+        },
+        "participantNote": [
+          "Skådespelare: Anna Odell, Anders Berg, Robert Fransson ..."
+        ],
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/ean"
+            },
+            "@type": "Identifier",
+            "identifierValue": "7340110410126"
+          }
+        ],
+        "@type": [
+          "ProjectedImage",
+          "Monograph"
+        ],
+        "languageNote": [
+          "Tal på svenska, textad på svenska"
+        ]
+      }
+    ]
+  }
+}

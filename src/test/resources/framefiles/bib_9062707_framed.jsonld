@@ -1,0 +1,249 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/9062707"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=SHB"
+        }
+      ],
+      "created": "2003-09-03T00:00:00.0+02:00",
+      "encLevel": {
+        "@id": "/def/enum/record/MinimalLevel"
+      },
+      "catalogingSource": {
+        "@id": "/def/enum/content/CooperativeCatalogingProgram"
+      },
+      "controlNumber": "9062707",
+      "@type": "Record",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "610": {
+            "subfields": [
+              {
+                "a": "Riksarkivet"
+              },
+              {
+                "x": "historia"
+              },
+              {
+                "y": "sekelskiftet 1900"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": "2",
+            "ind2": "7"
+          },
+          "_unhandled": [
+            "y"
+          ]
+        },
+        {
+          "610": {
+            "subfields": [
+              {
+                "a": "Riksarkivet"
+              },
+              {
+                "y": "sekelskiftet  2000"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": "2",
+            "ind2": "7"
+          },
+          "_unhandled": [
+            "y"
+          ]
+        }
+      ],
+      "modified": "2015-07-06T14:02:43.0+02:00",
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=SHB"
+      },
+      "@id": "/bib/9062707",
+      "linked": {
+        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+      }
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=SHB",
+          "@type": "Organization",
+          "name": "SHB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=SHB",
+          "@type": "Organization",
+          "notation": "SHB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/7/Ac-cz%20Stockholm%3A%20Riksarkivet",
+          "inScheme": {
+            "@id": "/scheme/kssb/7"
+          },
+          "@type": "Concept",
+          "notation": "Ac-cz Stockholm: Riksarkivet"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/7",
+          "@type": "ConceptScheme",
+          "notation": "kssb/7"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1942",
+          "givenName": "Erik",
+          "familyName": "Norberg",
+          "@id": "/some?type=Person&familyName=Norberg&givenName=Erik&birthYear=1942",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "isPartOf": {
+            "@id": "/some?type=Organization&name=Riksarkivet"
+          },
+          "@id": "/some?type=Organization&name=historia",
+          "focusOf": {
+            "@id": "/some?type=Concept"
+          },
+          "@type": "Organization",
+          "name": "historia"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=Riksarkivet",
+          "@type": "Organization",
+          "name": "Riksarkivet"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Concept",
+          "inScheme": {
+            "@id": "/scheme/sao"
+          },
+          "@type": "Concept"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sao",
+          "@type": "ConceptScheme",
+          "notation": "sao"
+        }
+      },
+      {
+        "@graph": {
+          "placePublisherAndDateOfPublication": "2002",
+          "scopeNote": [
+            "S. [379]-390"
+          ],
+          "title": "Med Clio til Kringsjå : festskrift til riksarkivar John Herstad",
+          "@type": "Aggregate",
+          "identifier": [
+            {
+              "@id": "/some?type=Identifier&identifierValue=82-7099-356-5"
+            }
+          ],
+          "@id": "/some?type=Aggregate&title=Med%20Clio%20til%20Kringsj%C3%A5%20%3A%20festskrift%20til%20riksarkivar%20John%20Herstad&placePublisherAndDateOfPublication=2002&scopeNote=S.%20%5B379%5D-390",
+          "describedBy": [
+            {
+              "@id": "/bib/8790075"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/isbn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=82-7099-356-5",
+          "@type": "Identifier",
+          "identifierValue": "82-7099-356-5"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/8790075",
+          "@type": "Record",
+          "controlNumber": "8790075"
+        }
+      }
+    ],
+    "items": [
+      {
+        "classification": [
+          {
+            "@id": "/topic/kssb/7/Ac-cz%20Stockholm%3A%20Riksarkivet"
+          }
+        ],
+        "festschrift": {
+          "@id": "/def/enum/content/Festschrift"
+        },
+        "responsibilityStatement": "Erik Norberg",
+        "attributedTo": {
+          "@id": "/some?type=Person&familyName=Norberg&givenName=Erik&birthYear=1942"
+        },
+        "language": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/no"
+          }
+        ],
+        "instanceTitle": {
+          "subtitle": "Riksarkivet i statsförvaltningen vid de senaste sekelskiftena",
+          "@type": "Title",
+          "titleValue": "Vägen ut och vägen in"
+        },
+        "publication": [
+          {
+            "providerDate": "2002"
+          }
+        ],
+        "isPartOf": [
+          {
+            "@id": "/some?type=Aggregate&title=Med%20Clio%20til%20Kringsj%C3%A5%20%3A%20festskrift%20til%20riksarkivar%20John%20Herstad&placePublisherAndDateOfPublication=2002&scopeNote=S.%20%5B379%5D-390"
+          }
+        ],
+        "@id": "/resource/bib/9062707",
+        "@type": [
+          "Text",
+          "ComponentPart"
+        ],
+        "subject": [
+          {
+            "@id": "/some?type=Organization&name=historia"
+          },
+          {
+            "@id": "/some?type=Organization&name=Riksarkivet"
+          }
+        ]
+      }
+    ]
+  }
+}

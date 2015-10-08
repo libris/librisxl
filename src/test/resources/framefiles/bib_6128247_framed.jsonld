@@ -1,0 +1,401 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/6128247"
+      },
+      "created": "2000-09-06T00:00:00.0+02:00",
+      "encLevel": {
+        "@id": "/def/enum/record/PrepublicationLevel"
+      },
+      "controlNumber": "6128247",
+      "modified": "2011-11-29T15:59:40.0+01:00",
+      "librisIIINumber": [
+        "085432710X"
+      ],
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "_unhandled": [
+            "2",
+            "v"
+          ],
+          "600": {
+            "subfields": [
+              {
+                "a": "Abramović, Marina,"
+              },
+              {
+                "d": "1946-"
+              },
+              {
+                "v": "utställningskataloger"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": "1",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Art, Modern"
+              },
+              {
+                "y": "20th century"
+              },
+              {
+                "v": "Exhibitions"
+              },
+              {
+                "2": "BNB"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        }
+      ],
+      "modifyingAgency": {
+        "@id": "/some?type=Organization&name=N"
+      },
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=BNB"
+      },
+      "@id": "/bib/6128247",
+      "@type": "Record"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=BNB",
+          "@type": "Organization",
+          "name": "BNB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=N",
+          "@type": "Organization",
+          "name": "N"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/7/Ibh.55",
+          "inScheme": {
+            "@id": "/scheme/kssb/7"
+          },
+          "@type": "Concept",
+          "notation": "Ibh.55"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/7",
+          "@type": "ConceptScheme",
+          "notation": "kssb/7"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/7/Iit-ez%20Southampton",
+          "inScheme": {
+            "@id": "/scheme/kssb/7"
+          },
+          "@type": "Concept",
+          "notation": "Iit-ez Southampton"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=%5BSouthampton%5D",
+          "@type": "Place",
+          "label": "[Southampton]"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Bristol",
+          "@type": "Place",
+          "label": "Bristol"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1946",
+          "givenName": "Marina",
+          "familyName": "Abramović",
+          "@id": "/some?type=Person&familyName=Abramovi%C4%87&givenName=Marina&birthYear=1946",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/lcsh/Earthworks%20%28Art%29",
+          "inScheme": {
+            "@id": "/scheme/lcsh"
+          },
+          "@type": "TopicalTerm",
+          "prefLabel": "Earthworks (Art)"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/lcsh",
+          "@type": "ConceptScheme",
+          "notation": "lcsh"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/lcsh/Body%20art",
+          "inScheme": {
+            "@id": "/scheme/lcsh"
+          },
+          "@type": "TopicalTerm",
+          "prefLabel": "Body art"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/BNB/Art%2C%20Modern/20th%20century/Exhibitions",
+          "inScheme": {
+            "@id": "/scheme/BNB"
+          },
+          "@type": "TopicalTerm",
+          "broader": [
+            {
+              "@id": "/some?type=TopicalTerm&prefLabel=Art%2C%20Modern"
+            },
+            {
+              "@id": "/some?type=ChronologicalTerm&prefLabel=20th%20century"
+            },
+            {
+              "@id": "/some?type=GenreTerm&prefLabel=Exhibitions"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=TopicalTerm&prefLabel=Art%2C%20Modern",
+          "@type": "TopicalTerm",
+          "prefLabel": "Art, Modern"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=ChronologicalTerm&prefLabel=20th%20century",
+          "@type": "ChronologicalTerm",
+          "prefLabel": "20th century"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=GenreTerm&prefLabel=Exhibitions",
+          "@type": "GenreTerm",
+          "prefLabel": "Exhibitions"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/BNB",
+          "@type": "ConceptScheme",
+          "notation": "BNB"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1946",
+          "givenName": "Marina",
+          "familyName": "Abramović",
+          "@id": "_:b-0",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Paul",
+          "familyName": "Carter",
+          "@id": "_:b-1",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Elaine",
+          "familyName": "Scarry",
+          "@id": "_:b-2",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Antonia",
+          "familyName": "Payne",
+          "@id": "_:b-3",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-4",
+          "@type": "Organization",
+          "name": "John Hansard Gallery"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-5",
+          "@type": "Organization",
+          "name": "Arnolfini Gallery"
+        }
+      }
+    ],
+    "items": [
+      {
+        "comment": [
+          "\"Published to coincide with the exhibition at the John Hansard Gallery, University of Southampton 19 October 1999-27 November 1999; Arnolfini, Bristol, 1 April-29 May 2000\" - colophon"
+        ],
+        "index": {
+          "@id": "/def/enum/content/NoIndex"
+        },
+        "classification": [
+          {
+            "@id": "/topic/kssb/7/Ibh.55"
+          },
+          {
+            "@id": "/topic/kssb/7/Iit-ez%20Southampton"
+          }
+        ],
+        "_providerDateStatus": {
+          "@id": "/def/enum/content/SingleKnownDateProbableDate"
+        },
+        "language": [
+          {
+            "@id": "/def/languages/eng"
+          }
+        ],
+        "responsibilityStatement": "Marina Abramović ... [et al.] ; with essays by Paul Carter, Elaine Scarry ; curated by Antonia Payne",
+        "@id": "/resource/bib/6128247",
+        "_providerYear": "1999",
+        "subject": [
+          {
+            "@id": "/some?type=Person&familyName=Abramovi%C4%87&givenName=Marina&birthYear=1946"
+          },
+          {
+            "@id": "/topic/lcsh/Earthworks%20%28Art%29"
+          },
+          {
+            "@id": "/topic/lcsh/Body%20art"
+          },
+          {
+            "@id": "/topic/BNB/Art%2C%20Modern/20th%20century/Exhibitions"
+          }
+        ],
+        "unspecifiedContributor": [
+          {
+            "@id": "_:b-0"
+          },
+          {
+            "@id": "_:b-1"
+          },
+          {
+            "@id": "_:b-2"
+          },
+          {
+            "@id": "_:b-3"
+          },
+          {
+            "@id": "_:b-4"
+          },
+          {
+            "@id": "_:b-5"
+          }
+        ],
+        "confPub": {
+          "@id": "/def/enum/content/NotAConferencePublication"
+        },
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/xxk"
+          }
+        ],
+        "instanceTitle": {
+          "searchElement": false,
+          "subtitle": "earth body material",
+          "@type": "Title",
+          "titleValue": "Lie of the land"
+        },
+        "literaryForm": {
+          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+        },
+        "hasFormat": [
+          {
+            "otherPhysicalDetails": "ill. (huvudsakligen i färg)",
+            "@type": "Product",
+            "extent": "73 s.",
+            "dimensions": "23cm"
+          }
+        ],
+        "festschrift": {
+          "@id": "/def/enum/content/NotAFestschrift"
+        },
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/isbn"
+            },
+            "identifierNote": "pbk",
+            "@type": "Identifier",
+            "identifierValue": "0-85432-710-X"
+          }
+        ],
+        "influencedBy": [
+          {
+            "@id": "_:b-0"
+          },
+          {
+            "@id": "_:b-1"
+          },
+          {
+            "@id": "_:b-2"
+          },
+          {
+            "@id": "_:b-3"
+          },
+          {
+            "@id": "_:b-4"
+          },
+          {
+            "@id": "_:b-5"
+          }
+        ],
+        "@type": [
+          "Text",
+          "Monograph"
+        ],
+        "publication": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=%5BSouthampton%5D"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "John Hansard Gallery, University of Southampton",
+            "providerDate": "[1999]"
+          }
+        ]
+      }
+    ]
+  }
+}

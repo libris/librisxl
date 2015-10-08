@@ -1,0 +1,626 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/3678656"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=NB"
+        },
+        {
+          "@id": "/some?type=Organization&notation=NLT"
+        }
+      ],
+      "created": "1984-04-10T00:00:00.0+02:00",
+      "controlNumber": "3678656",
+      "@type": "Record",
+      "librisIIINumber": [
+        "03451569"
+      ],
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "_unhandled": [
+            "2"
+          ],
+          "022": {
+            "subfields": [
+              {
+                "a": "0345-1569"
+              },
+              {
+                "2": "f"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "655": {
+            "subfields": [
+              {
+                "a": "Serietidningar"
+              },
+              {
+                "2": "sgp"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        }
+      ],
+      "modified": "2008-01-16T10:31:20.0+01:00",
+      "modifyingAgency": {
+        "@id": "/some?type=Organization&name=NLT"
+      },
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=NB"
+      },
+      "@id": "/bib/3678656",
+      "linked": {
+        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+      }
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=NB",
+          "@type": "Organization",
+          "name": "NB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=NLT",
+          "@type": "Organization",
+          "name": "NLT"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/swe",
+          "notation": "swe"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/eng",
+          "notation": "eng"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=NB",
+          "@type": "Organization",
+          "notation": "NB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=NLT",
+          "@type": "Organization",
+          "notation": "NLT"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Concept&notation=05",
+          "inScheme": {
+            "@id": "http://udcdata.info/udc-schema",
+            "@type": "ConceptScheme",
+            "notation": "UDC"
+          },
+          "@type": "Concept",
+          "notation": "05"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/8/Hci%28p%29%2Cu",
+          "inScheme": {
+            "@id": "/scheme/kssb/8"
+          },
+          "@type": "Concept",
+          "notation": "Hci(p),u"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/8",
+          "@type": "ConceptScheme",
+          "notation": "kssb/8"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Solna",
+          "@type": "Place",
+          "label": "Solna"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Stockholm",
+          "@type": "Place",
+          "label": "Stockholm"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Sundbyberg",
+          "@type": "Place",
+          "label": "Sundbyberg"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/saogf/Serietidningar",
+          "inScheme": {
+            "@id": "/scheme/sgp"
+          },
+          "@type": "GenreTerm",
+          "prefLabel": "Serietidningar"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sgp",
+          "@type": "ConceptScheme",
+          "notation": "sgp"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1944",
+          "givenName": "Leif",
+          "familyName": "Bergendorff",
+          "@id": "_:b-0",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1936",
+          "givenName": "Lennart",
+          "familyName": "Hartler",
+          "@id": "_:b-1",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1938",
+          "givenName": "Jan-E.",
+          "familyName": "Israelsson",
+          "@id": "_:b-2",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1946",
+          "givenName": "Lars",
+          "familyName": "Mortimer",
+          "@id": "_:b-3",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1938",
+          "givenName": "Börje",
+          "familyName": "Nilsson",
+          "@id": "_:b-4",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1940",
+          "givenName": "Hans",
+          "familyName": "Ruta",
+          "@id": "_:b-5",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1924",
+          "givenName": "Ebbe",
+          "familyName": "Setterstad",
+          "@id": "_:b-6",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "describedBy": [
+            {
+              "@id": "/bib/575085"
+            }
+          ],
+          "@id": "/some?type=Serial&title=Nya%20Blondie",
+          "@type": "Serial",
+          "title": "Nya Blondie"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/575085",
+          "@type": "Record",
+          "controlNumber": "575085"
+        }
+      },
+      {
+        "@graph": {
+          "describedBy": [
+            {
+              "@id": "/bib/3686193"
+            }
+          ],
+          "identifier": {
+            "@id": "/some?type=Identifier&identifierValue=0349-3350"
+          },
+          "@id": "/some?type=Serial&title=Karl-Alfred",
+          "@type": "Serial",
+          "title": "Karl-Alfred"
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/issn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=0349-3350",
+          "@type": "Identifier",
+          "identifierValue": "0349-3350"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/3686193",
+          "@type": "Record",
+          "controlNumber": "3686193"
+        }
+      },
+      {
+        "@graph": {
+          "describedBy": [
+            {
+              "@id": "/bib/3681934"
+            }
+          ],
+          "identifier": {
+            "@id": "/some?type=Identifier&identifierValue=0347-4682"
+          },
+          "@id": "/some?type=Serial&title=%C3%85sa-Nisse",
+          "@type": "Serial",
+          "title": "Åsa-Nisse"
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/issn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=0347-4682",
+          "@type": "Identifier",
+          "identifierValue": "0347-4682"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/3681934",
+          "@type": "Record",
+          "controlNumber": "3681934"
+        }
+      },
+      {
+        "@graph": {
+          "describedBy": [
+            {
+              "@id": "/bib/3618984"
+            }
+          ],
+          "identifier": {
+            "@id": "/some?type=Identifier&identifierValue=0282-9487"
+          },
+          "@id": "/some?type=Serial&title=Kul%20med%20...",
+          "@type": "Serial",
+          "title": "Kul med ..."
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/issn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=0282-9487",
+          "@type": "Identifier",
+          "identifierValue": "0282-9487"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/3618984",
+          "@type": "Record",
+          "controlNumber": "3618984"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sab/Hci%28p%29",
+          "inScheme": {
+            "@id": "/scheme/sab"
+          },
+          "@type": "Concept",
+          "notation": "Hci(p)",
+          "prefLabel": "Skönlitteratur"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sab",
+          "@type": "ConceptScheme",
+          "notation": "sab"
+        }
+      }
+    ],
+    "items": [
+      {
+        "comment": [
+          "1973:5 saknar undertitel",
+          "Översättning från engelska"
+        ],
+        "classification": [
+          {
+            "@id": "/some?type=Concept&notation=05"
+          },
+          {
+            "@id": "/topic/kssb/8/Hci%28p%29%2Cu"
+          },
+          {
+            "@id": "/topic/sab/Hci%28p%29"
+          }
+        ],
+        "titleVariation": [
+          {
+            "titleType": "",
+            "subtitle": "roar alla!",
+            "@type": "Title",
+            "coverage": "1966-1971:7",
+            "titleValue": "Blondie"
+          },
+          {
+            "titleType": "",
+            "subtitle": "hela familjens skämttidning!",
+            "@type": "Title",
+            "coverage": "1971:8-1973:2",
+            "titleValue": "Blondie"
+          },
+          {
+            "titleType": "",
+            "subtitle": "med dina seriefavoriter",
+            "@type": "Title",
+            "coverage": "1973:3-1974:1",
+            "titleValue": "Blondie"
+          },
+          {
+            "titleType": "3",
+            "@type": "Title",
+            "coverage": "1980-1983:13",
+            "titleValue": "Hela familjens Blondie"
+          }
+        ],
+        "publishingDirector": [
+          {
+            "@id": "_:b-0"
+          },
+          {
+            "@id": "_:b-1"
+          },
+          {
+            "@id": "_:b-3"
+          },
+          {
+            "@id": "_:b-5"
+          }
+        ],
+        "regularity": {
+          "@id": "/def/enum/content/Regular"
+        },
+        "frequency": "Varannan månad",
+        "publication": [
+          {
+            "scopeNote": "Sammanfattad utgivningstid:",
+            "place": {
+              "@id": "/some?type=Place&label=Solna"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Semic press",
+            "providerDate": "1966-1985"
+          },
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Solna"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Semic press",
+            "providerDate": "1966-1971"
+          },
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Sundbyberg"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Semic press",
+            "providerDate": "1971-1977"
+          },
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Sundbyberg"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Semic",
+            "providerDate": "1978-1985"
+          }
+        ],
+        "typeOfEntry": {
+          "@id": "/def/enum/content/SuccessiveEntry"
+        },
+        "alphabet": {
+          "@id": "/def/enum/content/ExtendedRoman"
+        },
+        "originalLanguage": [
+          {
+            "@id": "/def/languages/eng"
+          }
+        ],
+        "influencedBy": [
+          {
+            "@id": "_:b-0"
+          },
+          {
+            "@id": "_:b-1"
+          },
+          {
+            "@id": "_:b-2"
+          },
+          {
+            "@id": "_:b-3"
+          },
+          {
+            "@id": "_:b-4"
+          },
+          {
+            "@id": "_:b-5"
+          },
+          {
+            "@id": "_:b-6"
+          }
+        ],
+        "keyTitle": [
+          {
+            "@type": "Title",
+            "titleValue": "Blondie"
+          }
+        ],
+        "manufacture": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Stockholm"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Åhlen & Åkerlund)"
+          }
+        ],
+        "contentType": [
+          {
+            "@id": "/def/enum/content/Periodical"
+          }
+        ],
+        "temporalCoverageNote": "1966-1985",
+        "hasFormat": [
+          {
+            "@type": "Product",
+            "dimensions": "26 cm"
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "frequencyCategory": {
+          "@id": "/def/enum/content/BimonthlyIncludes67Or8NumbersAYear"
+        },
+        "genre": [
+          {
+            "@id": "/topic/saogf/Serietidningar"
+          }
+        ],
+        "@id": "/resource/bib/3678656",
+        "succeededBy": [
+          {
+            "@id": "/some?type=Serial&title=Karl-Alfred"
+          },
+          {
+            "@id": "/some?type=Serial&title=%C3%85sa-Nisse"
+          },
+          {
+            "@id": "/some?type=Serial&title=Kul%20med%20..."
+          }
+        ],
+        "replaces": [
+          {
+            "date": "1966-1969, 1972, 1984",
+            "frequency": "9-12 nr/år,",
+            "@type": "Serial"
+          },
+          {
+            "date": "1970-1971, 1973-1983",
+            "frequency": "13-16 nr/år,",
+            "@type": "Serial"
+          }
+        ],
+        "language": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "precededBy": [
+          {
+            "@id": "/some?type=Serial&title=Nya%20Blondie"
+          }
+        ],
+        "responsibleParty": [
+          {
+            "@id": "_:b-2"
+          },
+          {
+            "@id": "_:b-4"
+          },
+          {
+            "@id": "_:b-6"
+          }
+        ],
+        "confPub": {
+          "@id": "/def/enum/content/NotAConferencePublication"
+        },
+        "performerNote": [
+          "Red.: H. Ruta (1966-1969:2,1978:7-1985), L. Hartler (1969:3-6, 1978:1-5), Leif Bergendorff (1969:7-1977:9), Lars Mortimer (1977:10-16)",
+          "Ansv. utg.: E. Setterstad (1966-1970:12), Jan-E Israelsson (1970:13-1973:2), Börje Nilsson (1973:3-1985)"
+        ],
+        "instanceTitle": {
+          "subtitle": "roar alla!",
+          "@type": "Title",
+          "titleValue": "Blondie"
+        },
+        "issueNumber": [
+          "1966: nr 5-1985: nr 6"
+        ],
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/issn"
+            },
+            "@type": "Identifier",
+            "identifierValue": "0345-1569"
+          }
+        ],
+        "@type": [
+          "Text",
+          "Serial"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "descriptions": {
+    "entry": {
+      "headingSeries": {
+        "@id": "/def/enum/content/NotAppropriate"
+      },
+      "hasVersion": [
+        {
+          "@id": "/some?type=MeetingTerm&name=Woodstock"
+        },
+        {
+          "@id": "/some?type=MeetingTerm&name=Woodstockfestivalen&date=%281969%20%3A"
+        }
+      ],
+      "language": [
+        {
+          "@id": "/def/languages/swe"
+        }
+      ],
+      "created": "2010-10-06T00:00:00.0+02:00",
+      "headingSubject": {
+        "@id": "/def/enum/content/Appropriate"
+      },
+      "encLevel": {
+        "@id": "/def/enum/record/CompleteAuthorityRecord"
+      },
+      "level": {
+        "@id": "/def/enum/content/FullyEstablishedHeading"
+      },
+      "catalogingSource": {
+        "@id": "/def/enum/content/OtherSource"
+      },
+      "controlNumber": "337887",
+      "focus": {
+        "@id": "/resource/auth/337887"
+      },
+      "recordUpdate": {
+        "@id": "/def/enum/content/RecordCanBeUsed"
+      },
+      "source": [
+        {
+          "@type": "CreativeWork",
+          "label": "The road to Woodstock, 2010"
+        },
+        {
+          "@type": "CreativeWork",
+          "label": "NE (2010-10-06)"
+        },
+        {
+          "citation": "Woodstock Festival",
+          "@type": "CreativeWork",
+          "label": "LC"
+        },
+        {
+          "citation": "Woodstock",
+          "@type": "CreativeWork",
+          "label": "Sohlmans"
+        }
+      ],
+      "catalogingRules": {
+        "@id": "/def/enum/content/Aacr2"
+      },
+      "subjectSubdivision": {
+        "@id": "/def/enum/content/Topical"
+      },
+      "headingMain": {
+        "@id": "/def/enum/content/Appropriate"
+      },
+      "modified": "2010-10-06T15:40:15.0+02:00",
+      "kindOfRecord": {
+        "@id": "/def/enum/content/EstablishedHeadingRecord"
+      },
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=X"
+      },
+      "@id": "/auth/337887",
+      "@type": "MeetingTerm"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=X",
+          "@type": "Organization",
+          "name": "X"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/swe",
+          "notation": "swe"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/nationalities/xxu",
+          "notation": "xxu"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=MeetingTerm&name=Woodstock",
+          "@type": "MeetingTerm",
+          "name": "Woodstock"
+        }
+      },
+      {
+        "@graph": {
+          "date": "(1969 :",
+          "location": {
+            "@id": "/some?type=Place&label=Bethel%2C%20N.Y.%29"
+          },
+          "@id": "/some?type=MeetingTerm&name=Woodstockfestivalen&date=%281969%20%3A",
+          "@type": "MeetingTerm",
+          "name": "Woodstockfestivalen"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Bethel%2C%20N.Y.%29",
+          "@type": "Place",
+          "label": "Bethel, N.Y.)"
+        }
+      }
+    ],
+    "items": [
+      {
+        "nationality": {
+          "@id": "/def/nationalities/xxu"
+        },
+        "@id": "/resource/auth/337887",
+        "@type": "Meeting",
+        "name": "Woodstockfestivalen"
+      }
+    ]
+  }
+}
