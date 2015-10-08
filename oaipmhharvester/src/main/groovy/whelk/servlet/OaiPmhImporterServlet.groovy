@@ -46,7 +46,7 @@ class OaiPmhImporterServlet extends HttpServlet {
 
         InputStream oaipmhConfig = ( System.getProperty("xl.oaipmh.properties")
                 ? new FileInputStream(System.getProperty("xl.oaipmh.properties"))
-                : this.getClass().getClassLoader().getResourceAsStream("oaipmh.properties") ) //dataset= parameter med enbart auth
+                : this.getClass().getClassLoader().getResourceAsStream("oaipmh.properties") )
 
 
         props.load(secretsConfig)
@@ -88,9 +88,7 @@ class OaiPmhImporterServlet extends HttpServlet {
     void init() {
 
         ScheduledExecutorService ses = Executors.newScheduledThreadPool(3)
-        println("printing dataset")
         List datasets = props.dataset.split(",")
-        println(datasets[0])
         for (dataset in datasets) {
             log.info("Setting up schedule for $dataset")
             def job = new ScheduledJob(pico.getComponent(OaiPmhImporter.class), dataset, pico.getComponent(PostgreSQLComponent.class))
