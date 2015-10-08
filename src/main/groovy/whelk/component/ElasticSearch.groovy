@@ -46,7 +46,6 @@ class ElasticSearch implements Index {
         this.elastichost = elasticHost
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
-
         connectClient()
     }
 
