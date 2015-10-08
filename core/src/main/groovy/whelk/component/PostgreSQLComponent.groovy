@@ -134,18 +134,10 @@ class PostgreSQLComponent implements Storage {
 
     @Override
     Document store(Document doc) {
-        return store(doc, true)
-    }
-
-    Document store(Document doc, boolean flatten) {
         if (!doc.dataset) {
             throw new WhelkException("Can't save document without dataset.")
         }
         log.debug("Saving ${doc.id}")
-        if (flatten) {
-            log.trace("Flattening ${doc.id}")
-            doc.data = JsonLd.flatten(doc.data)
-        }
         Connection connection = getConnection()
         connection.setAutoCommit(false)
         try {
@@ -227,8 +219,6 @@ class PostgreSQLComponent implements Storage {
         try {
             docs.each { doc ->
                 Date now = new Date()
-                log.trace("Flattening ${doc.id}")
-                doc.data = JsonLd.flatten(doc.data)
                 calculateChecksum(doc)
                 if (versioning) {
                     ver_batch = rigVersionStatement(ver_batch, doc, now)

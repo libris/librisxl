@@ -254,7 +254,8 @@ class DocumentAPI implements RestAPI {
             log.debug("Set dataset: ${manifest.dataset}")
 
             try {
-                Document doc = new Document(mapper.readValue(request.getInputStream().getBytes(), Map), manifest)    // whelk.createDocument(manifest["contentType"]).withManifest(manifest).withData(request.getInputStream().getBytes())
+                Document doc = new Document(mapper.readValue(request.getInputStream().getBytes(), Map), manifest)
+                // whelk.createDocument(manifest["contentType"]).withManifest(manifest).withData(request.getInputStream().getBytes())
 
                 if (!hasPermission(request.getAttribute("user"), doc, existingDoc)) {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
@@ -267,6 +268,10 @@ class DocumentAPI implements RestAPI {
                     doc.addIdentifier(it);
                 }
 
+                if (doc.contentType == "application/ld+json") {
+                    log.debug("Flattening ${doc.id}")
+                    doc.data = JsonLd.flatten(doc.data)
+                }
                 log.debug("Saving document (${doc.identifier})")
                 def identifier = whelk.store(doc)
 
