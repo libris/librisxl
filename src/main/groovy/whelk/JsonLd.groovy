@@ -4,6 +4,7 @@ public class JsonLd {
 
     static final String GRAPH_KEY = "@graph"
     static final String ID_KEY = "@id"
+    static final String DESCRIPTIONS_KEY = "descriptions"
 
     static Map flatten(Map framedJsonLd) {
         if (isFlat(framedJsonLd)) {
@@ -63,14 +64,14 @@ public class JsonLd {
     }
 
     static boolean isFlat(Map jsonLd) {
-        if (jsonLd.size() == 1 && jsonLd.containsKey(GRAPH_KEY)) {
+        if (jsonLd.size() == 1 && (jsonLd.containsKey(GRAPH_KEY) || jsonLd.containsKey(DESCRIPTIONS_KEY))) {
             return true
         }
         return false
     }
 
     static boolean isFramed(Map jsonLd) {
-        if (jsonLd.size() == 1 && !jsonLd.containsKey(GRAPH_KEY)) {
+        if (jsonLd.size() == 1 && !jsonLd.containsKey(GRAPH_KEY) && !jsonLd.containsKey(DESCRIPTIONS_KEY)) {
             return true
         }
         return false
