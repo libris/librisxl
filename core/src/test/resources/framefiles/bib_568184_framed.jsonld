@@ -1,0 +1,440 @@
+{
+  "descriptions": {
+    "entry": {
+      "status": {
+        "@id": "/def/enum/record/IncreaseInEncodingLevel"
+      },
+      "about": {
+        "@id": "/resource/bib/568184"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=NLT"
+        }
+      ],
+      "created": "1986-08-13T00:00:00.0+02:00",
+      "catalogingSource": {
+        "@id": "/def/enum/content/CooperativeCatalogingProgram"
+      },
+      "controlNumber": "568184",
+      "modified": "2010-01-14T13:57:28.0+01:00",
+      "librisIIINumber": [
+        "9905846603"
+      ],
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "581": {
+            "subfields": [
+              {
+                "a": "Holmberg, Claes-Göran: Litterära tidskrifter i Sverige 1900-1970 (1975), s. 129-131"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Tidskrifter, Sverige"
+              },
+              {
+                "2": "sfit"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "655": {
+            "subfields": [
+              {
+                "a": "Litteraturtidskrifter"
+              },
+              {
+                "2": "sgp"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        }
+      ],
+      "modifyingAgency": {
+        "@id": "/some?type=Organization&name=NLT"
+      },
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=V%C3%B6"
+      },
+      "@id": "/bib/568184",
+      "@type": "Record"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=V%C3%B6",
+          "@type": "Organization",
+          "name": "Vö"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=NLT",
+          "@type": "Organization",
+          "name": "NLT"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=NLT",
+          "@type": "Organization",
+          "notation": "NLT"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/7/H%28p%29",
+          "inScheme": {
+            "@id": "/scheme/kssb/7"
+          },
+          "@type": "Concept",
+          "notation": "H(p)"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/7",
+          "@type": "ConceptScheme",
+          "notation": "kssb/7"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/7/G%28p%29",
+          "inScheme": {
+            "@id": "/scheme/kssb/7"
+          },
+          "@type": "Concept",
+          "notation": "G(p)"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/fiaf/2/F%28051%29%2040-tal",
+          "inScheme": {
+            "@id": "/scheme/fiaf/2"
+          },
+          "@type": "Concept",
+          "notation": "F(051) 40-tal"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/fiaf/2",
+          "@type": "ConceptScheme",
+          "notation": "fiaf/2"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/fiaf/2/F%28051%29%28485%29",
+          "inScheme": {
+            "@id": "/scheme/fiaf/2"
+          },
+          "@type": "Concept",
+          "notation": "F(051)(485)"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Stockholm",
+          "@type": "Place",
+          "label": "Stockholm"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sfit/Tidskrifter%2C%20Sverige",
+          "inScheme": {
+            "@id": "/scheme/sfit"
+          },
+          "@type": "TopicalTerm",
+          "prefLabel": "Tidskrifter, Sverige"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sfit",
+          "@type": "ConceptScheme",
+          "notation": "sfit"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/saogf/Litteraturtidskrifter",
+          "inScheme": {
+            "@id": "/scheme/sgp"
+          },
+          "@type": "GenreTerm",
+          "prefLabel": "Litteraturtidskrifter"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sgp",
+          "@type": "ConceptScheme",
+          "notation": "sgp"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-0",
+          "familyName": "Aspenström",
+          "birthYear": "1918",
+          "givenName": "Werner",
+          "deathYear": "1997",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-1",
+          "familyName": "Bonnier",
+          "birthYear": "1917",
+          "givenName": "Gerard",
+          "deathYear": "1987",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-2",
+          "familyName": "Dagerman",
+          "birthYear": "1923",
+          "givenName": "Stig",
+          "deathYear": "1954",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-3",
+          "familyName": "Göthberg",
+          "birthYear": "1920",
+          "givenName": "Lennart",
+          "deathYear": "1946",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-4",
+          "familyName": "Hoogland",
+          "birthYear": "1916",
+          "givenName": "Claes",
+          "deathYear": "1986",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=UniformWork&title=Fyrtiotal",
+          "@type": "UniformWork",
+          "title": "Fyrtiotal"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sab/G%28p%29",
+          "inScheme": {
+            "@id": "/scheme/sab"
+          },
+          "@type": "Concept",
+          "notation": "G(p)",
+          "prefLabel": "Litteraturvetenskap Periodica"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sab",
+          "@type": "ConceptScheme",
+          "notation": "sab"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sab/H%28p%29",
+          "inScheme": {
+            "@id": "/scheme/sab"
+          },
+          "@type": "Concept",
+          "notation": "H(p)",
+          "prefLabel": "Skönlitteratur"
+        }
+      }
+    ],
+    "items": [
+      {
+        "classification": [
+          {
+            "@id": "/topic/kssb/7/H%28p%29"
+          },
+          {
+            "@id": "/topic/kssb/7/G%28p%29"
+          },
+          {
+            "@id": "/topic/fiaf/2/F%28051%29%2040-tal"
+          },
+          {
+            "@id": "/topic/fiaf/2/F%28051%29%28485%29"
+          },
+          {
+            "@id": "/topic/sab/G%28p%29"
+          },
+          {
+            "@id": "/topic/sab/H%28p%29"
+          }
+        ],
+        "publishingDirector": [
+          {
+            "@id": "_:b-0"
+          },
+          {
+            "@id": "_:b-2"
+          },
+          {
+            "@id": "_:b-3"
+          },
+          {
+            "@id": "_:b-4"
+          }
+        ],
+        "regularity": {
+          "@id": "/def/enum/content/Regular"
+        },
+        "performerNote": [
+          "Red.: Werner Aspenström, Lennart Göthberg och Claes Hoogland (1944). I red.: Werner Aspenström ... (1945-1946:8). Red.: Werner Aspenström, Stig Dagerman och Claes Hoogland (1946:9/10), Stig Dagerman och Claes Hoogland (1947:1-3), Werner Aspenström och Claes Hoogland (1947:4)",
+          "Ansv. utg.: Gerhard Bonnier"
+        ],
+        "subject": [
+          {
+            "@id": "/topic/sfit/Tidskrifter%2C%20Sverige"
+          }
+        ],
+        "publication": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Stockholm"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Bonnier",
+            "providerDate": "1944-1947"
+          }
+        ],
+        "typeOfEntry": {
+          "@id": "/def/enum/content/SuccessiveEntry"
+        },
+        "alphabet": {
+          "@id": "/def/enum/content/ExtendedRoman"
+        },
+        "influentialRelation": [
+          {
+            "@id": "/some?type=UniformWork&title=Fyrtiotal"
+          }
+        ],
+        "influencedBy": [
+          {
+            "@id": "_:b-0"
+          },
+          {
+            "@id": "_:b-1"
+          },
+          {
+            "@id": "_:b-2"
+          },
+          {
+            "@id": "_:b-3"
+          },
+          {
+            "@id": "_:b-4"
+          }
+        ],
+        "manufacture": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Stockholm"
+            },
+            "@type": "ProviderEvent"
+          }
+        ],
+        "contentType": [
+          {
+            "@id": "/def/enum/content/Periodical"
+          }
+        ],
+        "temporalCoverageNote": "1944-1947",
+        "hasFormat": [
+          {
+            "@type": "Product",
+            "dimensions": "24 cm"
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "frequencyCategory": {
+          "@id": "/def/enum/content/MonthlyIncludes91011Or12NumbersAYear"
+        },
+        "genre": [
+          {
+            "@id": "/topic/saogf/Litteraturtidskrifter"
+          }
+        ],
+        "@id": "/resource/bib/568184",
+        "replaces": [
+          {
+            "frequency": "10 nr/år",
+            "@type": "Serial"
+          }
+        ],
+        "language": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "responsibleParty": [
+          {
+            "@id": "_:b-1"
+          }
+        ],
+        "confPub": {
+          "@id": "/def/enum/content/NotAConferencePublication"
+        },
+        "instanceTitle": {
+          "@type": "Title",
+          "titleValue": "40-tal"
+        },
+        "issueNumber": [
+          "Årg. 1(1944): nr 1-årg. 4(1947): nr 4"
+        ],
+        "@type": [
+          "Text",
+          "Serial"
+        ]
+      }
+    ]
+  }
+}

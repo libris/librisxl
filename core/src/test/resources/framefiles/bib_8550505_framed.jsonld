@@ -1,0 +1,171 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/8550505"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=SHB"
+        }
+      ],
+      "created": "2002-08-20T00:00:00.0+02:00",
+      "encLevel": {
+        "@id": "/def/enum/record/MinimalLevel"
+      },
+      "catalogingSource": {
+        "@id": "/def/enum/content/CooperativeCatalogingProgram"
+      },
+      "controlNumber": "8550505",
+      "@type": "Record",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "modified": "2004-04-20T09:39:04.0+02:00",
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=SHB"
+      },
+      "@id": "/bib/8550505",
+      "linked": {
+        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+      }
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=SHB",
+          "@type": "Organization",
+          "name": "SHB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=SHB",
+          "@type": "Organization",
+          "notation": "SHB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/7/Kc.428",
+          "inScheme": {
+            "@id": "/scheme/kssb/7"
+          },
+          "@type": "Concept",
+          "notation": "Kc.428"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/7",
+          "@type": "ConceptScheme",
+          "notation": "kssb/7"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1925",
+          "givenName": "Aleksandr Sergeevič",
+          "familyName": "Kan",
+          "@id": "/some?type=Person&familyName=Kan&givenName=Aleksandr%20Sergeevi%C4%8D&birthYear=1925",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "name": "Karl",
+          "personTitle": [
+            "kung av Sverige,"
+          ],
+          "@id": "/some?type=Person&name=Karl&numeration=XII%2C&personTitle=kung%20av%20Sverige%2C&birthYear=1682&deathYear=1718",
+          "birthYear": "1682",
+          "deathYear": "1718",
+          "@type": "Person",
+          "numeration": "XII,"
+        }
+      },
+      {
+        "@graph": {
+          "title": "Karolinska förbundets årsbok",
+          "scopeNote": [
+            "2000, s. [215]-217"
+          ],
+          "@type": "Aggregate",
+          "identifier": {
+            "@id": "/some?type=Identifier&identifierValue=0348-9833"
+          },
+          "@id": "/some?type=Aggregate&title=Karolinska%20f%C3%B6rbundets%20%C3%A5rsbok&scopeNote=2000%2C%20s.%20%5B215%5D-217",
+          "describedBy": [
+            {
+              "@id": "/bib/8261779"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/issn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=0348-9833",
+          "@type": "Identifier",
+          "identifierValue": "0348-9833"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/8261779",
+          "@type": "Record",
+          "controlNumber": "8261779"
+        }
+      }
+    ],
+    "items": [
+      {
+        "language": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "classification": [
+          {
+            "@id": "/topic/kssb/7/Kc.428"
+          }
+        ],
+        "responsibilityStatement": "av Aleksander Kan",
+        "attributedTo": {
+          "@id": "/some?type=Person&familyName=Kan&givenName=Aleksandr%20Sergeevi%C4%8D&birthYear=1925"
+        },
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "instanceTitle": {
+          "@type": "Title",
+          "titleValue": "Den postsovjetiske Karl XII"
+        },
+        "publication": [
+          {
+            "providerDate": "2001"
+          }
+        ],
+        "isPartOf": [
+          {
+            "@id": "/some?type=Aggregate&title=Karolinska%20f%C3%B6rbundets%20%C3%A5rsbok&scopeNote=2000%2C%20s.%20%5B215%5D-217"
+          }
+        ],
+        "@id": "/resource/bib/8550505",
+        "@type": [
+          "Text",
+          "ComponentPart"
+        ],
+        "subject": [
+          {
+            "@id": "/some?type=Person&name=Karl&numeration=XII%2C&personTitle=kung%20av%20Sverige%2C&birthYear=1682&deathYear=1718"
+          }
+        ]
+      }
+    ]
+  }
+}

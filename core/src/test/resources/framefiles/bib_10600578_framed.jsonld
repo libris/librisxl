@@ -1,0 +1,303 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/10600578"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=SHB"
+        }
+      ],
+      "created": "2007-11-12T00:00:00.0+01:00",
+      "encLevel": {
+        "@id": "/def/enum/record/MinimalLevel"
+      },
+      "controlNumber": "10600578",
+      "@type": "Record",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "610": {
+            "subfields": [
+              {
+                "a": "Kungl. Biblioteket"
+              }
+            ],
+            "ind1": "2",
+            "ind2": "4"
+          },
+          "_unhandled": [
+            "ind2"
+          ]
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Handskrifter"
+              },
+              {
+                "x": "historia"
+              },
+              {
+                "y": "1200-talet"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        }
+      ],
+      "modified": "2008-09-11T11:17:36.0+02:00",
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=SHB"
+      },
+      "@id": "/bib/10600578",
+      "linked": {
+        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+      }
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=SHB",
+          "@type": "Organization",
+          "name": "SHB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=SHB",
+          "@type": "Organization",
+          "notation": "SHB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/8/Aea-fda.3",
+          "inScheme": {
+            "@id": "/scheme/kssb/8"
+          },
+          "@type": "Concept",
+          "notation": "Aea-fda.3"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/8",
+          "@type": "ConceptScheme",
+          "notation": "kssb/8"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/8/Ab-cz%20Stockholm%3A%20Kungl.%20biblioteket",
+          "inScheme": {
+            "@id": "/scheme/kssb/8"
+          },
+          "@type": "Concept",
+          "notation": "Ab-cz Stockholm: Kungl. biblioteket"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Michael",
+          "familyName": "Gullick",
+          "@id": "/some?type=Person&familyName=Gullick&givenName=Michael",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=Kungl.%20Biblioteket",
+          "@type": "Organization",
+          "name": "Kungl. Biblioteket"
+        }
+      },
+      {
+        "@graph": {
+          "isPartOf": {
+            "@id": "/some?type=Organization&name=Kungl.%20biblioteket"
+          },
+          "@id": "/some?type=Organization&name=samlingar",
+          "focusOf": {
+            "@id": "/some?type=Concept"
+          },
+          "@type": "Organization",
+          "name": "samlingar"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=Kungl.%20biblioteket",
+          "@type": "Organization",
+          "name": "Kungl. biblioteket"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Concept",
+          "inScheme": {
+            "@id": "/scheme/sao"
+          },
+          "@type": "Concept"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sao",
+          "@type": "ConceptScheme",
+          "notation": "sao"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Handskrifter/historia/1200-talet",
+          "inScheme": {
+            "@id": "/scheme/sao"
+          },
+          "@type": "TopicalTerm",
+          "broader": [
+            {
+              "@id": "/some?type=TopicalTerm&prefLabel=Handskrifter"
+            },
+            {
+              "@id": "/some?type=SubdivisionTerm&prefLabel=historia"
+            },
+            {
+              "@id": "/some?type=ChronologicalTerm&prefLabel=1200-talet"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=TopicalTerm&prefLabel=Handskrifter",
+          "@type": "TopicalTerm",
+          "prefLabel": "Handskrifter"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=SubdivisionTerm&prefLabel=historia",
+          "@type": "SubdivisionTerm",
+          "prefLabel": "historia"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=ChronologicalTerm&prefLabel=1200-talet",
+          "@type": "ChronologicalTerm",
+          "prefLabel": "1200-talet"
+        }
+      },
+      {
+        "@graph": {
+          "title": "Biblis (Tidskrift)",
+          "scopeNote": [
+            "2007(38), s. [5]-19 :  färgill."
+          ],
+          "@type": "Aggregate",
+          "identifier": {
+            "@id": "/some?type=Identifier&identifierValue=1403-3313"
+          },
+          "@id": "/some?type=Aggregate&title=Biblis%20%28Tidskrift%29&scopeNote=2007%2838%29%2C%20s.%20%5B5%5D-19%20%3A%20%20f%C3%A4rgill.",
+          "describedBy": [
+            {
+              "@id": "/bib/8267559"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/issn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=1403-3313",
+          "@type": "Identifier",
+          "identifierValue": "1403-3313"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/8267559",
+          "@type": "Record",
+          "controlNumber": "8267559"
+        }
+      }
+    ],
+    "items": [
+      {
+        "classification": [
+          {
+            "@id": "/topic/kssb/8/Aea-fda.3"
+          },
+          {
+            "@id": "/topic/kssb/8/Ab-cz%20Stockholm%3A%20Kungl.%20biblioteket"
+          }
+        ],
+        "festschrift": {
+          "@id": "/def/enum/content/NotAFestschrift"
+        },
+        "responsibilityStatement": "Michael Gullick",
+        "attributedTo": {
+          "@id": "/some?type=Person&familyName=Gullick&givenName=Michael"
+        },
+        "confPub": {
+          "@id": "/def/enum/content/NotAConferencePublication"
+        },
+        "language": [
+          {
+            "@id": "/def/languages/eng"
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "instanceTitle": {
+          "subtitle": "a revised version of the Georg Svensson lecture delivered at The National Library of Sweden, Stockholm, November 2006",
+          "@type": "Title",
+          "titleValue": "The Codex Gigas"
+        },
+        "publication": [
+          {
+            "providerDate": "2007"
+          }
+        ],
+        "isPartOf": [
+          {
+            "@id": "/some?type=Aggregate&title=Biblis%20%28Tidskrift%29&scopeNote=2007%2838%29%2C%20s.%20%5B5%5D-19%20%3A%20%20f%C3%A4rgill."
+          }
+        ],
+        "@id": "/resource/bib/10600578",
+        "@type": [
+          "Text",
+          "ComponentPart"
+        ],
+        "subject": [
+          {
+            "@id": "/some?type=Organization&name=Kungl.%20Biblioteket"
+          },
+          {
+            "@id": "/some?type=Organization&name=samlingar"
+          },
+          {
+            "@id": "/topic/sao/Handskrifter/historia/1200-talet"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -141,6 +141,7 @@ class ScheduledJob implements Runnable {
                 currentSince = nextSince
                 log.info("Importer has no state for last import from $dataset. Setting last week (${nextSince})")
             }
+            nextSince = new Date(0) //sneeking past next date
             log.debug("Executing OAIPMH import for $dataset since $nextSince from ${importer.serviceUrl}")
             whelkState.put("status", "RUNNING")
 

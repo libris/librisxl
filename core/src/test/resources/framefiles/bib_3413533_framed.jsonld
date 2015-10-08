@@ -1,0 +1,741 @@
+{
+  "descriptions": {
+    "entry": {
+      "status": {
+        "@id": "/def/enum/record/IncreaseInEncodingLevel"
+      },
+      "about": {
+        "@id": "/resource/bib/3413533"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=NB"
+        },
+        {
+          "@id": "/some?type=Organization&notation=NLT"
+        }
+      ],
+      "created": "1984-03-14T00:00:00.0+01:00",
+      "technicalNote": [
+        "Indexeringslänk"
+      ],
+      "controlNumber": "3413533",
+      "@type": "Record",
+      "librisIIINumber": [
+        "00180327"
+      ],
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "_unhandled": [
+            "2"
+          ],
+          "022": {
+            "subfields": [
+              {
+                "a": "0018-0327"
+              },
+              {
+                "2": "f"
+              }
+            ],
+            "ind1": "0",
+            "ind2": " "
+          }
+        },
+        {
+          "515": {
+            "subfields": [
+              {
+                "a": "Provnummer utkom 1920"
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "655": {
+            "subfields": [
+              {
+                "a": "Familjetidningar"
+              },
+              {
+                "2": "sgp"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "655": {
+            "subfields": [
+              {
+                "a": "Populärpress"
+              },
+              {
+                "2": "sgp"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        }
+      ],
+      "sourceNote": [
+        "NLT: 1921-1999 bibliograferad för NLT. - Vid bibliografins slut 1999 utkom tidskriften med 1 nr/vecka",
+        "NB: Ekoll"
+      ],
+      "modified": "2015-07-28T15:43:56.0+02:00",
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=NB"
+      },
+      "@id": "/bib/3413533",
+      "linked": {
+        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+      }
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=NB",
+          "@type": "Organization",
+          "name": "NB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=NB",
+          "@type": "Organization",
+          "notation": "NB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=NLT",
+          "@type": "Organization",
+          "notation": "NLT"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "http://dewey.info/class/058.7/e22/",
+          "inScheme": {
+            "@id": "http://dewey.info/scheme/edition/e22/"
+          },
+          "@type": "Concept",
+          "notation": "058.7"
+        }
+      },
+      {
+        "@graph": {
+          "isVersionOf": {
+            "@id": "http://dewey.info/scheme/ddc/"
+          },
+          "version": "22",
+          "@id": "http://dewey.info/scheme/edition/e22/",
+          "@type": "ConceptScheme",
+          "notation": "DDC"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/8/Bd-c",
+          "inScheme": {
+            "@id": "/scheme/kssb/8"
+          },
+          "@type": "Concept",
+          "notation": "Bd-c"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/8",
+          "@type": "ConceptScheme",
+          "notation": "kssb/8"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/8/Bdb-c",
+          "inScheme": {
+            "@id": "/scheme/kssb/8"
+          },
+          "@type": "Concept",
+          "notation": "Bdb-c"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=G%C3%B6teborg",
+          "@type": "Place",
+          "label": "Göteborg"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Malm%C3%B6",
+          "@type": "Place",
+          "label": "Malmö"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/saogf/Familjetidningar",
+          "inScheme": {
+            "@id": "/scheme/sgp"
+          },
+          "@type": "GenreTerm",
+          "prefLabel": "Familjetidningar"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sgp",
+          "@type": "ConceptScheme",
+          "notation": "sgp"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/saogf/Popul%C3%A4rpress",
+          "inScheme": {
+            "@id": "/scheme/sgp"
+          },
+          "@type": "GenreTerm",
+          "prefLabel": "Populärpress"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Åke",
+          "familyName": "Dahlberg",
+          "@id": "_:b-0",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Kurt",
+          "familyName": "Ebenholtz",
+          "@id": "_:b-1",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "W.",
+          "familyName": "Fjellstedt",
+          "@id": "_:b-2",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Kurt",
+          "familyName": "Follin",
+          "@id": "_:b-3",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "A.",
+          "familyName": "Gerlach Richter",
+          "@id": "_:b-4",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-5",
+          "familyName": "Holmquist",
+          "birthYear": "1896",
+          "givenName": "Nils Gustaf",
+          "deathYear": "1984",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Kerstin",
+          "familyName": "Löfberg",
+          "@id": "_:b-6",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Hugo N.",
+          "familyName": "Nilsén",
+          "@id": "_:b-7",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-8",
+          "familyName": "Rask",
+          "birthYear": "1936",
+          "givenName": "Göran",
+          "deathYear": "2013",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1915",
+          "givenName": "Lennart",
+          "familyName": "Svenander",
+          "@id": "_:b-9",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Seved",
+          "familyName": "Söderström",
+          "@id": "_:b-10",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-11",
+          "familyName": "Sörmark",
+          "birthYear": "1923",
+          "givenName": "Sven",
+          "deathYear": "1987",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Kristina",
+          "familyName": "Waldén",
+          "@id": "_:b-12",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1948",
+          "givenName": "Janne",
+          "familyName": "Walles",
+          "@id": "_:b-13",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=UniformWork&title=Stora%20juljournalen",
+          "@type": "UniformWork",
+          "title": "Stora juljournalen"
+        }
+      },
+      {
+        "@graph": {
+          "title": "Hälsorevyn",
+          "linkNote": [
+            "1987 med bilaga:"
+          ],
+          "@type": "CreativeWork",
+          "identifier": {
+            "@id": "/some?type=Identifier&identifierValue=0283-8192"
+          },
+          "@id": "/some?type=CreativeWork&linkNote=1987%20med%20bilaga%3A&title=H%C3%A4lsorevyn",
+          "describedBy": [
+            {
+              "@id": "/bib/3620293"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/issn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=0283-8192",
+          "@type": "Identifier",
+          "identifierValue": "0283-8192"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/3620293",
+          "@type": "Record",
+          "controlNumber": "3620293"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=CreativeWork&linkNote=2003-%20med%20bilaga%3A&title=Kryssj%C3%A4tten",
+          "describedBy": [
+            {
+              "@id": "/bib/9556553"
+            }
+          ],
+          "linkNote": [
+            "2003- med bilaga:"
+          ],
+          "@type": "CreativeWork",
+          "title": "Kryssjätten"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/9556553",
+          "@type": "Record",
+          "controlNumber": "9556553"
+        }
+      },
+      {
+        "@graph": {
+          "describedBy": [
+            {
+              "@id": "/bib/8900456"
+            }
+          ],
+          "@id": "/some?type=Serial&title=Liv%20%28Stockholm.%201937%29",
+          "@type": "Serial",
+          "title": "Liv (Stockholm. 1937)"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/8900456",
+          "@type": "Record",
+          "controlNumber": "8900456"
+        }
+      },
+      {
+        "@graph": {
+          "identifier": {
+            "@id": "/some?type=Identifier&identifierValue=0283-6661"
+          },
+          "@id": "/some?type=Serial&title=Saxons",
+          "@type": "Serial",
+          "title": "Saxons"
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/issn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=0283-6661",
+          "@type": "Identifier",
+          "identifierValue": "0283-6661"
+        }
+      }
+    ],
+    "items": [
+      {
+        "comment": [
+          "Bilagor med varierande utseende och innehåll under hela utgivningstiden, t. ex. DamJournalen, Hälsorevyn, Vårt försvar (planscher med egen numrering), Stora Juljournalen"
+        ],
+        "classification": [
+          {
+            "@id": "http://dewey.info/class/058.7/e22/"
+          },
+          {
+            "@id": "/topic/kssb/8/Bd-c"
+          },
+          {
+            "@id": "/topic/kssb/8/Bdb-c"
+          }
+        ],
+        "isPrimaryTopicOf": [
+          {
+            "@id": "http://www.hemmetsjournal.se/",
+            "@type": "Document",
+            "copyNote": [
+              "Tidskriftens webbplats"
+            ]
+          }
+        ],
+        "titleVariation": [
+          {
+            "titleType": "",
+            "subtitle": "och Liv",
+            "@type": "Title",
+            "coverage": "1940:5-48",
+            "titleValue": "Hemmets journal"
+          },
+          {
+            "titleType": "3",
+            "@type": "Title",
+            "coverage": "1970:4-1988:37",
+            "titleValue": "HJ"
+          }
+        ],
+        "publishingDirector": [
+          {
+            "@id": "_:b-1"
+          },
+          {
+            "@id": "_:b-2"
+          },
+          {
+            "@id": "_:b-5"
+          },
+          {
+            "@id": "_:b-7"
+          },
+          {
+            "@id": "_:b-8"
+          },
+          {
+            "@id": "_:b-9"
+          },
+          {
+            "@id": "_:b-10"
+          },
+          {
+            "@id": "_:b-11"
+          },
+          {
+            "@id": "_:b-12"
+          }
+        ],
+        "regularity": {
+          "@id": "/def/enum/content/Regular"
+        },
+        "frequency": "1 nr/vecka",
+        "publication": [
+          {
+            "scopeNote": "Sammanfattad utgivningstid:",
+            "place": {
+              "@id": "/some?type=Place&label=G%C3%B6teborg"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Förlagsaktiebolaget Hemmet",
+            "providerDate": "1921-"
+          },
+          {
+            "place": {
+              "@id": "/some?type=Place&label=G%C3%B6teborg"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Förlagsaktiebolaget Hemmet",
+            "providerDate": "1921-1925"
+          },
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Malm%C3%B6"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Hemmets journal",
+            "providerDate": "1925-1997"
+          },
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Malm%C3%B6"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Egmont",
+            "providerDate": "1997-"
+          },
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Malm%C3%B6"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Egmont Publishing"
+          }
+        ],
+        "typeOfEntry": {
+          "@id": "/def/enum/content/SuccessiveEntry"
+        },
+        "alphabet": {
+          "@id": "/def/enum/content/ExtendedRoman"
+        },
+        "contains": [
+          {
+            "@id": "/some?type=CreativeWork&linkNote=1987%20med%20bilaga%3A&title=H%C3%A4lsorevyn"
+          },
+          {
+            "@id": "/some?type=CreativeWork&linkNote=2003-%20med%20bilaga%3A&title=Kryssj%C3%A4tten"
+          }
+        ],
+        "influentialRelation": [
+          {
+            "@id": "/some?type=UniformWork&title=Stora%20juljournalen"
+          }
+        ],
+        "generic:pdb": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "influencedBy": [
+          {
+            "@id": "_:b-0"
+          },
+          {
+            "@id": "_:b-1"
+          },
+          {
+            "@id": "_:b-2"
+          },
+          {
+            "@id": "_:b-3"
+          },
+          {
+            "@id": "_:b-4"
+          },
+          {
+            "@id": "_:b-5"
+          },
+          {
+            "@id": "_:b-6"
+          },
+          {
+            "@id": "_:b-7"
+          },
+          {
+            "@id": "_:b-8"
+          },
+          {
+            "@id": "_:b-9"
+          },
+          {
+            "@id": "_:b-10"
+          },
+          {
+            "@id": "_:b-11"
+          },
+          {
+            "@id": "_:b-12"
+          },
+          {
+            "@id": "_:b-13"
+          }
+        ],
+        "keyTitle": [
+          {
+            "@type": "Title",
+            "titleValue": "Hemmets journal"
+          }
+        ],
+        "manufacture": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=G%C3%B6teborg"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Elanders boktr.)"
+          }
+        ],
+        "contentType": [
+          {
+            "@id": "/def/enum/content/Periodical"
+          }
+        ],
+        "temporalCoverageNote": "1921-",
+        "hasFormat": [
+          {
+            "@type": "Product",
+            "dimensions": "Ca 34-37 cm (1921-1970:12), ca 28-32 cm (1970:13-)"
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "frequencyCategory": {
+          "@id": "/def/enum/content/Weekly"
+        },
+        "genre": [
+          {
+            "@id": "/topic/saogf/Familjetidningar"
+          },
+          {
+            "@id": "/topic/saogf/Popul%C3%A4rpress"
+          }
+        ],
+        "@id": "/resource/bib/3413533",
+        "language": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "precededBy": [
+          {
+            "@id": "/some?type=Serial&title=Liv%20%28Stockholm.%201937%29"
+          },
+          {
+            "@id": "/some?type=Serial&title=Saxons"
+          }
+        ],
+        "responsibleParty": [
+          {
+            "@id": "_:b-1"
+          },
+          {
+            "@id": "_:b-3"
+          },
+          {
+            "@id": "_:b-4"
+          },
+          {
+            "@id": "_:b-6"
+          },
+          {
+            "@id": "_:b-8"
+          },
+          {
+            "@id": "_:b-9"
+          },
+          {
+            "@id": "_:b-11"
+          },
+          {
+            "@id": "_:b-12"
+          },
+          {
+            "@id": "_:b-13"
+          }
+        ],
+        "confPub": {
+          "@id": "/def/enum/content/NotAConferencePublication"
+        },
+        "performerNote": [
+          "Red.: W. Fjellstedt (1921-1925:43), W. Fjellstedt och N. Hugo Nilsén (1925:44-1929, 1930:10-1936:43), N. Hugo Nilsén (1930:1-9, 1936:44-1940:5), N. Hugo Nilsén och Nils Gustaf Holmquist (1940:6-1941:26). Chefred.: N. Hugo Nilsén (1941:27-1960:19), Seved Söderström (1960:20-1962:14). Tf chefred.: L. Svenander (1962:15-21). Chefred.: Lennart Svenander (1962:22-1972:6), Sven Sörmark (1972:7-1974:21).Red.-chef: Kurt Ebenholtz (1974:22-1975:5). Chefred. Göran Rask (1975:6-1979:42, 1984-1990:48). I red.: Åke Dahlberg ... (1979:43-44). Chefred.: Kristina Waldén (1979:45-1983), Janne Walles (1990:49-1999)",
+          "Ansv. utg.: A. Gerlach Richter (1941:27-1955:22), K. Follin (1955:23-1967:48, 1968:2-35, 1968:40-1969:13). Stf ansv. utg.: L. Svenander (1967:49-1968:1, 1968:36-39, 1969:14-1970:39). Ansv. utg.: Lennart Svenander (1970:40-1972:6), Sven Sörmark (1972:7-1974:21), Kurt Ebenholtz (1974:22-1975:17, 1979:43-1980:5, 1984:1-1987:46), Göran Rask (1975:18-1979:42, 1988:19-1990:48), Kristina Waldén (1980:6-1983). Stf ansv. utg.: Kerstin Löfberg (1987:47-1988:18). Ansv. utg.: Janne Walles (1990:49-1999)"
+        ],
+        "instanceTitle": {
+          "@type": "Title",
+          "titleValue": "Hemmets journal"
+        },
+        "issueNumber": [
+          "Årg. 1(1921): nr 1-"
+        ],
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/issn"
+            },
+            "@type": "Identifier",
+            "identifierValue": "0018-0327"
+          }
+        ],
+        "@type": [
+          "Text",
+          "Serial"
+        ]
+      }
+    ]
+  }
+}

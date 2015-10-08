@@ -1,0 +1,219 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/17178420"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=SUEC"
+        }
+      ],
+      "created": "2014-11-21T00:00:00.0+01:00",
+      "encLevel": {
+        "@id": "/def/enum/record/MinimalLevel"
+      },
+      "catalogingSource": {
+        "@id": "/def/enum/content/CooperativeCatalogingProgram"
+      },
+      "controlNumber": "17178420",
+      "modified": "2014-11-24T13:12:11.0+01:00",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=S"
+      },
+      "@id": "/bib/17178420",
+      "@type": "Record"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=S",
+          "@type": "Organization",
+          "name": "S"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/pol",
+          "notation": "pol"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/swe",
+          "notation": "swe"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=SUEC",
+          "@type": "Organization",
+          "notation": "SUEC"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "http://dewey.info/class/839.738/e23/",
+          "inScheme": {
+            "@id": "http://dewey.info/scheme/edition/e23/swe/"
+          },
+          "@type": "Concept",
+          "notation": "839.738"
+        }
+      },
+      {
+        "@graph": {
+          "language": "swe",
+          "notation": "DDC",
+          "@id": "http://dewey.info/scheme/edition/e23/swe/",
+          "version": "23",
+          "isVersionOf": {
+            "@id": "http://dewey.info/scheme/ddc/"
+          },
+          "@type": "ConceptScheme"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1960",
+          "givenName": "Tove",
+          "familyName": "Alsterdal",
+          "@id": "/some?type=Person&familyName=Alsterdal&givenName=Tove&birthYear=1960",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=UniformWork&title=Kvinnorna%20p%C3%A5%20stranden.",
+          "@type": "UniformWork",
+          "language": {
+            "@id": "/some?type=Language&label=Polska"
+          },
+          "title": "Kvinnorna på stranden."
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Language&label=Polska",
+          "@type": "Language",
+          "label": "Polska"
+        }
+      },
+      {
+        "@graph": {
+          "edition": "Wyd. 1.",
+          "@id": "/some?type=Product&edition=Wyd.%201.",
+          "@type": "Product"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Warszawa",
+          "@type": "Place",
+          "label": "Warszawa"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1962",
+          "givenName": "Beata",
+          "familyName": "Walczak-Larsson",
+          "@id": "_:b-0",
+          "@type": "Person"
+        }
+      }
+    ],
+    "items": [
+      {
+        "hasFormat": [
+          {
+            "@type": "Product",
+            "extent": "307 s."
+          }
+        ],
+        "classification": [
+          {
+            "@id": "http://dewey.info/class/839.738/e23/"
+          }
+        ],
+        "originalLanguage": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "translator": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "language": [
+          {
+            "@id": "/def/languages/pol"
+          }
+        ],
+        "festschrift": {
+          "@id": "/def/enum/content/NotAFestschrift"
+        },
+        "@id": "/resource/bib/17178420",
+        "responsibilityStatement": "Tove Alsterdal ; przekłożyła Beata Walczak-Larsson",
+        "attributedTo": {
+          "@id": "/some?type=Person&familyName=Alsterdal&givenName=Tove&birthYear=1960"
+        },
+        "hasVersion": [
+          {
+            "@id": "/some?type=Product&edition=Wyd.%201."
+          }
+        ],
+        "confPub": {
+          "@id": "/def/enum/content/NotAConferencePublication"
+        },
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/pl"
+          }
+        ],
+        "exampleOfWork": {
+          "@id": "/some?type=UniformWork&title=Kvinnorna%20p%C3%A5%20stranden."
+        },
+        "instanceTitle": {
+          "@type": "Title",
+          "titleValue": "Kobiety na plaży"
+        },
+        "literaryForm": {
+          "@id": "/def/enum/content/Novel"
+        },
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/isbn"
+            },
+            "@type": "Identifier",
+            "identifierValue": "9788377586853"
+          }
+        ],
+        "influencedBy": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "@type": [
+          "Text",
+          "Monograph"
+        ],
+        "publication": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Warszawa"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Akurat",
+            "providerDate": "2014"
+          }
+        ]
+      }
+    ]
+  }
+}

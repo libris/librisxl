@@ -1,0 +1,220 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/8463462"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=SHB"
+        }
+      ],
+      "created": "2002-07-02T00:00:00.0+02:00",
+      "encLevel": {
+        "@id": "/def/enum/record/MinimalLevel"
+      },
+      "catalogingSource": {
+        "@id": "/def/enum/content/CooperativeCatalogingProgram"
+      },
+      "controlNumber": "8463462",
+      "@type": "Record",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "modified": "2004-04-20T14:48:18.0+02:00",
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=SHB"
+      },
+      "@id": "/bib/8463462",
+      "linked": {
+        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+      }
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=SHB",
+          "@type": "Organization",
+          "name": "SHB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=SHB",
+          "@type": "Organization",
+          "notation": "SHB"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1954",
+          "givenName": "Yvonne Maria",
+          "familyName": "Werner",
+          "@id": "/some?type=Person&familyName=Werner&givenName=Yvonne%20Maria&birthYear=1954",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "title": "Historisk tidskrift (Stockholm)",
+          "scopeNote": [
+            "2002(122):1, s. [117]-122"
+          ],
+          "@type": "Aggregate",
+          "identifier": {
+            "@id": "/some?type=Identifier&identifierValue=0345-469X"
+          },
+          "@id": "/some?type=Aggregate&title=Historisk%20tidskrift%20%28Stockholm%29&scopeNote=2002%28122%29%3A1%2C%20s.%20%5B117%5D-122",
+          "describedBy": [
+            {
+              "@id": "/bib/8261328"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/issn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=0345-469X",
+          "@type": "Identifier",
+          "identifierValue": "0345-469X"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/8261328",
+          "@type": "Record",
+          "controlNumber": "8261328"
+        }
+      },
+      {
+        "@graph": {
+          "placePublisherAndDateOfPublication": "2000",
+          "title": "Only human : studies in the history of conceptions of man",
+          "linkNote": [
+            "Recension av:"
+          ],
+          "@type": "CreativeWork",
+          "identifier": [
+            {
+              "@id": "/some?type=Identifier&identifierValue=91-22-01889-1"
+            }
+          ],
+          "@id": "/some?type=CreativeWork&linkNote=Recension%20av%3A&title=Only%20human%20%3A%20studies%20in%20the%20history%20of%20conceptions%20of%20man&placePublisherAndDateOfPublication=2000",
+          "describedBy": [
+            {
+              "@id": "/bib/7223530"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/isbn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=91-22-01889-1",
+          "@type": "Identifier",
+          "identifierValue": "91-22-01889-1"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/7223530",
+          "@type": "Record",
+          "controlNumber": "7223530"
+        }
+      },
+      {
+        "@graph": {
+          "placePublisherAndDateOfPublication": "2000",
+          "title": "Bedrägliga begrepp :  kön och genus i humanistisk forskning",
+          "linkNote": [
+            "Recension av:"
+          ],
+          "@type": "CreativeWork",
+          "identifier": [
+            {
+              "@id": "/some?type=Identifier&identifierValue=91-506-1414-2"
+            }
+          ],
+          "@id": "/some?type=CreativeWork&linkNote=Recension%20av%3A&title=Bedr%C3%A4gliga%20begrepp%20%3A%20%20k%C3%B6n%20och%20genus%20i%20humanistisk%20forskning&placePublisherAndDateOfPublication=2000",
+          "describedBy": [
+            {
+              "@id": "/bib/7403200"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/isbn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=91-506-1414-2",
+          "@type": "Identifier",
+          "identifierValue": "91-506-1414-2"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/7403200",
+          "@type": "Record",
+          "controlNumber": "7403200"
+        }
+      }
+    ],
+    "items": [
+      {
+        "contentType": [
+          {
+            "@id": "/def/enum/content/Review"
+          }
+        ],
+        "publication": [
+          {
+            "providerDate": "2002"
+          }
+        ],
+        "language": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "responsibilityStatement": "Yvonne Maria Werner",
+        "attributedTo": {
+          "@id": "/some?type=Person&familyName=Werner&givenName=Yvonne%20Maria&birthYear=1954"
+        },
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "instanceTitle": {
+          "@type": "Title",
+          "titleValue": "Människosyn och genuskonstruktion i historisk belysning"
+        },
+        "isPartOf": [
+          {
+            "@id": "/some?type=Aggregate&title=Historisk%20tidskrift%20%28Stockholm%29&scopeNote=2002%28122%29%3A1%2C%20s.%20%5B117%5D-122"
+          }
+        ],
+        "relation": [
+          {
+            "@id": "/some?type=CreativeWork&linkNote=Recension%20av%3A&title=Only%20human%20%3A%20studies%20in%20the%20history%20of%20conceptions%20of%20man&placePublisherAndDateOfPublication=2000"
+          },
+          {
+            "@id": "/some?type=CreativeWork&linkNote=Recension%20av%3A&title=Bedr%C3%A4gliga%20begrepp%20%3A%20%20k%C3%B6n%20och%20genus%20i%20humanistisk%20forskning&placePublisherAndDateOfPublication=2000"
+          }
+        ],
+        "@id": "/resource/bib/8463462",
+        "@type": [
+          "Text",
+          "ComponentPart"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,336 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/9201665"
+      },
+      "created": "2003-12-04T00:00:00.0+01:00",
+      "controlNumber": "9201665",
+      "@type": "Record",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "651": {
+            "subfields": [
+              {
+                "a": "Världen"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "4"
+          }
+        }
+      ],
+      "modified": "2009-11-25T12:32:10.0+01:00",
+      "modifyingAgency": {
+        "@id": "/some?type=Organization&name=NB"
+      },
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=Mhh"
+      },
+      "@id": "/bib/9201665",
+      "linked": {
+        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+      }
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "index": {
+            "@id": "/def/enum/content/IndexPresent"
+          },
+          "material": {
+            "@id": "/def/enum/content/Atlas"
+          },
+          "@id": "/some?type=Cartography",
+          "@type": [
+            "Cartography"
+          ],
+          "relief": {
+            "@id": "/def/enum/content/Shading"
+          }
+        }
+      },
+      {
+        "@graph": {
+          "color": {
+            "@id": "/def/enum/carrier/Multicolored"
+          },
+          "medium": {
+            "@id": "/def/enum/carrier/Paper"
+          },
+          "@id": "/some?type=Map",
+          "@type": [
+            "Map"
+          ],
+          "carrierType": [
+            {
+              "@id": "/def/enum/carrier/Atlas"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=Mhh",
+          "@type": "Organization",
+          "name": "Mhh"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=NB",
+          "@type": "Organization",
+          "name": "NB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/7/N%28ya%29",
+          "inScheme": {
+            "@id": "/scheme/kssb/7"
+          },
+          "@type": "Concept",
+          "notation": "N(ya)"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/7",
+          "@type": "ConceptScheme",
+          "notation": "kssb/7"
+        }
+      },
+      {
+        "@graph": {
+          "edition": "7., rev. utg. /",
+          "@id": "/some?type=Product&edition=7.%2C%20rev.%20utg.%20%2F&editionResponsibility=%5Brevidering%3A%20European%20Map%20Graphics%20Ltd%20och%20Margareta%20Elg%5D",
+          "@type": "Product",
+          "editionResponsibility": "[revidering: European Map Graphics Ltd och Margareta Elg]"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=V%C3%A4ster%C3%A5s",
+          "@type": "Place",
+          "label": "Västerås"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Danmark",
+          "@type": "Place",
+          "label": "Danmark"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/_/V%C3%A4rlden",
+          "@type": "GeographicalTerm",
+          "prefLabel": "Världen"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1944",
+          "givenName": "Margareta",
+          "familyName": "Elg",
+          "@id": "_:b-0",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "_:b-1",
+          "@type": "Organization",
+          "name": "European Map Graphics"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=UniformWork&title=V%C3%A4rldsatlas",
+          "@type": "UniformWork",
+          "title": "Världsatlas"
+        }
+      },
+      {
+        "@graph": {
+          "title": "Världsatlas för familjen",
+          "placePublisherAndDateOfPublication": "1992",
+          "@type": "CreativeWork",
+          "partNumber": [
+            "2003"
+          ],
+          "identifier": [
+            {
+              "@id": "/some?type=Identifier&identifierValue=91-534-1450-0"
+            }
+          ],
+          "@id": "/some?type=CreativeWork&controlledLabel=Terrac&title=V%C3%A4rldsatlas%20f%C3%B6r%20familjen&placePublisherAndDateOfPublication=1992&partNumber=2003",
+          "describedBy": [
+            {
+              "@id": "/bib/7414106"
+            }
+          ],
+          "controlledLabel": "Terrac"
+        }
+      },
+      {
+        "@graph": {
+          "identifierScheme": {
+            "@id": "/def/identifiers/isbn"
+          },
+          "@id": "/some?type=Identifier&identifierValue=91-534-1450-0",
+          "@type": "Identifier",
+          "identifierValue": "91-534-1450-0"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/bib/7414106",
+          "@type": "Record",
+          "controlNumber": "7414106"
+        }
+      }
+    ],
+    "items": [
+      {
+        "comment": [
+          "Föreg. uppl. med titeln: Ica förlagets världsatlas för 2000-talet",
+          "2. tr., 2005"
+        ],
+        "mediaTerm": "Kartografiskt material",
+        "classification": [
+          {
+            "@id": "/topic/kssb/7/N%28ya%29"
+          }
+        ],
+        "cartographicScale": "Varierande skala",
+        "subject": [
+          {
+            "@id": "/topic/_/V%C3%A4rlden"
+          }
+        ],
+        "index": {
+          "@id": "/def/enum/content/IndexPresent"
+        },
+        "listOfContents": [
+          "S. 24-35: Universum / text: Roland Schmechel ; svensk översättning: Hans Uno Bengtsson ; teckningar: Gabi van Emmerich ; fotografier: NASA, Washington, Erich Bach Bild-archiv Superbild, München, Max-Planck-Institut, Bonn"
+        ],
+        "publication": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=V%C3%A4ster%C3%A5s"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Ica",
+            "providerDate": "2003"
+          }
+        ],
+        "hasVersion": [
+          {
+            "@id": "/some?type=Product&edition=7.%2C%20rev.%20utg.%20%2F&editionResponsibility=%5Brevidering%3A%20European%20Map%20Graphics%20Ltd%20och%20Margareta%20Elg%5D"
+          }
+        ],
+        "@id": "/resource/bib/9201665",
+        "influentialRelation": [
+          {
+            "@id": "/some?type=UniformWork&title=V%C3%A4rldsatlas"
+          }
+        ],
+        "influencedBy": [
+          {
+            "@id": "_:b-0"
+          },
+          {
+            "@id": "_:b-1"
+          }
+        ],
+        "manufacture": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Danmark"
+            },
+            "@type": "ProviderEvent"
+          }
+        ],
+        "cartographer": [
+          {
+            "@id": "_:b-0"
+          },
+          {
+            "@id": "_:b-1"
+          }
+        ],
+        "hasPart": [
+          {
+            "@id": "/some?type=Cartography"
+          }
+        ],
+        "material": {
+          "@id": "/def/enum/content/Atlas"
+        },
+        "hasFormat": [
+          {
+            "@id": "/some?type=Map"
+          },
+          {
+            "otherPhysicalDetails": "färgill., kartor i färg",
+            "@type": "Product",
+            "extent": "1 atlas (276 s.)",
+            "dimensions": "35 cm"
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "alternateEdition": [
+          {
+            "@id": "/some?type=CreativeWork&controlledLabel=Terrac&title=V%C3%A4rldsatlas%20f%C3%B6r%20familjen&placePublisherAndDateOfPublication=1992&partNumber=2003"
+          }
+        ],
+        "language": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "termsOfAvailability": "290:00",
+        "instanceTitle": {
+          "searchElement": false,
+          "@type": "Title",
+          "titleValue": "Ica förlagets världsatlas"
+        },
+        "relief": {
+          "@id": "/def/enum/content/Shading"
+        },
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/isbn"
+            },
+            "identifierNote": "inb.",
+            "@type": "Identifier",
+            "identifierValue": "91-534-2418-2"
+          }
+        ],
+        "@type": [
+          "Cartography",
+          "Monograph"
+        ],
+        "cartographicAscensionAndDeclination": [
+          {
+            "@type": "CartographyCoordinates",
+            "cartographicScale": "a"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,246 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/1997018"
+      },
+      "created": "1995-05-08T00:00:00.0+02:00",
+      "encLevel": {
+        "@id": "/def/enum/record/MinimalLevel"
+      },
+      "catalogingSource": {
+        "@id": "/def/enum/content/CooperativeCatalogingProgram"
+      },
+      "controlNumber": "1997018",
+      "modified": "2010-09-14T14:48:56.0+02:00",
+      "librisIIINumber": [
+        "9920947555"
+      ],
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=X"
+      },
+      "@id": "/bib/1997018",
+      "@type": "Record"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=X",
+          "@type": "Organization",
+          "name": "X"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/6/Xda",
+          "inScheme": {
+            "@id": "/scheme/kssb/6"
+          },
+          "@type": "Concept",
+          "notation": "Xda"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/6",
+          "@type": "ConceptScheme",
+          "notation": "kssb/6"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/6/Xmf",
+          "inScheme": {
+            "@id": "/scheme/kssb/6"
+          },
+          "@type": "Concept",
+          "notation": "Xmf"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Philip",
+          "familyName": "Glass",
+          "@id": "/some?type=Person&familyName=Glass&givenName=Philip",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=UniformWork&title=Pianomusik.&subtitle=Urval",
+          "subtitle": [
+            "Urval"
+          ],
+          "@type": "UniformWork",
+          "title": "Pianomusik."
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=New%20York",
+          "@type": "Place",
+          "label": "New York"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Philip.",
+          "familyName": "Glass",
+          "@id": "/some?type=Person&familyName=Glass&givenName=Philip.",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sab/Xda",
+          "inScheme": {
+            "@id": "/scheme/sab"
+          },
+          "@type": "Concept",
+          "notation": "Xda",
+          "prefLabel": "Musikalier Instrumentalsoli Tangentinstrument"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sab",
+          "@type": "ConceptScheme",
+          "notation": "sab"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sab/Xmf",
+          "inScheme": {
+            "@id": "/scheme/sab"
+          },
+          "@type": "Concept",
+          "notation": "Xmf",
+          "prefLabel": "Musikalier Instrumentalmusik Symfoniska Dikter Karaktärsstycken"
+        }
+      }
+    ],
+    "items": [
+      {
+        "@id": "/resource/bib/1997018",
+        "mediaTerm": "Musiktryck] /",
+        "classification": [
+          {
+            "@id": "/topic/kssb/6/Xda"
+          },
+          {
+            "@id": "/topic/kssb/6/Xmf"
+          },
+          {
+            "@id": "/topic/sab/Xda"
+          },
+          {
+            "@id": "/topic/sab/Xmf"
+          }
+        ],
+        "language": [
+          {
+            "@id": "/def/languages/zxx"
+          }
+        ],
+        "listOfContents": [
+          "Innehåll: Metamorphosis 1-5 ; Mad rush ; Wichita vortex sutra"
+        ],
+        "responsibilityStatement": "Philip Glass",
+        "attributedTo": {
+          "@id": "/some?type=Person&familyName=Glass&givenName=Philip"
+        },
+        "audioIssueNumber": "AM 82181",
+        "hasFormat": [
+          {
+            "@type": "Product",
+            "extent": "58 s."
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/xxu"
+          }
+        ],
+        "exampleOfWork": {
+          "@id": "/some?type=UniformWork&title=Pianomusik.&subtitle=Urval"
+        },
+        "instanceTitle": {
+          "searchElement": false,
+          "@type": "Title",
+          "titleValue": "Solo piano"
+        },
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/isbn"
+            },
+            "@type": "Identifier",
+            "identifierNote": "US"
+          },
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/isbn"
+            },
+            "identifierNote": "UK",
+            "@type": "Identifier",
+            "identifierValue": "0-8256-1297-7"
+          },
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/isbn"
+            },
+            "@type": "Identifier",
+            "identifierValue": "0-7119-2460-0"
+          }
+        ],
+        "influencedBy": [
+          {
+            "influencedBy": [
+              {
+                "@id": "/some?type=Person&familyName=Glass&givenName=Philip."
+              }
+            ],
+            "@type": "UniformWork",
+            "title": "Metamorphosis"
+          },
+          {
+            "influencedBy": [
+              {
+                "@id": "/some?type=Person&familyName=Glass&givenName=Philip."
+              }
+            ],
+            "@type": "UniformWork",
+            "title": "Mad rush"
+          },
+          {
+            "influencedBy": [
+              {
+                "@id": "/some?type=Person&familyName=Glass&givenName=Philip."
+              }
+            ],
+            "@type": "UniformWork",
+            "title": "Wichita vortex sutra"
+          }
+        ],
+        "@type": [
+          "NotatedMusic",
+          "Monograph"
+        ],
+        "publication": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=New%20York"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Amsco",
+            "providerDate": "1991"
+          }
+        ]
+      }
+    ]
+  }
+}

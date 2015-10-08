@@ -1,0 +1,233 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/16022752"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=SUEC"
+        }
+      ],
+      "created": "2014-03-10T00:00:00.0+01:00",
+      "encLevel": {
+        "@id": "/def/enum/record/MinimalLevel"
+      },
+      "technicalNote": [
+        "Imported from: z3950.bibsys.no:2100/BIBSYS (Do not remove)",
+        "S: Förvärvas ej av KB (annan utgåva finns)"
+      ],
+      "controlNumber": "16022752",
+      "modified": "2014-05-14T15:26:24.0+02:00",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "modifyingAgency": {
+        "@id": "/some?type=Organization&name=S"
+      },
+      "systemNumber": [
+        "133472086"
+      ],
+      "@id": "/bib/16022752",
+      "@type": "Record"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=S",
+          "@type": "Organization",
+          "name": "S"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/nor",
+          "notation": "nor"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/swe",
+          "notation": "swe"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=SUEC",
+          "@type": "Organization",
+          "notation": "SUEC"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "http://dewey.info/class//e23/",
+          "inScheme": {
+            "@id": "http://dewey.info/scheme/edition/e23/swe/"
+          },
+          "@type": "Concept"
+        }
+      },
+      {
+        "@graph": {
+          "language": "swe",
+          "notation": "DDC",
+          "@id": "http://dewey.info/scheme/edition/e23/swe/",
+          "version": "23",
+          "isVersionOf": {
+            "@id": "http://dewey.info/scheme/ddc/"
+          },
+          "@type": "ConceptScheme"
+        }
+      },
+      {
+        "@graph": {
+          "deathYear": "1991",
+          "familyName": "Lang",
+          "birthYear": "1914",
+          "givenName": "Maria",
+          "@id": "/some?type=Person&familyName=Lang&givenName=Maria&birthYear=1914&deathYear=1991",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=UniformWork&title=Rosor%2C%20kyssar%20och%20d%C3%B6den.",
+          "@type": "UniformWork",
+          "language": {
+            "@id": "/some?type=Language&label=Norska"
+          },
+          "title": "Rosor, kyssar och döden."
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Language&label=Norska",
+          "@type": "Language",
+          "label": "Norska"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Oslo",
+          "@type": "Place",
+          "label": "Oslo"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Peter",
+          "familyName": "Grøn",
+          "@id": "_:b-0",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "Kari",
+          "familyName": "Wærum",
+          "@id": "_:b-1",
+          "@type": "Person"
+        }
+      }
+    ],
+    "items": [
+      {
+        "classification": [
+          {
+            "@id": "http://dewey.info/class//e23/"
+          }
+        ],
+        "attributedTo": {
+          "@id": "/some?type=Person&familyName=Lang&givenName=Maria&birthYear=1914&deathYear=1991"
+        },
+        "contributor": [
+          {
+            "@id": "_:b-1"
+          }
+        ],
+        "index": {
+          "@id": "/def/enum/content/NoIndex"
+        },
+        "festschrift": {
+          "@id": "/def/enum/content/NotAFestschrift"
+        },
+        "additionalCarrierType": {
+          "@id": "/def/enum/content/RegularPrintReproduction"
+        },
+        "exampleOfWork": {
+          "@id": "/some?type=UniformWork&title=Rosor%2C%20kyssar%20och%20d%C3%B6den."
+        },
+        "literaryForm": {
+          "@id": "/def/enum/content/Essay"
+        },
+        "originalLanguage": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "influencedBy": [
+          {
+            "@id": "_:b-0"
+          },
+          {
+            "@id": "_:b-1"
+          }
+        ],
+        "responsibilityStatement": "Maria Lang ; oversatt av Peter Grøn ; bearbeidet av Kari Wærum",
+        "translator": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/rm"
+          }
+        ],
+        "@id": "/resource/bib/16022752",
+        "publication": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Oslo"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Silke forlag",
+            "providerDate": "2014"
+          }
+        ],
+        "hasFormat": [
+          {
+            "@type": "Product",
+            "extent": "221 s."
+          }
+        ],
+        "nationalBibliographicNumber": "(BIBBI)0378428",
+        "language": [
+          {
+            "@id": "/def/languages/nor"
+          }
+        ],
+        "confPub": {
+          "@id": "/def/enum/content/NotAConferencePublication"
+        },
+        "instanceTitle": {
+          "@type": "Title",
+          "titleValue": "Roser, kyss og døden"
+        },
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/isbn"
+            },
+            "@type": "Identifier",
+            "identifierValue": "9788282700863"
+          }
+        ],
+        "@type": [
+          "Text",
+          "Monograph"
+        ]
+      }
+    ]
+  }
+}

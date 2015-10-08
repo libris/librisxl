@@ -1,0 +1,492 @@
+{
+  "descriptions": {
+    "entry": {
+      "sameAs": [
+        {
+          "@id": "/topic/sao/Romaner"
+        }
+      ],
+      "scopeNote": [
+        "Se även resp litteraturhistoria med tillägg .01, t ex svensk Gc.01. För genren i sig se H.01 och resp skönlitteratur med tillägg .01, t ex svensk Hc.01."
+      ],
+      "narrower": [
+        {
+          "@id": "/topic/sao/Biografiska%20romaner"
+        },
+        {
+          "@id": "/topic/sao/Chick%20lit"
+        },
+        {
+          "@id": "/topic/sao/Dagboksromaner"
+        },
+        {
+          "@id": "/topic/sao/Thrillers"
+        },
+        {
+          "@id": "/topic/sao/Metaromaner"
+        },
+        {
+          "@id": "/topic/sao/Nyckelromaner"
+        },
+        {
+          "@id": "/topic/sao/K%C3%A4rleksromaner"
+        },
+        {
+          "@id": "/topic/sao/Pikareskromaner"
+        },
+        {
+          "@id": "/topic/sao/Politiska%20romaner"
+        },
+        {
+          "@id": "/topic/sao/Revolutionsromaner"
+        },
+        {
+          "@id": "/topic/sao/Sederomaner"
+        },
+        {
+          "@id": "/topic/sao/Sensationsromaner"
+        },
+        {
+          "@id": "/topic/sao/Sj%C3%B6romaner"
+        },
+        {
+          "@id": "/topic/sao/Sociala%20romaner"
+        },
+        {
+          "@id": "/topic/sao/Religi%C3%B6sa%20romaner"
+        },
+        {
+          "@id": "/topic/sao/Krigsromaner"
+        },
+        {
+          "@id": "/topic/sao/Utvecklingsromaner"
+        },
+        {
+          "@id": "/topic/sao/Kolportageromaner"
+        },
+        {
+          "@id": "/topic/sao/Historiska%20romaner"
+        },
+        {
+          "@id": "/topic/sao/%C3%84ventyrsromaner"
+        },
+        {
+          "@id": "/topic/sao/Sj%C3%A4lvbiografiska%20romaner"
+        },
+        {
+          "@id": "/topic/sao/Sentimentala%20romaner"
+        },
+        {
+          "@id": "/topic/sao/Bildningsromaner"
+        },
+        {
+          "@id": "/topic/sao/Kollektivromaner"
+        },
+        {
+          "@id": "/topic/sao/Spionromaner"
+        },
+        {
+          "@id": "/topic/sao/Bonderomaner"
+        },
+        {
+          "@id": "/topic/sao/Brevromaner"
+        },
+        {
+          "@id": "/topic/sao/Deckare"
+        },
+        {
+          "@id": "/topic/sao/Dokument%C3%A4rromaner"
+        },
+        {
+          "@id": "/topic/sao/F%C3%B6ljetonger"
+        },
+        {
+          "@id": "/topic/sao/Kioskdeckare"
+        },
+        {
+          "@id": "/topic/sao/Jag-romaner"
+        }
+      ],
+      "focus": {
+        "@id": "/resource/auth/158278"
+      },
+      "modified": "2014-05-12T12:11:06.0+02:00",
+      "closeMatch": [
+        {
+          "@id": "/topic/kssb/7/G.01"
+        },
+        {
+          "@id": "/topic/lcsh/Fiction"
+        }
+      ],
+      "broader": [
+        {
+          "@id": "/topic/sao/Litteratur"
+        }
+      ],
+      "inScheme": {
+        "@id": "/scheme/sao"
+      },
+      "prefLabel": "Romaner",
+      "headingSeries": {
+        "@id": "/def/enum/content/NotAppropriate"
+      },
+      "encLevel": {
+        "@id": "/def/enum/record/CompleteAuthorityRecord"
+      },
+      "_marcUncompleted": [
+        {
+          "_unhandled": [
+            "a"
+          ],
+          "680": {
+            "subfields": [
+              {
+                "a": "Se även ämnesord för resp litteraturs romaner, t.ex. Svenska romaner."
+              }
+            ],
+            "ind1": " ",
+            "ind2": " "
+          }
+        }
+      ],
+      "headingMain": {
+        "@id": "/def/enum/content/NotAppropriate"
+      },
+      "systemNumber": [
+        "(sao)39577"
+      ],
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=NB"
+      },
+      "inCollection": [
+        {
+          "@id": "/some?type=TermCollection&notation=Fack"
+        }
+      ],
+      "@id": "/auth/158278",
+      "language": [
+        {
+          "@id": "/def/languages/swe"
+        }
+      ],
+      "created": "2002-04-09T00:00:00.0+02:00",
+      "headingSubject": {
+        "@id": "/def/enum/content/Appropriate"
+      },
+      "level": {
+        "@id": "/def/enum/content/FullyEstablishedHeading"
+      },
+      "controlNumber": "158278",
+      "recordUpdate": {
+        "@id": "/def/enum/content/RecordCanBeUsed"
+      },
+      "kindOfRecord": {
+        "@id": "/def/enum/content/EstablishedHeadingRecord"
+      },
+      "@type": "TopicalTerm"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=NB",
+          "@type": "Organization",
+          "name": "NB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/swe",
+          "notation": "swe"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sao",
+          "@type": "ConceptScheme",
+          "notation": "sao"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=TermCollection&notation=Fack",
+          "@type": "TermCollection",
+          "notation": "Fack"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/7/G.01",
+          "inScheme": {
+            "@id": "/scheme/kssb/7"
+          },
+          "@type": "Concept",
+          "notation": "G.01"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/7",
+          "@type": "ConceptScheme",
+          "notation": "kssb/7"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Biografiska%20romaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Biografiska romaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Chick%20lit",
+          "@type": "TopicalTerm",
+          "prefLabel": "Chick lit"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Dagboksromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Dagboksromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Thrillers",
+          "@type": "TopicalTerm",
+          "prefLabel": "Thrillers"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Metaromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Metaromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Nyckelromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Nyckelromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/K%C3%A4rleksromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Kärleksromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Pikareskromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Pikareskromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Politiska%20romaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Politiska romaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Revolutionsromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Revolutionsromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Sederomaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Sederomaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Sensationsromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Sensationsromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Sj%C3%B6romaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Sjöromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Sociala%20romaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Sociala romaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Religi%C3%B6sa%20romaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Religiösa romaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Krigsromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Krigsromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Utvecklingsromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Utvecklingsromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Kolportageromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Kolportageromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Historiska%20romaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Historiska romaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/%C3%84ventyrsromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Äventyrsromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Litteratur",
+          "@type": "TopicalTerm",
+          "prefLabel": "Litteratur"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Sj%C3%A4lvbiografiska%20romaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Självbiografiska romaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Sentimentala%20romaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Sentimentala romaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Bildningsromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Bildningsromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Kollektivromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Kollektivromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Spionromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Spionromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Bonderomaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Bonderomaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Brevromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Brevromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Deckare",
+          "@type": "TopicalTerm",
+          "prefLabel": "Deckare"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Dokument%C3%A4rromaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Dokumentärromaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/F%C3%B6ljetonger",
+          "@type": "TopicalTerm",
+          "prefLabel": "Följetonger"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Kioskdeckare",
+          "@type": "TopicalTerm",
+          "prefLabel": "Kioskdeckare"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Jag-romaner",
+          "@type": "TopicalTerm",
+          "prefLabel": "Jag-romaner"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/lcsh/Fiction",
+          "inScheme": {
+            "@id": "/scheme/lcsh"
+          },
+          "@type": "TopicalTerm",
+          "prefLabel": "Fiction"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/lcsh",
+          "@type": "ConceptScheme",
+          "notation": "lcsh"
+        }
+      }
+    ],
+    "items": [
+      {
+        "@id": "/resource/auth/158278",
+        "@type": [
+          "Authority"
+        ]
+      }
+    ]
+  }
+}

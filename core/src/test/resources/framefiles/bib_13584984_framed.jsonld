@@ -1,0 +1,622 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/13584984"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=KVIN"
+        },
+        {
+          "@id": "/some?type=Organization&notation=NB"
+        }
+      ],
+      "created": "2012-11-07T00:00:00.0+01:00",
+      "catalogingSource": {
+        "@id": "/def/enum/content/CooperativeCatalogingProgram"
+      },
+      "controlNumber": "13584984",
+      "modified": "2013-03-14T10:35:54.0+01:00",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Byar"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Lantbruk"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Könsarbetsdelning"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Genus (socialt kön)"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Jordbruk"
+              },
+              {
+                "x": "genus"
+              },
+              {
+                "z": "Vietnam"
+              },
+              {
+                "2": "kao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Jordbrukare"
+              },
+              {
+                "x": "könsroller"
+              },
+              {
+                "x": "genusarbetsdelning"
+              },
+              {
+                "2": "kao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "650": {
+            "subfields": [
+              {
+                "a": "Socialantropologi"
+              },
+              {
+                "2": "kao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        },
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "651": {
+            "subfields": [
+              {
+                "a": "Vietnam"
+              },
+              {
+                "z": "Phu Tho"
+              },
+              {
+                "2": "sao"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "7"
+          }
+        }
+      ],
+      "modifyingAgency": {
+        "@id": "/some?type=Organization&name=S"
+      },
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=G"
+      },
+      "@id": "/bib/13584984",
+      "@type": "Record"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=G",
+          "@type": "Organization",
+          "name": "G"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=S",
+          "@type": "Organization",
+          "name": "S"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/eng",
+          "notation": "eng"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=KVIN",
+          "@type": "Organization",
+          "notation": "KVIN"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=NB",
+          "@type": "Organization",
+          "notation": "NB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "http://dewey.info/class/307.7208109597/e23/",
+          "inScheme": {
+            "@id": "http://dewey.info/scheme/edition/e23/swe/"
+          },
+          "@type": "Concept",
+          "notation": "307.7208109597"
+        }
+      },
+      {
+        "@graph": {
+          "language": "swe",
+          "notation": "DDC",
+          "@id": "http://dewey.info/scheme/edition/e23/swe/",
+          "version": "23",
+          "isVersionOf": {
+            "@id": "http://dewey.info/scheme/ddc/"
+          },
+          "@type": "ConceptScheme"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/8/Oabb-ocdc",
+          "inScheme": {
+            "@id": "/scheme/kssb/8"
+          },
+          "@type": "Concept",
+          "notation": "Oabb-ocdc"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kssb/8",
+          "@type": "ConceptScheme",
+          "notation": "kssb/8"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kssb/8/Mocdc",
+          "inScheme": {
+            "@id": "/scheme/kssb/8"
+          },
+          "@type": "Concept",
+          "notation": "Mocdc"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1967",
+          "givenName": "Cecilia",
+          "familyName": "Bergstedt",
+          "@id": "/some?type=Person&familyName=Bergstedt&givenName=Cecilia&birthYear=1967",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=G%C3%B6teborg",
+          "@type": "Place",
+          "label": "Göteborg"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Bohus",
+          "@type": "Place",
+          "label": "Bohus"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Byar",
+          "inScheme": {
+            "@id": "/scheme/sao"
+          },
+          "@type": "TopicalTerm",
+          "prefLabel": "Byar"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/sao",
+          "@type": "ConceptScheme",
+          "notation": "sao"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Lantbruk",
+          "inScheme": {
+            "@id": "/scheme/sao"
+          },
+          "@type": "TopicalTerm",
+          "prefLabel": "Lantbruk"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/K%C3%B6nsarbetsdelning",
+          "inScheme": {
+            "@id": "/scheme/sao"
+          },
+          "@type": "TopicalTerm",
+          "prefLabel": "Könsarbetsdelning"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Genus%20%28socialt%20k%C3%B6n%29",
+          "inScheme": {
+            "@id": "/scheme/sao"
+          },
+          "@type": "TopicalTerm",
+          "prefLabel": "Genus (socialt kön)"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kao/Jordbruk/genus/Vietnam",
+          "inScheme": {
+            "@id": "/scheme/kao"
+          },
+          "@type": "TopicalTerm",
+          "broader": [
+            {
+              "@id": "/some?type=TopicalTerm&prefLabel=Jordbruk"
+            },
+            {
+              "@id": "/some?type=SubdivisionTerm&prefLabel=genus"
+            },
+            {
+              "@id": "/some?type=GeographicalTerm&prefLabel=Vietnam"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=TopicalTerm&prefLabel=Jordbruk",
+          "@type": "TopicalTerm",
+          "prefLabel": "Jordbruk"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=SubdivisionTerm&prefLabel=genus",
+          "@type": "SubdivisionTerm",
+          "prefLabel": "genus"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=GeographicalTerm&prefLabel=Vietnam",
+          "@type": "GeographicalTerm",
+          "prefLabel": "Vietnam"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/scheme/kao",
+          "@type": "ConceptScheme",
+          "notation": "kao"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kao/Jordbrukare/k%C3%B6nsroller/genusarbetsdelning",
+          "inScheme": {
+            "@id": "/scheme/kao"
+          },
+          "@type": "TopicalTerm",
+          "broader": [
+            {
+              "@id": "/some?type=TopicalTerm&prefLabel=Jordbrukare"
+            },
+            {
+              "@id": "/some?type=SubdivisionTerm&prefLabel=k%C3%B6nsroller"
+            },
+            {
+              "@id": "/some?type=SubdivisionTerm&prefLabel=genusarbetsdelning"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=TopicalTerm&prefLabel=Jordbrukare",
+          "@type": "TopicalTerm",
+          "prefLabel": "Jordbrukare"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=SubdivisionTerm&prefLabel=k%C3%B6nsroller",
+          "@type": "SubdivisionTerm",
+          "prefLabel": "könsroller"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=SubdivisionTerm&prefLabel=genusarbetsdelning",
+          "@type": "SubdivisionTerm",
+          "prefLabel": "genusarbetsdelning"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/kao/Socialantropologi",
+          "inScheme": {
+            "@id": "/scheme/kao"
+          },
+          "@type": "TopicalTerm",
+          "prefLabel": "Socialantropologi"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/sao/Vietnam/Phu%20Tho",
+          "inScheme": {
+            "@id": "/scheme/sao"
+          },
+          "@type": "GeographicalTerm",
+          "broader": [
+            {
+              "@id": "/some?type=TopicalTerm&prefLabel=Vietnam"
+            },
+            {
+              "@id": "/some?type=GeographicalTerm&prefLabel=Phu%20Tho"
+            }
+          ]
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=TopicalTerm&prefLabel=Vietnam",
+          "@type": "TopicalTerm",
+          "prefLabel": "Vietnam"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=GeographicalTerm&prefLabel=Phu%20Tho",
+          "@type": "GeographicalTerm",
+          "prefLabel": "Phu Tho"
+        }
+      },
+      {
+        "@graph": {
+          "isPartOf": {
+            "@id": "/some?type=Organization&name=G%C3%B6teborgs%20universitet."
+          },
+          "@id": "_:b-0",
+          "@type": "Organization",
+          "name": "Institutionen för globala studier"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=G%C3%B6teborgs%20universitet.",
+          "@type": "Organization",
+          "name": "Göteborgs universitet."
+        }
+      }
+    ],
+    "items": [
+      {
+        "manufacture": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Bohus"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Ale tryckteam)"
+          }
+        ],
+        "hasFormat": [
+          {
+            "@type": "Product",
+            "extent": "203 s.",
+            "dimensions": "25 cm"
+          }
+        ],
+        "classification": [
+          {
+            "@id": "http://dewey.info/class/307.7208109597/e23/"
+          },
+          {
+            "@id": "/topic/kssb/8/Oabb-ocdc"
+          },
+          {
+            "@id": "/topic/kssb/8/Mocdc"
+          }
+        ],
+        "@id": "/resource/bib/13584984",
+        "contentType": [
+          {
+            "@id": "/def/enum/content/Thesis"
+          }
+        ],
+        "language": [
+          {
+            "@id": "/def/languages/eng"
+          }
+        ],
+        "festschrift": {
+          "@id": "/def/enum/content/NotAFestschrift"
+        },
+        "publisher": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "influencedBy": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "responsibilityStatement": "Cecilia Bergstedt",
+        "attributedTo": {
+          "@id": "/some?type=Person&familyName=Bergstedt&givenName=Cecilia&birthYear=1967"
+        },
+        "subject": [
+          {
+            "@id": "/topic/sao/Byar"
+          },
+          {
+            "@id": "/topic/sao/Lantbruk"
+          },
+          {
+            "@id": "/topic/sao/K%C3%B6nsarbetsdelning"
+          },
+          {
+            "@id": "/topic/sao/Genus%20%28socialt%20k%C3%B6n%29"
+          },
+          {
+            "@id": "/topic/kao/Jordbruk/genus/Vietnam"
+          },
+          {
+            "@id": "/topic/kao/Jordbrukare/k%C3%B6nsroller/genusarbetsdelning"
+          },
+          {
+            "@id": "/topic/kao/Socialantropologi"
+          },
+          {
+            "@id": "/topic/sao/Vietnam/Phu%20Tho"
+          }
+        ],
+        "hasAnnotation": [
+          {
+            "note": "Diss. Göteborg : Göteborgs universitet, 2012",
+            "@type": "DissertationAnnotation"
+          }
+        ],
+        "confPub": {
+          "@id": "/def/enum/content/NotAConferencePublication"
+        },
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "instanceTitle": {
+          "subtitle": "gender, farm work, and land in a rural Vietnamese village",
+          "@type": "Title",
+          "titleValue": "The lie of the land"
+        },
+        "literaryForm": {
+          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+        },
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/isbn"
+            },
+            "@type": "Identifier",
+            "identifierValue": "9789162885809"
+          }
+        ],
+        "hasSummaryLanguage": {
+          "@id": "/some"
+        },
+        "@type": [
+          "Text",
+          "Monograph"
+        ],
+        "publication": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=G%C3%B6teborg"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "School of Global Studies, University of Gothenburg",
+            "providerDate": "2012"
+          }
+        ]
+      }
+    ]
+  }
+}

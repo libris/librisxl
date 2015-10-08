@@ -8,6 +8,9 @@ import whelk.converter.JsonLDLinkCompleterFilter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.WhelkAddException
 
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.text.*
 import java.util.concurrent.*
 
@@ -338,6 +341,9 @@ class OaiPmhImporter {
                         if (marcFrameConverter && it.manifest.dataset != SUPPRESSRECORD_DATASET) {
                             log.trace("Conversion starts.")
                             def doc = marcFrameConverter.doConvert(it.record, it.manifest)
+                            Files.write(Paths.get("/tmp/${doc.id}_flat.jsonld"), doc.dataAsString.getBytes("utf-8"), StandardOpenOption.CREATE)
+
+
                             log.trace("Convestion finished.")
                             if (it.originalIdentifier) {
                                 def dataMap = doc.data

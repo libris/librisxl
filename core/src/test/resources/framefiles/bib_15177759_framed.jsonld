@@ -1,0 +1,283 @@
+{
+  "descriptions": {
+    "entry": {
+      "about": {
+        "@id": "/resource/bib/15177759"
+      },
+      "bibliography": [
+        {
+          "@id": "/some?type=Organization&notation=NB"
+        }
+      ],
+      "created": "2014-04-16T00:00:00.0+02:00",
+      "encLevel": {
+        "@id": "/def/enum/record/MinimalLevel"
+      },
+      "controlNumber": "15177759",
+      "modified": "2015-10-07T08:44:51.0+02:00",
+      "catForm": {
+        "@id": "/def/enum/record/AACR2"
+      },
+      "_marcUncompleted": [
+        {
+          "_unhandled": [
+            "ind2"
+          ],
+          "655": {
+            "subfields": [
+              {
+                "a": "Deckare, thrillers och spänning"
+              }
+            ],
+            "ind1": " ",
+            "ind2": "4"
+          }
+        }
+      ],
+      "modifyingAgency": {
+        "@id": "/some?type=Organization&name=S"
+      },
+      "systemNumber": [
+        "(BOKR)9789174293968"
+      ],
+      "originalCatalogingAgency": {
+        "@id": "/some?type=Organization&name=BOKR"
+      },
+      "@id": "/bib/15177759",
+      "@type": "Record"
+    },
+    "quoted": [
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=BOKR",
+          "@type": "Organization",
+          "name": "BOKR"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&name=S",
+          "@type": "Organization",
+          "name": "S"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/swe",
+          "notation": "swe"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/def/languages/eng",
+          "notation": "eng"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Organization&notation=NB",
+          "@type": "Organization",
+          "notation": "NB"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "http://dewey.info/class/813.54/e23/",
+          "inScheme": {
+            "@id": "http://dewey.info/scheme/edition/e23/swe/"
+          },
+          "@type": "Concept",
+          "notation": "813.54"
+        }
+      },
+      {
+        "@graph": {
+          "language": "swe",
+          "notation": "DDC",
+          "@id": "http://dewey.info/scheme/edition/e23/swe/",
+          "version": "23",
+          "isVersionOf": {
+            "@id": "http://dewey.info/scheme/ddc/"
+          },
+          "@type": "ConceptScheme"
+        }
+      },
+      {
+        "@graph": {
+          "givenName": "John",
+          "familyName": "Grisham",
+          "@id": "/some?type=Person&familyName=Grisham&givenName=John",
+          "@type": "Person"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=UniformWork&title=The%20racketeer.",
+          "@type": "UniformWork",
+          "language": {
+            "@id": "/some?type=Language&label=Svenska"
+          },
+          "title": "The racketeer."
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Language&label=Svenska",
+          "@type": "Language",
+          "label": "Svenska"
+        }
+      },
+      {
+        "@graph": {
+          "edition": "[Ny utg.]",
+          "@id": "/some?type=Product&edition=%5BNy%20utg.%5D",
+          "@type": "Product"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Stockholm",
+          "@type": "Place",
+          "label": "Stockholm"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/some?type=Place&label=Falun",
+          "@type": "Place",
+          "label": "Falun"
+        }
+      },
+      {
+        "@graph": {
+          "@id": "/topic/saogf/Deckare%2C%20thrillers%20och%20sp%C3%A4nning",
+          "@type": "GenreTerm",
+          "prefLabel": "Deckare, thrillers och spänning"
+        }
+      },
+      {
+        "@graph": {
+          "birthYear": "1960",
+          "givenName": "Kjell",
+          "familyName": "Waltman",
+          "@id": "_:b-0",
+          "@type": "Person"
+        }
+      }
+    ],
+    "items": [
+      {
+        "comment": [
+          "Första svenska upplaga 2013"
+        ],
+        "classification": [
+          {
+            "@id": "http://dewey.info/class/813.54/e23/"
+          }
+        ],
+        "series": [
+          {
+            "issn": "99-0307595-2",
+            "@type": "Serial",
+            "title": "Bonnier pocket"
+          }
+        ],
+        "attributedTo": {
+          "@id": "/some?type=Person&familyName=Grisham&givenName=John"
+        },
+        "festschrift": {
+          "@id": "/def/enum/content/NotAFestschrift"
+        },
+        "hasVersion": [
+          {
+            "@id": "/some?type=Product&edition=%5BNy%20utg.%5D"
+          }
+        ],
+        "exampleOfWork": {
+          "@id": "/some?type=UniformWork&title=The%20racketeer."
+        },
+        "literaryForm": {
+          "@id": "/def/enum/content/Novel"
+        },
+        "originalLanguage": [
+          {
+            "@id": "/def/languages/eng"
+          }
+        ],
+        "influencedBy": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "manufacture": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Falun"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Scandbook)"
+          }
+        ],
+        "responsibilityStatement": "John Grisham ; översättning av Kjell Waltman",
+        "hasFormat": [
+          {
+            "@type": "Product",
+            "extent": "375 s.",
+            "dimensions": "18 cm"
+          }
+        ],
+        "publicationCountry": [
+          {
+            "@id": "/def/countries/sw"
+          }
+        ],
+        "genre": [
+          {
+            "@id": "/topic/saogf/Deckare%2C%20thrillers%20och%20sp%C3%A4nning"
+          }
+        ],
+        "@id": "/resource/bib/15177759",
+        "publication": [
+          {
+            "place": {
+              "@id": "/some?type=Place&label=Stockholm"
+            },
+            "@type": "ProviderEvent",
+            "providerName": "Bonnier pocket",
+            "providerDate": "2014"
+          }
+        ],
+        "translator": [
+          {
+            "@id": "_:b-0"
+          }
+        ],
+        "language": [
+          {
+            "@id": "/def/languages/swe"
+          }
+        ],
+        "confPub": {
+          "@id": "/def/enum/content/NotAConferencePublication"
+        },
+        "instanceTitle": {
+          "@type": "Title",
+          "titleValue": "Svindlaren"
+        },
+        "identifier": [
+          {
+            "identifierScheme": {
+              "@id": "/def/identifiers/isbn"
+            },
+            "@type": "Identifier",
+            "identifierValue": "9789174293968"
+          }
+        ],
+        "@type": [
+          "Text",
+          "Monograph"
+        ]
+      }
+    ]
+  }
+}
