@@ -1,3 +1,4 @@
 oaipmhServiceUrl = URL
 oaipmhUsername   = USERNAME
 oaipmhPassword   = PASSWORD
+dataset          = ONE,OR,MORE,DATASETS

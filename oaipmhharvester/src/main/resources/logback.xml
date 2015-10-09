@@ -126,11 +126,8 @@
 <logger name="whelk.plugin.libris.JsonLDLinkExpander">
   <level value="info"/>
 </logger>
-<logger name="whelk.plugin.ScheduledOperator">
-  <level value="info"/>
-</logger>
-<logger name="whelk.plugin.ScheduledJob">
-  <level value="info"/>
+<logger name="whelk.servlet.ScheduledJob">
+  <level value="trace"/>
 </logger>
 <logger name="whelk.plugin.JsonLDLinkCompleterFilter">
   <level value="info"/>

@@ -16,6 +16,8 @@ import whelk.rest.security.*
 
 import java.util.regex.Pattern
 
+import static whelk.rest.api.HttpTools.getMajorContentType
+
 @Log
 class DocumentAPI implements RestAPI {
     MimetypesFileTypeMap mt = new MimetypesFileTypeMap()
@@ -41,12 +43,12 @@ class DocumentAPI implements RestAPI {
 
     def determineDisplayMode(path) {
         if (path.endsWith("/meta")) {
-            return [path[0 .. -6], DisplayMode.META]
+            return [path[0 .. -6], HttpTools.DisplayMode.META]
         }
         if (path.endsWith("/_raw")) {
-            return [path[0 .. -6], DisplayMode.RAW]
+            return [path[0 .. -6], HttpTools.DisplayMode.RAW]
         }
-        return [path, DisplayMode.DOCUMENT]
+        return [path, whelk.rest.api.HttpTools.DisplayMode.DOCUMENT]
     }
 
     String getCleanPath(List pathVars) {
@@ -255,7 +257,6 @@ class DocumentAPI implements RestAPI {
 
             try {
                 Document doc = new Document(mapper.readValue(request.getInputStream().getBytes(), Map), manifest)
-                // whelk.createDocument(manifest["contentType"]).withManifest(manifest).withData(request.getInputStream().getBytes())
 
                 if (!hasPermission(request.getAttribute("user"), doc, existingDoc)) {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
@@ -336,10 +337,6 @@ class DocumentAPI implements RestAPI {
         return ds
     }
 
-    String getMajorContentType(String contentType) {
-        return contentType?.replaceAll("/[\\w]+\\+", "/")
-    }
-
     List<String> getAlternateIdentifiersFromLinkHeaders(HttpServletRequest request) {
         def alts = []
         for (link in request.getHeaders("Link")) {
@@ -353,35 +350,5 @@ class DocumentAPI implements RestAPI {
         }
         return alts
     }
-
-    static void sendResponse(HttpServletResponse response, Map data, String contentType, int statusCode = 200) {
-        if (!data) {
-            sendResponse(response, new byte[0], contentType, statusCode)
-        } else {
-            sendResponse(response, mapper.writeValueAsBytes(data), contentType, statusCode)
-        }
-    }
-
-    static void sendResponse(HttpServletResponse response, byte[] data, String contentType, int statusCode = 200) {
-        response.setStatus(statusCode)
-        if (contentType) {
-            response.setContentType(contentType)
-            if (contentType.startsWith("text/") || contentType.startsWith("application/")) {
-                response.setCharacterEncoding("UTF-8")
-            }
-        }
-
-        if (data.length > 0) {
-            OutputStream out = response.getOutputStream()
-            out.write(data, 0, data.length)
-            out.flush()
-            out.close()
-        }
-    }
-
-
 }
 
-enum DisplayMode {
-DOCUMENT, META, RAW
-}

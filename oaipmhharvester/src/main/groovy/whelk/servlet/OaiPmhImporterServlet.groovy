@@ -117,6 +117,7 @@ class ScheduledJob implements Runnable {
         this.dataset = ds
         this.storage = pg
         this.initialState = is
+        assert storage
     }
 
 
@@ -148,6 +149,7 @@ class ScheduledJob implements Runnable {
             whelkState.put("importOperator", dataset)
             whelkState.remove("lastImportOperator")
             def result = importer.doImport(dataset, null, -1, true, true, nextSince)
+            log.trace("Import completed, result: $result")
 
             int totalCount = result.numberOfDocuments
             if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
@@ -170,10 +172,8 @@ class ScheduledJob implements Runnable {
         } catch (Exception e) {
             log.error("Something failed: ${e.message}", e)
         } finally {
-            whelkState["test"].put("stuff", "other stuff")
-
-            storage?.store(new Document("/sys/whelk.state", whelkState).withDataset("sys"), false)
-
+            log.debug("Saving state $whelkState")
+            storage.store(new Document("/sys/whelk.state", whelkState).withDataset("sys"))
         }
     }
 

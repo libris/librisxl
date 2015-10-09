@@ -135,6 +135,7 @@ class PostgreSQLComponent implements Storage {
     @Override
     Document store(Document doc) {
         if (!doc.dataset) {
+            log.error("Can't save document without dataset.")
             throw new WhelkException("Can't save document without dataset.")
         }
         log.debug("Saving ${doc.id}")
