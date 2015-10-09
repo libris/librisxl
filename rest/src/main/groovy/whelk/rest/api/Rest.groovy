@@ -1,18 +1,24 @@
 package whelk.rest.api
 
 import groovy.util.logging.Slf4j as Log
+import org.picocontainer.Characteristics
+import org.picocontainer.DefaultPicoContainer
+import org.picocontainer.PicoContainer
+import org.picocontainer.containers.PropertiesPicoContainer
 import whelk.Document
 import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
+import whelk.component.ElasticSearch
+import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
 import whelk.exception.WhelkRuntimeException
+import whelk.filter.JsonLdLinkExpander
 
 import javax.activation.MimetypesFileTypeMap
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import java.awt.DisplayMode
 
 import static HttpTools.sendResponse
 import static whelk.rest.api.HttpTools.getMajorContentType
@@ -32,16 +38,50 @@ class Rest extends HttpServlet {
             "hold": "/sys/context/lib.jsonld"
     ]
     Whelk whelk
+    PicoContainer pico
+
+    Rest() {
+        super()
+        log.info("Setting up httpwhelk.")
+
+        // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
+        InputStream secretsConfig = ( System.getProperty("xl.secret.properties")
+                ? new FileInputStream(System.getProperty("xl.secret.properties"))
+                : this.getClass().getClassLoader().getResourceAsStream("secret.properties") )
+
+        Properties props = new Properties()
+
+        props.load(secretsConfig)
+
+        pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
+
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
+
+        pico.addComponent(Whelk.class)
+
+        pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
+
+        pico.addComponent(DocumentAPI.class)
+        pico.addComponent(ISXNTool.class)
+
+        pico.start()
+    }
+
+    @Override
+    void init() {
+        whelk = pico.getComponent(Whelk.class)
+    }
+
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
 
+        /*
         if (request.pathInfo.endsWith("/")) {
-            handleQuery(request, response, request.pathInfo)
-            return
+            return handleQuery(request, response, request.pathInfo)
         }
-
-
+        */
 
         try {
             def (path, mode) = determineDisplayMode(request.pathInfo)
@@ -61,7 +101,7 @@ class Rest extends HttpServlet {
             }
 
             if (HttpTools.DisplayMode.DOCUMENT == mode) {
-                document = convertDocumentToAcceptedMediaType(document, request.getHeader("accept"))
+                document = convertDocumentToAcceptedMediaType(document, path, request.getHeader("accept"))
             }
 
             if (document && (!document.isDeleted() || mode== HttpTools.DisplayMode.META)) {
@@ -150,16 +190,16 @@ class Rest extends HttpServlet {
 
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
-        handleRequest(request, response)
     }
 
     @Override
     void doPut(HttpServletRequest request, HttpServletResponse response) {
-        handleRequest(request, response)
     }
 
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
-        handleRequest(request, response)
     }
+
+
+
 }
