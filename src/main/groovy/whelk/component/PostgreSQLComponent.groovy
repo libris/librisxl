@@ -146,7 +146,7 @@ class PostgreSQLComponent implements Storage {
             Date now = new Date()
             if (versioning) {
                 if (!saveVersion(doc, connection, now)) {
-                    return doc// Same document already in storage.
+                    return doc // Same document already in storage.
                 }
             }
             PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT)
