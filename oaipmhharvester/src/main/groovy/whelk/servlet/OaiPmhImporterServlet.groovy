@@ -120,7 +120,6 @@ class ScheduledJob implements Runnable {
         assert storage
     }
 
-
     void run() {
         assert dataset
 
@@ -142,33 +141,30 @@ class ScheduledJob implements Runnable {
                 currentSince = nextSince
                 log.info("Importer has no state for last import from $dataset. Setting last week (${nextSince})")
             }
-            nextSince = new Date(0) //sneeking past next date
+            //nextSince = new Date(0) //sneeking past next date
             log.debug("Executing OAIPMH import for $dataset since $nextSince from ${importer.serviceUrl}")
-            whelkState.put("status", "RUNNING")
+            whelkState[dataset].put("status", "RUNNING")
 
-            whelkState.put("importOperator", dataset)
-            whelkState.remove("lastImportOperator")
+            whelkState[dataset].put("importOperator", dataset)
+            whelkState[dataset].remove("lastImportOperator")
             def result = importer.doImport(dataset, null, -1, true, true, nextSince)
             log.trace("Import completed, result: $result")
 
-            int totalCount = result.numberOfDocuments
             if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
                 log.info("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $dataset. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
                 whelkState[dataset].put("lastImportNrImported", result.numberOfDocuments)
                 whelkState[dataset].put("lastImportNrDeleted", result.numberOfDeleted)
                 whelkState[dataset].put("lastImportNrSkipped", result.numberOfDocumentsSkipped)
-                println("lastRecordDateStamp: ${result.lastRecordDatestamp}")
                 whelkState[dataset].put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
 
             } else {
                 log.debug("Imported ${result.numberOfDocuments} document for $dataset.")
-                whelkState.put("lastImport", currentSince.format(DATE_FORMAT))
+                whelkState[dataset].put("lastImport", currentSince.format(DATE_FORMAT))
             }
-            whelkState.remove("importOperator")
-            whelkState.put("status", "IDLE ödla")
-            whelkState.put("lastRunNrImported", result.numberOfDocuments)
-            whelkState.put("lastRun", new Date().format(DATE_FORMAT))
-
+            whelkState[dataset].remove("importOperator")
+            whelkState[dataset].put("status", "IDLE ödla")
+            whelkState[dataset].put("lastRunNrImported", result.numberOfDocuments)
+            whelkState[dataset].put("lastRun", new Date().format(DATE_FORMAT))
         } catch (Exception e) {
             log.error("Something failed: ${e.message}", e)
         } finally {

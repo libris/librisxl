@@ -32,7 +32,6 @@ class OaiPmhImporter {
     String dataset
 
     String serviceUrl
-    //imp.serviceUrl = conf.url  removed from scheduled operator. fix!
 
     int recordCount = 0
     int nrDeleted = 0
@@ -341,7 +340,7 @@ class OaiPmhImporter {
                         if (marcFrameConverter && it.manifest.dataset != SUPPRESSRECORD_DATASET) {
                             log.trace("Conversion starts.")
                             def doc = marcFrameConverter.doConvert(it.record, it.manifest)
-                            Files.write(Paths.get("/tmp/${doc.id}_flat.jsonld"), doc.dataAsString.getBytes("utf-8"), StandardOpenOption.CREATE)
+                            //Files.write(Paths.get("/tmp/${doc.id}_flat.jsonld"), doc.dataAsString.getBytes("utf-8"), StandardOpenOption.CREATE)
 
 
                             log.trace("Convestion finished.")

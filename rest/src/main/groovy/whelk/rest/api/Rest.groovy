@@ -114,22 +114,22 @@ class Rest extends HttpServlet {
                     sendResponse(response, document.getManifestAsJson(), "application/json")
                 } else {
                     String ctheader = contextHeaders.get(path.split("/")[1])
-                    if (ctheader)
+                    if (ctheader) {
                         response.setHeader("Link", "<$ctheader>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"")
                     }
-                    response.setHeader("ETag", document.modified as String)
-                    String contentType = getMajorContentType(document.contentType)
-                    if (path in contextHeaders.collect { it.value })  {
-                        log.debug("request is for context file. Must serve original content-type ($contentType).")
-                        contentType = document.contentType
-                    }
-                    if (flat) {
-                        sendResponse(response, JsonLd.flatten(document.data), contentType)
-                    } else {
-                        log.info("Framing ${document.identifier} ...")
-                        sendResponse(response, JsonLd.frame(document.identifier, document.data), contentType)
-                    }
-
+                }
+                response.setHeader("ETag", document.modified as String)
+                String contentType = getMajorContentType(document.contentType)
+                if (path in contextHeaders.collect { it.value })  {
+                    log.debug("request is for context file. Must serve original content-type ($contentType).")
+                    contentType = document.contentType
+                }
+                if (flat) {
+                    sendResponse(response, JsonLd.flatten(document.data), contentType)
+                } else {
+                    log.info("Framing ${document.identifier} ...")
+                    sendResponse(response, JsonLd.frame(document.identifier, document.data), contentType)
+                }
             } else {
                 log.debug("Failed to find a document with URI $path")
                 response.sendError(response.SC_NOT_FOUND)
