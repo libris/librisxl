@@ -480,7 +480,7 @@ class PostgreSQLComponent implements Storage {
     void remove(String identifier, String dataset) {
         if (versioning) {
             log.debug("Creating tombstone record with id ${identifier}")
-            store(createTombstone(identifier, dataset), false)
+            store(createTombstone(identifier, dataset))
         } else {
             Connection connection = getConnection()
             PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
