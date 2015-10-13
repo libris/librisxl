@@ -22,11 +22,13 @@ class Document {
 
     String id
     private Map data = [:]
-    private final TreeMap manifest = new TreeMap()
+    protected final TreeMap manifest = new TreeMap()
     boolean deleted = false
     Date created
     Date modified
     int version = 0
+
+    Document() {}
 
     Document(String id, Map data) {
         setId(id)
@@ -120,6 +122,10 @@ class Document {
         manifest[CHECKUM_KEY]
     }
 
+    Map getManifest() {
+        return deepCopy(manifest)
+    }
+
     Document withData(Map data) {
         setData(data)
         return this
@@ -162,4 +168,6 @@ class Document {
         manifest[DATASET_KEY] = ds
         return this
     }
+
+    boolean isJson() { true }
 }

@@ -12,6 +12,8 @@ import whelk.Whelk
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
+import whelk.converter.marc.JsonLD2MarcConverter
+import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.exception.WhelkRuntimeException
 import whelk.filter.JsonLdLinkExpander
 
@@ -57,6 +59,8 @@ class Rest extends HttpServlet {
 
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
+        pico.addComponent(JsonLD2MarcConverter.class)
+        pico.addComponent(JsonLD2MarcXMLConverter.class)
 
         pico.addComponent(Whelk.class)
 
@@ -101,7 +105,7 @@ class Rest extends HttpServlet {
             }
 
             if (HttpTools.DisplayMode.DOCUMENT == mode) {
-                document = convertDocumentToAcceptedMediaType(document, path, request.getHeader("accept"))
+                document = convertDocumentToAcceptedMediaType(document, path, request.getHeader("accept"), response)
             }
 
             if (document && (!document.isDeleted() || mode== HttpTools.DisplayMode.META)) {
@@ -127,8 +131,12 @@ class Rest extends HttpServlet {
                 if (flat) {
                     sendResponse(response, JsonLd.flatten(document.data), contentType)
                 } else {
-                    log.info("Framing ${document.identifier} ...")
-                    sendResponse(response, JsonLd.frame(document.identifier, document.data), contentType)
+                    if (document.isJson()) {
+                        log.info("Framing ${document.identifier} ...")
+                        sendResponse(response, JsonLd.frame(document.identifier, document.data), contentType)
+                    } else {
+                        sendResponse(response, document.data, contentType)
+                    }
                 }
             } else {
                 log.debug("Failed to find a document with URI $path")
@@ -149,7 +157,7 @@ class Rest extends HttpServlet {
         return [path, HttpTools.DisplayMode.DOCUMENT]
     }
 
-    Document convertDocumentToAcceptedMediaType(Document document, String path, String acceptHeader) {
+    Document convertDocumentToAcceptedMediaType(Document document, String path, String acceptHeader, HttpServletResponse response) {
 
         List<String> accepting = acceptHeader?.split(",").collect {
             int last = (it.indexOf(';') == -1 ? it.length() : it.indexOf(';'))
@@ -168,7 +176,7 @@ class Rest extends HttpServlet {
         }
 
         if (document && accepting && !accepting.contains("*/*") && !accepting.contains(document.contentType) && !accepting.contains(getMajorContentType(document.contentType))) {
-            def fc = plugins.find { it instanceof FormatConverter && accepting.contains(it.resultContentType) && it.requiredContentType == document.contentType }
+            FormatConverter fc = pico.getComponents(FormatConverter.class).find { accepting.contains(it.resultContentType) && it.requiredContentType == document.contentType }
             if (fc) {
                 log.debug("Found formatconverter for ${fc.resultContentType}")
                 document = fc.convert(document)
