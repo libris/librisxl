@@ -1,17 +1,18 @@
-package whelk.converter
+package whelk.converter.marc
 
 import groovy.util.logging.Slf4j as Log
+import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.util.marc.MarcRecord
 import whelk.Document
-
-import org.codehaus.jackson.map.*
-
-import static whelk.converter.JSONMarcConverter.marcRecordAsXMLString
+import whelk.converter.FormatConverter
+import whelk.converter.JSONMarcConverter
+import whelk.converter.marc.JsonLD2MarcConverter
 
 @Log
 class JsonLD2MarcXMLConverter implements FormatConverter {
 
     JsonLD2MarcConverter jsonldConverter = null
+    final static ObjectMapper mapper = new ObjectMapper()
 
     @Override
     Document convert(Document doc) {
@@ -43,7 +44,7 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
 
         Document xmlDocument = whelk.createDocument(getResultContentType()).withEntry(doc.manifest).withContentType(getResultContentType()).withData(whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record))
 
-        log.debug("Document ${xmlDocument.identifier} created successfully with entry: ${xmlDocument.manifest} and meta: ${xmlDocument.meta}")
+        log.debug("Document ${xmlDocument.identifier} created successfully with entry: ${xmlDocument.manifest}")
         return xmlDocument
     }
 
