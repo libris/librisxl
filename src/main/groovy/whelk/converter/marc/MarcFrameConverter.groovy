@@ -298,9 +298,8 @@ class MarcConversion {
         def quotedIds = new HashSet()
 
         state.quotedEntities.each { ent ->
-            def entId = ent['@id']
-                //?: ent['sameAs']?.getAt(0)?.get('@id')
-                ?: makeSomeId(ent)
+            //def endId = ent['@id'] ?: ent['sameAs']?.getAt(0)?.get('@id')
+            def entId = ent['@id'] ?: makeSomeId(ent)
             if (entId) {
                 def copy = ent.clone()
                 ent.clear()
