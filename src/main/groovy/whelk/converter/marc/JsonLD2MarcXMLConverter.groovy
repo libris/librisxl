@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.util.marc.MarcRecord
 import whelk.Document
+import whelk.GenericDataDocument
 import whelk.converter.FormatConverter
 import whelk.converter.JSONMarcConverter
 import whelk.converter.marc.JsonLD2MarcConverter
@@ -14,15 +15,16 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
     JsonLD2MarcConverter jsonldConverter = null
     final static ObjectMapper mapper = new ObjectMapper()
 
+    JsonLD2MarcXMLConverter() {
+        jsonldConverter = new JsonLD2MarcConverter()
+    }
+
     @Override
-    Document convert(Document doc) {
+    Document convert(final Document doc) {
 
-        if (jsonldConverter == null)
-            jsonldConverter =  plugins.find { it instanceof JsonLD2MarcConverter }
+        assert (doc instanceof  Document)
 
-        assert jsonldConverter
-
-        Document jsonDocument = jsonldConverter.doConvert(doc)
+        Document jsonDocument = jsonldConverter.convert(doc)
 
         MarcRecord record = JSONMarcConverter.fromJson(jsonDocument.getDataAsString())
 
@@ -42,7 +44,7 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
             record.addField(df)
         }
 
-        Document xmlDocument = whelk.createDocument(getResultContentType()).withEntry(doc.manifest).withContentType(getResultContentType()).withData(whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record))
+        Document xmlDocument = new GenericDataDocument(doc.id, whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record), doc.manifest)
 
         log.debug("Document ${xmlDocument.identifier} created successfully with entry: ${xmlDocument.manifest}")
         return xmlDocument
