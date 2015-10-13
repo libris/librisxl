@@ -4,8 +4,6 @@ apply plugin: 'jetty'
 apply plugin: 'war'
 apply plugin: 'application'
 apply plugin: 'maven'
-apply plugin: 'maven-publish'
-apply plugin: 'maven-publish-auth'
 apply plugin: 'java'
 
 
@@ -173,34 +171,4 @@ task(console, dependsOn: 'classes', type: JavaExec) {
   description "Launch a Groovy Console"
   classpath = sourceSets.main.runtimeClasspath
   main = 'groovy.ui.Console'
-}
-
-publishing {
-    publications {
-        mavenCustom(MavenPublication) {
-            groupId "se.kb.libris"
-            artifactId "librisxl-whelk"
-            version "${project.jar.version}"
-            artifacts {
-                archives jar
-            }
-            from components.java
-
-
-            pom.withXml {
-                asNode().appendNode('parent')
-                .appendNode('groupId', 'se.kb.libris').parent()
-                .appendNode('artifactId', 'super-pom').parent()
-                .appendNode('version', '1.1')
-            }
-
-        }
-    }
-
-    repositories {
-        maven {
-            name "nexus"
-            url "http://dev.libris.kb.se/nexus/content/repositories/internal/"
-        }
-    }
 }

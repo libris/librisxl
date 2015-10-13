@@ -138,9 +138,7 @@
 <logger name="whelk.importer.libris.MySQLImporter">
   <level value="info"/>
 </logger>
-<logger name="whelk.importer.BasicOaiPmhImporter">
-  <level value="info"/>
-</logger>
+<logger name="whelk.importer.OaiPmhImporter" level="debug"/>
 <logger name="whelk.importer.LibrisOaiPmhImporter">
   <level value="info"/>
 </logger>
