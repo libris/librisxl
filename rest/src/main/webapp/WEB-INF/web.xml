@@ -35,7 +35,7 @@
 
     <servlet>
         <servlet-name>WhelkServlet</servlet-name>
-        <servlet-class>whelk.rest.api.Rest</servlet-class>
+        <servlet-class>whelk.rest.api.Crud</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 

@@ -14,6 +14,7 @@ import whelk.Whelk
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
+import whelk.converter.URIMinter
 import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.exception.DocumentException
@@ -36,7 +37,7 @@ import static whelk.rest.api.HttpTools.getMajorContentType
  * Created by markus on 2015-10-09.
  */
 @Log
-class Rest extends HttpServlet {
+class Crud extends HttpServlet {
 
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
     final static String DOCBASE_URI = "http://libris.kb.se/"
@@ -53,7 +54,7 @@ class Rest extends HttpServlet {
     static final ObjectMapper mapper = new ObjectMapper()
     AccessControl accessControl = new AccessControl()
 
-    Rest() {
+    Crud() {
         super()
         log.info("Setting up httpwhelk.")
 
@@ -207,7 +208,7 @@ class Rest extends HttpServlet {
 
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
-        doPostOrPut()
+        doPostOrPut(request, response)
     }
 
     @Override
@@ -216,6 +217,7 @@ class Rest extends HttpServlet {
     }
 
     void doPostOrPut(HttpServletRequest request, HttpServletResponse response) {
+        log.debug("Executing ${request.getMethod()}-request")
         String dataset = getDatasetBasedOnPath(request.pathInfo)
         byte[] data = request.getInputStream().getBytes()
         try {
@@ -250,45 +252,54 @@ class Rest extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Content-Type application/x-www-form-urlencoded is not supported")
             return null
         }
-        if (request.method == "PUT" && request.pathInfo == "/") {
-            response.sendError(response.SC_BAD_REQUEST, "PUT not allowed to ROOT")
-            return null
-        }
+        String identifier = request.pathInfo
         if (request.method == "POST") {
             int pathsize = request.pathInfo.split("/").size()
+            log.debug("pathsize: $pathsize")
             if (pathsize != 0 && pathsize != 2) {
                 response.sendError(response.SC_BAD_REQUEST, "POST only allowed to root or dataset")
                 return null
             }
+            identifier = mintIdentifier(dataset)
         }
-        Document existingDoc = whelk.storage.load(request.pathInfo)
-        if (existingDoc) {
-            if (request.getHeader("If-Match") && existingDoc.modified as String != request.getHeader("If-Match")) {
-                log.debug("Document with identifier ${existingDoc.identifier} already exists.")
-                response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
+        Document existingDoc = null
+        if (request.method == "PUT") {
+            if (request.pathInfo == "/") {
+                response.sendError(response.SC_BAD_REQUEST, "PUT not allowed to ROOT")
                 return null
             }
+            existingDoc = whelk.storage.load(request.pathInfo)
+            if (existingDoc) {
+                if (request.getHeader("If-Match") && existingDoc.modified as String != request.getHeader("If-Match")) {
+                    log.debug("Document with identifier ${existingDoc.identifier} already exists.")
+                    response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
+                    return null
+                }
+            }
         }
+
         Document doc
         if (Document.isJson(cType)) {
             doc = new Document(request.pathInfo, mapper.readValue(data, Map), existingDoc?.manifest)
         } else {
             doc = new Document(request.pathInfo, [(Document.NON_JSON_CONTENT_KEY): new String(data)], existingDoc?.manifest)
         }
-        //Document doc = new Document(mapper.readValue(data, Map), whelk.storage.load(request.pathInfo)?.manifest) // reuse manifest from existing doc (if exists)
         doc = doc.withDataset(dataset)
                 .withContentType(ContentType.parse(request.getContentType()).getMimeType())
-                .withIdentifier(request.pathInfo)
-                .setDeleted(false)
+                .withIdentifier(identifier)
+                .withDeleted(false)
 
         getAlternateIdentifiersFromLinkHeaders(request).each {
             doc.addIdentifier(it);
         }
 
+        log.debug("Checking permissions for ${doc}")
         if (!hasPermission(request.getAttribute("user"), doc, existingDoc)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
             return null
         }
+
+        log.debug("All checks passed")
 
         return doc
     }
@@ -307,7 +318,10 @@ class Rest extends HttpServlet {
             locationRef.delete(startPos, endPos)
         }
 
-        locationRef.append(identifier)
+        if (!locationRef.toString().endsWith(identifier)) {
+            locationRef.append(identifier)
+        }
+
         return locationRef.toString()
     }
 
@@ -354,6 +368,10 @@ class Rest extends HttpServlet {
             }
         }
         return alts
+    }
+
+    String mintIdentifier(String dataset) {
+        return new URI("/" + (dataset ? "${dataset}/" : "") + UUID.randomUUID()).toString();
     }
 
 

@@ -87,6 +87,8 @@ class Document {
         deleted = d
         if (deleted) {
             manifest[DELETED_KEY] = deleted
+        } else {
+            manifest.remove(DELETED_KEY)
         }
     }
 
@@ -125,9 +127,7 @@ class Document {
         manifest[CHECKUM_KEY]
     }
 
-    Map getManifest() {
-        return deepCopy(manifest)
-    }
+    Map getManifest() { manifest }
 
     Document withData(Map data) {
         setData(data)
@@ -141,6 +141,7 @@ class Document {
     Document withIdentifier(String identifier) {
         this.id = identifier
         this.manifest[ID_KEY] = id
+        return this
      }
 
     Document withManifest(Map entrydata) {
@@ -157,6 +158,9 @@ class Document {
             deleted = entrydata[DELETED_KEY]
         }
         if (entrydata != null) {
+            for (sensitiveKey in [Document.CHECKUM_KEY]) {
+                entrydata.remove(sensitiveKey)
+            }
             this.manifest.putAll(entrydata)
         }
         return this
@@ -169,6 +173,11 @@ class Document {
 
     Document withDataset(String ds) {
         manifest[DATASET_KEY] = ds
+        return this
+    }
+
+    Document withDeleted(boolean d) {
+        setDeleted(d)
         return this
     }
 

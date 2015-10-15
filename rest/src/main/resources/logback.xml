@@ -20,6 +20,7 @@
    <logger name="whelk.component.PostgreSQLComponent" level="trace"/>
    <logger name="whelk.component.ElasticSearch" level="trace"/>
     <logger name="whelk.filter.JsonLDLinkExpander" level="trace"/>
+    <logger name="whelk.rest.api.Crud" level="trace"/>
 
   <root level="info">
     <appender-ref ref="STDOUT" />
