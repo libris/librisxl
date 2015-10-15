@@ -52,13 +52,13 @@ dependencies {
     // Integration
     compile "org.elasticsearch:elasticsearch:1.4.4"
     compile "org.apache.commons:commons-lang3:3.3.2"
+    compile "org.apache.activemq:activemq-camel:${activeMQVersion}"
     /*
     compile "org.apache.camel:camel-core:${camelVersion}"
     compile "org.apache.camel:camel-elasticsearch:2.15.0"
     compile "org.apache.camel:camel-jackson:${camelVersion}"
     compile "org.apache.camel:camel-http4:${camelVersion}"
     compile "org.apache.camel:camel-groovy:${camelVersion}"
-    compile "org.apache.activemq:activemq-camel:${activeMQVersion}"
     compile "org.apache.activemq:activemq-broker:${activeMQVersion}"
     compile "org.apache.jena:jena-core:2.12.0"
     compile "org.apache.jena:jena-fuseki:1.1.0"
