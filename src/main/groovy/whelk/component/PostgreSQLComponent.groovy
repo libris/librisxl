@@ -145,6 +145,7 @@ class PostgreSQLComponent implements Storage {
             calculateChecksum(doc)
             Date now = new Date()
             if (versioning) {
+                log.debug("Document has checksum ${doc.checksum} before saving version.")
                 if (!saveVersion(doc, connection, now)) {
                     return doc // Same document already in storage.
                 }
