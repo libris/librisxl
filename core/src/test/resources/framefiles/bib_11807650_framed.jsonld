@@ -1,499 +1,237 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/11807650"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=NB"
-        },
-        {
-          "@id": "/some?type=Organization&notation=DALA"
-        }
-      ],
-      "created": "2010-04-01T00:00:00.0+02:00",
-      "modified": "2010-04-28T11:55:53.0+02:00",
-      "controlNumber": "11807650",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Bergsbruk - historia"
-              },
-              {
-                "z": "Sverige"
-              },
-              {
-                "z": "Dalarna"
-              },
-              {
-                "v": "kartor"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "655": {
-            "subfields": [
-              {
-                "a": "Turistkartor"
-              },
-              {
-                "2": "gmgpc//swe"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=S"
-      },
-      "@id": "/bib/11807650",
-      "@type": "Record"
-    },
-    "quoted": [
+  "about": {
+    "comment": [
+      "Ur: GSD-Röda kartan / Lantmäteriverket"
+    ],
+    "mediaTerm": "Kartografiskt material] /",
+    "classification": [
       {
-        "@graph": {
-          "color": {
-            "@id": "/def/enum/carrier/Multicolored"
-          },
-          "medium": {
-            "@id": "/def/enum/carrier/Paper"
-          },
-          "@id": "/some?type=Map",
-          "@type": [
-            "Map"
-          ],
-          "carrierType": [
-            {
-              "@id": "/def/enum/carrier/MapATwoDimensionalMap"
-            }
-          ]
-        }
+        "@id": "/topic/kssb/8/Ncaf"
       },
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=S",
-          "@type": "Organization",
-          "name": "S"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=NB",
-          "@type": "Organization",
-          "notation": "NB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=DALA",
-          "@type": "Organization",
-          "notation": "DALA"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Ncaf",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Ncaf"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/8",
-          "@type": "ConceptScheme",
-          "notation": "kssb/8"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Pd-caf%3Ak",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Pd-caf:k"
-        }
-      },
-      {
-        "@graph": {
-          "edition": "2. uppl.",
-          "@id": "/some?type=Product&edition=2.%20uppl.",
-          "@type": "Product"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Falun",
-          "@type": "Place",
-          "label": "Falun"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=G%C3%A4vle",
-          "@type": "Place",
-          "label": "Gävle"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Bergsbruk%20-%20historia/Sverige/Dalarna/kartor",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Bergsbruk%20-%20historia"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Dalarna"
-            },
-            {
-              "@id": "/some?type=GenreTerm&prefLabel=kartor"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Bergsbruk%20-%20historia",
-          "@type": "TopicalTerm",
-          "prefLabel": "Bergsbruk - historia"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Sverige",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Sverige"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Dalarna",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Dalarna"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GenreTerm&prefLabel=kartor",
-          "@type": "GenreTerm",
-          "prefLabel": "kartor"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/saogf/Turistkartor",
-          "inScheme": {
-            "@id": "/scheme/gmgpc//swe"
-          },
-          "@type": "GenreTerm",
-          "prefLabel": "Turistkartor"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/gmgpc//swe",
-          "@type": "ConceptScheme",
-          "notation": "gmgpc//swe"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1949",
-          "givenName": "Margareta",
-          "familyName": "Andersson",
-          "@id": "_:b-0",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1944",
-          "givenName": "Örjan",
-          "familyName": "Hamrin",
-          "@id": "_:b-1",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1953",
-          "givenName": "Lars",
-          "familyName": "Dahlström",
-          "@id": "_:b-2",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1944",
-          "givenName": "Roland",
-          "familyName": "Andersson",
-          "@id": "_:b-3",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1960",
-          "givenName": "Titti",
-          "familyName": "Lorentzson",
-          "@id": "_:b-4",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1949",
-          "givenName": "Anders",
-          "familyName": "Gottberg",
-          "@id": "_:b-5",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "isPartOf": {
-            "@id": "/some?type=Organization&name=L%C3%A4nsstyrelsen%20Dalarnas%20l%C3%A4n."
-          },
-          "@id": "_:b-6",
-          "@type": "Organization",
-          "name": "Kulturmiljöenheten"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=L%C3%A4nsstyrelsen%20Dalarnas%20l%C3%A4n.",
-          "@type": "Organization",
-          "name": "Länsstyrelsen Dalarnas län."
-        }
-      },
-      {
-        "@graph": {
-          "isPartOf": {
-            "@id": "/some?type=Organization&name=Sverige."
-          },
-          "@id": "_:b-7",
-          "@type": "Organization",
-          "name": "Lantmäteriverket"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=Sverige.",
-          "@type": "Organization",
-          "name": "Sverige."
-        }
+        "@id": "/topic/kssb/8/Pd-caf%3Ak"
       }
     ],
-    "items": [
+    "cartographicCoordinates": "(Ö 14°07'-Ö 16°42'/N 60°58'-N 59°51')",
+    "cartographicScale": "Skala [ca 1:250 000]",
+    "subject": [
       {
-        "comment": [
-          "Ur: GSD-Röda kartan / Lantmäteriverket"
-        ],
-        "mediaTerm": "Kartografiskt material] /",
-        "classification": [
-          {
-            "@id": "/topic/kssb/8/Ncaf"
-          },
-          {
-            "@id": "/topic/kssb/8/Pd-caf%3Ak"
-          }
-        ],
-        "cartographicCoordinates": "(Ö 14°07'-Ö 16°42'/N 60°58'-N 59°51')",
-        "cartographicScale": "Skala [ca 1:250 000]",
-        "subject": [
-          {
-            "@id": "/topic/sao/Bergsbruk%20-%20historia/Sverige/Dalarna/kartor"
-          }
-        ],
-        "index": {
-          "@id": "/def/enum/content/IndexPresent"
+        "@id": "/topic/sao/Bergsbruk%20-%20historia/Sverige/Dalarna/kartor"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/IndexPresent"
+    },
+    "listOfContents": [
+      "Förteckning med bilder och beskrivande text. - Kulturhistorisk informationstext"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Falun"
         },
-        "listOfContents": [
-          "Förteckning med bilder och beskrivande text. - Kulturhistorisk informationstext"
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Falun"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Kulturmiljöenheten, Länsstyrelsen Dalarnas län",
-            "providerDate": "2001"
-          }
-        ],
-        "hasVersion": [
-          {
-            "@id": "/some?type=Product&edition=2.%20uppl."
-          }
-        ],
-        "author": [
-          {
-            "@id": "_:b-0"
-          },
-          {
-            "@id": "_:b-1"
-          }
-        ],
-        "photographer": [
-          {
-            "@id": "_:b-2"
-          }
-        ],
-        "unspecifiedContributor": [
-          {
-            "@id": "_:b-4"
-          },
-          {
-            "@id": "_:b-5"
-          }
-        ],
-        "influencedBy": [
-          {
-            "@id": "_:b-0"
-          },
-          {
-            "@id": "_:b-1"
-          },
-          {
-            "@id": "_:b-2"
-          },
-          {
-            "@id": "_:b-3"
-          },
-          {
-            "@id": "_:b-4"
-          },
-          {
-            "@id": "_:b-5"
-          },
-          {
-            "@id": "_:b-6"
-          },
-          {
-            "@id": "_:b-7"
-          }
-        ],
-        "manufacture": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=G%C3%A4vle"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Gävle offset)"
-          }
-        ],
-        "cartographer": [
-          {
-            "@id": "_:b-7"
-          }
-        ],
-        "responsibilityStatement": "text: Margareta Andersson och Örjan Hamrin ; omslagsfoto: Lars Dahlström ; illustrationer: Roland Andersson ; grafisk form: Titti Lorentzson ; projektansvarig: Anders Gottberg",
-        "material": {
-          "@id": "/def/enum/content/SingleMap"
+        "@type": "ProviderEvent",
+        "providerName": "Kulturmiljöenheten, Länsstyrelsen Dalarnas län",
+        "providerDate": "2001"
+      }
+    ],
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=2.%20uppl."
+      }
+    ],
+    "author": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "photographer": [
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      },
+      {
+        "@id": "_:b-6"
+      },
+      {
+        "@id": "_:b-7"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=G%C3%A4vle"
         },
-        "hasFormat": [
-          {
-            "@id": "/some?type=Map"
-          },
-          {
-            "otherPhysicalDetails": "färg",
-            "@type": "Product",
-            "extent": "1 karta",
-            "dimensions": "på ark 50 x 70 cm vikt till 25 x 18 cm"
-          }
+        "@type": "ProviderEvent",
+        "providerName": "Gävle offset)"
+      }
+    ],
+    "cartographer": [
+      {
+        "@id": "_:b-7"
+      }
+    ],
+    "responsibilityStatement": "text: Margareta Andersson och Örjan Hamrin ; omslagsfoto: Lars Dahlström ; illustrationer: Roland Andersson ; grafisk form: Titti Lorentzson ; projektansvarig: Anders Gottberg",
+    "material": {
+      "@id": "/def/enum/content/SingleMap"
+    },
+    "hasFormat": [
+      {
+        "@id": "/some?type=Map"
+      },
+      {
+        "otherPhysicalDetails": "färg",
+        "@type": "Product",
+        "extent": "1 karta",
+        "dimensions": "på ark 50 x 70 cm vikt till 25 x 18 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/Turistkartor"
+      }
+    ],
+    "@id": "/resource/bib/11807650",
+    "publisher": [
+      {
+        "@id": "_:b-6"
+      }
+    ],
+    "illustrator": [
+      {
+        "@id": "_:b-3"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "summary": [
+      "Redovisar gruvor, hyttor, bruk - smedjor samt bebyggelse"
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Upptäck Dalarnas bergslag"
+    },
+    "relief": {
+      "@id": "/def/enum/content/Contour"
+    },
+    "@type": [
+      "Cartography",
+      "Monograph"
+    ],
+    "cartographicAscensionAndDeclination": [
+      {
+        "northernmostLatitudeCoordinates": "n0605800",
+        "westernmostLongitudeCoordinates": "e0140700",
+        "constantRatioLinearHorizontalScale": [
+          "250000"
         ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "genre": [
-          {
-            "@id": "/topic/saogf/Turistkartor"
-          }
-        ],
-        "@id": "/resource/bib/11807650",
-        "publisher": [
-          {
-            "@id": "_:b-6"
-          }
-        ],
-        "illustrator": [
-          {
-            "@id": "_:b-3"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "summary": [
-          "Redovisar gruvor, hyttor, bruk - smedjor samt bebyggelse"
-        ],
-        "instanceTitle": {
-          "@type": "Title",
-          "titleValue": "Upptäck Dalarnas bergslag"
-        },
-        "relief": {
-          "@id": "/def/enum/content/Contour"
-        },
-        "@type": [
-          "Cartography",
-          "Monograph"
-        ],
-        "cartographicAscensionAndDeclination": [
-          {
-            "northernmostLatitudeCoordinates": "n0605800",
-            "westernmostLongitudeCoordinates": "e0140700",
-            "constantRatioLinearHorizontalScale": [
-              "250000"
-            ],
-            "southernmostLatitudeCoordinates": "n0595100",
-            "easternmostLongitudeCoordinates": "e0164200",
-            "cartographicScale": "a",
-            "@type": "CartographyCoordinates"
-          }
-        ]
+        "southernmostLatitudeCoordinates": "n0595100",
+        "easternmostLongitudeCoordinates": "e0164200",
+        "cartographicScale": "a",
+        "@type": "CartographyCoordinates"
       }
     ]
-  }
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=DALA"
+    }
+  ],
+  "created": "2010-04-01T00:00:00.0+02:00",
+  "modified": "2010-04-28T11:55:53.0+02:00",
+  "controlNumber": "11807650",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Bergsbruk - historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "z": "Dalarna"
+          },
+          {
+            "v": "kartor"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Turistkartor"
+          },
+          {
+            "2": "gmgpc//swe"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/bib/11807650",
+  "@type": "Record"
 }

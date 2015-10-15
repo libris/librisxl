@@ -1,595 +1,328 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/8997956"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=NB"
-        }
-      ],
-      "created": "2003-07-07T00:00:00.0+02:00",
-      "technicalNote": [
-        "Indexeringslänk"
-      ],
-      "controlNumber": "8997956",
-      "@type": "Record",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "2"
-          ],
-          "022": {
-            "subfields": [
-              {
-                "a": "1651-792X"
-              },
-              {
-                "z": "1651-8705"
-              },
-              {
-                "2": "f"
-              }
-            ],
-            "ind1": "0",
-            "ind2": " "
-          }
-        },
-        {
-          "515": {
-            "subfields": [
-              {
-                "a": "2008:1 utkom ej"
-              }
-            ],
-            "ind1": " ",
-            "ind2": " "
-          }
-        },
-        {
-          "547": {
-            "subfields": [
-              {
-                "a": "Gr. 2003. - Bildad genom sammanslagning av: Kartbladet / Kartografiska sällskapet; och Bildteknik"
-              }
-            ],
-            "ind1": " ",
-            "ind2": " "
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Kartor"
-              },
-              {
-                "v": "periodika"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Datorkartografi"
-              },
-              {
-                "v": "periodika"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Vetenskaplig fotografi"
-              },
-              {
-                "v": "periodika"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "655": {
-            "subfields": [
-              {
-                "a": "Organisationspress"
-              },
-              {
-                "2": "sgp"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "655": {
-            "subfields": [
-              {
-                "a": "Specialtidningar"
-              },
-              {
-                "2": "sgp"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "modified": "2014-11-17T13:23:15.0+01:00",
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=NB"
-      },
-      "@id": "/bib/8997956",
-      "linked": {
-        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
-      }
-    },
-    "quoted": [
+  "about": {
+    "comment": [
+      "Vissa nummer med bilaga (vissa på engelska): Kart- & bildteknik = Mapping and image Science : scientific edition"
+    ],
+    "classification": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=NB",
-          "@type": "Organization",
-          "name": "NB"
-        }
+        "@id": "http://dewey.info/class/526.8/e/"
       },
       {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=NB",
-          "@type": "Organization",
-          "notation": "NB"
-        }
+        "@id": "/topic/kssb/8/Ny%28p%29"
       },
       {
-        "@graph": {
-          "@id": "http://dewey.info/class/526.8/e/",
-          "@type": "Concept",
-          "notation": "526.8"
-        }
+        "@id": "/topic/kssb/8/Ny%3Apu%28p%29"
       },
       {
-        "@graph": {
-          "@id": "/topic/kssb/8/Ny%28p%29",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Ny(p)"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/8",
-          "@type": "ConceptScheme",
-          "notation": "kssb/8"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Ny%3Apu%28p%29",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Ny:pu(p)"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Pnd%28p%29",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Pnd(p)"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=G%C3%A4vle",
-          "@type": "Place",
-          "label": "Gävle"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Kartor/periodika",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Kartor"
-            },
-            {
-              "@id": "/some?type=GenreTerm&prefLabel=periodika"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Kartor",
-          "@type": "TopicalTerm",
-          "prefLabel": "Kartor"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GenreTerm&prefLabel=periodika",
-          "@type": "GenreTerm",
-          "prefLabel": "periodika"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Datorkartografi/periodika",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Datorkartografi"
-            },
-            {
-              "@id": "/some?type=GenreTerm&prefLabel=periodika"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Datorkartografi",
-          "@type": "TopicalTerm",
-          "prefLabel": "Datorkartografi"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Vetenskaplig%20fotografi/periodika",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Vetenskaplig%20fotografi"
-            },
-            {
-              "@id": "/some?type=GenreTerm&prefLabel=periodika"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Vetenskaplig%20fotografi",
-          "@type": "TopicalTerm",
-          "prefLabel": "Vetenskaplig fotografi"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/saogf/Organisationspress",
-          "inScheme": {
-            "@id": "/scheme/sgp"
-          },
-          "@type": "GenreTerm",
-          "prefLabel": "Organisationspress"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sgp",
-          "@type": "ConceptScheme",
-          "notation": "sgp"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/saogf/Specialtidningar",
-          "inScheme": {
-            "@id": "/scheme/sgp"
-          },
-          "@type": "GenreTerm",
-          "prefLabel": "Specialtidningar"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "_:b-0",
-          "@type": "Organization",
-          "name": "Kartografiska sällskapet"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=Scientific%20edition",
-          "@type": "UniformWork",
-          "title": "Scientific edition"
-        }
-      },
-      {
-        "@graph": {
-          "describedBy": [
-            {
-              "@id": "/bib/3619122"
-            }
-          ],
-          "identifier": {
-            "@id": "/some?type=Identifier&identifierValue=0283-0418"
-          },
-          "@id": "/some?type=Serial&title=Kartbladet%20%28Kartografiska%20s%C3%A4llskapet%29",
-          "@type": "Serial",
-          "title": "Kartbladet (Kartografiska sällskapet)"
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/issn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=0283-0418",
-          "@type": "Identifier",
-          "identifierValue": "0283-0418"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/3619122",
-          "@type": "Record",
-          "controlNumber": "3619122"
-        }
-      },
-      {
-        "@graph": {
-          "describedBy": [
-            {
-              "@id": "/bib/4113397"
-            }
-          ],
-          "identifier": {
-            "@id": "/some?type=Identifier&identifierValue=1104-5825"
-          },
-          "@id": "/some?type=Serial&title=Bildteknik",
-          "@type": "Serial",
-          "title": "Bildteknik"
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/issn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=1104-5825",
-          "@type": "Identifier",
-          "identifierValue": "1104-5825"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/4113397",
-          "@type": "Record",
-          "controlNumber": "4113397"
-        }
+        "@id": "/topic/kssb/8/Pnd%28p%29"
       }
     ],
-    "items": [
+    "isPrimaryTopicOf": [
       {
-        "comment": [
-          "Vissa nummer med bilaga (vissa på engelska): Kart- & bildteknik = Mapping and image Science : scientific edition"
-        ],
-        "classification": [
-          {
-            "@id": "http://dewey.info/class/526.8/e/"
-          },
-          {
-            "@id": "/topic/kssb/8/Ny%28p%29"
-          },
-          {
-            "@id": "/topic/kssb/8/Ny%3Apu%28p%29"
-          },
-          {
-            "@id": "/topic/kssb/8/Pnd%28p%29"
-          }
-        ],
-        "isPrimaryTopicOf": [
-          {
-            "@id": "http://www.geoforum.se/page//156",
-            "@type": "Document"
-          }
-        ],
-        "titleVariation": [
-          {
-            "titleType": "1",
-            "@type": "Title",
-            "titleValue": "Mapping and image science"
-          },
-          {
-            "titleType": "0",
-            "@type": "Title",
-            "titleValue": "Kart- och bildteknik"
-          }
-        ],
-        "regularity": {
-          "@id": "/def/enum/content/Regular"
-        },
-        "frequency": "1 nr/kvartal",
-        "subject": [
-          {
-            "@id": "/topic/sao/Kartor/periodika"
-          },
-          {
-            "@id": "/topic/sao/Datorkartografi/periodika"
-          },
-          {
-            "@id": "/topic/sao/Vetenskaplig%20fotografi/periodika"
-          }
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=G%C3%A4vle"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Kartografiska sällskapet",
-            "providerDate": "2003-"
-          }
-        ],
-        "typeOfEntry": {
-          "@id": "/def/enum/content/SuccessiveEntry"
-        },
-        "alphabet": {
-          "@id": "/def/enum/content/ExtendedRoman"
-        },
-        "influentialRelation": [
-          {
-            "@id": "/some?type=UniformWork&title=Scientific%20edition"
-          }
-        ],
-        "influencedBy": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "keyTitle": [
-          {
-            "@type": "Title",
-            "titleValue": "Kart- & bildteknik"
-          }
-        ],
-        "manufacture": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=G%C3%A4vle"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Gävle offsett)"
-          }
-        ],
-        "contentType": [
-          {
-            "@id": "/def/enum/content/Periodical"
-          }
-        ],
-        "responsibilityStatement": "Kartografiska sällskapet",
-        "temporalCoverageNote": "2003-",
-        "hasFormat": [
-          {
-            "@type": "Product",
-            "dimensions": "28 cm"
-          }
-        ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "frequencyCategory": {
-          "@id": "/def/enum/content/QuarterlyIncludes4NumbersAYear"
-        },
-        "genre": [
-          {
-            "@id": "/topic/saogf/Organisationspress"
-          },
-          {
-            "@id": "/topic/saogf/Specialtidningar"
-          }
-        ],
-        "@id": "/resource/bib/8997956",
-        "publisher": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "precededBy": [
-          {
-            "@id": "/some?type=Serial&title=Kartbladet%20%28Kartografiska%20s%C3%A4llskapet%29"
-          },
-          {
-            "@id": "/some?type=Serial&title=Bildteknik"
-          }
-        ],
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "instanceTitle": {
-          "subtitle": "Mapping and image science / Swedish Cartographic Society",
-          "@type": "Title",
-          "titleValue": "Kart- & bildteknik ="
-        },
-        "issueNumber": [
-          "Årg. 18:1- (2003- )"
-        ],
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/issn"
-            },
-            "identifierStatus": "canceledInvalid",
-            "@type": "Identifier",
-            "identifierValue": "1651-792X"
-          }
-        ],
-        "@type": [
-          "Text",
-          "Serial"
-        ]
+        "@id": "http://www.geoforum.se/page//156",
+        "@type": "Document"
       }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "1",
+        "@type": "Title",
+        "titleValue": "Mapping and image science"
+      },
+      {
+        "titleType": "0",
+        "@type": "Title",
+        "titleValue": "Kart- och bildteknik"
+      }
+    ],
+    "regularity": {
+      "@id": "/def/enum/content/Regular"
+    },
+    "frequency": "1 nr/kvartal",
+    "subject": [
+      {
+        "@id": "/topic/sao/Kartor/periodika"
+      },
+      {
+        "@id": "/topic/sao/Datorkartografi/periodika"
+      },
+      {
+        "@id": "/topic/sao/Vetenskaplig%20fotografi/periodika"
+      }
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=G%C3%A4vle"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kartografiska sällskapet",
+        "providerDate": "2003-"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/SuccessiveEntry"
+    },
+    "alphabet": {
+      "@id": "/def/enum/content/ExtendedRoman"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Scientific%20edition"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "keyTitle": [
+      {
+        "@type": "Title",
+        "titleValue": "Kart- & bildteknik"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=G%C3%A4vle"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Gävle offsett)"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Periodical"
+      }
+    ],
+    "responsibilityStatement": "Kartografiska sällskapet",
+    "temporalCoverageNote": "2003-",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "dimensions": "28 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "frequencyCategory": {
+      "@id": "/def/enum/content/QuarterlyIncludes4NumbersAYear"
+    },
+    "genre": [
+      {
+        "@id": "/topic/saogf/Organisationspress"
+      },
+      {
+        "@id": "/topic/saogf/Specialtidningar"
+      }
+    ],
+    "@id": "/resource/bib/8997956",
+    "publisher": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "precededBy": [
+      {
+        "@id": "/some?type=Serial&title=Kartbladet%20%28Kartografiska%20s%C3%A4llskapet%29"
+      },
+      {
+        "@id": "/some?type=Serial&title=Bildteknik"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "subtitle": "Mapping and image science / Swedish Cartographic Society",
+      "@type": "Title",
+      "titleValue": "Kart- & bildteknik ="
+    },
+    "issueNumber": [
+      "Årg. 18:1- (2003- )"
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/issn"
+        },
+        "identifierStatus": "canceledInvalid",
+        "@type": "Identifier",
+        "identifierValue": "1651-792X"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Serial"
     ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2003-07-07T00:00:00.0+02:00",
+  "technicalNote": [
+    "Indexeringslänk"
+  ],
+  "controlNumber": "8997956",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "2"
+      ],
+      "022": {
+        "subfields": [
+          {
+            "a": "1651-792X"
+          },
+          {
+            "z": "1651-8705"
+          },
+          {
+            "2": "f"
+          }
+        ],
+        "ind1": "0",
+        "ind2": " "
+      }
+    },
+    {
+      "515": {
+        "subfields": [
+          {
+            "a": "2008:1 utkom ej"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "547": {
+        "subfields": [
+          {
+            "a": "Gr. 2003. - Bildad genom sammanslagning av: Kartbladet / Kartografiska sällskapet; och Bildteknik"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Kartor"
+          },
+          {
+            "v": "periodika"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Datorkartografi"
+          },
+          {
+            "v": "periodika"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Vetenskaplig fotografi"
+          },
+          {
+            "v": "periodika"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Organisationspress"
+          },
+          {
+            "2": "sgp"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Specialtidningar"
+          },
+          {
+            "2": "sgp"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modified": "2014-11-17T13:23:15.0+01:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/8997956",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
   }
 }

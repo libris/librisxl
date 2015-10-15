@@ -1,479 +1,227 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/17039013"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=SAMB"
-        }
-      ],
-      "created": "2014-10-15T00:00:00.0+02:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "17039013",
-      "modified": "2014-10-15T16:06:38.0+02:00",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Traditionell kunskap"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Samer"
-              },
-              {
-                "x": "vardagsliv och traditioner"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Pedagogisk metodik"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "651": {
-            "subfields": [
-              {
-                "a": "Sverige"
-              },
-              {
-                "z": "Lappland"
-              },
-              {
-                "z": "Jokkmokk"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=Ajtt"
-      },
-      "@id": "/bib/17039013",
-      "@type": "Record"
-    },
-    "quoted": [
+  "about": {
+    "comment": [
+      "Beskriver ett läger för samiska barn i form av en tidsresa"
+    ],
+    "classification": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=Ajtt",
-          "@type": "Organization",
-          "name": "Ajtt"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/sme",
-          "notation": "sme"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=SAMB",
-          "@type": "Organization",
-          "notation": "SAMB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/305.894570488875/e23/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e23/swe/"
-          },
-          "@type": "Concept",
-          "notation": "305.894570488875"
-        }
-      },
-      {
-        "@graph": {
-          "language": "swe",
-          "notation": "DDC",
-          "@id": "http://dewey.info/scheme/edition/e23/swe/",
-          "version": "23",
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "@type": "ConceptScheme"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1968",
-          "givenName": "Ylva",
-          "familyName": "Jannok Nutti",
-          "@id": "/some?type=Person&familyName=Jannok%20Nutti&givenName=Ylva&birthYear=1968",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=En%20eldstad%2C%20flera%20ber%C3%A4ttelser.",
-          "@type": "UniformWork",
-          "language": {
-            "@id": "/some?type=Language&label=Nordsamiska"
-          },
-          "title": "En eldstad, flera berättelser."
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Language&label=Nordsamiska",
-          "@type": "Language",
-          "label": "Nordsamiska"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Jokkmokk",
-          "@type": "Place",
-          "label": "Jokkmokk"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Traditionell%20kunskap",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Traditionell kunskap"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Samer/vardagsliv%20och%20traditioner",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Samer"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=vardagsliv%20och%20traditioner"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Samer",
-          "@type": "TopicalTerm",
-          "prefLabel": "Samer"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=vardagsliv%20och%20traditioner",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "vardagsliv och traditioner"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Pedagogisk%20metodik",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Pedagogisk metodik"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Sverige/Lappland/Jokkmokk",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "GeographicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Lappland"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Jokkmokk"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Sverige",
-          "@type": "TopicalTerm",
-          "prefLabel": "Sverige"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Lappland",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Lappland"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Jokkmokk",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Jokkmokk"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1967",
-          "givenName": "Kajsa",
-          "familyName": "Kuoljok",
-          "@id": "/some?type=Person&familyName=Kuoljok&givenName=Kajsa&birthYear=1967",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "givenName": "Miliana",
-          "familyName": "Baer",
-          "@id": "_:b-0",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "_:b-1",
-          "@type": "Organization",
-          "name": "Ájtte, svenskt fjäll- och samemuseum"
-        }
-      },
-      {
-        "@graph": {
-          "title": "Akta árran, maŋgga muitalusa",
-          "linkNote": [
-            "Även utgiven elektroniskt"
-          ],
-          "@type": "Product",
-          "identifier": [
-            {
-              "@id": "/some?type=Identifier&identifierValue=978-91-87636-25-7"
-            }
-          ],
-          "@id": "/some?type=Product&linkNote=%C3%84ven%20utgiven%20elektroniskt&title=Akta%20%C3%A1rran%2C%20ma%C5%8Bgga%20muitalusa",
-          "describedBy": [
-            {
-              "@id": "/bib/16983590"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/isbn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=978-91-87636-25-7",
-          "@type": "Identifier",
-          "identifierValue": "978-91-87636-25-7"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/16983590",
-          "@type": "Record",
-          "controlNumber": "16983590"
-        }
+        "@id": "http://dewey.info/class/305.894570488875/e23/"
       }
     ],
-    "items": [
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Jannok%20Nutti&givenName=Ylva&birthYear=1968"
+    },
+    "subject": [
       {
-        "comment": [
-          "Beskriver ett läger för samiska barn i form av en tidsresa"
-        ],
-        "classification": [
-          {
-            "@id": "http://dewey.info/class/305.894570488875/e23/"
-          }
-        ],
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Jannok%20Nutti&givenName=Ylva&birthYear=1968"
-        },
-        "subject": [
-          {
-            "@id": "/topic/sao/Traditionell%20kunskap"
-          },
-          {
-            "@id": "/topic/sao/Samer/vardagsliv%20och%20traditioner"
-          },
-          {
-            "@id": "/topic/sao/Pedagogisk%20metodik"
-          },
-          {
-            "@id": "/topic/sao/Sverige/Lappland/Jokkmokk"
-          }
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
-        },
-        "alternateFormat": [
-          {
-            "@id": "/some?type=Product&linkNote=%C3%84ven%20utgiven%20elektroniskt&title=Akta%20%C3%A1rran%2C%20ma%C5%8Bgga%20muitalusa"
-          }
-        ],
-        "exampleOfWork": {
-          "@id": "/some?type=UniformWork&title=En%20eldstad%2C%20flera%20ber%C3%A4ttelser."
-        },
-        "literaryForm": {
-          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
-        },
-        "illustrations": {
-          "@id": "/def/enum/content/Illustration"
-        },
-        "originalLanguage": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "influencedBy": [
-          {
-            "@id": "/some?type=Person&familyName=Kuoljok&givenName=Kajsa&birthYear=1967"
-          },
-          {
-            "@id": "_:b-0"
-          },
-          {
-            "@id": "_:b-1"
-          }
-        ],
-        "publisher": [
-          {
-            "@id": "_:b-1"
-          }
-        ],
-        "responsibilityStatement": "Ylva Jannok Nutti & Kajsa Kuoljok ; [jorgalan davvisámegillii: Miliana Baer]",
-        "hasFormat": [
-          {
-            "otherPhysicalDetails": "ill.",
-            "@type": "Product",
-            "extent": "24 s."
-          }
-        ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "@id": "/resource/bib/17039013",
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Jokkmokk"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Ájtte, svenskt fjäll- och samemuseum",
-            "providerDate": "2014"
-          }
-        ],
-        "translator": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/sme"
-          }
-        ],
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "instanceTitle": {
-          "subtitle": "nuorat ráhkadit gaskavuođaid ovddit buolvvaid sámi sajiide",
-          "@type": "Title",
-          "titleValue": "Akta árran, maŋgga muitalusa"
-        },
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierStatus": "canceledInvalid",
-            "@type": "Identifier",
-            "identifierValue": "978-91-87636-25-7"
-          }
-        ],
-        "@type": [
-          "Text",
-          "Monograph"
-        ],
-        "languageNote": [
-          "Nordsamisk text"
-        ]
+        "@id": "/topic/sao/Traditionell%20kunskap"
+      },
+      {
+        "@id": "/topic/sao/Samer/vardagsliv%20och%20traditioner"
+      },
+      {
+        "@id": "/topic/sao/Pedagogisk%20metodik"
+      },
+      {
+        "@id": "/topic/sao/Sverige/Lappland/Jokkmokk"
       }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&linkNote=%C3%84ven%20utgiven%20elektroniskt&title=Akta%20%C3%A1rran%2C%20ma%C5%8Bgga%20muitalusa"
+      }
+    ],
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=En%20eldstad%2C%20flera%20ber%C3%A4ttelser."
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "illustrations": {
+      "@id": "/def/enum/content/Illustration"
+    },
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "/some?type=Person&familyName=Kuoljok&givenName=Kajsa&birthYear=1967"
+      },
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "publisher": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "responsibilityStatement": "Ylva Jannok Nutti & Kajsa Kuoljok ; [jorgalan davvisámegillii: Miliana Baer]",
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "24 s."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "@id": "/resource/bib/17039013",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Jokkmokk"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Ájtte, svenskt fjäll- och samemuseum",
+        "providerDate": "2014"
+      }
+    ],
+    "translator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/sme"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "subtitle": "nuorat ráhkadit gaskavuođaid ovddit buolvvaid sámi sajiide",
+      "@type": "Title",
+      "titleValue": "Akta árran, maŋgga muitalusa"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierStatus": "canceledInvalid",
+        "@type": "Identifier",
+        "identifierValue": "978-91-87636-25-7"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "languageNote": [
+      "Nordsamisk text"
     ]
-  }
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SAMB"
+    }
+  ],
+  "created": "2014-10-15T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "17039013",
+  "modified": "2014-10-15T16:06:38.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Traditionell kunskap"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Samer"
+          },
+          {
+            "x": "vardagsliv och traditioner"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Pedagogisk metodik"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "651": {
+        "subfields": [
+          {
+            "a": "Sverige"
+          },
+          {
+            "z": "Lappland"
+          },
+          {
+            "z": "Jokkmokk"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Ajtt"
+  },
+  "@id": "/bib/17039013",
+  "@type": "Record"
 }

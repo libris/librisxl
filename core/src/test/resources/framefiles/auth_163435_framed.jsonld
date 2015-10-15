@@ -1,230 +1,147 @@
 {
-  "descriptions": {
-    "entry": {
-      "headingSeries": {
-        "@id": "/def/enum/content/NotAppropriate"
-      },
-      "language": [
-        {
-          "@id": "/def/languages/swe"
-        }
-      ],
-      "created": "2002-04-09T00:00:00.0+02:00",
-      "headingSubject": {
-        "@id": "/def/enum/content/Appropriate"
-      },
-      "scopeNote": [
-        "För verk om landets historia läggs geografiskt ämnesord och det allmänna ämnesordet Historia.",
-        "Särsk orter se resp landskap med tillägg z, t ex Blekinge Ncbcz."
-      ],
-      "encLevel": {
-        "@id": "/def/enum/record/CompleteAuthorityRecord"
-      },
-      "level": {
-        "@id": "/def/enum/content/FullyEstablishedHeading"
-      },
-      "focus": {
-        "@id": "/resource/auth/163435"
-      },
-      "controlNumber": "163435",
-      "modified": "2015-10-02T10:18:26.0+02:00",
-      "recordUpdate": {
-        "@id": "/def/enum/content/RecordCanBeUsed"
-      },
-      "sameAs": [
-        {
-          "@id": "/topic/_/Sverige"
-        }
-      ],
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "c"
-          ],
-          "065": {
-            "subfields": [
-              {
-                "a": "Kc"
-              },
-              {
-                "c": "Historia"
-              },
-              {
-                "2": "kssb/7"
-              }
-            ],
-            "ind1": " ",
-            "ind2": " "
-          }
-        },
-        {
-          "083": {
-            "subfields": [
-              {
-                "z": "2"
-              },
-              {
-                "a": "485"
-              },
-              {
-                "2": "23/swe"
-              }
-            ],
-            "ind1": "0",
-            "ind2": "4"
-          },
-          "_unhandled": [
-            "z"
-          ]
-        },
-        {
-          "451": {
-            "subfields": [
-              {
-                "a": "Konungariket Sverige"
-              }
-            ],
-            "ind1": " ",
-            "ind2": " "
-          }
-        },
-        {
-          "751": {
-            "subfields": [
-              {
-                "a": "Sweden"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "0"
-          }
-        },
-        {
-          "751": {
-            "subfields": [
-              {
-                "a": "Sweden"
-              },
-              {
-                "x": "History"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "0"
-          }
-        }
-      ],
-      "closeMatch": [
-        {
-          "@id": "/topic/kssb/7/Kc"
-        },
-        {
-          "@id": "/topic/kssb/7/Nc"
-        },
-        {
-          "@id": "http://dewey.info/class/948.5/e23/"
-        },
-        {
-          "@id": "http://dewey.info/class/485/e23/"
-        }
-      ],
-      "headingMain": {
-        "@id": "/def/enum/content/NotAppropriate"
-      },
-      "systemNumber": [
-        "(sao)47864"
-      ],
-      "kindOfRecord": {
-        "@id": "/def/enum/content/EstablishedHeadingRecord"
-      },
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=NB"
-      },
-      "@id": "/auth/163435",
-      "@type": "GeographicalTerm",
-      "prefLabel": "Sverige"
-    },
-    "quoted": [
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=NB",
-          "@type": "Organization",
-          "name": "NB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/Kc",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "Kc"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/7",
-          "@type": "ConceptScheme",
-          "notation": "kssb/7"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/Nc",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "Nc"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/948.5/e23/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e23/swe/"
-          },
-          "@type": "Concept",
-          "notation": "948.5"
-        }
-      },
-      {
-        "@graph": {
-          "language": "swe",
-          "notation": "DDC",
-          "@id": "http://dewey.info/scheme/edition/e23/swe/",
-          "version": "23",
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "@type": "ConceptScheme"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/485/e23/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e23/swe/"
-          },
-          "@type": "Concept",
-          "notation": "485"
-        }
-      }
-    ],
-    "items": [
-      {
-        "@id": "/resource/auth/163435",
-        "@type": [
-          "Authority"
-        ]
-      }
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2002-04-09T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "scopeNote": [
+    "För verk om landets historia läggs geografiskt ämnesord och det allmänna ämnesordet Historia.",
+    "Särsk orter se resp landskap med tillägg z, t ex Blekinge Ncbcz."
+  ],
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "focus": {
+    "@id": "/resource/auth/163435",
+    "@type": [
+      "Authority"
     ]
-  }
+  },
+  "controlNumber": "163435",
+  "modified": "2015-10-02T10:18:26.0+02:00",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "sameAs": [
+    {
+      "@id": "/topic/_/Sverige"
+    }
+  ],
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "c"
+      ],
+      "065": {
+        "subfields": [
+          {
+            "a": "Kc"
+          },
+          {
+            "c": "Historia"
+          },
+          {
+            "2": "kssb/7"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "083": {
+        "subfields": [
+          {
+            "z": "2"
+          },
+          {
+            "a": "485"
+          },
+          {
+            "2": "23/swe"
+          }
+        ],
+        "ind1": "0",
+        "ind2": "4"
+      },
+      "_unhandled": [
+        "z"
+      ]
+    },
+    {
+      "451": {
+        "subfields": [
+          {
+            "a": "Konungariket Sverige"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "751": {
+        "subfields": [
+          {
+            "a": "Sweden"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "751": {
+        "subfields": [
+          {
+            "a": "Sweden"
+          },
+          {
+            "x": "History"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    }
+  ],
+  "closeMatch": [
+    {
+      "@id": "/topic/kssb/7/Kc"
+    },
+    {
+      "@id": "/topic/kssb/7/Nc"
+    },
+    {
+      "@id": "http://dewey.info/class/948.5/e23/"
+    },
+    {
+      "@id": "http://dewey.info/class/485/e23/"
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "systemNumber": [
+    "(sao)47864"
+  ],
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/auth/163435",
+  "@type": "GeographicalTerm",
+  "prefLabel": "Sverige"
 }

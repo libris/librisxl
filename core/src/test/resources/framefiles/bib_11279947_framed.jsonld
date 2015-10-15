@@ -1,383 +1,186 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/11279947"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=NB"
-        }
-      ],
-      "created": "2009-01-15T00:00:00.0+01:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "11279947",
-      "modified": "2009-10-09T14:10:49.0+02:00",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Intelligenstester"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Hjärna"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=C"
-      },
-      "@id": "/bib/11279947",
-      "@type": "Record"
-    },
-    "quoted": [
+  "about": {
+    "comment": [
+      "Härtill 4 uppsatser"
+    ],
+    "classification": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=C",
-          "@type": "Organization",
-          "name": "C"
-        }
+        "@id": "/topic/kssb/8/Vef"
       },
       {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=NB",
-          "@type": "Organization",
-          "notation": "NB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Vef",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Vef"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/8",
-          "@type": "ConceptScheme",
-          "notation": "kssb/8"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Doat",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Doat"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1969",
-          "givenName": "Lea J.",
-          "familyName": "Forsman",
-          "@id": "/some?type=Person&familyName=Forsman&givenName=Lea%20J.&birthYear=1969",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Stockholm",
-          "@type": "Place",
-          "label": "Stockholm"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/mesh/Personality",
-          "inScheme": {
-            "@id": "/scheme/mesh"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Personality"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/mesh",
-          "@type": "ConceptScheme",
-          "notation": "mesh"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/mesh/Intelligence",
-          "inScheme": {
-            "@id": "/scheme/mesh"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Intelligence"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/mesh/Intelligence%20Tests",
-          "inScheme": {
-            "@id": "/scheme/mesh"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Intelligence Tests"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/mesh/Brain",
-          "inScheme": {
-            "@id": "/scheme/mesh"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Brain"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/mesh/Brain%20Mapping/anatomy%20%26%20histology",
-          "inScheme": {
-            "@id": "/scheme/mesh"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Brain%20Mapping"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=anatomy%20%26%20histology"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Brain%20Mapping",
-          "@type": "TopicalTerm",
-          "prefLabel": "Brain Mapping"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=anatomy%20%26%20histology",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "anatomy & histology"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Intelligenstester",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Intelligenstester"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Hj%C3%A4rna",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Hjärna"
-        }
-      },
-      {
-        "@graph": {
-          "title": "Neural correlates of individual differences in personality and intelligence",
-          "placePublisherAndDateOfPublication": "2009",
-          "linkNote": [
-            "Även utgiven elektroniskt:"
-          ],
-          "@type": "Product",
-          "@id": "/some?type=Product&linkNote=%C3%84ven%20utgiven%20elektroniskt%3A&controlledLabel=Forsman%2C%20Lea%20J.&title=Neural%20correlates%20of%20individual%20differences%20in%20personality%20and%20intelligence&placePublisherAndDateOfPublication=2009",
-          "describedBy": [
-            {
-              "@id": "/bib/11279954"
-            }
-          ],
-          "controlledLabel": "Forsman, Lea J."
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/11279954",
-          "@type": "Record",
-          "controlNumber": "11279954"
-        }
+        "@id": "/topic/kssb/8/Doat"
       }
     ],
-    "items": [
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Forsman&givenName=Lea%20J.&birthYear=1969"
+    },
+    "subject": [
       {
-        "comment": [
-          "Härtill 4 uppsatser"
-        ],
-        "classification": [
-          {
-            "@id": "/topic/kssb/8/Vef"
-          },
-          {
-            "@id": "/topic/kssb/8/Doat"
-          }
-        ],
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Forsman&givenName=Lea%20J.&birthYear=1969"
-        },
-        "subject": [
-          {
-            "@id": "/topic/mesh/Personality"
-          },
-          {
-            "@id": "/topic/mesh/Intelligence"
-          },
-          {
-            "@id": "/topic/mesh/Intelligence%20Tests"
-          },
-          {
-            "@id": "/topic/mesh/Brain"
-          },
-          {
-            "@id": "/topic/mesh/Brain%20Mapping/anatomy%20%26%20histology"
-          },
-          {
-            "@id": "/topic/sao/Intelligenstester"
-          },
-          {
-            "@id": "/topic/sao/Hj%C3%A4rna"
-          }
-        ],
-        "index": {
-          "@id": "/def/enum/content/NoIndex"
-        },
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
-        },
-        "alternateFormat": [
-          {
-            "@id": "/some?type=Product&linkNote=%C3%84ven%20utgiven%20elektroniskt%3A&controlledLabel=Forsman%2C%20Lea%20J.&title=Neural%20correlates%20of%20individual%20differences%20in%20personality%20and%20intelligence&placePublisherAndDateOfPublication=2009"
-          }
-        ],
-        "literaryForm": {
-          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
-        },
-        "illustrations": {
-          "@id": "/def/enum/content/Illustration"
-        },
-        "manufacture": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Stockholm"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Larserics Digital Print)"
-          }
-        ],
-        "hasAnnotation": [
-          {
-            "note": "Diss. (sammanfattning) Stockholm : Karolinska institutet, 2009",
-            "@type": "DissertationAnnotation"
-          }
-        ],
-        "contentType": [
-          {
-            "@id": "/def/enum/content/Thesis"
-          }
-        ],
-        "responsibilityStatement": "Lea J. Forsman",
-        "hasFormat": [
-          {
-            "otherPhysicalDetails": "diagr.",
-            "@type": "Product",
-            "extent": "51 s.",
-            "dimensions": "24 cm"
-          }
-        ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "@id": "/resource/bib/11279947",
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Stockholm"
-            },
-            "@type": "ProviderEvent",
-            "providerDate": "2009"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/eng"
-          }
-        ],
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "instanceTitle": {
-          "subtitle": "studies using an isochronous timing task and voxel based morphometry",
-          "@type": "Title",
-          "titleValue": "Neural correlates of individual differences in personality and intelligence"
-        },
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "@type": "Identifier",
-            "identifierValue": "9789174093209"
-          }
-        ],
-        "@type": [
-          "Text",
-          "Monograph"
-        ]
+        "@id": "/topic/mesh/Personality"
+      },
+      {
+        "@id": "/topic/mesh/Intelligence"
+      },
+      {
+        "@id": "/topic/mesh/Intelligence%20Tests"
+      },
+      {
+        "@id": "/topic/mesh/Brain"
+      },
+      {
+        "@id": "/topic/mesh/Brain%20Mapping/anatomy%20%26%20histology"
+      },
+      {
+        "@id": "/topic/sao/Intelligenstester"
+      },
+      {
+        "@id": "/topic/sao/Hj%C3%A4rna"
       }
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&linkNote=%C3%84ven%20utgiven%20elektroniskt%3A&controlledLabel=Forsman%2C%20Lea%20J.&title=Neural%20correlates%20of%20individual%20differences%20in%20personality%20and%20intelligence&placePublisherAndDateOfPublication=2009"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "illustrations": {
+      "@id": "/def/enum/content/Illustration"
+    },
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Larserics Digital Print)"
+      }
+    ],
+    "hasAnnotation": [
+      {
+        "note": "Diss. (sammanfattning) Stockholm : Karolinska institutet, 2009",
+        "@type": "DissertationAnnotation"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Thesis"
+      }
+    ],
+    "responsibilityStatement": "Lea J. Forsman",
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "diagr.",
+        "@type": "Product",
+        "extent": "51 s.",
+        "dimensions": "24 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "@id": "/resource/bib/11279947",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerDate": "2009"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "subtitle": "studies using an isochronous timing task and voxel based morphometry",
+      "@type": "Title",
+      "titleValue": "Neural correlates of individual differences in personality and intelligence"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9789174093209"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
     ]
-  }
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2009-01-15T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "11279947",
+  "modified": "2009-10-09T14:10:49.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Intelligenstester"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Hjärna"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=C"
+  },
+  "@id": "/bib/11279947",
+  "@type": "Record"
 }

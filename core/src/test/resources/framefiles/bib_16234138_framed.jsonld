@@ -1,234 +1,128 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/16234138"
-      },
-      "created": "2014-03-19T00:00:00.0+01:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "16234138",
-      "modified": "2015-04-15T16:43:36.0+02:00",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Tv-spel"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=Um"
-      },
-      "@id": "/bib/16234138",
-      "@type": "Record"
-    },
-    "quoted": [
+  "about": {
+    "comment": [
+      "TV-spel (Xbox One, Xbox Live Gold)",
+      "Avsett för 2-24 spelare"
+    ],
+    "classification": [
       {
-        "@graph": {
-          "@id": "/some?type=Electronic",
-          "@type": [
-            "Electronic"
-          ],
-          "carrierType": [
-            {
-              "@id": "/def/enum/carrier/OpticalDisc"
-            }
-          ]
-        }
+        "@id": "http://dewey.info/class/794.8/e23/"
       },
       {
-        "@graph": {
-          "@id": "/def/enum/content/Juvenile",
-          "@type": "Audience"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/identifiers/EAN",
-          "notation": "EAN"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=Um",
-          "@type": "Organization",
-          "name": "Um"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/794.8/e23/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e23/swe/"
-          },
-          "@type": "Concept",
-          "notation": "794.8"
-        }
-      },
-      {
-        "@graph": {
-          "language": "swe",
-          "notation": "DDC",
-          "@id": "http://dewey.info/scheme/edition/e23/swe/",
-          "version": "23",
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "@type": "ConceptScheme"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Rdcb%2FDO",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Rdcb/DO"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/8",
-          "@type": "ConceptScheme",
-          "notation": "kssb/8"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Gen%C3%A8ve",
-          "@type": "Place",
-          "label": "Genève"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Tv-spel",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Tv-spel"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
+        "@id": "/topic/kssb/8/Rdcb%2FDO"
       }
     ],
-    "items": [
+    "mediaTerm": "Elektronisk resurs",
+    "contentType": [
       {
-        "comment": [
-          "TV-spel (Xbox One, Xbox Live Gold)",
-          "Avsett för 2-24 spelare"
-        ],
-        "classification": [
-          {
-            "@id": "http://dewey.info/class/794.8/e23/"
-          },
-          {
-            "@id": "/topic/kssb/8/Rdcb%2FDO"
-          }
-        ],
-        "mediaTerm": "Elektronisk resurs",
-        "contentType": [
-          {
-            "@id": "/def/enum/content/Game"
-          }
-        ],
-        "_providerDateStatus": {
-          "@id": "/def/enum/content/SingleKnownDateProbableDate"
+        "@id": "/def/enum/content/Game"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "_providerYear": "2014",
+    "subject": [
+      {
+        "@id": "/topic/sao/Tv-spel"
+      }
+    ],
+    "audience": {
+      "@id": "/def/enum/content/Juvenile"
+    },
+    "fileType": "Interaktivt multimedium",
+    "hasFormat": [
+      {
+        "@id": "/some?type=Electronic"
+      },
+      {
+        "otherPhysicalDetails": "ljud, färg",
+        "@type": "Product",
+        "extent": "1 DVD-ROM"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sz"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Plants vs. zombies garden warfare"
+    },
+    "systemRequirements": [
+      "Kräver Xbox Live Gold",
+      "Stöd för co-op 2-4",
+      "Stöd för Kinect",
+      "Systemkrav: Xbox One"
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/EAN"
         },
-        "language": [
-          {
-            "@id": "/def/languages/eng"
-          }
-        ],
-        "_providerYear": "2014",
-        "subject": [
-          {
-            "@id": "/topic/sao/Tv-spel"
-          }
-        ],
-        "audience": {
-          "@id": "/def/enum/content/Juvenile"
+        "@type": "Identifier",
+        "identifierValue": "5030943112329"
+      }
+    ],
+    "@id": "/resource/bib/16234138",
+    "@type": [
+      "Multimedia",
+      "Monograph"
+    ],
+    "languageNote": [
+      "Tal och text på engelska."
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Gen%C3%A8ve"
         },
-        "fileType": "Interaktivt multimedium",
-        "hasFormat": [
-          {
-            "@id": "/some?type=Electronic"
-          },
-          {
-            "otherPhysicalDetails": "ljud, färg",
-            "@type": "Product",
-            "extent": "1 DVD-ROM"
-          }
-        ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sz"
-          }
-        ],
-        "instanceTitle": {
-          "@type": "Title",
-          "titleValue": "Plants vs. zombies garden warfare"
-        },
-        "systemRequirements": [
-          "Kräver Xbox Live Gold",
-          "Stöd för co-op 2-4",
-          "Stöd för Kinect",
-          "Systemkrav: Xbox One"
-        ],
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/EAN"
-            },
-            "@type": "Identifier",
-            "identifierValue": "5030943112329"
-          }
-        ],
-        "@id": "/resource/bib/16234138",
-        "@type": [
-          "Multimedia",
-          "Monograph"
-        ],
-        "languageNote": [
-          "Tal och text på engelska."
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Gen%C3%A8ve"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "PopCap EA",
-            "providerDate": "cop. 2014"
-          }
-        ]
+        "@type": "ProviderEvent",
+        "providerName": "PopCap EA",
+        "providerDate": "cop. 2014"
       }
     ]
-  }
+  },
+  "created": "2014-03-19T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "16234138",
+  "modified": "2015-04-15T16:43:36.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Tv-spel"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Um"
+  },
+  "@id": "/bib/16234138",
+  "@type": "Record"
 }

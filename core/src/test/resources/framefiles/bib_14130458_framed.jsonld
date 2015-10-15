@@ -1,449 +1,182 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/14130458"
-      },
-      "created": "2014-03-12T00:00:00.0+01:00",
-      "encLevel": {
-        "@id": "/def/enum/record/AbbreviatedLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "14130458",
-      "modified": "2015-01-27T17:09:57.0+01:00",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "655": {
-            "subfields": [
-              {
-                "a": "Lättlästa böcker"
-              },
-              {
-                "2": "saogf"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "modifyingAgency": {
-        "@id": "/some?type=Organization&name=SEK"
-      },
-      "systemNumber": [
-        "(BOKR)9789187395628"
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=BOKR"
-      },
-      "@id": "/bib/14130458",
-      "@type": "Record"
-    },
-    "quoted": [
+  "about": {
+    "comment": [
+      "Textboken även utgiven separat med ISBN: 978-91-87061-58-5"
+    ],
+    "mediaTerm": "Kombinerat material] :",
+    "classification": [
       {
-        "@graph": {
-          "confPub": {
-            "@id": "/def/enum/content/NotAConferencePublication"
-          },
-          "@id": "/some?type=Text",
-          "@type": [
-            "Text"
-          ],
-          "festschrift": {
-            "@id": "/def/enum/content/NotAFestschrift"
-          },
-          "literaryForm": {
-            "@id": "/def/enum/content/FictionNotFurtherSpecified"
-          }
-        }
-      },
-      {
-        "@graph": {
-          "text": {
-            "@id": "/def/enum/content/Fiction"
-          },
-          "@id": "/some?type=Audio",
-          "@type": [
-            "Audio"
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SoundRecording",
-          "@type": [
-            "SoundRecording"
-          ],
-          "carrierType": [
-            {
-              "@id": "/def/enum/carrier/SoundDisc"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=BOKR",
-          "@type": "Organization",
-          "name": "BOKR"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=SEK",
-          "@type": "Organization",
-          "name": "SEK"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/nor",
-          "notation": "nor"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/839.8238/e23/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e23/swe/"
-          },
-          "@type": "Concept",
-          "notation": "839.8238"
-        }
-      },
-      {
-        "@graph": {
-          "language": "swe",
-          "notation": "DDC",
-          "@id": "http://dewey.info/scheme/edition/e23/swe/",
-          "version": "23",
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "@type": "ConceptScheme"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1964",
-          "givenName": "Anna",
-          "familyName": "Fiske",
-          "@id": "_:b-0",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=Fra%20T-bane%20til%20lenestol.",
-          "@type": "UniformWork",
-          "language": {
-            "@id": "/some?type=Language&label=Svenska"
-          },
-          "title": "Fra T-bane til lenestol."
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Language&label=Svenska",
-          "@type": "Language",
-          "label": "Svenska"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=CreativeWork",
-          "contentType": {
-            "@id": "/some?type=Class&_groupID=1.1&label=text&notation=txt&termGroup=rdacontent"
-          },
-          "@type": "CreativeWork"
-        }
-      },
-      {
-        "@graph": {
-          "notation": "txt",
-          "label": "text",
-          "_groupID": "1.1",
-          "@id": "/some?type=Class&_groupID=1.1&label=text&notation=txt&termGroup=rdacontent",
-          "@type": "Class",
-          "termGroup": "rdacontent"
-        }
-      },
-      {
-        "@graph": {
-          "notation": "spw",
-          "label": "spoken word",
-          "_groupID": "2.1",
-          "@id": "/some?type=Class&_groupID=2.1&label=spoken%20word&notation=spw&termGroup=rdacontent",
-          "@type": "Class",
-          "termGroup": "rdacontent"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Product",
-          "@type": "Product",
-          "mediaType": {
-            "@id": "/some?type=MediaType&_groupID=1.2&label=unmediated&notation=n&termGroup=rdamedia"
-          }
-        }
-      },
-      {
-        "@graph": {
-          "notation": "n",
-          "label": "unmediated",
-          "_groupID": "1.2",
-          "@id": "/some?type=MediaType&_groupID=1.2&label=unmediated&notation=n&termGroup=rdamedia",
-          "@type": "MediaType",
-          "termGroup": "rdamedia"
-        }
-      },
-      {
-        "@graph": {
-          "notation": "s",
-          "label": "audio",
-          "_groupID": "2.2",
-          "@id": "/some?type=MediaType&_groupID=2.2&label=audio&notation=s&termGroup=rdamedia",
-          "@type": "MediaType",
-          "termGroup": "rdamedia"
-        }
-      },
-      {
-        "@graph": {
-          "notation": "nc",
-          "label": "volume",
-          "_groupID": "1.3",
-          "@id": "/some?type=CarrierType&_groupID=1.3&label=volume&notation=nc&termGroup=rdacarrier",
-          "@type": "CarrierType",
-          "termGroup": "rdacarrier"
-        }
-      },
-      {
-        "@graph": {
-          "notation": "sd",
-          "label": "audio disc",
-          "_groupID": "2.3",
-          "@id": "/some?type=CarrierType&_groupID=2.3&label=audio%20disc&notation=sd&termGroup=rdacarrier",
-          "@type": "CarrierType",
-          "termGroup": "rdacarrier"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/saogf/L%C3%A4ttl%C3%A4sta%20b%C3%B6cker",
-          "inScheme": {
-            "@id": "/scheme/saogf"
-          },
-          "@type": "GenreTerm",
-          "prefLabel": "Lättlästa böcker"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/saogf",
-          "@type": "ConceptScheme",
-          "notation": "saogf"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1922",
-          "givenName": "Hans",
-          "familyName": "Peterson",
-          "@id": "_:b-1",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "title": "Från tunnelbana till fåtölj",
-          "linkNote": [
-            "Textbok"
-          ],
-          "@type": "CreativeWork",
-          "identifier": [
-            {
-              "@id": "/some?type=Identifier&identifierValue=9789187061585"
-            }
-          ],
-          "@id": "/some?type=CreativeWork&linkNote=Textbok&title=Fr%C3%A5n%20tunnelbana%20till%20f%C3%A5t%C3%B6lj",
-          "describedBy": [
-            {
-              "@id": "/bib/13432584"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/isbn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=9789187061585",
-          "@type": "Identifier",
-          "identifierValue": "9789187061585"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/13432584",
-          "@type": "Record",
-          "controlNumber": "13432584"
-        }
+        "@id": "http://dewey.info/class/839.8238/e23/"
       }
     ],
-    "items": [
+    "series": [
       {
-        "comment": [
-          "Textboken även utgiven separat med ISBN: 978-91-87061-58-5"
-        ],
-        "mediaTerm": "Kombinerat material] :",
-        "classification": [
-          {
-            "@id": "http://dewey.info/class/839.8238/e23/"
-          }
-        ],
-        "series": [
-          {
-            "@type": "Serial",
-            "title": "Vilja"
-          }
-        ],
-        "attributedTo": {
-          "@id": "_:b-0"
-        },
-        "relation": [
-          {
-            "@id": "/some?type=CreativeWork&linkNote=Textbok&title=Fr%C3%A5n%20tunnelbana%20till%20f%C3%A5t%C3%B6lj"
-          }
-        ],
-        "publication": [
-          {
-            "@type": "ProviderEvent",
-            "providerName": "Nypon förlag",
-            "providerDate": "2013"
-          }
-        ],
-        "author": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "exampleOfWork": {
-          "@id": "/some?type=UniformWork&title=Fra%20T-bane%20til%20lenestol."
-        },
-        "originalLanguage": [
-          {
-            "@id": "/def/languages/nor"
-          }
-        ],
-        "influencedBy": [
-          {
-            "@id": "_:b-1"
-          }
-        ],
-        "contentType": [
-          {
-            "@id": "/def/enum/content/Kit"
-          }
-        ],
-        "hasPart": [
-          {
-            "@id": "/some?type=Text"
-          },
-          {
-            "@id": "/some?type=Audio"
-          },
-          {
-            "@id": "/some?type=CreativeWork"
-          },
-          {
-            "@id": "/some?type=CreativeWork"
-          }
-        ],
-        "translator": [
-          {
-            "@id": "_:b-1"
-          }
-        ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "genre": [
-          {
-            "@id": "/topic/saogf/L%C3%A4ttl%C3%A4sta%20b%C3%B6cker"
-          }
-        ],
-        "@id": "/resource/bib/14130458",
-        "hasFormat": [
-          {
-            "@id": "/some?type=Text"
-          },
-          {
-            "@id": "/some?type=SoundRecording"
-          },
-          {
-            "@type": "Product",
-            "extent": "1 textbok (35 s.) + 1 CD i mp3-format (? min.)"
-          },
-          {
-            "@id": "/some?type=Product"
-          },
-          {
-            "@id": "/some?type=Product"
-          },
-          {
-            "@id": "/some?type=Product"
-          },
-          {
-            "@id": "/some?type=Product"
-          }
-        ],
-        "illustrator": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "instanceTitle": {
-          "subtitle": "en bilderbok för vuxna",
-          "@type": "Title",
-          "titleValue": "Från tunnelbana till fåtölj"
-        },
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "MP3-CD",
-            "@type": "Identifier",
-            "identifierValue": "9789187395628"
-          }
-        ],
-        "@type": [
-          "Kit",
-          "Monograph"
-        ]
+        "@type": "Serial",
+        "title": "Vilja"
       }
+    ],
+    "attributedTo": {
+      "@id": "_:b-0"
+    },
+    "relation": [
+      {
+        "@id": "/some?type=CreativeWork&linkNote=Textbok&title=Fr%C3%A5n%20tunnelbana%20till%20f%C3%A5t%C3%B6lj"
+      }
+    ],
+    "publication": [
+      {
+        "@type": "ProviderEvent",
+        "providerName": "Nypon förlag",
+        "providerDate": "2013"
+      }
+    ],
+    "author": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=Fra%20T-bane%20til%20lenestol."
+    },
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/nor"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Kit"
+      }
+    ],
+    "hasPart": [
+      {
+        "@id": "/some?type=Text"
+      },
+      {
+        "@id": "/some?type=Audio"
+      },
+      {
+        "@id": "/some?type=CreativeWork"
+      },
+      {
+        "@id": "/some?type=CreativeWork"
+      }
+    ],
+    "translator": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/L%C3%A4ttl%C3%A4sta%20b%C3%B6cker"
+      }
+    ],
+    "@id": "/resource/bib/14130458",
+    "hasFormat": [
+      {
+        "@id": "/some?type=Text"
+      },
+      {
+        "@id": "/some?type=SoundRecording"
+      },
+      {
+        "@type": "Product",
+        "extent": "1 textbok (35 s.) + 1 CD i mp3-format (? min.)"
+      },
+      {
+        "@id": "/some?type=Product"
+      },
+      {
+        "@id": "/some?type=Product"
+      },
+      {
+        "@id": "/some?type=Product"
+      },
+      {
+        "@id": "/some?type=Product"
+      }
+    ],
+    "illustrator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "en bilderbok för vuxna",
+      "@type": "Title",
+      "titleValue": "Från tunnelbana till fåtölj"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "MP3-CD",
+        "@type": "Identifier",
+        "identifierValue": "9789187395628"
+      }
+    ],
+    "@type": [
+      "Kit",
+      "Monograph"
     ]
-  }
+  },
+  "created": "2014-03-12T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/AbbreviatedLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "14130458",
+  "modified": "2015-01-27T17:09:57.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Lättlästa böcker"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=SEK"
+  },
+  "systemNumber": [
+    "(BOKR)9789187395628"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=BOKR"
+  },
+  "@id": "/bib/14130458",
+  "@type": "Record"
 }

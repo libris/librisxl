@@ -1,436 +1,190 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/10202722"
-      },
-      "created": "2006-01-05T00:00:00.0+01:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "10202722",
-      "modified": "2012-01-10T16:56:25.0+01:00",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "2"
-          ],
-          "015": {
-            "subfields": [
-              {
-                "a": "GBA636655"
-              },
-              {
-                "2": "bnb"
-              }
-            ],
-            "ind1": " ",
-            "ind2": " "
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Cancer"
-              },
-              {
-                "x": "genetiska aspekter"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "modifyingAgency": {
-        "@id": "/some?type=Organization&name=Lfa"
-      },
-      "systemNumber": [
-        "(Uk)013437540"
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=StDuBDS"
-      },
-      "@id": "/bib/10202722",
-      "@type": "Record"
-    },
-    "quoted": [
+  "about": {
+    "comment": [
+      "Härtill 1 CD-ROM (innehållande Figures from text, Supplementary sidebars, Mini-lectures, Movies) samt 1 plansch i ficka"
+    ],
+    "classification": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=StDuBDS",
-          "@type": "Organization",
-          "name": "StDuBDS"
-        }
+        "@id": "http://dewey.info/class/616.994071/e22/"
       },
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=Lfa",
-          "@type": "Organization",
-          "name": "Lfa"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/616.994071/e22/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e22/"
-          },
-          "@type": "Concept",
-          "notation": "616.994071"
-        }
-      },
-      {
-        "@graph": {
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "version": "22",
-          "@id": "http://dewey.info/scheme/edition/e22/",
-          "@type": "ConceptScheme",
-          "notation": "DDC"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/Vep",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "Vep"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/7",
-          "@type": "ConceptScheme",
-          "notation": "kssb/7"
-        }
-      },
-      {
-        "@graph": {
-          "givenName": "Robert A.",
-          "familyName": "Weinberg",
-          "@id": "/some?type=Person&familyName=Weinberg&givenName=Robert%20A.",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=New%20York%20%3B",
-          "@type": "Place",
-          "label": "New York ;"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=London",
-          "@type": "Place",
-          "label": "London"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/lcsh/Cancer/Molecular%20aspects",
-          "inScheme": {
-            "@id": "/scheme/lcsh"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Cancer"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=Molecular%20aspects"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/lcsh",
-          "@type": "ConceptScheme",
-          "notation": "lcsh"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Cancer",
-          "@type": "TopicalTerm",
-          "prefLabel": "Cancer"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=Molecular%20aspects",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "Molecular aspects"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/lcsh/Cancer/Genetic%20aspects",
-          "inScheme": {
-            "@id": "/scheme/lcsh"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Cancer"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=Genetic%20aspects"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=Genetic%20aspects",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "Genetic aspects"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/lcsh/Cancer%20cells",
-          "inScheme": {
-            "@id": "/scheme/lcsh"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Cancer cells"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/mesh/Neoplasms/genetics",
-          "inScheme": {
-            "@id": "/scheme/mesh"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Neoplasms"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=genetics"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/mesh",
-          "@type": "ConceptScheme",
-          "notation": "mesh"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Neoplasms",
-          "@type": "TopicalTerm",
-          "prefLabel": "Neoplasms"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=genetics",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "genetics"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/mesh/Cell%20transformation%2C%20neoplastic",
-          "inScheme": {
-            "@id": "/scheme/mesh"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Cell transformation, neoplastic"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/mesh/Genes%2C%20neoplasm",
-          "inScheme": {
-            "@id": "/scheme/mesh"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Genes, neoplasm"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Cancer/genetiska%20aspekter",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Cancer"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=genetiska%20aspekter"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=genetiska%20aspekter",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "genetiska aspekter"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
+        "@id": "/topic/kssb/7/Vep"
       }
     ],
-    "items": [
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Weinberg&givenName=Robert%20A."
+    },
+    "termsOfAvailability": "?89.99",
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "subject": [
       {
-        "comment": [
-          "Härtill 1 CD-ROM (innehållande Figures from text, Supplementary sidebars, Mini-lectures, Movies) samt 1 plansch i ficka"
-        ],
-        "classification": [
-          {
-            "@id": "http://dewey.info/class/616.994071/e22/"
-          },
-          {
-            "@id": "/topic/kssb/7/Vep"
-          }
-        ],
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Weinberg&givenName=Robert%20A."
-        },
-        "termsOfAvailability": "?89.99",
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
-        },
-        "subject": [
-          {
-            "@id": "/topic/lcsh/Cancer/Molecular%20aspects"
-          },
-          {
-            "@id": "/topic/lcsh/Cancer/Genetic%20aspects"
-          },
-          {
-            "@id": "/topic/lcsh/Cancer%20cells"
-          },
-          {
-            "@id": "/topic/mesh/Neoplasms/genetics"
-          },
-          {
-            "@id": "/topic/mesh/Cell%20transformation%2C%20neoplastic"
-          },
-          {
-            "@id": "/topic/mesh/Genes%2C%20neoplasm"
-          },
-          {
-            "@id": "/topic/sao/Cancer/genetiska%20aspekter"
-          }
-        ],
-        "index": {
-          "@id": "/def/enum/content/IndexPresent"
-        },
-        "listOfContents": [
-          "The biology and genetics of cells and organisms -- The nature of cancer -- Tumor viruses -- Cellular oncogenes -- Growth factors and their receptors -- Cytoplasmic signaling circuitry programs many of the traits of cancer -- Tumor suppressor genes -- pRb and control of the cell cycle clock -- p53 and apoptosis: Master guardian and executioner -- Eternal life: Cell immortalization and tumorigenesis -- Multistep tumorigenesis -- Maintenance of genomic integrity and the development of cancer -- Dialogue replaces monologue: Heterotypic interactions and the biology of angiogenesis -- Moving out: Invasion and metastasis -- Crowd control: Tumor immunology and immunotherapy -- Rational treatment of cancer"
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=New%20York%20%3B"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Taylor & Francis",
-            "providerDate": "cop. 2007"
-          }
-        ],
-        "literaryForm": {
-          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
-        },
-        "illustrations": {
-          "@id": "/def/enum/content/Illustration"
-        },
-        "_providerYear": "2007",
-        "responsibilityStatement": "Robert A. Weinberg",
-        "hasFormat": [
-          {
-            "accompanyingMaterial": "1 CD-ROM",
-            "otherPhysicalDetails": "ill., många i färg",
-            "@type": "Product",
-            "extent": "xix, 796, 4, 20, 24 s."
-          }
-        ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/xxu"
-          }
-        ],
-        "@id": "/resource/bib/10202722",
-        "nationalBibliographicNumber": "GBA636655",
-        "_providerDateStatus": {
-          "@id": "/def/enum/content/SingleKnownDateProbableDate"
-        },
-        "language": [
-          {
-            "@id": "/def/languages/eng"
-          }
-        ],
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "instanceTitle": {
-          "@type": "Title",
-          "titleValue": "The biology of cancer"
-        },
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "hbk.",
-            "@type": "Identifier",
-            "identifierValue": "0-8153-4078-8"
-          },
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "pbk.",
-            "@type": "Identifier",
-            "identifierValue": "0-8153-4076-1"
-          },
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "@type": "Identifier",
-            "identifierValue": "9780815340768"
-          }
-        ],
-        "@type": [
-          "Text",
-          "Monograph"
-        ]
+        "@id": "/topic/lcsh/Cancer/Molecular%20aspects"
+      },
+      {
+        "@id": "/topic/lcsh/Cancer/Genetic%20aspects"
+      },
+      {
+        "@id": "/topic/lcsh/Cancer%20cells"
+      },
+      {
+        "@id": "/topic/mesh/Neoplasms/genetics"
+      },
+      {
+        "@id": "/topic/mesh/Cell%20transformation%2C%20neoplastic"
+      },
+      {
+        "@id": "/topic/mesh/Genes%2C%20neoplasm"
+      },
+      {
+        "@id": "/topic/sao/Cancer/genetiska%20aspekter"
       }
+    ],
+    "index": {
+      "@id": "/def/enum/content/IndexPresent"
+    },
+    "listOfContents": [
+      "The biology and genetics of cells and organisms -- The nature of cancer -- Tumor viruses -- Cellular oncogenes -- Growth factors and their receptors -- Cytoplasmic signaling circuitry programs many of the traits of cancer -- Tumor suppressor genes -- pRb and control of the cell cycle clock -- p53 and apoptosis: Master guardian and executioner -- Eternal life: Cell immortalization and tumorigenesis -- Multistep tumorigenesis -- Maintenance of genomic integrity and the development of cancer -- Dialogue replaces monologue: Heterotypic interactions and the biology of angiogenesis -- Moving out: Invasion and metastasis -- Crowd control: Tumor immunology and immunotherapy -- Rational treatment of cancer"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=New%20York%20%3B"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Taylor & Francis",
+        "providerDate": "cop. 2007"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "illustrations": {
+      "@id": "/def/enum/content/Illustration"
+    },
+    "_providerYear": "2007",
+    "responsibilityStatement": "Robert A. Weinberg",
+    "hasFormat": [
+      {
+        "accompanyingMaterial": "1 CD-ROM",
+        "otherPhysicalDetails": "ill., många i färg",
+        "@type": "Product",
+        "extent": "xix, 796, 4, 20, 24 s."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxu"
+      }
+    ],
+    "@id": "/resource/bib/10202722",
+    "nationalBibliographicNumber": "GBA636655",
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "The biology of cancer"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "hbk.",
+        "@type": "Identifier",
+        "identifierValue": "0-8153-4078-8"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "pbk.",
+        "@type": "Identifier",
+        "identifierValue": "0-8153-4076-1"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9780815340768"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
     ]
-  }
+  },
+  "created": "2006-01-05T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "10202722",
+  "modified": "2012-01-10T16:56:25.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "2"
+      ],
+      "015": {
+        "subfields": [
+          {
+            "a": "GBA636655"
+          },
+          {
+            "2": "bnb"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Cancer"
+          },
+          {
+            "x": "genetiska aspekter"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Lfa"
+  },
+  "systemNumber": [
+    "(Uk)013437540"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=StDuBDS"
+  },
+  "@id": "/bib/10202722",
+  "@type": "Record"
 }

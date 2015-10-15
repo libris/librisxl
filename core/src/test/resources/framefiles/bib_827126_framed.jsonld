@@ -1,178 +1,105 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/827126"
-      },
-      "created": "1989-07-13T00:00:00.0+02:00",
-      "encLevel": {
-        "@id": "/def/enum/record/AbbreviatedLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "827126",
-      "librisIIINumber": [
-        "9908502107"
-      ],
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=Gp"
-      },
-      "@id": "/bib/827126",
-      "@type": "Record"
-    },
-    "quoted": [
+  "about": {
+    "manufacture": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=Gp",
-          "@type": "Organization",
-          "name": "Gp"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/uHc",
-          "inScheme": {
-            "@id": "/scheme/kssb"
-          },
-          "@type": "Concept",
-          "notation": "uHc"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb",
-          "@type": "ConceptScheme",
-          "notation": "kssb"
-        }
-      },
-      {
-        "@graph": {
-          "deathYear": "2001",
-          "familyName": "Jansson",
-          "birthYear": "1914",
-          "givenName": "Tove",
-          "@id": "/some?type=Person&familyName=Jansson&givenName=Tove&birthYear=1914&deathYear=2001",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "edition": "2. uppl.",
-          "@id": "/some?type=Product&edition=2.%20uppl.",
-          "@type": "Product"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Stockholm",
-          "@type": "Place",
-          "label": "Stockholm"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=%5BSolna%5D",
-          "@type": "Place",
-          "label": "[Solna]"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Karlstad",
-          "@type": "Place",
-          "label": "Karlstad"
-        }
+        "place": {
+          "@id": "/some?type=Place&label=Karlstad"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Bok & Plast)"
       }
     ],
-    "items": [
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "classification": [
       {
-        "manufacture": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Karlstad"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Bok & Plast)"
-          }
-        ],
-        "index": {
-          "@id": "/def/enum/content/NoIndex"
+        "@id": "/topic/kssb/uHc"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "series": [
+      {
+        "issn": "0458-6247",
+        "volumeNumberSequentialDesignation": "1",
+        "@type": "Serial",
+        "title": "Läsalätt-serien"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Jansson&givenName=Tove&birthYear=1914&deathYear=2001"
+    },
+    "audience": {
+      "@id": "/def/enum/content/Juvenile"
+    },
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=2.%20uppl."
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "@type": "Title",
+      "titleValue": "Mumintrollet och hemliga tecknen."
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "47 s."
+      }
+    ],
+    "@id": "/resource/bib/827126",
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
         },
-        "classification": [
-          {
-            "@id": "/topic/kssb/uHc"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
-        },
-        "series": [
-          {
-            "issn": "0458-6247",
-            "volumeNumberSequentialDesignation": "1",
-            "@type": "Serial",
-            "title": "Läsalätt-serien"
-          }
-        ],
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Jansson&givenName=Tove&birthYear=1914&deathYear=2001"
-        },
-        "audience": {
-          "@id": "/def/enum/content/Juvenile"
-        },
-        "hasVersion": [
-          {
-            "@id": "/some?type=Product&edition=2.%20uppl."
-          }
-        ],
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "instanceTitle": {
-          "searchElement": false,
-          "@type": "Title",
-          "titleValue": "Mumintrollet och hemliga tecknen."
-        },
-        "literaryForm": {
-          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
-        },
-        "hasFormat": [
-          {
-            "otherPhysicalDetails": "ill.",
-            "@type": "Product",
-            "extent": "47 s."
-          }
-        ],
-        "@id": "/resource/bib/827126",
-        "@type": [
-          "Text",
-          "Monograph"
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Stockholm"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Liber",
-            "providerDate": "1968"
-          }
-        ]
+        "@type": "ProviderEvent",
+        "providerName": "Liber",
+        "providerDate": "1968"
       }
     ]
-  }
+  },
+  "created": "1989-07-13T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/AbbreviatedLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "827126",
+  "librisIIINumber": [
+    "9908502107"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Gp"
+  },
+  "@id": "/bib/827126",
+  "@type": "Record"
 }

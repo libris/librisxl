@@ -1,65 +1,47 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/hold/718818"
-      },
-      "_marcFailedFixedFields": {
-        "000": {
-          "7": "a"
-        }
-      },
-      "created": "2002-01-08T00:00:00.0+01:00",
-      "encLevel": {
-        "@id": "/def/enum/record/HoldingsLevel1"
-      },
-      "controlNumber": "718818",
-      "itemInfoInRecord": {
-        "@id": "/def/enum/record/NoItemInformation"
-      },
-      "librisIIINumber": [
-        "9100563226"
-      ],
-      "holdingType": {
-        "@id": "/def/enum/record/SinglePartItemHolding"
-      },
-      "@id": "/hold/718818",
-      "@type": "Record"
+  "about": {
+    "holdingFor": {
+      "@id": "/resource/bib/7149593"
     },
-    "quoted": [
+    "heldBy": {
+      "@type": "Organization",
+      "notation": "U"
+    },
+    "offers": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=U",
-          "@type": "Organization",
-          "notation": "U"
-        }
-      }
-    ],
-    "items": [
-      {
-        "holdingFor": {
-          "@id": "/resource/bib/7149593"
-        },
-        "heldBy": {
-          "@type": "Organization",
-          "notation": "U"
-        },
-        "offers": [
+        "heldBy": [
           {
-            "heldBy": [
-              {
-                "@id": "/some?type=Organization&notation=U"
-              }
-            ],
-            "@type": "Offer",
-            "shelfControlNumber": "21",
-            "classificationPart": "1996 Gc"
+            "@id": "/some?type=Organization&notation=U"
           }
         ],
-        "numberOfItems": 0,
-        "@id": "/resource/hold/718818",
-        "@type": "HeldMaterial"
+        "@type": "Offer",
+        "shelfControlNumber": "21",
+        "classificationPart": "1996 Gc"
       }
-    ]
-  }
+    ],
+    "numberOfItems": 0,
+    "@id": "/resource/hold/718818",
+    "@type": "HeldMaterial"
+  },
+  "_marcFailedFixedFields": {
+    "000": {
+      "7": "a"
+    }
+  },
+  "created": "2002-01-08T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/HoldingsLevel1"
+  },
+  "controlNumber": "718818",
+  "itemInfoInRecord": {
+    "@id": "/def/enum/record/NoItemInformation"
+  },
+  "librisIIINumber": [
+    "9100563226"
+  ],
+  "holdingType": {
+    "@id": "/def/enum/record/SinglePartItemHolding"
+  },
+  "@id": "/hold/718818",
+  "@type": "Record"
 }
