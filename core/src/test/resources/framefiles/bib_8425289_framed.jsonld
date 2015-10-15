@@ -1,291 +1,116 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/8425289"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=SHB"
-        },
-        {
-          "@id": "/some?type=Organization&notation=SUEC"
-        }
-      ],
-      "created": "2002-05-14T00:00:00.0+02:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "8425289",
-      "@type": "Record",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Värnplikt"
-              },
-              {
-                "x": "historia"
-              },
-              {
-                "z": "Sverige"
-              },
-              {
-                "y": "1800-talet"
-              },
-              {
-                "y": "1900-talet"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "modified": "2005-12-21T17:01:14.0+01:00",
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=SHB"
-      },
-      "@id": "/bib/8425289",
-      "linked": {
-        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
-      }
-    },
-    "quoted": [
+  "about": {
+    "listOfContents": [
+      "Om värnpliktens historia"
+    ],
+    "language": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=SHB",
-          "@type": "Organization",
-          "name": "SHB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=SHB",
-          "@type": "Organization",
-          "notation": "SHB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=SUEC",
-          "@type": "Organization",
-          "notation": "SUEC"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/S-c%3Ak.46",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "S-c:k.46"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/7",
-          "@type": "ConceptScheme",
-          "notation": "kssb/7"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/S-c%3Ak.5",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "S-c:k.5"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1957",
-          "givenName": "Lars",
-          "familyName": "Ericson Wolke",
-          "@id": "/some?type=Person&familyName=Ericson%20Wolke&givenName=Lars&birthYear=1957",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/V%C3%A4rnplikt/historia/Sverige/1800-talet/1900-talet",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=V%C3%A4rnplikt"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=historia"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1800-talet"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1900-talet"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=V%C3%A4rnplikt",
-          "@type": "TopicalTerm",
-          "prefLabel": "Värnplikt"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=historia",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "historia"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Sverige",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Sverige"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=ChronologicalTerm&prefLabel=1800-talet",
-          "@type": "ChronologicalTerm",
-          "prefLabel": "1800-talet"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=ChronologicalTerm&prefLabel=1900-talet",
-          "@type": "ChronologicalTerm",
-          "prefLabel": "1900-talet"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "title": "La guerre totale : la défense totale, 1789-2000 : actes",
-          "scopeNote": [
-            "S. 253-262"
-          ],
-          "placePublisherAndDateOfPublication": "2001",
-          "@type": "Aggregate",
-          "identifier": [
-            {
-              "@id": "/some?type=Identifier&identifierValue=91-631-1254-X"
-            }
-          ],
-          "@id": "/some?type=Aggregate&controlledLabel=International%20Congress%20on%20Military%20History%20%2826%20%3A%20Stockholm%20%3A%202000%29&title=La%20guerre%20totale%20%3A%20la%20d%C3%A9fense%20totale%2C%201789-2000%20%3A%20actes&placePublisherAndDateOfPublication=2001&scopeNote=S.%20253-262",
-          "describedBy": [
-            {
-              "@id": "/bib/8365329"
-            }
-          ],
-          "controlledLabel": "International Congress on Military History (26 : Stockholm : 2000)"
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/isbn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=91-631-1254-X",
-          "@type": "Identifier",
-          "identifierValue": "91-631-1254-X"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/8365329",
-          "@type": "Record",
-          "controlNumber": "8365329"
-        }
+        "@id": "/def/languages/eng"
       }
     ],
-    "items": [
+    "classification": [
       {
-        "listOfContents": [
-          "Om värnpliktens historia"
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/eng"
-          }
-        ],
-        "classification": [
-          {
-            "@id": "/topic/kssb/7/S-c%3Ak.46"
-          },
-          {
-            "@id": "/topic/kssb/7/S-c%3Ak.5"
-          }
-        ],
-        "responsibilityStatement": "Lars Ericson",
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Ericson%20Wolke&givenName=Lars&birthYear=1957"
-        },
-        "confPub": {
-          "@id": "/def/enum/content/ConferencePublication"
-        },
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "instanceTitle": {
-          "subtitle": "the Swedish experience",
-          "@type": "Title",
-          "titleValue": "The nation at arms"
-        },
-        "publication": [
-          {
-            "providerDate": "2001"
-          }
-        ],
-        "isPartOf": [
-          {
-            "@id": "/some?type=Aggregate&controlledLabel=International%20Congress%20on%20Military%20History%20%2826%20%3A%20Stockholm%20%3A%202000%29&title=La%20guerre%20totale%20%3A%20la%20d%C3%A9fense%20totale%2C%201789-2000%20%3A%20actes&placePublisherAndDateOfPublication=2001&scopeNote=S.%20253-262"
-          }
-        ],
-        "@id": "/resource/bib/8425289",
-        "@type": [
-          "Text",
-          "ComponentPart"
-        ],
-        "subject": [
-          {
-            "@id": "/topic/sao/V%C3%A4rnplikt/historia/Sverige/1800-talet/1900-talet"
-          }
-        ]
+        "@id": "/topic/kssb/7/S-c%3Ak.46"
+      },
+      {
+        "@id": "/topic/kssb/7/S-c%3Ak.5"
+      }
+    ],
+    "responsibilityStatement": "Lars Ericson",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Ericson%20Wolke&givenName=Lars&birthYear=1957"
+    },
+    "confPub": {
+      "@id": "/def/enum/content/ConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "the Swedish experience",
+      "@type": "Title",
+      "titleValue": "The nation at arms"
+    },
+    "publication": [
+      {
+        "providerDate": "2001"
+      }
+    ],
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&controlledLabel=International%20Congress%20on%20Military%20History%20%2826%20%3A%20Stockholm%20%3A%202000%29&title=La%20guerre%20totale%20%3A%20la%20d%C3%A9fense%20totale%2C%201789-2000%20%3A%20actes&placePublisherAndDateOfPublication=2001&scopeNote=S.%20253-262"
+      }
+    ],
+    "@id": "/resource/bib/8425289",
+    "@type": [
+      "Text",
+      "ComponentPart"
+    ],
+    "subject": [
+      {
+        "@id": "/topic/sao/V%C3%A4rnplikt/historia/Sverige/1800-talet/1900-talet"
       }
     ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SUEC"
+    }
+  ],
+  "created": "2002-05-14T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "8425289",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Värnplikt"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "y": "1800-talet"
+          },
+          {
+            "y": "1900-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modified": "2005-12-21T17:01:14.0+01:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SHB"
+  },
+  "@id": "/bib/8425289",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
   }
 }

@@ -1,326 +1,189 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/9033354"
-      },
-      "license": "Ingår i avtal: ScienceDirect",
-      "created": "730000",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "9033354",
-      "@type": "Record",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "030": {
-            "subfields": [
-              {
-                "a": "IJGOAL"
-              }
-            ],
-            "ind1": " ",
-            "ind2": " "
-          }
-        },
-        {
-          "_unhandled": [
-            "z"
-          ],
-          "362": {
-            "subfields": [
-              {
-                "a": "Vol. 48- (1995- )"
-              },
-              {
-                "z": "ScienceDirect"
-              }
-            ],
-            "ind1": "1",
-            "ind2": " "
-          }
-        }
-      ],
-      "modified": "2015-09-29T22:01:10.0+02:00",
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=SEK"
-      },
-      "@id": "/bib/9033354",
-      "linked": {
-        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
-      }
-    },
-    "quoted": [
+  "about": {
+    "mediaTerm": "Elektronisk resurs",
+    "classification": [
       {
-        "@graph": {
-          "@id": "/some?type=Electronic",
-          "@type": [
-            "Electronic"
-          ],
-          "carrierType": [
-            {
-              "@id": "/def/enum/carrier/OnlineResource"
-            }
-          ]
-        }
+        "@id": "/topic/kssb/6/Vga%28p%29%2FDR"
       },
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=SEK",
-          "@type": "Organization",
-          "name": "SEK"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/6/Vga%28p%29%2FDR",
-          "inScheme": {
-            "@id": "/scheme/kssb/6"
-          },
-          "@type": "Concept",
-          "notation": "Vga(p)/DR"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/6",
-          "@type": "ConceptScheme",
-          "notation": "kssb/6"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Baltimore%2C%20Md",
-          "@type": "Place",
-          "label": "Baltimore, Md"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/mesh/Gynecology%3A%20periodicals",
-          "inScheme": {
-            "@id": "/scheme/mesh"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Gynecology: periodicals"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/mesh",
-          "@type": "ConceptScheme",
-          "notation": "mesh"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "_:b-0",
-          "@type": "Organization",
-          "name": "International Federation of Gynaecology and Obstetrics"
-        }
-      },
-      {
-        "@graph": {
-          "identifier": {
-            "@id": "/some?type=Identifier&identifierValue=0020-7292"
-          },
-          "@id": "/some?type=Product&title=International%20journal%20of%20gynaecology%20and%20obstetrics%20%28Print%29",
-          "@type": "Product",
-          "title": "International journal of gynaecology and obstetrics (Print)"
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/issn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=0020-7292",
-          "@type": "Identifier",
-          "identifierValue": "0020-7292"
-        }
-      },
-      {
-        "@graph": {
-          "identifier": {
-            "@id": "/some?type=Identifier&identifierValue=0020-6695"
-          },
-          "@id": "/some?type=Serial&title=Journal%20of%20the%20International%20Federation%20of%20Gynaecology%20and%20Obstetrics",
-          "@type": "Serial",
-          "title": "Journal of the International Federation of Gynaecology and Obstetrics"
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/issn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=0020-6695",
-          "@type": "Identifier",
-          "identifierValue": "0020-6695"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sab/Vga%28p%29",
-          "inScheme": {
-            "@id": "/scheme/sab"
-          },
-          "@type": "Concept",
-          "notation": "Vga(p)",
-          "prefLabel": "Gynekologi Obstetrik Periodica"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sab",
-          "@type": "ConceptScheme",
-          "notation": "sab"
-        }
+        "@id": "/topic/sab/Vga%28p%29"
       }
     ],
-    "items": [
+    "regularity": {
+      "@id": "/def/enum/content/Regular"
+    },
+    "relation": [
       {
-        "mediaTerm": "Elektronisk resurs",
-        "classification": [
-          {
-            "@id": "/topic/kssb/6/Vga%28p%29%2FDR"
-          },
-          {
-            "@id": "/topic/sab/Vga%28p%29"
-          }
-        ],
-        "regularity": {
-          "@id": "/def/enum/content/Regular"
-        },
-        "relation": [
-          {
-            "@id": "http://www.sciencedirect.com/science/journal/00207292",
-            "@type": "Document",
-            "copyNote": [
-              "Table of Contents / Abstracts",
-              "ScienceDirect"
-            ]
-          }
-        ],
-        "subject": [
-          {
-            "@id": "/topic/mesh/Gynecology%3A%20periodicals"
-          }
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Baltimore%2C%20Md"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Williams and Wilkins Co.",
-            "providerDate": "1995-"
-          }
-        ],
-        "typeOfEntry": {
-          "@id": "/def/enum/content/SuccessiveEntry"
-        },
-        "additionalCarrierType": {
-          "@id": "/def/enum/content/Electronic"
-        },
-        "unspecifiedContributor": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "influencedBy": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "keyTitle": [
-          {
-            "titleQualifier": "(Online)",
-            "@type": "Title",
-            "titleValue": "International journal of gynecology and obstetrics"
-          }
-        ],
-        "contentType": [
-          {
-            "@id": "/def/enum/content/Periodical"
-          }
-        ],
-        "temporalCoverageNote": "1995-",
-        "hasFormat": [
-          {
-            "@id": "/some?type=Electronic"
-          }
-        ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/xxu"
-          }
-        ],
-        "frequencyCategory": {
-          "@id": "/def/enum/content/BimonthlyIncludes67Or8NumbersAYear"
-        },
-        "@id": "/resource/bib/9033354",
-        "language": [
-          {
-            "@id": "/def/languages/eng"
-          }
-        ],
-        "precededBy": [
-          {
-            "@id": "/some?type=Serial&title=Journal%20of%20the%20International%20Federation%20of%20Gynaecology%20and%20Obstetrics"
-          }
-        ],
-        "previousTitle": [
-          {
-            "searchElement": false,
-            "@type": "Title",
-            "titleValue": "International journal of gynecology & obstetrics."
-          }
-        ],
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "alternateFormat": [
-          {
-            "@id": "/some?type=Product&title=International%20journal%20of%20gynaecology%20and%20obstetrics%20%28Print%29"
-          }
-        ],
-        "instanceTitle": {
-          "searchElement": false,
-          "subtitle": "the official organ of the International Federation of Gynaecology and Obstetrics",
-          "@type": "Title",
-          "titleValue": "International journal of gynaecology and obstetrics"
-        },
-        "issueNumber": [
-          "Vol. 48- (1995- )"
-        ],
-        "abbreviatedTitle": [
-          {
-            "@type": "Title",
-            "titleValue": "Int. J. Gynaecol. Obstet."
-          }
-        ],
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/issn"
-            },
-            "identifierStatus": "canceledInvalid",
-            "@type": "Identifier",
-            "identifierValue": "0020-7292"
-          }
-        ],
-        "@type": [
-          "Text",
-          "Serial"
+        "@id": "http://www.sciencedirect.com/science/journal/00207292",
+        "@type": "Document",
+        "copyNote": [
+          "Table of Contents / Abstracts",
+          "ScienceDirect"
         ]
       }
+    ],
+    "subject": [
+      {
+        "@id": "/topic/mesh/Gynecology%3A%20periodicals"
+      }
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Baltimore%2C%20Md"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Williams and Wilkins Co.",
+        "providerDate": "1995-"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/SuccessiveEntry"
+    },
+    "additionalCarrierType": {
+      "@id": "/def/enum/content/Electronic"
+    },
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "keyTitle": [
+      {
+        "titleQualifier": "(Online)",
+        "@type": "Title",
+        "titleValue": "International journal of gynecology and obstetrics"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Periodical"
+      }
+    ],
+    "temporalCoverageNote": "1995-",
+    "hasFormat": [
+      {
+        "@id": "/some?type=Electronic"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxu"
+      }
+    ],
+    "frequencyCategory": {
+      "@id": "/def/enum/content/BimonthlyIncludes67Or8NumbersAYear"
+    },
+    "@id": "/resource/bib/9033354",
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "precededBy": [
+      {
+        "@id": "/some?type=Serial&title=Journal%20of%20the%20International%20Federation%20of%20Gynaecology%20and%20Obstetrics"
+      }
+    ],
+    "previousTitle": [
+      {
+        "searchElement": false,
+        "@type": "Title",
+        "titleValue": "International journal of gynecology & obstetrics."
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&title=International%20journal%20of%20gynaecology%20and%20obstetrics%20%28Print%29"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "subtitle": "the official organ of the International Federation of Gynaecology and Obstetrics",
+      "@type": "Title",
+      "titleValue": "International journal of gynaecology and obstetrics"
+    },
+    "issueNumber": [
+      "Vol. 48- (1995- )"
+    ],
+    "abbreviatedTitle": [
+      {
+        "@type": "Title",
+        "titleValue": "Int. J. Gynaecol. Obstet."
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/issn"
+        },
+        "identifierStatus": "canceledInvalid",
+        "@type": "Identifier",
+        "identifierValue": "0020-7292"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Serial"
     ]
+  },
+  "license": "Ingår i avtal: ScienceDirect",
+  "created": "730000",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "9033354",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "030": {
+        "subfields": [
+          {
+            "a": "IJGOAL"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "z"
+      ],
+      "362": {
+        "subfields": [
+          {
+            "a": "Vol. 48- (1995- )"
+          },
+          {
+            "z": "ScienceDirect"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    }
+  ],
+  "modified": "2015-09-29T22:01:10.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SEK"
+  },
+  "@id": "/bib/9033354",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
   }
 }

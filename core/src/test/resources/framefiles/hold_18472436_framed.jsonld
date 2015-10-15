@@ -1,66 +1,48 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/hold/18472436"
-      },
-      "created": "2005-05-18T00:00:00.0+02:00",
-      "encLevel": {
-        "@id": "/def/enum/record/HoldingsLevel1"
-      },
-      "controlNumber": "18472436",
-      "modified": "2005-05-18T11:34:44.0+02:00",
-      "holdingType": {
-        "@id": "/def/enum/record/SinglePartItemHolding"
-      },
-      "@id": "/hold/18472436",
-      "@type": "Record"
+  "about": {
+    "acquisitionStatus": {
+      "@id": "/def/enum/content/CurrentlyReceived"
     },
-    "quoted": [
+    "completeness": {
+      "@id": "/def/enum/content/Complete"
+    },
+    "holdingFor": {
+      "@id": "/resource/bib/7149593"
+    },
+    "generalRetentionPolicy": {
+      "@id": "/def/enum/content/PermanentlyRetained"
+    },
+    "heldBy": {
+      "@type": "Organization",
+      "notation": "Umdp"
+    },
+    "offers": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=Umdp",
-          "@type": "Organization",
-          "notation": "Umdp"
-        }
-      }
-    ],
-    "items": [
-      {
-        "acquisitionStatus": {
-          "@id": "/def/enum/content/CurrentlyReceived"
-        },
-        "completeness": {
-          "@id": "/def/enum/content/Complete"
-        },
-        "holdingFor": {
-          "@id": "/resource/bib/7149593"
-        },
-        "generalRetentionPolicy": {
-          "@id": "/def/enum/content/PermanentlyRetained"
-        },
-        "heldBy": {
-          "@type": "Organization",
-          "notation": "Umdp"
-        },
-        "offers": [
+        "heldBy": [
           {
-            "heldBy": [
-              {
-                "@id": "/some?type=Organization&notation=Umdp"
-              }
-            ],
-            "@type": "Offer",
-            "shelfControlNumber": "168113"
+            "@id": "/some?type=Organization&notation=Umdp"
           }
         ],
-        "numberOfItems": 1,
-        "copyReport": {
-          "@id": "/def/enum/content/Separate"
-        },
-        "@id": "/resource/hold/18472436",
-        "@type": "HeldMaterial"
+        "@type": "Offer",
+        "shelfControlNumber": "168113"
       }
-    ]
-  }
+    ],
+    "numberOfItems": 1,
+    "copyReport": {
+      "@id": "/def/enum/content/Separate"
+    },
+    "@id": "/resource/hold/18472436",
+    "@type": "HeldMaterial"
+  },
+  "created": "2005-05-18T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/HoldingsLevel1"
+  },
+  "controlNumber": "18472436",
+  "modified": "2005-05-18T11:34:44.0+02:00",
+  "holdingType": {
+    "@id": "/def/enum/record/SinglePartItemHolding"
+  },
+  "@id": "/hold/18472436",
+  "@type": "Record"
 }

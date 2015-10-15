@@ -1,163 +1,70 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/8435499"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=SHB"
-        }
-      ],
-      "created": "2002-06-07T00:00:00.0+02:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "8435499",
-      "@type": "Record",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "modified": "2004-04-20T14:51:15.0+02:00",
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=SHB"
-      },
-      "@id": "/bib/8435499",
-      "linked": {
-        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
-      }
-    },
-    "quoted": [
+  "about": {
+    "comment": [
+      "Andersson bemöter Tommy Hammarströms replik \"Svar\" (Förr och nu, 1977:2, s. 27)"
+    ],
+    "publication": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=SHB",
-          "@type": "Organization",
-          "name": "SHB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=SHB",
-          "@type": "Organization",
-          "notation": "SHB"
-        }
-      },
-      {
-        "@graph": {
-          "deathYear": "1984",
-          "familyName": "Andersson",
-          "birthYear": "1919",
-          "givenName": "Aron",
-          "@id": "/some?type=Person&familyName=Andersson&givenName=Aron&birthYear=1919&deathYear=1984",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "title": "Förr och nu",
-          "scopeNote": [
-            "1977:3, s. 62-63"
-          ],
-          "@type": "Aggregate",
-          "identifier": {
-            "@id": "/some?type=Identifier&identifierValue=0345-3162"
-          },
-          "@id": "/some?type=Aggregate&title=F%C3%B6rr%20och%20nu&scopeNote=1977%3A3%2C%20s.%2062-63",
-          "describedBy": [
-            {
-              "@id": "/bib/8261310"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/issn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=0345-3162",
-          "@type": "Identifier",
-          "identifierValue": "0345-3162"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/8261310",
-          "@type": "Record",
-          "controlNumber": "8261310"
-        }
-      },
-      {
-        "@graph": {
-          "title": "Lögnen om Sigismund",
-          "linkNote": [
-            "Kommentar nr 3 till:"
-          ],
-          "@type": "CreativeWork",
-          "@id": "/some?type=CreativeWork&linkNote=Kommentar%20nr%203%20till%3A&controlledLabel=Hammarstr%C3%B6m%2C%20Tommy&title=L%C3%B6gnen%20om%20Sigismund",
-          "describedBy": [
-            {
-              "@id": "/bib/8435255"
-            }
-          ],
-          "controlledLabel": "Hammarström, Tommy"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/8435255",
-          "@type": "Record",
-          "controlNumber": "8435255"
-        }
+        "providerDate": "1977"
       }
     ],
-    "items": [
+    "language": [
       {
-        "comment": [
-          "Andersson bemöter Tommy Hammarströms replik \"Svar\" (Förr och nu, 1977:2, s. 27)"
-        ],
-        "publication": [
-          {
-            "providerDate": "1977"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "responsibilityStatement": "Aron Andersson",
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Andersson&givenName=Aron&birthYear=1919&deathYear=1984"
-        },
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "instanceTitle": {
-          "@type": "Title",
-          "titleValue": "Lögner om Sigismund"
-        },
-        "isPartOf": [
-          {
-            "@id": "/some?type=Aggregate&title=F%C3%B6rr%20och%20nu&scopeNote=1977%3A3%2C%20s.%2062-63"
-          }
-        ],
-        "relation": [
-          {
-            "@id": "/some?type=CreativeWork&linkNote=Kommentar%20nr%203%20till%3A&controlledLabel=Hammarstr%C3%B6m%2C%20Tommy&title=L%C3%B6gnen%20om%20Sigismund"
-          }
-        ],
-        "@id": "/resource/bib/8435499",
-        "@type": [
-          "Text",
-          "ComponentPart"
-        ]
+        "@id": "/def/languages/swe"
       }
+    ],
+    "responsibilityStatement": "Aron Andersson",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Andersson&givenName=Aron&birthYear=1919&deathYear=1984"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Lögner om Sigismund"
+    },
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&title=F%C3%B6rr%20och%20nu&scopeNote=1977%3A3%2C%20s.%2062-63"
+      }
+    ],
+    "relation": [
+      {
+        "@id": "/some?type=CreativeWork&linkNote=Kommentar%20nr%203%20till%3A&controlledLabel=Hammarstr%C3%B6m%2C%20Tommy&title=L%C3%B6gnen%20om%20Sigismund"
+      }
+    ],
+    "@id": "/resource/bib/8435499",
+    "@type": [
+      "Text",
+      "ComponentPart"
     ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    }
+  ],
+  "created": "2002-06-07T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "8435499",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modified": "2004-04-20T14:51:15.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SHB"
+  },
+  "@id": "/bib/8435499",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
   }
 }

@@ -1,433 +1,170 @@
 {
-  "descriptions": {
-    "entry": {
-      "historyNote": [
-        "Tidigare Barn - psykologi. Ändrat 2013-07-12."
-      ],
-      "sameAs": [
-        {
-          "@id": "/topic/sao/Barnpsykologi"
-        }
-      ],
-      "scopeNote": [
-        "HIt verk om barns psykologi. För verk om disciplinen barnpsykologi kompletteras ämnesordet Barnpsykologi med lämplig allmän underindelning, t.ex. - teori, filosofi; - forskning; - metodik."
-      ],
-      "narrower": [
-        {
-          "@id": "/topic/sao/Aggression%20hos%20barn"
-        },
-        {
-          "@id": "/topic/sao/Anknytning%20hos%20barn"
-        },
-        {
-          "@id": "/topic/sao/Imitation%20hos%20barn"
-        },
-        {
-          "@id": "/topic/sao/In%C3%A5tv%C3%A4nda%20barn"
-        },
-        {
-          "@id": "/topic/sao/Kognitiv%20utveckling%20hos%20barn"
-        },
-        {
-          "@id": "/topic/sao/Kritiskt%20t%C3%A4nkande%20hos%20barn"
-        },
-        {
-          "@id": "/topic/sao/Sj%C3%A4lvf%C3%B6rverkligande%20hos%20barn"
-        },
-        {
-          "@id": "/topic/sao/Sj%C3%A4lvk%C3%A4nsla%20hos%20barn"
-        },
-        {
-          "@id": "/topic/sao/Sm%C3%A5barnspsykologi"
-        },
-        {
-          "@id": "/topic/sao/Sp%C3%A4dbarnspsykologi"
-        },
-        {
-          "@id": "/topic/sao/Stress%20hos%20barn"
-        },
-        {
-          "@id": "/topic/sao/Trots%C3%A5lder"
-        },
-        {
-          "@id": "/topic/sao/Vrede%20hos%20barn"
-        }
-      ],
-      "focus": {
-        "@id": "/resource/auth/140482"
-      },
-      "related": [
-        {
-          "@id": "/topic/sao/Barns%20utveckling"
-        },
-        {
-          "@id": "/topic/sao/Barnuppfostran"
-        }
-      ],
-      "modified": "2014-05-12T11:20:24.0+02:00",
-      "closeMatch": [
-        {
-          "@id": "/topic/kssb/8/Dofa%2B"
-        },
-        {
-          "@id": "http://dewey.info/class/155.4/e23/"
-        },
-        {
-          "@id": "/topic/lcsh/Child%20psychology"
-        },
-        {
-          "@id": "/topic/lcsh/Children/Psychology"
-        }
-      ],
-      "broader": [
-        {
-          "@id": "/topic/sao/Psykologi"
-        }
-      ],
-      "inScheme": {
-        "@id": "/scheme/sao"
-      },
-      "prefLabel": "Barnpsykologi",
-      "headingSeries": {
-        "@id": "/def/enum/content/NotAppropriate"
-      },
-      "encLevel": {
-        "@id": "/def/enum/record/CompleteAuthorityRecord"
-      },
-      "source": [
-        {
-          "@type": "CreativeWork",
-          "label": "NE."
-        }
-      ],
-      "_marcUncompleted": [
-        {
-          "450": {
-            "subfields": [
-              {
-                "w": "||e"
-              },
-              {
-                "a": "Barn"
-              },
-              {
-                "x": "psykologi"
-              }
-            ],
-            "ind1": " ",
-            "ind2": " "
-          },
-          "_unhandled": [
-            "w"
-          ]
-        }
-      ],
-      "headingMain": {
-        "@id": "/def/enum/content/NotAppropriate"
-      },
-      "systemNumber": [
-        "(sao)2480"
-      ],
-      "altLabel": [
-        "Barn- och ungdomspsykologi",
-        "Skolålderns psykologi"
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=NB"
-      },
-      "inCollection": [
-        {
-          "@id": "/some?type=TermCollection&notation=Fack"
-        }
-      ],
-      "@id": "/auth/140482",
-      "replaces": [
-        {
-          "@id": "/topic/sao/Barn,psykologi"
-        }
-      ],
-      "language": [
-        {
-          "@id": "/def/languages/swe"
-        }
-      ],
-      "created": "2002-04-09T00:00:00.0+02:00",
-      "headingSubject": {
-        "@id": "/def/enum/content/Appropriate"
-      },
-      "level": {
-        "@id": "/def/enum/content/FullyEstablishedHeading"
-      },
-      "controlNumber": "140482",
-      "recordUpdate": {
-        "@id": "/def/enum/content/RecordCanBeUsed"
-      },
-      "kindOfRecord": {
-        "@id": "/def/enum/content/EstablishedHeadingRecord"
-      },
-      "@type": "TopicalTerm"
+  "historyNote": [
+    "Tidigare Barn - psykologi. Ändrat 2013-07-12."
+  ],
+  "sameAs": [
+    {
+      "@id": "/topic/sao/Barnpsykologi"
+    }
+  ],
+  "scopeNote": [
+    "HIt verk om barns psykologi. För verk om disciplinen barnpsykologi kompletteras ämnesordet Barnpsykologi med lämplig allmän underindelning, t.ex. - teori, filosofi; - forskning; - metodik."
+  ],
+  "narrower": [
+    {
+      "@id": "/topic/sao/Aggression%20hos%20barn"
     },
-    "quoted": [
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=NB",
-          "@type": "Organization",
-          "name": "NB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TermCollection&notation=Fack",
-          "@type": "TermCollection",
-          "notation": "Fack"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Dofa%2B",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Dofa+"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/8",
-          "@type": "ConceptScheme",
-          "notation": "kssb/8"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/155.4/e23/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e23/swe/"
-          },
-          "@type": "Concept",
-          "notation": "155.4"
-        }
-      },
-      {
-        "@graph": {
-          "language": "swe",
-          "notation": "DDC",
-          "@id": "http://dewey.info/scheme/edition/e23/swe/",
-          "version": "23",
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "@type": "ConceptScheme"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Barn,psykologi",
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/topic/sao/Barn"
-            },
-            {
-              "@id": "/topic/sao/psykologi"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Barn",
-          "prefLabel": "Barn"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/psykologi",
-          "prefLabel": "psykologi"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Psykologi",
-          "@type": "TopicalTerm",
-          "prefLabel": "Psykologi"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Aggression%20hos%20barn",
-          "@type": "TopicalTerm",
-          "prefLabel": "Aggression hos barn"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Anknytning%20hos%20barn",
-          "@type": "TopicalTerm",
-          "prefLabel": "Anknytning hos barn"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Imitation%20hos%20barn",
-          "@type": "TopicalTerm",
-          "prefLabel": "Imitation hos barn"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/In%C3%A5tv%C3%A4nda%20barn",
-          "@type": "TopicalTerm",
-          "prefLabel": "Inåtvända barn"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Kognitiv%20utveckling%20hos%20barn",
-          "@type": "TopicalTerm",
-          "prefLabel": "Kognitiv utveckling hos barn"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Kritiskt%20t%C3%A4nkande%20hos%20barn",
-          "@type": "TopicalTerm",
-          "prefLabel": "Kritiskt tänkande hos barn"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Sj%C3%A4lvf%C3%B6rverkligande%20hos%20barn",
-          "@type": "TopicalTerm",
-          "prefLabel": "Självförverkligande hos barn"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Sj%C3%A4lvk%C3%A4nsla%20hos%20barn",
-          "@type": "TopicalTerm",
-          "prefLabel": "Självkänsla hos barn"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Sm%C3%A5barnspsykologi",
-          "@type": "TopicalTerm",
-          "prefLabel": "Småbarnspsykologi"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Sp%C3%A4dbarnspsykologi",
-          "@type": "TopicalTerm",
-          "prefLabel": "Spädbarnspsykologi"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Stress%20hos%20barn",
-          "@type": "TopicalTerm",
-          "prefLabel": "Stress hos barn"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Trots%C3%A5lder",
-          "@type": "TopicalTerm",
-          "prefLabel": "Trotsålder"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Vrede%20hos%20barn",
-          "@type": "TopicalTerm",
-          "prefLabel": "Vrede hos barn"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Barns%20utveckling",
-          "@type": "TopicalTerm",
-          "prefLabel": "Barns utveckling"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Barnuppfostran",
-          "@type": "TopicalTerm",
-          "prefLabel": "Barnuppfostran"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/lcsh/Child%20psychology",
-          "inScheme": {
-            "@id": "/scheme/lcsh"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Child psychology"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/lcsh",
-          "@type": "ConceptScheme",
-          "notation": "lcsh"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/lcsh/Children/Psychology",
-          "inScheme": {
-            "@id": "/scheme/lcsh"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Children"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=Psychology"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Children",
-          "@type": "TopicalTerm",
-          "prefLabel": "Children"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=Psychology",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "Psychology"
-        }
-      }
-    ],
-    "items": [
-      {
-        "@id": "/resource/auth/140482",
-        "@type": [
-          "Authority"
-        ]
-      }
+    {
+      "@id": "/topic/sao/Anknytning%20hos%20barn"
+    },
+    {
+      "@id": "/topic/sao/Imitation%20hos%20barn"
+    },
+    {
+      "@id": "/topic/sao/In%C3%A5tv%C3%A4nda%20barn"
+    },
+    {
+      "@id": "/topic/sao/Kognitiv%20utveckling%20hos%20barn"
+    },
+    {
+      "@id": "/topic/sao/Kritiskt%20t%C3%A4nkande%20hos%20barn"
+    },
+    {
+      "@id": "/topic/sao/Sj%C3%A4lvf%C3%B6rverkligande%20hos%20barn"
+    },
+    {
+      "@id": "/topic/sao/Sj%C3%A4lvk%C3%A4nsla%20hos%20barn"
+    },
+    {
+      "@id": "/topic/sao/Sm%C3%A5barnspsykologi"
+    },
+    {
+      "@id": "/topic/sao/Sp%C3%A4dbarnspsykologi"
+    },
+    {
+      "@id": "/topic/sao/Stress%20hos%20barn"
+    },
+    {
+      "@id": "/topic/sao/Trots%C3%A5lder"
+    },
+    {
+      "@id": "/topic/sao/Vrede%20hos%20barn"
+    }
+  ],
+  "focus": {
+    "@id": "/resource/auth/140482",
+    "@type": [
+      "Authority"
     ]
-  }
+  },
+  "related": [
+    {
+      "@id": "/topic/sao/Barns%20utveckling"
+    },
+    {
+      "@id": "/topic/sao/Barnuppfostran"
+    }
+  ],
+  "modified": "2014-05-12T11:20:24.0+02:00",
+  "closeMatch": [
+    {
+      "@id": "/topic/kssb/8/Dofa%2B"
+    },
+    {
+      "@id": "http://dewey.info/class/155.4/e23/"
+    },
+    {
+      "@id": "/topic/lcsh/Child%20psychology"
+    },
+    {
+      "@id": "/topic/lcsh/Children/Psychology"
+    }
+  ],
+  "broader": [
+    {
+      "@id": "/topic/sao/Psykologi"
+    }
+  ],
+  "inScheme": {
+    "@id": "/scheme/sao"
+  },
+  "prefLabel": "Barnpsykologi",
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "NE."
+    }
+  ],
+  "_marcUncompleted": [
+    {
+      "450": {
+        "subfields": [
+          {
+            "w": "||e"
+          },
+          {
+            "a": "Barn"
+          },
+          {
+            "x": "psykologi"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      },
+      "_unhandled": [
+        "w"
+      ]
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "systemNumber": [
+    "(sao)2480"
+  ],
+  "altLabel": [
+    "Barn- och ungdomspsykologi",
+    "Skolålderns psykologi"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "inCollection": [
+    {
+      "@id": "/some?type=TermCollection&notation=Fack"
+    }
+  ],
+  "@id": "/auth/140482",
+  "replaces": [
+    {
+      "@id": "/topic/sao/Barn,psykologi"
+    }
+  ],
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2002-04-09T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "140482",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "TopicalTerm"
 }

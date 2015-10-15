@@ -54,7 +54,7 @@ class OaiPmhImporterServlet extends HttpServlet {
 
         pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
 
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
+        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
         pico.as(Characteristics.USE_NAMES).addComponent(OaiPmhImporter.class)
         pico.addComponent(new MarcFrameConverter())

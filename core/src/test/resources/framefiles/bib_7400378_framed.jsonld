@@ -1,209 +1,122 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/7400378"
-      },
-      "created": "1992-03-09T00:00:00.0+01:00",
-      "encLevel": {
-        "@id": "/def/enum/record/AbbreviatedLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "7400378",
-      "librisIIINumber": [
-        "9150003224"
-      ],
-      "_marcUncompleted": [
-        {
-          "249": {
-            "subfields": [
-              {
-                "a": "Do Androids dream of electric sheep."
-              }
-            ],
-            "ind1": " ",
-            "ind2": "0"
-          }
-        }
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=Hib"
-      },
-      "@id": "/bib/7400378",
-      "@type": "Record"
-    },
-    "quoted": [
+  "about": {
+    "manufacture": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=Hib",
-          "@type": "Organization",
-          "name": "Hib"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/eng",
-          "notation": "eng"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/Hce",
-          "inScheme": {
-            "@id": "/scheme/kssb"
-          },
-          "@type": "Concept",
-          "notation": "Hce"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb",
-          "@type": "ConceptScheme",
-          "notation": "kssb"
-        }
-      },
-      {
-        "@graph": {
-          "givenName": "Philip K.",
-          "familyName": "Dick",
-          "@id": "/some?type=Person&familyName=Dick&givenName=Philip%20K.",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Malm%C3%B6",
-          "@type": "Place",
-          "label": "Malmö"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Uddevalla",
-          "@type": "Place",
-          "label": "Uddevalla"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sab/He%3Dc",
-          "inScheme": {
-            "@id": "/scheme/sab"
-          },
-          "@type": "Concept",
-          "notation": "He=c",
-          "prefLabel": "Skönlitteratur"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sab",
-          "@type": "ConceptScheme",
-          "notation": "sab"
-        }
+        "place": {
+          "@id": "/some?type=Place&label=Uddevalla"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Bohusläns graf.)"
       }
     ],
-    "items": [
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "classification": [
       {
-        "manufacture": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Uddevalla"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Bohusläns graf.)"
-          }
-        ],
-        "index": {
-          "@id": "/def/enum/content/NoIndex"
+        "@id": "/topic/kssb/Hce"
+      },
+      {
+        "@id": "/topic/sab/He%3Dc"
+      }
+    ],
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "series": [
+      {
+        "issn": "99-0736122-4",
+        "@type": "Serial",
+        "title": "Science fiction & fantastica"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Dick&givenName=Philip%20K."
+    },
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "@type": "Title",
+      "titleValue": "Androidens drömmar."
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "285 s."
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
         },
-        "classification": [
-          {
-            "@id": "/topic/kssb/Hce"
-          },
-          {
-            "@id": "/topic/sab/He%3Dc"
-          }
-        ],
-        "originalLanguage": [
-          {
-            "@id": "/def/languages/eng"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
+        "@type": "Identifier",
+        "identifierValue": "91-500-0322-4"
+      }
+    ],
+    "@id": "/resource/bib/7400378",
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Malm%C3%B6"
         },
-        "series": [
-          {
-            "issn": "99-0736122-4",
-            "@type": "Serial",
-            "title": "Science fiction & fantastica"
-          }
-        ],
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Dick&givenName=Philip%20K."
-        },
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "instanceTitle": {
-          "searchElement": false,
-          "@type": "Title",
-          "titleValue": "Androidens drömmar."
-        },
-        "literaryForm": {
-          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
-        },
-        "hasFormat": [
-          {
-            "@type": "Product",
-            "extent": "285 s."
-          }
-        ],
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "@type": "Identifier",
-            "identifierValue": "91-500-0322-4"
-          }
-        ],
-        "@id": "/resource/bib/7400378",
-        "@type": [
-          "Text",
-          "Monograph"
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Malm%C3%B6"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Bernce",
-            "providerDate": "1974"
-          }
-        ]
+        "@type": "ProviderEvent",
+        "providerName": "Bernce",
+        "providerDate": "1974"
       }
     ]
-  }
+  },
+  "created": "1992-03-09T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/AbbreviatedLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "7400378",
+  "librisIIINumber": [
+    "9150003224"
+  ],
+  "_marcUncompleted": [
+    {
+      "249": {
+        "subfields": [
+          {
+            "a": "Do Androids dream of electric sheep."
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Hib"
+  },
+  "@id": "/bib/7400378",
+  "@type": "Record"
 }

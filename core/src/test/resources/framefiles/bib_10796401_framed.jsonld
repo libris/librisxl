@@ -1,392 +1,168 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/10796401"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=SHB"
-        },
-        {
-          "@id": "/some?type=Organization&notation=BOTHBD"
-        }
-      ],
-      "created": "2008-04-24T00:00:00.0+02:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "10796401",
-      "@type": "Record",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Gruvarbetare"
-              },
-              {
-                "x": "genusaspekter"
-              },
-              {
-                "x": "historia"
-              },
-              {
-                "z": "Sverige"
-              },
-              {
-                "z": "Norrbotten"
-              },
-              {
-                "y": "1900-talet"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Kvinnliga gruvarbetare"
-              },
-              {
-                "x": "historia"
-              },
-              {
-                "z": "Sverige"
-              },
-              {
-                "z": "Norrbotten"
-              },
-              {
-                "y": "1900-talet"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "651": {
-            "subfields": [
-              {
-                "a": "Kiruna"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "4"
-          }
-        }
-      ],
-      "modified": "2011-03-31T13:18:54.0+02:00",
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=S"
-      },
-      "@id": "/bib/10796401",
-      "linked": {
-        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
-      }
-    },
-    "quoted": [
+  "about": {
+    "classification": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=S",
-          "@type": "Organization",
-          "name": "S"
-        }
+        "@id": "/topic/kssb/8/Pdab-c%3Ak.5"
       },
       {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=SHB",
-          "@type": "Organization",
-          "notation": "SHB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=BOTHBD",
-          "@type": "Organization",
-          "notation": "BOTHBD"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Pdab-c%3Ak.5",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Pdab-c:k.5"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/8",
-          "@type": "ConceptScheme",
-          "notation": "kssb/8"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Ohja-c%3Ak.5",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Ohja-c:k.5"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1966",
-          "givenName": "Lena",
-          "familyName": "Abrahamsson",
-          "@id": "/some?type=Person&familyName=Abrahamsson&givenName=Lena&birthYear=1966",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Gruvarbetare/genusaspekter/historia/Sverige/Norrbotten/1900-talet",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Gruvarbetare"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=genusaspekter"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=historia"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Norrbotten"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1900-talet"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Gruvarbetare",
-          "@type": "TopicalTerm",
-          "prefLabel": "Gruvarbetare"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=genusaspekter",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "genusaspekter"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=historia",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "historia"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Sverige",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Sverige"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Norrbotten",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Norrbotten"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=ChronologicalTerm&prefLabel=1900-talet",
-          "@type": "ChronologicalTerm",
-          "prefLabel": "1900-talet"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Kvinnliga%20gruvarbetare/historia/Sverige/Norrbotten/1900-talet",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Kvinnliga%20gruvarbetare"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=historia"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Norrbotten"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1900-talet"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Kvinnliga%20gruvarbetare",
-          "@type": "TopicalTerm",
-          "prefLabel": "Kvinnliga gruvarbetare"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/_/Kiruna",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Kiruna"
-        }
-      },
-      {
-        "@graph": {
-          "placePublisherAndDateOfPublication": "2007",
-          "scopeNote": [
-            "S. 130-158 : ill."
-          ],
-          "title": "Oplogat : spår av kvinnors liv och arbete i Norrbotten",
-          "@type": "Aggregate",
-          "identifier": [
-            {
-              "@id": "/some?type=Identifier&identifierValue=978-91-633-1294-6"
-            }
-          ],
-          "@id": "/some?type=Aggregate&title=Oplogat%20%3A%20sp%C3%A5r%20av%20kvinnors%20liv%20och%20arbete%20i%20Norrbotten&placePublisherAndDateOfPublication=2007&scopeNote=S.%20130-158%20%3A%20ill.",
-          "describedBy": [
-            {
-              "@id": "/bib/10527640"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/isbn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=978-91-633-1294-6",
-          "@type": "Identifier",
-          "identifierValue": "978-91-633-1294-6"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/10527640",
-          "@type": "Record",
-          "controlNumber": "10527640"
-        }
+        "@id": "/topic/kssb/8/Ohja-c%3Ak.5"
       }
     ],
-    "items": [
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "responsibilityStatement": "Lena Abrahamsson",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Abrahamsson&givenName=Lena&birthYear=1966"
+    },
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "language": [
       {
-        "classification": [
-          {
-            "@id": "/topic/kssb/8/Pdab-c%3Ak.5"
-          },
-          {
-            "@id": "/topic/kssb/8/Ohja-c%3Ak.5"
-          }
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
-        },
-        "responsibilityStatement": "Lena Abrahamsson",
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Abrahamsson&givenName=Lena&birthYear=1966"
-        },
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "instanceTitle": {
-          "subtitle": "om hur gruvarbetet blev och förblev manligt",
-          "@type": "Title",
-          "titleValue": "Gruvarbetets historia ur ett genusperspektiv"
-        },
-        "publication": [
-          {
-            "providerDate": "2007"
-          }
-        ],
-        "isPartOf": [
-          {
-            "@id": "/some?type=Aggregate&title=Oplogat%20%3A%20sp%C3%A5r%20av%20kvinnors%20liv%20och%20arbete%20i%20Norrbotten&placePublisherAndDateOfPublication=2007&scopeNote=S.%20130-158%20%3A%20ill."
-          }
-        ],
-        "@id": "/resource/bib/10796401",
-        "@type": [
-          "Text",
-          "ComponentPart"
-        ],
-        "subject": [
-          {
-            "@id": "/topic/sao/Gruvarbetare/genusaspekter/historia/Sverige/Norrbotten/1900-talet"
-          },
-          {
-            "@id": "/topic/sao/Kvinnliga%20gruvarbetare/historia/Sverige/Norrbotten/1900-talet"
-          },
-          {
-            "@id": "/topic/_/Kiruna"
-          }
-        ]
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "om hur gruvarbetet blev och förblev manligt",
+      "@type": "Title",
+      "titleValue": "Gruvarbetets historia ur ett genusperspektiv"
+    },
+    "publication": [
+      {
+        "providerDate": "2007"
+      }
+    ],
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&title=Oplogat%20%3A%20sp%C3%A5r%20av%20kvinnors%20liv%20och%20arbete%20i%20Norrbotten&placePublisherAndDateOfPublication=2007&scopeNote=S.%20130-158%20%3A%20ill."
+      }
+    ],
+    "@id": "/resource/bib/10796401",
+    "@type": [
+      "Text",
+      "ComponentPart"
+    ],
+    "subject": [
+      {
+        "@id": "/topic/sao/Gruvarbetare/genusaspekter/historia/Sverige/Norrbotten/1900-talet"
+      },
+      {
+        "@id": "/topic/sao/Kvinnliga%20gruvarbetare/historia/Sverige/Norrbotten/1900-talet"
+      },
+      {
+        "@id": "/topic/_/Kiruna"
       }
     ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=BOTHBD"
+    }
+  ],
+  "created": "2008-04-24T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "10796401",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Gruvarbetare"
+          },
+          {
+            "x": "genusaspekter"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "z": "Norrbotten"
+          },
+          {
+            "y": "1900-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Kvinnliga gruvarbetare"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "z": "Norrbotten"
+          },
+          {
+            "y": "1900-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "651": {
+        "subfields": [
+          {
+            "a": "Kiruna"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    }
+  ],
+  "modified": "2011-03-31T13:18:54.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/bib/10796401",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
   }
 }

@@ -1,161 +1,91 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/2912361"
-      },
-      "created": "1999-11-24T00:00:00.0+01:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "2912361",
-      "modified": "2013-09-19T15:30:39.0+02:00",
-      "librisIIINumber": [
-        "9930569839"
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=Kd"
-      },
-      "@id": "/bib/2912361",
-      "@type": "Record"
+  "about": {
+    "comment": [
+      "Föreg. uppl. med titeln: Walda stycken ur P. Ovidii Nasonis Methamorphoses"
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
     },
-    "quoted": [
+    "language": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=Kd",
-          "@type": "Organization",
-          "name": "Kd"
-        }
+        "@id": "/def/languages/swe"
       },
       {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/lat",
-          "notation": "lat"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "43",
-          "givenName": "Publius",
-          "familyName": "Ovidius Naso",
-          "@id": "/some?type=Person&familyName=Ovidius%20Naso&givenName=Publius&birthYear=43",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=Metamorphoses.&subtitle=Urval",
-          "subtitle": [
-            "Urval"
-          ],
-          "@type": "UniformWork",
-          "title": "Metamorphoses."
-        }
-      },
-      {
-        "@graph": {
-          "edition": "2. uppl.",
-          "@id": "/some?type=Product&edition=2.%20uppl.",
-          "@type": "Product"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Skara",
-          "@type": "Place",
-          "label": "Skara"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=Metamorphoses",
-          "@type": "UniformWork",
-          "title": "Metamorphoses"
-        }
+        "@id": "/def/languages/lat"
       }
     ],
-    "items": [
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "responsibilityStatement": "i urval för elementarläroverken, med förklaringar utg. af C.J. Brodén",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Ovidius%20Naso&givenName=Publius&birthYear=43"
+    },
+    "influentialRelation": [
       {
-        "comment": [
-          "Föreg. uppl. med titeln: Walda stycken ur P. Ovidii Nasonis Methamorphoses"
-        ],
-        "index": {
-          "@id": "/def/enum/content/NoIndex"
+        "@id": "/some?type=UniformWork&title=Metamorphoses"
+      }
+    ],
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=2.%20uppl."
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=Metamorphoses.&subtitle=Urval"
+    },
+    "instanceTitle": {
+      "searchElement": false,
+      "@type": "Title",
+      "titleValue": "P. Ovidii Nasonis Metamorphoses"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "141 s."
+      }
+    ],
+    "@id": "/resource/bib/2912361",
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Skara"
         },
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          },
-          {
-            "@id": "/def/languages/lat"
-          }
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
-        },
-        "responsibilityStatement": "i urval för elementarläroverken, med förklaringar utg. af C.J. Brodén",
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Ovidius%20Naso&givenName=Publius&birthYear=43"
-        },
-        "influentialRelation": [
-          {
-            "@id": "/some?type=UniformWork&title=Metamorphoses"
-          }
-        ],
-        "hasVersion": [
-          {
-            "@id": "/some?type=Product&edition=2.%20uppl."
-          }
-        ],
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "exampleOfWork": {
-          "@id": "/some?type=UniformWork&title=Metamorphoses.&subtitle=Urval"
-        },
-        "instanceTitle": {
-          "searchElement": false,
-          "@type": "Title",
-          "titleValue": "P. Ovidii Nasonis Metamorphoses"
-        },
-        "literaryForm": {
-          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
-        },
-        "hasFormat": [
-          {
-            "@type": "Product",
-            "extent": "141 s."
-          }
-        ],
-        "@id": "/resource/bib/2912361",
-        "@type": [
-          "Text",
-          "Monograph"
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Skara"
-            },
-            "@type": "ProviderEvent",
-            "providerDate": "1869"
-          }
-        ]
+        "@type": "ProviderEvent",
+        "providerDate": "1869"
       }
     ]
-  }
+  },
+  "created": "1999-11-24T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "2912361",
+  "modified": "2013-09-19T15:30:39.0+02:00",
+  "librisIIINumber": [
+    "9930569839"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Kd"
+  },
+  "@id": "/bib/2912361",
+  "@type": "Record"
 }
