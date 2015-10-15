@@ -1,92 +1,58 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/hold/718798"
-      },
-      "_marcFailedFixedFields": {
-        "000": {
-          "7": "a"
-        }
-      },
-      "created": "2002-01-08T00:00:00.0+01:00",
-      "encLevel": {
-        "@id": "/def/enum/record/HoldingsLevel1"
-      },
-      "controlNumber": "718798",
-      "itemInfoInRecord": {
-        "@id": "/def/enum/record/NoItemInformation"
-      },
-      "librisIIINumber": [
-        "9100563226"
-      ],
-      "holdingType": {
-        "@id": "/def/enum/record/SinglePartItemHolding"
-      },
-      "@id": "/hold/718798",
-      "@type": "Record"
+  "about": {
+    "holdingFor": {
+      "@id": "/resource/bib/7149593"
     },
-    "quoted": [
+    "heldBy": {
+      "@type": "Organization",
+      "notation": "H"
+    },
+    "offers": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=H",
-          "@type": "Organization",
-          "notation": "H"
-        }
-      },
-      {
-        "@graph": {
-          "givenName": "Tove",
-          "familyName": "Jansson",
-          "@id": "/some?type=Person&familyName=Jansson&givenName=Tove",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "givenName": "Tuulikki",
-          "familyName": "Pietilä",
-          "@id": "/some?type=Person&familyName=Pietil%C3%A4&givenName=Tuulikki",
-          "@type": "Person"
-        }
-      }
-    ],
-    "items": [
-      {
-        "holdingFor": {
-          "@id": "/resource/bib/7149593"
-        },
-        "heldBy": {
-          "@type": "Organization",
-          "notation": "H"
-        },
-        "offers": [
+        "heldBy": [
           {
-            "heldBy": [
-              {
-                "@id": "/some?type=Organization&notation=H"
-              }
-            ],
-            "copyNumber": "1",
-            "shelfLocation": [
-              "MAG"
-            ],
-            "@type": "Offer",
-            "shelfControlNumber": "65.465"
+            "@id": "/some?type=Organization&notation=H"
           }
         ],
-        "numberOfItems": 0,
-        "@id": "/resource/hold/718798",
-        "@type": "HeldMaterial",
-        "subject": [
-          {
-            "@id": "/some?type=Person&familyName=Jansson&givenName=Tove"
-          },
-          {
-            "@id": "/some?type=Person&familyName=Pietil%C3%A4&givenName=Tuulikki"
-          }
-        ]
+        "copyNumber": "1",
+        "shelfLocation": [
+          "MAG"
+        ],
+        "@type": "Offer",
+        "shelfControlNumber": "65.465"
+      }
+    ],
+    "numberOfItems": 0,
+    "@id": "/resource/hold/718798",
+    "@type": "HeldMaterial",
+    "subject": [
+      {
+        "@id": "/some?type=Person&familyName=Jansson&givenName=Tove"
+      },
+      {
+        "@id": "/some?type=Person&familyName=Pietil%C3%A4&givenName=Tuulikki"
       }
     ]
-  }
+  },
+  "_marcFailedFixedFields": {
+    "000": {
+      "7": "a"
+    }
+  },
+  "created": "2002-01-08T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/HoldingsLevel1"
+  },
+  "controlNumber": "718798",
+  "itemInfoInRecord": {
+    "@id": "/def/enum/record/NoItemInformation"
+  },
+  "librisIIINumber": [
+    "9100563226"
+  ],
+  "holdingType": {
+    "@id": "/def/enum/record/SinglePartItemHolding"
+  },
+  "@id": "/hold/718798",
+  "@type": "Record"
 }

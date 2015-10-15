@@ -1,277 +1,124 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/5485896"
-      },
-      "created": "1993-11-15T00:00:00.0+01:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "5485896",
-      "modified": "2012-10-24T11:25:41.0+02:00",
-      "librisIIINumber": [
-        "0711933227"
-      ],
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "modifyingAgency": {
-        "@id": "/some?type=Organization&name=Omu"
-      },
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=X"
-      },
-      "@id": "/bib/5485896",
-      "@type": "Record"
-    },
-    "quoted": [
+  "about": {
+    "classification": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=X",
-          "@type": "Organization",
-          "name": "X"
-        }
+        "@id": "http://dewey.info/class/786.21542/e23/"
       },
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=Omu",
-          "@type": "Organization",
-          "name": "Omu"
-        }
+        "@id": "/topic/kssb/6/Xrea"
       },
       {
-        "@graph": {
-          "@id": "http://dewey.info/class/786.21542/e23/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e23/"
-          },
-          "@type": "Concept",
-          "notation": "786.21542"
-        }
+        "@id": "/topic/kssb/6/Xda"
       },
       {
-        "@graph": {
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "version": "23",
-          "@id": "http://dewey.info/scheme/edition/e23/",
-          "@type": "ConceptScheme",
-          "notation": "DDC"
-        }
+        "@id": "/topic/sab/Xrea"
       },
       {
-        "@graph": {
-          "@id": "/topic/kssb/6/Xrea",
-          "inScheme": {
-            "@id": "/scheme/kssb/6"
-          },
-          "@type": "Concept",
-          "notation": "Xrea"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/6",
-          "@type": "ConceptScheme",
-          "notation": "kssb/6"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/6/Xda",
-          "inScheme": {
-            "@id": "/scheme/kssb/6"
-          },
-          "@type": "Concept",
-          "notation": "Xda"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1944",
-          "givenName": "Michael",
-          "familyName": "Nyman",
-          "@id": "_:b-0",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=London",
-          "@type": "Place",
-          "label": "London"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=Big%20my%20secret",
-          "@type": "UniformWork",
-          "title": "Big my secret"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=The%20mood%20that%20passes%20through%20you",
-          "@type": "UniformWork",
-          "title": "The mood that passes through you"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=Deep%20sleep%20playing",
-          "@type": "UniformWork",
-          "title": "Deep sleep playing"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=The%20attraction%20of%20the%20pedalling%20ankle",
-          "@type": "UniformWork",
-          "title": "The attraction of the pedalling ankle"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=The%20heart%20asks%20pleasure%20first",
-          "@type": "UniformWork",
-          "title": "The heart asks pleasure first"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sab/Xrea",
-          "inScheme": {
-            "@id": "/scheme/sab"
-          },
-          "@type": "Concept",
-          "notation": "Xrea",
-          "prefLabel": "Musikalier Filmmusik Skådespelsmusik"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sab",
-          "@type": "ConceptScheme",
-          "notation": "sab"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sab/Xda",
-          "inScheme": {
-            "@id": "/scheme/sab"
-          },
-          "@type": "Concept",
-          "notation": "Xda",
-          "prefLabel": "Musikalier Instrumentalsoli Tangentinstrument"
-        }
+        "@id": "/topic/sab/Xda"
       }
     ],
-    "items": [
+    "mediaTerm": "Musiktryck] :",
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
       {
-        "classification": [
-          {
-            "@id": "http://dewey.info/class/786.21542/e23/"
-          },
-          {
-            "@id": "/topic/kssb/6/Xrea"
-          },
-          {
-            "@id": "/topic/kssb/6/Xda"
-          },
-          {
-            "@id": "/topic/sab/Xrea"
-          },
-          {
-            "@id": "/topic/sab/Xda"
-          }
-        ],
-        "mediaTerm": "Musiktryck] :",
-        "_providerDateStatus": {
-          "@id": "/def/enum/content/SingleKnownDateProbableDate"
+        "@id": "/def/languages/zxx"
+      }
+    ],
+    "responsibilityStatement": "Michael Nyman",
+    "_providerYear": "1993",
+    "attributedTo": {
+      "@id": "_:b-0"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Big%20my%20secret"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=The%20mood%20that%20passes%20through%20you"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=Deep%20sleep%20playing"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=The%20attraction%20of%20the%20pedalling%20ankle"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=The%20heart%20asks%20pleasure%20first"
+      }
+    ],
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "31 s."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxk"
+      }
+    ],
+    "listOfContents": [
+      "Innehåll: Big my secret ; The mood that passes through you ; Deep sleep playing ; Silver-fingered fling ; The attraction of pedalling ankle ; The heart asks pleasure first"
+    ],
+    "instanceTitle": {
+      "subtitle": "original compositions for solo piano from the award-winning film by Jane Campion",
+      "@type": "Title",
+      "titleValue": "The piano"
+    },
+    "composer": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
         },
-        "language": [
-          {
-            "@id": "/def/languages/zxx"
-          }
-        ],
-        "responsibilityStatement": "Michael Nyman",
-        "_providerYear": "1993",
-        "attributedTo": {
-          "@id": "_:b-0"
+        "@type": "Identifier",
+        "identifierValue": "0-7119-3322-7"
+      }
+    ],
+    "@id": "/resource/bib/5485896",
+    "@type": [
+      "NotatedMusic",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=London"
         },
-        "influentialRelation": [
-          {
-            "@id": "/some?type=UniformWork&title=Big%20my%20secret"
-          },
-          {
-            "@id": "/some?type=UniformWork&title=The%20mood%20that%20passes%20through%20you"
-          },
-          {
-            "@id": "/some?type=UniformWork&title=Deep%20sleep%20playing"
-          },
-          {
-            "@id": "/some?type=UniformWork&title=The%20attraction%20of%20the%20pedalling%20ankle"
-          },
-          {
-            "@id": "/some?type=UniformWork&title=The%20heart%20asks%20pleasure%20first"
-          }
-        ],
-        "hasFormat": [
-          {
-            "otherPhysicalDetails": "ill.",
-            "@type": "Product",
-            "extent": "31 s."
-          }
-        ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/xxk"
-          }
-        ],
-        "listOfContents": [
-          "Innehåll: Big my secret ; The mood that passes through you ; Deep sleep playing ; Silver-fingered fling ; The attraction of pedalling ankle ; The heart asks pleasure first"
-        ],
-        "instanceTitle": {
-          "subtitle": "original compositions for solo piano from the award-winning film by Jane Campion",
-          "@type": "Title",
-          "titleValue": "The piano"
-        },
-        "composer": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "@type": "Identifier",
-            "identifierValue": "0-7119-3322-7"
-          }
-        ],
-        "@id": "/resource/bib/5485896",
-        "@type": [
-          "NotatedMusic",
-          "Monograph"
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=London"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Chester",
-            "providerDate": "cop. 1993"
-          }
-        ]
+        "@type": "ProviderEvent",
+        "providerName": "Chester",
+        "providerDate": "cop. 1993"
       }
     ]
-  }
+  },
+  "created": "1993-11-15T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "5485896",
+  "modified": "2012-10-24T11:25:41.0+02:00",
+  "librisIIINumber": [
+    "0711933227"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Omu"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=X"
+  },
+  "@id": "/bib/5485896",
+  "@type": "Record"
 }

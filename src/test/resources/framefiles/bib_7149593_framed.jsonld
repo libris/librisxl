@@ -1,318 +1,146 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/7149593"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=BULB"
+  "about": {
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Finland"
         },
-        {
-          "@id": "/some?type=Organization&notation=NB"
-        },
-        {
-          "@id": "/some?type=Organization&notation=SEE"
-        },
-        {
-          "@id": "/some?type=Organization&notation=SLB"
-        },
-        {
-          "@id": "/some?type=Organization&notation=KVIN"
-        }
-      ],
-      "created": "1996-02-14T00:00:00.0+01:00",
-      "modified": "2014-06-10T12:05:05.0+02:00",
-      "controlNumber": "7149593",
-      "librisIIINumber": [
-        "9100563226"
-      ],
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=NB"
-      },
-      "@id": "/bib/7149593",
-      "@type": "Record"
-    },
-    "quoted": [
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=NB",
-          "@type": "Organization",
-          "name": "NB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=BULB",
-          "@type": "Organization",
-          "notation": "BULB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=NB",
-          "@type": "Organization",
-          "notation": "NB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=SEE",
-          "@type": "Organization",
-          "notation": "SEE"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=SLB",
-          "@type": "Organization",
-          "notation": "SLB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=KVIN",
-          "@type": "Organization",
-          "notation": "KVIN"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/839.7374/e23/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e23/swe/"
-          },
-          "@type": "Concept",
-          "notation": "839.7374"
-        }
-      },
-      {
-        "@graph": {
-          "language": "swe",
-          "notation": "DDC",
-          "@id": "http://dewey.info/scheme/edition/e23/swe/",
-          "version": "23",
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "@type": "ConceptScheme"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/6/Gcdz%20Jansson%2C%20Tove",
-          "inScheme": {
-            "@id": "/scheme/kssb/6"
-          },
-          "@type": "Concept",
-          "notation": "Gcdz Jansson, Tove"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/6",
-          "@type": "ConceptScheme",
-          "notation": "kssb/6"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/6/Ibz%20Pietil%C3%A4%2C%20Tuulikki",
-          "inScheme": {
-            "@id": "/scheme/kssb/6"
-          },
-          "@type": "Concept",
-          "notation": "Ibz Pietilä, Tuulikki"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/Lz",
-          "@type": "Concept",
-          "notation": "Lz"
-        }
-      },
-      {
-        "@graph": {
-          "deathYear": "2001",
-          "familyName": "Jansson",
-          "birthYear": "1914",
-          "givenName": "Tove",
-          "@id": "/some?type=Person&familyName=Jansson&givenName=Tove&birthYear=1914&deathYear=2001",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Stockholm",
-          "@type": "Place",
-          "label": "Stockholm"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Finland",
-          "@type": "Place",
-          "label": "Finland"
-        }
-      },
-      {
-        "@graph": {
-          "deathYear": "2009",
-          "familyName": "Pietilä",
-          "birthYear": "1917",
-          "givenName": "Tuulikki",
-          "@id": "/some?type=Person&familyName=Pietil%C3%A4&givenName=Tuulikki&birthYear=1917&deathYear=2009",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sab/Gcdz",
-          "inScheme": {
-            "@id": "/scheme/sab"
-          },
-          "@type": "Concept",
-          "notation": "Gcdz",
-          "prefLabel": "Litteraturhistoria Finlandssvensk"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sab",
-          "@type": "ConceptScheme",
-          "notation": "sab"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sab/Ibz",
-          "inScheme": {
-            "@id": "/scheme/sab"
-          },
-          "@type": "Concept",
-          "notation": "Ibz",
-          "prefLabel": "Konst Konsthistoria"
-        }
+        "@type": "ProviderEvent"
       }
     ],
-    "items": [
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "classification": [
       {
-        "manufacture": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Finland"
-            },
-            "@type": "ProviderEvent"
-          }
-        ],
-        "index": {
-          "@id": "/def/enum/content/NoIndex"
+        "@id": "http://dewey.info/class/839.7374/e23/"
+      },
+      {
+        "@id": "/topic/kssb/6/Gcdz%20Jansson%2C%20Tove"
+      },
+      {
+        "@id": "/topic/kssb/6/Ibz%20Pietil%C3%A4%2C%20Tuulikki"
+      },
+      {
+        "@id": "/topic/kssb/Lz"
+      },
+      {
+        "@id": "/topic/sab/Gcdz"
+      },
+      {
+        "@id": "/topic/sab/Ibz"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "@id": "/resource/bib/7149593",
+    "responsibilityStatement": "Tove Jansson, Tuulikki Pietilä",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Jansson&givenName=Tove&birthYear=1914&deathYear=2001"
+    },
+    "subject": [
+      {
+        "@id": "/some?type=Person&familyName=Jansson&givenName=Tove&birthYear=1914&deathYear=2001"
+      },
+      {
+        "@id": "/some?type=Person&familyName=Pietil%C3%A4&givenName=Tuulikki&birthYear=1917&deathYear=2009"
+      }
+    ],
+    "comment": [
+      "Även tillg. med tryckår: 2. uppl., 1996"
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "termsOfAvailability": "310:00",
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Anteckningar från en ö"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "102, [1] s.",
+        "dimensions": "25 cm"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
         },
-        "classification": [
-          {
-            "@id": "http://dewey.info/class/839.7374/e23/"
-          },
-          {
-            "@id": "/topic/kssb/6/Gcdz%20Jansson%2C%20Tove"
-          },
-          {
-            "@id": "/topic/kssb/6/Ibz%20Pietil%C3%A4%2C%20Tuulikki"
-          },
-          {
-            "@id": "/topic/kssb/Lz"
-          },
-          {
-            "@id": "/topic/sab/Gcdz"
-          },
-          {
-            "@id": "/topic/sab/Ibz"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
+        "identifierNote": "inb.",
+        "@type": "Identifier",
+        "identifierValue": "91-0-056322-6"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "/some?type=Person&familyName=Pietil%C3%A4&givenName=Tuulikki&birthYear=1917&deathYear=2009"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "biography": {
+      "@id": "/def/enum/content/Autobiography"
+    },
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
         },
-        "@id": "/resource/bib/7149593",
-        "responsibilityStatement": "Tove Jansson, Tuulikki Pietilä",
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Jansson&givenName=Tove&birthYear=1914&deathYear=2001"
-        },
-        "subject": [
-          {
-            "@id": "/some?type=Person&familyName=Jansson&givenName=Tove&birthYear=1914&deathYear=2001"
-          },
-          {
-            "@id": "/some?type=Person&familyName=Pietil%C3%A4&givenName=Tuulikki&birthYear=1917&deathYear=2009"
-          }
-        ],
-        "comment": [
-          "Även tillg. med tryckår: 2. uppl., 1996"
-        ],
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "termsOfAvailability": "310:00",
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "instanceTitle": {
-          "@type": "Title",
-          "titleValue": "Anteckningar från en ö"
-        },
-        "literaryForm": {
-          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
-        },
-        "hasFormat": [
-          {
-            "otherPhysicalDetails": "ill.",
-            "@type": "Product",
-            "extent": "102, [1] s.",
-            "dimensions": "25 cm"
-          }
-        ],
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "inb.",
-            "@type": "Identifier",
-            "identifierValue": "91-0-056322-6"
-          }
-        ],
-        "influencedBy": [
-          {
-            "@id": "/some?type=Person&familyName=Pietil%C3%A4&givenName=Tuulikki&birthYear=1917&deathYear=2009"
-          }
-        ],
-        "@type": [
-          "Text",
-          "Monograph"
-        ],
-        "biography": {
-          "@id": "/def/enum/content/Autobiography"
-        },
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Stockholm"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Bonnier",
-            "providerDate": "1996"
-          }
-        ]
+        "@type": "ProviderEvent",
+        "providerName": "Bonnier",
+        "providerDate": "1996"
       }
     ]
-  }
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=BULB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SEE"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SLB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=KVIN"
+    }
+  ],
+  "created": "1996-02-14T00:00:00.0+01:00",
+  "modified": "2014-06-10T12:05:05.0+02:00",
+  "controlNumber": "7149593",
+  "librisIIINumber": [
+    "9100563226"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/7149593",
+  "@type": "Record"
 }

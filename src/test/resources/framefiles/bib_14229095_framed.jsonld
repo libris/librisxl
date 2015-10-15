@@ -1,330 +1,179 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/14229095"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=NB"
-        }
-      ],
-      "created": "2013-06-14T00:00:00.0+02:00",
-      "encLevel": {
-        "@id": "/def/enum/record/AbbreviatedLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "14229095",
-      "modified": "2014-01-07T08:48:04.0+01:00",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Slott"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
+  "about": {
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Malm%C3%B6"
         },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "651": {
-            "subfields": [
-              {
-                "a": "Sverige"
-              },
-              {
-                "z": "Skåne"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "modifyingAgency": {
-        "@id": "/some?type=Organization&name=S"
-      },
-      "systemNumber": [
-        "(BOKR)9789163725159"
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=BOKR"
-      },
-      "@id": "/bib/14229095",
-      "@type": "Record"
-    },
-    "quoted": [
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=BOKR",
-          "@type": "Organization",
-          "name": "BOKR"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=S",
-          "@type": "Organization",
-          "name": "S"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/eng",
-          "notation": "eng"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=NB",
-          "@type": "Organization",
-          "notation": "NB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/948.61/e23/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e23/swe/"
-          },
-          "@type": "Concept",
-          "notation": "948.61"
-        }
-      },
-      {
-        "@graph": {
-          "language": "swe",
-          "notation": "DDC",
-          "@id": "http://dewey.info/scheme/edition/e23/swe/",
-          "version": "23",
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "@type": "ConceptScheme"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1952",
-          "givenName": "Annika",
-          "familyName": "McClintock",
-          "@id": "/some?type=Person&familyName=McClintock&givenName=Annika&birthYear=1952",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Lund",
-          "@type": "Place",
-          "label": "Lund"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Malm%C3%B6",
-          "@type": "Place",
-          "label": "Malmö"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Slott",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Slott"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Sverige/Sk%C3%A5ne",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "GeographicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sk%C3%A5ne"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Sverige",
-          "@type": "TopicalTerm",
-          "prefLabel": "Sverige"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Sk%C3%A5ne",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Skåne"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=12%20sk%C3%A5nska%20slott",
-          "@type": "UniformWork",
-          "title": "12 skånska slott"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=12%20castles%20in%20Scania",
-          "@type": "UniformWork",
-          "title": "12 castles in Scania"
-        }
+        "@type": "ProviderEvent",
+        "providerName": "Exakta)"
       }
     ],
-    "items": [
+    "hasFormat": [
       {
-        "manufacture": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Malm%C3%B6"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Exakta)"
-          }
-        ],
-        "hasFormat": [
-          {
-            "otherPhysicalDetails": "ill.",
-            "@type": "Product",
-            "extent": "64 s.",
-            "dimensions": "19 cm"
-          }
-        ],
-        "classification": [
-          {
-            "@id": "http://dewey.info/class/948.61/e23/"
-          }
-        ],
-        "originalLanguage": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          },
-          {
-            "@id": "/def/languages/eng"
-          }
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "64 s.",
+        "dimensions": "19 cm"
+      }
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/948.61/e23/"
+      }
+    ],
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      },
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=12%20sk%C3%A5nska%20slott"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=12%20castles%20in%20Scania"
+      }
+    ],
+    "responsibilityStatement": "Annika McClintock ; [foto: Per Holmqvist ; översättning: John McClintock]",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=McClintock&givenName=Annika&birthYear=1952"
+    },
+    "subject": [
+      {
+        "@id": "/topic/sao/Slott"
+      },
+      {
+        "@id": "/topic/sao/Sverige/Sk%C3%A5ne"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "1",
+        "@type": "Title",
+        "titleValue": "Twelve castles in Scania"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "Twelve castles in Scania",
+      "@type": "Title",
+      "titleValue": "Tolv skånska slott ="
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
         },
-        "influentialRelation": [
-          {
-            "@id": "/some?type=UniformWork&title=12%20sk%C3%A5nska%20slott"
-          },
-          {
-            "@id": "/some?type=UniformWork&title=12%20castles%20in%20Scania"
-          }
-        ],
-        "responsibilityStatement": "Annika McClintock ; [foto: Per Holmqvist ; översättning: John McClintock]",
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=McClintock&givenName=Annika&birthYear=1952"
+        "@type": "Identifier",
+        "identifierValue": "9789163725159"
+      }
+    ],
+    "@id": "/resource/bib/14229095",
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "languageNote": [
+      "Parallelltext på svenska och engelska"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Lund"
         },
-        "subject": [
-          {
-            "@id": "/topic/sao/Slott"
-          },
-          {
-            "@id": "/topic/sao/Sverige/Sk%C3%A5ne"
-          }
-        ],
-        "titleVariation": [
-          {
-            "titleType": "1",
-            "@type": "Title",
-            "titleValue": "Twelve castles in Scania"
-          }
-        ],
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "instanceTitle": {
-          "subtitle": "Twelve castles in Scania",
-          "@type": "Title",
-          "titleValue": "Tolv skånska slott ="
-        },
-        "literaryForm": {
-          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
-        },
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "@type": "Identifier",
-            "identifierValue": "9789163725159"
-          }
-        ],
-        "@id": "/resource/bib/14229095",
-        "@type": [
-          "Text",
-          "Monograph"
-        ],
-        "languageNote": [
-          "Parallelltext på svenska och engelska"
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Lund"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "MacMedia",
-            "providerDate": "2013"
-          }
-        ]
+        "@type": "ProviderEvent",
+        "providerName": "MacMedia",
+        "providerDate": "2013"
       }
     ]
-  }
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2013-06-14T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/AbbreviatedLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "14229095",
+  "modified": "2014-01-07T08:48:04.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Slott"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "651": {
+        "subfields": [
+          {
+            "a": "Sverige"
+          },
+          {
+            "z": "Skåne"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "systemNumber": [
+    "(BOKR)9789163725159"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=BOKR"
+  },
+  "@id": "/bib/14229095",
+  "@type": "Record"
 }

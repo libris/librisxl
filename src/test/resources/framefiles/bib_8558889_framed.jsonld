@@ -1,457 +1,254 @@
 {
-  "descriptions": {
-    "entry": {
-      "status": {
-        "@id": "/def/enum/record/IncreaseInEncodingLevelFromPrepublication"
-      },
-      "about": {
-        "@id": "/resource/bib/8558889"
-      },
-      "created": "2002-05-23T00:00:00.0+02:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "transcribingAgency": {
-        "@id": "/some?type=Organization&name=DLC"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "8558889",
-      "modified": "2007-01-10T16:43:35.0+01:00",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "b"
-          ],
-          "050": {
-            "subfields": [
-              {
-                "a": "LB15"
-              },
-              {
-                "b": ".E47 2003"
-              }
-            ],
-            "ind1": "0",
-            "ind2": "0"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Utbildning"
-              },
-              {
-                "v": "Lexikon"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "modifyingAgency": {
-        "@id": "/some?type=Organization&name=Kd"
-      },
-      "systemNumber": [
-        "(DLC)  2002008205"
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=DLC"
-      },
-      "@id": "/bib/8558889",
-      "@type": "Record"
-    },
-    "quoted": [
+  "status": {
+    "@id": "/def/enum/record/IncreaseInEncodingLevelFromPrepublication"
+  },
+  "about": {
+    "comment": [
+      "Även utgiven i elektronisk version"
+    ],
+    "classification": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=DLC",
-          "@type": "Organization",
-          "name": "DLC"
-        }
+        "@id": "http://dewey.info/class/370%2F.3/e21/"
       },
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=Kd",
-          "@type": "Organization",
-          "name": "Kd"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=O",
-          "@type": "Organization",
-          "name": "O"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/370%2F.3/e21/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e21/"
-          },
-          "@type": "Concept",
-          "notation": "370/.3"
-        }
-      },
-      {
-        "@graph": {
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "version": "21",
-          "@id": "http://dewey.info/scheme/edition/e21/",
-          "@type": "ConceptScheme",
-          "notation": "DDC"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/E%28x%29",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "E(x)"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/7",
-          "@type": "ConceptScheme",
-          "notation": "kssb/7"
-        }
-      },
-      {
-        "@graph": {
-          "edition": "2. ed.",
-          "@id": "/some?type=Product&edition=2.%20ed.",
-          "@type": "Product"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=New%20York",
-          "@type": "Place",
-          "label": "New York"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/lcsh/Education/Encyclopedias.",
-          "inScheme": {
-            "@id": "/scheme/lcsh"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Education"
-            },
-            {
-              "@id": "/some?type=GenreTerm&prefLabel=Encyclopedias."
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/lcsh",
-          "@type": "ConceptScheme",
-          "notation": "lcsh"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Education",
-          "@type": "TopicalTerm",
-          "prefLabel": "Education"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GenreTerm&prefLabel=Encyclopedias.",
-          "@type": "GenreTerm",
-          "prefLabel": "Encyclopedias."
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Utbildning/Lexikon",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Utbildning"
-            },
-            {
-              "@id": "/some?type=GenreTerm&prefLabel=Lexikon"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Utbildning",
-          "@type": "TopicalTerm",
-          "prefLabel": "Utbildning"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GenreTerm&prefLabel=Lexikon",
-          "@type": "GenreTerm",
-          "prefLabel": "Lexikon"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "givenName": "James W.",
-          "familyName": "Guthrie",
-          "@id": "_:b-0",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "placePublisherAndDateOfPublication": "2003",
-          "title": "Encyclopedia of education",
-          "@type": "Product",
-          "identifier": [
-            {
-              "@id": "/some?type=Identifier&identifierValue=0-02-865882-5"
-            }
-          ],
-          "@id": "/some?type=Product&title=Encyclopedia%20of%20education&placePublisherAndDateOfPublication=2003",
-          "describedBy": [
-            {
-              "@id": "/bib/9133304"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/isbn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=0-02-865882-5",
-          "@type": "Identifier",
-          "identifierValue": "0-02-865882-5"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/9133304",
-          "@type": "Record",
-          "controlNumber": "9133304"
-        }
+        "@id": "/topic/kssb/7/E%28x%29"
       }
     ],
-    "items": [
+    "subject": [
       {
-        "comment": [
-          "Även utgiven i elektronisk version"
-        ],
-        "classification": [
-          {
-            "@id": "http://dewey.info/class/370%2F.3/e21/"
-          },
-          {
-            "@id": "/topic/kssb/7/E%28x%29"
-          }
-        ],
-        "subject": [
-          {
-            "@id": "/topic/lcsh/Education/Encyclopedias."
-          },
-          {
-            "@id": "/topic/sao/Utbildning/Lexikon"
-          }
-        ],
-        "index": {
-          "@id": "/def/enum/content/IndexPresent"
-        },
-        "listOfContents": [
-          "v. 1. A-C -- v. 2. D-G -- v. 3. H-J -- v. 4. K-M -- v. 5. N-P -- v. 6. R-T -- v. 7. U-Z -- v. 8. Appendixes. Index."
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
-        },
-        "hasVersion": [
-          {
-            "@id": "/some?type=Product&edition=2.%20ed."
-          }
-        ],
-        "alternateFormat": [
-          {
-            "@id": "/some?type=Product&title=Encyclopedia%20of%20education&placePublisherAndDateOfPublication=2003"
-          }
-        ],
-        "@id": "/resource/bib/8558889",
-        "editor": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "literaryForm": {
-          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
-        },
-        "influencedBy": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "_providerYear": "2003",
-        "contentType": [
-          {
-            "@id": "/def/enum/content/Bibliography"
-          },
-          {
-            "@id": "/def/enum/content/Encyclopedia"
-          }
-        ],
-        "responsibilityStatement": "James W. Guthrie, editor in chief",
-        "hasFormat": [
-          {
-            "@type": "Product",
-            "extent": "8 vol."
-          }
-        ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/xxu"
-          }
-        ],
-        "supplementaryContentNote": [
-          "Includes bibliographical references and index."
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=New%20York"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Macmillan Reference USA",
-            "providerDate": "cop. 2003"
-          }
-        ],
-        "_providerDateStatus": {
-          "@id": "/def/enum/content/SingleKnownDateProbableDate"
-        },
-        "language": [
-          {
-            "@id": "/def/languages/eng"
-          }
-        ],
-        "lccn": "2002008205",
-        "classificationLcc": "LB15",
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "instanceTitle": {
-          "searchElement": false,
-          "@type": "Title",
-          "titleValue": "Encyclopedia of education"
-        },
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "hardcover : set : alk. paper",
-            "@type": "Identifier",
-            "identifierValue": "0-02-865594-X"
-          },
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "Vol. 1",
-            "@type": "Identifier",
-            "identifierValue": "0-02-865595-8"
-          },
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "Vol. 2",
-            "@type": "Identifier",
-            "identifierValue": "0-02-865596-6"
-          },
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "Vol. 3",
-            "@type": "Identifier",
-            "identifierValue": "0-02-865597-4"
-          },
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "Vol. 4",
-            "@type": "Identifier",
-            "identifierValue": "0-02-865598-2"
-          },
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "Vol. 5",
-            "@type": "Identifier",
-            "identifierValue": "0-02-865599-0"
-          },
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "Vol. 6",
-            "@type": "Identifier",
-            "identifierValue": "0-02-865600-8"
-          },
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "Vol. 7",
-            "@type": "Identifier",
-            "identifierValue": "0-02-865601-6"
-          },
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "identifierNote": "Vol. 8",
-            "@type": "Identifier",
-            "identifierValue": "0-02-865602-4"
-          }
-        ],
-        "@type": [
-          "Text",
-          "Monograph"
-        ]
+        "@id": "/topic/lcsh/Education/Encyclopedias."
+      },
+      {
+        "@id": "/topic/sao/Utbildning/Lexikon"
       }
+    ],
+    "index": {
+      "@id": "/def/enum/content/IndexPresent"
+    },
+    "listOfContents": [
+      "v. 1. A-C -- v. 2. D-G -- v. 3. H-J -- v. 4. K-M -- v. 5. N-P -- v. 6. R-T -- v. 7. U-Z -- v. 8. Appendixes. Index."
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=2.%20ed."
+      }
+    ],
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&title=Encyclopedia%20of%20education&placePublisherAndDateOfPublication=2003"
+      }
+    ],
+    "@id": "/resource/bib/8558889",
+    "editor": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "_providerYear": "2003",
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Bibliography"
+      },
+      {
+        "@id": "/def/enum/content/Encyclopedia"
+      }
+    ],
+    "responsibilityStatement": "James W. Guthrie, editor in chief",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "8 vol."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxu"
+      }
+    ],
+    "supplementaryContentNote": [
+      "Includes bibliographical references and index."
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=New%20York"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Macmillan Reference USA",
+        "providerDate": "cop. 2003"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "lccn": "2002008205",
+    "classificationLcc": "LB15",
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "searchElement": false,
+      "@type": "Title",
+      "titleValue": "Encyclopedia of education"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "hardcover : set : alk. paper",
+        "@type": "Identifier",
+        "identifierValue": "0-02-865594-X"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "Vol. 1",
+        "@type": "Identifier",
+        "identifierValue": "0-02-865595-8"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "Vol. 2",
+        "@type": "Identifier",
+        "identifierValue": "0-02-865596-6"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "Vol. 3",
+        "@type": "Identifier",
+        "identifierValue": "0-02-865597-4"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "Vol. 4",
+        "@type": "Identifier",
+        "identifierValue": "0-02-865598-2"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "Vol. 5",
+        "@type": "Identifier",
+        "identifierValue": "0-02-865599-0"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "Vol. 6",
+        "@type": "Identifier",
+        "identifierValue": "0-02-865600-8"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "Vol. 7",
+        "@type": "Identifier",
+        "identifierValue": "0-02-865601-6"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "Vol. 8",
+        "@type": "Identifier",
+        "identifierValue": "0-02-865602-4"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
     ]
-  }
+  },
+  "created": "2002-05-23T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "transcribingAgency": {
+    "@id": "/some?type=Organization&name=DLC"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "8558889",
+  "modified": "2007-01-10T16:43:35.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "b"
+      ],
+      "050": {
+        "subfields": [
+          {
+            "a": "LB15"
+          },
+          {
+            "b": ".E47 2003"
+          }
+        ],
+        "ind1": "0",
+        "ind2": "0"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Utbildning"
+          },
+          {
+            "v": "Lexikon"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Kd"
+  },
+  "systemNumber": [
+    "(DLC)  2002008205"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=DLC"
+  },
+  "@id": "/bib/8558889",
+  "@type": "Record"
 }

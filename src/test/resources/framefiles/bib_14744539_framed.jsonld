@@ -1,328 +1,169 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/14744539"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=NB"
-        }
-      ],
-      "created": "2014-01-04T00:00:00.0+01:00",
-      "modified": "2015-04-09T11:33:17.0+02:00",
-      "controlNumber": "14744539",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "655": {
-            "subfields": [
-              {
-                "a": "Deckare"
-              },
-              {
-                "2": "saogf"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
+  "about": {
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Falun"
         },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "655": {
-            "subfields": [
-              {
-                "a": "Skönlitteratur"
-              },
-              {
-                "2": "saogf"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "modifyingAgency": {
-        "@id": "/some?type=Organization&name=S"
-      },
-      "systemNumber": [
-        "(BOKR)9789137139821"
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=BOKR"
-      },
-      "@id": "/bib/14744539",
-      "@type": "Record"
-    },
-    "quoted": [
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=BOKR",
-          "@type": "Organization",
-          "name": "BOKR"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=S",
-          "@type": "Organization",
-          "name": "S"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/nor",
-          "notation": "nor"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=NB",
-          "@type": "Organization",
-          "notation": "NB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/839.82374/e23/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e23/swe/"
-          },
-          "@type": "Concept",
-          "notation": "839.82374"
-        }
-      },
-      {
-        "@graph": {
-          "language": "swe",
-          "notation": "DDC",
-          "@id": "http://dewey.info/scheme/edition/e23/swe/",
-          "version": "23",
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "@type": "ConceptScheme"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Hcedb.01",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Hcedb.01"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/8",
-          "@type": "ConceptScheme",
-          "notation": "kssb/8"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1954",
-          "givenName": "Karin",
-          "familyName": "Fossum",
-          "@id": "/some?type=Person&familyName=Fossum&givenName=Karin&birthYear=1954",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=UniformWork&title=Carmen%20Zita%20og%20d%C3%B8den.",
-          "@type": "UniformWork",
-          "language": {
-            "@id": "/some?type=Language&label=Svenska"
-          },
-          "title": "Carmen Zita og døden."
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Language&label=Svenska",
-          "@type": "Language",
-          "label": "Svenska"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Stockholm",
-          "@type": "Place",
-          "label": "Stockholm"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Falun",
-          "@type": "Place",
-          "label": "Falun"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/saogf/Deckare",
-          "inScheme": {
-            "@id": "/scheme/saogf"
-          },
-          "@type": "GenreTerm",
-          "prefLabel": "Deckare"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/saogf",
-          "@type": "ConceptScheme",
-          "notation": "saogf"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/saogf/Sk%C3%B6nlitteratur",
-          "inScheme": {
-            "@id": "/scheme/saogf"
-          },
-          "@type": "GenreTerm",
-          "prefLabel": "Skönlitteratur"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1947",
-          "givenName": "Margareta",
-          "familyName": "Järnebrand",
-          "@id": "_:b-0",
-          "@type": "Person"
-        }
+        "@type": "ProviderEvent",
+        "providerName": "Scandbook)"
       }
     ],
-    "items": [
+    "hasFormat": [
       {
-        "manufacture": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Falun"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Scandbook)"
-          }
-        ],
-        "hasFormat": [
-          {
-            "@type": "Product",
-            "extent": "203 s.",
-            "dimensions": "22 cm"
-          }
-        ],
-        "classification": [
-          {
-            "@id": "http://dewey.info/class/839.82374/e23/"
-          },
-          {
-            "@id": "/topic/kssb/8/Hcedb.01"
-          }
-        ],
-        "originalLanguage": [
-          {
-            "@id": "/def/languages/nor"
-          }
-        ],
-        "translator": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
+        "@type": "Product",
+        "extent": "203 s.",
+        "dimensions": "22 cm"
+      }
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/839.82374/e23/"
+      },
+      {
+        "@id": "/topic/kssb/8/Hcedb.01"
+      }
+    ],
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/nor"
+      }
+    ],
+    "translator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "@id": "/resource/bib/14744539",
+    "responsibilityStatement": "Karin Fossum ; översättning: Margareta Järnebrand",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Fossum&givenName=Karin&birthYear=1954"
+    },
+    "comment": [
+      "Serie/fortsättningsarbete: 1. Evas öga -- 2. Se dig inte om! -- 3. Den som fruktar vargen -- 4. När djävulen håller ljuset -- 5. Älskade Poona -- 6. Svarta sekunder -- 7. Mordet på Harriet Krohn -- 8. Den som älskar något annat -- 9. Den onda viljan -- 10. Döden skall du tåla -- 11. Carmen och döden -- 12. Helveteselden",
+      "Första svenska upplaga 2013",
+      "Undertitel från skyddsomslag"
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=Carmen%20Zita%20og%20d%C3%B8den."
+    },
+    "instanceTitle": {
+      "subtitle": "[en Konrad Sejer-deckare]",
+      "@type": "Title",
+      "titleValue": "Carmen och döden"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/Novel"
+    },
+    "genre": [
+      {
+        "@id": "/topic/saogf/Deckare"
+      },
+      {
+        "@id": "/topic/saogf/Sk%C3%B6nlitteratur"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
         },
-        "@id": "/resource/bib/14744539",
-        "responsibilityStatement": "Karin Fossum ; översättning: Margareta Järnebrand",
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Fossum&givenName=Karin&birthYear=1954"
+        "@type": "Identifier",
+        "identifierValue": "9789137139821"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
         },
-        "comment": [
-          "Serie/fortsättningsarbete: 1. Evas öga -- 2. Se dig inte om! -- 3. Den som fruktar vargen -- 4. När djävulen håller ljuset -- 5. Älskade Poona -- 6. Svarta sekunder -- 7. Mordet på Harriet Krohn -- 8. Den som älskar något annat -- 9. Den onda viljan -- 10. Döden skall du tåla -- 11. Carmen och döden -- 12. Helveteselden",
-          "Första svenska upplaga 2013",
-          "Undertitel från skyddsomslag"
-        ],
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "exampleOfWork": {
-          "@id": "/some?type=UniformWork&title=Carmen%20Zita%20og%20d%C3%B8den."
-        },
-        "instanceTitle": {
-          "subtitle": "[en Konrad Sejer-deckare]",
-          "@type": "Title",
-          "titleValue": "Carmen och döden"
-        },
-        "literaryForm": {
-          "@id": "/def/enum/content/Novel"
-        },
-        "genre": [
-          {
-            "@id": "/topic/saogf/Deckare"
-          },
-          {
-            "@id": "/topic/saogf/Sk%C3%B6nlitteratur"
-          }
-        ],
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "@type": "Identifier",
-            "identifierValue": "9789137139821"
-          }
-        ],
-        "influencedBy": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "@type": [
-          "Text",
-          "Monograph"
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Stockholm"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Forum",
-            "providerDate": "2013"
-          }
-        ]
+        "@type": "ProviderEvent",
+        "providerName": "Forum",
+        "providerDate": "2013"
       }
     ]
-  }
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2014-01-04T00:00:00.0+01:00",
+  "modified": "2015-04-09T11:33:17.0+02:00",
+  "controlNumber": "14744539",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Deckare"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Skönlitteratur"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "systemNumber": [
+    "(BOKR)9789137139821"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=BOKR"
+  },
+  "@id": "/bib/14744539",
+  "@type": "Record"
 }

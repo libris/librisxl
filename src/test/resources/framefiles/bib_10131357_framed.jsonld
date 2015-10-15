@@ -1,375 +1,165 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/10131357"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=SHB"
-        }
-      ],
-      "created": "2006-03-30T00:00:00.0+02:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "10131357",
-      "@type": "Record",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Idrott"
-              },
-              {
-                "x": "historia"
-              },
-              {
-                "z": "Sverige"
-              },
-              {
-                "y": "1900-talet"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Idrottsrörelsen"
-              },
-              {
-                "x": "historia"
-              },
-              {
-                "z": "Sverige"
-              },
-              {
-                "y": "1900-talet"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Idrottspolitik"
-              },
-              {
-                "x": "historia"
-              },
-              {
-                "z": "Sverige"
-              },
-              {
-                "y": "1900-talet"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "modified": "2006-03-30T10:59:55.0+02:00",
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=SHB"
-      },
-      "@id": "/bib/10131357",
-      "linked": {
-        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
-      }
-    },
-    "quoted": [
+  "about": {
+    "classification": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=SHB",
-          "@type": "Organization",
-          "name": "SHB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=SHB",
-          "@type": "Organization",
-          "notation": "SHB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/Rb-c%3Ak.5",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "Rb-c:k.5"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/7",
-          "@type": "ConceptScheme",
-          "notation": "kssb/7"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1969",
-          "givenName": "Johan R.",
-          "familyName": "Norberg",
-          "@id": "/some?type=Person&familyName=Norberg&givenName=Johan%20R.&birthYear=1969",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Idrott/historia/Sverige/1900-talet",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Idrott"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=historia"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1900-talet"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Idrott",
-          "@type": "TopicalTerm",
-          "prefLabel": "Idrott"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=historia",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "historia"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Sverige",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Sverige"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=ChronologicalTerm&prefLabel=1900-talet",
-          "@type": "ChronologicalTerm",
-          "prefLabel": "1900-talet"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Idrottsr%C3%B6relsen/historia/Sverige/1900-talet",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Idrottsr%C3%B6relsen"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=historia"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1900-talet"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Idrottsr%C3%B6relsen",
-          "@type": "TopicalTerm",
-          "prefLabel": "Idrottsrörelsen"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Idrottspolitik/historia/Sverige/1900-talet",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Idrottspolitik"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=historia"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1900-talet"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Idrottspolitik",
-          "@type": "TopicalTerm",
-          "prefLabel": "Idrottspolitik"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Aggregate&title=Historia%20-%20ekonomi%20-%20forskning%20%3A%20fem%20rapporter%20om%20idrott%20%3A%20rapporter%20till%20Idrottsutredningen&placePublisherAndDateOfPublication=1998&seriesLabel=Statens%20offentliga%20utredningar%2C%200375-250X%20%3B%201998%3A33&scopeNote=S.%20%5B61%5D-98",
-          "placePublisherAndDateOfPublication": "1998",
-          "scopeNote": [
-            "S. [61]-98"
-          ],
-          "title": "Historia - ekonomi - forskning : fem rapporter om idrott : rapporter till Idrottsutredningen",
-          "@type": "Aggregate",
-          "identifier": [
-            {
-              "@id": "/some?type=Identifier&identifierValue=91-38-20867-9"
-            }
-          ],
-          "seriesLabel": [
-            "Statens offentliga utredningar, 0375-250X ; 1998:33"
-          ],
-          "describedBy": [
-            {
-              "@id": "/bib/7266489"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/isbn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=91-38-20867-9",
-          "@type": "Identifier",
-          "identifierValue": "91-38-20867-9"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/7266489",
-          "@type": "Record",
-          "controlNumber": "7266489"
-        }
+        "@id": "/topic/kssb/7/Rb-c%3Ak.5"
       }
     ],
-    "items": [
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "responsibilityStatement": "Johan R. Norberg",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Norberg&givenName=Johan%20R.&birthYear=1969"
+    },
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "language": [
       {
-        "classification": [
-          {
-            "@id": "/topic/kssb/7/Rb-c%3Ak.5"
-          }
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
-        },
-        "responsibilityStatement": "Johan R. Norberg",
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Norberg&givenName=Johan%20R.&birthYear=1969"
-        },
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "instanceTitle": {
-          "subtitle": "ett diskussionsunderlag rörande förhållandet mellan staten och idrottsrörelsen",
-          "@type": "Title",
-          "titleValue": "Nya tider och gamla problem"
-        },
-        "publication": [
-          {
-            "providerDate": "1998"
-          }
-        ],
-        "isPartOf": [
-          {
-            "@id": "/some?type=Aggregate&title=Historia%20-%20ekonomi%20-%20forskning%20%3A%20fem%20rapporter%20om%20idrott%20%3A%20rapporter%20till%20Idrottsutredningen&placePublisherAndDateOfPublication=1998&seriesLabel=Statens%20offentliga%20utredningar%2C%200375-250X%20%3B%201998%3A33&scopeNote=S.%20%5B61%5D-98"
-          }
-        ],
-        "@id": "/resource/bib/10131357",
-        "@type": [
-          "Text",
-          "ComponentPart"
-        ],
-        "subject": [
-          {
-            "@id": "/topic/sao/Idrott/historia/Sverige/1900-talet"
-          },
-          {
-            "@id": "/topic/sao/Idrottsr%C3%B6relsen/historia/Sverige/1900-talet"
-          },
-          {
-            "@id": "/topic/sao/Idrottspolitik/historia/Sverige/1900-talet"
-          }
-        ]
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "ett diskussionsunderlag rörande förhållandet mellan staten och idrottsrörelsen",
+      "@type": "Title",
+      "titleValue": "Nya tider och gamla problem"
+    },
+    "publication": [
+      {
+        "providerDate": "1998"
+      }
+    ],
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&title=Historia%20-%20ekonomi%20-%20forskning%20%3A%20fem%20rapporter%20om%20idrott%20%3A%20rapporter%20till%20Idrottsutredningen&placePublisherAndDateOfPublication=1998&seriesLabel=Statens%20offentliga%20utredningar%2C%200375-250X%20%3B%201998%3A33&scopeNote=S.%20%5B61%5D-98"
+      }
+    ],
+    "@id": "/resource/bib/10131357",
+    "@type": [
+      "Text",
+      "ComponentPart"
+    ],
+    "subject": [
+      {
+        "@id": "/topic/sao/Idrott/historia/Sverige/1900-talet"
+      },
+      {
+        "@id": "/topic/sao/Idrottsr%C3%B6relsen/historia/Sverige/1900-talet"
+      },
+      {
+        "@id": "/topic/sao/Idrottspolitik/historia/Sverige/1900-talet"
       }
     ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    }
+  ],
+  "created": "2006-03-30T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "10131357",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Idrott"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "y": "1900-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Idrottsrörelsen"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "y": "1900-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Idrottspolitik"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "y": "1900-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modified": "2006-03-30T10:59:55.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SHB"
+  },
+  "@id": "/bib/10131357",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
   }
 }

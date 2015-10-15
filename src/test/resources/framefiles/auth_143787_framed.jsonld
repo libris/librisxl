@@ -1,236 +1,122 @@
 {
-  "descriptions": {
-    "entry": {
-      "historyNote": [
-        "Tidigare Detektivromaner. Ändrat 2006-03-23."
-      ],
-      "sameAs": [
-        {
-          "@id": "/topic/sao/Deckare"
-        }
-      ],
-      "scopeNote": [
-        "Se även resp litteraturhistoria med tillägg .0977, t ex svensk Gc.0977. För genren i sig används SAB-kod H.01 och resp skönlitteratur med tillägg .01, t ex svensk Hc.01.",
-        "Se även ämnesord för resp litteraturs deckare, t.ex. Svenska deckare."
-      ],
-      "narrower": [
-        {
-          "@id": "/topic/sao/Kioskdeckare"
-        }
-      ],
-      "focus": {
-        "@id": "/resource/auth/143787"
-      },
-      "related": [
-        {
-          "@id": "/topic/sao/Mord%20i%20litteraturen"
-        }
-      ],
-      "modified": "2014-05-12T11:27:50.0+02:00",
-      "closeMatch": [
-        {
-          "@id": "/topic/kssb/7/G.0977"
-        },
-        {
-          "@id": "/topic/lcsh/Detective%20and%20mystery%20stories"
-        }
-      ],
-      "broader": [
-        {
-          "@id": "/topic/sao/Kriminallitteratur"
-        },
-        {
-          "@id": "/topic/sao/Romaner"
-        },
-        {
-          "@id": "/topic/sao/%C3%84ventyrsromaner"
-        },
-        {
-          "@id": "/topic/sao/Litter%C3%A4ra%20genrer"
-        }
-      ],
-      "inScheme": {
-        "@id": "/scheme/sao"
-      },
-      "prefLabel": "Deckare",
-      "headingSeries": {
-        "@id": "/def/enum/content/NotAppropriate"
-      },
-      "encLevel": {
-        "@id": "/def/enum/record/CompleteAuthorityRecord"
-      },
-      "_marcUncompleted": [
-        {
-          "450": {
-            "subfields": [
-              {
-                "a": "Detektivromaner"
-              },
-              {
-                "w": "||e"
-              }
-            ],
-            "ind1": " ",
-            "ind2": " "
-          },
-          "_unhandled": [
-            "w"
-          ]
-        }
-      ],
-      "headingMain": {
-        "@id": "/def/enum/content/NotAppropriate"
-      },
-      "systemNumber": [
-        "(sao)6976"
-      ],
-      "altLabel": [
-        "Detektivromaner",
-        "Kriminalromaner",
-        "Detektivberättelser"
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=NB"
-      },
-      "inCollection": [
-        {
-          "@id": "/some?type=TermCollection&notation=Fack"
-        }
-      ],
-      "@id": "/auth/143787",
-      "language": [
-        {
-          "@id": "/def/languages/swe"
-        }
-      ],
-      "created": "2002-04-09T00:00:00.0+02:00",
-      "headingSubject": {
-        "@id": "/def/enum/content/Appropriate"
-      },
-      "level": {
-        "@id": "/def/enum/content/FullyEstablishedHeading"
-      },
-      "controlNumber": "143787",
-      "recordUpdate": {
-        "@id": "/def/enum/content/RecordCanBeUsed"
-      },
-      "kindOfRecord": {
-        "@id": "/def/enum/content/EstablishedHeadingRecord"
-      },
-      "@type": "TopicalTerm"
-    },
-    "quoted": [
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=NB",
-          "@type": "Organization",
-          "name": "NB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TermCollection&notation=Fack",
-          "@type": "TermCollection",
-          "notation": "Fack"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/G.0977",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "G.0977"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/7",
-          "@type": "ConceptScheme",
-          "notation": "kssb/7"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Kriminallitteratur",
-          "@type": "TopicalTerm",
-          "prefLabel": "Kriminallitteratur"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Romaner",
-          "@type": "TopicalTerm",
-          "prefLabel": "Romaner"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/%C3%84ventyrsromaner",
-          "@type": "TopicalTerm",
-          "prefLabel": "Äventyrsromaner"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Litter%C3%A4ra%20genrer",
-          "@type": "TopicalTerm",
-          "prefLabel": "Litterära genrer"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Kioskdeckare",
-          "@type": "TopicalTerm",
-          "prefLabel": "Kioskdeckare"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Mord%20i%20litteraturen",
-          "@type": "TopicalTerm",
-          "prefLabel": "Mord i litteraturen"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/lcsh/Detective%20and%20mystery%20stories",
-          "inScheme": {
-            "@id": "/scheme/lcsh"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Detective and mystery stories"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/lcsh",
-          "@type": "ConceptScheme",
-          "notation": "lcsh"
-        }
-      }
-    ],
-    "items": [
-      {
-        "@id": "/resource/auth/143787",
-        "@type": [
-          "Authority"
-        ]
-      }
+  "historyNote": [
+    "Tidigare Detektivromaner. Ändrat 2006-03-23."
+  ],
+  "sameAs": [
+    {
+      "@id": "/topic/sao/Deckare"
+    }
+  ],
+  "scopeNote": [
+    "Se även resp litteraturhistoria med tillägg .0977, t ex svensk Gc.0977. För genren i sig används SAB-kod H.01 och resp skönlitteratur med tillägg .01, t ex svensk Hc.01.",
+    "Se även ämnesord för resp litteraturs deckare, t.ex. Svenska deckare."
+  ],
+  "narrower": [
+    {
+      "@id": "/topic/sao/Kioskdeckare"
+    }
+  ],
+  "focus": {
+    "@id": "/resource/auth/143787",
+    "@type": [
+      "Authority"
     ]
-  }
+  },
+  "related": [
+    {
+      "@id": "/topic/sao/Mord%20i%20litteraturen"
+    }
+  ],
+  "modified": "2014-05-12T11:27:50.0+02:00",
+  "closeMatch": [
+    {
+      "@id": "/topic/kssb/7/G.0977"
+    },
+    {
+      "@id": "/topic/lcsh/Detective%20and%20mystery%20stories"
+    }
+  ],
+  "broader": [
+    {
+      "@id": "/topic/sao/Kriminallitteratur"
+    },
+    {
+      "@id": "/topic/sao/Romaner"
+    },
+    {
+      "@id": "/topic/sao/%C3%84ventyrsromaner"
+    },
+    {
+      "@id": "/topic/sao/Litter%C3%A4ra%20genrer"
+    }
+  ],
+  "inScheme": {
+    "@id": "/scheme/sao"
+  },
+  "prefLabel": "Deckare",
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "_marcUncompleted": [
+    {
+      "450": {
+        "subfields": [
+          {
+            "a": "Detektivromaner"
+          },
+          {
+            "w": "||e"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      },
+      "_unhandled": [
+        "w"
+      ]
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "systemNumber": [
+    "(sao)6976"
+  ],
+  "altLabel": [
+    "Detektivromaner",
+    "Kriminalromaner",
+    "Detektivberättelser"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "inCollection": [
+    {
+      "@id": "/some?type=TermCollection&notation=Fack"
+    }
+  ],
+  "@id": "/auth/143787",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2002-04-09T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "143787",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "TopicalTerm"
 }

@@ -1,659 +1,311 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/11798968"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=NB"
-        }
-      ],
-      "created": "2010-03-27T00:00:00.0+01:00",
-      "modified": "2013-08-09T09:49:19.0+02:00",
-      "controlNumber": "11798968",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Tysklands återförening 1990"
-              },
-              {
-                "x": "attityder till"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Nationell identitet"
-              },
-              {
-                "z": "Östtyskland"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Nationell identitet"
-              },
-              {
-                "z": "Västtyskland"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Östtyskar"
-              },
-              {
-                "x": "attityder"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Politisk kultur"
-              },
-              {
-                "z": "Västtyskland"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Politisk kultur"
-              },
-              {
-                "z": "Östtyskland"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Företagsorganisation Företagsledning Företagsformer"
-              },
-              {
-                "z": "Tyskland"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "modifyingAgency": {
-        "@id": "/some?type=Organization&name=S"
-      },
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=LGEN"
-      },
-      "@id": "/bib/11798968",
-      "@type": "Record"
-    },
-    "quoted": [
+  "about": {
+    "@id": "/resource/bib/11798968",
+    "hasFormat": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=LGEN",
-          "@type": "Organization",
-          "name": "LGEN"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=S",
-          "@type": "Organization",
-          "name": "S"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=NB",
-          "@type": "Organization",
-          "notation": "NB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/943.088/e23/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e23/"
-          },
-          "@type": "Concept",
-          "notation": "943.088"
-        }
-      },
-      {
-        "@graph": {
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "version": "23",
-          "@id": "http://dewey.info/scheme/edition/e23/",
-          "@type": "ConceptScheme",
-          "notation": "DDC"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Kfa.59",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Kfa.59"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/8",
-          "@type": "ConceptScheme",
-          "notation": "kssb/8"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Kfag.55",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Kfag.55"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Kfah.55",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Kfah.55"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Qba-fa",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Qba-fa"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Place&label=Tumba",
-          "@type": "Place",
-          "label": "Tumba"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Tysklands%20%C3%A5terf%C3%B6rening%201990/attityder%20till",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Tysklands%20%C3%A5terf%C3%B6rening%201990"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=attityder%20till"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Tysklands%20%C3%A5terf%C3%B6rening%201990",
-          "@type": "TopicalTerm",
-          "prefLabel": "Tysklands återförening 1990"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=attityder%20till",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "attityder till"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Nationell%20identitet/%C3%96sttyskland",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Nationell%20identitet"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=%C3%96sttyskland"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Nationell%20identitet",
-          "@type": "TopicalTerm",
-          "prefLabel": "Nationell identitet"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=%C3%96sttyskland",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Östtyskland"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Nationell%20identitet/V%C3%A4sttyskland",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Nationell%20identitet"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=V%C3%A4sttyskland"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=V%C3%A4sttyskland",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Västtyskland"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/%C3%96sttyskar/attityder",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=%C3%96sttyskar"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=attityder"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=%C3%96sttyskar",
-          "@type": "TopicalTerm",
-          "prefLabel": "Östtyskar"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=attityder",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "attityder"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Politisk%20kultur/V%C3%A4sttyskland",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Politisk%20kultur"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=V%C3%A4sttyskland"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Politisk%20kultur",
-          "@type": "TopicalTerm",
-          "prefLabel": "Politisk kultur"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Politisk%20kultur/%C3%96sttyskland",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Politisk%20kultur"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=%C3%96sttyskland"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/_/F%C3%B6retagsorganisation%20F%C3%B6retagsledning%20F%C3%B6retagsformer/Tyskland",
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=F%C3%B6retagsorganisation%20F%C3%B6retagsledning%20F%C3%B6retagsformer"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Tyskland"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=F%C3%B6retagsorganisation%20F%C3%B6retagsledning%20F%C3%B6retagsformer",
-          "@type": "TopicalTerm",
-          "prefLabel": "Företagsorganisation Företagsledning Företagsformer"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Tyskland",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Tyskland"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1954",
-          "givenName": "Frank-Michael",
-          "familyName": "Kirsch",
-          "@id": "_:b-0",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "givenName": "Susanne",
-          "familyName": "Lüders",
-          "@id": "_:b-1",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "givenName": "Frank Thomas",
-          "familyName": "Grub",
-          "@id": "_:b-2",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "givenName": "Ernst-Ullrich",
-          "familyName": "Pinkert",
-          "@id": "_:b-3",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "givenName": "Göran",
-          "familyName": "Wettlegren",
-          "@id": "_:b-4",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "_:b-5",
-          "@type": "Organization",
-          "name": "Mångkulturellt centrum"
-        }
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "185 s.",
+        "dimensions": "22 cm"
       }
     ],
-    "items": [
+    "classification": [
       {
-        "@id": "/resource/bib/11798968",
-        "hasFormat": [
-          {
-            "otherPhysicalDetails": "ill.",
-            "@type": "Product",
-            "extent": "185 s.",
-            "dimensions": "22 cm"
-          }
-        ],
-        "classification": [
-          {
-            "@id": "http://dewey.info/class/943.088/e23/"
-          },
-          {
-            "@id": "/topic/kssb/8/Kfa.59"
-          },
-          {
-            "@id": "/topic/kssb/8/Kfag.55"
-          },
-          {
-            "@id": "/topic/kssb/8/Kfah.55"
-          },
-          {
-            "@id": "/topic/kssb/8/Qba-fa"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
+        "@id": "http://dewey.info/class/943.088/e23/"
+      },
+      {
+        "@id": "/topic/kssb/8/Kfa.59"
+      },
+      {
+        "@id": "/topic/kssb/8/Kfag.55"
+      },
+      {
+        "@id": "/topic/kssb/8/Kfah.55"
+      },
+      {
+        "@id": "/topic/kssb/8/Qba-fa"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "author": [
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      }
+    ],
+    "series": [
+      {
+        "issn": "1401-2316",
+        "volumeNumberSequentialDesignation": "2010:2",
+        "@type": "Serial",
+        "title": "Mångkulturellt centrum"
+      }
+    ],
+    "responsibilityStatement": "Frank-Michael Kirsch (red.) ; med bidrag av Susanne Lüders ...",
+    "publisher": [
+      {
+        "@id": "_:b-5"
+      }
+    ],
+    "subject": [
+      {
+        "@id": "/topic/sao/Tysklands%20%C3%A5terf%C3%B6rening%201990/attityder%20till"
+      },
+      {
+        "@id": "/topic/sao/Nationell%20identitet/%C3%96sttyskland"
+      },
+      {
+        "@id": "/topic/sao/Nationell%20identitet/V%C3%A4sttyskland"
+      },
+      {
+        "@id": "/topic/sao/%C3%96sttyskar/attityder"
+      },
+      {
+        "@id": "/topic/sao/Politisk%20kultur/V%C3%A4sttyskland"
+      },
+      {
+        "@id": "/topic/sao/Politisk%20kultur/%C3%96sttyskland"
+      },
+      {
+        "@id": "/topic/_/F%C3%B6retagsorganisation%20F%C3%B6retagsledning%20F%C3%B6retagsformer/Tyskland"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "östtyska erfarenheter före och under enhetsprocessen : en antologi",
+      "@type": "Title",
+      "titleValue": "\"-där isen höll nyss\""
+    },
+    "editor": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
         },
-        "author": [
-          {
-            "@id": "_:b-1"
-          },
-          {
-            "@id": "_:b-2"
-          },
-          {
-            "@id": "_:b-3"
-          },
-          {
-            "@id": "_:b-4"
-          }
-        ],
-        "series": [
-          {
-            "issn": "1401-2316",
-            "volumeNumberSequentialDesignation": "2010:2",
-            "@type": "Serial",
-            "title": "Mångkulturellt centrum"
-          }
-        ],
-        "responsibilityStatement": "Frank-Michael Kirsch (red.) ; med bidrag av Susanne Lüders ...",
-        "publisher": [
-          {
-            "@id": "_:b-5"
-          }
-        ],
-        "subject": [
-          {
-            "@id": "/topic/sao/Tysklands%20%C3%A5terf%C3%B6rening%201990/attityder%20till"
-          },
-          {
-            "@id": "/topic/sao/Nationell%20identitet/%C3%96sttyskland"
-          },
-          {
-            "@id": "/topic/sao/Nationell%20identitet/V%C3%A4sttyskland"
-          },
-          {
-            "@id": "/topic/sao/%C3%96sttyskar/attityder"
-          },
-          {
-            "@id": "/topic/sao/Politisk%20kultur/V%C3%A4sttyskland"
-          },
-          {
-            "@id": "/topic/sao/Politisk%20kultur/%C3%96sttyskland"
-          },
-          {
-            "@id": "/topic/_/F%C3%B6retagsorganisation%20F%C3%B6retagsledning%20F%C3%B6retagsformer/Tyskland"
-          }
-        ],
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
+        "@type": "Identifier",
+        "identifierValue": "978-91-86429-02-7"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Tumba"
         },
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "instanceTitle": {
-          "subtitle": "östtyska erfarenheter före och under enhetsprocessen : en antologi",
-          "@type": "Title",
-          "titleValue": "\"-där isen höll nyss\""
-        },
-        "editor": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "literaryForm": {
-          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
-        },
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/isbn"
-            },
-            "@type": "Identifier",
-            "identifierValue": "978-91-86429-02-7"
-          }
-        ],
-        "influencedBy": [
-          {
-            "@id": "_:b-0"
-          },
-          {
-            "@id": "_:b-1"
-          },
-          {
-            "@id": "_:b-2"
-          },
-          {
-            "@id": "_:b-3"
-          },
-          {
-            "@id": "_:b-4"
-          },
-          {
-            "@id": "_:b-5"
-          }
-        ],
-        "@type": [
-          "Text",
-          "Monograph"
-        ],
-        "publication": [
-          {
-            "place": {
-              "@id": "/some?type=Place&label=Tumba"
-            },
-            "@type": "ProviderEvent",
-            "providerName": "Mångkulturellt centrum",
-            "providerDate": "2010"
-          }
-        ]
+        "@type": "ProviderEvent",
+        "providerName": "Mångkulturellt centrum",
+        "providerDate": "2010"
       }
     ]
-  }
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2010-03-27T00:00:00.0+01:00",
+  "modified": "2013-08-09T09:49:19.0+02:00",
+  "controlNumber": "11798968",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Tysklands återförening 1990"
+          },
+          {
+            "x": "attityder till"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Nationell identitet"
+          },
+          {
+            "z": "Östtyskland"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Nationell identitet"
+          },
+          {
+            "z": "Västtyskland"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Östtyskar"
+          },
+          {
+            "x": "attityder"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Politisk kultur"
+          },
+          {
+            "z": "Västtyskland"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Politisk kultur"
+          },
+          {
+            "z": "Östtyskland"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Företagsorganisation Företagsledning Företagsformer"
+          },
+          {
+            "z": "Tyskland"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=LGEN"
+  },
+  "@id": "/bib/11798968",
+  "@type": "Record"
 }
