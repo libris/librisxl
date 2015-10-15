@@ -17,7 +17,18 @@ public class JsonLd {
         storeFlattened(framedJsonLd, flatList)
 
         return [(GRAPH_KEY): flatList.reverse()]
+    }
 
+    static Map flattenWithDescriptions(Map framedJsonLd) {
+        if (isFlat(framedJsonLd)) {
+            return framedJsonLd
+        }
+        def descriptionsFlatMap = ["descriptions": [:]]
+        flatten(framedJsonLd).eachWithIndex { i, item ->
+            if (i == 0) {
+                descriptionsFlatMap['descriptions']['entry'] = item
+            }
+        }
     }
 
 

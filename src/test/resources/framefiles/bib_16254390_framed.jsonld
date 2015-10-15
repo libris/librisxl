@@ -1,223 +1,128 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/16254390"
-      },
-      "created": "2014-03-25T00:00:00.0+01:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "16254390",
-      "modified": "2014-03-25T11:35:38.0+01:00",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "655": {
-            "subfields": [
-              {
-                "a": "Thrillers (film)"
-              },
-              {
-                "2": "saogf"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=Gbg"
-      },
-      "@id": "/bib/16254390",
-      "@type": "Record"
-    },
-    "quoted": [
+  "about": {
+    "comment": [
+      "Tal på engelska. Textad på svenska, engelska"
+    ],
+    "director": [
       {
-        "@graph": {
-          "@id": "/some?type=VideoRecording",
-          "@type": [
-            "VideoRecording"
-          ],
-          "carrierType": [
-            {
-              "@id": "/def/enum/carrier/Videodisc"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/identifiers/sici",
-          "notation": "sici"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/identifiers/upc",
-          "notation": "upc"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=Gbg",
-          "@type": "Organization",
-          "name": "Gbg"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/He.025%2FVC",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "He.025/VC"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/8",
-          "@type": "ConceptScheme",
-          "notation": "kssb/8"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/8/Hcee.025%2FVC",
-          "inScheme": {
-            "@id": "/scheme/kssb/8"
-          },
-          "@type": "Concept",
-          "notation": "Hcee.025/VC"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/saogf/Thrillers%20%28film%29",
-          "inScheme": {
-            "@id": "/scheme/saogf"
-          },
-          "@type": "GenreTerm",
-          "prefLabel": "Thrillers (film)"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/saogf",
-          "@type": "ConceptScheme",
-          "notation": "saogf"
-        }
-      },
-      {
-        "@graph": {
-          "givenName": "Brad",
-          "familyName": "Furman",
-          "@id": "_:b-0",
-          "@type": "Person"
-        }
+        "@id": "_:b-0"
       }
     ],
-    "items": [
+    "mediaTerm": "Videoupptagning] /",
+    "contentType": [
       {
-        "comment": [
-          "Tal på engelska. Textad på svenska, engelska"
-        ],
-        "director": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "mediaTerm": "Videoupptagning] /",
-        "contentType": [
-          {
-            "@id": "/def/enum/content/Videorecording"
-          }
-        ],
-        "classification": [
-          {
-            "@id": "/topic/kssb/8/He.025%2FVC"
-          },
-          {
-            "@id": "/topic/kssb/8/Hcee.025%2FVC"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/eng"
-          }
-        ],
-        "@id": "/resource/bib/16254390",
-        "responsibilityStatement": "Regisserad av Brad Furman",
-        "hasFormat": [
-          {
-            "@id": "/some?type=VideoRecording"
-          },
-          {
-            "otherPhysicalDetails": "ljud, färg",
-            "@type": "Product",
-            "extent": "1 DVD-Video"
-          }
-        ],
-        "genre": [
-          {
-            "@id": "/topic/saogf/Thrillers%20%28film%29"
-          }
-        ],
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "instanceTitle": {
-          "@type": "Title",
-          "titleValue": "Runner runner"
+        "@id": "/def/enum/content/Videorecording"
+      }
+    ],
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/He.025%2FVC"
+      },
+      {
+        "@id": "/topic/kssb/8/Hcee.025%2FVC"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "@id": "/resource/bib/16254390",
+    "responsibilityStatement": "Regisserad av Brad Furman",
+    "hasFormat": [
+      {
+        "@id": "/some?type=VideoRecording"
+      },
+      {
+        "otherPhysicalDetails": "ljud, färg",
+        "@type": "Product",
+        "extent": "1 DVD-Video"
+      }
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/Thrillers%20%28film%29"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Runner runner"
+    },
+    "participantNote": [
+      "Skådespelare: Ben Affleck, Justin Timberlake, Gemma Arterton ..."
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/sici"
         },
-        "participantNote": [
-          "Skådespelare: Ben Affleck, Justin Timberlake, Gemma Arterton ..."
-        ],
-        "identifier": [
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/sici"
-            },
-            "@type": "Identifier",
-            "identifierValue": "FP10256483"
-          },
-          {
-            "identifierScheme": {
-              "@id": "/def/identifiers/upc"
-            },
-            "@type": "Identifier",
-            "identifierValue": "7340112706654"
-          }
-        ],
-        "influencedBy": [
-          {
-            "@id": "_:b-0"
-          }
-        ],
-        "@type": [
-          "ProjectedImage",
-          "Monograph"
-        ],
-        "publication": [
-          {
-            "@type": "ProviderEvent",
-            "providerName": "Monarchy enterprises",
-            "providerDate": "2014"
-          }
-        ]
+        "@type": "Identifier",
+        "identifierValue": "FP10256483"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/upc"
+        },
+        "@type": "Identifier",
+        "identifierValue": "7340112706654"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "@type": [
+      "ProjectedImage",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "@type": "ProviderEvent",
+        "providerName": "Monarchy enterprises",
+        "providerDate": "2014"
       }
     ]
-  }
+  },
+  "created": "2014-03-25T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "16254390",
+  "modified": "2014-03-25T11:35:38.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Thrillers (film)"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Gbg"
+  },
+  "@id": "/bib/16254390",
+  "@type": "Record"
 }

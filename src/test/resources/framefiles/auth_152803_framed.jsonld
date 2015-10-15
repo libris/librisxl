@@ -1,107 +1,59 @@
 {
-  "descriptions": {
-    "entry": {
-      "headingSeries": {
-        "@id": "/def/enum/content/NotAppropriate"
-      },
-      "language": [
-        {
-          "@id": "/def/languages/swe"
-        }
-      ],
-      "created": "2002-04-09T00:00:00.0+02:00",
-      "headingSubject": {
-        "@id": "/def/enum/content/Appropriate"
-      },
-      "inScheme": {
-        "@id": "/scheme/sao"
-      },
-      "encLevel": {
-        "@id": "/def/enum/record/CompleteAuthorityRecord"
-      },
-      "level": {
-        "@id": "/def/enum/content/FullyEstablishedHeading"
-      },
-      "focus": {
-        "@id": "/resource/auth/152803"
-      },
-      "controlNumber": "152803",
-      "modified": "2006-10-09T11:09:30.0+02:00",
-      "recordUpdate": {
-        "@id": "/def/enum/content/RecordCanBeUsed"
-      },
-      "sameAs": [
-        {
-          "@id": "/topic/sao/Lund"
-        }
-      ],
-      "closeMatch": [
-        {
-          "@id": "/topic/kssb/7/Ncbaz"
-        }
-      ],
-      "headingMain": {
-        "@id": "/def/enum/content/NotAppropriate"
-      },
-      "systemNumber": [
-        "(sao)28799"
-      ],
-      "kindOfRecord": {
-        "@id": "/def/enum/content/EstablishedHeadingRecord"
-      },
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=NB"
-      },
-      "@id": "/auth/152803",
-      "@type": "GeographicalTerm",
-      "prefLabel": "Lund"
-    },
-    "quoted": [
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=NB",
-          "@type": "Organization",
-          "name": "NB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/Ncbaz",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "Ncbaz"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/7",
-          "@type": "ConceptScheme",
-          "notation": "kssb/7"
-        }
-      }
-    ],
-    "items": [
-      {
-        "@id": "/resource/auth/152803",
-        "@type": [
-          "Authority"
-        ]
-      }
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2002-04-09T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "inScheme": {
+    "@id": "/scheme/sao"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "focus": {
+    "@id": "/resource/auth/152803",
+    "@type": [
+      "Authority"
     ]
-  }
+  },
+  "controlNumber": "152803",
+  "modified": "2006-10-09T11:09:30.0+02:00",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "sameAs": [
+    {
+      "@id": "/topic/sao/Lund"
+    }
+  ],
+  "closeMatch": [
+    {
+      "@id": "/topic/kssb/7/Ncbaz"
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "systemNumber": [
+    "(sao)28799"
+  ],
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/auth/152803",
+  "@type": "GeographicalTerm",
+  "prefLabel": "Lund"
 }

@@ -1,412 +1,181 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/8549011"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=SHB"
-        }
-      ],
-      "created": "2002-08-14T00:00:00.0+02:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "8549011",
-      "@type": "Record",
-      "catForm": {
-        "@id": "/def/enum/record/AACR2"
-      },
-      "_marcUncompleted": [
-        {
-          "610": {
-            "subfields": [
-              {
-                "a": "Bergskollegium"
-              }
-            ],
-            "ind1": "2",
-            "ind2": "4"
-          },
-          "_unhandled": [
-            "ind2"
-          ]
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Sociala nätverk"
-              },
-              {
-                "x": "historia"
-              },
-              {
-                "z": "Sverige"
-              },
-              {
-                "y": "1600-talet"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Släktskapsförhållanden"
-              },
-              {
-                "x": "historia"
-              },
-              {
-                "z": "Sverige"
-              },
-              {
-                "y": "1600-talet"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Adel"
-              },
-              {
-                "x": "historia"
-              },
-              {
-                "z": "Sverige"
-              },
-              {
-                "y": "1600-talet"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        }
-      ],
-      "modified": "2004-04-20T14:44:56.0+02:00",
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=SHB"
-      },
-      "@id": "/bib/8549011",
-      "linked": {
-        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
-      }
-    },
-    "quoted": [
+  "about": {
+    "language": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=SHB",
-          "@type": "Organization",
-          "name": "SHB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=SHB",
-          "@type": "Organization",
-          "notation": "SHB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/Ku-c.42",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "Ku-c.42"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/7",
-          "@type": "ConceptScheme",
-          "notation": "kssb/7"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/Ku-dd.42",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "Ku-dd.42"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/Pd-c%3Abf%20Bergskollegium",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "Pd-c:bf Bergskollegium"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1975",
-          "givenName": "Mirkka",
-          "familyName": "Lappalainen",
-          "@id": "/some?type=Person&familyName=Lappalainen&givenName=Mirkka&birthYear=1975",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=Bergskollegium",
-          "@type": "Organization",
-          "name": "Bergskollegium"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Sociala%20n%C3%A4tverk/historia/Sverige/1600-talet",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Sociala%20n%C3%A4tverk"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=historia"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1600-talet"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Sociala%20n%C3%A4tverk",
-          "@type": "TopicalTerm",
-          "prefLabel": "Sociala nätverk"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=historia",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "historia"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Sverige",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Sverige"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=ChronologicalTerm&prefLabel=1600-talet",
-          "@type": "ChronologicalTerm",
-          "prefLabel": "1600-talet"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Sl%C3%A4ktskapsf%C3%B6rh%C3%A5llanden/historia/Sverige/1600-talet",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Sl%C3%A4ktskapsf%C3%B6rh%C3%A5llanden"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=historia"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1600-talet"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Sl%C3%A4ktskapsf%C3%B6rh%C3%A5llanden",
-          "@type": "TopicalTerm",
-          "prefLabel": "Släktskapsförhållanden"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Adel/historia/Sverige/1600-talet",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Adel"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=historia"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1600-talet"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Adel",
-          "@type": "TopicalTerm",
-          "prefLabel": "Adel"
-        }
-      },
-      {
-        "@graph": {
-          "title": "Historisk tidskrift för Finland",
-          "scopeNote": [
-            "2002(87):2, s. [145]-172"
-          ],
-          "@type": "Aggregate",
-          "identifier": {
-            "@id": "/some?type=Identifier&identifierValue=0046-7596"
-          },
-          "@id": "/some?type=Aggregate&title=Historisk%20tidskrift%20f%C3%B6r%20Finland&scopeNote=2002%2887%29%3A2%2C%20s.%20%5B145%5D-172",
-          "describedBy": [
-            {
-              "@id": "/bib/3433106"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/issn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=0046-7596",
-          "@type": "Identifier",
-          "identifierValue": "0046-7596"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/3433106",
-          "@type": "Record",
-          "controlNumber": "3433106"
-        }
+        "@id": "/def/languages/swe"
       }
     ],
-    "items": [
+    "classification": [
       {
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "classification": [
-          {
-            "@id": "/topic/kssb/7/Ku-c.42"
-          },
-          {
-            "@id": "/topic/kssb/7/Ku-dd.42"
-          },
-          {
-            "@id": "/topic/kssb/7/Pd-c%3Abf%20Bergskollegium"
-          }
-        ],
-        "responsibilityStatement": "Mirkka Lappalainen",
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Lappalainen&givenName=Mirkka&birthYear=1975"
-        },
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/fi"
-          }
-        ],
-        "instanceTitle": {
-          "@type": "Title",
-          "titleValue": "Släkt och stånd i Bergskollegium före reduktionstiden"
-        },
-        "publication": [
-          {
-            "providerDate": "2002"
-          }
-        ],
-        "isPartOf": [
-          {
-            "@id": "/some?type=Aggregate&title=Historisk%20tidskrift%20f%C3%B6r%20Finland&scopeNote=2002%2887%29%3A2%2C%20s.%20%5B145%5D-172"
-          }
-        ],
-        "@id": "/resource/bib/8549011",
-        "@type": [
-          "Text",
-          "ComponentPart"
-        ],
-        "subject": [
-          {
-            "@id": "/some?type=Organization&name=Bergskollegium"
-          },
-          {
-            "@id": "/topic/sao/Sociala%20n%C3%A4tverk/historia/Sverige/1600-talet"
-          },
-          {
-            "@id": "/topic/sao/Sl%C3%A4ktskapsf%C3%B6rh%C3%A5llanden/historia/Sverige/1600-talet"
-          },
-          {
-            "@id": "/topic/sao/Adel/historia/Sverige/1600-talet"
-          }
-        ]
+        "@id": "/topic/kssb/7/Ku-c.42"
+      },
+      {
+        "@id": "/topic/kssb/7/Ku-dd.42"
+      },
+      {
+        "@id": "/topic/kssb/7/Pd-c%3Abf%20Bergskollegium"
+      }
+    ],
+    "responsibilityStatement": "Mirkka Lappalainen",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Lappalainen&givenName=Mirkka&birthYear=1975"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/fi"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Släkt och stånd i Bergskollegium före reduktionstiden"
+    },
+    "publication": [
+      {
+        "providerDate": "2002"
+      }
+    ],
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&title=Historisk%20tidskrift%20f%C3%B6r%20Finland&scopeNote=2002%2887%29%3A2%2C%20s.%20%5B145%5D-172"
+      }
+    ],
+    "@id": "/resource/bib/8549011",
+    "@type": [
+      "Text",
+      "ComponentPart"
+    ],
+    "subject": [
+      {
+        "@id": "/some?type=Organization&name=Bergskollegium"
+      },
+      {
+        "@id": "/topic/sao/Sociala%20n%C3%A4tverk/historia/Sverige/1600-talet"
+      },
+      {
+        "@id": "/topic/sao/Sl%C3%A4ktskapsf%C3%B6rh%C3%A5llanden/historia/Sverige/1600-talet"
+      },
+      {
+        "@id": "/topic/sao/Adel/historia/Sverige/1600-talet"
       }
     ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    }
+  ],
+  "created": "2002-08-14T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "8549011",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "610": {
+        "subfields": [
+          {
+            "a": "Bergskollegium"
+          }
+        ],
+        "ind1": "2",
+        "ind2": "4"
+      },
+      "_unhandled": [
+        "ind2"
+      ]
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Sociala nätverk"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "y": "1600-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Släktskapsförhållanden"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "y": "1600-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Adel"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "y": "1600-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modified": "2004-04-20T14:44:56.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SHB"
+  },
+  "@id": "/bib/8549011",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
   }
 }

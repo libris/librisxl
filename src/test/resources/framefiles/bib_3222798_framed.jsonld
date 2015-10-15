@@ -1,370 +1,166 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/3222798"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=SHB"
-        }
-      ],
-      "created": "2000-10-26T00:00:00.0+02:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "3222798",
-      "@type": "Record",
-      "librisIIINumber": [
-        "993375551X"
-      ],
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Skeppsbyggare"
-              },
-              {
-                "z": "Sverige"
-              },
-              {
-                "y": "1800-talet"
-              },
-              {
-                "v": "biografi"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "7"
-          ],
-          "773": {
-            "subfields": [
-              {
-                "7": "n  s"
-              },
-              {
-                "t": "Årsbok / Marinmuseum"
-              },
-              {
-                "d": "Karlskrona : Marinmuseum, 1999-"
-              },
-              {
-                "x": "ISSN 1404-0581"
-              },
-              {
-                "w": "8267693"
-              },
-              {
-                "g": "2000, s. 147-170 : ill."
-              },
-              {
-                "9": "2000"
-              },
-              {
-                "9": "147"
-              }
-            ],
-            "ind1": "0",
-            "ind2": " "
-          }
-        }
-      ],
-      "modified": "2004-01-27T13:55:38.0+01:00",
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=SHB"
-      },
-      "@id": "/bib/3222798",
-      "linked": {
-        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
-      }
+  "about": {
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
     },
-    "quoted": [
+    "classification": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=SHB",
-          "@type": "Organization",
-          "name": "SHB"
-        }
+        "@id": "/topic/kssb/6/Lz%20Carlsund%2C%20Otto%20Edvard"
       },
       {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
+        "@id": "/topic/kssb/6/Prca-c%3Ak.46"
       },
       {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=SHB",
-          "@type": "Organization",
-          "notation": "SHB"
-        }
+        "@id": "/topic/sab/Lz"
       },
       {
-        "@graph": {
-          "@id": "/topic/kssb/6/Lz%20Carlsund%2C%20Otto%20Edvard",
-          "inScheme": {
-            "@id": "/scheme/kssb/6"
-          },
-          "@type": "Concept",
-          "notation": "Lz Carlsund, Otto Edvard"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/6",
-          "@type": "ConceptScheme",
-          "notation": "kssb/6"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/6/Prca-c%3Ak.46",
-          "inScheme": {
-            "@id": "/scheme/kssb/6"
-          },
-          "@type": "Concept",
-          "notation": "Prca-c:k.46"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1924",
-          "givenName": "Nils",
-          "familyName": "Abrahamson",
-          "@id": "/some?type=Person&familyName=Abrahamson&givenName=Nils&birthYear=1924",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "deathYear": "1884",
-          "familyName": "Carlsund",
-          "birthYear": "1809",
-          "givenName": "Otto Edvard",
-          "@id": "/some?type=Person&familyName=Carlsund&givenName=Otto%20Edvard&birthYear=1809&deathYear=1884",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Skeppsbyggare/Sverige/1800-talet/biografi",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Skeppsbyggare"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1800-talet"
-            },
-            {
-              "@id": "/some?type=GenreTerm&prefLabel=biografi"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Skeppsbyggare",
-          "@type": "TopicalTerm",
-          "prefLabel": "Skeppsbyggare"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Sverige",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Sverige"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=ChronologicalTerm&prefLabel=1800-talet",
-          "@type": "ChronologicalTerm",
-          "prefLabel": "1800-talet"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GenreTerm&prefLabel=biografi",
-          "@type": "GenreTerm",
-          "prefLabel": "biografi"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "placePublisherAndDateOfPublication": "Karlskrona : Marinmuseum, 1999-",
-          "scopeNote": [
-            "2000, s. 147-170 : ill."
-          ],
-          "title": "Årsbok / Marinmuseum",
-          "@type": "Aggregate",
-          "partNumber": [
-            "2000",
-            "147"
-          ],
-          "identifier": {
-            "@id": "/some?type=Identifier&identifierValue=ISSN%201404-0581"
-          },
-          "@id": "/some?type=Aggregate&title=%C3%85rsbok%20%2F%20Marinmuseum&placePublisherAndDateOfPublication=Karlskrona%20%3A%20Marinmuseum%2C%201999-&scopeNote=2000%2C%20s.%20147-170%20%3A%20ill.&partNumber=147",
-          "describedBy": [
-            {
-              "@id": "/bib/8267693"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/issn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=ISSN%201404-0581",
-          "@type": "Identifier",
-          "identifierValue": "ISSN 1404-0581"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/8267693",
-          "@type": "Record",
-          "controlNumber": "8267693"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sab/Lz",
-          "inScheme": {
-            "@id": "/scheme/sab"
-          },
-          "@type": "Concept",
-          "notation": "Lz",
-          "prefLabel": "Biografi Genealogi"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sab",
-          "@type": "ConceptScheme",
-          "notation": "sab"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sab/Prca-c%3Ak.46",
-          "inScheme": {
-            "@id": "/scheme/sab"
-          },
-          "@type": "Concept",
-          "notation": "Prca-c:k.46",
-          "prefLabel": "Skeppsbyggeri Sverige Historia Nya Tiden"
-        }
+        "@id": "/topic/sab/Prca-c%3Ak.46"
       }
     ],
-    "items": [
+    "language": [
       {
-        "index": {
-          "@id": "/def/enum/content/NoIndex"
-        },
-        "classification": [
-          {
-            "@id": "/topic/kssb/6/Lz%20Carlsund%2C%20Otto%20Edvard"
-          },
-          {
-            "@id": "/topic/kssb/6/Prca-c%3Ak.46"
-          },
-          {
-            "@id": "/topic/sab/Lz"
-          },
-          {
-            "@id": "/topic/sab/Prca-c%3Ak.46"
-          }
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
-        },
-        "@id": "/resource/bib/3222798",
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Abrahamson&givenName=Nils&birthYear=1924"
-        },
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "instanceTitle": {
-          "searchElement": false,
-          "subtitle": "skeppsbyggmästare, maskinkonstruktör och industriledare",
-          "@type": "Title",
-          "titleValue": "Otto Edvard Carlsund"
-        },
-        "publication": [
-          {
-            "providerDate": "2000"
-          }
-        ],
-        "literaryForm": {
-          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
-        },
-        "isPartOf": [
-          {
-            "@id": "/some?type=Aggregate&title=%C3%85rsbok%20%2F%20Marinmuseum&placePublisherAndDateOfPublication=Karlskrona%20%3A%20Marinmuseum%2C%201999-&scopeNote=2000%2C%20s.%20147-170%20%3A%20ill.&partNumber=147"
-          }
-        ],
-        "hasSummaryLanguage": {
-          "@id": "/some"
-        },
-        "@type": [
-          "Text",
-          "ComponentPart"
-        ],
-        "languageNote": [
-          "Summary: Otto Edvard Carlsund : master shipwright, engineer and industrialist"
-        ],
-        "subject": [
-          {
-            "@id": "/some?type=Person&familyName=Carlsund&givenName=Otto%20Edvard&birthYear=1809&deathYear=1884"
-          },
-          {
-            "@id": "/topic/sao/Skeppsbyggare/Sverige/1800-talet/biografi"
-          }
-        ]
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "@id": "/resource/bib/3222798",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Abrahamson&givenName=Nils&birthYear=1924"
+    },
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "subtitle": "skeppsbyggmästare, maskinkonstruktör och industriledare",
+      "@type": "Title",
+      "titleValue": "Otto Edvard Carlsund"
+    },
+    "publication": [
+      {
+        "providerDate": "2000"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&title=%C3%85rsbok%20%2F%20Marinmuseum&placePublisherAndDateOfPublication=Karlskrona%20%3A%20Marinmuseum%2C%201999-&scopeNote=2000%2C%20s.%20147-170%20%3A%20ill.&partNumber=147"
+      }
+    ],
+    "hasSummaryLanguage": {
+      "@id": "/some"
+    },
+    "@type": [
+      "Text",
+      "ComponentPart"
+    ],
+    "languageNote": [
+      "Summary: Otto Edvard Carlsund : master shipwright, engineer and industrialist"
+    ],
+    "subject": [
+      {
+        "@id": "/some?type=Person&familyName=Carlsund&givenName=Otto%20Edvard&birthYear=1809&deathYear=1884"
+      },
+      {
+        "@id": "/topic/sao/Skeppsbyggare/Sverige/1800-talet/biografi"
       }
     ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    }
+  ],
+  "created": "2000-10-26T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "3222798",
+  "@type": "Record",
+  "librisIIINumber": [
+    "993375551X"
+  ],
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Skeppsbyggare"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "y": "1800-talet"
+          },
+          {
+            "v": "biografi"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "7"
+      ],
+      "773": {
+        "subfields": [
+          {
+            "7": "n  s"
+          },
+          {
+            "t": "Årsbok / Marinmuseum"
+          },
+          {
+            "d": "Karlskrona : Marinmuseum, 1999-"
+          },
+          {
+            "x": "ISSN 1404-0581"
+          },
+          {
+            "w": "8267693"
+          },
+          {
+            "g": "2000, s. 147-170 : ill."
+          },
+          {
+            "9": "2000"
+          },
+          {
+            "9": "147"
+          }
+        ],
+        "ind1": "0",
+        "ind2": " "
+      }
+    }
+  ],
+  "modified": "2004-01-27T13:55:38.0+01:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SHB"
+  },
+  "@id": "/bib/3222798",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
   }
 }

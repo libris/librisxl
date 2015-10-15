@@ -1,95 +1,65 @@
 {
-  "descriptions": {
-    "entry": {
-      "headingSeries": {
-        "@id": "/def/enum/content/NotAppropriate"
-      },
-      "language": [
-        {
-          "@id": "/def/languages/nor"
-        }
-      ],
-      "created": "2003-10-29T00:00:00.0+01:00",
-      "headingSubject": {
-        "@id": "/def/enum/content/Appropriate"
-      },
-      "encLevel": {
-        "@id": "/def/enum/record/CompleteAuthorityRecord"
-      },
-      "level": {
-        "@id": "/def/enum/content/FullyEstablishedHeading"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/OtherSource"
-      },
-      "controlNumber": "225964",
-      "modified": "2015-01-28T12:31:38.0+01:00",
-      "personalName": {
-        "@id": "/def/enum/content/DifferentiatedPersonalName"
-      },
-      "recordUpdate": {
-        "@id": "/def/enum/content/RecordCanBeUsed"
-      },
-      "source": [
-        {
-          "citation": "t.p. (Karin Fossum)",
-          "@type": "CreativeWork",
-          "label": "Fossum, Karin. Jonas Eckel, 2003:"
-        }
-      ],
-      "catalogingRules": {
-        "@id": "/def/enum/content/Aacr2"
-      },
-      "headingMain": {
-        "@id": "/def/enum/content/Appropriate"
-      },
-      "focus": {
-        "@id": "/resource/auth/225964"
-      },
-      "kindOfRecord": {
-        "@id": "/def/enum/content/EstablishedHeadingRecord"
-      },
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=Li"
-      },
-      "@id": "/auth/225964",
-      "@type": "PersonTerm"
-    },
-    "quoted": [
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=Li",
-          "@type": "Organization",
-          "name": "Li"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/nor",
-          "notation": "nor"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/nationalities/e-no---",
-          "notation": "e-no---"
-        }
-      }
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/nor"
+    }
+  ],
+  "created": "2003-10-29T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/OtherSource"
+  },
+  "controlNumber": "225964",
+  "modified": "2015-01-28T12:31:38.0+01:00",
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "source": [
+    {
+      "citation": "t.p. (Karin Fossum)",
+      "@type": "CreativeWork",
+      "label": "Fossum, Karin. Jonas Eckel, 2003:"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "focus": {
+    "familyName": "Fossum",
+    "note": [
+      "Norsk deckarförfattare"
     ],
-    "items": [
-      {
-        "familyName": "Fossum",
-        "note": [
-          "Norsk deckarförfattare"
-        ],
-        "birthYear": "1954",
-        "nationality": {
-          "@id": "/def/nationalities/e-no---"
-        },
-        "givenName": "Karin",
-        "@id": "/resource/auth/225964",
-        "@type": "Person"
-      }
-    ]
-  }
+    "birthYear": "1954",
+    "nationality": {
+      "@id": "/def/nationalities/e-no---"
+    },
+    "givenName": "Karin",
+    "@id": "/resource/auth/225964",
+    "@type": "Person"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Li"
+  },
+  "@id": "/auth/225964",
+  "@type": "PersonTerm"
 }

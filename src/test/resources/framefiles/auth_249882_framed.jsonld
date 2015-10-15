@@ -1,220 +1,91 @@
 {
-  "descriptions": {
-    "entry": {
-      "sameAs": [
-        {
-          "@id": "/topic/sao/Tsunamier"
-        }
-      ],
-      "narrower": [
-        {
-          "@id": "/topic/sao/Flodv%C3%A5gskatastrofen%202004"
-        },
-        {
-          "@id": "/topic/sao/Jordb%C3%A4vningen%20i%20Japan%202011"
-        }
-      ],
-      "focus": {
-        "@id": "/resource/auth/249882"
-      },
-      "modified": "2014-05-12T14:15:11.0+02:00",
-      "closeMatch": [
-        {
-          "@id": "/topic/kssb/7/Ubbad"
-        },
-        {
-          "@id": "http://dewey.info/class/551.4637/e23/"
-        },
-        {
-          "@id": "/topic/lcsh/Tsunamis"
-        }
-      ],
-      "broader": [
-        {
-          "@id": "/topic/sao/Havsv%C3%A5gor"
-        },
-        {
-          "@id": "/topic/sao/Naturkatastrofer"
-        }
-      ],
-      "inScheme": {
-        "@id": "/scheme/sao"
-      },
-      "prefLabel": "Tsunamier",
-      "headingSeries": {
-        "@id": "/def/enum/content/NotAppropriate"
-      },
-      "encLevel": {
-        "@id": "/def/enum/record/CompleteAuthorityRecord"
-      },
-      "headingMain": {
-        "@id": "/def/enum/content/NotAppropriate"
-      },
-      "altLabel": [
-        "Jätteflodvågor",
-        "Tsunamis",
-        "Tsunamivågor"
-      ],
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=NB"
-      },
-      "inCollection": [
-        {
-          "@id": "/some?type=TermCollection&notation=Fack"
-        },
-        {
-          "@id": "/some?type=TermCollection&notation=Skon"
-        }
-      ],
-      "@id": "/auth/249882",
-      "language": [
-        {
-          "@id": "/def/languages/swe"
-        }
-      ],
-      "created": "2005-02-01T00:00:00.0+01:00",
-      "headingSubject": {
-        "@id": "/def/enum/content/Appropriate"
-      },
-      "level": {
-        "@id": "/def/enum/content/FullyEstablishedHeading"
-      },
-      "controlNumber": "249882",
-      "recordUpdate": {
-        "@id": "/def/enum/content/RecordCanBeUsed"
-      },
-      "kindOfRecord": {
-        "@id": "/def/enum/content/EstablishedHeadingRecord"
-      },
-      "@type": "TopicalTerm"
+  "sameAs": [
+    {
+      "@id": "/topic/sao/Tsunamier"
+    }
+  ],
+  "narrower": [
+    {
+      "@id": "/topic/sao/Flodv%C3%A5gskatastrofen%202004"
     },
-    "quoted": [
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&name=NB",
-          "@type": "Organization",
-          "name": "NB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TermCollection&notation=Fack",
-          "@type": "TermCollection",
-          "notation": "Fack"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TermCollection&notation=Skon",
-          "@type": "TermCollection",
-          "notation": "Skon"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/7/Ubbad",
-          "inScheme": {
-            "@id": "/scheme/kssb/7"
-          },
-          "@type": "Concept",
-          "notation": "Ubbad"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/7",
-          "@type": "ConceptScheme",
-          "notation": "kssb/7"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "http://dewey.info/class/551.4637/e23/",
-          "inScheme": {
-            "@id": "http://dewey.info/scheme/edition/e23/swe/"
-          },
-          "@type": "Concept",
-          "notation": "551.4637"
-        }
-      },
-      {
-        "@graph": {
-          "language": "swe",
-          "notation": "DDC",
-          "@id": "http://dewey.info/scheme/edition/e23/swe/",
-          "version": "23",
-          "isVersionOf": {
-            "@id": "http://dewey.info/scheme/ddc/"
-          },
-          "@type": "ConceptScheme"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Havsv%C3%A5gor",
-          "@type": "TopicalTerm",
-          "prefLabel": "Havsvågor"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Naturkatastrofer",
-          "@type": "TopicalTerm",
-          "prefLabel": "Naturkatastrofer"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Flodv%C3%A5gskatastrofen%202004",
-          "@type": "TopicalTerm",
-          "prefLabel": "Flodvågskatastrofen 2004"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Jordb%C3%A4vningen%20i%20Japan%202011",
-          "@type": "TopicalTerm",
-          "prefLabel": "Jordbävningen i Japan 2011"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/lcsh/Tsunamis",
-          "inScheme": {
-            "@id": "/scheme/lcsh"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Tsunamis"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/lcsh",
-          "@type": "ConceptScheme",
-          "notation": "lcsh"
-        }
-      }
-    ],
-    "items": [
-      {
-        "@id": "/resource/auth/249882",
-        "@type": [
-          "Authority"
-        ]
-      }
+    {
+      "@id": "/topic/sao/Jordb%C3%A4vningen%20i%20Japan%202011"
+    }
+  ],
+  "focus": {
+    "@id": "/resource/auth/249882",
+    "@type": [
+      "Authority"
     ]
-  }
+  },
+  "modified": "2014-05-12T14:15:11.0+02:00",
+  "closeMatch": [
+    {
+      "@id": "/topic/kssb/7/Ubbad"
+    },
+    {
+      "@id": "http://dewey.info/class/551.4637/e23/"
+    },
+    {
+      "@id": "/topic/lcsh/Tsunamis"
+    }
+  ],
+  "broader": [
+    {
+      "@id": "/topic/sao/Havsv%C3%A5gor"
+    },
+    {
+      "@id": "/topic/sao/Naturkatastrofer"
+    }
+  ],
+  "inScheme": {
+    "@id": "/scheme/sao"
+  },
+  "prefLabel": "Tsunamier",
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "altLabel": [
+    "Jätteflodvågor",
+    "Tsunamis",
+    "Tsunamivågor"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "inCollection": [
+    {
+      "@id": "/some?type=TermCollection&notation=Fack"
+    },
+    {
+      "@id": "/some?type=TermCollection&notation=Skon"
+    }
+  ],
+  "@id": "/auth/249882",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2005-02-01T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "249882",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "TopicalTerm"
 }

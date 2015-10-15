@@ -1,468 +1,206 @@
 {
-  "descriptions": {
-    "entry": {
-      "about": {
-        "@id": "/resource/bib/2317684"
-      },
-      "bibliography": [
-        {
-          "@id": "/some?type=Organization&notation=SHB"
-        },
-        {
-          "@id": "/some?type=Organization&notation=SKvB"
-        }
-      ],
-      "created": "1997-08-05T00:00:00.0+02:00",
-      "encLevel": {
-        "@id": "/def/enum/record/MinimalLevel"
-      },
-      "catalogingSource": {
-        "@id": "/def/enum/content/CooperativeCatalogingProgram"
-      },
-      "controlNumber": "2317684",
-      "@type": "Record",
-      "librisIIINumber": [
-        "9924438337"
-      ],
-      "_marcUncompleted": [
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Trädgårdskonst"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Trädgårdar"
-              },
-              {
-                "x": "landskapsarkitektur"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "650": {
-            "subfields": [
-              {
-                "a": "Malmgårdar"
-              },
-              {
-                "z": "Sverige"
-              },
-              {
-                "z": "Stockholm"
-              },
-              {
-                "y": "1600-talet"
-              },
-              {
-                "y": "1700-talet"
-              },
-              {
-                "2": "sao"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "7"
-          }
-        },
-        {
-          "_unhandled": [
-            "ind2"
-          ],
-          "651": {
-            "subfields": [
-              {
-                "a": "Stockholm"
-              },
-              {
-                "x": "Kungsholmen"
-              }
-            ],
-            "ind1": " ",
-            "ind2": "4"
-          }
-        }
-      ],
-      "modified": "2006-05-05T10:19:36.0+02:00",
-      "originalCatalogingAgency": {
-        "@id": "/some?type=Organization&name=SKvB"
-      },
-      "@id": "/bib/2317684",
-      "linked": {
-        "@id": "/def/enum/record/RecordHasLinks-Obsolete"
-      }
+  "about": {
+    "@id": "/resource/bib/2317684",
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
     },
-    "quoted": [
+    "classification": [
       {
-        "@graph": {
-          "@id": "/some?type=Organization&name=SKvB",
-          "@type": "Organization",
-          "name": "SKvB"
-        }
+        "@id": "/topic/kssb/6/Icu-cz%20Stockholm"
       },
       {
-        "@graph": {
-          "@id": "/def/languages/swe",
-          "notation": "swe"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=SHB",
-          "@type": "Organization",
-          "notation": "SHB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=Organization&notation=SKvB",
-          "@type": "Organization",
-          "notation": "SKvB"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/kssb/6/Icu-cz%20Stockholm",
-          "inScheme": {
-            "@id": "/scheme/kssb/6"
-          },
-          "@type": "Concept",
-          "notation": "Icu-cz Stockholm"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/kssb/6",
-          "@type": "ConceptScheme",
-          "notation": "kssb/6"
-        }
-      },
-      {
-        "@graph": {
-          "givenName": "Maria",
-          "familyName": "Holmlund",
-          "@id": "/some?type=Person&familyName=Holmlund&givenName=Maria",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Tr%C3%A4dg%C3%A5rdskonst",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "prefLabel": "Trädgårdskonst"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sao",
-          "@type": "ConceptScheme",
-          "notation": "sao"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Tr%C3%A4dg%C3%A5rdar/landskapsarkitektur",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Tr%C3%A4dg%C3%A5rdar"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=landskapsarkitektur"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Tr%C3%A4dg%C3%A5rdar",
-          "@type": "TopicalTerm",
-          "prefLabel": "Trädgårdar"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=landskapsarkitektur",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "landskapsarkitektur"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sao/Malmg%C3%A5rdar/Sverige/Stockholm/1600-talet/1700-talet",
-          "inScheme": {
-            "@id": "/scheme/sao"
-          },
-          "@type": "TopicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Malmg%C3%A5rdar"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Sverige"
-            },
-            {
-              "@id": "/some?type=GeographicalTerm&prefLabel=Stockholm"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1600-talet"
-            },
-            {
-              "@id": "/some?type=ChronologicalTerm&prefLabel=1700-talet"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Malmg%C3%A5rdar",
-          "@type": "TopicalTerm",
-          "prefLabel": "Malmgårdar"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Sverige",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Sverige"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=GeographicalTerm&prefLabel=Stockholm",
-          "@type": "GeographicalTerm",
-          "prefLabel": "Stockholm"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=ChronologicalTerm&prefLabel=1600-talet",
-          "@type": "ChronologicalTerm",
-          "prefLabel": "1600-talet"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=ChronologicalTerm&prefLabel=1700-talet",
-          "@type": "ChronologicalTerm",
-          "prefLabel": "1700-talet"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/_/Stockholm/Kungsholmen",
-          "@type": "GeographicalTerm",
-          "broader": [
-            {
-              "@id": "/some?type=TopicalTerm&prefLabel=Stockholm"
-            },
-            {
-              "@id": "/some?type=SubdivisionTerm&prefLabel=Kungsholmen"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=TopicalTerm&prefLabel=Stockholm",
-          "@type": "TopicalTerm",
-          "prefLabel": "Stockholm"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/some?type=SubdivisionTerm&prefLabel=Kungsholmen",
-          "@type": "SubdivisionTerm",
-          "prefLabel": "Kungsholmen"
-        }
-      },
-      {
-        "@graph": {
-          "birthYear": "1973",
-          "givenName": "Elin",
-          "familyName": "Manker",
-          "@id": "/some?type=Person&familyName=Manker&givenName=Elin&birthYear=1973",
-          "@type": "Person"
-        }
-      },
-      {
-        "@graph": {
-          "title": "Bebyggelsehistorisk tidskrift",
-          "scopeNote": [
-            "1996(31/32), s. 57-74 : ill."
-          ],
-          "@type": "Aggregate",
-          "identifier": {
-            "@id": "/some?type=Identifier&identifierValue=0349-2834"
-          },
-          "@id": "/some?type=Aggregate&title=Bebyggelsehistorisk%20tidskrift&scopeNote=1996%2831%2F32%29%2C%20s.%2057-74%20%3A%20ill.",
-          "describedBy": [
-            {
-              "@id": "/bib/8261807"
-            }
-          ]
-        }
-      },
-      {
-        "@graph": {
-          "identifierScheme": {
-            "@id": "/def/identifiers/issn"
-          },
-          "@id": "/some?type=Identifier&identifierValue=0349-2834",
-          "@type": "Identifier",
-          "identifierValue": "0349-2834"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/bib/8261807",
-          "@type": "Record",
-          "controlNumber": "8261807"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/topic/sab/Icu-cz",
-          "inScheme": {
-            "@id": "/scheme/sab"
-          },
-          "@type": "Concept",
-          "notation": "Icu-cz",
-          "prefLabel": "Arkitektur Landskapsarkitektur Sverige"
-        }
-      },
-      {
-        "@graph": {
-          "@id": "/scheme/sab",
-          "@type": "ConceptScheme",
-          "notation": "sab"
-        }
+        "@id": "/topic/sab/Icu-cz"
       }
     ],
-    "items": [
+    "listOfContents": [
+      "Behandlar den Gripenhielmska trädgården och den Piperska trädgården på Kungsholmen i Stockholm"
+    ],
+    "language": [
       {
-        "@id": "/resource/bib/2317684",
-        "index": {
-          "@id": "/def/enum/content/NoIndex"
-        },
-        "classification": [
-          {
-            "@id": "/topic/kssb/6/Icu-cz%20Stockholm"
-          },
-          {
-            "@id": "/topic/sab/Icu-cz"
-          }
-        ],
-        "listOfContents": [
-          "Behandlar den Gripenhielmska trädgården och den Piperska trädgården på Kungsholmen i Stockholm"
-        ],
-        "language": [
-          {
-            "@id": "/def/languages/swe"
-          }
-        ],
-        "festschrift": {
-          "@id": "/def/enum/content/NotAFestschrift"
-        },
-        "influencedBy": [
-          {
-            "@id": "/some?type=Person&familyName=Manker&givenName=Elin&birthYear=1973"
-          }
-        ],
-        "series": [
-          {
-            "@type": "Serial",
-            "title": "Trädgårdar och parker : historia, dagsläge"
-          }
-        ],
-        "responsibilityStatement": "av Maria Holmlund och Elin Manker",
-        "attributedTo": {
-          "@id": "/some?type=Person&familyName=Holmlund&givenName=Maria"
-        },
-        "confPub": {
-          "@id": "/def/enum/content/NotAConferencePublication"
-        },
-        "publicationCountry": [
-          {
-            "@id": "/def/countries/sw"
-          }
-        ],
-        "instanceTitle": {
-          "searchElement": false,
-          "subtitle": "en studie av två malmgårdsträdgårdar",
-          "@type": "Title",
-          "titleValue": "\"Det i flor stående Stockholm\""
-        },
-        "publication": [
-          {
-            "providerDate": "1996"
-          }
-        ],
-        "literaryForm": {
-          "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
-        },
-        "isPartOf": [
-          {
-            "@id": "/some?type=Aggregate&title=Bebyggelsehistorisk%20tidskrift&scopeNote=1996%2831%2F32%29%2C%20s.%2057-74%20%3A%20ill."
-          }
-        ],
-        "hasSummaryLanguage": {
-          "@id": "/some"
-        },
-        "@type": [
-          "Text",
-          "ComponentPart"
-        ],
-        "languageNote": [
-          "Summary: \"Stockholm in blossom\" : a study of two \"malmgård\" gardens"
-        ],
-        "subject": [
-          {
-            "@id": "/topic/sao/Tr%C3%A4dg%C3%A5rdskonst"
-          },
-          {
-            "@id": "/topic/sao/Tr%C3%A4dg%C3%A5rdar/landskapsarkitektur"
-          },
-          {
-            "@id": "/topic/sao/Malmg%C3%A5rdar/Sverige/Stockholm/1600-talet/1700-talet"
-          },
-          {
-            "@id": "/topic/_/Stockholm/Kungsholmen"
-          }
-        ]
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "influencedBy": [
+      {
+        "@id": "/some?type=Person&familyName=Manker&givenName=Elin&birthYear=1973"
+      }
+    ],
+    "series": [
+      {
+        "@type": "Serial",
+        "title": "Trädgårdar och parker : historia, dagsläge"
+      }
+    ],
+    "responsibilityStatement": "av Maria Holmlund och Elin Manker",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Holmlund&givenName=Maria"
+    },
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "subtitle": "en studie av två malmgårdsträdgårdar",
+      "@type": "Title",
+      "titleValue": "\"Det i flor stående Stockholm\""
+    },
+    "publication": [
+      {
+        "providerDate": "1996"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&title=Bebyggelsehistorisk%20tidskrift&scopeNote=1996%2831%2F32%29%2C%20s.%2057-74%20%3A%20ill."
+      }
+    ],
+    "hasSummaryLanguage": {
+      "@id": "/some"
+    },
+    "@type": [
+      "Text",
+      "ComponentPart"
+    ],
+    "languageNote": [
+      "Summary: \"Stockholm in blossom\" : a study of two \"malmgård\" gardens"
+    ],
+    "subject": [
+      {
+        "@id": "/topic/sao/Tr%C3%A4dg%C3%A5rdskonst"
+      },
+      {
+        "@id": "/topic/sao/Tr%C3%A4dg%C3%A5rdar/landskapsarkitektur"
+      },
+      {
+        "@id": "/topic/sao/Malmg%C3%A5rdar/Sverige/Stockholm/1600-talet/1700-talet"
+      },
+      {
+        "@id": "/topic/_/Stockholm/Kungsholmen"
       }
     ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SKvB"
+    }
+  ],
+  "created": "1997-08-05T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "2317684",
+  "@type": "Record",
+  "librisIIINumber": [
+    "9924438337"
+  ],
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Trädgårdskonst"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Trädgårdar"
+          },
+          {
+            "x": "landskapsarkitektur"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Malmgårdar"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "z": "Stockholm"
+          },
+          {
+            "y": "1600-talet"
+          },
+          {
+            "y": "1700-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "651": {
+        "subfields": [
+          {
+            "a": "Stockholm"
+          },
+          {
+            "x": "Kungsholmen"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    }
+  ],
+  "modified": "2006-05-05T10:19:36.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SKvB"
+  },
+  "@id": "/bib/2317684",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
   }
 }
