@@ -16,6 +16,7 @@ class Document {
     static final String DATASET_KEY = "dataset";
     static final String CONTENT_TYPE_KEY = "contentType";
     static final String CHECKUM_KEY = "checksum";
+    static final String NON_JSON_CONTENT_KEY = "content"
 
     @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()
@@ -103,6 +104,8 @@ class Document {
         return mapper.writeValueAsString(data)
     }
 
+    Map getData() { data }
+
     @JsonIgnore
     String getDataset() { manifest[DATASET_KEY] }
 
@@ -169,5 +172,11 @@ class Document {
         return this
     }
 
-    boolean isJson() { true }
+    static boolean isJson(String ct) {
+        ct ==~ /application\/(\w+\+)*json/ || ct ==~ /application\/x-(\w+)-json/
+    }
+
+    boolean isJson() {
+        return isJson(getContentType())
+    }
 }
