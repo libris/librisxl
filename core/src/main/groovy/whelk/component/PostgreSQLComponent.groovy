@@ -285,10 +285,11 @@ class PostgreSQLComponent implements Storage {
                 log.trace("New place to look: $identifier")
             }
             log.debug("Checking if new identifier (${identifier}) has something to get")
-            if (load(identifier, null, [], false)) {
+            //if (load(identifier, null, [], false)) {
+            def docStatus = status(identifier)
+            if (docStatus.exists && !docStatus.deleted) {
                 return new Location().withURI(new URI(identifier)).withResponseCode(303)
             }
-
             log.debug("Check alternate identifiers.")
             doc = loadByAlternateIdentifier(uri)
             if (doc) {
@@ -480,7 +481,7 @@ class PostgreSQLComponent implements Storage {
     void remove(String identifier, String dataset) {
         if (versioning) {
             log.debug("Creating tombstone record with id ${identifier}")
-            store(createTombstone(identifier, dataset), false)
+            store(createTombstone(identifier, dataset))
         } else {
             Connection connection = getConnection()
             PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)

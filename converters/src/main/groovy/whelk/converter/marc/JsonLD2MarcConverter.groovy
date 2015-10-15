@@ -1,8 +1,10 @@
-package whelk.converter
+package whelk.converter.marc
 
 import groovy.util.logging.Slf4j as Log
-
+import org.codehaus.jackson.map.ObjectMapper
 import whelk.*
+import whelk.converter.FormatConverter
+import whelk.converter.URIMinter
 import whelk.converter.marc.MarcConversion
 
 @Log
@@ -10,6 +12,8 @@ class JsonLD2MarcConverter implements FormatConverter {
 
     URIMinter uriMinter
     protected MarcConversion conversion
+    final static ObjectMapper mapper = new ObjectMapper()
+
 
     @Override
     String getResultContentType() { "application/x-marc-json" }
@@ -40,12 +44,10 @@ class JsonLD2MarcConverter implements FormatConverter {
         conversion = new MarcConversion(config, uriMinter, tokenMaps)
     }
 
-    @Override
     Document convert(final Document doc) {
         def source = doc.data
         def result = conversion.revert(source)
         log.trace("Created frame: $result")
-
-        return whelk.createDocument("application/x-marc-json").withIdentifier(doc.identifier).withData(mapper.writeValueAsBytes(result)).withEntry(doc.entry).withMeta(doc.meta)
+        return new Document(doc.identifier, result, doc.manifest).withContentType(getResultContentType())
     }
 }

@@ -19,6 +19,10 @@ class HttpTools {
         }
     }
 
+    static void sendResponse(HttpServletResponse response, String data, String contentType, int statusCode = 200) {
+        sendResponse(response, data.getBytes("UTF-8"), contentType, statusCode)
+    }
+
     static void sendResponse(HttpServletResponse response, byte[] data, String contentType, int statusCode = 200) {
         response.setStatus(statusCode)
         if (contentType) {

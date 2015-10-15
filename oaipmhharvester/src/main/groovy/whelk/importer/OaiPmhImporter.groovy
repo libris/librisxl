@@ -399,6 +399,11 @@ class OaiPmhImporter {
     }
 
     private void getAuthentication() {
+        if (username && password) {
+            log.debug("Setting username (${username}) and password (${password})")
+        } else {
+            log.debug("Not setting username/password")
+        }
         try {
             Authenticator.setDefault(new Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
