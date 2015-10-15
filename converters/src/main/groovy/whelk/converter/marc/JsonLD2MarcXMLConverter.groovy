@@ -4,7 +4,7 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.util.marc.MarcRecord
 import whelk.Document
-
+import whelk.JsonLd
 import whelk.converter.FormatConverter
 import whelk.converter.JSONMarcConverter
 
@@ -23,9 +23,11 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
 
         assert (doc instanceof  Document)
 
-        Document jsonDocument = jsonldConverter.convert(doc)
+        doc.withData(JsonLd.frame(doc.id, doc.data))
 
-        MarcRecord record = JSONMarcConverter.fromJson(jsonDocument.getDataAsString())
+        Document marcJsonDocument = jsonldConverter.convert(doc)
+
+        MarcRecord record = JSONMarcConverter.fromJson(marcJsonDocument.getDataAsString())
 
         log.debug("Setting document identifier in field 887.")
         boolean has887Field = false
