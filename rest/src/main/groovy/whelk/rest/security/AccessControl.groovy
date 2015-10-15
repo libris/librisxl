@@ -2,13 +2,14 @@ package whelk.rest.security
 import groovy.util.logging.Slf4j as Log
 
 import whelk.Document
+import whelk.JsonLd
 
 @Log
 class AccessControl {
 
     boolean checkDocument(Document newdoc, Document olddoc, Map userPrivileges) {
         if (newdoc?.dataset == "hold") {
-            def sigel = newdoc.dataAsMap.about.heldBy.notation
+            def sigel = JsonLd.frame(newdoc.id, newdoc.data).about.heldBy.notation
             log.debug("User tries to change a holding for sigel ${sigel}.")
 
             def privs = userPrivileges.authorization.find { it.sigel == sigel }
@@ -18,16 +19,17 @@ class AccessControl {
                 log.debug("User does not have sufficient privileges.")
                 return false
             }
-
-            def currentSigel = olddoc?.dataAsMap?.about?.heldBy?.notation
-            if (currentSigel) {
-                log.trace("Checking sigel privs for existing document.")
-                privs = userPrivileges.authorization.find { it.sigel == currentSigel }
-                log.trace("User has these privs for current sigel ${sigel}: $privs")
-                //if (!privs?.reg && !privs?.kat) {
-                if (!privs?.xlreg) {
-                    log.debug("User does NOT have enough privileges.")
-                    return false
+            if (olddoc) {
+                def currentSigel = JsonLd.frame(olddoc.id, olddoc.data).about.heldBy.notation
+                if (currentSigel) {
+                    log.trace("Checking sigel privs for existing document.")
+                    privs = userPrivileges.authorization.find { it.sigel == currentSigel }
+                    log.trace("User has these privs for current sigel ${sigel}: $privs")
+                    //if (!privs?.reg && !privs?.kat) {
+                    if (!privs?.xlreg) {
+                        log.debug("User does NOT have enough privileges.")
+                        return false
+                    }
                 }
             }
         } else {
@@ -36,7 +38,7 @@ class AccessControl {
         }
 
         if (newdoc) {
-            newdoc.entry.lastChangeBy = userPrivileges.username
+            newdoc.manifest.lastChangeBy = userPrivileges.username
         }
         log.debug("User is authorized to make the change.")
         return true

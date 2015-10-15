@@ -4,10 +4,9 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.util.marc.MarcRecord
 import whelk.Document
-import whelk.GenericDataDocument
+
 import whelk.converter.FormatConverter
 import whelk.converter.JSONMarcConverter
-import whelk.converter.marc.JsonLD2MarcConverter
 
 @Log
 class JsonLD2MarcXMLConverter implements FormatConverter {
@@ -44,7 +43,7 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
             record.addField(df)
         }
 
-        Document xmlDocument = new GenericDataDocument(doc.id, whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record), doc.manifest)
+        Document xmlDocument = new Document(doc.id, [(Document.NON_JSON_CONTENT_KEY): whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record)], doc.manifest).withContentType(getResultContentType())
 
         log.debug("Document ${xmlDocument.identifier} created successfully with entry: ${xmlDocument.manifest}")
         return xmlDocument

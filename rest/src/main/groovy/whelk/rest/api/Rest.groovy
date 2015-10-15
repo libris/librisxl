@@ -1,6 +1,8 @@
 package whelk.rest.api
 
 import groovy.util.logging.Slf4j as Log
+import org.apache.http.entity.ContentType
+import org.codehaus.jackson.map.ObjectMapper
 import org.picocontainer.Characteristics
 import org.picocontainer.DefaultPicoContainer
 import org.picocontainer.PicoContainer
@@ -14,8 +16,11 @@ import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
 import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.JsonLD2MarcXMLConverter
+import whelk.exception.DocumentException
+import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
 import whelk.filter.JsonLdLinkExpander
+import whelk.rest.security.AccessControl
 
 import javax.activation.MimetypesFileTypeMap
 import javax.servlet.http.HttpServlet
@@ -33,7 +38,11 @@ import static whelk.rest.api.HttpTools.getMajorContentType
 @Log
 class Rest extends HttpServlet {
 
+    final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
+    final static String DOCBASE_URI = "http://libris.kb.se/"
+
     MimetypesFileTypeMap mimeTypes = new MimetypesFileTypeMap()
+
     final static Map contextHeaders = [
             "bib": "/sys/context/lib.jsonld",
             "auth": "/sys/context/lib.jsonld",
@@ -41,6 +50,8 @@ class Rest extends HttpServlet {
     ]
     Whelk whelk
     PicoContainer pico
+    static final ObjectMapper mapper = new ObjectMapper()
+    AccessControl accessControl = new AccessControl()
 
     Rest() {
         super()
@@ -108,7 +119,7 @@ class Rest extends HttpServlet {
                 document = convertDocumentToAcceptedMediaType(document, path, request.getHeader("accept"), response)
             }
 
-            if (document && (!document.isDeleted() || mode== HttpTools.DisplayMode.META)) {
+            if (document && (!document.isDeleted() || mode == HttpTools.DisplayMode.META)) {
 
                 if (mode == HttpTools.DisplayMode.META) {
                     def versions = whelk.storage.loadAllVersions(document.identifier)
@@ -124,24 +135,21 @@ class Rest extends HttpServlet {
                 }
                 response.setHeader("ETag", document.modified as String)
                 String contentType = getMajorContentType(document.contentType)
-                if (path in contextHeaders.collect { it.value })  {
+                if (path in contextHeaders.collect { it.value }) {
                     log.debug("request is for context file. Must serve original content-type ($contentType).")
                     contentType = document.contentType
                 }
-                if (flat) {
-                    sendResponse(response, JsonLd.flatten(document.data), contentType)
+                if (document.isJson()) {
+                    sendResponse(response, (flat ? JsonLd.flatten(document.data) : JsonLd.frame(document.identifier, document.data)), contentType)
                 } else {
-                    if (document.isJson()) {
-                        log.info("Framing ${document.identifier} ...")
-                        sendResponse(response, JsonLd.frame(document.identifier, document.data), contentType)
-                    } else {
-                        sendResponse(response, document.data, contentType)
-                    }
+                    sendResponse(response, document.data.get(Document.NON_JSON_CONTENT_KEY) ?: document.data, contentType) // For non json data, the convention is to keep the data in "content"
                 }
             } else {
                 log.debug("Failed to find a document with URI $path")
                 response.sendError(response.SC_NOT_FOUND)
             }
+        } catch (UnsupportedContentTypeException ucte) {
+            response.sendError(response.SC_NOT_ACCEPTABLE, ucte.message)
         } catch (WhelkRuntimeException wrte) {
             response.sendError(response.SC_INTERNAL_SERVER_ERROR, wrte.message)
         }
@@ -185,6 +193,7 @@ class Rest extends HttpServlet {
                 }
             } else {
                 document = null
+                throw new UnsupportedContentTypeException("No supported types found in $accepting")
             }
         }
         return document
@@ -198,11 +207,155 @@ class Rest extends HttpServlet {
 
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
+        doPostOrPut()
     }
 
     @Override
     void doPut(HttpServletRequest request, HttpServletResponse response) {
+        doPostOrPut(request, response)
     }
+
+    void doPostOrPut(HttpServletRequest request, HttpServletResponse response) {
+        String dataset = getDatasetBasedOnPath(request.pathInfo)
+        byte[] data = request.getInputStream().getBytes()
+        try {
+            Document doc = createDocumentIfOkToSave(data, dataset, request, response)
+            if (doc) {
+            //if (okToSave(data, dataset, request, response)) {
+                if (doc.contentType == "application/ld+json") {
+                    log.debug("Flattening ${doc.id}")
+                    doc.data = JsonLd.flatten(doc.data)
+                }
+                log.debug("Saving document (${doc.identifier})")
+                doc = whelk.store(doc)
+
+                sendDocumentSavedResponse(response, getResponseUrl(request, doc.identifier, doc.dataset), doc.modified as String)
+            }
+        } catch (WhelkAddException wae) {
+            log.warn("Whelk failed to store document: ${wae.message}")
+            response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE , wae.message)
+        } catch (Exception e) {
+            log.error("Operation failed", e)
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.message)
+        }
+    }
+
+    Document createDocumentIfOkToSave(byte[] data, String dataset, HttpServletRequest request, HttpServletResponse response) {
+        if (data.length == 0) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No data received")
+            return null
+        }
+        String cType = ContentType.parse(request.getContentType()).getMimeType()
+        if (cType == "application/x-www-form-urlencoded") {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Content-Type application/x-www-form-urlencoded is not supported")
+            return null
+        }
+        if (request.method == "PUT" && request.pathInfo == "/") {
+            response.sendError(response.SC_BAD_REQUEST, "PUT not allowed to ROOT")
+            return null
+        }
+        if (request.method == "POST") {
+            int pathsize = request.pathInfo.split("/").size()
+            if (pathsize != 0 && pathsize != 2) {
+                response.sendError(response.SC_BAD_REQUEST, "POST only allowed to root or dataset")
+                return null
+            }
+        }
+        Document existingDoc = whelk.storage.load(request.pathInfo)
+        if (existingDoc) {
+            if (request.getHeader("If-Match") && existingDoc.modified as String != request.getHeader("If-Match")) {
+                log.debug("Document with identifier ${existingDoc.identifier} already exists.")
+                response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
+                return null
+            }
+        }
+        Document doc
+        if (Document.isJson(cType)) {
+            doc = new Document(request.pathInfo, mapper.readValue(data, Map), existingDoc?.manifest)
+        } else {
+            doc = new Document(request.pathInfo, [(Document.NON_JSON_CONTENT_KEY): new String(data)], existingDoc?.manifest)
+        }
+        //Document doc = new Document(mapper.readValue(data, Map), whelk.storage.load(request.pathInfo)?.manifest) // reuse manifest from existing doc (if exists)
+        doc = doc.withDataset(dataset)
+                .withContentType(ContentType.parse(request.getContentType()).getMimeType())
+                .withIdentifier(request.pathInfo)
+                .setDeleted(false)
+
+        getAlternateIdentifiersFromLinkHeaders(request).each {
+            doc.addIdentifier(it);
+        }
+
+        if (!hasPermission(request.getAttribute("user"), doc, existingDoc)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
+            return null
+        }
+
+        return doc
+    }
+
+
+
+    String getResponseUrl(HttpServletRequest request, String identifier, String dataset) {
+        StringBuffer locationRef = request.getRequestURL()
+        while (locationRef[-1] == '/') {
+            locationRef.deleteCharAt(locationRef.length() - 1)
+        }
+
+        if (dataset && locationRef.toString().endsWith(dataset)) {
+            int endPos = locationRef.length()
+            int startPos = endPos - dataset.length() - 1
+            locationRef.delete(startPos, endPos)
+        }
+
+        locationRef.append(identifier)
+        return locationRef.toString()
+    }
+
+    void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag) {
+        log.debug("Setting header Location: $locationRef")
+        response.setHeader("Location", locationRef)
+        response.setHeader("ETag", etag as String)
+        response.setStatus(HttpServletResponse.SC_CREATED)
+    }
+
+
+    boolean hasPermission(info, newdoc, olddoc) {
+        if (info) {
+            log.debug("User is: $info")
+            if (info.user == "SYSTEM") {
+                return true
+            }
+            return accessControl.checkDocument(newdoc, olddoc, info)
+        }
+        log.info("No user information received, denying request.")
+        return false
+    }
+
+    String getDatasetBasedOnPath(path) {
+        String ds = ""
+        def elements = path.split("/")
+        int i = 1
+        while (ds.length() == 0) {
+            ds = elements[i++]
+        }
+        log.trace("Estimated dataset: $ds")
+        return ds
+    }
+
+    List<String> getAlternateIdentifiersFromLinkHeaders(HttpServletRequest request) {
+        def alts = []
+        for (link in request.getHeaders("Link")) {
+            def (id, rel) = link.split(";")*.trim()
+            if (rel.replaceAll(/"/, "") == "rel=${SAMEAS_NAMESPACE}") {
+                def match = id =~ /<([\S]+)>/
+                if (match.matches()) {
+                    alts << match[0][1]
+                }
+            }
+        }
+        return alts
+    }
+
 
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
