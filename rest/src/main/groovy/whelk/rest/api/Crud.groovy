@@ -377,6 +377,20 @@ class Crud extends HttpServlet {
 
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            def doc = whelk.storage.load(request.pathInfo)
+            if (doc && !hasPermission(request.getAttribute("user"), doc, null)) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
+            } else {
+                log.debug("Removing resource at ${request.pathInfo}")
+                whelk.remove(request.pathInfo, getDatasetBasedOnPath(request.pathInfo))
+                response.setStatus(HttpServletResponse.SC_NO_CONTENT)
+
+            }
+        } catch (WhelkRuntimeException wre) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
+        }
+
     }
 
 

@@ -109,13 +109,17 @@ class ElasticSearch implements Index {
     public void bulkIndex(List<Document> docs) {
         BulkRequest bulk = new BulkRequest()
         for (doc in docs) {
-            log.trace("Framing ${doc.id}")
-            doc.data = JsonLd.frame(doc.id, doc.data)
-            if (expander) {
-                doc = expander.filter(doc)
-            }
+            if (doc.isJson()) {
+                log.trace("Framing ${doc.id}")
+                doc.data = JsonLd.frame(doc.id, doc.data)
+                if (expander) {
+                    doc = expander.filter(doc)
+                }
 
-            bulk.add(new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)))
+                bulk.add(new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)))
+            } else {
+                log.warn("Document ${doc.id} is ${doc.contentType}. Will not index.")
+            }
         }
         BulkResponse response = performExecute(bulk)
         if (response.hasFailures()) {
@@ -129,14 +133,18 @@ class ElasticSearch implements Index {
 
     @Override
     public void index(Document doc) {
-        log.trace("Framing ${doc.id}")
-        doc.data = JsonLd.frame(doc.id, doc.data)
-        if (expander) {
-            doc = expander.filter(doc)
+        if (doc.isJson()) {
+            log.trace("Framing ${doc.id}")
+            doc.data = JsonLd.frame(doc.id, doc.data)
+            if (expander) {
+                doc = expander.filter(doc)
+            }
+            def idxReq = new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)).source(doc.data)
+            def response = performExecute(idxReq)
+            log.debug("Indexed the document ${doc.id} as ${indexName}/${doc.dataset}/${response.getId()} as version ${response.getVersion()}")
+        } else {
+            log.warn("Document ${doc.id} is ${doc.contentType}. Will not index.")
         }
-        def idxReq = new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)).source(doc.data)
-        def response = performExecute(idxReq)
-        log.debug("Indexed the document ${doc.id} as ${indexName}/${doc.dataset}/${response.getId()} as version ${response.getVersion()}")
     }
 
     @Override

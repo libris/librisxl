@@ -72,7 +72,7 @@ class PostgreSQLComponent implements Storage {
 
         GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
-        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,created,modified,deleted FROM $versionsTableName WHERE id = ? ORDER BY modified"
+        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created',modified,manifest->>'deleted' FROM $versionsTableName WHERE id = ? ORDER BY modified"
         GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest @> '{ \"alternateIdentifiers\": [?] }'"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? ORDER BY modified"
         LOAD_ALL_DOCUMENTS_BY_DATASET = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest->>'dataset' = ? AND modified >= ? AND modified <= ? ORDER BY modified"
