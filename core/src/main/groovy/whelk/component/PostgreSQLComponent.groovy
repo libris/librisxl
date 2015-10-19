@@ -27,7 +27,7 @@ class PostgreSQLComponent implements Storage {
 
     private final static LOCATION_PRECURSOR = "/resource"
 
-    protected boolean versioning = true
+    boolean versioning = true
 
     // SQL statements
     protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT
@@ -210,7 +210,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    void bulkStore(final List<Document> docs) {
+    boolean bulkStore(final List<Document> docs) {
         if (!docs || docs.isEmpty()) {
             return
         }
@@ -234,13 +234,14 @@ class PostgreSQLComponent implements Storage {
             ver_batch.executeBatch()
             batch.executeBatch()
             log.debug("Stored ${docs.size()} documents with dataset ${docs.first().dataset} (versioning: ${versioning})")
+            return true
         } catch (Exception e) {
-            log.error("Failed to save batch: ${e.message}")
-            throw e
+            log.error("Failed to save batch: ${e.message}", e)
         } finally {
             connection.close()
             log.debug("[bulkStore] Closed connection.")
         }
+        return false
     }
 
     String calculateChecksum(Document doc) {

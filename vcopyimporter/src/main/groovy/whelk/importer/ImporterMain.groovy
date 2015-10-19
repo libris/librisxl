@@ -18,7 +18,7 @@ class ImporterMain {
 
     ImporterMain() {
 
-        log.info("Setting up httpwhelk.")
+        log.info("Setting up import program.")
         // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
         InputStream secretsConfig = ( System.getProperty("xl.secret.properties")
                 ? new FileInputStream(System.getProperty("xl.secret.properties"))
@@ -54,7 +54,7 @@ class ImporterMain {
             println("Usage: <progam> [dataset]")
             System.exit(1)
         }
-        new ImporterMain().go(args[1])
+        new ImporterMain().go(args[0])
     }
 
 }

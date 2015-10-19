@@ -20,17 +20,18 @@ class Whelk {
         this.storage = pg
         this.elastic = es
         this.expander = ex
-        log.info("Whelk started")
+        log.info("Whelk started with storage ${storage}, index $elastic and expander.")
     }
 
     public Whelk(Storage pg, Index es) {
         this.storage = pg
         this.elastic = es
-        log.info("Whelk started")
+        log.info("Whelk started with storage $storage and index $elastic")
     }
 
     public Whelk(Storage pg) {
         this.storage = pg
+        log.info("Whelk started with storage $storage")
     }
 
     public Whelk() {

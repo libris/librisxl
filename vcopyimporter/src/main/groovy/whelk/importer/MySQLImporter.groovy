@@ -63,23 +63,15 @@ class MySQLImporter {
         //queue = Executors.newWorkStealingPool()
         queue = Executors.newFixedThreadPool(10)
 
-        def versioningSettings = [:]
-
-        //log.info("Suspending camel during import.")
-        //whelk.camelContext.suspend()
-        for (st in this.whelk.getStorages()) {
-            log.debug("Turning off versioning in ${st.id}")
-            // Preserve original setting
-            versioningSettings.put(st.id, st.versioning)
-            st.versioning = false
-        }
+        log.debug("Turning off versioning in storage")
+        this.whelk.storage.versioning = false
 
         try {
 
             Class.forName("com.mysql.jdbc.Driver")
 
             log.debug("Connecting to database...")
-            conn = connectToUri(connectionUrl)
+            conn = connectToUri(new URI(connectionUrl))
             conn.setAutoCommit(false)
 
             if (dataset == "auth") {
@@ -184,14 +176,14 @@ class MySQLImporter {
         String dataset = type
         if (documentList.size() >= addBatchSize || record == null) {
             if (tickets.availablePermits() < 1) {
-                log.info("Queues are full at the moment. Waiting for some to finish.")
+                log.info("At $recordCount documents loaded: Queues are full at the moment. Waiting for some to finish.")
             }
             tickets.acquire()
             log.debug("Doclist has reached batch size. Sending it to bulkAdd (open the trapdoor)")
 
             //def casr = new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets)
             //casr.run()
-            queue.execute(new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets))
+            queue.execute(new ConvertAndStoreRunner(whelk, marcFrameConverter, documentList, tickets))
             /*
             log.debug("     Current poolsize: ${queue.poolSize}")
             log.debug("------------------------------")

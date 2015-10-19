@@ -1,1 +1,1 @@
-mysqlConnectionUrl = URL
+mysqlConnectionUrl = jdbc:mysql://HOST:PORT/SCHEMA?user=USERNAME&password=PASSWORD

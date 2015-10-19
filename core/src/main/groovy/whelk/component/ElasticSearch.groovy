@@ -115,8 +115,7 @@ class ElasticSearch implements Index {
                 if (expander) {
                     doc = expander.filter(doc)
                 }
-
-                bulk.add(new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)))
+                bulk.add(new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)).source(doc.data))
             } else {
                 log.warn("Document ${doc.id} is ${doc.contentType}. Will not index.")
             }

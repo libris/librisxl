@@ -111,10 +111,25 @@ public class JsonLd {
 
     private static Map getIdMap(Map flatJsonLd) {
         Map idMap = [:]
-        for (item in flatJsonLd.get(GRAPH_KEY)) {
-            if (item.containsKey(ID_KEY)) {
-                idMap.put(item.get(ID_KEY), item)
+        if (flatJsonLd.containsKey(GRAPH_KEY)) {
+            for (item in flatJsonLd.get(GRAPH_KEY)) {
+                if (item.containsKey(ID_KEY)) {
+                    idMap.put(item.get(ID_KEY), item)
+                }
             }
+        } else if (flatJsonLd.containsKey(DESCRIPTIONS_KEY)) {
+            idMap.put(flatJsonLd.get(DESCRIPTIONS_KEY).get("entry").get(ID_KEY), flatJsonLd.get(DESCRIPTIONS_KEY).get("entry"))
+            for (item in flatJsonLd.get(DESCRIPTIONS_KEY).get("items")) {
+                if (item.containsKey(ID_KEY)) {
+                    idMap.put(item.get(ID_KEY), item)
+                }
+            }
+            for (item in flatJsonLd.get(DESCRIPTIONS_KEY).get("quoted")) {
+                if (item.containsKey(ID_KEY)) {
+                    idMap.put(item.get(ID_KEY), item)
+                }
+            }
+
         }
         return idMap
     }
