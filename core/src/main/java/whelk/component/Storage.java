@@ -14,4 +14,5 @@ public interface Storage {
     Location locate(String uri);
     Document load(String id);
     Iterable<Document> loadAll(String dataset);
+    boolean remove(String id, String dataset);
 }

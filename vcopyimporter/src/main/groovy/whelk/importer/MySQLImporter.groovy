@@ -58,9 +58,6 @@ class MySQLImporter {
         ResultSet resultSet = null
 
 
-        int sqlLimit = 6000
-        if (nrOfDocs > 0 && nrOfDocs < sqlLimit) { sqlLimit = nrOfDocs }
-
         tickets = new Semaphore(10)
         //queue = Executors.newSingleThreadExecutor()
         //queue = Executors.newWorkStealingPool()
@@ -82,7 +79,7 @@ class MySQLImporter {
             Class.forName("com.mysql.jdbc.Driver")
 
             log.debug("Connecting to database...")
-            conn = connectToUri(serviceUrl)
+            conn = connectToUri(connectionUrl)
             conn.setAutoCommit(false)
 
             if (dataset == "auth") {
@@ -211,8 +208,8 @@ class MySQLImporter {
         if (record) {
             def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
             if ("SUPPRESSRECORD" in aList) {
-                log.debug("Record ${identifier} is suppressed. Setting dataset to $SUPPRESSRECORD_DATASET ...")
-                dataset = SUPPRESSRECORD_DATASET
+                log.debug("Record ${identifier} is suppressed. Setting dataset to $SUPPRESS_RECORD_DATASET ...")
+                dataset = SUPPRESS_RECORD_DATASET
             }
             log.trace("building document $identifier")
             try {
@@ -225,7 +222,7 @@ class MySQLImporter {
         }
         try {
             if (oaipmhSetSpecValue) {
-                buildingMetaRecord.get(identifier, [:]).get("meta", [:]).get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
+                buildingMetaRecord.get(identifier, [:]).get("manifest", [:]).get("extraData", [:]).get("oaipmhSetSpecs", []).add(oaipmhSetSpecValue)
             }
             if (lastIdentifier && lastIdentifier != identifier) {
                 log.trace("New document received. Adding last ($lastIdentifier}) to the doclist")
@@ -263,16 +260,16 @@ class MySQLImporter {
                     if (!convertedDocs.containsKey(it.manifest.dataset)) { // Create new list
                         convertedDocs.put(it.manifest.dataset, [])
                     }
-                    if (it.manifest.dataset == SUPPRESSRECORD_DATASET) {
+                    if (it.manifest.dataset == SUPPRESS_RECORD_DATASET) {
                         it.manifest['contentType'] = "application/x-marc-json"
-                        convertedDocs[(SUPPRESSRECORD_DATASET)] << whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.manifest, it.meta)
+                        convertedDocs[(SUPPRESS_RECORD_DATASET)] << new Document(it.identifier, MarcJSONConverter.toJSONMap(it.record), it.manifest)
                     } else {
-                        Document doc = converter.doConvert(it.record, ["manifest":it.manifest,"meta":it.meta])
+                        Document doc = converter.doConvert(it.record, it.manifest)
                         convertedDocs[(doc.dataset)] << doc
                     }
                 }
                 convertedDocs.each { ds, docList ->
-                    this.whelk.bulkAdd(docList, ds, docList.first().contentType, false)
+                    this.whelk.bulkStore(docList)
                 }
             } finally {
                 tickets.release()
