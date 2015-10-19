@@ -3,7 +3,7 @@ package whelk
 import groovy.util.logging.Slf4j as Log
 
 import whelk.component.Index
-import whelk.component.PostgreSQLComponent
+import whelk.component.Storage
 import whelk.filter.JsonLdLinkExpander
 
 /**
@@ -12,24 +12,24 @@ import whelk.filter.JsonLdLinkExpander
 @Log
 class Whelk {
 
-    PostgreSQLComponent storage
+    Storage storage
     Index elastic
     JsonLdLinkExpander expander
 
-    public Whelk(PostgreSQLComponent pg, Index es, JsonLdLinkExpander ex) {
+    public Whelk(Storage pg, Index es, JsonLdLinkExpander ex) {
         this.storage = pg
         this.elastic = es
         this.expander = ex
         log.info("Whelk started")
     }
 
-    public Whelk(PostgreSQLComponent pg, Index es) {
+    public Whelk(Storage pg, Index es) {
         this.storage = pg
         this.elastic = es
         log.info("Whelk started")
     }
 
-    public Whelk(PostgreSQLComponent pg) {
+    public Whelk(Storage pg) {
         this.storage = pg
     }
 
@@ -43,7 +43,7 @@ class Whelk {
         return document
     }
 
-    void bulkStore(List<Document> documents, String dataset) {
+    void bulkStore(List<Document> documents) {
         if (storage.bulkStore(documents) && elastic) {
             elastic.bulkIndex(documents)
         }
