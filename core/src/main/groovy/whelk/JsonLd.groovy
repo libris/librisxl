@@ -125,8 +125,8 @@ public class JsonLd {
                 }
             }
             for (item in flatJsonLd.get(DESCRIPTIONS_KEY).get("quoted")) {
-                if (item.containsKey(ID_KEY)) {
-                    idMap.put(item.get(ID_KEY), item)
+                if (item.get(GRAPH_KEY).containsKey(ID_KEY)) {
+                    idMap.put(item.get(GRAPH_KEY).get(ID_KEY), item.get(GRAPH_KEY))
                 }
             }
 
