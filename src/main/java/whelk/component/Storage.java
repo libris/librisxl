@@ -10,7 +10,7 @@ import java.util.List;
  */
 public interface Storage {
     Document store(Document document);
-    void bulkStore(List<Document> documents);
+    boolean bulkStore(List<Document> documents);
     Location locate(String uri);
     Document load(String id);
     Iterable<Document> loadAll(String dataset);
