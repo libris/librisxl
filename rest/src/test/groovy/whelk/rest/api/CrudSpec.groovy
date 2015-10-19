@@ -138,4 +138,14 @@ class CrudSpec extends Specification {
 
     }
 
+    def "should calculate dataset based on path"() {
+        expect:
+        crud.getDatasetBasedOnPath("/bib/12345") == "bib"
+        crud.getDatasetBasedOnPath("/dataset") == "dataset"
+        crud.getDatasetBasedOnPath("/dataset/") == "dataset"
+        crud.getDatasetBasedOnPath("/sys/common/foobar") == "sys"
+        crud.getDatasetBasedOnPath("/") == ""
+
+    }
+
 }

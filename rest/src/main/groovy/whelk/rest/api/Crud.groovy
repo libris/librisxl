@@ -345,7 +345,7 @@ class Crud extends HttpServlet {
         return false
     }
 
-    String getDatasetBasedOnPath(path) {
+    static String getDatasetBasedOnPath(path) {
         String ds = ""
         def elements = path.split("/")
         int i = 1
