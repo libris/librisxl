@@ -6,6 +6,7 @@ import whelk.Location
 import whelk.Whelk
 import whelk.component.Storage
 
+import javax.servlet.ServletInputStream
 import javax.servlet.ServletOutputStream
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -31,6 +32,9 @@ class CrudSpec extends Specification {
             String contentType
             public ServletOutputStream getOutputStream() {
                 return out
+            }
+            public void sendError(int sc, String mess) {
+                this.status = sc
             }
         }
         storage = GroovyMock(Storage.class)
@@ -65,6 +69,62 @@ class CrudSpec extends Specification {
         response.getStatus()== 200
         response.getContentType() == "application/json"
     }
+
+    def "should set error if empty content"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> { new byte[0] }
+        request.getInputStream() >> { is }
+        request.getPathInfo() >> { "/dataset/" }
+        request.getMethod() >> { "POST" }
+        when:
+        crud.doPost(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
+    }
+
+    def "should set error if form content-type"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> { new String("foobar").getBytes("UTF-8") }
+        request.getInputStream() >> { is }
+        request.getPathInfo() >> { "/dataset/" }
+        request.getMethod() >> { "POST" }
+        request.getContentType() >> { "application/x-www-form-urlencoded" }
+        when:
+        crud.doPost(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
+    }
+
+    def "should set error on incorrect POST url"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> { new String("foobar").getBytes("UTF-8") }
+        request.getInputStream() >> { is }
+        request.getPathInfo() >> { "/dataset/foo" }
+        request.getMethod() >> { "POST" }
+        request.getContentType() >> { "text/plain" }
+        when:
+        crud.doPost(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
+    }
+
+    def "should set error on incorrect PUT url"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> { new String("foobar").getBytes("UTF-8") }
+        request.getInputStream() >> { is }
+        request.getPathInfo() >> { "/" }
+        request.getMethod() >> { "PUT" }
+        request.getContentType() >> { "text/plain" }
+        when:
+        crud.doPost(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
+    }
+
 
     def "should update document"() {
 

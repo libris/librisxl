@@ -349,7 +349,7 @@ class Crud extends HttpServlet {
         String ds = ""
         def elements = path.split("/")
         int i = 1
-        while (ds.length() == 0) {
+        while (elements.size() > i && ds.length() == 0) {
             ds = elements[i++]
         }
         log.trace("Estimated dataset: $ds")
