@@ -63,6 +63,31 @@ dependencies {
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }
 
+
+// Include dependent libraries in archive.
+mainClassName = "whelk.importer.ImporterMain"
+
+jar {
+    manifest {
+        attributes "Main-Class": "$mainClassName"
+    }
+
+    /*
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    */
+
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : project.zipTree(it).matching {
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+            }
+        }
+    }
+
+}
+
 configurations {
     all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
 }
