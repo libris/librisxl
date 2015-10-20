@@ -1,5 +1,7 @@
 package whelk
 
+import whelk.exception.FramingException
+
 public class JsonLd {
 
     static final String GRAPH_KEY = "@graph"
@@ -70,7 +72,11 @@ public class JsonLd {
         def idMap = getIdMap(flatJsonLd)
         def framedMap = idMap.get(mainId)
 
-        framedMap = embed(framedMap, idMap)
+        try {
+            framedMap = embed(framedMap, idMap)
+        } catch (StackOverflowError sofe) {
+            throw new FramingException("Unable to frame JSONLD", sofe)
+        }
 
         return framedMap
     }

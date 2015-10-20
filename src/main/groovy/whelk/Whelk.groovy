@@ -47,6 +47,8 @@ class Whelk {
     void bulkStore(List<Document> documents) {
         if (storage.bulkStore(documents) && elastic) {
             elastic.bulkIndex(documents)
+        } else {
+            log.warn("Bulk store failed, not indexing : ${documents.first().id} - ${documents.last().id}")
         }
     }
 
