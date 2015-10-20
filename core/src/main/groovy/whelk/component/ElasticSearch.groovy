@@ -110,12 +110,16 @@ class ElasticSearch implements Index {
         BulkRequest bulk = new BulkRequest()
         for (doc in docs) {
             if (doc.isJson()) {
-                log.trace("Framing ${doc.id}")
-                doc.data = JsonLd.frame(doc.id, doc.data)
-                if (expander) {
-                    doc = expander.filter(doc)
+                try {
+                    log.trace("Framing ${doc.id}")
+                    doc.data = JsonLd.frame(doc.id, doc.data)
+                    if (expander) {
+                        doc = expander.filter(doc)
+                    }
+                    bulk.add(new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)).source(doc.data))
+                } catch (Exception e) {
+                    log.error("Failed to create indexrequest for document ${doc.id}. Reason: ${e.message}")
                 }
-                bulk.add(new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)).source(doc.data))
             } else {
                 log.warn("Document ${doc.id} is ${doc.contentType}. Will not index.")
             }

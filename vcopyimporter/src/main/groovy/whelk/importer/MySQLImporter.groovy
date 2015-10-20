@@ -33,6 +33,7 @@ class MySQLImporter {
     int startAt = 0
 
     int addBatchSize = 1000
+    int poolSize = 10
 
     int recordCount
     long startTime
@@ -58,10 +59,10 @@ class MySQLImporter {
         ResultSet resultSet = null
 
 
-        tickets = new Semaphore(10)
+        tickets = new Semaphore(poolSize)
         //queue = Executors.newSingleThreadExecutor()
         //queue = Executors.newWorkStealingPool()
-        queue = Executors.newFixedThreadPool(10)
+        queue = Executors.newFixedThreadPool(poolSize)
 
         log.debug("Turning off versioning in storage")
         this.whelk.storage.versioning = false
@@ -162,10 +163,10 @@ class MySQLImporter {
             //log.info("Starting camel context ...")
             //whelk.camelContext.resume()
         } as Runnable)
+        */
 
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
-        */
 
         log.info("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
         //return new ImportResult(numberOfDocuments: recordCount, lastRecordDatestamp: null) // TODO: Add correct last document datestamp
