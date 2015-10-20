@@ -77,6 +77,7 @@ class CrudSpec extends Specification {
         request.getInputStream() >> { is }
         request.getPathInfo() >> { "/dataset/" }
         request.getMethod() >> { "POST" }
+        storage.store(_) >> { throw new Exception("This shouldn't happen") }
         when:
         crud.doPost(request, response)
         then:
@@ -91,6 +92,8 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> { "/dataset/" }
         request.getMethod() >> { "POST" }
         request.getContentType() >> { "application/x-www-form-urlencoded" }
+        storage.store(_) >> { throw new Exception("This shouldn't happen") }
+
         when:
         crud.doPost(request, response)
         then:
@@ -105,6 +108,7 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> { "/dataset/foo" }
         request.getMethod() >> { "POST" }
         request.getContentType() >> { "text/plain" }
+        storage.store(_) >> { throw new Exception("This shouldn't happen") }
         when:
         crud.doPost(request, response)
         then:
@@ -119,10 +123,12 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> { "/" }
         request.getMethod() >> { "PUT" }
         request.getContentType() >> { "text/plain" }
+        storage.store(_) >> { throw new Exception("This shouldn't happen") }
         when:
         crud.doPost(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
+
     }
 
 
