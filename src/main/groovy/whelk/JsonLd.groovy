@@ -71,7 +71,6 @@ public class JsonLd {
 
         def idMap = getIdMap(flatJsonLd)
         def framedMap = idMap.get(mainId)
-
         try {
             framedMap = embed(framedMap, idMap, [])
         } catch (StackOverflowError sofe) {
@@ -97,7 +96,6 @@ public class JsonLd {
 
     private static Map embed(Map framedMap, Map idMap, List embedChain) {
         framedMap.each { key, value ->
-            println("key is $key, value is $value")
             if (key == ID_KEY) {
                 embedChain.add(value)
             }
