@@ -73,9 +73,9 @@ public class JsonLd {
         def framedMap = idMap.get(mainId)
 
         try {
-            framedMap = embed(framedMap, idMap)
+            framedMap = embed(framedMap, idMap, [])
         } catch (StackOverflowError sofe) {
-            throw new FramingException("Unable to frame JSONLD", sofe)
+            throw new FramingException("Unable to frame JSONLD (recursive loop?)", sofe)
         }
 
         return framedMap
@@ -95,16 +95,20 @@ public class JsonLd {
         return false
     }
 
-    private static Map embed(Map framedMap, Map idMap) {
+    private static Map embed(Map framedMap, Map idMap, List embedChain) {
         framedMap.each { key, value ->
+            println("key is $key, value is $value")
+            if (key == ID_KEY) {
+                embedChain.add(value)
+            }
             if (value instanceof Map && value.containsKey(ID_KEY) && idMap.containsKey(value.get(ID_KEY))) {
-                framedMap.put(key, embed(idMap.get(value.get(ID_KEY)), idMap))
+                framedMap.put(key, embed(idMap.get(value.get(ID_KEY)), idMap, embedChain))
             }
             if (value instanceof List) {
                 def newList = []
                 for (l in value) {
-                    if (l instanceof Map && l.containsKey(ID_KEY) && idMap.containsKey(l.get(ID_KEY))) {
-                        newList.add(embed(idMap.get(l.get(ID_KEY)), idMap))
+                    if (l instanceof Map && l.containsKey(ID_KEY) && idMap.containsKey(l.get(ID_KEY)) && !embedChain.contains(l.get(ID_KEY))) {
+                        newList.add(embed(idMap.get(l.get(ID_KEY)), idMap, embedChain))
                     } else {
                         newList.add(l)
                     }
