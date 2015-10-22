@@ -244,6 +244,7 @@ class Crud extends HttpServlet {
     }
 
     Document createDocumentIfOkToSave(byte[] data, String dataset, HttpServletRequest request, HttpServletResponse response) {
+        log.info("dataset is $dataset")
         if (data.length == 0) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No data received")
             return null
@@ -253,7 +254,7 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Content-Type application/x-www-form-urlencoded is not supported")
             return null
         }
-        String identifier = request.pathInfo
+        String identifier = null
         if (request.method == "POST") {
             int pathsize = request.pathInfo.split("/").size()
             log.debug("pathsize: $pathsize")
@@ -261,30 +262,42 @@ class Crud extends HttpServlet {
                 response.sendError(response.SC_BAD_REQUEST, "POST only allowed to root or dataset")
                 return null
             }
-            identifier = mintIdentifier(dataset)
         }
-        Document existingDoc = null
         if (request.method == "PUT") {
+            identifier = request.pathInfo
             if (request.pathInfo == "/") {
                 response.sendError(response.SC_BAD_REQUEST, "PUT not allowed to ROOT")
                 return null
             }
-            existingDoc = whelk.storage.load(request.pathInfo)
-            if (existingDoc) {
-                if (request.getHeader("If-Match") && existingDoc.modified as String != request.getHeader("If-Match")) {
-                    log.debug("Document with identifier ${existingDoc.identifier} already exists.")
-                    response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
-                    return null
-                }
+        }
+        Document existingDoc = whelk.storage.load(request.pathInfo)
+        if (existingDoc) {
+            if (request.getHeader("If-Match") && existingDoc.modified as String != request.getHeader("If-Match")) {
+                log.debug("Document with identifier ${existingDoc.identifier} already exists.")
+                response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
+                return null
             }
         }
 
         Document doc
+        Map dataMap = null
         if (Document.isJson(cType)) {
-            doc = new Document(request.pathInfo, mapper.readValue(data, Map), existingDoc?.manifest)
+            dataMap = mapper.readValue(data, Map)
+            doc = new Document(request.pathInfo, dataMap, existingDoc?.manifest)
         } else {
             doc = new Document(request.pathInfo, [(Document.NON_JSON_CONTENT_KEY): new String(data)], existingDoc?.manifest)
         }
+        if (identifier) {
+            String foundIdentifier = JsonLd.findIdentifier(dataMap)
+            if (foundIdentifier && foundIdentifier != identifier) {
+                response.sendError(response.SC_CONFLICT, "The supplied data contains an @id ($foundIdentifier) which differs from the URI in the PUT request ($identifier)")
+                return null
+            }
+        } else {
+            identifier = mintIdentifier(dataset, dataMap)
+        }
+        log.info("dataset is now $dataset")
+
         doc = doc.withDataset(dataset)
                 .withContentType(ContentType.parse(request.getContentType()).getMimeType())
                 .withIdentifier(identifier)
@@ -304,8 +317,6 @@ class Crud extends HttpServlet {
 
         return doc
     }
-
-
 
     String getResponseUrl(HttpServletRequest request, String identifier, String dataset) {
         StringBuffer locationRef = request.getRequestURL()
@@ -371,8 +382,12 @@ class Crud extends HttpServlet {
         return alts
     }
 
-    String mintIdentifier(String dataset) {
-        return new URI("/" + (dataset ? "${dataset}/" : "") + UUID.randomUUID()).toString();
+    String mintIdentifier(String dataset, Map data) {
+        String id = null
+        if (data) {
+            id = JsonLd.findIdentifier(data)
+        }
+        return id ?: new URI("/" + (dataset ? "${dataset}/" : "") + UUID.randomUUID()).toString();
     }
 
 

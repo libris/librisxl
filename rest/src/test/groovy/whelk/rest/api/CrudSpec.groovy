@@ -163,7 +163,7 @@ class CrudSpec extends Specification {
         request.getInputStream() >> { is }
         request.getPathInfo() >> { "/dataset/identifier" }
         request.getMethod() >> { "PUT" }
-        request.getContentType() >> { "appplication/ld+json" }
+        request.getContentType() >> { "application/ld+json" }
         request.getAttribute(_) >> {
             if (it.first() == "user") {
                 return ["user":"SYSTEM"]
@@ -191,15 +191,15 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         is.getBytes() >> { mapper.writeValueAsBytes(["@id":"/dataset/identifier","@type":"Record","contains":"some new data"]) }
         request.getInputStream() >> { is }
-        request.getPathInfo() >> { "/dataset/" }
+        request.getPathInfo() >> { "/record/" }
         request.getMethod() >> { "POST" }
-        request.getContentType() >> { "appplication/ld+json" }
+        request.getContentType() >> { "application/ld+json" }
         request.getAttribute(_) >> {
             if (it.first() == "user") {
                 return ["user":"SYSTEM"]
             }
         }
-        request.getRequestURL() >> { return new StringBuffer("/dataset/") }
+        request.getRequestURL() >> { return new StringBuffer("/record/") }
         storage.store(_) >> { return it.first() }
         when:
         crud.doPost(request, response)
@@ -209,6 +209,96 @@ class CrudSpec extends Specification {
         response.getHeader("Location").length() > "/dataset/some_data".length()
 
     }
+
+    def "should set correct id from document if POSTing"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> { mapper.writeValueAsBytes(["@id":"/dataset/identifier","@type":"Record","contains":"some new data"]) }
+        request.getInputStream() >> { is }
+        request.getPathInfo() >> { "/records/" }
+        request.getMethod() >> { "POST" }
+        request.getContentType() >> { "application/ld+json" }
+        request.getAttribute(_) >> {
+            if (it.first() == "user") {
+                return ["user":"SYSTEM"]
+            }
+        }
+        request.getRequestURL() >> { return new StringBuffer("/records/") }
+        storage.load(_) >> {
+            new Document(
+                    it.first(),
+                    ["@id":it.first(),"@type":"Record","contains":"some data"],
+                    ["dataset":"dataset","modified":new Date().getTime(), "created":new Date(0).getTime()]
+            )
+        }
+        storage.store(_) >> { return it.first() }
+        when:
+        Document doc = crud.createDocumentIfOkToSave(mapper.writeValueAsBytes(["@id":"/dataset/identifier","@type":"Record","contains":"some new data"]), "records", request, response)
+        then:
+        doc != null
+        doc.id == "/dataset/identifier"
+        doc.dataset == "records"
+    }
+
+    def "should set correct id from path if PUTing"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> { mapper.writeValueAsBytes(["@id":"/dataset/id2","@type":"Record","contains":"some new data"]) }
+        request.getInputStream() >> { is }
+        request.getPathInfo() >> { "/dataset/id2" }
+        request.getMethod() >> { "PUT" }
+        request.getContentType() >> { "application/ld+json" }
+        request.getAttribute(_) >> {
+            if (it.first() == "user") {
+                return ["user":"SYSTEM"]
+            }
+        }
+        request.getRequestURL() >> { return new StringBuffer("/dataset/id2") }
+        storage.load(_) >> {
+            new Document(
+                    it.first(),
+                    ["@id":it.first(),"@type":"Record","contains":"some data"],
+                    ["dataset":"dataset","modified":new Date().getTime(), "created":new Date(0).getTime()]
+            )
+        }
+        storage.store(_) >> { return it.first() }
+        when:
+        Document doc = crud.createDocumentIfOkToSave(mapper.writeValueAsBytes(["@id":"/dataset/id2","@type":"Record","contains":"some new data"]), "dataset", request, response)
+        then:
+        doc != null
+        doc.id == "/dataset/id2"
+    }
+
+    def "should respond with error if mismatch in path and @id"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> { mapper.writeValueAsBytes(["@id":"/dataset/id2","@type":"Record","contains":"some new data"]) }
+        request.getInputStream() >> { is }
+        request.getPathInfo() >> { "/dataset/id3" }
+        request.getMethod() >> { "PUT" }
+        request.getContentType() >> { "application/ld+json" }
+        request.getAttribute(_) >> {
+            if (it.first() == "user") {
+                return ["user":"SYSTEM"]
+            }
+        }
+        request.getRequestURL() >> { return new StringBuffer("/dataset/id3") }
+        storage.load(_) >> {
+            new Document(
+                    it.first(),
+                    ["@id":it.first(),"@type":"Record","contains":"some data"],
+                    ["dataset":"dataset","modified":new Date().getTime(), "created":new Date(0).getTime()]
+            )
+        }
+        storage.store(_) >> { throw new Exception("This shouldn't happen") }
+        when:
+        Document doc = crud.createDocumentIfOkToSave(mapper.writeValueAsBytes(["@id":"/dataset/id2","@type":"Record","contains":"some new data"]), "dataset", request, response)
+        then:
+        doc == null
+        response.getStatus() == HttpServletResponse.SC_CONFLICT
+
+    }
+
 
     def "should delete document"() {
         given:

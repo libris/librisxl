@@ -108,6 +108,24 @@ public class JsonLd {
         return o
     }
 
+    static String findIdentifier(Map jsonLd) {
+        if (!jsonLd) {
+            return null
+        }
+        if (isFlat(jsonLd)) {
+            if (jsonLd.containsKey(GRAPH_KEY)) {
+                return jsonLd.get(GRAPH_KEY).first().get(ID_KEY)
+            }
+            if (jsonLd.containsKey(DESCRIPTIONS_KEY)) {
+                return jsonLd.get(DESCRIPTIONS_KEY).get("entry").get(ID_KEY)
+            }
+        }
+        if (isFramed(jsonLd)) {
+            return jsonLd.get(ID_KEY)
+        }
+        return null
+    }
+
 
 
     static boolean isFlat(Map jsonLd) {
@@ -118,7 +136,7 @@ public class JsonLd {
     }
 
     static boolean isFramed(Map jsonLd) {
-        if (jsonLd.size() == 1 && !jsonLd.containsKey(GRAPH_KEY) && !jsonLd.containsKey(DESCRIPTIONS_KEY)) {
+        if ((jsonLd.size() > 1 && !jsonLd.containsKey(GRAPH_KEY) && !jsonLd.containsKey(DESCRIPTIONS_KEY)) || jsonLd.containsKey(ID_KEY)) {
             return true
         }
         return false
