@@ -32,11 +32,18 @@ class CrudSpec extends Specification {
         response = new HttpServletResponseWrapper(GroovyMock(HttpServletResponse.class)) {
             int status = 0
             String contentType
+            def headers = [:]
             public ServletOutputStream getOutputStream() {
                 return out
             }
             public void sendError(int sc, String mess) {
                 this.status = sc
+            }
+            public void setHeader(String h, String v) {
+                headers.put(h, v)
+            }
+            public String getHeader(String h) {
+                return headers.get(h)
             }
         }
         storage = GroovyMock(Storage.class)
@@ -180,11 +187,43 @@ class CrudSpec extends Specification {
     }
 
     def "should create new document"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> { mapper.writeValueAsBytes(["@id":"/dataset/identifier","@type":"Record","contains":"some new data"]) }
+        request.getInputStream() >> { is }
+        request.getPathInfo() >> { "/dataset/" }
+        request.getMethod() >> { "POST" }
+        request.getContentType() >> { "appplication/ld+json" }
+        request.getAttribute(_) >> {
+            if (it.first() == "user") {
+                return ["user":"SYSTEM"]
+            }
+        }
+        request.getRequestURL() >> { return new StringBuffer("/dataset/") }
+        storage.store(_) >> { return it.first() }
+        when:
+        crud.doPost(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_CREATED
+        response.getHeader("Location").startsWith("/dataset/")
+        response.getHeader("Location").length() > "/dataset/some_data".length()
 
     }
 
     def "should delete document"() {
-
+        given:
+        request.getPathInfo() >> { "/dataset/some_document" }
+        request.getMethod() >> { "DELETE" }
+        request.getAttribute(_) >> {
+            if (it.first() == "user") {
+                return ["user":"SYSTEM"]
+            }
+        }
+        storage.remove(_,_) >> { return true }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_NO_CONTENT
     }
 
     def "should calculate dataset based on path"() {
