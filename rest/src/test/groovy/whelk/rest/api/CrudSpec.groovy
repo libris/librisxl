@@ -1,5 +1,6 @@
 package whelk.rest.api
 
+import org.codehaus.jackson.map.ObjectMapper
 import spock.lang.Specification
 import whelk.Document
 import whelk.Location
@@ -22,6 +23,7 @@ class CrudSpec extends Specification {
     Storage storage
     HttpServletRequest request
     HttpServletResponse response
+    private static final ObjectMapper mapper = new ObjectMapper()
 
 
     void setup() {
@@ -131,8 +133,49 @@ class CrudSpec extends Specification {
 
     }
 
+    def "should deny unauthorized user"() {
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> { new String("data").getBytes("UTF-8") }
+        request.getInputStream() >> { is }
+        request.getPathInfo() >> { "/dataset/identifier" }
+        request.getMethod() >> { "PUT" }
+        request.getContentType() >> { "text/plain" }
+        storage.store(_) >> { throw new Exception("This shouldn't happen") }
+        when:
+        crud.doPost(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+
+    }
+
 
     def "should update document"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> { mapper.writeValueAsBytes(["@id":"/dataset/identifier","@type":"Record","contains":"some new data"]) }
+        request.getInputStream() >> { is }
+        request.getPathInfo() >> { "/dataset/identifier" }
+        request.getMethod() >> { "PUT" }
+        request.getContentType() >> { "appplication/ld+json" }
+        request.getAttribute(_) >> {
+            if (it.first() == "user") {
+                return ["user":"SYSTEM"]
+            }
+        }
+        request.getRequestURL() >> { return new StringBuffer("/dataset/identifier") }
+        storage.load(_) >> {
+            new Document(
+                    it.first(),
+                    ["@id":it.first(),"@type":"Record","contains":"some data"],
+                    ["dataset":"dataset","modified":new Date().getTime(), "created":new Date(0).getTime()]
+            )
+        }
+        storage.store(_) >> { return it.first() }
+        when:
+        crud.doPost(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_CREATED
+
 
     }
 

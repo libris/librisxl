@@ -141,6 +141,7 @@ class Crud extends HttpServlet {
                     contentType = document.contentType
                 }
                 if (document.isJson()) {
+                    log.info("This is the data: ${document.data}")
                     sendResponse(response, (flat ? JsonLd.flatten(document.data) : JsonLd.frame(document.identifier, document.data)), contentType)
                 } else {
                     sendResponse(response, document.data.get(Document.NON_JSON_CONTENT_KEY) ?: document.data, contentType) // For non json data, the convention is to keep the data in "content"

@@ -6,6 +6,7 @@ import whelk.converter.FormatConverter
 import whelk.converter.JsonLDLinkCompleterFilter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.converter.MarcJSONConverter
+import whelk.util.Tools
 
 import java.sql.*
 import java.util.concurrent.*
@@ -78,6 +79,7 @@ class MySQLImporter {
             if (dataset == "auth") {
                 log.info("Creating auth load statement.")
                 statement = conn.prepareStatement("SELECT auth_id, data FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
+                //statement = conn.prepareStatement("SELECT auth_id, data FROM auth_record WHERE auth_id = ? AND deleted = 0 ORDER BY auth_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
             }
             if (dataset == "bib") {
                 log.info("Creating bib load statement.")
@@ -99,6 +101,7 @@ class MySQLImporter {
             MarcRecord record = null
 
             statement.setInt(1, recordId)
+            //statement.setInt(1, 146775)
             resultSet = statement.executeQuery()
 
             log.debug("Query executed. Starting processing ...")
@@ -107,7 +110,7 @@ class MySQLImporter {
                 recordId = resultSet.getInt(1)
                 record = Iso2709Deserializer.deserialize(normalizeString(new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
 
-                buildDocument(recordId, record, dataset, null)
+                //buildDocument(recordId, record, dataset, null)
 
                 if (dataset == "auth") {
                     int auth_id = resultSet.getInt("auth_id")
@@ -142,6 +145,8 @@ class MySQLImporter {
             }
             log.debug("Clearing out remaining docs ...")
             buildDocument(null, null, dataset, null)
+            buildDocument(null, null, dataset, null)
+
 
         } catch(SQLException se) {
             log.error("SQL Exception", se)
@@ -152,18 +157,10 @@ class MySQLImporter {
             close(conn, statement, resultSet)
         }
 
-
-        /*
         queue.execute({
-            this.whelk.flush()
             log.debug("Resetting versioning setting for storages")
-            for (st in this.whelk.getStorages()) {
-                st.versioning = versioningSettings.get(st.id)
-            }
-            //log.info("Starting camel context ...")
-            //whelk.camelContext.resume()
+            this.whelk.storage.versioning = true
         } as Runnable)
-        */
 
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
@@ -177,7 +174,10 @@ class MySQLImporter {
         String dataset = type
         if (documentList.size() >= addBatchSize || record == null) {
             if (tickets.availablePermits() < 1) {
-                log.info("At $recordCount documents loaded: Queues are full at the moment. Waiting for some to finish.")
+                if (!log.isDebugEnabled()) {
+                    Tools.printSpinner("Holding for available queues at $recordCount documents ", recordCount)
+                }
+                log.debug("At $recordCount documents loaded: Queues are full at the moment. Waiting for some to finish.")
             }
             tickets.acquire()
             log.debug("Doclist has reached batch size. Sending it to bulkAdd (open the trapdoor)")
@@ -221,6 +221,9 @@ class MySQLImporter {
                 log.trace("New document received. Adding last ($lastIdentifier}) to the doclist")
                 recordCount++
                 documentList << buildingMetaRecord.remove(lastIdentifier)
+                if (!log.isDebugEnabled()) {
+                    Tools.printSpinner("Working. Currently $recordCount documents imported", recordCount)
+                }
             }
             lastIdentifier = identifier
         } catch (Exception e) {
