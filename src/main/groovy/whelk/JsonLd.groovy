@@ -68,17 +68,47 @@ public class JsonLd {
         if (isFramed(flatJsonLd)) {
             return flatJsonLd
         }
-
         def idMap = getIdMap(flatJsonLd)
-        def framedMap = idMap.get(mainId)
+        def mainItemMap = idMap.get(mainId)
+        Map framedMap
         try {
-            framedMap = embed(framedMap, idMap, [])
+            framedMap = embed(mainId, mainItemMap, idMap, new HashSet<String>())
         } catch (StackOverflowError sofe) {
-            throw new FramingException("Unable to frame JSONLD (recursive loop?)", sofe)
+            throw new FramingException("Unable to frame JSONLD ($flatJsonLd). Recursive loop?)", sofe)
         }
 
         return framedMap
     }
+
+    private static Map embed(String mainId, Map mainItemMap, Map idMap, Set embedChain) {
+        embedChain.add(mainId)
+        mainItemMap.each { key, value ->
+            mainItemMap.put(key, toEmbedded(value, idMap, embedChain))
+        }
+        return mainItemMap
+    }
+
+    private static Object toEmbedded(Object o, Map idMap, Set embedChain) {
+        if (o instanceof List) {
+            def newList = []
+            o.each {
+                newList.add(toEmbedded(it, idMap, embedChain))
+            }
+            return newList
+        }
+        if (o instanceof Map) {
+            def oId = o.get(ID_KEY)
+            if (oId && !embedChain.contains(oId)) {
+                def obj = idMap.get(oId)
+                if (obj) {
+                    return embed(oId, obj, idMap, embedChain)
+                }
+            }
+        }
+        return o
+    }
+
+
 
     static boolean isFlat(Map jsonLd) {
         if (jsonLd.size() == 1 && (jsonLd.containsKey(GRAPH_KEY) || jsonLd.containsKey(DESCRIPTIONS_KEY))) {
@@ -92,29 +122,6 @@ public class JsonLd {
             return true
         }
         return false
-    }
-
-    private static Map embed(Map framedMap, Map idMap, List embedChain) {
-        framedMap.each { key, value ->
-            if (key == ID_KEY) {
-                embedChain.add(value)
-            }
-            if (value instanceof Map && value.containsKey(ID_KEY) && idMap.containsKey(value.get(ID_KEY))) {
-                framedMap.put(key, embed(idMap.get(value.get(ID_KEY)), idMap, embedChain))
-            }
-            if (value instanceof List) {
-                def newList = []
-                for (l in value) {
-                    if (l instanceof Map && l.containsKey(ID_KEY) && idMap.containsKey(l.get(ID_KEY)) && !embedChain.contains(l.get(ID_KEY))) {
-                        newList.add(embed(idMap.get(l.get(ID_KEY)), idMap, embedChain))
-                    } else {
-                        newList.add(l)
-                    }
-                }
-                framedMap.put(key, newList)
-            }
-        }
-        return framedMap
     }
 
     private static Map getIdMap(Map flatJsonLd) {
