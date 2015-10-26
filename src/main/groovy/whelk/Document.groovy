@@ -129,6 +129,20 @@ class Document {
 
     Map getManifest() { manifest }
 
+    @JsonIgnore
+    List getQuoted() {
+        return getData().get("descriptions", [:]).get("quoted")
+    }
+
+    @JsonIgnore
+    String getQuotedAsString() {
+        List quoteds = getQuoted()
+        if (quoteds) {
+            return mapper.writeValueAsString(quoteds)
+        }
+        return null
+    }
+
     Document withData(Map data) {
         setData(data)
         return this

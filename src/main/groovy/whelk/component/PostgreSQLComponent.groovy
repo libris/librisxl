@@ -64,8 +64,8 @@ class PostgreSQLComponent implements Storage {
         }
 
         // Setting up sql-statements
-        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ? RETURNING *) " +
-            "INSERT INTO $mainTableName (id, data, manifest, deleted) SELECT ?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
+        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ? RETURNING *) " +
+            "INSERT INTO $mainTableName (id, data, quoted, manifest, deleted) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
 
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"// (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)" +
@@ -172,14 +172,16 @@ class PostgreSQLComponent implements Storage {
 
     private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime) {
         insert.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
-        insert.setObject(2, doc.manifestAsJson, java.sql.Types.OTHER)
-        insert.setBoolean(3, doc.isDeleted())
-        insert.setTimestamp(4, new Timestamp(modTime.getTime()))
-        insert.setString(5, doc.identifier)
+        insert.setObject(2, doc.quotedAsString, java.sql.Types.OTHER)
+        insert.setObject(3, doc.manifestAsJson, java.sql.Types.OTHER)
+        insert.setBoolean(4, doc.isDeleted())
+        insert.setTimestamp(5, new Timestamp(modTime.getTime()))
         insert.setString(6, doc.identifier)
-        insert.setObject(7, doc.dataAsString, java.sql.Types.OTHER)
-        insert.setObject(8, doc.manifestAsJson, java.sql.Types.OTHER)
-        insert.setBoolean(9, doc.isDeleted())
+        insert.setString(7, doc.identifier)
+        insert.setObject(8, doc.dataAsString, java.sql.Types.OTHER)
+        insert.setObject(9, doc.quotedAsString, java.sql.Types.OTHER)
+        insert.setObject(10, doc.manifestAsJson, java.sql.Types.OTHER)
+        insert.setBoolean(11, doc.isDeleted())
 
         return insert
     }
