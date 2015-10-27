@@ -2,14 +2,25 @@
 
 The project layout is as follows:
 
-* etc/
-    Configuration files for different environments and configurations. The files from here are copied into build/resources/main on project build.
-* src/
-    Standard gradle/maven source-layout
-* dep/
-    Third party libraries not available from maven central or other online repositories.
-* librisxl-tools/
-    Various scripts used for maintenance and operations.
+* General modules
+    * core/
+        The LIBRISXL core. Database, index and basic infrastructure components.
+    * converters/
+        Module containing data converters.
+* Applications
+    * rest/
+        A servlet web application. The REST and other HTTP APIs
+    * oaipmhharvester/
+        An OAIPMH harvester. Servlet web application.
+    * oaipmhexporter/
+        Servlet web application. OAIPMH service for LIBRISXL
+    * vcopyimporter/
+        A java application to load data from the vcopy database
+* Other
+    * dep/
+        Third party libraries not available from maven central or other online repositories.
+    * librisxl-tools/
+        Various scripts used for maintenance and operations.
 
 
 ## Dependencies
