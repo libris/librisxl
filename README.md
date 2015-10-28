@@ -58,11 +58,11 @@ Install script requirements
 
 Get/create/update datasets:
 
-    $ python scripts/compile_defs.py -c cache/ -o build/
+    $ python datasets.py
 
 Load the resulting resources into the running whelk:
 
-    $ scripts/load_defs_whelk.sh http://localhost:8180/whelk
+    $ scripts/load-defs-whelk.sh http://localhost:8180/whelk
 
 
 ### Import/update local storage from test data
