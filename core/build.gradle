@@ -1,7 +1,11 @@
 apply plugin: 'groovy'
 apply plugin: 'java'
+apply plugin: 'maven'
 
 archivesBaseName = "xlcore"
+
+group = 'se.kb.libris'
+version = '1.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
