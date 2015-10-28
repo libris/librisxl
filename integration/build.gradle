@@ -1,0 +1,45 @@
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'war'
+apply plugin: 'jetty'
+
+group = 'se.kb.libris.integration'
+version = '1.0'
+
+// Application build for testing purposes
+mainClassName = "se.kb.libris.integration.LibrisIntegrationApplication"
+
+war.archiveName = "whelk-integration.war"
+
+sourceCompatibility = 1.7
+
+sourceSets {
+    main {
+        java { srcDirs 'src/main/java' }
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "http://repo1.maven.org/maven2" }
+    maven { url "http://repo.fusesource.com/maven2" }
+    maven { url "http://repo.fusesource.com/nexus/content/repositories/releases"}
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+
+    compile 'org.apache.camel:camel-core:2.15.3'
+    compile 'org.apache.camel:camel-spring:2.15.3'
+    compile 'org.apache.camel:camel-jms:2.15.3'
+    compile 'org.apache.camel:camel-elasticsearch:2.15.3'
+    compile 'org.apache.camel:camel-http4:2.15.3'
+
+    compile 'org.springframework:spring-web:4.2.1.RELEASE'
+
+    compile 'org.apache.activemq:activemq-all:5.8.0'
+    compile 'org.apache.activemq:activemq-pool:5.8.0'
+
+    compile 'org.elasticsearch:elasticsearch:1.7.2'
+}
