@@ -73,7 +73,7 @@ class SearchAPI implements RestAPI {
             performQuery(elasticQuery, indexConfig) +
             (callback ? ");" : "")
 
-            DocumentAPI.sendResponse(response, jsonResult, "application/json")
+            HttpTools.sendResponse(response, jsonResult, "application/json")
 
         } catch (WhelkRuntimeException wrte) {
             response.sendError(response.SC_NOT_FOUND)

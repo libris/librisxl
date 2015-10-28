@@ -78,7 +78,6 @@ class Crud extends HttpServlet {
 
         pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
 
-        pico.addComponent(DocumentAPI.class)
         pico.addComponent(ISXNTool.class)
 
         pico.start()

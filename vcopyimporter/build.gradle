@@ -95,6 +95,7 @@ configurations {
 task(doRun, dependsOn: "classes", type: JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     main = "whelk.importer.ImporterMain"
+    System.setProperty('xl.secret.properties', System.getProperty("xl.secret.properties"))
     args(System.getProperty("args", "").split() as String[])
 }
 

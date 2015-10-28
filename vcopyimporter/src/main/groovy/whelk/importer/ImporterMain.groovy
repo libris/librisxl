@@ -29,8 +29,18 @@ class ImporterMain {
 
         Properties props = new Properties()
 
-        props.load(secretsConfig)
-        props.load(mysqlConfig)
+        try {
+            props.load(secretsConfig)
+            props.load(mysqlConfig)
+        } catch (GroovyRuntimeException gre) {
+            if (secretsConfig == null) {
+                System.err.println("No secret.properties found in classpath. You'll need to specify its location using \"-Dxl.secret.properties=<property file location>\"")
+            }
+            if (mysqlConfig == null) {
+                System.err.println("No mysql.properties found in classpath. You'll need to specify its location using \"-Dxl.mysql.properties=<property file location>\"")
+            }
+            System.exit(1)
+        }
 
         pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)

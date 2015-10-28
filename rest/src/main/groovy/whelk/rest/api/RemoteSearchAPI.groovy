@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 import whelk.converter.marc.MarcFrameConverter
+import whelk.rest.ServiceServlet
 
 import java.util.concurrent.*
 import javax.servlet.http.*
@@ -22,7 +23,7 @@ import whelk.converter.*
 import java.util.regex.Pattern
 
 @Log
-class RemoteSearchAPI implements RestAPI {
+class RemoteSearchAPI extends ServiceServlet {
     final static mapper = new ElasticJsonMapper()
 
     String description = "Query API for remote search"
@@ -90,7 +91,7 @@ class RemoteSearchAPI implements RestAPI {
     }
 
     @Override
-    void handle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
+    void doGet(HttpServletRequest request, HttpServletResponse response) {
         def query = request.getParameter("q")
         int start = (request.getParameter("start") ?: "0") as int
         int n = (request.getParameter("n") ?: "10") as int
@@ -172,7 +173,7 @@ class RemoteSearchAPI implements RestAPI {
         if (!output) {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT)
         } else {
-            DocumentAPI.sendResponse(response, output, "application/json")
+            HttpTools.sendResponse(response, output, "application/json")
         }
     }
 

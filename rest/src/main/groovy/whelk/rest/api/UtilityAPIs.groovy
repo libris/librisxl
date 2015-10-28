@@ -44,7 +44,7 @@ class FormatterAPI implements RestAPI {
                 } else {
                     log.info("No conversion requested. Returning document as is.")
                 }
-                DocumentAPI.sendResponse(response, doc.dataAsString, doc.contentType)
+                HttpTools.sendResponse(response, doc.dataAsString, doc.contentType)
             }
         } else {
             response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED)
@@ -74,7 +74,7 @@ class HoldCounter extends SearchAPI {
         elasticQuery.n = 0
 
         try {
-            DocumentAPI.sendResponse(response, performQuery(elasticQuery, null), "application/json")
+            HttpTools.sendResponse(response, performQuery(elasticQuery, null), "application/json")
         } catch (WhelkRuntimeException wrte) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, wrte.message)
 
@@ -92,7 +92,7 @@ class ISXNTool implements RestAPI {
         if (request.getParameter("isbn")) {
             handleIsbn(request, response)
         } else {
-            DocumentAPI.sendResponse(response, '{"error":"No valid parameter found."}', "application/json")
+            HttpTools.sendResponse(response, '{"error":"No valid parameter found."}', "application/json")
         }
     }
 
@@ -127,7 +127,7 @@ class ISXNTool implements RestAPI {
             isbnmap["valid"] = false
             isbnmap["error"] = new String("Failed to parse $providedIsbn as ISBN")
         }
-        DocumentAPI.sendResponse(response, mapper.writeValueAsString(["isbn":isbnmap]), "application/json")
+        HttpTools.sendResponse(response, mapper.writeValueAsString(["isbn":isbnmap]), "application/json")
     }
 
     boolean validISBN(String isbn) {
@@ -208,7 +208,7 @@ class CompleteExpander implements RestAPI {
                 if (!resultMap) {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND)
                 } else {
-                    DocumentAPI.sendResponse(response, mapper.writeValueAsString(resultMap), "application/json")
+                    HttpTools.sendResponse(response, mapper.writeValueAsString(resultMap), "application/json")
                 }
 
             }
