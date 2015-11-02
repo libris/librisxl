@@ -30,7 +30,7 @@ repositories {
 
 dependencies {
     def activeMQVersion = "5.11.1"
-    def groovyVersion="2.3.10"
+    def groovyVersion= GroovySystem.getVersion()
 
     // LIBRISXL modules
     compile project(':../core')
@@ -114,3 +114,4 @@ task(console, dependsOn: 'classes', type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
   main = 'groovy.ui.Console'
 }
+
