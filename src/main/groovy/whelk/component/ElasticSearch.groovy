@@ -62,11 +62,14 @@ class ElasticSearch implements Index {
             client = new TransportClient(elasticSettings)
             try {
                 elastichost.split(",").each {
-                        def (host, port) = it.split(":")
-                        if (!port) {
-                            port = 9300
-                        }
-                        client = ((TransportClient)client).addTransportAddress(new InetSocketTransportAddress(host, port as int))
+                    def host, port
+                    if (it.contains(":")) {
+                        (host, port) = it.split(":")
+                    } else {
+                        host = it
+                        port = 9300
+                    }
+                    client = ((TransportClient)client).addTransportAddress(new InetSocketTransportAddress(host, port as int))
                 }
             } catch (ArrayIndexOutOfBoundsException aioobe) {
                 throw new WhelkRuntimeException("Unable to initialize elasticsearch client. Host configuration might be missing port?")
