@@ -14,6 +14,7 @@ import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.Document
+import whelk.JsonLd
 
 import whelk.converter.FormatConverter
 import whelk.converter.MarcJSONConverter
@@ -114,6 +115,10 @@ class MarcFrameConverter implements FormatConverter {
         def source = converter.mapper.readValue(new File(fpath), Map)
         def result = null
         if (cmd == "revert") {
+            if (source.descriptions) {
+                def entryId = source.descriptions.entry['@id']
+                source = JsonLd.frame(entryId, source)
+            }
             result = converter.runRevert(source)
         } else {
             result = converter.runConvert(source)
@@ -487,18 +492,23 @@ class MarcRuleSet {
     }
 
     boolean matchesData(Map data) {
+        if(hasIntersection(asList(data['@type']), aboutTypeMap['?record']))
+            return true
         def thing = data[thingLink]
         if (!thing)
             return false
-        def types = thing['@type']
-        if (types instanceof String)
-            types = [types]
-        def aboutTypes = aboutTypeMap['?thing']
-        for (type in types) {
-            if (type in aboutTypes)
+        return hasIntersection(asList(thing['@type']), aboutTypeMap['?thing'])
+    }
+
+    boolean hasIntersection(Collection candidates, Collection matches) {
+        for (value in candidates) {
+            if (value in matches)
                 return true
         }
-        return false
+    }
+
+    List asList(v) {
+        return (v instanceof List)? v : [v]
     }
 
     void convert(Map marcSource, Map state) {
