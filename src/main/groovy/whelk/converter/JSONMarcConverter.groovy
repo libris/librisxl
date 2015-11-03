@@ -64,7 +64,7 @@ class JSONMarcConverter {
     }
 
     static String marcRecordAsXMLString(MarcRecord record) {
-        DocumentFragment docFragment = DomSerializer.serialize(record, javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument())
+        DocumentFragment docFragment = marcRecordAsXMLFragment(record)
         StringWriter sw = new StringWriter()
         Source source = new DOMSource(docFragment)
         Result result = new StreamResult(sw)
@@ -79,5 +79,10 @@ class JSONMarcConverter {
         }
 
         return sw.toString()
+    }
+
+    static DocumentFragment marcRecordAsXMLFragment(MarcRecord record) {
+        DocumentFragment docFragment = DomSerializer.serialize(record, javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument())
+        return docFragment
     }
 }
