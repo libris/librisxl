@@ -30,7 +30,7 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
 
         MarcRecord record = JSONMarcConverter.fromJson(marcJsonDocument.getDataAsString())
 
-        record = prepareRecord(record)
+        record = prepareRecord(record, doc.id, doc.modified, doc.checksum)
 
         Document xmlDocument = new Document(doc.id, [(Document.NON_JSON_CONTENT_KEY): whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record)], doc.manifest).withContentType(getResultContentType())
 
@@ -38,19 +38,19 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
         return xmlDocument
     }
 
-    static MarcRecord prepareRecord(record) {
+    static MarcRecord prepareRecord(record, identifier, modified, checksum) {
         log.debug("Setting document identifier in field 887.")
         boolean has887Field = false
         for (field in record.getDatafields("887")) {
             if (!field.getSubfields("2").isEmpty() && field.getSubfields("2").first().data == "librisxl") {
                 has887Field = true
                 def subFieldA = field.getSubfields("a").first()
-                subFieldA.setData(mapper.writeValueAsString(["@id":doc.identifier,"modified":doc.modified,"checksum":doc.checksum]))
+                subFieldA.setData(mapper.writeValueAsString(["@id":identifier,"modified":modified,"checksum":checksum]))
             }
         }
         if (!has887Field) {
             def df = record.createDatafield("887")
-            df.addSubfield("a".charAt(0), mapper.writeValueAsString(["@id":doc.identifier,"modified":doc.modified,"checksum":doc.checksum]))
+            df.addSubfield("a".charAt(0), mapper.writeValueAsString(["@id":identifier,"modified":modified,"checksum":checksum]))
             df.addSubfield("2".charAt(0), "librisxl")
             record.addField(df)
         }
@@ -63,7 +63,7 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
         Document marcJsonDocument = jsonldConverter.convert(doc)
 
         MarcRecord record = JSONMarcConverter.fromJson(marcJsonDocument.dataAsString)
-        record = prepareRecord(record)
+        record = prepareRecord(record, doc.id, doc.modified, doc.checksum)
 
         return whelk.converter.JSONMarcConverter.marcRecordAsXMLFragment(record)
     }
