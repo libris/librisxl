@@ -66,8 +66,6 @@ dependencies {
     compile project(':../core')
     compile project(':../converters')
 
-    def camelVersion = "2.14.1"
-    def activeMQVersion = "5.11.1"
     def groovyVersion=GroovySystem.getVersion()
     def jettyVersion="8.1.16.v20140903"
 

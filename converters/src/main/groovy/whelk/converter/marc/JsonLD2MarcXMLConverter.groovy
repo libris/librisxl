@@ -2,6 +2,7 @@ package whelk.converter.marc
 
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
+import org.w3c.dom.DocumentFragment
 import se.kb.libris.util.marc.MarcRecord
 import whelk.Document
 import whelk.JsonLd
@@ -29,6 +30,15 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
 
         MarcRecord record = JSONMarcConverter.fromJson(marcJsonDocument.getDataAsString())
 
+        record = prepareRecord(record)
+
+        Document xmlDocument = new Document(doc.id, [(Document.NON_JSON_CONTENT_KEY): whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record)], doc.manifest).withContentType(getResultContentType())
+
+        log.debug("Document ${xmlDocument.identifier} created successfully with entry: ${xmlDocument.manifest}")
+        return xmlDocument
+    }
+
+    static MarcRecord prepareRecord(record) {
         log.debug("Setting document identifier in field 887.")
         boolean has887Field = false
         for (field in record.getDatafields("887")) {
@@ -44,11 +54,18 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
             df.addSubfield("2".charAt(0), "librisxl")
             record.addField(df)
         }
+        return record
+    }
 
-        Document xmlDocument = new Document(doc.id, [(Document.NON_JSON_CONTENT_KEY): whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record)], doc.manifest).withContentType(getResultContentType())
+    DocumentFragment convertToFragment(final Document doc) {
+        doc.withData(JsonLd.frame(doc.id, doc.data))
 
-        log.debug("Document ${xmlDocument.identifier} created successfully with entry: ${xmlDocument.manifest}")
-        return xmlDocument
+        Document marcJsonDocument = jsonldConverter.convert(doc)
+
+        MarcRecord record = JSONMarcConverter.fromJson(marcJsonDocument.dataAsString)
+        record = prepareRecord(record)
+
+        return whelk.converter.JSONMarcConverter.marcRecordAsXMLFragment(record)
     }
 
     @Override
