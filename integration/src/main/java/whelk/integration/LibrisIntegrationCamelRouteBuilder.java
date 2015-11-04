@@ -8,6 +8,9 @@ import org.apache.camel.component.elasticsearch.aggregation.BulkRequestAggregati
 import whelk.filter.JsonLdLinkExpander;
 import whelk.component.PostgreSQLComponent;
 
+import java.io.IOException;
+import java.util.Properties;
+
 public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
 
     final static String VALID_CONTENTTYPE_REGEX = "application\\/(\\w+\\+)*json|application\\/x-(\\w+)-json|text/plain";
@@ -24,11 +27,12 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
         String activemqIndexQueue = properties.getProperty("activemq_es_index_queue");
         String activemqApixQueue = properties.getProperty("activemq_apix_queue");
         String activemqApixRetriesQueue = properties.getProperty("activemq_apix_retries_queue");
+        String apixUri = properties.getProperty("apix_Uri");
 
         BulkRequestAggregationStrategy bulkRequestAggregationStrategy = new BulkRequestAggregationStrategy();
-        PostgreSQLComponent postgreSQLComponent = new PostgreSQLComponent(sqlUrl, slqMainTable);
+        PostgreSQLComponent postgreSQLComponent = new PostgreSQLComponent(postgresqlUrl, postgresqlMainTable);
         ElasticProcessor elasticProcessor = new ElasticProcessor(elasticCluster, elasticHost, elasticPort, new JsonLdLinkExpander(postgreSQLComponent));
-        APIXProcessor apixProcessor =
+        APIXProcessor apixProcessor = new APIXProcessor("PREFIX??");
 
         // Exception handling
         onException(Exception.class)
@@ -38,21 +42,21 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
         // Activemq to Elasticsearch
         from(activemqIndexQueue)
                 .filter(header("document:contentType").regex(VALID_CONTENTTYPE_REGEX))
-                .process()
+                //.process()
                 .aggregate(header("document:dataset"), bulkRequestAggregationStrategy).completionSize(2000).completionTimeout(5000)
                 .routingSlip(header("elasticDestination"));
                 //.to("elasticsearch:local?operation=INDEX&indexName=test&indexType=test");
 
         // Activemq to APIX
-        from(messageQueue)
+        from(activemqApixQueue)
                 .filter("groovy", "['ADD', 'DELETE'].contains(request.getHeader('whelk:operation'))")
                 .filter("groovy", "['auth','bib','hold'].contains(request.getHeader('document:dataset'))") // Only save auth hold and bib
                 .process(apixProcessor)
                 .to(apixUri)
-                .process(apixResponseProcessor)
+                .process(apixProcessor)
                 .choice()
                 .when(header("retry"))
-                .to(retriesQueue)
+                .to(activemqApixRetriesQueue)
                 .otherwise()
                 .end();
 
@@ -63,8 +67,9 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
         // TODO: Activemq retries to APIX
     }
 
-    private Properties getProperties() {
-        Properties properties = this.getClass().getClassLoader().getResourceAsStream("integration.properties");
+    private Properties getProperties() throws IOException {
+        Properties properties = new Properties();
+        properties.load(this.getClass().getClassLoader().getResourceAsStream("integration.properties"));
         return properties;
     }
 }

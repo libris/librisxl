@@ -2,12 +2,15 @@ package whelk.integration.process
 
 import groovy.util.logging.Slf4j as Log
 
+import org.apache.camel.Exchange
+import org.apache.camel.Message
+import org.apache.camel.Processor
 import whelk.Document
 
 @Log
-class APIXResponseProcessor extends BasicPlugin implements Processor {
+class APIXResponseProcessor implements Processor {
 
-    @Override
+    //@Override
     public void process(Exchange exchange) throws Exception {
         Message message = exchange.getIn()
         if (log.isTraceEnabled()) {

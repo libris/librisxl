@@ -8,7 +8,7 @@ import org.apache.camel.Processor
 import org.apache.camel.component.http4.HttpMethods
 
 import whelk.Document
-import whelk.JsonDocument //Should be in core?
+//import whelk.JsonDocument //Should be in core? No, eclipsed by whelk.Document.
 
 
 @Log
@@ -48,14 +48,8 @@ class APIXProcessor implements org.apache.camel.Processor {
             if (!messagePrepared) {
                 def doc = createDocument(message)
                 log.debug("Recreated document in preparation for deletion. (${doc?.identifier})")
-                String voyagerUri
-                if (doc instanceof JsonDocument) {
-                    voyagerUri = getVoyagerUri(doc)
-                    log.debug("got voyageruri $voyagerUri from doc")
-                } else {
-                    voyagerUri = getVoyagerUri(message.getHeader("document:identifier"), message.getHeader("document:dataset"))
+                String voyagerUri = getVoyagerUri(message.getHeader("document:identifier"), message.getHeader("document:dataset"))
                     log.debug("got voyageruri $voyagerUri from headers")
-                }
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
                 if (doc) {
                     prepareMessage(doc, message)
