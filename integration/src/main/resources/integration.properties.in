@@ -8,4 +8,5 @@ postgresql_maintable=
 activemq_es_index_queue=
 activemq_apix_queue=
 activemq_apix_retries_queue=
-apix_Uri=
+apix_uri=
+apix_path=

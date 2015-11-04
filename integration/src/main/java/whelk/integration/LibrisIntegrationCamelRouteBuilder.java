@@ -27,12 +27,13 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
         String activemqIndexQueue = properties.getProperty("activemq_es_index_queue");
         String activemqApixQueue = properties.getProperty("activemq_apix_queue");
         String activemqApixRetriesQueue = properties.getProperty("activemq_apix_retries_queue");
-        String apixUri = properties.getProperty("apix_Uri");
+        String apixUri = properties.getProperty("apix_uri");
+        String apixPath = properties.getProperty("apix_path");
 
         BulkRequestAggregationStrategy bulkRequestAggregationStrategy = new BulkRequestAggregationStrategy();
         PostgreSQLComponent postgreSQLComponent = new PostgreSQLComponent(postgresqlUrl, postgresqlMainTable);
         ElasticProcessor elasticProcessor = new ElasticProcessor(elasticCluster, elasticHost, elasticPort, new JsonLdLinkExpander(postgreSQLComponent));
-        APIXProcessor apixProcessor = new APIXProcessor("PREFIX??");
+        APIXProcessor apixProcessor = new APIXProcessor(apixPath);
 
         // Exception handling
         onException(Exception.class)
