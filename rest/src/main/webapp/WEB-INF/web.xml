@@ -38,6 +38,16 @@
         <servlet-class>whelk.rest.api.Crud</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
+    <servlet>
+        <servlet-name>RemoteSearch</servlet-name>
+        <servlet-class>whelk.rest.api.RemoteSearchAPI</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>RemoteSearch</servlet-name>
+        <url-pattern>/_remotesearch</url-pattern>
+    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>WhelkServlet</servlet-name>

@@ -15,7 +15,6 @@ import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.exception.*
 import whelk.component.*
-import whelk.rest.api.DocumentAPI
 
 @Log
 class HttpWhelk extends HttpServlet {
@@ -51,7 +50,6 @@ class HttpWhelk extends HttpServlet {
 
         pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
 
-        pico.addComponent(DocumentAPI.class)
         pico.addComponent(ISXNTool.class)
 
         pico.start()
@@ -104,7 +102,6 @@ class HttpWhelk extends HttpServlet {
                 printAvailableAPIs(response, whelkinfo)
             } else {
                 log.info("Accessing $path")
-                //def api = pico.getComponent(DocumentAPI.class)
                 //api.handle(request, response, [path])
 
                 def (api, pathVars) = getAPIForPath(path)

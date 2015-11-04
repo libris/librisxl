@@ -14,6 +14,7 @@ import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.Document
+import whelk.JsonLd
 
 import whelk.converter.FormatConverter
 import whelk.converter.MarcJSONConverter
@@ -114,6 +115,10 @@ class MarcFrameConverter implements FormatConverter {
         def source = converter.mapper.readValue(new File(fpath), Map)
         def result = null
         if (cmd == "revert") {
+            if (source.descriptions) {
+                def entryId = source.descriptions.entry['@id']
+                source = JsonLd.frame(entryId, source)
+            }
             result = converter.runRevert(source)
         } else {
             result = converter.runConvert(source)
@@ -298,7 +303,9 @@ class MarcConversion {
         def quotedIds = new HashSet()
 
         state.quotedEntities.each { ent ->
-            //def endId = ent['@id'] ?: ent['sameAs']?.getAt(0)?.get('@id')
+            //def entId = ent['@id']
+            //    ?: ent['sameAs']?.getAt(0)?.get('@id')
+            //    ?: makeSomeId(ent)
             def entId = ent['@id'] ?: makeSomeId(ent)
             if (entId) {
                 def copy = ent.clone()
@@ -313,6 +320,7 @@ class MarcConversion {
 
         return [
             'descriptions': [entry: record, items: [thing], quoted: quotedEntities]
+            //'@graph': [record, thing] + quotedEntities
         ]
     }
 
@@ -345,8 +353,8 @@ class MarcConversion {
                 def keypath = path + key
                 if (it instanceof String) {
                     acc[keypath] = it
-                //} else {
-                //    collectUriData(it, acc, keypath + '.')
+                } else {
+                    collectUriData(it, acc, keypath + '.')
                 }
             }
         }
@@ -417,7 +425,7 @@ class MarcRuleSet {
         this.aboutTypeMap['?thing'] = new HashSet<String>()
     }
 
-    void buildHandlers(config) {
+    void buildHandlers(Map config) {
         def subConf = config[name]
 
         subConf.each { tag, dfn ->
@@ -432,9 +440,7 @@ class MarcRuleSet {
                 return
             }
 
-            if (dfn.inherit) {
-                dfn = processInherit(config, subConf, tag, dfn)
-            }
+            dfn = processInherit(config, subConf, tag, dfn)
             if (dfn.ignored || dfn.size() == 0) {
                 return
             }
@@ -467,6 +473,10 @@ class MarcRuleSet {
 
     def processInherit(config, subConf, tag, fieldDfn) {
         def ref = fieldDfn.inherit
+        if (!ref) {
+            return fieldDfn
+        }
+
         def refTag = tag
         if (ref.contains(':')) {
             (ref, refTag) = ref.split(':')
@@ -482,18 +492,23 @@ class MarcRuleSet {
     }
 
     boolean matchesData(Map data) {
+        if(hasIntersection(asList(data['@type']), aboutTypeMap['?record']))
+            return true
         def thing = data[thingLink]
         if (!thing)
             return false
-        def types = thing['@type']
-        if (types instanceof String)
-            types = [types]
-        def aboutTypes = aboutTypeMap['?thing']
-        for (type in types) {
-            if (type in aboutTypes)
+        return hasIntersection(asList(thing['@type']), aboutTypeMap['?thing'])
+    }
+
+    boolean hasIntersection(Collection candidates, Collection matches) {
+        for (value in candidates) {
+            if (value in matches)
                 return true
         }
-        return false
+    }
+
+    List asList(v) {
+        return (v instanceof List)? v : [v]
     }
 
     void convert(Map marcSource, Map state) {
@@ -1620,6 +1635,7 @@ class MarcSubFieldHandler extends ConversionPart {
     boolean required = false
     String requiresI1
     String requiresI2
+    // TODO: itemPos is not used right now. Only supports first/rest.
     String itemPos
 
     MarcSubFieldHandler(fieldHandler, code, Map subDfn) {

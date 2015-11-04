@@ -30,7 +30,7 @@ repositories {
 
 dependencies {
     def activeMQVersion = "5.11.1"
-    def groovyVersion="2.3.10"
+    def groovyVersion= GroovySystem.getVersion()
 
     // LIBRISXL modules
     compile project(':../core')
@@ -95,6 +95,10 @@ configurations {
 task(doRun, dependsOn: "classes", type: JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     main = "whelk.importer.ImporterMain"
+    systemProperties( [
+        'xl.secret.properties': System.getProperty("xl.secret.properties"),
+        'xl.mysql.properties': System.getProperty("xl.mysql.properties")
+    ] )
     args(System.getProperty("args", "").split() as String[])
 }
 
@@ -110,3 +114,4 @@ task(console, dependsOn: 'classes', type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
   main = 'groovy.ui.Console'
 }
+

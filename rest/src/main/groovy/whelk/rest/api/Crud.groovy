@@ -78,7 +78,6 @@ class Crud extends HttpServlet {
 
         pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
 
-        pico.addComponent(DocumentAPI.class)
         pico.addComponent(ISXNTool.class)
 
         pico.start()
@@ -92,7 +91,7 @@ class Crud extends HttpServlet {
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
-
+        log.info("in crud doGet()")
         /*
         if (request.pathInfo.endsWith("/")) {
             return handleQuery(request, response, request.pathInfo)

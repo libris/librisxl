@@ -4,17 +4,13 @@ import groovy.util.logging.Slf4j as Log
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 import whelk.converter.marc.MarcFrameConverter
+import whelk.rest.ServiceServlet
 
 import java.util.concurrent.*
 import javax.servlet.http.*
 
 import whelk.*
-import whelk.api.*
 import whelk.component.*
-import whelk.exception.*
-import whelk.plugin.*
-import whelk.plugin.libris.*
-import whelk.result.*
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 import whelk.converter.*
@@ -22,7 +18,7 @@ import whelk.converter.*
 import java.util.regex.Pattern
 
 @Log
-class RemoteSearchAPI implements RestAPI {
+class RemoteSearchAPI extends HttpServlet {
     final static mapper = new ElasticJsonMapper()
 
     String description = "Query API for remote search"
@@ -33,26 +29,18 @@ class RemoteSearchAPI implements RestAPI {
 
     MarcFrameConverter marcFrameConverter
 
-    URL metaProxyInfoUrl
-    String metaProxyBaseUrl
+    URL metaProxyInfoUrl = new URL("http://mproxy.libris.kb.se/db_Metaproxy.xml")
+    String metaProxyBaseUrl = "http://mproxy.libris.kb.se:8000"
 
     final String DEFAULT_DATABASE = "LC"
 
     def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10","startRecord": "1"]
 
-    RemoteSearchAPI(String metaProxyBaseUrl, String metaProxyInfoUrl) {
-        this.metaProxyBaseUrl = metaProxyBaseUrl
-        // Cut trailing slashes from url
-        while (metaProxyBaseUrl.endsWith("/")) {
-            metaProxyBaseUrl = metaProxyBaseUrl[0..-1]
-        }
-        assert metaProxyBaseUrl
-        this.metaProxyInfoUrl = new URL(metaProxyInfoUrl)
-
-        // Prepare remoteURLs by loading settings once.
+    RemoteSearchAPI() {
+        log.info("Starting Remote Search API")
         loadMetaProxyInfo(metaProxyInfoUrl)
+        log.info("Up and running")
     }
-
 
     List loadMetaProxyInfo(URL url) {
         def xml = new XmlSlurper(false,false).parse(url.newInputStream())
@@ -90,7 +78,8 @@ class RemoteSearchAPI implements RestAPI {
     }
 
     @Override
-    void handle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
+    void doGet(HttpServletRequest request, HttpServletResponse response) {
+        log.info("Performing remote search ...")
         def query = request.getParameter("q")
         int start = (request.getParameter("start") ?: "0") as int
         int n = (request.getParameter("n") ?: "10") as int
@@ -125,7 +114,7 @@ class RemoteSearchAPI implements RestAPI {
                     for (database in databaseList) {
                         url = new URL(remoteURLs[database] + queryStr + "&query=" + URLEncoder.encode(query, "utf-8"))
                         log.debug("submitting to futures")
-                        futures << queue.submit(new MetaproxyQuery(whelk, url, database))
+                        futures << queue.submit(new MetaproxyQuery(url, database))
                     }
                     log.info("Started all threads. Now harvesting the future")
                     for (f in futures) {
@@ -172,7 +161,7 @@ class RemoteSearchAPI implements RestAPI {
         if (!output) {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT)
         } else {
-            DocumentAPI.sendResponse(response, output, "application/json")
+            HttpTools.sendResponse(response, output, "application/json")
         }
     }
 
@@ -180,13 +169,10 @@ class RemoteSearchAPI implements RestAPI {
 
         URL url
         String database
-        Whelk whelk
 
-        MetaproxyQuery(Whelk w, URL queryUrl, String db) {
+        MetaproxyQuery(URL queryUrl, String db) {
             this.url = queryUrl
             this.database = db
-            this.whelk = w
-            assert whelk
         }
 
         @Override

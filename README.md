@@ -30,7 +30,26 @@ The project layout is as follows:
 
 Optionally, see details about using a Graph Store at the end of this document.
 
+*IMPORTANT*: Some instructions below are obsolete. Some needs updating, some to be removed.
+
 ## Working locally
+
+### Importing data (NEW)
+
+First, create these config files from corresponding ".in"-files in the same
+directories, and fill out details:
+
+    vcopyimporter/src/main/resources/mysql.properties
+    core/src/main/resources/secret.properties
+
+Then:
+
+    $ cd vcopyimporter/
+
+and run the following to import and index data into a whelk (psql/es-combo)
+from a mysql-backed vcopy:
+
+    $ gradle doRun -Dargs="auth"
 
 ### Setup whelk.properties
 
@@ -58,11 +77,11 @@ Install script requirements
 
 Get/create/update datasets:
 
-    $ python scripts/compile_defs.py -c cache/ -o build/
+    $ python datasets.py
 
 Load the resulting resources into the running whelk:
 
-    $ scripts/load_defs_whelk.sh http://localhost:8180/whelk
+    $ scripts/load-defs-whelk.sh http://localhost:8180/whelk
 
 
 ### Import/update local storage from test data
