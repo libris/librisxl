@@ -2,9 +2,12 @@ package whelk.plugin
 
 import groovy.util.logging.Slf4j as Log
 
+import org.codehaus.jackson.map.ObjectMapper
+
 import java.util.concurrent.*
 
 import whelk.Whelk
+import whelk.JsonDocument
 
 @Log
 class ScheduledOperator extends BasicPlugin {
@@ -41,13 +44,6 @@ class ScheduledOperator extends BasicPlugin {
             log.info("Whelk ${this.whelk.id} is started in operations mode. No tasks scheduled.")
         }
     }
-
-    void testJob() {
-        log.info("Test job!")
-        def j = new ScheduledJob("test", getPlugin("oaipmhimporter"), "bib", whelk)
-        j.run()
-        log.info("Test complete!")
-    }
 }
 
 @Log
@@ -59,6 +55,10 @@ class ScheduledJob implements Runnable {
     Importer importer
     Whelk whelk
 
+    ConcurrentHashMap whelkState = null
+
+    static final String STATE_ID_PREFIX = "/sys/oaipmhstate."
+
     ScheduledJob(String id, whelk.plugin.Importer imp, String ds, Whelk w) {
         this.id = id
         this.importer = imp
@@ -66,20 +66,28 @@ class ScheduledJob implements Runnable {
         this.whelk = w
     }
 
+    void updateState() {
+        whelk.storage.store(new JsonDocument()
+            .withEntry(["dataset":"sys"])
+            .withContentType("application/json")
+            .withIdentifier(STATE_ID_PREFIX + dataset)
+            .withData(whelkState), false)
+    }
+
 
     void run() {
-        assert dataset
-
-        if (whelk.acquireLock(dataset)) {
-            log.trace("Lock acquired for $dataset")
-        } else {
-            log.trace("[${this.id}] Whelk is busy for dataset $dataset")
-            return
-        }
-
         try {
-            log.trace("all state: ${whelk.state}")
-            def whelkState = whelk.state.get(dataset) ?: [:]
+            if (!whelkState) {
+                log.info("Loading current state from storage ...")
+                whelkState = new ConcurrentHashMap()
+                def stateDoc = whelk.get(STATE_ID_PREFIX + dataset)
+                if (stateDoc) {
+                    def jd = new JsonDocument().fromDocument(stateDoc)
+                    whelkState.putAll(jd.dataAsMap)
+                }
+                log.info("Loaded state for $dataset : $whelkState")
+            }
+
             String lastImport = whelkState.get("lastImport")
             Date currentSince
             Date nextSince = new Date()
@@ -99,7 +107,7 @@ class ScheduledJob implements Runnable {
             whelkState.put("status", "RUNNING")
             whelkState.put("importOperator", this.id)
             whelkState.remove("lastImportOperator")
-            whelk.updateState(dataset, whelkState)
+            updateState()
             def result = importer.doImport(dataset, null, -1, true, true, nextSince)
 
             int totalCount = result.numberOfDocuments
@@ -117,13 +125,10 @@ class ScheduledJob implements Runnable {
             whelkState.put("status", "IDLE")
             whelkState.put("lastRunNrImported", result.numberOfDocuments)
             whelkState.put("lastRun", new Date().format(DATE_FORMAT))
-            whelk.updateState(dataset, whelkState)
+            updateState()
 
         } catch (Exception e) {
             log.error("Something failed: ${e.message}", e)
-        } finally {
-            whelk.releaseLock(dataset)
-            log.trace("Lock released for $dataset")
         }
     }
 
