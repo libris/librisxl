@@ -103,12 +103,16 @@ class ScheduledJob implements Runnable {
                 currentSince = nextSince
                 log.info("Whelk has no state for last import from $dataset. Setting last week (${nextSince})")
             }
+            if (nextSince.after(new Date())) {
+                log.warn("Since is slipping ... Is now ${nextSince}. Resetting to now()")
+                nextSince = new Date()
+            }
             log.debug("Executing OAIPMH import for $dataset since $nextSince from ${importer.serviceUrl}")
             whelkState.put("status", "RUNNING")
             whelkState.put("importOperator", this.id)
             whelkState.remove("lastImportOperator")
             updateState()
-            def result = importer.doImport(dataset, null, -1, true, true, nextSince)
+            def result = importer.doImport(dataset, null, -1, true, true, new Date(nextSince.getTime()))
 
             int totalCount = result.numberOfDocuments
             if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
