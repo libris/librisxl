@@ -147,6 +147,7 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
     def harvest(URL url, Date startDate) {
         long elapsed = System.currentTimeMillis()
         Date recordDate
+        Date now = new Date()
         def xmlString = normalizeString(url.text)
         if ((System.currentTimeMillis() - elapsed) > 5000) {
             log.warn("[$dataset / $recordCount] Load from URL ${url.toString()} took more than 5 seconds (${System.currentTimeMillis() - elapsed})")
@@ -187,6 +188,11 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                         recordDate = startDate
                         resumptionToken = null
                         break
+                    } else if (recordDate.after(now)) {
+                        log.error("Encountered datestamp in the future (${recordDate}) for record ${it.header.identifier}. Breaking.")
+                        recordDate = startDate
+                        resumptionToken = null
+                        break
                     }
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
                     log.trace("Marc record instantiated from XML.")
@@ -214,6 +220,17 @@ class OaiPmhImporter extends BasicPlugin implements Importer {
                 }
             } else if (it.header?.@status == 'deleted' || it.header?.@deleted == 'true') {
                 recordDate = Date.parse(DATE_FORMAT, it.header.datestamp.toString())
+                if (recordDate.before(startDate)) {
+                    log.error("Encountered datestamp older (${recordDate}) than starttime (${startDate}) for record ${it.header.identifier}. Breaking.")
+                    recordDate = startDate
+                    resumptionToken = null
+                    break
+                } else if (recordDate.after(now)) {
+                    log.error("Encountered datestamp in the future (${recordDate}) for record ${it.header.identifier}. Breaking.")
+                    recordDate = startDate
+                    resumptionToken = null
+                    break
+                }
                 String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
                     try {
                         whelk.remove(deleteIdentifier, this.dataset)
