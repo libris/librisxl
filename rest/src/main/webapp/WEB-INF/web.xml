@@ -43,7 +43,12 @@
         <servlet-class>whelk.rest.api.RemoteSearchAPI</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
-    
+
+    <servlet-mapping>
+        <servlet-name>WhelkServlet</servlet-name>
+        <url-pattern>/_iri/*</url-pattern>
+    </servlet-mapping>
+
     <servlet-mapping>
         <servlet-name>RemoteSearch</servlet-name>
         <url-pattern>/_remotesearch</url-pattern>

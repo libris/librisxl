@@ -39,6 +39,7 @@ class RemoteSearchAPI extends HttpServlet {
     RemoteSearchAPI() {
         log.info("Starting Remote Search API")
         loadMetaProxyInfo(metaProxyInfoUrl)
+        marcFrameConverter = new MarcFrameConverter()
         log.info("Up and running")
     }
 
@@ -70,13 +71,6 @@ class RemoteSearchAPI extends HttpServlet {
         return databases
     }
 
-
-    void bootstrap() {
-        log.debug("plugins: ${plugins}")
-        marcFrameConverter = plugins.find { it instanceof FormatConverter && it.resultContentType == "application/ld+json" && it.requiredContentType == "application/x-marc-json" }
-        assert marcFrameConverter
-    }
-
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         log.info("Performing remote search ...")
@@ -91,6 +85,7 @@ class RemoteSearchAPI extends HttpServlet {
         urlParams['maximumRecords'] = n
         urlParams['startRecord'] = (start < 1 ? 1 : start)
 
+        log.trace("Query is $query")
         if (query) {
             // Weed out the unavailable databases
             databaseList = databaseList.intersect(remoteURLs.keySet() as List)
