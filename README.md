@@ -25,7 +25,7 @@ The project layout is as follows:
 
 ## Dependencies
 
-1. Install gradle from <http://gradle.org/> (or use a package manager, e.g.: brew install gradle).
+1. Install gradle from <http://gradle.org/> (or use a package manager, e.g.: brew install gradle). Check gradle -version and make sure that Groovy version matches groovyVersion in build.gradle.
 2. Install elasticsearch from <http://elasticsearch.org/> (or use a package manager, e.g.: brew install elasticsearch).
 
 Optionally, see details about using a Graph Store at the end of this document.

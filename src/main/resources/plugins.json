@@ -683,7 +683,7 @@
             "availableTypes": "_property:AVAILABLE_TYPES",
             "databaseUrl": "_property:DATABASE_URL",
             "tableName": "_property:DATABASE_TABLENAME",
-            "contentTypes": ["application/ld+json","application/x-marc-json"],
+            "contentTypes": ["application/ld+json","application/x-marc-json", "application/json"],
             "versioning" : true
         }
     },

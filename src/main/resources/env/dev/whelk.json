@@ -15,25 +15,22 @@
         "DATABASE_URL": "jdbc:postgresql://localhost/whelk",
         "UPDATE_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",
         "UPDATE_HOLD_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",
-        "UPDATE_INTERVAL":3000
+        "UPDATE_INTERVAL":10
     },
     "_supportplugins": [
         "elasticnode",
-        "activemqbroker",
-        "fusekiserver"
+        "activemqbroker"
     ],
     "_plugins": {
         "_camel": [
-            "indexroutebuilder",
-            "graphstoreroutebuilder"
+            "indexroutebuilder"
             ],
         "_components": [
-            "jsonldstorage",
-            "index",
-            "graphstore"
+            "postgrestorage",
+            "index"
         ],
         "_maintenance": [
-            null
+            "scheduledoperator"
         ]
     }
 }
