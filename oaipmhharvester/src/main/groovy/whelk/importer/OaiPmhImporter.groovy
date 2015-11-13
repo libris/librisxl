@@ -84,6 +84,7 @@ class OaiPmhImporter {
         this.cancelled = false
         this.dataset = dataset
         this.recordCount = 0
+        this.skippedRecordCount = 0
         this.nrDeleted = 0
         if (!serviceUrl) {
             serviceUrl = SERVICE_BASE_URL
