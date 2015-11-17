@@ -13,6 +13,7 @@ import whelk.Location
 import whelk.Whelk
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
+import whelk.component.StorageType
 import whelk.converter.FormatConverter
 import whelk.converter.URIMinter
 import whelk.converter.marc.JsonLD2MarcConverter
@@ -88,15 +89,20 @@ class Crud extends HttpServlet {
         whelk = pico.getComponent(Whelk.class)
     }
 
+    void handleQuery(HttpServletRequest request, HttpServletResponse response, String dataset) {
+        def results = whelk.storage.ldApiQuery(request.getParameterMap(), dataset, StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS)
+        log.info("Found $results")
+        sendResponse(response, "ok. ${results.size()} results.", "text/plain")
+    }
+
+
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
-        log.info("in crud doGet()")
-        /*
         if (request.pathInfo.endsWith("/")) {
-            return handleQuery(request, response, request.pathInfo)
+            handleQuery(request, response, request.pathInfo)
+            return
         }
-        */
 
         try {
             def (path, mode) = determineDisplayMode(request.pathInfo)
@@ -139,9 +145,10 @@ class Crud extends HttpServlet {
                     log.debug("request is for context file. Must serve original content-type ($contentType).")
                     contentType = document.contentType
                 }
-                if (document.isJson()) {
-                    log.info("This is the data: ${document.data}")
+                if (document.isJsonLd()) {
                     sendResponse(response, (flat ? JsonLd.flatten(document.data) : JsonLd.frame(document.identifier, document.data)), contentType)
+                } else if (document.isJson()) {
+                    sendResponse(response, document.data, contentType)
                 } else {
                     sendResponse(response, document.data.get(Document.NON_JSON_CONTENT_KEY) ?: document.data, contentType) // For non json data, the convention is to keep the data in "content"
                 }

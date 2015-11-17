@@ -17,6 +17,7 @@ import whelk.scheduler.ScheduledOperator
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ScheduledExecutorService
@@ -29,9 +30,12 @@ import java.util.concurrent.TimeUnit
 class OaiPmhImporterServlet extends HttpServlet {
 
     PicoContainer pico
-    int scheduleDelaySeconds = 10
-    int scheduleIntervalSeconds = 30
+    int scheduleDelaySeconds = 30
+    int scheduleIntervalSeconds = 3000
     Properties props = new Properties()
+    private Map jobs = [:]
+
+    static final ObjectMapper mapper = new ObjectMapper()
 
 
     public OaiPmhImporterServlet() {
@@ -65,23 +69,56 @@ class OaiPmhImporterServlet extends HttpServlet {
         log.info("Started ...")
     }
 
-
-
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         def storage = pico.getComponent(PostgreSQLComponent)
-        def whelkState = storage.load("/sys/whelk.state")?.data ?: [:]
 
-        def objectmapper = new ObjectMapper()
-        String jsonStatus = objectmapper.writeValueAsString(whelkState)
+        List datasets = props.dataset.split(",")
+        def state = [:]
+        StringBuilder table = new StringBuilder("<table cellspacing=\"10\"><tr><th>&nbsp;</th>")
+        table.append("<form method=\"post\">")
 
-        log.info("Current whelkstate: $whelkState")
+        Set catSet = new TreeSet<String>()
+
+        for (dataset in datasets) {
+            state[dataset] = storage.loadSettings(dataset)
+            catSet.addAll(state[dataset].keySet())
+            table.append("<th>$dataset</th>")
+        }
+        table.append("</tr>")
+        List categories = catSet.toList()
+
+        log.info("state: $state")
+        log.info("Categories: $catSet")
+
+        int i = 0
+        for (cat in categories) {
+            table.append("<tr><td align=\"right\"><b>$cat</b></td>")
+            for (dataset in datasets) {
+                table.append("<td>${state.get(dataset).get(cat) != null ? state.get(dataset).get(cat) : "&nbsp;"}</td>")
+            }
+            table.append("</tr>")
+        }
+        table.append("<tr><td><input type=\"submit\" name=\"action\" value=\"stop all\"></td>")
+        for (dataset in datasets) {
+            table.append("<td><input type=\"submit\" name=\"action\" value=\"${jobs[dataset].active ? "stop" : "start"}\"></td>")
+        }
+        table.append("</tr>")
+
+        table.append("</form></table>")
+
+        String html =
+                """
+                <html><head><title>OAIPMH Harvester control panel</title></head>
+                <body>
+                ${table.toString()}
+                </form>
+                """
 
 
-
-        response.setContentType("application/json");
+        response.setContentType("text/html");
         PrintWriter out = response.getWriter();
-        out.print(jsonStatus);
+        out.print(html);
         out.flush();
     }
 
@@ -92,6 +129,7 @@ class OaiPmhImporterServlet extends HttpServlet {
         for (dataset in datasets) {
             log.info("Setting up schedule for $dataset")
             def job = new ScheduledJob(pico.getComponent(OaiPmhImporter.class), dataset, pico.getComponent(PostgreSQLComponent.class))
+            jobs[dataset] = job
             try {
                 ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
             } catch (RejectedExecutionException ree) {
@@ -110,66 +148,76 @@ class ScheduledJob implements Runnable {
     String dataset
     OaiPmhImporter importer
     PostgreSQLComponent storage
-    Map initialState
+    Map whelkState = null
+    boolean active = true
 
-    ScheduledJob(OaiPmhImporter imp, String ds, PostgreSQLComponent pg, Map is = [:]) {
+    ScheduledJob(OaiPmhImporter imp, String ds, PostgreSQLComponent pg) {
         this.importer = imp
         this.dataset = ds
         this.storage = pg
-        this.initialState = is
         assert storage
+        assert dataset
+    }
+
+    void toggleActive() {
+        active = !active
     }
 
     void run() {
-        assert dataset
-
-        def whelkState = storage?.load("/sys/whelk.state")?.data ?: initialState
-        log.info("Current whelkstate: $whelkState")
-        try {
-            String lastImport = whelkState.get(dataset, [:]).get("lastImport")
-            Date currentSince
-            Date nextSince = new Date()
-            if (lastImport) {
-                log.trace("Parsing $lastImport as date")
-                currentSince = Date.parse(DATE_FORMAT, lastImport)
-                nextSince = new Date(currentSince.getTime())
-                nextSince.set(second: currentSince[Calendar.SECOND] + 1)
-                log.trace("Next since (upped by 1 second): $nextSince")
-            } else {
-                def lastWeeksDate = nextSince[Calendar.DATE] - 7
-                nextSince.set(date: lastWeeksDate)
-                currentSince = nextSince
-                log.info("Importer has no state for last import from $dataset. Setting last week (${nextSince})")
+        if (active) {
+            if (!whelkState) {
+                log.info("Loading current state from storage ...")
+                whelkState = storage.loadSettings(dataset)
+                log.info("Loaded state for $dataset : $whelkState")
             }
-            //nextSince = new Date(0) //sneeking past next date
-            log.debug("Executing OAIPMH import for $dataset since $nextSince from ${importer.serviceUrl}")
-            whelkState[dataset].put("status", "RUNNING")
+            log.debug("Current whelkstate: $whelkState")
+            try {
+                String lastImport = whelkState.get("lastImport")
+                Date currentSince
+                Date nextSince = new Date()
+                if (lastImport) {
+                    log.trace("Parsing $lastImport as date")
+                    currentSince = Date.parse(DATE_FORMAT, lastImport)
+                    nextSince = new Date(currentSince.getTime() + 1000)
+                    log.trace("Next since (upped by 1 second): $nextSince")
+                } else {
+                    def lastWeeksDate = nextSince[Calendar.DATE] - 7
+                    nextSince.set(date: lastWeeksDate)
+                    currentSince = nextSince
+                    log.info("Importer has no state for last import from $dataset. Setting last week (${nextSince})")
+                }
+                //nextSince = new Date(0) //sneeking past next date
+                if (nextSince.after(new Date())) {
+                    log.warn("Since is slipping ... Is now ${nextSince}. Resetting to now()")
+                    nextSince = new Date()
+                }
+                log.debug("Executing OAIPMH import for $dataset since $nextSince from ${importer.serviceUrl}")
+                whelkState.put("status", "RUNNING")
 
-            whelkState[dataset].put("importOperator", dataset)
-            whelkState[dataset].remove("lastImportOperator")
-            def result = importer.doImport(dataset, null, -1, true, true, nextSince)
-            log.trace("Import completed, result: $result")
+                storage.saveSettings(dataset, whelkState)
+                def result = importer.doImport(dataset, null, -1, true, true, nextSince)
+                log.trace("Import completed, result: $result")
 
-            if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
-                log.info("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $dataset. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
-                whelkState[dataset].put("lastImportNrImported", result.numberOfDocuments)
-                whelkState[dataset].put("lastImportNrDeleted", result.numberOfDeleted)
-                whelkState[dataset].put("lastImportNrSkipped", result.numberOfDocumentsSkipped)
-                whelkState[dataset].put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
+                if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
+                    log.info("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $dataset. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
+                    whelkState.put("lastImportNrImported", result.numberOfDocuments)
+                    whelkState.put("lastImportNrDeleted", result.numberOfDeleted)
+                    whelkState.put("lastImportNrSkipped", result.numberOfDocumentsSkipped)
+                    whelkState.put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
 
-            } else {
-                log.debug("Imported ${result.numberOfDocuments} document for $dataset.")
-                whelkState[dataset].put("lastImport", currentSince.format(DATE_FORMAT))
+                } else {
+                    log.debug("Imported ${result.numberOfDocuments} document for $dataset.")
+                    whelkState.put("lastImport", currentSince.format(DATE_FORMAT))
+                }
+                whelkState.put("status", "IDLE ödla")
+                whelkState.put("lastRunNrImported", result.numberOfDocuments)
+                whelkState.put("lastRun", new Date().format(DATE_FORMAT))
+            } catch (Exception e) {
+                log.error("Something failed: ${e.message}", e)
+            } finally {
+                log.debug("Saving state $whelkState")
+                storage.saveSettings(dataset, whelkState)
             }
-            whelkState[dataset].remove("importOperator")
-            whelkState[dataset].put("status", "IDLE ödla")
-            whelkState[dataset].put("lastRunNrImported", result.numberOfDocuments)
-            whelkState[dataset].put("lastRun", new Date().format(DATE_FORMAT))
-        } catch (Exception e) {
-            log.error("Something failed: ${e.message}", e)
-        } finally {
-            log.debug("Saving state $whelkState")
-            storage.store(new Document("/sys/whelk.state", whelkState).withDataset("sys"))
         }
     }
 

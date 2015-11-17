@@ -396,8 +396,8 @@ class OaiPmhImporter {
                         log.debug("Adding ${convertedDocs.size()} documents to whelk.")
                         long elapsed = System.currentTimeMillis()
                         convertedDocs.each { ds, docList ->
-                            log.info("Bulk saving ${docList.size()} documents to dataset $ds ...")
-                            this.whelk.bulkStore(docList, ds)
+                            log.debug("Bulk saving ${docList.size()} documents to dataset $ds ...")
+                            this.whelk.bulkStore(docList)
                         }
                         if ((System.currentTimeMillis() - elapsed) > 10000) {
                             log.warn("[$dataset / $recordCount] Bulk add took more than 10 seconds (${System.currentTimeMillis() - elapsed})")

@@ -31,10 +31,13 @@ class PostgreSQLComponent implements Storage {
 
     // SQL statements
     protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT
+    protected String LOAD_SETTINGS, SAVE_SETTINGS
+    protected String QUERY_LD_API
 
     PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
         String mainTableName = sqlMaintable
         String versionsTableName = mainTableName + "__versions"
+        String settingsTableName = mainTableName + "__settings"
 
 
         connectionPool = new BasicDataSource();
@@ -72,7 +75,7 @@ class PostgreSQLComponent implements Storage {
 
         GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
-        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created',modified,manifest->>'deleted' FROM $versionsTableName WHERE id = ? ORDER BY modified"
+        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created' AS created,modified,manifest->>'deleted' AS deleted FROM $versionsTableName WHERE id = ? ORDER BY modified"
         GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest @> '{ \"alternateIdentifiers\": [?] }'"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? ORDER BY modified"
         LOAD_ALL_DOCUMENTS_BY_DATASET = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest->>'dataset' = ? AND modified >= ? AND modified <= ? ORDER BY modified"
@@ -99,6 +102,15 @@ class PostgreSQLComponent implements Storage {
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         STATUS_OF_DOCUMENT = "SELECT created, modified, deleted FROM $mainTableName WHERE id = ?"
+
+        // Queries
+        QUERY_LD_API = "SELECT id,data,manifest,created,modified FROM $mainTableName WHERE deleted IS NOT TRUE AND "
+
+        // SQL for settings management
+        LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
+        SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
+                "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
+
     }
 
 
@@ -244,6 +256,90 @@ class PostgreSQLComponent implements Storage {
             log.debug("[bulkStore] Closed connection.")
         }
         return false
+    }
+
+    List<Document> ldApiQuery(Map queryParameters, String dataset, StorageType storageType = StorageType.JSONLD_FLAT) {
+        Connection connection = getConnection()
+        StringBuilder whereClause = new StringBuilder("(")
+        boolean firstKey = true
+        List values = []
+        for (entry in queryParameters) {
+            if (!firstKey) {
+                whereClause.append(" AND ")
+            }
+            String key = entry.key
+            boolean firstValue = true
+            whereClause.append("(")
+            for (value in entry.value) {
+                if (!firstValue) {
+                    whereClause.append(" OR ")
+                }
+                def (sqlKey, sqlValue) = translateToSql(key, value, storageType)
+                whereClause.append(sqlKey)
+                values.add(sqlValue)
+                firstValue = false
+            }
+            whereClause.append(")")
+            firstKey = false
+        }
+        whereClause.append(")")
+        log.info("QUERY: ${QUERY_LD_API + whereClause.toString()}")
+        PreparedStatement query = connection.prepareStatement(QUERY_LD_API+whereClause.toString())
+        int i = 1
+        for (value in values) {
+            query.setObject(i++, value, java.sql.Types.OTHER)
+        }
+
+        ResultSet rs = query.executeQuery()
+        List results = []
+        if (rs.next()) {
+            def manifest = mapper.readValue(rs.getString("manifest"), Map)
+            Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
+            doc.setCreated(rs.getTimestamp("created").getTime())
+            doc.setModified(rs.getTimestamp("modified").getTime())
+            log.trace("Created document with id ${doc.id}")
+            results.add(doc)
+        } else if (log.isTraceEnabled()) {
+            log.trace("No results returned")
+        }
+        return results
+    }
+
+    protected translateToSql(String key, String value, StorageType storageType) {
+        println("key: $key")
+        def keyElements = key.split("\\.")
+        println("keyElements: $keyElements")
+        StringBuilder jsonbPath
+        if (storageType == StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS) {
+            jsonbPath = new StringBuilder("data->'descriptions'")
+            if (keyElements.length == 1 || keyElements[0] == "entry") {
+                // If no elements in key, assume "entry"
+                jsonbPath.append("->'entry'")
+                Map mapValue = [(keyElements.last()): value]
+                value = mapper.writeValueAsString(mapValue)
+            } else {
+                // array
+                jsonbPath.append("->'${keyElements[0]}'")
+                List listValue = [[(keyElements.last()): value]]
+                value = mapper.writeValueAsString(listValue)
+            }
+        }
+
+        jsonbPath.append(" @> ?")
+
+
+        /*
+        for (k in keyElements) {
+            jsonbPath.append("->'${k}")
+        }
+        */
+        return [jsonbPath.toString(), value]
+
+        //return ["data->'descriptions'->'items'->>'"+key+"'", value]
+
+
+
+        //return "data->>'"+key+"'"
     }
 
     String calculateChecksum(Document doc) {
@@ -398,9 +494,9 @@ class PostgreSQLComponent implements Storage {
 
     private Document assembleDocument(ResultSet rs) {
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map), mapper.readValue(rs.getString("manifest"), Map))
-        doc.setCreated(rs.getTimestamp("created").getTime())
+        doc.setCreated(rs.getTimestamp("created")?.getTime())
         doc.setModified(rs.getTimestamp("modified").getTime())
-        doc.setDeleted(rs.getBoolean("deleted"))
+        doc.setDeleted(rs.getBoolean("deleted") ?: false)
         return doc
     }
 
@@ -507,6 +603,44 @@ class PostgreSQLComponent implements Storage {
         def tombstone = new Document(id, ["@type":"Tombstone"]).withContentType("application/ld+json").withDataset(dataset)
         tombstone.setDeleted(true)
         return tombstone
+    }
+
+    public Map loadSettings(String key) {
+        Connection connection = getConnection()
+        PreparedStatement selectstmt
+        ResultSet rs
+        Map settings = [:]
+        try {
+            selectstmt = connection.prepareStatement(LOAD_SETTINGS)
+            selectstmt.setString(1, key)
+            rs = selectstmt.executeQuery()
+            if (rs.next()) {
+                settings = mapper.readValue(rs.getString("settings"), Map)
+            } else if (log.isTraceEnabled()) {
+                log.trace("No settings found for $key")
+            }
+        } finally {
+            connection.close()
+        }
+
+        return settings
+    }
+
+    public void saveSettings(String key, final Map settings) {
+        Connection connection = getConnection()
+        PreparedStatement savestmt
+        try {
+            String serializedSettings = mapper.writeValueAsString(settings)
+            log.debug("Saving settings for ${key}: $serializedSettings")
+            savestmt = connection.prepareStatement(SAVE_SETTINGS)
+            savestmt.setObject(1, serializedSettings, Types.OTHER)
+            savestmt.setString(2, key)
+            savestmt.setString(3, key)
+            savestmt.setObject(4, serializedSettings, Types.OTHER)
+            savestmt.executeUpdate()
+        } finally {
+            connection.close()
+        }
     }
 
     Connection getConnection() {
