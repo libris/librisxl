@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit
 class OaiPmhImporterServlet extends HttpServlet {
 
     PicoContainer pico
-    int scheduleDelaySeconds = 30
+    int scheduleDelaySeconds = 10
     int scheduleIntervalSeconds = 3000
     Properties props = new Properties()
     private Map jobs = [:]
@@ -186,7 +186,7 @@ class ScheduledJob implements Runnable {
                     currentSince = nextSince
                     log.info("Importer has no state for last import from $dataset. Setting last week (${nextSince})")
                 }
-                //nextSince = new Date(0) //sneeking past next date
+                nextSince = new Date(0) //sneeking past next date
                 if (nextSince.after(new Date())) {
                     log.warn("Since is slipping ... Is now ${nextSince}. Resetting to now()")
                     nextSince = new Date()
