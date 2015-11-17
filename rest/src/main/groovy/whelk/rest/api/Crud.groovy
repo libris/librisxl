@@ -89,9 +89,27 @@ class Crud extends HttpServlet {
         whelk = pico.getComponent(Whelk.class)
     }
 
+    StorageType autoDetectQueryMode(Map queries) {
+        boolean probablyMarcQuery = false
+        for (entry in queries) {
+            if (entry.key ==~ /\d{3}\.{0,1}\w{0,1}/) {
+                probablyMarcQuery = true
+            } else if (!entry.key.startsWith("_")) {
+                probablyMarcQuery = false
+            }
+        }
+        return probablyMarcQuery ? StorageType.MARC21_JSON : StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS
+    }
+
     void handleQuery(HttpServletRequest request, HttpServletResponse response, String dataset) {
-        def results = whelk.storage.ldApiQuery(request.getParameterMap(), dataset, StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS)
+        Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
+        String callback = queryParameters.remove("callback")
+
+        def results = whelk.storage.ldApiQuery(queryParameters, dataset, autoDetectQueryMode(queryParameters))
         log.info("Found $results")
+
+        def jsonResult = (callback ? callback + "(" : "") + results + (callback ? ");" : "")
+
         sendResponse(response, "ok. ${results.size()} results.", "text/plain")
     }
 
@@ -130,7 +148,7 @@ class Crud extends HttpServlet {
                 if (mode == HttpTools.DisplayMode.META) {
                     def versions = whelk.storage.loadAllVersions(document.identifier)
                     if (versions) {
-                        document.manifest.versions = versions
+                        document.manifest.versions = versions.collect { ["modified": it.modified, "checksum":it.checksum] }
                     }
                     sendResponse(response, document.getManifestAsJson(), "application/json")
                 } else {

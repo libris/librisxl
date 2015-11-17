@@ -41,6 +41,9 @@ class HttpTools {
     }
 
     static String getMajorContentType(String contentType) {
+        if (contentType == "application/x-marc-json") {
+            return "application/json"
+        }
         return contentType?.replaceAll("/[\\w]+\\+", "/")
     }
 
