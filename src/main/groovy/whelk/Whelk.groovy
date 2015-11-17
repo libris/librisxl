@@ -1,7 +1,7 @@
 package whelk
 
 import groovy.util.logging.Slf4j as Log
-
+import whelk.component.APIX
 import whelk.component.Index
 import whelk.component.Storage
 import whelk.filter.JsonLdLinkExpander
@@ -14,7 +14,16 @@ class Whelk {
 
     Storage storage
     Index elastic
+    APIX apix
     JsonLdLinkExpander expander
+
+    public Whelk(Storage pg, Index es, APIX a, JsonLdLinkExpander ex) {
+        this.storage = pg
+        this.elastic = es
+        this.apix = a
+        this.expander = ex
+        log.info("Whelk started with storage ${storage}, index $elastic, apix $apix and expander.")
+    }
 
     public Whelk(Storage pg, Index es, JsonLdLinkExpander ex) {
         this.storage = pg
@@ -23,11 +32,25 @@ class Whelk {
         log.info("Whelk started with storage ${storage}, index $elastic and expander.")
     }
 
+    public Whelk(Storage pg, Index es, APIX a) {
+        this.storage = pg
+        this.elastic = es
+        this.apix = a
+        log.info("Whelk started with storage $storage and index $elastic and apix $apix ")
+    }
+
     public Whelk(Storage pg, Index es) {
         this.storage = pg
         this.elastic = es
         log.info("Whelk started with storage $storage and index $elastic")
     }
+
+    public Whelk(Storage pg, APIX a) {
+        this.storage = pg
+        this.apix = a
+        log.info("Whelk started with storage $storage and apix $apix")
+    }
+
 
     public Whelk(Storage pg) {
         this.storage = pg
@@ -40,6 +63,9 @@ class Whelk {
     Document store(Document document) {
         if (storage.store(document) && elastic) {
             elastic.index(document)
+            if (apix) {
+                apix.send(document)
+            }
         }
         return document
     }
