@@ -186,7 +186,7 @@ class ScheduledJob implements Runnable {
                     currentSince = nextSince
                     log.info("Importer has no state for last import from $dataset. Setting last week (${nextSince})")
                 }
-                nextSince = new Date(0) //sneeking past next date
+                //nextSince = new Date(0) //sneeking past next date
                 if (nextSince.after(new Date())) {
                     log.warn("Since is slipping ... Is now ${nextSince}. Resetting to now()")
                     nextSince = new Date()

@@ -73,7 +73,7 @@ class Crud extends HttpServlet {
 
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ApixClientCamel.class)
+        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ApixClientCamel.class)
         pico.addComponent(JsonLD2MarcConverter.class)
         pico.addComponent(JsonLD2MarcXMLConverter.class)
 
@@ -107,12 +107,12 @@ class Crud extends HttpServlet {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String callback = queryParameters.remove("callback")
 
-        def results = whelk.storage.ldApiQuery(queryParameters, dataset, autoDetectQueryMode(queryParameters))
+        def results = whelk.storage.linkedDataApiQuery(queryParameters, dataset, autoDetectQueryMode(queryParameters))
         log.info("Found $results")
 
-        def jsonResult = (callback ? callback + "(" : "") + results + (callback ? ");" : "")
+        def jsonResult = (callback ? callback + "(" : "") + mapper.writeValueAsString(results) + (callback ? ");" : "")
 
-        sendResponse(response, "ok. ${results.size()} results.", "text/plain")
+        sendResponse(response, jsonResult, "application/json")
     }
 
 
