@@ -11,6 +11,7 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
+import whelk.component.ApixClientCamel
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.component.StorageType
@@ -72,6 +73,7 @@ class Crud extends HttpServlet {
 
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ApixClientCamel.class)
         pico.addComponent(JsonLD2MarcConverter.class)
         pico.addComponent(JsonLD2MarcXMLConverter.class)
 
