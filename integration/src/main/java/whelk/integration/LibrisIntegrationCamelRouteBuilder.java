@@ -27,8 +27,8 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
         String activemqIndexQueue = properties.getProperty("activemq_es_index_queue");
         String activemqApixQueue = properties.getProperty("activemq_apix_queue");
         String activemqApixRetriesQueue = properties.getProperty("activemq_apix_retries_queue");
-        String apixUri = properties.getProperty("apix_uri");
-        String apixPath = properties.getProperty("apix_path");
+        String apixUrl = properties.getProperty("apixUrl");
+        String apixPath = properties.getProperty("apixPath");
 
         BulkRequestAggregationStrategy bulkRequestAggregationStrategy = new BulkRequestAggregationStrategy();
         PostgreSQLComponent postgreSQLComponent = new PostgreSQLComponent(postgresqlUrl, postgresqlMainTable);
@@ -43,7 +43,7 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
         // Activemq to Elasticsearch
         from(activemqIndexQueue)
                 .filter(header("document:contentType").regex(VALID_CONTENTTYPE_REGEX))
-                //.process()
+                .process(elasticProcessor)
                 .aggregate(header("document:dataset"), bulkRequestAggregationStrategy).completionSize(2000).completionTimeout(5000)
                 .routingSlip(header("elasticDestination"));
                 //.to("elasticsearch:local?operation=INDEX&indexName=test&indexType=test");
@@ -53,7 +53,7 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
                 .filter("groovy", "['ADD', 'DELETE'].contains(request.getHeader('whelk:operation'))")
                 .filter("groovy", "['auth','bib','hold'].contains(request.getHeader('document:dataset'))") // Only save auth hold and bib
                 .process(apixProcessor)
-                .to(apixUri)
+                .to(apixUrl)
                 .process(apixProcessor)
                 .choice()
                 .when(header("retry"))
@@ -62,7 +62,7 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
                 .end();
 
         from(activemqApixQueue)
-                .process(new APIXProcessor("https://libris.kb.se/apix/0.1/cat/test/"))
+                .process(new APIXProcessor(apixPath))
                 .to("elasticsearch:local?operation=INDEX&indexName=test&indexType=test");
 
         // TODO: Activemq retries to APIX

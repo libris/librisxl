@@ -11,7 +11,7 @@
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
         "GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED": false,
         "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616",
-        "APIX_HOST": "http://localhost:8001",
+        "APIX_HOST": "http://localhost:8100",
         "DATABASE_URL": "jdbc:postgresql://localhost/whelk",
         "UPDATE_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",
         "UPDATE_HOLD_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",

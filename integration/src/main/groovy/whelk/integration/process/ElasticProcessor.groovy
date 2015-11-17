@@ -19,7 +19,7 @@ class ElasticProcessor implements org.apache.camel.Processor {
     private static final String DEFAULT_OPERATION = "INDEX" //default elasticsearch operation (operations: INDEX, BULK_INDEX or DELETE)
     private String elasticCluster, elasticHost
     private int elasticPort
-    private JsonLdLinkExpander jsonLdLinkExpander //TODO: needs config param "nodesToExpand" (src/main/resources/plugins.json)
+    private JsonLdLinkExpander jsonLdLinkExpander
 
 
     public ElasticProcessor(String elasticCluster, String elasticHost, String elasticPort, jsonLdLinkExpander) {

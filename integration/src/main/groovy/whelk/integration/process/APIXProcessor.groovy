@@ -16,7 +16,7 @@ class APIXProcessor implements org.apache.camel.Processor {
 
     String apixPathPrefix
 
-    APIXProcessor(String prefix) {
+    APIXProcessor(String prefix) { //prefix = /apix/0.1/cat/libris/
         StringBuilder pathBuilder = new StringBuilder(prefix)
         while (pathBuilder[-1] == '/') {
             pathBuilder.deleteCharAt(pathBuilder.length()-1)
