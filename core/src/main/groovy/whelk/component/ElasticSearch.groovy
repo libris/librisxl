@@ -114,10 +114,12 @@ class ElasticSearch implements Index {
         for (doc in docs) {
             if (doc.isJson()) {
                 try {
-                    log.trace("Framing ${doc.id}")
-                    doc.data = JsonLd.frame(doc.id, doc.data)
-                    if (expander) {
-                        doc = expander.filter(doc)
+                    if (doc.isJsonLd()) {
+                        log.trace("Framing ${doc.id}")
+                        doc.data = JsonLd.frame(doc.id, doc.data)
+                        if (expander) {
+                            doc = expander.filter(doc)
+                        }
                     }
                     bulk.add(new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)).source(doc.data))
                 } catch (Exception e) {
