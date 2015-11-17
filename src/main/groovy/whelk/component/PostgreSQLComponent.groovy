@@ -34,6 +34,17 @@ class PostgreSQLComponent implements Storage {
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
 
+    // Query defaults
+    static final int DEFAULT_PAGE_SIZE=50
+
+    // Query idiomatic data
+
+
+    static final Map<StorageType, String> SQL_PREFIXES = [
+            (StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS): "data->'descriptions'",
+            (StorageType.MARC21_JSON): "data->'fields'"
+    ]
+
     PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
         String mainTableName = sqlMaintable
         String versionsTableName = mainTableName + "__versions"
@@ -259,10 +270,18 @@ class PostgreSQLComponent implements Storage {
     }
 
     List<Document> ldApiQuery(Map queryParameters, String dataset, StorageType storageType = StorageType.JSONLD_FLAT) {
+        log.debug("Performing query with type $storageType : $queryParameters")
         Connection connection = getConnection()
         StringBuilder whereClause = new StringBuilder("(")
         boolean firstKey = true
         List values = []
+        // Extract LDAPI parameters
+        String pageSize = queryParameters.remove("_pageSize")?.first() ?: ""+DEFAULT_PAGE_SIZE
+        String page = queryParameters.remove("_page")?.first() ?: "1"
+        String sort = queryParameters.remove("_sort")?.first()
+        queryParameters.remove("_where") // Not supported
+        queryParameters.remove("_orderBy") // Not supported
+        queryParameters.remove("_select") // Not supported
         for (entry in queryParameters) {
             if (!firstKey) {
                 whereClause.append(" AND ")
@@ -283,8 +302,17 @@ class PostgreSQLComponent implements Storage {
             firstKey = false
         }
         whereClause.append(")")
-        log.info("QUERY: ${QUERY_LD_API + whereClause.toString()}")
-        PreparedStatement query = connection.prepareStatement(QUERY_LD_API+whereClause.toString())
+
+        int limit = pageSize as int
+        int offset = (Integer.parseInt(page)-1) * limit
+
+        StringBuilder finalQuery = new StringBuilder("${QUERY_LD_API + whereClause.toString()} OFFSET $offset LIMIT $limit")
+        if (sort) {
+            finalQuery.append(" ORDER BY ${translateSort(sort, storageType)}")
+        }
+        log.debug("QUERY: ${finalQuery.toString()}")
+        log.debug("QUERY VALUES: $values")
+        PreparedStatement query = connection.prepareStatement(finalQuery.toString())
         int i = 1
         for (value in values) {
             query.setObject(i++, value, java.sql.Types.OTHER)
@@ -292,54 +320,88 @@ class PostgreSQLComponent implements Storage {
 
         ResultSet rs = query.executeQuery()
         List results = []
-        if (rs.next()) {
+        while (rs.next()) {
             def manifest = mapper.readValue(rs.getString("manifest"), Map)
             Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
             doc.setCreated(rs.getTimestamp("created").getTime())
             doc.setModified(rs.getTimestamp("modified").getTime())
             log.trace("Created document with id ${doc.id}")
             results.add(doc)
-        } else if (log.isTraceEnabled()) {
-            log.trace("No results returned")
         }
         return results
+    }
+
+    protected String translateSort(String keys, StorageType storageType) {
+        StringBuilder jsonbPath = new StringBuilder()
+        for (key in keys.split(",")) {
+            if (jsonbPath.length() > 0) {
+                jsonbPath.append(", ")
+            }
+            String direction = "ASC"
+            int elementIndex = 0
+            for (element in key.split("\\.")) {
+                if (elementIndex == 0) {
+                    jsonbPath.append(SQL_PREFIXES.get(storageType, "")+"->")
+                } else {
+                    jsonbPath.append("->")
+                }
+                if (storageType == StorageType.MARC21_JSON && elementIndex == 1) {
+                    jsonbPath.append("'subfields'->")
+                }
+
+                if (element.charAt(0) == '-') {
+                    direction = "DESC"
+                    element = element.substring(1)
+                }
+                jsonbPath.append("'${element}'")
+                elementIndex++
+            }
+            jsonbPath.append(" "+direction)
+        }
+        println("orderstring: ${jsonbPath.toString()}")
+        return jsonbPath.toString()
+
     }
 
     protected translateToSql(String key, String value, StorageType storageType) {
         println("key: $key")
         def keyElements = key.split("\\.")
         println("keyElements: $keyElements")
-        StringBuilder jsonbPath
+        StringBuilder jsonbPath = new StringBuilder(SQL_PREFIXES.get(storageType, ""))
         if (storageType == StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS) {
-            jsonbPath = new StringBuilder("data->'descriptions'")
-            if (keyElements.length == 1 || keyElements[0] == "entry") {
-                // If no elements in key, assume "entry"
+            if (keyElements[0] == "entry") {
                 jsonbPath.append("->'entry'")
-                Map mapValue = [(keyElements.last()): value]
-                value = mapper.writeValueAsString(mapValue)
+                value = mapper.writeValueAsString([(keyElements.last()): value])
             } else {
-                // array
-                jsonbPath.append("->'${keyElements[0]}'")
-                List listValue = [[(keyElements.last()): value]]
-                value = mapper.writeValueAsString(listValue)
+                // If no elements in key, assume "items"
+                jsonbPath.append("->'items'")
+                Map jsonbQueryStructure = [:]
+                Map nextMap = null
+                for (int i = (keyElements[0] == "items" ? 1 : 0); i < keyElements.length-1; i++) {
+                    nextMap = [:]
+                    jsonbQueryStructure.put(keyElements[i], nextMap)
+                }
+                if (nextMap == null) {
+                    nextMap = jsonbQueryStructure
+                }
+                nextMap.put(keyElements.last(), value)
+                println("queryStructure: $jsonbQueryStructure")
+                value = mapper.writeValueAsString([jsonbQueryStructure])
+            }
+        }
+        if (storageType == StorageType.MARC21_JSON) {
+            if (keyElements.length == 1) {
+                // Probably search in control field
+                value = mapper.writeValueAsString([[(keyElements[0]): value]])
+            } else {
+                value = mapper.writeValueAsString([[(keyElements[0]): ["subfields": [[(keyElements[1]):value]]] ]]);
+
             }
         }
 
         jsonbPath.append(" @> ?")
 
-
-        /*
-        for (k in keyElements) {
-            jsonbPath.append("->'${k}")
-        }
-        */
         return [jsonbPath.toString(), value]
-
-        //return ["data->'descriptions'->'items'->>'"+key+"'", value]
-
-
-
-        //return "data->>'"+key+"'"
     }
 
     String calculateChecksum(Document doc) {
