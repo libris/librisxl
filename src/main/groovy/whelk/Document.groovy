@@ -202,4 +202,14 @@ class Document {
     boolean isJson() {
         return isJson(getContentType())
     }
+
+    static boolean isJsonLd(String ct) {
+        return "application/ld+json" == ct
+    }
+
+    boolean isJsonLd() {
+        return isJsonLd(getContentType())
+    }
+
+
 }

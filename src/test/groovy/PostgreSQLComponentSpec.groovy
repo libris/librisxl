@@ -13,7 +13,7 @@ import java.sql.Timestamp
 @Log
 class PostgreSQLComponentSpec extends Specification {
 
-    Storage storage
+    PostgreSQLComponent storage
     def stmt = GroovyMock(PreparedStatement)
     def conn = GroovyMock(Connection)
     def result = GroovyMock(ResultSet)
@@ -96,6 +96,19 @@ class PostgreSQLComponentSpec extends Specification {
         Document r = storage.load("nonexistingid")
         then:
         r == null
+    }
+
+    def "should generate correct jsonb query according to storage type"() {
+        expect:
+        storage.translateToSql(key, value, storageType) == [sqlKey, sqlValue]
+        where:
+        key           | value         | storageType                               | sqlKey                               | sqlValue
+        "entry.@id"   | "/bib/12345"  | StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS | "data->'descriptions'->'entry' @> ?" | "{\"@id\":\"/bib/12345\"}"
+        "@id"         | "/auth/345"   | StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS | "data->'descriptions'->'entry' @> ?" | "{\"@id\":\"/auth/345\"}"
+        "items.title" | "Kalldrag"    | StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS | "data->'descriptions'->'items' @> ?" | "[{\"title\":\"Kalldrag\"}]"
+        "245.a"       | "Kalldrag"    | StorageType.MARC21_JSON                   | "data->'fields' @> ?"                | "[{\"245\":\"subfields\":[{\"a\":\"Kalldrag\"}]}]"
+
+
     }
 
     def "should calculate correct checksum regardless of created, modified or previous checksum"() {
