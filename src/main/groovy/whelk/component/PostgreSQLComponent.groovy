@@ -269,8 +269,10 @@ class PostgreSQLComponent implements Storage {
         return false
     }
 
-    List<Document> ldApiQuery(Map queryParameters, String dataset, StorageType storageType = StorageType.JSONLD_FLAT) {
+    @Override
+    Map<String, Object> linkedDataApiQuery(Map queryParameters, String dataset, StorageType storageType) {
         log.debug("Performing query with type $storageType : $queryParameters")
+        long startTime = System.currentTimeMillis()
         Connection connection = getConnection()
         StringBuilder whereClause = new StringBuilder("(")
         boolean firstKey = true
@@ -319,15 +321,20 @@ class PostgreSQLComponent implements Storage {
         }
 
         ResultSet rs = query.executeQuery()
-        List results = []
+        Map results = new HashMap<String, Object>()
+        List items= []
         while (rs.next()) {
             def manifest = mapper.readValue(rs.getString("manifest"), Map)
             Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
             doc.setCreated(rs.getTimestamp("created").getTime())
             doc.setModified(rs.getTimestamp("modified").getTime())
             log.trace("Created document with id ${doc.id}")
-            results.add(doc)
+            items.add(doc.data)
         }
+        results.put("startIndex", offset)
+        results.put("itemsPerPage", (limit > items.size() ? items.size() : limit))
+        results.put("duration", "PT"+(System.currentTimeMillis()-startTime)/1000+"S")
+        results.put("items", items)
         return results
     }
 
