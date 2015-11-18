@@ -133,7 +133,7 @@ class RemoteSearchAPI extends HttpServlet {
                             if (result.error) {
                                 errors.get(result.database, [:]).put(""+i, result.error)
                             } else if (i < result.hits.size()) {
-                                results.items << ['database':result.database,'data':result.hits[i].dataAsMap]
+                                results.items << ['database':result.database,'data':result.hits[i].data]
                             }
                         } catch (ArrayIndexOutOfBoundsException aioobe) {
                             log.debug("Overstepped array bounds.")
@@ -196,12 +196,14 @@ class RemoteSearchAPI extends HttpServlet {
 
                         def jsonRec = MarcJSONConverter.toJSONString(record)
                         log.trace("Marcjsonconverter for done")
-                        def xMarcJsonDoc = new Document(mapper.readValue(jsonRec.getBytes("UTF-8"), Map)).withContentType("application/x-marc-json")
+                        def xMarcJsonDoc = new Document().withData(mapper.readValue(jsonRec.getBytes("UTF-8"), Map)).withContentType("application/x-marc-json")
                         //Convert xMarcJsonDoc to ld+json
-                        def jsonDoc = marcFrameConverter.doConvert(xMarcJsonDoc)
+                        def jsonDoc = marcFrameConverter.convert(xMarcJsonDoc)
+                        /* Necessary?
                         if (!jsonDoc.id) {
                             jsonDoc.id = new URIMinter().mint(jsonDoc)
                         }
+                        */
                         log.trace("Marcframeconverter done")
 
                         results.addHit(jsonDoc)
