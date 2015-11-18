@@ -83,7 +83,7 @@ class URIMinter {
     }
 
     String computePath(Document doc) {
-        computePath(doc.getDataAsMap())
+        computePath(doc.data)
     }
 
     Map computePaths(Map data, String dataset) {
