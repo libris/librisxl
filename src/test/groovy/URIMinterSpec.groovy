@@ -24,6 +24,20 @@ class URIMinterSpec extends Specification {
         139409779957    | "flg72dq7"    | true
     }
 
+    def "should encode and crc32 hash identifier"() {
+        given:
+        def minter = new URIMinter(alphabet: URIMinter.DEVOWELLED)
+        expect:
+        minter.mint(n, seed) == id
+        where:
+        n              | seed         | id
+        139409779957   | "auth-1245"  | "/flg72dq7b1pf"
+        139419779957   | "bib-245555" | "/rxs0q35k5mzw"
+        139429779957   | "hold-11111" | "/384qdslw337q"
+        //139439779957   | null         | "flg72dq7"
+
+    }
+
     def "should scramble slug"() {
         given:
         def minter = new URIMinter(
