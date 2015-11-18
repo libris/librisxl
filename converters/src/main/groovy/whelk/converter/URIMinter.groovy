@@ -7,6 +7,8 @@ import com.damnhandy.uri.template.UriTemplate
 import whelk.Document
 import whelk.plugin.*
 
+import java.util.zip.CRC32
+
 
 @Log
 class URIMinter {
@@ -15,7 +17,9 @@ class URIMinter {
     static final char[] VOWELS = "auoeiy".chars
     static final char[] DEVOWELLED = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
-    URI base
+    static final int IDENTIFIER_LENGTH = 12
+
+    URI base = new URI("/")
     String typeKey = '@type'
     String documentUriTemplate
     String thingUriTemplate
@@ -39,9 +43,6 @@ class URIMinter {
     private int checkForWordsMinSize = maxWordsInSlug * (shortWordSize + 1)
 
     URIMinter() {
-        if (base != null) {
-            this.setBase(base)
-        }
         this.timestampCaesarCipher = timestampCaesarCipher
         this.setEpochDate(epochDate)
         this.alphabet = alphabet
@@ -80,6 +81,21 @@ class URIMinter {
 
     URI mint(Document doc) {
         return base.resolve(computePath(doc))
+    }
+
+    String mint(long timestamp, String seed) {
+        String timestampPart = baseEncode(timestamp, true)
+        StringBuilder identifier = new StringBuilder(timestampPart)
+        if (seed) {
+            CRC32 crc32 = new CRC32()
+            crc32.update(seed.getBytes("UTF-8"))
+            String hashPart = baseEncode(crc32.value, false)
+            identifier.append(hashPart.substring(0,IDENTIFIER_LENGTH-identifier.length()))
+        }
+        while (identifier.length() < IDENTIFIER_LENGTH) {
+            identifier.append(DEVOWELLED[new Random().nextInt(DEVOWELLED.length)])
+        }
+        return base.resolve(identifier.toString()).toString()
     }
 
     String computePath(Document doc) {
