@@ -6,10 +6,10 @@ import spock.lang.Specification
 class URIMinterSpec extends Specification {
 
     def "should base encode numbers"() {
-        given:
-        def minter = new URIMinter(alphabet: URIMinter.DEVOWELLED)
+        //given:
+        //def minter = new URIMinter(alphabet: URIMinter.DEVOWELLED)
         expect:
-        minter.baseEncode(n, caesared) == expected
+        URIMinter.baseEncode(n, caesared) == expected
 
         where:
         n               | expected      | caesared
@@ -17,11 +17,15 @@ class URIMinterSpec extends Specification {
         1               | "1"           | false
         31              | "11"          | false
         139409779957    | "6c70t5h7"    | false
+        26938782        | "137pzd"      | false
+        4175343705      | "5psqbrh"     | false
+        3081193821      | "46rx8np"     | true
 
         1               | "1"           | true
         30              | "10"          | true
         31              | "21"          | true
         139409779957    | "flg72dq7"    | true
+        1008111600      | "1cgkg00"     | true
     }
 
     def "should encode and crc32 hash identifier"() {
@@ -35,8 +39,8 @@ class URIMinterSpec extends Specification {
         139419779957   | "bib-245555" | "/rxs0q35k5mzw"
         139429779957   | "hold-11111" | "/384qdslw337q"
         //139439779957   | null         | "flg72dq7"
-
     }
+
 
     def "should scramble slug"() {
         given:

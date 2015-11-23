@@ -5,7 +5,6 @@ import groovy.util.logging.Slf4j as Log
 import com.damnhandy.uri.template.UriTemplate
 
 import whelk.Document
-import whelk.plugin.*
 
 import java.util.zip.CRC32
 
@@ -17,7 +16,7 @@ class URIMinter {
     static final char[] VOWELS = "auoeiy".chars
     static final char[] DEVOWELLED = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
-    static final int IDENTIFIER_LENGTH = 12
+    static final int MIN_IDENTIFIER_LENGTH = 12
 
     URI base = new URI("/")
     String typeKey = '@type'
@@ -25,7 +24,7 @@ class URIMinter {
     String thingUriTemplate
     String objectLink
     String epochDate
-    char[] alphabet = ALPHANUM
+    static char[] alphabet = DEVOWELLED
     String randomVariable = null
     int maxRandom = 0
     String timestampVariable = null
@@ -83,17 +82,22 @@ class URIMinter {
         return base.resolve(computePath(doc))
     }
 
-    String mint(long timestamp, String seed) {
-        String timestampPart = baseEncode(timestamp, true)
-        StringBuilder identifier = new StringBuilder(timestampPart)
+    static String mint(String part1, String part2, URI base = new URI("/")) {
+        CRC32 crc32 = new CRC32()
+        crc32.update(part1.getBytes("UTF-8"))
+        return mint(crc32.value, part2, base)
+    }
+
+    static String mint(long timestamp, String seed = null, URI base = new URI("/")) {
+        StringBuilder identifier = new StringBuilder(baseEncode(timestamp, true))
         if (seed) {
             CRC32 crc32 = new CRC32()
             crc32.update(seed.getBytes("UTF-8"))
-            String hashPart = baseEncode(crc32.value, false)
-            identifier.append(hashPart.substring(0,IDENTIFIER_LENGTH-identifier.length()))
-        }
-        while (identifier.length() < IDENTIFIER_LENGTH) {
-            identifier.append(DEVOWELLED[new Random().nextInt(DEVOWELLED.length)])
+            identifier.append(baseEncode(crc32.value, false))
+        } else {
+            while (identifier.length() < MIN_IDENTIFIER_LENGTH) {
+                identifier.append(DEVOWELLED[new Random().nextInt(DEVOWELLED.length)])
+            }
         }
         return base.resolve(identifier.toString()).toString()
     }
@@ -230,7 +234,7 @@ class URIMinter {
         return s
     }
 
-    String baseEncode(long n, boolean lastDigitBasedCaesarCipher=false) {
+   static String baseEncode(long n, boolean lastDigitBasedCaesarCipher=false) {
         int base = alphabet.length
         int[] positions = basePositions(n, base)
         if (lastDigitBasedCaesarCipher) {
@@ -242,12 +246,12 @@ class URIMinter {
         return baseEncode((int[]) positions)
     }
 
-    String baseEncode(int[] positions) {
+    static String baseEncode(int[] positions) {
         def chars = positions.collect { alphabet[it] }
         return chars.join("")
     }
 
-    int[] basePositions(long n, int base) {
+    static int[] basePositions(long n, int base) {
         int maxExp = Math.floor(Math.log(n) / Math.log(base))
         int[] positions = new int[maxExp + 1]
         for (int i=maxExp; i > -1; i--) {
@@ -256,7 +260,7 @@ class URIMinter {
         return positions
     }
 
-    int rotate(int i, int rotation, int ceil) {
+    static int rotate(int i, int rotation, int ceil) {
         int j = i + rotation
         return (j >= ceil)? j - ceil : j
     }
