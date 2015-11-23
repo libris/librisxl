@@ -29,15 +29,15 @@ class MarcFrameConverter implements FormatConverter {
 
     URIMinter uriMinter
     ObjectMapper mapper = new ObjectMapper()
+    String cfgBase = "ext"
 
     protected MarcConversion conversion
 
-    MarcFrameConverter(uriSpacePath="ext/oldspace.json") {
-        def loader = getClass().classLoader
-        loader.getResourceAsStream(uriSpacePath).withStream {
-            uriMinter = new URIMinter(mapper.readValue(it, Map))
+    MarcFrameConverter(uriSpacePath=null) {
+        uriMinter = readConfig(uriSpacePath ?: "$cfgBase/oldspace.json") {
+            new URIMinter(mapper.readValue(it, Map))
         }
-        def config = loader.getResourceAsStream("ext/marcframe.json").withStream {
+        def config = readConfig("$cfgBase/marcframe.json") {
             mapper.readValue(it, Map)
         }
         initialize(uriMinter, config)
@@ -47,19 +47,44 @@ class MarcFrameConverter implements FormatConverter {
         initialize(uriMinter, config)
     }
 
+    def readConfig(String path, Closure picker) {
+        return getClass().classLoader.getResourceAsStream(path).withStream(picker)
+    }
+
     void initialize(URIMinter uriMinter, Map config) {
-        def tokenMaps = [:]
-        def loader = getClass().classLoader
-        config.tokenMaps.each { key, sourceRef ->
-            if (sourceRef instanceof String) {
-                tokenMaps[key] = loader.getResourceAsStream("ext/"+sourceRef).withStream {
+        def tokenMaps = loadTokenMaps(config.tokenMaps)
+        conversion = new MarcConversion(config, uriMinter, tokenMaps)
+    }
+
+    Map loadTokenMaps(tokenMaps) {
+        def result = [:]
+        def maps = [:]
+        if (tokenMaps instanceof String) {
+            tokenMaps = [tokenMaps]
+        }
+        if (tokenMaps instanceof List) {
+            tokenMaps.each {
+                if (it instanceof String) {
+                    maps += readConfig("$cfgBase/$it") {
+                        mapper.readValue(it, Map)
+                    }
+                } else {
+                    maps += it
+                }
+            }
+        } else {
+            maps = tokenMaps
+        }
+        maps.each { key, src ->
+            if (src instanceof String) {
+                result[key] = readConfig("$cfgBase/$src") {
                     mapper.readValue(it, List).collectEntries { [it.code, it] }
                 }
             } else {
-                tokenMaps[key] = sourceRef
+                result[key] = src
             }
         }
-        conversion = new MarcConversion(config, uriMinter, tokenMaps)
+        return result
     }
 
     Map runConvert(Map marcSource, Map extraData=null) {
