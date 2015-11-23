@@ -61,8 +61,10 @@ class Whelk {
     }
 
     Document store(Document document) {
-        if (storage.store(document) && elastic) {
-            elastic.index(document)
+        if (storage.store(document)) {
+            if (elastic) {
+                elastic.index(document)
+            }
             if (apix) {
                 apix.send(document)
             }
@@ -71,8 +73,10 @@ class Whelk {
     }
 
     void bulkStore(List<Document> documents) {
-        if (storage.bulkStore(documents) && elastic) {
-            elastic.bulkIndex(documents)
+        if (storage.bulkStore(documents)) {
+            if (elastic) {
+                elastic.bulkIndex(documents)
+            }
         } else {
             log.warn("Bulk store failed, not indexing : ${documents.first().id} - ${documents.last().id}")
         }

@@ -5,6 +5,7 @@ import groovy.util.slurpersupport.GPathResult
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.converter.JsonLDLinkCompleterFilter
+import whelk.converter.URIMinter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.WhelkAddException
 
@@ -277,8 +278,9 @@ class OaiPmhImporter {
         def documentMap = [:]
         log.trace("Record preparation starts.")
         String recordId = "/"+this.dataset+"/"+record.getControlfields("001").get(0).getData()
+        String xlId = URIMinter.mint(recordId, record.getControlfields("001").get(0).getData())
 
-        def manifest = ["identifier":recordId,"dataset":ds]
+        def manifest = ["identifier":xlId,"dataset":ds]
         if (preserveTimestamps) {
             log.trace("Setting date: $recordDate")
             manifest.put(Document.MODIFIED_KEY, recordDate.getTime())
@@ -296,7 +298,7 @@ class OaiPmhImporter {
                         originalIdentifier = xlData.get("@id")
                         originalModified = xlData.get("modified") as long
                     } catch (Exception e) {
-                        log.error("Failed to parse 887 as json for $recordId")
+                        log.error("Failed to parse 887 as json for $xlId (${recordId})")
                     }
                 }
             }
@@ -314,7 +316,7 @@ class OaiPmhImporter {
                 }
             }
         } catch (NoSuchElementException nsee) {
-            log.trace("Record doesn't have a 877 field.")
+            log.trace("Record doesn't have a 887 field.")
         }
 
         log.trace("887 check complete.")

@@ -43,7 +43,7 @@ class ImporterMain {
         }
 
         pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
+        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
         pico.addComponent(new MarcFrameConverter())
         pico.addComponent(Whelk.class)

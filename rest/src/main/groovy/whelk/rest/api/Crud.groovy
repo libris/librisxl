@@ -133,7 +133,7 @@ class Crud extends HttpServlet {
             if (version) {
                 document = whelk.storage.load(path, version)
             } else {
-                Location location = whelk.storage.locate(path)
+                Location location = whelk.storage.locate(path, false)
                 document = location?.document
                 if (!document && location?.uri) {
                     sendRedirect(request, response, location)
@@ -296,32 +296,39 @@ class Crud extends HttpServlet {
                 return null
             }
         }
-        Document existingDoc = whelk.storage.load(request.pathInfo)
-        if (existingDoc) {
-            if (request.getHeader("If-Match") && existingDoc.modified as String != request.getHeader("If-Match")) {
-                log.debug("Document with identifier ${existingDoc.identifier} already exists.")
-                response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
-                return null
-            }
-        }
-
-        Document doc
-        Map dataMap = null
+        Map dataMap
         if (Document.isJson(cType)) {
             dataMap = mapper.readValue(data, Map)
-            doc = new Document(request.pathInfo, dataMap, existingDoc?.manifest)
         } else {
-            doc = new Document(request.pathInfo, [(Document.NON_JSON_CONTENT_KEY): new String(data)], existingDoc?.manifest)
+            dataMap = [(Document.NON_JSON_CONTENT_KEY): new String(data)]
         }
+
         if (identifier) {
             String foundIdentifier = JsonLd.findIdentifier(dataMap)
             if (foundIdentifier && foundIdentifier != identifier) {
                 response.sendError(response.SC_CONFLICT, "The supplied data contains an @id ($foundIdentifier) which differs from the URI in the PUT request ($identifier)")
                 return null
             }
-        } else {
-            identifier = mintIdentifier(dataset, dataMap)
         }
+
+        Document existingDoc = whelk.storage.locate(identifier, true)?.document
+        if (existingDoc) {
+            if (request.getHeader("If-Match") && existingDoc.modified as String != request.getHeader("If-Match")) {
+                log.debug("Document with identifier ${existingDoc.identifier} already exists.")
+                response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
+                return null
+            }
+            log.info("Identifier was ${identifier}. Setting to ${existingDoc.id}")
+            identifier = existingDoc.id
+        }
+
+
+        if (!identifier) {
+            identifier = mintIdentifier(dataMap)
+        }
+
+        Document doc = new Document(identifier, dataMap, existingDoc?.manifest)
+
         log.info("dataset is now $dataset")
 
         doc = doc.withDataset(dataset)
@@ -344,6 +351,7 @@ class Crud extends HttpServlet {
         return doc
     }
 
+    // TODO: fix this for new URI:s
     String getResponseUrl(HttpServletRequest request, String identifier, String dataset) {
         StringBuffer locationRef = request.getRequestURL()
         while (locationRef[-1] == '/') {
@@ -408,12 +416,12 @@ class Crud extends HttpServlet {
         return alts
     }
 
-    String mintIdentifier(String dataset, Map data) {
+    String mintIdentifier(Map data) {
         String id = null
         if (data) {
             id = JsonLd.findIdentifier(data)
         }
-        return id ?: new URI("/" + (dataset ? "${dataset}/" : "") + UUID.randomUUID()).toString();
+        return id ?: URIMinter.mint(new Date().getTime())
     }
 
 

@@ -10,6 +10,7 @@ import whelk.JsonLd
 import whelk.Location
 import whelk.exception.WhelkException
 
+import javax.print.Doc
 import java.security.MessageDigest
 import java.sql.ResultSet
 import java.sql.Timestamp
@@ -30,7 +31,7 @@ class PostgreSQLComponent implements Storage {
     boolean versioning = true
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT
+    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
 
@@ -78,16 +79,17 @@ class PostgreSQLComponent implements Storage {
         }
 
         // Setting up sql-statements
-        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ? RETURNING *) " +
+        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ? " +
+                "OR manifest @> ? RETURNING *) " +
             "INSERT INTO $mainTableName (id, data, quoted, manifest, deleted) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
-
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"// (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)" +
 
         GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created' AS created,modified,manifest->>'deleted' AS deleted FROM $versionsTableName WHERE id = ? ORDER BY modified"
-        GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest @> '{ \"alternateIdentifiers\": [?] }'"
+        GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest @> '{ \"${Document.ALTERNATE_ID_KEY}\": [?] }'"
+        LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? ORDER BY modified"
         LOAD_ALL_DOCUMENTS_BY_DATASET = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest->>'dataset' = ? AND modified >= ? AND modified <= ? ORDER BY modified"
         LOAD_ALL_DOCUMENTS_WITH_LINKS = """
@@ -200,18 +202,39 @@ class PostgreSQLComponent implements Storage {
         insert.setBoolean(4, doc.isDeleted())
         insert.setTimestamp(5, new Timestamp(modTime.getTime()))
         insert.setString(6, doc.identifier)
-        insert.setString(7, doc.identifier)
-        insert.setObject(8, doc.dataAsString, java.sql.Types.OTHER)
-        insert.setObject(9, doc.quotedAsString, java.sql.Types.OTHER)
-        insert.setObject(10, doc.manifestAsJson, java.sql.Types.OTHER)
-        insert.setBoolean(11, doc.isDeleted())
+        insert.setObject(7, matchAlternateIdentifierJson(doc.id), java.sql.Types.OTHER)
+        insert.setString(8, doc.identifier)
+        insert.setObject(9, doc.dataAsString, java.sql.Types.OTHER)
+        insert.setObject(10, doc.quotedAsString, java.sql.Types.OTHER)
+        insert.setObject(11, doc.manifestAsJson, java.sql.Types.OTHER)
+        insert.setBoolean(12, doc.isDeleted())
 
         return insert
+    }
+
+    private static String matchAlternateIdentifierJson(String id) {
+        return mapper.writeValueAsString([(Document.ALTERNATE_ID_KEY): [id]])
+
+    }
+
+    private String loadProperIdFromAlternates(String id, Connection connection) {
+        PreparedStatement properStatment = connection.prepareStatement(LOAD_ID_FROM_ALTERNATE)
+        properStatment.setObject(1, matchAlternateIdentifierJson(id), java.sql.Types.OTHER)
+        ResultSet rs = properStatment.executeQuery()
+        try {
+            if (rs.next()) {
+                return rs.getString("id")
+            }
+        } finally {
+            rs.close()
+        }
+        return id
     }
 
     boolean saveVersion(Document doc, Connection connection, Date modTime) {
         PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
+            //doc.id = loadProperIdFromAlternates(doc.id)
             log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: $modTime")
             insvers = rigVersionStatement(insvers, doc, modTime)
             int updated =  insvers.executeUpdate()
@@ -239,7 +262,7 @@ class PostgreSQLComponent implements Storage {
         if (!docs || docs.isEmpty()) {
             return
         }
-        log.debug("Bulk storing ${docs.size()} documents.")
+        log.trace("Bulk storing ${docs.size()} documents.")
         Connection connection = getConnection()
         PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT)
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
@@ -264,7 +287,7 @@ class PostgreSQLComponent implements Storage {
             log.error("Failed to save batch: ${e.message}", e)
         } finally {
             connection.close()
-            log.debug("[bulkStore] Closed connection.")
+            log.trace("[bulkStore] Closed connection.")
         }
         return false
     }
@@ -428,7 +451,7 @@ class PostgreSQLComponent implements Storage {
         byte[] digest = m.digest()
         BigInteger bigInt = new BigInteger(1,digest)
         String hashtext = bigInt.toString(16)
-        log.debug("calculated checksum: $hashtext")
+        log.trace("calculated checksum: $hashtext")
         doc.manifest[Document.CHECKUM_KEY] = hashtext
         // Reinsert created and modified
         doc.setCreated(created)
@@ -438,7 +461,7 @@ class PostgreSQLComponent implements Storage {
 
     // TODO: Update to real locate
     @Override
-    Location locate(String uri) {
+    Location locate(String uri, boolean loadDoc) {
         log.debug("Locating $uri")
         if (uri) {
             def doc = load(uri)
@@ -457,12 +480,20 @@ class PostgreSQLComponent implements Storage {
             //if (load(identifier, null, [], false)) {
             def docStatus = status(identifier)
             if (docStatus.exists && !docStatus.deleted) {
-                return new Location().withURI(new URI(identifier)).withResponseCode(303)
+                if (loadDoc) {
+                    return new Location(load(identifier)).withResponseCode(303)
+                } else {
+                    return new Location().withURI(new URI(identifier)).withResponseCode(303)
+                }
             }
             log.debug("Check alternate identifiers.")
             doc = loadByAlternateIdentifier(uri)
             if (doc) {
-                return new Location().withURI(new URI(doc.identifier)).withResponseCode(301)
+                if (loadDoc) {
+                    return new Location(doc).withResponseCode(301)
+                } else {
+                    return new Location().withURI(new URI(doc.identifier)).withResponseCode(301)
+                }
             }
         }
 
@@ -508,7 +539,7 @@ class PostgreSQLComponent implements Storage {
             }
             log.trace("Executing query")
             rs = selectstmt.executeQuery()
-            log.trace("Executed query")
+            log.trace("Executed query.")
             if (rs.next()) {
                 log.trace("next")
                 def manifest = mapper.readValue(rs.getString("manifest"), Map)

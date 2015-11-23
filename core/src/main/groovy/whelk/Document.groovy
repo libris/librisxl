@@ -17,6 +17,7 @@ class Document {
     static final String CONTENT_TYPE_KEY = "contentType";
     static final String CHECKUM_KEY = "checksum";
     static final String NON_JSON_CONTENT_KEY = "content"
+    static final String ALTERNATE_ID_KEY = "alternateIdentifiers"
 
     @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()
@@ -148,8 +149,12 @@ class Document {
         return this
     }
 
-    void addIdentifier(String identifier) {
-        manifest.get("alternateIdentifiers", []).add(identifier)
+    Document addIdentifier(String identifier) {
+        Set<String> ids = new HashSet<String>()
+        ids.addAll(manifest.get(ALTERNATE_ID_KEY, []))
+        ids.add(identifier)
+        manifest.put(ALTERNATE_ID_KEY, ids)
+        return this
     }
 
     Document withIdentifier(String identifier) {
@@ -161,6 +166,9 @@ class Document {
     Document withManifest(Map entrydata) {
         if (entrydata?.containsKey("identifier")) {
             this.id = entrydata["identifier"]
+        }
+        if (entrydata?.containsKey(ID_KEY)) {
+            this.id = entrydata[ID_KEY]
         }
         if (entrydata?.containsKey(CREATED_KEY)) {
             setCreated(entrydata.remove(CREATED_KEY))
