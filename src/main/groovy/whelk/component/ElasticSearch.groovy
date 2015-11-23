@@ -142,10 +142,12 @@ class ElasticSearch implements Index {
     @Override
     public void index(Document doc) {
         if (doc.isJson()) {
-            log.trace("Framing ${doc.id}")
-            doc.data = JsonLd.frame(doc.id, doc.data)
-            if (expander) {
-                doc = expander.filter(doc)
+            if (doc.isJsonLd()) {
+                log.trace("Framing ${doc.id}")
+                doc.data = JsonLd.frame(doc.id, doc.data)
+                if (expander) {
+                    doc = expander.filter(doc)
+                }
             }
             def idxReq = new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)).source(doc.data)
             def response = performExecute(idxReq)
@@ -333,8 +335,13 @@ class ElasticSearch implements Index {
         return idxType
     }
 
-    String toElasticId(String id) {
-        return Base64.encodeBase64URLSafeString(id.getBytes("UTF-8"))
+    static String toElasticId(String id) {
+        URI uri = new URI(id)
+        if (uri.path.substring(1).contains("/")) {
+            return Base64.encodeBase64URLSafeString(id.getBytes("UTF-8"))
+        } else {
+            return uri.path.substring(1) // If XL-minted identifier, use the same charsequence
+        }
     }
 
     String fromElasticId(String id) {

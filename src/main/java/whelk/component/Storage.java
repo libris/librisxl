@@ -12,7 +12,7 @@ import java.util.Map;
 public interface Storage {
     Document store(Document document);
     boolean bulkStore(List<Document> documents);
-    Location locate(String uri);
+    Location locate(String uri, boolean loadDocumentIfFound);
     Document load(String id);
     Iterable<Document> loadAll(String dataset);
     boolean remove(String id, String dataset);
