@@ -16,7 +16,7 @@ class URIMinter {
     static final char[] VOWELS = "auoeiy".chars
     static final char[] DEVOWELLED = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
-    static final int MIN_IDENTIFIER_LENGTH = 12
+    static final int IDENTIFIER_LENGTH = 13
 
     URI base = new URI("/")
     String typeKey = '@type'
@@ -82,20 +82,21 @@ class URIMinter {
         return base.resolve(computePath(doc))
     }
 
-    static String mint(String part1, String part2, URI base = new URI("/")) {
+    static String mint(String originalIdentifier, URI base = new URI("/")) {
+        String numericId = originalIdentifier.split("/").last()
         CRC32 crc32 = new CRC32()
-        crc32.update(part1.getBytes("UTF-8"))
-        return mint(crc32.value, part2, base)
+        crc32.update(originalIdentifier.getBytes("UTF-8"))
+        return mint(crc32.value, numericId, base, 12)
     }
 
-    static String mint(long timestamp, String seed = null, URI base = new URI("/")) {
+    static String mint(long timestamp, String seed = null, URI base = new URI("/"), idLength = IDENTIFIER_LENGTH) {
         StringBuilder identifier = new StringBuilder(baseEncode(timestamp, true))
         if (seed) {
             CRC32 crc32 = new CRC32()
             crc32.update(seed.getBytes("UTF-8"))
             identifier.append(baseEncode(crc32.value, false))
         } else {
-            while (identifier.length() < MIN_IDENTIFIER_LENGTH) {
+            while (identifier.length() < idLength) {
                 identifier.append(DEVOWELLED[new Random().nextInt(DEVOWELLED.length)])
             }
         }

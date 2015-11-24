@@ -210,7 +210,7 @@ class MySQLImporter {
             log.trace("building document $identifier")
             try {
                 String oldStyleIdentifier = "/"+type+"/"+record.getControlfields("001").get(0).getData()
-                identifier = URIMinter.mint(oldStyleIdentifier, record.getControlfields("001").get(0).getData())
+                identifier = URIMinter.mint(oldStyleIdentifier)
                 buildingMetaRecord.get(identifier, [:]).put("record", record)
                 buildingMetaRecord.get(identifier).put("createDate", createDate)
                 buildingMetaRecord.get(identifier).put("manifest", ["identifier":identifier,"dataset":dataset, "alternateIdentifiers": [oldStyleIdentifier]])

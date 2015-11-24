@@ -132,7 +132,7 @@ class Document {
 
     @JsonIgnore
     List getQuoted() {
-        return getData().get("descriptions", [:]).get("quoted")
+        return getData().get("descriptions")?.get("quoted")
     }
 
     @JsonIgnore
@@ -151,7 +151,7 @@ class Document {
 
     Document addIdentifier(String identifier) {
         Set<String> ids = new HashSet<String>()
-        ids.addAll(manifest.get(ALTERNATE_ID_KEY, []))
+        ids.addAll(manifest.get(ALTERNATE_ID_KEY) ?: [])
         ids.add(identifier)
         manifest.put(ALTERNATE_ID_KEY, ids)
         return this
