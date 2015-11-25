@@ -96,7 +96,7 @@ class OaiPmhImporterSpec extends Specification {
         then:
         result.numberOfDocuments == 1
         result.numberOfDocumentsSkipped == 0
-        whelk.documents.first().dataset == OaiPmhImporter.SUPPRESSRECORD_DATASET_PREFIX
+        whelk.documents.first().dataset == OaiPmhImporter.EPLIKT_DATASET_PREFIX
         result.lastRecordDatestamp == date("2015-05-28T12:43:00Z")
     }
 

@@ -17,9 +17,9 @@ class URIMinter {
     static final char[] DEVOWELLED = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
     static final Map<String,Long> BASETIMES = [
-            "auth": Date.parse("yyyy-MM-dd", "1999-01-01"),
-             "bib": Date.parse("yyyy-MM-dd", "2000-01-01"),
-            "hold": Date.parse("yyyy-MM-dd", "2001-01-01")
+            "auth": Date.parse("yyyy-MM-dd", "1999-01-01").getTime(),
+             "bib": Date.parse("yyyy-MM-dd", "2000-01-01").getTime(),
+            "hold": Date.parse("yyyy-MM-dd", "2001-01-01").getTime()
     ]
 
     static final int IDENTIFIER_LENGTH = 13
@@ -102,7 +102,7 @@ class URIMinter {
             crc32.update(seed.getBytes("UTF-8"))
             identifier.append(baseEncode(crc32.value, false))
             if (identifier.length() > idLength) {
-                identifier = identifier.substring(0, idLength)
+                identifier = new StringBuilder(identifier.substring(0, idLength))
             }
         } else {
             while (identifier.length() < idLength) {

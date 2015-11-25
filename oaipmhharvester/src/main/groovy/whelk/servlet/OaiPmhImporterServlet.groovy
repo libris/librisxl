@@ -31,7 +31,7 @@ class OaiPmhImporterServlet extends HttpServlet {
 
     PicoContainer pico
     int scheduleDelaySeconds = 10
-    int scheduleIntervalSeconds = 3000
+    int scheduleIntervalSeconds = 30
     Properties props = new Properties()
     private Map jobs = [:]
 
@@ -73,7 +73,7 @@ class OaiPmhImporterServlet extends HttpServlet {
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         def storage = pico.getComponent(PostgreSQLComponent)
 
-        List datasets = props.dataset.split(",")
+        List datasets = props.scheduledDatasets.split(",")
         def state = [:]
         StringBuilder table = new StringBuilder("<table cellspacing=\"10\"><tr><th>&nbsp;</th>")
         table.append("<form method=\"post\">")
@@ -125,7 +125,7 @@ class OaiPmhImporterServlet extends HttpServlet {
     void init() {
 
         ScheduledExecutorService ses = Executors.newScheduledThreadPool(3)
-        List datasets = props.dataset.split(",")
+        List datasets = props.scheduledDatasets.split(",")
         for (dataset in datasets) {
             log.info("Setting up schedule for $dataset")
             def job = new ScheduledJob(pico.getComponent(OaiPmhImporter.class), dataset, pico.getComponent(PostgreSQLComponent.class))
@@ -186,7 +186,7 @@ class ScheduledJob implements Runnable {
                     currentSince = nextSince
                     log.info("Importer has no state for last import from $dataset. Setting last week (${nextSince})")
                 }
-                //nextSince = new Date(0) //sneeking past next date
+                nextSince = new Date(0) //sneeking past next date
                 if (nextSince.after(new Date())) {
                     log.warn("Since is slipping ... Is now ${nextSince}. Resetting to now()")
                     nextSince = new Date()

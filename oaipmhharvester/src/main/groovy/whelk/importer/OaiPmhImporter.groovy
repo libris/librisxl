@@ -24,7 +24,7 @@ class OaiPmhImporter {
     static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
-    static final String SUPPRESSRECORD_DATASET_PREFIX = "e"
+    static final String EPLIKT_DATASET_PREFIX = "e"
 
 
     String dataset
@@ -50,6 +50,7 @@ class OaiPmhImporter {
     static final ObjectMapper mapper = new ObjectMapper()
 
     String username, password
+    List<String> eligibleDatasets = null
 
     boolean cancelled = false
 
@@ -67,6 +68,20 @@ class OaiPmhImporter {
         marcFrameConverter = mfc
         username = oaipmhUsername
         password = oaipmhPassword
+    }
+    OaiPmhImporter(Whelk w, MarcFrameConverter mfc, String oaipmhServiceUrl, String oaipmhUsername, String oaipmhPassword, String datasetsToSave) {
+        whelk = w
+        serviceUrl = oaipmhServiceUrl
+        marcFrameConverter = mfc
+        username = oaipmhUsername
+        password = oaipmhPassword
+        if (datasetsToSave) {
+            this.eligibleDatasets = []
+            datasetsToSave.split(",").each {
+                String ds = it.trim()
+                this.eligibleDatasets.add(ds)
+            }
+        }
 
     }
 
@@ -148,6 +163,10 @@ class OaiPmhImporter {
         return new ImportResult(numberOfDocuments: recordCount, numberOfDeleted: nrDeleted, numberOfDocumentsSkipped: skippedRecordCount, lastRecordDatestamp: lastRecordDatestamp)
     }
 
+    private boolean isEligible(String ds) {
+        return (eligibleDatasets == null) || ds in eligibleDatasets
+    }
+
 
     String washXmlOfBadCharacters(String xmlString) {
         log.warn("Trying to recuperate by washing XML ...")
@@ -215,15 +234,14 @@ class OaiPmhImporter {
                     log.trace("Marc record instantiated from XML.")
                     def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
                     if ("SUPPRESSRECORD" in aList) {
-                        log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed. Setting dataset to ${SUPPRESSRECORD_DATASET_PREFIX+ds} ...")
+                        log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed. Setting dataset to ${EPLIKT_DATASET_PREFIX+ds} ...")
 
-                        ds = SUPPRESSRECORD_DATASET_PREFIX + ds
-                        /*
-                        skippedRecordCount++
-                        continue
-                        */
+                        ds = EPLIKT_DATASET_PREFIX + ds
                     }
-                    def document = createDocumentMap(record, recordDate, it.header, ds)
+                    def document
+                    if (isEligible(ds)) {
+                        document = createDocumentMap(record, recordDate, it.header, ds)
+                    }
                     if (document) {
                         documents << document
                         recordCount++
@@ -248,7 +266,7 @@ class OaiPmhImporter {
                     resumptionToken = null
                     break
                 }
-                String deleteIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
+                String deleteIdentifier = URIMinter.mint("/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/"))
                     try {
                         whelk.remove(deleteIdentifier, this.dataset)
                     } catch (Exception e2) {
@@ -354,7 +372,7 @@ class OaiPmhImporter {
                 def convertedDocs = [:]
                 documents.each {
                     try {
-                        if (marcFrameConverter && !it.manifest.dataset?.startsWith(SUPPRESSRECORD_DATASET_PREFIX)) {
+                        if (marcFrameConverter && !it.manifest.dataset?.startsWith(EPLIKT_DATASET_PREFIX)) {
                             log.trace("Conversion starts.")
                             def doc = marcFrameConverter.doConvert(it.record, it.manifest)
                             //Files.write(Paths.get("/tmp/${doc.id}_flat.jsonld"), doc.dataAsString.getBytes("utf-8"), StandardOpenOption.CREATE)
@@ -378,7 +396,7 @@ class OaiPmhImporter {
                                 }
                                 convertedDocs[(doc.dataset)] << doc
                             }
-                        } else if (it.manifest.dataset.startsWith(SUPPRESSRECORD_DATASET_PREFIX)) {
+                        } else if (it.manifest.dataset.startsWith(EPLIKT_DATASET_PREFIX)) {
                             if (!convertedDocs.containsKey(it.manifest.dataset)) {
                                 convertedDocs.put(it.manifest.dataset, [])
                             }
