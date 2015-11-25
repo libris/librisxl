@@ -25,7 +25,7 @@ class MySQLImporter {
     JsonLDLinkCompleterFilter enhancer
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
-    static String SUPPRESS_RECORD_DATASET_PREFIX = "e"
+    static String EPLIKT_RECORD_DATASET_PREFIX = "e"
 
     boolean cancelled = false
 
@@ -106,7 +106,6 @@ class MySQLImporter {
             resultSet = statement.executeQuery()
 
             log.debug("Query executed. Starting processing ...")
-            int lastRecordId = recordId
             while(resultSet.next()) {
                 recordId = resultSet.getInt(1)
                 record = Iso2709Deserializer.deserialize(normalizeString(new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
@@ -204,8 +203,8 @@ class MySQLImporter {
         if (record) {
             def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
             if ("SUPPRESSRECORD" in aList) {
-                log.debug("Record ${identifier} is suppressed. Setting dataset to ${SUPPRESS_RECORD_DATASET_PREFIX+dataset} ...")
-                dataset = SUPPRESS_RECORD_DATASET_PREFIX + dataset
+                log.debug("Record ${identifier} is suppressed. Setting dataset to ${EPLIKT_RECORD_DATASET_PREFIX+dataset} ...")
+                dataset = EPLIKT_RECORD_DATASET_PREFIX + dataset
             }
             log.trace("building document $identifier")
             try {
@@ -261,7 +260,7 @@ class MySQLImporter {
                     if (!convertedDocs.containsKey(it.manifest.dataset)) { // Create new list
                         convertedDocs.put(it.manifest.dataset, [])
                     }
-                    if (it.manifest.dataset.startsWith(SUPPRESS_RECORD_DATASET_PREFIX)) {
+                    if (it.manifest.dataset.startsWith(EPLIKT_RECORD_DATASET_PREFIX)) {
                         it.manifest['contentType'] = "application/x-marc-json"
                         convertedDocs[(it.manifest.dataset)] << new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)
                     } else {
