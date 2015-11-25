@@ -9,9 +9,6 @@ import whelk.converter.URIMinter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.WhelkAddException
 
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
 import java.text.*
 import java.util.concurrent.*
 
@@ -27,7 +24,7 @@ class OaiPmhImporter {
     static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
-    static final String SUPPRESSRECORD_DATASET = "eplikt"
+    static final String SUPPRESSRECORD_DATASET_PREFIX = "e"
 
 
     String dataset
@@ -218,9 +215,9 @@ class OaiPmhImporter {
                     log.trace("Marc record instantiated from XML.")
                     def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
                     if ("SUPPRESSRECORD" in aList) {
-                        log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed. Setting dataset to $SUPPRESSRECORD_DATASET ...")
+                        log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed. Setting dataset to ${SUPPRESSRECORD_DATASET_PREFIX+ds} ...")
 
-                        ds = SUPPRESSRECORD_DATASET
+                        ds = SUPPRESSRECORD_DATASET_PREFIX + ds
                         /*
                         skippedRecordCount++
                         continue
@@ -357,7 +354,7 @@ class OaiPmhImporter {
                 def convertedDocs = [:]
                 documents.each {
                     try {
-                        if (marcFrameConverter && it.manifest.dataset != SUPPRESSRECORD_DATASET) {
+                        if (marcFrameConverter && !it.manifest.dataset?.startsWith(SUPPRESSRECORD_DATASET_PREFIX)) {
                             log.trace("Conversion starts.")
                             def doc = marcFrameConverter.doConvert(it.record, it.manifest)
                             //Files.write(Paths.get("/tmp/${doc.id}_flat.jsonld"), doc.dataAsString.getBytes("utf-8"), StandardOpenOption.CREATE)
@@ -381,12 +378,12 @@ class OaiPmhImporter {
                                 }
                                 convertedDocs[(doc.dataset)] << doc
                             }
-                        } else if (it.manifest.dataset == SUPPRESSRECORD_DATASET) {
-                            if (!convertedDocs.containsKey(SUPPRESSRECORD_DATASET)) {
-                                convertedDocs.put(SUPPRESSRECORD_DATASET, [])
+                        } else if (it.manifest.dataset.startsWith(SUPPRESSRECORD_DATASET_PREFIX)) {
+                            if (!convertedDocs.containsKey(it.manifest.dataset)) {
+                                convertedDocs.put(it.manifest.dataset, [])
                             }
                             it.manifest['contentType'] = "application/x-marc-json"
-                            convertedDocs[(SUPPRESSRECORD_DATASET)] << new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)// whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.manifest)
+                            convertedDocs[(it.manifest.dataset)] << new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)// whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.manifest)
                         }
                     } catch (Exception e) {
                         log.error("Exception in conversion", e)

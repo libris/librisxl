@@ -217,24 +217,9 @@ class PostgreSQLComponent implements Storage {
 
     }
 
-    private String loadProperIdFromAlternates(String id, Connection connection) {
-        PreparedStatement properStatment = connection.prepareStatement(LOAD_ID_FROM_ALTERNATE)
-        properStatment.setObject(1, matchAlternateIdentifierJson(id), java.sql.Types.OTHER)
-        ResultSet rs = properStatment.executeQuery()
-        try {
-            if (rs.next()) {
-                return rs.getString("id")
-            }
-        } finally {
-            rs.close()
-        }
-        return id
-    }
-
     boolean saveVersion(Document doc, Connection connection, Date modTime) {
         PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
-            //doc.id = loadProperIdFromAlternates(doc.id)
             log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: $modTime")
             insvers = rigVersionStatement(insvers, doc, modTime)
             int updated =  insvers.executeUpdate()

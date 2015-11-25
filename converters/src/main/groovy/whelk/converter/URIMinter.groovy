@@ -16,7 +16,13 @@ class URIMinter {
     static final char[] VOWELS = "auoeiy".chars
     static final char[] DEVOWELLED = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
-    static final int IDENTIFIER_LENGTH = 13
+    static final Map<String,Long> BASETIMES = [
+            "auth": Date.parse("yyyy-MM-dd", "1999-01-01"),
+             "bib": Date.parse("yyyy-MM-dd", "2000-01-01"),
+            "hold": Date.parse("yyyy-MM-dd", "2001-01-01")
+    ]
+
+    static final int IDENTIFIER_LENGTH = 12
 
     URI base = new URI("/")
     String typeKey = '@type'
@@ -83,10 +89,10 @@ class URIMinter {
     }
 
     static String mint(String originalIdentifier, URI base = new URI("/")) {
-        String numericId = originalIdentifier.split("/").last()
-        CRC32 crc32 = new CRC32()
-        crc32.update(originalIdentifier.getBytes("UTF-8"))
-        return mint(crc32.value, numericId, base, 12)
+        String[] parts = originalIdentifier.split("/")
+        String dataset = parts[1]
+        int numericId = Integer.parseInt(parts.last())
+        return mint(BASETIMES.get(dataset)+numericId, originalIdentifier, base)
     }
 
     static String mint(long timestamp, String seed = null, URI base = new URI("/"), idLength = IDENTIFIER_LENGTH) {

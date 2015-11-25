@@ -1,7 +1,5 @@
 package whelk.importer
 
-import com.sun.xml.internal.bind.annotation.OverrideAnnotationOf
-import whelk.Document
 import whelk.Whelk
 
 import spock.lang.Specification
@@ -98,7 +96,7 @@ class OaiPmhImporterSpec extends Specification {
         then:
         result.numberOfDocuments == 1
         result.numberOfDocumentsSkipped == 0
-        whelk.documents.first().dataset == OaiPmhImporter.SUPPRESSRECORD_DATASET
+        whelk.documents.first().dataset == OaiPmhImporter.SUPPRESSRECORD_DATASET_PREFIX
         result.lastRecordDatestamp == date("2015-05-28T12:43:00Z")
     }
 

@@ -303,15 +303,17 @@ class Crud extends HttpServlet {
             dataMap = [(Document.NON_JSON_CONTENT_KEY): new String(data)]
         }
 
+        Document existingDoc
+
         if (identifier) {
             String foundIdentifier = JsonLd.findIdentifier(dataMap)
             if (foundIdentifier && foundIdentifier != identifier) {
                 response.sendError(response.SC_CONFLICT, "The supplied data contains an @id ($foundIdentifier) which differs from the URI in the PUT request ($identifier)")
                 return null
             }
+            existingDoc = whelk.storage.locate(identifier, true)?.document
         }
 
-        Document existingDoc = whelk.storage.locate(identifier, true)?.document
         if (existingDoc) {
             if (request.getHeader("If-Match") && existingDoc.modified as String != request.getHeader("If-Match")) {
                 log.debug("Document with identifier ${existingDoc.identifier} already exists.")

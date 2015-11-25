@@ -25,7 +25,7 @@ class MySQLImporter {
     JsonLDLinkCompleterFilter enhancer
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
-    static String SUPPRESS_RECORD_DATASET = "eplikt"
+    static String SUPPRESS_RECORD_DATASET_PREFIX = "e"
 
     boolean cancelled = false
 
@@ -204,8 +204,8 @@ class MySQLImporter {
         if (record) {
             def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
             if ("SUPPRESSRECORD" in aList) {
-                log.debug("Record ${identifier} is suppressed. Setting dataset to $SUPPRESS_RECORD_DATASET ...")
-                dataset = SUPPRESS_RECORD_DATASET
+                log.debug("Record ${identifier} is suppressed. Setting dataset to ${SUPPRESS_RECORD_DATASET_PREFIX+dataset} ...")
+                dataset = SUPPRESS_RECORD_DATASET_PREFIX + dataset
             }
             log.trace("building document $identifier")
             try {
@@ -261,12 +261,11 @@ class MySQLImporter {
                     if (!convertedDocs.containsKey(it.manifest.dataset)) { // Create new list
                         convertedDocs.put(it.manifest.dataset, [])
                     }
-                    if (it.manifest.dataset == SUPPRESS_RECORD_DATASET) {
+                    if (it.manifest.dataset.startsWith(SUPPRESS_RECORD_DATASET_PREFIX)) {
                         it.manifest['contentType'] = "application/x-marc-json"
-                        convertedDocs[(SUPPRESS_RECORD_DATASET)] << new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)
+                        convertedDocs[(it.manifest.dataset)] << new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)
                     } else {
                         Document doc = converter.doConvert(it.record, it.manifest)
-                        log.debug("Created document with id ${doc.id} and alt ids: ${doc.manifest.alternateIdentifiers}")
                         convertedDocs[(doc.dataset)] << doc
                     }
                 }
