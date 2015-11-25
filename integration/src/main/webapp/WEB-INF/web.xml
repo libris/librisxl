@@ -26,9 +26,7 @@
     <!-- location of spring XML files -->
     <context-param>
         <param-name>contextConfigLocation</param-name>
-        <param-value>
-            classpath:META-INF/spring/camel-context.xml
-        </param-value>
+        <param-value>classpath:/META-INF/spring/camel-context.xml</param-value>
     </context-param>
 
     <!-- the listener that kick-starts Spring, which loads the config XML files and start our application -->
@@ -36,13 +34,17 @@
         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
     </listener>
 
-    <context-param>
-        <param-name>log4jConfigLocation</param-name>
-        <param-value>/resources/main/log4j.properties</param-value>
-    </context-param>
+    <!-- Camel servlet -->
+    <servlet>
+        <servlet-name>CamelServlet</servlet-name>
+        <servlet-class>org.apache.camel.component.servlet.CamelHttpTransportServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
 
-    <listener>
-        <listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
-    </listener>
+    <!-- Camel servlet mapping -->
+    <servlet-mapping>
+        <servlet-name>CamelServlet</servlet-name>
+        <url-pattern>/camel/*</url-pattern>
+    </servlet-mapping>
 
 </web-app>

@@ -1,6 +1,6 @@
 package whelk.integration.process
 
-import groovy.util.logging.Slf4j as Log
+import org.apache.log4j.Logger
 
 import org.apache.camel.Exchange
 import org.apache.camel.Message
@@ -8,36 +8,54 @@ import org.apache.camel.Processor
 import org.apache.camel.component.http4.HttpMethods
 
 import whelk.Document
-//import whelk.JsonDocument //Should be in core? No, eclipsed by whelk.Document.
+import whelk.Location
+import whelk.Whelk
+import whelk.converter.marc.JsonLD2MarcXMLConverter
 
 
-@Log
 class APIXProcessor implements org.apache.camel.Processor {
 
+    Logger logger = Logger.getLogger(APIXTestProcessor.class.getName())
+
+    Whelk whelk
+    JsonLD2MarcXMLConverter jsonLD2MarcXMLConverter
     String apixPathPrefix
 
-    APIXProcessor(String prefix) { //prefix = /apix/0.1/cat/libris/
+    APIXProcessor(String prefix, Whelk whelk, JsonLD2MarcXMLConverter jsonLD2MarcXMLConverter) { //prefix = /apix/0.1/cat/libris/
+
+        this.whelk = whelk
+        this.jsonLD2MarcXMLConverter = jsonLD2MarcXMLConverter
+
         StringBuilder pathBuilder = new StringBuilder(prefix)
         while (pathBuilder[-1] == '/') {
             pathBuilder.deleteCharAt(pathBuilder.length()-1)
         }
+
         this.apixPathPrefix = pathBuilder.toString()
+
     }
 
     @Override
     public void process(Exchange exchange) throws Exception {
-        log.info("APIX start processing.")
+
+        logger.info("APIX start processing.")
+
         Message message = exchange.getIn()
 
-        String operation = message.getHeader("whelk:operation")
+        Map messageBody = message.getBody()
 
-        log.debug("processing ${message.getHeader('document:identifier')} for APIX")
-        log.debug("Received operation: " + operation)
-        log.debug("dataset: ${message.getHeader('document:dataset')}")
+        String operation = messageBody["info"]["operation"]
+        String id = messageBody["info"]["id"]
+        Map documentData = messageBody["documentData"]
+        Map metaData = messageBody["metaData"]
+
+        logger.debug("Processing document " + id + " for APIX")
+        logger.debug("Operation: " + operation)
+
         boolean messagePrepared = false
 
         if (message.getHeader("CamelHttpPath")) {
-            log.debug("Message is already prepped ... Forego all treatment.")
+            logger.debug("Message is already prepped ... Forego all treatment.")
             message.setHeader(Exchange.HTTP_PATH, message.getHeader("CamelHttpPath"))
             messagePrepared = true
         }
@@ -45,19 +63,28 @@ class APIXProcessor implements org.apache.camel.Processor {
         message.setHeader(Exchange.CONTENT_TYPE, "application/xml")
         if (operation == "DELETE") {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
+
             if (!messagePrepared) {
-                def doc = createDocument(message)
-                log.debug("Recreated document in preparation for deletion. (${doc?.identifier})")
-                String voyagerUri = getVoyagerUri(message.getHeader("document:identifier"), message.getHeader("document:dataset"))
-                    log.debug("got voyageruri $voyagerUri from headers")
+
+                Document doc = new Document().withIdentifier(id).withData(documentData).withManifest(metaData)
+                logger.debug("Recreated document in preparation for deletion. (${doc?.identifier})")
+
+                String voyagerUri = getVoyagerUri(message.getHeader("document:identifier"))
+
+                logger.debug("DELETE to APIX at ${apixPathPrefix + voyagerUri}")
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
+
                 if (doc) {
-                    prepareMessage(doc, message)
+                    message.setBody(doc.data)
+                    message.setHeader("document:metaentry", doc.manifestAsJson)
                 }
             }
         } else {
+
             if (!messagePrepared) {
-                def doc = createDocument(message)
+
+                Document doc = new Document().withIdentifier(id).withData(documentData).withManifest(metaData)
+
                 String voyagerUri = getVoyagerUri(doc)
                 if (!voyagerUri) {
                     if (message.getHeader("document:dataset") == "hold") {
@@ -66,104 +93,108 @@ class APIXProcessor implements org.apache.camel.Processor {
                         voyagerUri =  "/" + message.getHeader("document:dataset") +"/new"
                     }
                 }
-                doc = runConverters(doc)
-                prepareMessage(doc, message)
+                doc = jsonLD2MarcXMLConverter.convert(doc) //TODO: other converters?
 
-                log.debug("PUT to APIX at ${apixPathPrefix + voyagerUri}")
+                message.setBody(doc.data)
+                message.setHeader("document:metaentry", doc.manifestAsJson)
+
+                logger.debug("PUT to APIX at ${apixPathPrefix + voyagerUri}")
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
             }
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.PUT)
         }
-        log.debug("Sending message to ${message.getHeader(Exchange.HTTP_PATH)}")
+
+        logger.debug("Sending message to ${message.getHeader(Exchange.HTTP_PATH)}")
 
         exchange.setOut(message)
     }
 
+
     String getUriForNewHolding(Document doc) {
-        log.debug("Constructing proper URI for creating new holding.")
-        def holdingFor = doc.dataAsMap.about.holdingFor.get("@id")
-        log.debug("Document is holding for $holdingFor, loading that document ...")
-        //TODO: don't use whelk.locate and location (document and uri)
-        def location = whelk.locate(holdingFor)
-        log.debug("Found location: $location")
-        def bibDoc = location?.document
-        log.debug("It contained a doc: $bibDoc")
+
+        String holdingFor = doc.data.about.holdingFor.get("@id")
+        logger.debug("Document is holding for $holdingFor, loading that document ...")
+
+        Location location = whelk.locate(holdingFor)
+        logger.debug("Found location: $location")
+
+        Document bibDoc = location?.document
+        logger.debug("It contained a doc: $bibDoc")
+
         if (!bibDoc && location) {
-            log.debug(" ... or rather not. Loading redirect: ${location.uri}")
-            //TODO: storage.load(identifier, version=null?)
+            logger.debug(" ... or rather not. Loading redirect: ${location.uri}")
             bibDoc = whelk.get(location.uri.toString())
         }
+
         String apixNewHold = null
+
         try {
             apixNewHold = getVoyagerUri(bibDoc) + "/newhold"
+
             if (!apixNewHold) {
                 throw new Exception("Failed")
             }
+
         } catch (Exception e) {
             throw new Exception("Could not figure out voyager-id for document ${doc.identifier}")
         }
-        log.debug("Constructed URI $apixNewHold for creating holding.")
+
+        logger.debug("Constructed URI $apixNewHold for creating holding.")
+
         return apixNewHold
     }
 
-    String getVoyagerUri(String xlIdentifier, String dataset) {
-        log.debug("trying to build voyager uri from $xlIdentifier and $dataset")
+
+    String getVoyagerUri(String xlIdentifier) {
+
         if (xlIdentifier ==~ /\/(auth|bib|hold)\/\d+/) {
-            log.debug("Identified apix uri: ${xlIdentifier}")
+
+            logger.debug("Identified apix uri: ${xlIdentifier}")
             return xlIdentifier
         }
-        log.debug("Could not assertain a voyager URI for $xlIdentifier")
+
+        logger.debug("Could not assertain a voyager URI for $xlIdentifier")
         return null
     }
 
+
     String getVoyagerUri(Document doc) {
+
         String vUri = getVoyagerUri(doc.identifier, doc.dataset)
-        log.debug("proposed voy id from identifier: $vUri")
-        log.debug("Looking in ${doc.identifiers}")
+
+        logger.debug("proposed voy id from identifier: $vUri")
+        logger.debug("Looking in ${doc.identifiers}")
+
         for (altId in doc.identifiers) {
+
             if (altId ==~ /\/(auth|bib|hold)\/\d+/) {
-                log.debug("Identified apix uri from alternates: ${altId}")
+                logger.debug("Identified apix uri from alternates: ${altId}")
                 return altId
             }
         }
+
         return vUri
     }
 
-    Document createDocument(Message docMessage) {
-        def body = docMessage.getBody()
-        Document doc
-        if (body instanceof String) {
-            //TODO: storage.load(identifier)
-            doc = whelk.get(docMessage.getBody()) //docMessage.getBody returnerar identifier?
-            //TODO: apply filters, if filter.valid(doc)
-            log.debug("Loaded document ${doc?.identifier}")
-        } else {
-            log.debug("Setting document data with type ${body.getClass().getName()}")
-            def metaentry = mapper.readValue(docMessage.getHeader("document:metaentry") as String, Map)
-            doc = whelk.createDocument(metaentry.entry.contentType).withData(body).withMeta(metaentry.meta).withEntry(metaentry.entry)
-        }
-        return doc
-    }
 
-    Document runConverters(Document doc) {
-        //TODO: provide converters and filters
-        log.debug("converters: $converters filters: $filters")
+    /*Document runConverters(Document doc) {
+
+        logger.debug("converters: $converters filters: $filters")
+
         if (doc && (converters || filters)) {
+
             for (converter in converters) {
-                log.debug("Running converter ${converter.id}.")
+                logger.debug("Running converter ${converter.id}.")
                 doc = converter.convert(doc)
             }
+
             for (filter in filters) {
-                log.debug("Running filter ${filter.id}.")
+                logger.debug("Running filter ${filter.id}.")
                 doc = filter.filter(doc)
             }
         }
-        return doc
-    }
 
-    void prepareMessage(Document doc, Message docMessage) {
-        log.debug("Resetting document ${doc.identifier} in message.")
-        docMessage.setBody(doc.data)
-        docMessage.setHeader("document:metaentry", doc.metadataAsJson)
-    }
+        return doc
+    }*/
+
 }
