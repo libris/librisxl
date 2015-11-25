@@ -22,7 +22,7 @@ class URIMinter {
             "hold": Date.parse("yyyy-MM-dd", "2001-01-01")
     ]
 
-    static final int IDENTIFIER_LENGTH = 12
+    static final int IDENTIFIER_LENGTH = 13
 
     URI base = new URI("/")
     String typeKey = '@type'
@@ -92,7 +92,7 @@ class URIMinter {
         String[] parts = originalIdentifier.split("/")
         String dataset = parts[1]
         int numericId = Integer.parseInt(parts.last())
-        return mint(BASETIMES.get(dataset)+numericId, originalIdentifier, base)
+        return mint(BASETIMES.get(dataset)+numericId, originalIdentifier, base, 12)
     }
 
     static String mint(long timestamp, String seed = null, URI base = new URI("/"), idLength = IDENTIFIER_LENGTH) {
@@ -101,6 +101,9 @@ class URIMinter {
             CRC32 crc32 = new CRC32()
             crc32.update(seed.getBytes("UTF-8"))
             identifier.append(baseEncode(crc32.value, false))
+            if (identifier.length() > idLength) {
+                identifier = identifier.substring(0, idLength)
+            }
         } else {
             while (identifier.length() < idLength) {
                 identifier.append(DEVOWELLED[new Random().nextInt(DEVOWELLED.length)])
