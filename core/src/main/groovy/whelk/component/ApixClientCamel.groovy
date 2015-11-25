@@ -13,7 +13,11 @@ class ApixClientCamel extends CamelSender implements APIX {
     }
 
     @Override
-    void send(Document doc) {
-        sendObjectMessage(doc.data)
+    void send(Document doc, Map info) {
+        Map objectToSend = [:]
+        objectToSend["info"] = info
+        objectToSend["documentData"] = doc.data
+        objectToSend["metaData"] = doc.manifest ?: null
+        sendObjectMessage(objectToSend)
     }
 }
