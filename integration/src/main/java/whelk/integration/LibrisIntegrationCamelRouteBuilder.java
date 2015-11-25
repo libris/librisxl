@@ -50,7 +50,7 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
         ElasticProcessor elasticProcessor = new ElasticProcessor(elasticCluster, elasticHost, elasticPort, new JsonLdLinkExpander(postgreSQLComponent));
 
         APIXProcessor apixProcessor = new APIXProcessor(apixPath, whelk, new JsonLD2MarcXMLConverter());
-        APIXResponseProcessor apixResponseProcessor = new APIXResponseProcessor();
+        APIXResponseProcessor apixResponseProcessor = new APIXResponseProcessor(whelk);
         APIXHttpResponseFailureBean apixHttpResponseFailureBean = new APIXHttpResponseFailureBean(apixResponseProcessor);
 
         // APIX exception handling

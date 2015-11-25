@@ -7,7 +7,7 @@ import org.apache.camel.Message;
 
 class APIXHttpResponseFailureBean {
 
-    Logger logger = Logger.getLogger(LibrisIntegrationCamelRouteBuilder.class.getName());
+    Logger logger = Logger.getLogger(APIXHttpResponseFailureBean.class.getName());
 
     APIXResponseProcessor apixResponseProcessor
 

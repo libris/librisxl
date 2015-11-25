@@ -15,7 +15,7 @@ import whelk.converter.marc.JsonLD2MarcXMLConverter
 
 class APIXProcessor implements org.apache.camel.Processor {
 
-    Logger logger = Logger.getLogger(APIXTestProcessor.class.getName())
+    Logger logger = Logger.getLogger(APIXProcessor.class.getName())
 
     Whelk whelk
     JsonLD2MarcXMLConverter jsonLD2MarcXMLConverter
