@@ -66,7 +66,10 @@ class Whelk {
                 elastic.index(document)
             }
             if (apix) {
-                apix.send(document)
+                Map info = [:]
+                info["operation"] = "ADD"
+                info["id"] = document.getIdentifier()
+                apix.send(document, info)
             }
         }
         return document
@@ -83,8 +86,17 @@ class Whelk {
     }
 
     void remove(String id, String dataset) {
-        if (storage.remove(id, dataset) && elastic) {
-            elastic.remove(id, dataset)
+        if (storage.remove(id, dataset)) {
+            if (elastic) {
+                elastic.remove(id, dataset)
+            }
+            if (apix) {
+                Map info = [:]
+                info["operation"] = "DELETE"
+                info["id"] = id
+                info["dataset"] = dataset
+                apix.send(null, info)
+            }
         }
     }
 }
