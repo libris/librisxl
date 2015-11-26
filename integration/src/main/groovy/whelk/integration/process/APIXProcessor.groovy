@@ -61,6 +61,7 @@ class APIXProcessor implements org.apache.camel.Processor {
         }
 
         message.setHeader(Exchange.CONTENT_TYPE, "application/xml")
+
         if (operation == "DELETE") {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
 
@@ -93,7 +94,9 @@ class APIXProcessor implements org.apache.camel.Processor {
                         voyagerUri =  "/" + message.getHeader("document:dataset") +"/new"
                     }
                 }
-                doc = jsonLD2MarcXMLConverter.convert(doc) //TODO: other converters?
+                doc = jsonLD2MarcXMLConverter.convert(doc)
+
+                logger.debug("Converted document to MarcXML. New content-type: " + doc.getContentType())
 
                 message.setBody(doc.data)
                 message.setHeader("document:metaentry", doc.manifestAsJson)

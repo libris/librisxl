@@ -7,6 +7,7 @@ import org.apache.camel.Processor
 import whelk.Document
 import whelk.Location
 import whelk.Whelk
+import whelk.converter.MarcXml2JsonLDConverter
 
 import org.apache.log4j.Logger
 
@@ -16,9 +17,11 @@ class APIXResponseProcessor implements Processor {
     Logger logger = Logger.getLogger(APIXResponseProcessor.class.getName())
 
     Whelk whelk
+    MarcXml2JsonLDConverter marcXml2JsonLDConverter
 
     APIXResponseProcessor(Whelk whelk) {
         this.whelk = whelk
+        marcXml2JsonLDConverter = new MarcXml2JsonLDConverter()
     }
 
     @Override
@@ -44,11 +47,8 @@ class APIXResponseProcessor implements Processor {
                 logger.error("APIX responded with error code ${xmlresponse.@error_code} (${xmlresponse.@error_message}) when calling ${message.getHeader('CamelHttpPath')} for document ${message.getHeader('document:identifier')}")
                 logger.debug("APIX response: $xmlBody")
 
-                def errorDetails = [:]
-
                 Location location = whelk.storage.locate(message.getHeader("document:identifier"), true)
 
-                //TODO: Spara failade docs?
                 Document failedDocument = location?.document
 
                 def docManifest = failedDocument.manifest ?: null
@@ -58,12 +58,21 @@ class APIXResponseProcessor implements Processor {
                 docManifest['apixRequestPath'] = message.getHeader('CamelHttpPath').toString()
                 failedDocument.withManifest(docManifest)
 
-                //TODO: Flatten + index
+                if (failedDocument.contentType == "application/marcxml+xml") {
+
+                    logger.debug("Converting document from marcxml+xml to ld+json...")
+                    failedDocument = marcXml2JsonLDConverter.doConvert(failedDocument)
+
+                    logger.debug("Flattening ${failedDocument.id}")
+                    failedDocument.data = JsonLd.flatten(failedDocument.data)
+
+                }
                 whelk.storage.store(failedDocument)
+                whelk.elastic.index(failedDocument)
 
                 if (xmlresponse.@error_message.toString().endsWith(" error = 203") && xmlresponse.@error_code.toString() == "2") {
                     message.setHeader("retry", true)
-                    logger.info("Setting retry with next: ${message.getHeader('JMSDetination')}")
+                    logger.info("Setting retry with next: ${message.getHeader('JMSDestination')}")
                     message.setHeader("next", message.getHeader("JMSDestination").toString().replace("queue://", "activemq:"))
                 } else {
                     logger.info("Error ${xmlresponse.@error_code} (${xmlresponse.@error_message}) is not deemed retryable.")
@@ -89,8 +98,12 @@ class APIXResponseProcessor implements Processor {
                 doc.withData(docDataMap)
                 doc.addIdentifier("/"+dataset+"/"+recordNumber)
 
-                //TODO: Flatten + index
+                if (doc.contentType == "application/ld+json") {
+                    logger.debug("Flattening ${doc.id}")
+                    doc.data = JsonLd.flatten(doc.data)
+                }
                 whelk.storage.store(doc)
+                whelk.elastic.index(doc)
 
                 logger.debug("Added identifier /${dataset}/${recordNumber} to document ${doc.identifier}")
 

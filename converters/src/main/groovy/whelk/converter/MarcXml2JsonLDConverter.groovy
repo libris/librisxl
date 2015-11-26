@@ -14,13 +14,13 @@ class MarcXml2JsonLDConverter {
     String requiredContentType = "application/marcxml+xml"
     String resultContentType = "application/ld+json"
 
-    MarcFrameConverter marcFrameConverter = null
+    MarcFrameConverter marcFrameConverter
+
+    MarcXml2JsonLDConverter() {
+        marcFrameConverter = new MarcFrameConverter()
+    }
 
     Document doConvert(final Document document) {
-        if (marcFrameConverter == null) {
-            marcFrameConverter = plugins.find { it instanceof MarcFrameConverter }
-        }
-        assert marcFrameConverter
 
         MarcRecord record = MarcXmlRecordReader.fromXml(document.dataAsString)
 
