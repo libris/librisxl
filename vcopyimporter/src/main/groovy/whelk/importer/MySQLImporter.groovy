@@ -40,6 +40,8 @@ class MySQLImporter {
     int recordCount
     long startTime
 
+    List<String> eligibleDatasets = null
+
     List<Document> documentList = []
     ConcurrentHashMap buildingMetaRecord = new ConcurrentHashMap()
     String lastIdentifier = null
@@ -51,6 +53,20 @@ class MySQLImporter {
         marcFrameConverter = mfc
         connectionUrl = mysqlConnectionUrl
     }
+
+    MySQLImporter(Whelk w, MarcFrameConverter mfc, String mysqlConnectionUrl, String datasetsToSave) {
+        whelk = w
+        marcFrameConverter = mfc
+        connectionUrl = mysqlConnectionUrl
+        if (datasetsToSave) {
+            this.eligibleDatasets = []
+            datasetsToSave.split(",").each {
+                String ds = it.trim()
+                this.eligibleDatasets.add(ds)
+            }
+        }
+    }
+
 
     void doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true) {
         recordCount = 0
@@ -269,13 +285,20 @@ class MySQLImporter {
                     }
                 }
                 convertedDocs.each { ds, docList ->
-                    this.whelk.bulkStore(docList)
+                    if (isEligble(ds)) {
+                        this.whelk.bulkStore(docList)
+                    }
                 }
             } finally {
                 tickets.release()
             }
         }
     }
+
+    private boolean isEligible(String ds) {
+        return (eligibleDatasets == null) || ds in eligibleDatasets
+    }
+
 
     Connection connectToUri(URI uri) {
         log.info("connect uri: $uri")
