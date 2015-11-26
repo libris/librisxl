@@ -285,7 +285,7 @@ class MySQLImporter {
                     }
                 }
                 convertedDocs.each { ds, docList ->
-                    if (isEligble(ds)) {
+                    if (isEligible(ds)) {
                         this.whelk.bulkStore(docList)
                     }
                 }
