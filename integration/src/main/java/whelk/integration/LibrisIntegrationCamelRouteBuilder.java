@@ -2,27 +2,31 @@ package whelk.integration;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http4.HttpOperationFailedException;
-import whelk.integration.process.*;
 import org.apache.camel.component.elasticsearch.aggregation.BulkRequestAggregationStrategy;
 
-import whelk.filter.JsonLdLinkExpander;
+import whelk.Whelk;
+import whelk.component.ElasticSearch;
+import whelk.component.Index;
 import whelk.component.PostgreSQLComponent;
+import whelk.converter.marc.JsonLD2MarcXMLConverter;
+import whelk.filter.JsonLdLinkExpander;
+import whelk.integration.process.*;
+import whelk.integration.filter.FilterMessagesForAPIX;
 
 import java.io.IOException;
 import java.util.Properties;
-import java.whelk.integration.filter.FilterMessagesForAPIX;
-
-import whelk.Whelk;
-import whelk.converter.marc.JsonLD2MarcXMLConverter;
 
 import org.apache.log4j.Logger;
 
 
 public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
 
-    final static String VALID_CONTENTTYPE_REGEX = "application\\/(\\w+\\+)*json|application\\/x-(\\w+)-json|text/plain";
+    //final static String VALID_CONTENTTYPE_REGEX = "application\\/(\\w+\\+)*json|application\\/x-(\\w+)-json|text/plain";
 
     Logger logger = Logger.getLogger(LibrisIntegrationCamelRouteBuilder.class.getName());
+
+    PostgreSQLComponent postgreSQLComponent = null;
+    Index elastic = null;
 
     private Whelk whelk = null;
 
@@ -34,24 +38,27 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
         Properties properties = getProperties();
         String elasticCluster = properties.getProperty("elastic_cluster");
         String elasticHost = properties.getProperty("elastic_host");
-        String elasticPort = properties.getProperty("elastic_port");
+        String elasticIndex = properties.getProperty("elastic_index");
         String postgresqlUrl = properties.getProperty("postgresql_url");
         String postgresqlMainTable = properties.getProperty("postgresql_maintable");
-        String activemqIndexQueue = properties.getProperty("activemq_es_index_queue");
         String activemqApixQueue = properties.getProperty("activemq_apix_queue");
         String activemqApixRetriesQueue = properties.getProperty("activemq_apix_retries_queue");
         String apixUrl = properties.getProperty("apixUrl");
         String apixPath = properties.getProperty("apixPath");
+        //String activemqIndexQueue = properties.getProperty("activemq_es_index_queue");
 
-        whelk = new Whelk(new PostgreSQLComponent(postgresqlUrl, postgresqlMainTable));
+        postgreSQLComponent = new PostgreSQLComponent(postgresqlUrl, postgresqlMainTable);
+        elastic = new ElasticSearch(elasticHost, elasticCluster, elasticIndex);
+
+        whelk = new Whelk(postgreSQLComponent, elastic);
 
         BulkRequestAggregationStrategy bulkRequestAggregationStrategy = new BulkRequestAggregationStrategy();
-        PostgreSQLComponent postgreSQLComponent = new PostgreSQLComponent(postgresqlUrl, postgresqlMainTable);
-        ElasticProcessor elasticProcessor = new ElasticProcessor(elasticCluster, elasticHost, elasticPort, new JsonLdLinkExpander(postgreSQLComponent));
 
         APIXProcessor apixProcessor = new APIXProcessor(apixPath, whelk, new JsonLD2MarcXMLConverter());
         APIXResponseProcessor apixResponseProcessor = new APIXResponseProcessor(whelk);
         APIXHttpResponseFailureBean apixHttpResponseFailureBean = new APIXHttpResponseFailureBean(apixResponseProcessor);
+
+        //ElasticProcessor elasticProcessor = new ElasticProcessor(elasticCluster, elasticHost, elasticPort, new JsonLdLinkExpander(postgreSQLComponent));
 
         // APIX exception handling
         onException(HttpOperationFailedException.class)
