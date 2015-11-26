@@ -17,8 +17,7 @@ class ElasticProcessor implements org.apache.camel.Processor {
     private static final String DEFAULT_INDEX_NAME = "libris"
     private static final String DEFAULT_INDEX_TYPE = "bib"
     private static final String DEFAULT_OPERATION = "INDEX" //default elasticsearch operation (operations: INDEX, BULK_INDEX or DELETE)
-    private String elasticCluster, elasticHost
-    private int elasticPort
+    private String elasticCluster, elasticHost, elasticPort
     private JsonLdLinkExpander jsonLdLinkExpander
 
 
