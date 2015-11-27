@@ -282,7 +282,6 @@ class PostgreSQLComponent implements Storage {
         log.debug("Performing query with type $storageType : $queryParameters")
         long startTime = System.currentTimeMillis()
         Connection connection = getConnection()
-        List values = []
         // Extract LDAPI parameters
         String pageSize = queryParameters.remove("_pageSize")?.first() ?: ""+DEFAULT_PAGE_SIZE
         String page = queryParameters.remove("_page")?.first() ?: "1"
@@ -291,7 +290,7 @@ class PostgreSQLComponent implements Storage {
         queryParameters.remove("_orderBy") // Not supported
         queryParameters.remove("_select") // Not supported
 
-        String whereClause = buildQueryString(queryParameters, storageType, values)
+        def (whereClause, values) = buildQueryString(queryParameters, dataset, storageType)
 
         int limit = pageSize as int
         int offset = (Integer.parseInt(page)-1) * limit
@@ -334,9 +333,17 @@ class PostgreSQLComponent implements Storage {
         return results
     }
 
-    private String buildQueryString(Map queryParameters, StorageType storageType, List values) {
+    def buildQueryString(Map queryParameters, String dataset, StorageType storageType) {
         boolean firstKey = true
+        List values = []
+
         StringBuilder whereClause = new StringBuilder("(")
+
+        if (dataset) {
+            whereClause.append("manifest->>'dataset' = ?")
+            values.add(dataset)
+            firstKey = false
+        }
 
         for (entry in queryParameters) {
             if (!firstKey) {
@@ -358,7 +365,7 @@ class PostgreSQLComponent implements Storage {
             firstKey = false
         }
         whereClause.append(")")
-        return whereClause.toString()
+        return [whereClause.toString(), values]
     }
 
     protected String translateSort(String keys, StorageType storageType) {
