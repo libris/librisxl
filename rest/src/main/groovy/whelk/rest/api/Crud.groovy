@@ -103,7 +103,6 @@ class Crud extends HttpServlet {
         return probablyMarcQuery ? StorageType.MARC21_JSON : StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS
     }
 
-    // TODO: Fix for empty query
     void handleQuery(HttpServletRequest request, HttpServletResponse response, String dataset) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String callback = queryParameters.remove("callback")
@@ -121,7 +120,7 @@ class Crud extends HttpServlet {
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo.endsWith("/")) {
-            handleQuery(request, response, request.pathInfo)
+            handleQuery(request, response, request.pathInfo.replaceAll("/", ""))
             return
         }
 

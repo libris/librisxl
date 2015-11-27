@@ -90,8 +90,8 @@ class PostgreSQLComponent implements Storage {
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created' AS created,modified,manifest->>'deleted' AS deleted FROM $versionsTableName WHERE id = ? ORDER BY modified"
         GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest @> '{ \"${Document.ALTERNATE_ID_KEY}\": [?] }'"
         LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
-        LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? ORDER BY modified"
-        LOAD_ALL_DOCUMENTS_BY_DATASET = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest->>'dataset' = ? AND modified >= ? AND modified <= ? ORDER BY modified"
+        LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
+        LOAD_ALL_DOCUMENTS_BY_DATASET = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND manifest->>'dataset' = ?"
         LOAD_ALL_DOCUMENTS_WITH_LINKS = """
             SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
             FROM (
@@ -117,7 +117,7 @@ class PostgreSQLComponent implements Storage {
         STATUS_OF_DOCUMENT = "SELECT created, modified, deleted FROM $mainTableName WHERE id = ?"
 
         // Queries
-        QUERY_LD_API = "SELECT id,data,manifest,created,modified FROM $mainTableName WHERE deleted IS NOT TRUE AND "
+        QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
 
         // SQL for settings management
         LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
@@ -282,8 +282,6 @@ class PostgreSQLComponent implements Storage {
         log.debug("Performing query with type $storageType : $queryParameters")
         long startTime = System.currentTimeMillis()
         Connection connection = getConnection()
-        StringBuilder whereClause = new StringBuilder("(")
-        boolean firstKey = true
         List values = []
         // Extract LDAPI parameters
         String pageSize = queryParameters.remove("_pageSize")?.first() ?: ""+DEFAULT_PAGE_SIZE
@@ -292,6 +290,54 @@ class PostgreSQLComponent implements Storage {
         queryParameters.remove("_where") // Not supported
         queryParameters.remove("_orderBy") // Not supported
         queryParameters.remove("_select") // Not supported
+
+        String whereClause = buildQueryString(queryParameters, storageType, values)
+
+        int limit = pageSize as int
+        int offset = (Integer.parseInt(page)-1) * limit
+
+        StringBuilder finalQuery = new StringBuilder("${values ? QUERY_LD_API + whereClause : (dataset ? LOAD_ALL_DOCUMENTS_BY_DATASET : LOAD_ALL_DOCUMENTS)+ " AND deleted IS NOT true"} OFFSET $offset LIMIT $limit")
+
+        if (sort) {
+            finalQuery.append(" ORDER BY ${translateSort(sort, storageType)}")
+        }
+        log.debug("QUERY: ${finalQuery.toString()}")
+        log.debug("QUERY VALUES: $values")
+        PreparedStatement query = connection.prepareStatement(finalQuery.toString())
+        int i = 1
+        for (value in values) {
+            query.setObject(i++, value, java.sql.Types.OTHER)
+        }
+        if (!values) {
+            query.setTimestamp(1, new Timestamp(0L))
+            query.setTimestamp(2, new Timestamp(PGStatement.DATE_POSITIVE_INFINITY))
+            if (dataset) {
+                query.setString(3, dataset)
+            }
+        }
+
+        ResultSet rs = query.executeQuery()
+        Map results = new HashMap<String, Object>()
+        List items= []
+        while (rs.next()) {
+            def manifest = mapper.readValue(rs.getString("manifest"), Map)
+            Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
+            doc.setCreated(rs.getTimestamp("created").getTime())
+            doc.setModified(rs.getTimestamp("modified").getTime())
+            log.trace("Created document with id ${doc.id}")
+            items.add(doc.data)
+        }
+        results.put("startIndex", offset)
+        results.put("itemsPerPage", (limit > items.size() ? items.size() : limit))
+        results.put("duration", "PT"+(System.currentTimeMillis()-startTime)/1000+"S")
+        results.put("items", items)
+        return results
+    }
+
+    private String buildQueryString(Map queryParameters, StorageType storageType, List values) {
+        boolean firstKey = true
+        StringBuilder whereClause = new StringBuilder("(")
+
         for (entry in queryParameters) {
             if (!firstKey) {
                 whereClause.append(" AND ")
@@ -312,38 +358,7 @@ class PostgreSQLComponent implements Storage {
             firstKey = false
         }
         whereClause.append(")")
-
-        int limit = pageSize as int
-        int offset = (Integer.parseInt(page)-1) * limit
-
-        StringBuilder finalQuery = new StringBuilder("${QUERY_LD_API + whereClause.toString()} OFFSET $offset LIMIT $limit")
-        if (sort) {
-            finalQuery.append(" ORDER BY ${translateSort(sort, storageType)}")
-        }
-        log.debug("QUERY: ${finalQuery.toString()}")
-        log.debug("QUERY VALUES: $values")
-        PreparedStatement query = connection.prepareStatement(finalQuery.toString())
-        int i = 1
-        for (value in values) {
-            query.setObject(i++, value, java.sql.Types.OTHER)
-        }
-
-        ResultSet rs = query.executeQuery()
-        Map results = new HashMap<String, Object>()
-        List items= []
-        while (rs.next()) {
-            def manifest = mapper.readValue(rs.getString("manifest"), Map)
-            Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
-            doc.setCreated(rs.getTimestamp("created").getTime())
-            doc.setModified(rs.getTimestamp("modified").getTime())
-            log.trace("Created document with id ${doc.id}")
-            items.add(doc.data)
-        }
-        results.put("startIndex", offset)
-        results.put("itemsPerPage", (limit > items.size() ? items.size() : limit))
-        results.put("duration", "PT"+(System.currentTimeMillis()-startTime)/1000+"S")
-        results.put("items", items)
-        return results
+        return whereClause.toString()
     }
 
     protected String translateSort(String keys, StorageType storageType) {
@@ -603,23 +618,16 @@ class PostgreSQLComponent implements Storage {
                     }
                 } else {
                     if (withLinks) {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS)
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS + " ORDER BY modified")
                     } else {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS)
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS + " ORDER BY modified")
                     }
                 }
                 loadAllStatement.setFetchSize(100)
+                loadAllStatement.setTimestamp(1, new Timestamp(sinceTS))
+                loadAllStatement.setTimestamp(2, new Timestamp(untilTS))
                 if (dataset) {
-                    loadAllStatement.setString(1, dataset)
-                    if (withLinks) {
-                        loadAllStatement.setString(2, dataset)
-                    } else {
-                        loadAllStatement.setTimestamp(2, new Timestamp(sinceTS))
-                        loadAllStatement.setTimestamp(3, new Timestamp(untilTS))
-                    }
-                } else {
-                    loadAllStatement.setTimestamp(1, new Timestamp(sinceTS))
-                    loadAllStatement.setTimestamp(2, new Timestamp(untilTS))
+                    loadAllStatement.setString(3, dataset)
                 }
                 ResultSet rs = loadAllStatement.executeQuery()
 
