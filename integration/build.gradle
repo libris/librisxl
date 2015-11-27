@@ -8,7 +8,7 @@ group = 'se.kb.libris.integration'
 version = '1.0'
 
 // Application build for testing purposes
-mainClassName = "se.kb.libris.integration.LibrisIntegrationApplication"
+mainClassName = "whelk.integration.LibrisIntegrationApplication"
 
 war.archiveName = "whelk-integration.war"
 
@@ -34,20 +34,26 @@ dependencies {
     
     testCompile group: 'junit', name: 'junit', version: '4.11'
 
-    compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '${groovyVersion}'
 
-    compile 'org.apache.camel:camel-core:2.15.3'
-    compile 'org.apache.camel:camel-spring:2.15.3'
-    compile 'org.apache.camel:camel-jms:2.15.3'
-    compile 'org.apache.camel:camel-elasticsearch:2.15.3'
-    compile 'org.apache.camel:camel-http4:2.15.3'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.4.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.4.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.4.1'
 
-    compile 'org.springframework:spring-web:4.2.1.RELEASE'
+    compile group: 'org.apache.camel', name: 'camel-core', version: '2.15.3'
+    compile group: 'org.apache.camel', name: 'camel-servlet', version: '2.15.3'
+    compile group: 'org.apache.camel', name: 'camel-spring', version: '2.15.3'
+    compile group: 'org.apache.camel', name: 'camel-jms', version: '2.15.3'
+    compile group: 'org.apache.camel', name: 'camel-elasticsearch', version: '2.15.3'
+    compile group: 'org.apache.camel', name: 'camel-http4', version: '2.15.3'
 
-    compile 'org.apache.activemq:activemq-all:5.8.0'
-    compile 'org.apache.activemq:activemq-pool:5.8.0'
+    compile group: 'org.springframework', name: 'spring-web', version: '4.2.1.RELEASE'
 
-    compile 'org.elasticsearch:elasticsearch:1.7.2'
+    compile group: 'org.apache.activemq', name: 'activemq-all', version: '5.8.0'
+    compile group: 'org.apache.activemq', name: 'activemq-pool', version: '5.8.0'
+
+    compile group: 'org.elasticsearch', name: 'elasticsearch', version: '1.7.2'
 
     compile project(':../core')
+    compile project(':../converters')
 }

@@ -120,7 +120,7 @@ class Crud extends HttpServlet {
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo.endsWith("/")) {
-            handleQuery(request, response, request.pathInfo)
+            handleQuery(request, response, request.pathInfo.replaceAll("/", ""))
             return
         }
 

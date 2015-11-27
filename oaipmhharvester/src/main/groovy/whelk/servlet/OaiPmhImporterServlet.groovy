@@ -33,7 +33,7 @@ class OaiPmhImporterServlet extends HttpServlet {
     int scheduleDelaySeconds = 10
     int scheduleIntervalSeconds = 30
     Properties props = new Properties()
-    private Map jobs = [:]
+    private Map<String,ScheduledJob> jobs = [:]
 
     static final ObjectMapper mapper = new ObjectMapper()
 
@@ -99,9 +99,9 @@ class OaiPmhImporterServlet extends HttpServlet {
             }
             table.append("</tr>")
         }
-        table.append("<tr><td><input type=\"submit\" name=\"action\" value=\"stop all\"></td>")
+        table.append("<tr><td><input type=\"submit\" name=\"action_all\" value=\"stop all\"></td>")
         for (dataset in datasets) {
-            table.append("<td><input type=\"submit\" name=\"action\" value=\"${jobs[dataset].active ? "stop" : "start"}\"></td>")
+            table.append("<td><input type=\"submit\" name=\"action_${dataset}\" value=\"${jobs[dataset].active ? "stop" : "start"}\"></td>")
         }
         table.append("</tr>")
 
@@ -120,6 +120,20 @@ class OaiPmhImporterServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.print(html);
         out.flush();
+    }
+
+    void doPost(HttpServletRequest request, HttpServletResponse response) {
+        log.info("Received post request. Got this: ${request.getParameterMap()}")
+        for (reqs in request.getParameterNames()) {
+            if (reqs == "action_all") {
+                for (job in jobs) {
+                    job.value.disable()
+                }
+            } else {
+                jobs.get(reqs.substring(7)).toggleActive()
+            }
+        }
+        response.sendRedirect(request.getRequestURL().toString())
     }
 
     void init() {
@@ -161,15 +175,36 @@ class ScheduledJob implements Runnable {
 
     void toggleActive() {
         active = !active
+        loadWhelkState().put("status", (active ? "IDLE" : "STOPPED"))
+        storage.saveSettings(dataset, whelkState)
     }
+
+    void disable() {
+        active = false
+        println("Setting ws: stopped")
+        loadWhelkState().put("status", "STOPPED")
+        storage.saveSettings(dataset, whelkState)
+    }
+
+    void enable() {
+        active = true
+        loadWhelkState().put("status", "IDLE")
+        storage.saveSettings(dataset, whelkState)
+    }
+
+    Map loadWhelkState() {
+        if (!whelkState) {
+            log.info("Loading current state from storage ...")
+            whelkState = storage.loadSettings(dataset)
+            log.info("Loaded state for $dataset : $whelkState")
+        }
+        return whelkState
+    }
+
 
     void run() {
         if (active) {
-            if (!whelkState) {
-                log.info("Loading current state from storage ...")
-                whelkState = storage.loadSettings(dataset)
-                log.info("Loaded state for $dataset : $whelkState")
-            }
+            loadWhelkState()
             log.debug("Current whelkstate: $whelkState")
             try {
                 String lastImport = whelkState.get("lastImport")
@@ -186,7 +221,7 @@ class ScheduledJob implements Runnable {
                     currentSince = nextSince
                     log.info("Importer has no state for last import from $dataset. Setting last week (${nextSince})")
                 }
-                nextSince = new Date(0) //sneeking past next date
+                //nextSince = new Date(0) //sneeking past next date
                 if (nextSince.after(new Date())) {
                     log.warn("Since is slipping ... Is now ${nextSince}. Resetting to now()")
                     nextSince = new Date()
@@ -209,7 +244,7 @@ class ScheduledJob implements Runnable {
                     log.debug("Imported ${result.numberOfDocuments} document for $dataset.")
                     whelkState.put("lastImport", currentSince.format(DATE_FORMAT))
                 }
-                whelkState.put("status", "IDLE ödla")
+                whelkState.put("status", "IDLE")
                 whelkState.put("lastRunNrImported", result.numberOfDocuments)
                 whelkState.put("lastRun", new Date().format(DATE_FORMAT))
             } catch (Exception e) {
