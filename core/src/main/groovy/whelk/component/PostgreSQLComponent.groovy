@@ -143,9 +143,9 @@ class PostgreSQLComponent implements Storage {
                 statusMap['created'] = new Date(rs.getTimestamp("created").getTime())
                 statusMap['modified'] = new Date(rs.getTimestamp("modified").getTime())
                 statusMap['deleted'] = rs.getBoolean("deleted")
-                log.info("StatusMap: $statusMap")
+                log.trace("StatusMap: $statusMap")
             } else {
-                log.info("No results returned for $identifier")
+                log.debug("No results returned for $identifier")
                 statusMap['exists'] = false
             }
         } finally {

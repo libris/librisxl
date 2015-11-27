@@ -108,7 +108,6 @@ class Crud extends HttpServlet {
         String callback = queryParameters.remove("callback")
 
         def results = whelk.storage.linkedDataApiQuery(queryParameters, dataset, autoDetectQueryMode(queryParameters))
-        log.info("Found $results")
 
         def jsonResult = (callback ? callback + "(" : "") + mapper.writeValueAsString(results) + (callback ? ");" : "")
 
@@ -270,7 +269,7 @@ class Crud extends HttpServlet {
     }
 
     Document createDocumentIfOkToSave(byte[] data, String dataset, HttpServletRequest request, HttpServletResponse response) {
-        log.info("dataset is $dataset")
+        log.debug("dataset is $dataset")
         if (data.length == 0) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No data received")
             return null
@@ -320,7 +319,7 @@ class Crud extends HttpServlet {
                 response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                 return null
             }
-            log.info("Identifier was ${identifier}. Setting to ${existingDoc.id}")
+            log.debug("Identifier was ${identifier}. Setting to ${existingDoc.id}")
             identifier = existingDoc.id
         }
 
@@ -331,7 +330,7 @@ class Crud extends HttpServlet {
 
         Document doc = new Document(identifier, dataMap, existingDoc?.manifest)
 
-        log.info("dataset is now $dataset")
+        log.debug("dataset is now $dataset")
 
         doc = doc.withDataset(dataset)
                 .withContentType(ContentType.parse(request.getContentType()).getMimeType())
