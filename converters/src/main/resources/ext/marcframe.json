@@ -3687,6 +3687,7 @@
     },
     "065" : {
       "inherit": "083",
+      "addLink": "broadMatch",
       "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
       "$2": {
         "link": "inScheme", "resourceType": "ConceptScheme",
