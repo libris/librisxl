@@ -18,11 +18,9 @@ import whelk.JsonLd
 
 import whelk.converter.FormatConverter
 import whelk.converter.MarcJSONConverter
-import whelk.converter.URIMinter
+import whelk.URIMinter
 
 import com.damnhandy.uri.template.UriTemplate
-import com.damnhandy.uri.template.UriUtil
-
 
 @Log
 class MarcFrameConverter implements FormatConverter {

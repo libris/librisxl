@@ -1,6 +1,7 @@
-package whelk.converter
+package whelk
 
 import spock.lang.Specification
+import whelk.URIMinter
 
 
 class URIMinterSpec extends Specification {

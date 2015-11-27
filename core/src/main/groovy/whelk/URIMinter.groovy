@@ -1,10 +1,8 @@
-package whelk.converter
+package whelk
 
 import groovy.util.logging.Slf4j as Log
 
 import com.damnhandy.uri.template.UriTemplate
-
-import whelk.Document
 
 import java.util.zip.CRC32
 
@@ -22,7 +20,7 @@ class URIMinter {
             "hold": Date.parse("yyyy-MM-dd", "2001-01-01").getTime()
     ]
 
-    static final int IDENTIFIER_LENGTH = 13
+    static final int IDENTIFIER_LENGTH = 14
 
     URI base = new URI("/")
     String typeKey = '@type'

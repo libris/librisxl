@@ -11,18 +11,14 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
-import whelk.component.ApixClientCamel
-import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.component.StorageType
 import whelk.converter.FormatConverter
-import whelk.converter.URIMinter
+import whelk.URIMinter
 import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.JsonLD2MarcXMLConverter
-import whelk.exception.DocumentException
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
-import whelk.filter.JsonLdLinkExpander
 import whelk.rest.security.AccessControl
 
 import javax.activation.MimetypesFileTypeMap
