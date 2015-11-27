@@ -4,8 +4,7 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.*
 import whelk.converter.FormatConverter
-import whelk.converter.URIMinter
-import whelk.converter.marc.MarcConversion
+import whelk.URIMinter
 
 @Log
 class JsonLD2MarcConverter implements FormatConverter {

@@ -1,7 +1,7 @@
 package whelk.converter.marc
 
 
-import whelk.converter.URIMinter
+import whelk.URIMinter
 import spock.lang.*
 
 
