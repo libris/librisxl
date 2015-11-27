@@ -71,7 +71,7 @@ class Crud extends HttpServlet {
 
         pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
 
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
+        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
         //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ApixClientCamel.class)
         pico.addComponent(JsonLD2MarcConverter.class)
@@ -79,7 +79,7 @@ class Crud extends HttpServlet {
 
         pico.addComponent(Whelk.class)
 
-        pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
+        //pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
 
         pico.addComponent(ISXNTool.class)
 

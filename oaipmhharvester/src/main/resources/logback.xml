@@ -29,8 +29,8 @@
       <level value="warn"/>
   </logger>
  <logger name="whelk.component.PostgreSQLComponent" level="info"/>
- <logger name="whelk.component.ElasticSearch" level="trace"/>
-    <logger name="whelk.servlet.OaiPmhImporterServlet" level="trace"/>
+ <logger name="whelk.component.ElasticSearch" level="info"/>
+    <logger name="whelk.servlet.OaiPmhImporterServlet" level="info"/>
  <logger name="whelk.importer.libris.OaiPmhImporter" level="info"/>
 
   <root level="info">
