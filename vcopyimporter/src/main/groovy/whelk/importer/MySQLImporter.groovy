@@ -2,9 +2,9 @@ package whelk.importer
 
 import groovy.util.logging.Slf4j as Log
 
+import whelk.URIMinter
 import whelk.converter.FormatConverter
 import whelk.converter.JsonLDLinkCompleterFilter
-import whelk.converter.URIMinter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.converter.MarcJSONConverter
 import whelk.util.Tools
@@ -54,6 +54,7 @@ class MySQLImporter {
         connectionUrl = mysqlConnectionUrl
     }
 
+    /*
     MySQLImporter(Whelk w, MarcFrameConverter mfc, String mysqlConnectionUrl, String datasetsToSave) {
         whelk = w
         marcFrameConverter = mfc
@@ -65,7 +66,7 @@ class MySQLImporter {
                 this.eligibleDatasets.add(ds)
             }
         }
-    }
+    }*/
 
 
     void doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true) {
