@@ -1,7 +1,7 @@
 package whelk.integration;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.http4.HttpOperationFailedException;
+import org.apache.camel.component.http.HttpOperationFailedException; //or http4.HttpOperationFailedException?
 import org.apache.camel.component.elasticsearch.aggregation.BulkRequestAggregationStrategy;
 
 import whelk.Whelk;
@@ -79,7 +79,7 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
                 .process(apixProcessor)
                 .choice()
                 .when(header("retry"))
-                .to(activemqApixRetriesQueue)
+                .to("activemq:" + activemqApixRetriesQueue)
                 .otherwise()
                 .end();
 

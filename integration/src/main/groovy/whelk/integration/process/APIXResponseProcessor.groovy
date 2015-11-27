@@ -3,11 +3,13 @@ package whelk.integration.process
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import org.apache.camel.Processor
+import org.apache.camel.component.http4.HttpMethods
 
 import whelk.Document
 import whelk.Location
 import whelk.Whelk
 import whelk.converter.MarcXml2JsonLDConverter
+import whelk.JsonLd
 
 import org.apache.log4j.Logger
 
@@ -90,7 +92,7 @@ class APIXResponseProcessor implements Processor {
                 String recordNumber = message.getHeader("Location").split("/")[-1]
                 String dataset = message.getHeader("Location").split("/")[-2]
 
-                Document doc = whelk.storage.locate(message.getHeader("document:identifier"), true)
+                Document doc = whelk.storage.locate(message.getHeader("document:identifier"), true).document
                 logger.info("Document type: ${doc.getClass().getName()}")
 
                 def docDataMap = doc.data

@@ -9,7 +9,7 @@ import org.apache.log4j.Logger
 
 class FilterMessagesForAPIX {
 
-    Logger logger = Logger.getLogger(LibrisIntegrationCamelRouteBuilder.class.getName());
+    Logger logger = Logger.getLogger(FilterMessagesForAPIX.class.getName());
 
     boolean isAddOrDelete(Exchange exchange) {
         Map body = exchange.getIn().getBody()
@@ -19,7 +19,7 @@ class FilterMessagesForAPIX {
     }
 
     boolean isRelevantDataset(Exchange exchange) {
-        Map body = exchange.getInt().getBody()
+        Map body = exchange.getIn().getBody()
         String id = body.info.id
         logger.debug("Checking incoming id: " + id)
         return id ==~ /\/(auth|bib|hold)\/\d+/

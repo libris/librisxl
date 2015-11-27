@@ -21,13 +21,13 @@ class JsonLD2MarcConverter implements FormatConverter {
     String getRequiredContentType() { "application/ld+json" }
 
     JsonLD2MarcConverter() {
-        def marcFrameConverter = new MarcFrameConverter()
+        marcFrameConverter = new MarcFrameConverter()
     }
 
     Document convert(final Document doc) {
         def source = doc.data
         def result = marcFrameConverter.runRevert(source)
         log.trace("Created frame: $result")
-        return new Document(doc.identifier, result, doc.manifest).withContentType(getResultContentType())
+        return new Document(doc.id, result, doc.manifest).withContentType(getResultContentType())
     }
 }

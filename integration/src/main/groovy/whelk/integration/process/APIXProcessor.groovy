@@ -4,7 +4,6 @@ import org.apache.log4j.Logger
 
 import org.apache.camel.Exchange
 import org.apache.camel.Message
-import org.apache.camel.Processor
 import org.apache.camel.component.http4.HttpMethods
 
 import whelk.Document
@@ -46,11 +45,13 @@ class APIXProcessor implements org.apache.camel.Processor {
 
         String operation = messageBody["info"]["operation"]
         String id = messageBody["info"]["id"]
+        message.setHeader("document:identifier", id)
         Map documentData = messageBody["documentData"]
         Map metaData = messageBody["metaData"]
+        String dataset = getDataSetFromId(id)
 
         logger.debug("Processing document " + id + " for APIX")
-        logger.debug("Operation: " + operation)
+        logger.debug("Operation: " + operation + " Dataset: " + dataset)
 
         boolean messagePrepared = false
 
@@ -62,22 +63,22 @@ class APIXProcessor implements org.apache.camel.Processor {
 
         message.setHeader(Exchange.CONTENT_TYPE, "application/xml")
 
+        String voyagerUri = getVoyagerUri(id)
+
         if (operation == "DELETE") {
             message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
 
             if (!messagePrepared) {
 
                 Document doc = new Document().withIdentifier(id).withData(documentData).withManifest(metaData)
-                logger.debug("Recreated document in preparation for deletion. (${doc?.identifier})")
-
-                String voyagerUri = getVoyagerUri(message.getHeader("document:identifier"))
+                logger.debug("Recreated document in preparation for deletion. (${doc?.id})")
 
                 logger.debug("DELETE to APIX at ${apixPathPrefix + voyagerUri}")
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
 
                 if (doc) {
                     message.setBody(doc.data)
-                    message.setHeader("document:metaentry", doc.manifestAsJson)
+                    //message.setHeader("document:metaentry", doc.manifestAsJson)
                 }
             }
         } else {
@@ -86,20 +87,21 @@ class APIXProcessor implements org.apache.camel.Processor {
 
                 Document doc = new Document().withIdentifier(id).withData(documentData).withManifest(metaData)
 
-                String voyagerUri = getVoyagerUri(doc)
                 if (!voyagerUri) {
-                    if (message.getHeader("document:dataset") == "hold") {
+                    if (dataset == "hold") {
                         voyagerUri = getUriForNewHolding(doc)
                     } else {
-                        voyagerUri =  "/" + message.getHeader("document:dataset") +"/new"
+                        voyagerUri =  "/" + dataset +"/new"
                     }
                 }
+
                 doc = jsonLD2MarcXMLConverter.convert(doc)
-
                 logger.debug("Converted document to MarcXML. New content-type: " + doc.getContentType())
+                logger.debug("Doc data: " + doc.data.getClass())
+                logger.debug(doc.data.content)
 
-                message.setBody(doc.data)
-                message.setHeader("document:metaentry", doc.manifestAsJson)
+                message.setBody(doc.data.content)
+                //message.setHeader("document:metaentry", doc.manifestAsJson)
 
                 logger.debug("PUT to APIX at ${apixPathPrefix + voyagerUri}")
                 message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
@@ -113,12 +115,20 @@ class APIXProcessor implements org.apache.camel.Processor {
     }
 
 
+    String getDataSetFromId(String identifier) {
+
+        if (identifier ==~ /\/(auth|bib|hold)\/\d+/) {
+            return identifier.split("/")[-2]
+        }
+    }
+
+
     String getUriForNewHolding(Document doc) {
 
         String holdingFor = doc.data.about.holdingFor.get("@id")
         logger.debug("Document is holding for $holdingFor, loading that document ...")
 
-        Location location = whelk.locate(holdingFor)
+        Location location = whelk.storage.locate(holdingFor, true)
         logger.debug("Found location: $location")
 
         Document bibDoc = location?.document
@@ -126,13 +136,13 @@ class APIXProcessor implements org.apache.camel.Processor {
 
         if (!bibDoc && location) {
             logger.debug(" ... or rather not. Loading redirect: ${location.uri}")
-            bibDoc = whelk.get(location.uri.toString())
+            bibDoc = whelk.storage.load(location.uri)
         }
 
         String apixNewHold = null
 
         try {
-            apixNewHold = getVoyagerUri(bibDoc) + "/newhold"
+            apixNewHold = getVoyagerUri(bibDoc.id) + "/newhold"
 
             if (!apixNewHold) {
                 throw new Exception("Failed")
@@ -159,45 +169,5 @@ class APIXProcessor implements org.apache.camel.Processor {
         logger.debug("Could not assertain a voyager URI for $xlIdentifier")
         return null
     }
-
-
-    String getVoyagerUri(Document doc) {
-
-        String vUri = getVoyagerUri(doc.identifier, doc.dataset)
-
-        logger.debug("proposed voy id from identifier: $vUri")
-        logger.debug("Looking in ${doc.identifiers}")
-
-        for (altId in doc.identifiers) {
-
-            if (altId ==~ /\/(auth|bib|hold)\/\d+/) {
-                logger.debug("Identified apix uri from alternates: ${altId}")
-                return altId
-            }
-        }
-
-        return vUri
-    }
-
-
-    /*Document runConverters(Document doc) {
-
-        logger.debug("converters: $converters filters: $filters")
-
-        if (doc && (converters || filters)) {
-
-            for (converter in converters) {
-                logger.debug("Running converter ${converter.id}.")
-                doc = converter.convert(doc)
-            }
-
-            for (filter in filters) {
-                logger.debug("Running filter ${filter.id}.")
-                doc = filter.filter(doc)
-            }
-        }
-
-        return doc
-    }*/
 
 }
