@@ -278,7 +278,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    Map<String, Object> linkedDataApiQuery(Map queryParameters, String dataset, StorageType storageType) {
+    Map<String, Object> query(Map queryParameters, String dataset, StorageType storageType) {
         log.debug("Performing query with type $storageType : $queryParameters")
         long startTime = System.currentTimeMillis()
         Connection connection = getConnection()

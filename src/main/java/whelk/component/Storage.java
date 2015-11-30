@@ -16,5 +16,5 @@ public interface Storage {
     Document load(String id);
     Iterable<Document> loadAll(String dataset);
     boolean remove(String id, String dataset);
-    Map<String,Object> linkedDataApiQuery(Map<String,String[]> queryParameters, String dataset, StorageType storageType);
+    Map<String,Object> query(Map<String,String[]> queryParameters, String dataset, StorageType storageType);
 }
