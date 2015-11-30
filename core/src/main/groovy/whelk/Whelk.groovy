@@ -1,10 +1,18 @@
 package whelk
 
+import com.sun.java.swing.plaf.windows.TMSchema.Prop
 import groovy.util.logging.Slf4j as Log
+import org.picocontainer.Characteristics
+import org.picocontainer.DefaultPicoContainer
+import org.picocontainer.PicoContainer
+import org.picocontainer.containers.PropertiesPicoContainer
 import whelk.component.APIX
+import whelk.component.ElasticSearch
 import whelk.component.Index
+import whelk.component.PostgreSQLComponent
 import whelk.component.Storage
 import whelk.filter.JsonLdLinkExpander
+import whelk.util.PropertyLoader
 
 /**
  * Created by markus on 15-09-03.
@@ -58,6 +66,19 @@ class Whelk {
     }
 
     public Whelk() {
+    }
+
+    public static DefaultPicoContainer getPreparedComponentsContainer(Properties properties) {
+        DefaultPicoContainer pico = new DefaultPicoContainer(new PropertiesPicoContainer(properties))
+        Properties componentProperties = PropertyLoader.loadProperties("component")
+        for (comProp in componentProperties) {
+            if (comProp.key.endsWith("Class") && comProp.value && comProp.value != "null") {
+                println("Adding pico component ${comProp.key} = ${comProp.value}")
+                pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(Class.forName(comProp.value))
+            }
+        }
+        pico.addComponent(Whelk.class)
+        return pico
     }
 
     Document store(Document document) {

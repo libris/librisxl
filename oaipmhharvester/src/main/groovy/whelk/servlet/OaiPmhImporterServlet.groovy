@@ -3,21 +3,16 @@ package whelk.servlet
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 import org.picocontainer.Characteristics
-import org.picocontainer.DefaultPicoContainer
 import org.picocontainer.PicoContainer
-import org.picocontainer.containers.PropertiesPicoContainer
-import whelk.Document
 import whelk.Whelk
-import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.OaiPmhImporter
-import whelk.scheduler.ScheduledOperator
+import whelk.util.PropertyLoader
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ScheduledExecutorService
@@ -41,28 +36,13 @@ class OaiPmhImporterServlet extends HttpServlet {
     public OaiPmhImporterServlet() {
         log.info("Starting oaipmhimporter.")
 
-        Properties mainProps = new Properties()
 
-        // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
-        InputStream secretsConfig = ( System.getProperty("xl.secret.properties")
-                ? new FileInputStream(System.getProperty("xl.secret.properties"))
-                : this.getClass().getClassLoader().getResourceAsStream("secret.properties") )
+        props = PropertyLoader.loadProperties("secret", "oaipmh")
 
-        InputStream oaipmhConfig = ( System.getProperty("xl.oaipmh.properties")
-                ? new FileInputStream(System.getProperty("xl.oaipmh.properties"))
-                : this.getClass().getClassLoader().getResourceAsStream("oaipmh.properties") )
+        pico = Whelk.getPreparedComponentsContainer(props)
 
-
-        props.load(secretsConfig)
-        props.load(oaipmhConfig)
-
-        pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
-
-        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
         pico.as(Characteristics.USE_NAMES).addComponent(OaiPmhImporter.class)
         pico.addComponent(new MarcFrameConverter())
-        pico.addComponent(Whelk.class)
 
         pico.start()
 

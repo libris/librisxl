@@ -3,16 +3,12 @@ package whelk.rest.api
 import groovy.util.logging.Slf4j as Log
 import org.apache.http.entity.ContentType
 import org.codehaus.jackson.map.ObjectMapper
-import org.picocontainer.Characteristics
-import org.picocontainer.DefaultPicoContainer
 import org.picocontainer.PicoContainer
-import org.picocontainer.containers.PropertiesPicoContainer
 import whelk.Document
 import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
 import whelk.component.ElasticSearch
-import whelk.component.PostgreSQLComponent
 import whelk.component.StorageType
 import whelk.converter.FormatConverter
 import whelk.URIMinter
@@ -21,6 +17,7 @@ import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
+import whelk.util.PropertyLoader
 
 import javax.activation.MimetypesFileTypeMap
 import javax.servlet.http.HttpServlet
@@ -57,28 +54,17 @@ class Crud extends HttpServlet {
         super()
         log.info("Setting up httpwhelk.")
 
-        // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
-        InputStream secretsConfig = ( System.getProperty("xl.secret.properties")
-                ? new FileInputStream(System.getProperty("xl.secret.properties"))
-                : this.getClass().getClassLoader().getResourceAsStream("secret.properties") )
+        Properties props = PropertyLoader.loadProperties("secret")
 
-        Properties props = new Properties()
+        // Get a properties pico container, pre-wired with components according to components.properties
+        pico = Whelk.getPreparedComponentsContainer(props)
 
-        props.load(secretsConfig)
-
-        pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
-
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
-        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ApixClientCamel.class)
         pico.addComponent(JsonLD2MarcConverter.class)
         pico.addComponent(JsonLD2MarcXMLConverter.class)
-
-        pico.addComponent(Whelk.class)
-
-        //pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
-
         pico.addComponent(ISXNTool.class)
+
+        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ApixClientCamel.class)
+        //pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
 
         pico.start()
     }
