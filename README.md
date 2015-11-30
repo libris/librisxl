@@ -279,11 +279,11 @@ To run the conversion from MARC to JSON-LD again for all records, call transfer:
 ## Component synchronization
 
 When starting up the whelk, each component checks if it needs to update it's data. This happens automatically by each component loading it's state, stored in WHELK\_WORK\_DIR/componentname.state. WHELK\_WORK\_DIR is configured in whelk.json.
-If no state file can be found for a component, it is automatically created and the "last\_updated" parameter is set to epoch. Since this would be a big operation to catch up at startup, it needs to be forcibly requested by a human to start. 
+If no state file can be found for a component, it is automatically created and the "last\_updated" parameter is set to epoch. Since this would be a big operation to catch up at startup, it needs to be forcibly requested by a human to start.
 
     $ curl http://<whelkhost>/_operations?operation=ping
 
-This is analogous to a full reindex, except that no new index will be created. 
+This is analogous to a full reindex, except that no new index will be created.
 
 If the statefiles are missing, but you know that the index is in a reasonable state, you could just create a statefile by hand with a more recent "last\_updated".
 
@@ -314,7 +314,7 @@ curl -XGET http://<host>:9200/libris/auth/_search -d '{ "facets" : { "my_terms" 
 
 whelk, SEARCH API:
 http://<host>:<PORT>/whelk/<indextype>/_search?q=(<field>:)strindberg
-OR 
+OR
 http://<host>:<PORT>/whelk/<indextype>?<field>:strindberg
 
 INDEX TYPES:

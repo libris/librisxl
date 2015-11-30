@@ -11,6 +11,7 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
+import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.component.StorageType
 import whelk.converter.FormatConverter
@@ -67,7 +68,7 @@ class Crud extends HttpServlet {
 
         pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
 
-        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
         //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ApixClientCamel.class)
         pico.addComponent(JsonLD2MarcConverter.class)
@@ -102,8 +103,20 @@ class Crud extends HttpServlet {
     void handleQuery(HttpServletRequest request, HttpServletResponse response, String dataset) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String callback = queryParameters.remove("callback")
-
-        def results = whelk.storage.linkedDataApiQuery(queryParameters, dataset, autoDetectQueryMode(queryParameters))
+        Map results = null
+        if (queryParameters.containsKey("q")) {
+            // If general q-parameter chosen, use elastic for query
+            def dslQuery = ElasticSearch.createJsonDsl(queryParameters)
+            if (whelk.elastic) {
+                results = whelk.elastic.query(dslQuery, dataset)
+            } else {
+                log.error("Attempted elastic query, but whelk has no elastic component configured.")
+                response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "Attempted to use elastic for query, but no elastic component is configured.")
+                return
+            }
+        } else {
+            results = whelk.storage.query(queryParameters, dataset, autoDetectQueryMode(queryParameters))
+        }
 
         def jsonResult = (callback ? callback + "(" : "") + mapper.writeValueAsString(results) + (callback ? ");" : "")
 
