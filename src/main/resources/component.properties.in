@@ -1,0 +1,3 @@
+storageClass=whelk.component.PostgreSQLComponent
+indexClass=whelk.component.ElasticSearch
+apixClass=null
