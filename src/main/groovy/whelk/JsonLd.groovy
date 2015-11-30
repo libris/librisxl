@@ -73,6 +73,9 @@ public class JsonLd {
         Map framedMap
         try {
             framedMap = embed(mainId, mainItemMap, idMap, new HashSet<String>())
+            if (!framedMap) {
+                throw new FramingException("Failed to frame JSONLD ($flatJsonLd)")
+            }
         } catch (StackOverflowError sofe) {
             throw new FramingException("Unable to frame JSONLD ($flatJsonLd). Recursive loop?)", sofe)
         }

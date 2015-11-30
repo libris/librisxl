@@ -121,8 +121,9 @@ class ElasticSearch implements Index {
             if (doc.isJson()) {
                 try {
                     if (doc.isJsonLd()) {
-                        log.trace("Framing ${doc.id}")
+                        log.debug("Framing ${doc.id}")
                         doc.data = JsonLd.frame(doc.id, doc.data)
+                        log.trace("Framed data: ${doc.data}")
                         if (expander) {
                             doc = expander.filter(doc)
                         }
