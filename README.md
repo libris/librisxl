@@ -227,7 +227,7 @@ All whelk maintenance is controlled from the operations interface (<whelkhost>/\
 
 If a new index is to be set up, and unless you run locally in a pristine setup, you need to put the config to the index, like (replace localhost with target machine):
 
-  $ curl -XPUT http://localhost:9200/<indexname> -d @librisxl-tools/elasticsearch/libris\_config.json
+    $ curl -XPUT http://localhost:9200/<indexname> -d @librisxl-tools/elasticsearch/libris_config.json
 
 (To replace an existing setup with entirely new configuration, you need to delete the index `curl -XDELETE http://localhost:9200/<indexname>/` and read all data again (even locally).)
 
