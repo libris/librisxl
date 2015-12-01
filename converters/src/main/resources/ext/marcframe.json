@@ -3905,10 +3905,10 @@
       "match-code": {
         "x": {
           "addLink": "replaces",
-          "resourceType": "TopicalTerm",
-          "uriTemplate": "/topic/sao/{broader.prefLabel*}",
-          "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
-          "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
+          "resourceType": "ComplexTerm",
+          "uriTemplate": "/topic/sao/{termParts.prefLabel*}",
+          "$a": {"addLink": "termParts", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
+          "$x": {"addLink": "termParts", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
         }
       },
       "TODO": "whatIs w||e"
