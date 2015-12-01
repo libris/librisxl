@@ -5,6 +5,10 @@ package whelk.exception;
  */
 public class FramingException extends RuntimeException {
 
+    public FramingException(String message) {
+        super(message);
+    }
+
     public FramingException(String message, Throwable throwable) {
         super(message, throwable);
     }
