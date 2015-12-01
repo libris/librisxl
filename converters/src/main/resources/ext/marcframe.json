@@ -87,7 +87,7 @@
         "v x y z": {
           "uriTemplate": null,
           "uriTemplate": "/topic/{+inScheme.notation}{/termParts.prefLabel*}",
-          "aboutType": "ComplexTerm",
+          "resourceType": "ComplexTerm",
           "$a": {"addLink": "termParts",
                  "resourceType": "TopicalTerm",
                  "property": "prefLabel", "required": true},
@@ -3116,9 +3116,9 @@
           "result": {"about": {
             "subject": [
               {
-                "@type": "TopicalTerm",
+                "@type": "ComplexTerm",
                 "@id":"/topic/lcsh/Information/Information%20Age",
-                "broader": [
+                "termParts": [
                   {
                     "@type": "TopicalTerm",
                     "prefLabel": "Information"
@@ -3799,7 +3799,7 @@
     "150" : {
       "inherit": "patterns:termbase",
       "aboutEntity": "?record",
-      "aboutType": "TopicalTerm",
+      "resourceType": "TopicalTerm",
       "uriTemplateDefaults": {"inScheme.notation": "sao"},
       "dependsOn": ["040", "042"],
       "$0": null,
@@ -3819,25 +3819,25 @@
     "151" : {
       "inherit": "patterns:termbase",
       "aboutEntity": "?record",
-      "aboutType": "GeographicalTerm"
+      "resourceType": "GeographicalTerm"
     },
     "155" : {
       "inherit": "patterns:termbase",
       "aboutEntity": "?record",
-      "aboutType": "GenreTerm",
+      "resourceType": "GenreTerm",
       "TODO:just-assert-inScheme=saogf?:uriTemplate": "/topic/saogf/{prefLabel}"
     },
     "162" : {
       "inherit": "patterns:termbase",
       "TODO": "besättning - musik",
       "aboutEntity": "?record",
-      "aboutType": "OrchestraTerm"
+      "resourceType": "OrchestraTerm"
     },
 
     "180" : {
       "inherit": null,
       "aboutEntity": "?record",
-      "aboutType": "SubdivisionTerm",
+      "resourceType": "SubdivisionTerm",
       "$x": {
         "property": "prefLabel",
         "defaults": {"inCollection": {"@id": "/topic/aspects/", "notation": "aspects"}}
@@ -3846,19 +3846,19 @@
     "181" : {
       "inherit": null,
       "aboutEntity": "?record",
-      "aboutType": "GeographicalSubdivisionTerm",
+      "resourceType": "GeographicalSubdivisionTerm",
       "$z": {"property": "prefLabel"}
     },
     "182" : {
       "inherit": null,
       "aboutEntity": "?record",
-      "aboutType": "ChronologicalSubdivisionTerm",
+      "resourceType": "ChronologicalSubdivisionTerm",
       "$y": {"property": "prefLabel"}
     },
     "185" : {
       "inherit": null,
       "aboutEntity": "?record",
-      "aboutType": "GenreSubdivisionTerm",
+      "resourceType": "GenreSubdivisionTerm",
       "$v": {"property": "prefLabel"}
     },
 

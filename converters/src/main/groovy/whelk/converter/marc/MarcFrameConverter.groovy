@@ -694,8 +694,12 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         } else {
             link = fieldDfn.link
         }
+        if (!link && !definesDomainEntityType && !fieldDfn.computeLinks) {
+            definesDomainEntityType = fieldDfn.resourceType
+        } else {
+            resourceType = fieldDfn.resourceType
+        }
         embedded = fieldDfn.embedded == true
-        resourceType = fieldDfn.resourceType
     }
 
     abstract ConvertResult convert(state, value)
