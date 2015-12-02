@@ -144,7 +144,7 @@ class Crud extends HttpServlet {
                 if (mode == HttpTools.DisplayMode.META) {
                     def versions = whelk.storage.loadAllVersions(document.identifier)
                     if (versions) {
-                        document.manifest.versions = versions.collect { ["modified": it.modified, "checksum":it.checksum] }
+                        document.manifest.versions = versions.collect { ["version":it.version, "modified": it.modified as String, "checksum":it.manifest.checksum] }
                     }
                     sendResponse(response, document.getManifestAsJson(), "application/json")
                 } else {
@@ -153,7 +153,7 @@ class Crud extends HttpServlet {
                         response.setHeader("Link", "<$ctheader>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"")
                     }
                 }
-                response.setHeader("ETag", document.modified as String)
+                response.setHeader("ETag", document.modified.getTime() as String)
                 String contentType = getMajorContentType(document.contentType)
                 if (path in contextHeaders.collect { it.value }) {
                     log.debug("request is for context file. Must serve original content-type ($contentType).")
@@ -252,7 +252,7 @@ class Crud extends HttpServlet {
                 log.debug("Saving document (${doc.identifier})")
                 doc = whelk.store(doc)
 
-                sendDocumentSavedResponse(response, getResponseUrl(request, doc.identifier, doc.dataset), doc.modified as String)
+                sendDocumentSavedResponse(response, getResponseUrl(request, doc.identifier, doc.dataset), doc.modified.getTime() as String)
             }
         } catch (WhelkAddException wae) {
             log.warn("Whelk failed to store document: ${wae.message}")
