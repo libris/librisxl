@@ -48,26 +48,18 @@ class MySQLImporter {
 
     String connectionUrl
 
+    MySQLImporter(Whelk w, String mysqlConnectionUrl) {
+        whelk = w
+        marcFrameConverter = null
+        connectionUrl = mysqlConnectionUrl
+    }
+
+
     MySQLImporter(Whelk w, MarcFrameConverter mfc, String mysqlConnectionUrl) {
         whelk = w
         marcFrameConverter = mfc
         connectionUrl = mysqlConnectionUrl
     }
-
-    /*
-    MySQLImporter(Whelk w, MarcFrameConverter mfc, String mysqlConnectionUrl, String datasetsToSave) {
-        whelk = w
-        marcFrameConverter = mfc
-        connectionUrl = mysqlConnectionUrl
-        if (datasetsToSave) {
-            this.eligibleDatasets = []
-            datasetsToSave.split(",").each {
-                String ds = it.trim()
-                this.eligibleDatasets.add(ds)
-            }
-        }
-    }*/
-
 
     void doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true) {
         recordCount = 0
@@ -172,7 +164,6 @@ class MySQLImporter {
             queue.shutdown()
             queue.awaitTermination(7, TimeUnit.DAYS)
 
-
         } catch(SQLException se) {
             log.error("SQL Exception", se)
         } catch(Exception e) {
@@ -275,7 +266,7 @@ class MySQLImporter {
                     if (!convertedDocs.containsKey(it.manifest.dataset)) { // Create new list
                         convertedDocs.put(it.manifest.dataset, [])
                     }
-                    if (it.manifest.dataset.startsWith(EPLIKT_RECORD_DATASET_PREFIX)) {
+                    if (it.manifest.dataset.startsWith(EPLIKT_RECORD_DATASET_PREFIX) || converter == null) {
                         it.manifest['contentType'] = "application/x-marc-json"
                         convertedDocs[(it.manifest.dataset)] << new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)
                     } else {
