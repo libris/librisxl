@@ -147,18 +147,22 @@ Load the resulting resources into the running whelk:
     $ scripts/load-defs-whelk.sh http://localhost:8180/whelk
 
 
-### Import/update local storage from test data (INCOMPLETE)
+### Import/update local storage from test data
 
 Create a local OAI-PMH dump of examples and run a full import:
 
     $ python librisxl-tools/scripts/assemble_oaipmh_records.py src/main/resources/secrets.json librisxl-tools/scripts/example_records.tsv /tmp/oaidump
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer) &
 
+Modify your oaipmh.properties to indicate oaipmhServiceUrl as http://localhost:8000/{dataset}/oaipmh
+
     $ cd oaipmhharvester/
 
     $ gradle jettyrun
 
-    and go to http://localhost:8180/oaipmhharvester using a browser
+    and go to http://localhost:8180/oaipmhharvester using a browser.
+
+    To make sure all data is loaded, stop all harvester threads, set the "reload from" value to 1970 or equally old and restart them. The data will now load from your mock OAIPMH server.
 
 
 (Using the OAI-PMH dump makes out-of-band metadata available, which is necessary to create links from bib data to auth data.)
