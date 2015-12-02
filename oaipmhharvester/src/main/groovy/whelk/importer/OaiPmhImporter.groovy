@@ -5,7 +5,7 @@ import groovy.util.slurpersupport.GPathResult
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.converter.JsonLDLinkCompleterFilter
-import whelk.converter.URIMinter
+import whelk.URIMinter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.WhelkAddException
 
@@ -184,7 +184,13 @@ class OaiPmhImporter {
         long elapsed = System.currentTimeMillis()
         Date recordDate
         Date now = new Date()
-        def xmlString = normalizeString(url.text)
+        def xmlString
+        try {
+            xmlString = normalizeString(url.text)
+        } catch (ConnectException ce) {
+            log.warn("Failed to connect to $url")
+            return new HarvestResult(resumptionToken: null, lastRecordDatestamp: recordDate)
+        }
         if ((System.currentTimeMillis() - elapsed) > 5000) {
             log.warn("[$dataset / $recordCount] Load from URL ${url.toString()} took more than 5 seconds (${System.currentTimeMillis() - elapsed})")
         }
