@@ -6,8 +6,17 @@
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
+    <appender name="FILE-WHELK" class="ch.qos.logback.core.FileAppender">
+        <file>${catalina.base}/logs/whelk.log</file>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
-  <logger name="org.elasticsearch" level="warn"/>
+
+
+
+    <logger name="org.elasticsearch" level="warn"/>
   <logger name="org.apache.jena.fuseki" level="warn"/>
   <logger name="org.apache.camel.component.http4" level="warn"/>
   <logger name="org.apache.camel.component.elasticsearch" level="warn"/>
@@ -15,7 +24,8 @@
   <logger name="whelk.component.PostgreSQLComponent" level="debug"/>
 
   <root level="info">
-    <appender-ref ref="STDOUT" />
+      <appender-ref ref="FILE-WHELK" />
+      <appender-ref ref="STDOUT" />
   </root>
 </configuration>
 
