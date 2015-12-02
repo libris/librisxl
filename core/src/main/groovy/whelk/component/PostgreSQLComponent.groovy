@@ -6,11 +6,9 @@ import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import whelk.Document
-import whelk.JsonLd
 import whelk.Location
 import whelk.exception.WhelkException
 
-import javax.print.Doc
 import java.security.MessageDigest
 import java.sql.ResultSet
 import java.sql.Timestamp
