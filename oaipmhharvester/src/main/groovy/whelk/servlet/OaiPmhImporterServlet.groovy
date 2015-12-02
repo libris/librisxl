@@ -81,7 +81,12 @@ class OaiPmhImporterServlet extends HttpServlet {
         }
         table.append("<tr><td><input type=\"submit\" name=\"action_all\" value=\"stop all\"></td>")
         for (dataset in datasets) {
-            table.append("<td><input type=\"submit\" name=\"action_${dataset}\" value=\"${jobs[dataset].active ? "stop" : "start"}\"></td>")
+            table.append("<td><input type=\"submit\" name=\"action_${dataset}\" value=\"${jobs[dataset].active ? "stop" : "start"}\">")
+            if (!jobs[dataset].active) {
+                String lastImportDate = jobs[dataset].getLastImportValue().format("yyyy-MM-dd'T'HH:mm")
+                table.append("&nbsp;<input type=\"submit\" name=\"reset_${dataset}\" value=\"reload $dataset from\"/>&nbsp;<input type=\"datetime-local\" name=\"datevalue\" value=\"${lastImportDate}\"/>")
+            }
+            table.append("</td>")
         }
         table.append("</tr>")
 
@@ -109,7 +114,15 @@ class OaiPmhImporterServlet extends HttpServlet {
                 for (job in jobs) {
                     job.value.disable()
                 }
-            } else {
+            } else if (reqs.startsWith("reset_")) {
+                log.info("Loading job for ${reqs.substring(6)}")
+                log.info("Got these jobs: $jobs")
+                def job = jobs.get(reqs.substring(6))
+                Date startDate = Date.parse("yyyy-MM-dd'T'HH:mm", request.getParameter("datevalue"))
+                log.info("Resetting harvester for ${job.dataset} to $startDate")
+                job.setStartDate(startDate)
+                //job.enable()
+            } else if (reqs.startsWith("action_")) {
                 jobs.get(reqs.substring(7)).toggleActive()
             }
         }
@@ -144,6 +157,7 @@ class ScheduledJob implements Runnable {
     PostgreSQLComponent storage
     Map whelkState = null
     boolean active = true
+    final static long WEEK_MILLIS = 604800000
 
     ScheduledJob(OaiPmhImporter imp, String ds, PostgreSQLComponent pg) {
         this.importer = imp
@@ -172,6 +186,20 @@ class ScheduledJob implements Runnable {
         storage.saveSettings(dataset, whelkState)
     }
 
+    void setStartDate(Date startDate) {
+        loadWhelkState().put("lastImport", startDate.format(DATE_FORMAT))
+        storage.saveSettings(dataset, whelkState)
+    }
+
+    Date getLastImportValue() {
+        String dateString = loadWhelkState().get("lastImport")
+        if (!dateString) {
+            return new Date(new Date().getTime() - WEEK_MILLIS)
+        } else {
+            return Date.parse(DATE_FORMAT, dateString)
+        }
+    }
+
     Map loadWhelkState() {
         if (!whelkState) {
             log.info("Loading current state from storage ...")
@@ -180,7 +208,6 @@ class ScheduledJob implements Runnable {
         }
         return whelkState
     }
-
 
     void run() {
         if (active) {
