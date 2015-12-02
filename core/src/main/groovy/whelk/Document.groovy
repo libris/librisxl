@@ -180,9 +180,6 @@ class Document {
             deleted = entrydata[DELETED_KEY]
         }
         if (entrydata != null) {
-            for (sensitiveKey in [Document.CHECKUM_KEY]) {
-                entrydata.remove(sensitiveKey)
-            }
             this.manifest.putAll(entrydata)
         }
         return this
