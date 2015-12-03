@@ -1,10 +1,10 @@
 package whelk
 
-import groovy.util.logging.Slf4j as Log
+import java.util.zip.CRC32
 
 import com.damnhandy.uri.template.UriTemplate
 
-import java.util.zip.CRC32
+import groovy.util.logging.Slf4j as Log
 
 
 @Log
@@ -15,9 +15,9 @@ class URIMinter {
     static final char[] CONSONANTS = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
     static final Map<String,Long> BASETIMES = [
-            "auth": Date.parse("yyyy-MM-dd", "1999-01-01").getTime(),
-             "bib": Date.parse("yyyy-MM-dd", "2000-01-01").getTime(),
-            "hold": Date.parse("yyyy-MM-dd", "2001-01-01").getTime()
+            "auth": DateUtil.parseDate("1999-01-01").getTime(),
+             "bib": DateUtil.parseDate("2000-01-01").getTime(),
+            "hold": DateUtil.parseDate("2001-01-01").getTime()
     ]
 
     static final int IDENTIFIER_LENGTH = 14
@@ -55,7 +55,7 @@ class URIMinter {
 
     void setEpochDate(String epochDate) {
         if (epochDate instanceof String) {
-            epochOffset = Date.parse("yyyy-MM-dd", epochDate).getTime()
+            epochOffset = DateUtil.parseDate(epochDate).getTime()
         }
         this.epochDate = epochDate
     }
