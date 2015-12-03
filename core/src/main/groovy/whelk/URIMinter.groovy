@@ -11,8 +11,8 @@ import java.util.zip.CRC32
 class URIMinter {
 
     static final char[] ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyz".chars
-    static final char[] VOWELS = "auoeiy".chars
-    static final char[] DEVOWELLED = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
+    static final char[] VOWELS = "aoueiy".chars
+    static final char[] CONSONANTS = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
     static final Map<String,Long> BASETIMES = [
             "auth": Date.parse("yyyy-MM-dd", "1999-01-01").getTime(),
@@ -29,7 +29,7 @@ class URIMinter {
     String thingUriTemplate
     String objectLink
     String epochDate
-    char[] alphabet = DEVOWELLED
+    char[] alphabet = CONSONANTS
     String randomVariable = null
     int maxRandom = 0
     String timestampVariable = null
@@ -40,11 +40,8 @@ class URIMinter {
     String compoundSlugSeparator = ""
     Map<String, MintRuleSet> rulesByDataset
     int minSlugSize = 2
-    int maxWordsInSlug = 6
-    int shortWordSize = 3
 
     private long epochOffset
-    private int checkForWordsMinSize = maxWordsInSlug * (shortWordSize + 1)
 
     URIMinter() {
         this.timestampCaesarCipher = timestampCaesarCipher
@@ -105,7 +102,7 @@ class URIMinter {
             }
         } else {
             while (identifier.length() < idLength) {
-                identifier.append(DEVOWELLED[new Random().nextInt(DEVOWELLED.length)])
+                identifier.append(CONSONANTS[new Random().nextInt(CONSONANTS.length)])
             }
         }
         return base.resolve(identifier.toString()).toString()
@@ -208,7 +205,7 @@ class URIMinter {
             } else {
                 def value = data[key]
                 if (value) {
-                    compound << shorten(value)
+                    compound << value
                     if (pickFirst) {
                         return compound
                     }
@@ -226,18 +223,6 @@ class URIMinter {
             def reduced = s.findAll { alphabet.contains(it) }.join("")
             if (reduced.size() >= minSlugSize) {
                 return reduced
-            }
-        }
-        return s
-    }
-
-    String shorten(String s) {
-        if (maxWordsInSlug && s.size() > checkForWordsMinSize) {
-            def words = s.split(/\s+|-/)
-            if (words.size() > maxWordsInSlug) {
-                return words.collect {
-                    it.size() > shortWordSize? it.substring(0, shortWordSize) : it
-                }.join(" ")
             }
         }
         return s
