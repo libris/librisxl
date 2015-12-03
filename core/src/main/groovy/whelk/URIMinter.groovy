@@ -84,18 +84,22 @@ class URIMinter {
         return base.resolve(computePath(doc))
     }
 
-    String mint(String originalIdentifier, URI base = new URI("/")) {
+    String mint(String originalIdentifier) {
         String[] parts = originalIdentifier.split("/")
         String dataset = parts[1]
         int numericId = Integer.parseInt(parts.last())
-        return mint(BASETIMES.get(dataset)+numericId, originalIdentifier, base, 12)
+        return mint(BASETIMES.get(dataset)+numericId, originalIdentifier, 12)
     }
 
-    String mint(long timestamp, String seed = null) {
+    String mint(long timestamp, String data = null) {
+        return mint(timestamp, data, idLength)
+    }
+
+    String mint(long timestamp, String data, int idLength) {
         StringBuilder identifier = new StringBuilder(baseEncode(timestamp, true))
-        if (seed) {
+        if (data) {
             CRC32 crc32 = new CRC32()
-            crc32.update(seed.getBytes("UTF-8"))
+            crc32.update(data.getBytes("UTF-8"))
             identifier.append(baseEncode(crc32.value, false))
             if (identifier.length() > idLength) {
                 identifier = new StringBuilder(identifier.substring(0, idLength))
