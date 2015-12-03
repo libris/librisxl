@@ -7,10 +7,10 @@ import whelk.URIMinter
 class URIMinterSpec extends Specification {
 
     def "should base encode numbers"() {
-        //given:
-        //def minter = new URIMinter(alphabet: URIMinter.DEVOWELLED)
+        given:
+        def minter = new URIMinter()
         expect:
-        URIMinter.baseEncode(n, caesared) == expected
+        minter.baseEncode(n, caesared) == expected
 
         where:
         n               | expected      | caesared
@@ -20,7 +20,7 @@ class URIMinterSpec extends Specification {
         139409779957    | "6c70t5h7"    | false
         26938782        | "137pzd"      | false
         4175343705      | "5psqbrh"     | false
-        3081193821      | "46rx8np"     | true
+        3081193821      | "twgmzcp"     | true
 
         1               | "1"           | true
         30              | "10"          | true
@@ -31,14 +31,14 @@ class URIMinterSpec extends Specification {
 
     def "should encode and crc32 hash identifier"() {
         given:
-        def minter = new URIMinter(alphabet: URIMinter.DEVOWELLED)
+        def minter = new URIMinter()
         expect:
         minter.mint(n, seed) == id
         where:
         n              | seed         | id
-        139409779957   | "auth-1245"  | "/flg72dq7b1pf"
-        139419779957   | "bib-245555" | "/rxs0q35k5mzw"
-        139429779957   | "hold-11111" | "/384qdslw337q"
+        139409779957   | "auth-1245"  | "/flg72dq7b1pfpr"
+        139419779957   | "bib-245555" | "/rxs0q35k5mzw5h"
+        139429779957   | "hold-11111" | "/384qdslw337qmh"
         //139439779957   | null         | "flg72dq7"
     }
 
