@@ -21,6 +21,7 @@ class URIMinter {
     ]
 
     static final int IDENTIFIER_LENGTH = 14
+    int idLength = IDENTIFIER_LENGTH
 
     URI base = new URI("/")
     String typeKey = '@type'
@@ -28,7 +29,7 @@ class URIMinter {
     String thingUriTemplate
     String objectLink
     String epochDate
-    static char[] alphabet = DEVOWELLED
+    char[] alphabet = DEVOWELLED
     String randomVariable = null
     int maxRandom = 0
     String timestampVariable = null
@@ -86,14 +87,14 @@ class URIMinter {
         return base.resolve(computePath(doc))
     }
 
-    static String mint(String originalIdentifier, URI base = new URI("/")) {
+    String mint(String originalIdentifier, URI base = new URI("/")) {
         String[] parts = originalIdentifier.split("/")
         String dataset = parts[1]
         int numericId = Integer.parseInt(parts.last())
         return mint(BASETIMES.get(dataset)+numericId, originalIdentifier, base, 12)
     }
 
-    static String mint(long timestamp, String seed = null, URI base = new URI("/"), idLength = IDENTIFIER_LENGTH) {
+    String mint(long timestamp, String seed = null) {
         StringBuilder identifier = new StringBuilder(baseEncode(timestamp, true))
         if (seed) {
             CRC32 crc32 = new CRC32()
@@ -242,7 +243,7 @@ class URIMinter {
         return s
     }
 
-   static String baseEncode(long n, boolean lastDigitBasedCaesarCipher=false) {
+   String baseEncode(long n, boolean lastDigitBasedCaesarCipher=false) {
         int base = alphabet.length
         int[] positions = basePositions(n, base)
         if (lastDigitBasedCaesarCipher) {
@@ -254,7 +255,7 @@ class URIMinter {
         return baseEncode((int[]) positions)
     }
 
-    static String baseEncode(int[] positions) {
+    String baseEncode(int[] positions) {
         def chars = positions.collect { alphabet[it] }
         return chars.join("")
     }

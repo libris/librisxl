@@ -23,6 +23,7 @@ class MySQLImporter {
     Whelk whelk
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
+    URIMinter minter = new URIMinter()
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
     static String EPLIKT_RECORD_DATASET_PREFIX = "e"
@@ -216,7 +217,7 @@ class MySQLImporter {
             log.trace("building document $identifier")
             try {
                 String oldStyleIdentifier = "/"+type+"/"+record.getControlfields("001").get(0).getData()
-                identifier = URIMinter.mint(oldStyleIdentifier)
+                identifier = minter.mint(oldStyleIdentifier)
                 buildingMetaRecord.get(identifier, [:]).put("record", record)
                 buildingMetaRecord.get(identifier).put("manifest", ["identifier":identifier,"dataset":dataset, "alternateIdentifiers": [oldStyleIdentifier]])
             } catch (Exception e) {
