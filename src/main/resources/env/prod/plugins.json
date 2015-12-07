@@ -1,7 +1,0 @@
-{
-    "apixprocessor": {
-        "_class": "whelk.camel.APIXProcessor",
-        "_params": "/apix/0.1/cat/libris/",
-        "_plugins" : ["jsonld2marcxmlconverter"]
-    }
-}
