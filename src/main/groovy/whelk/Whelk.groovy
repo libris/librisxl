@@ -106,16 +106,15 @@ class Whelk {
         }
     }
 
-    void remove(String id, String dataset) {
-        if (storage.remove(id, dataset)) {
+    void remove(String id) {
+        if (storage.remove(id)) {
             if (elastic) {
-                elastic.remove(id, dataset)
+                elastic.remove(id)
             }
             if (apix) {
                 Map info = [:]
                 info["operation"] = "DELETE"
                 info["id"] = id
-                info["dataset"] = dataset
                 apix.send(null, info)
             }
         }
