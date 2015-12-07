@@ -25,6 +25,7 @@ class PostgreSQLComponent implements Storage {
     public final static mapper = new ObjectMapper()
 
     private final static LOCATION_PRECURSOR = "/resource"
+    private final static JSONLD_ALT_ID_KEY = "sameAs"
 
     boolean versioning = true
 
@@ -165,6 +166,8 @@ class PostgreSQLComponent implements Storage {
         Connection connection = getConnection()
         connection.setAutoCommit(false)
         try {
+            PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT)
+            findIdentifiers(doc)
             calculateChecksum(doc)
             Date now = new Date()
             if (versioning) {
@@ -173,7 +176,6 @@ class PostgreSQLComponent implements Storage {
                     return doc // Same document already in storage.
                 }
             }
-            PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT)
             insert = rigUpsertStatement(insert, doc, now)
             insert.executeUpdate()
             connection.commit()
@@ -252,6 +254,7 @@ class PostgreSQLComponent implements Storage {
         try {
             docs.each { doc ->
                 Date now = new Date()
+                findIdentifiers(doc)
                 calculateChecksum(doc)
                 if (versioning) {
                     ver_batch = rigVersionStatement(ver_batch, doc, now)
@@ -437,6 +440,22 @@ class PostgreSQLComponent implements Storage {
         jsonbPath.append(" @> ?")
 
         return [jsonbPath.toString(), value]
+    }
+
+    void findIdentifiers(Document doc) {
+        for (entry in doc.data.get(Document.GRAPH_KEY)) {
+            URI entryURI = new URI(entry['@id'])
+            if (entryURI.getPath().substring(1) == doc.id) {
+                def sameAs = entry.get(JSONLD_ALT_ID_KEY)
+                if (sameAs instanceof String) {
+                    doc.addIdentifier(sameAs)
+                } else {
+                    for (sameId in sameAs) {
+                        doc.addIdentifier(sameId)
+                    }
+                }
+            }
+        }
     }
 
     String calculateChecksum(Document doc) {

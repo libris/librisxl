@@ -8,28 +8,13 @@ import groovy.util.logging.Slf4j as Log
 
 
 @Log
-class URIMinter {
-
-    static final char[] ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyz".chars
-    static final char[] VOWELS = "aoueiy".chars
-    static final char[] CONSONANTS = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
-
-    static final Map<String,Long> BASETIMES = [
-            "auth": DateUtil.parseDate("1999-01-01").getTime(),
-             "bib": DateUtil.parseDate("2000-01-01").getTime(),
-            "hold": DateUtil.parseDate("2001-01-01").getTime()
-    ]
-
-    static final int IDENTIFIER_LENGTH = 14
-    int idLength = IDENTIFIER_LENGTH
-
+class URIMinter extends IdGenerator {
     URI base = new URI("/")
     String typeKey = '@type'
     String documentUriTemplate
     String thingUriTemplate
     String objectLink
     String epochDate
-    char[] alphabet = CONSONANTS
     String randomVariable = null
     int maxRandom = 0
     String timestampVariable = null
@@ -84,33 +69,6 @@ class URIMinter {
         return base.resolve(computePath(doc))
     }
 
-    String mint(String originalIdentifier) {
-        String[] parts = originalIdentifier.split("/")
-        String dataset = parts[1]
-        int numericId = Integer.parseInt(parts.last())
-        return mint(BASETIMES.get(dataset)+numericId, originalIdentifier, 12)
-    }
-
-    String mint(long timestamp, String data = null) {
-        return mint(timestamp, data, idLength)
-    }
-
-    String mint(long timestamp, String data, int idLength) {
-        StringBuilder identifier = new StringBuilder(baseEncode(timestamp, true))
-        if (data) {
-            CRC32 crc32 = new CRC32()
-            crc32.update(data.getBytes("UTF-8"))
-            identifier.append(baseEncode(crc32.value, false))
-            if (identifier.length() > idLength) {
-                identifier = new StringBuilder(identifier.substring(0, idLength))
-            }
-        } else {
-            while (identifier.length() < idLength) {
-                identifier.append(CONSONANTS[new Random().nextInt(CONSONANTS.length)])
-            }
-        }
-        return base.resolve(identifier.toString()).toString()
-    }
 
     String computePath(Document doc) {
         computePath(doc.data)
@@ -230,37 +188,6 @@ class URIMinter {
             }
         }
         return s
-    }
-
-   String baseEncode(long n, boolean lastDigitBasedCaesarCipher=false) {
-        int base = alphabet.length
-        int[] positions = basePositions(n, base)
-        if (lastDigitBasedCaesarCipher) {
-            int rotation = positions[-1]
-            for (int i=0; i < positions.length - 1; i++) {
-                positions[i] = rotate(positions[i], rotation, base)
-            }
-        }
-        return baseEncode((int[]) positions)
-    }
-
-    String baseEncode(int[] positions) {
-        def chars = positions.collect { alphabet[it] }
-        return chars.join("")
-    }
-
-    static int[] basePositions(long n, int base) {
-        int maxExp = Math.floor(Math.log(n) / Math.log(base))
-        int[] positions = new int[maxExp + 1]
-        for (int i=maxExp; i > -1; i--) {
-            positions[maxExp-i] = (int) (((n / (base ** i)) as long) % base)
-        }
-        return positions
-    }
-
-    static int rotate(int i, int rotation, int ceil) {
-        int j = i + rotation
-        return (j >= ceil)? j - ceil : j
     }
 
     static class MintRuleSet {
