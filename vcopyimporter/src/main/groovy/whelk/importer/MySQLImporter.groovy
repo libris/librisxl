@@ -2,7 +2,6 @@ package whelk.importer
 
 import groovy.util.logging.Slf4j as Log
 
-import whelk.URIMinter
 import whelk.converter.FormatConverter
 import whelk.converter.JsonLDLinkCompleterFilter
 import whelk.converter.marc.MarcFrameConverter

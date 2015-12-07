@@ -4,12 +4,10 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.*
 import whelk.converter.FormatConverter
-import whelk.URIMinter
 
 @Log
 class JsonLD2MarcConverter implements FormatConverter {
 
-    URIMinter uriMinter
     protected MarcFrameConverter marcFrameConverter
     final static ObjectMapper mapper = new ObjectMapper()
 
