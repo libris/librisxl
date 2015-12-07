@@ -2,9 +2,6 @@ package whelk
 
 import java.util.zip.CRC32
 
-/**
- * Created by markus on 2015-12-07.
- */
 class IdGenerator {
     static final char[] ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyz".chars
     static final char[] VOWELS = "aoueiy".chars
@@ -15,7 +12,7 @@ class IdGenerator {
     static char[] alphabet = CONSONANTS
 
     static String generate() {
-        return generate(new Date().getTime(), null)
+        return generate(System.currentTimeMillis(), null)
     }
 
     static String generate(long timestamp, String data, int idLength = IDENTIFIER_LENGTH) {
