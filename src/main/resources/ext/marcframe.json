@@ -9,6 +9,12 @@
     "z": "auth"
   },
 
+  "baseUri": "/",
+  "uriTemplates": {
+    "record": "{marcType}/{controlNumber}",
+    "thing": "resource/{marcType}/{controlNumber}"
+  },
+
   "tokenMaps": [
     "marcenums.json",
     {

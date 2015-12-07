@@ -1,7 +1,6 @@
 package whelk.converter.marc
 
 
-import whelk.URIMinter
 import spock.lang.*
 
 
@@ -10,8 +9,8 @@ class MarcFrameConverterSpec extends Specification {
 
     static converter = new MarcFrameConverter() {
         def config
-        void initialize(URIMinter uriMinter, Map config) {
-            super.initialize(uriMinter, config)
+        void initialize(Map config) {
+            super.initialize(config)
             this.config = config
             super.conversion.doPostProcessing = false
             super.conversion.flatQuotedForm = false
@@ -238,6 +237,53 @@ class MarcFrameConverterSpec extends Specification {
 
         where:
         item << postProcStepSpecs
+    }
+
+    def r = converter.conversion.&resolve
+    def manageIds = converter.conversion.&manageIds
+
+    def "should make ids"() {
+        given:
+        def record = ['@id': null, controlNumber: "123"]
+        def thing = ['@id': null]
+        when:
+        manageIds('auth', record, thing)
+        then:
+        record == ['@id': r('auth/123'), controlNumber: "123"]
+        thing == ['@id': r('resource/auth/123')]
+    }
+
+    def "should use record id"() {
+        given:
+        def record = ['@id': '/fnrblgr', controlNumber: "123"]
+        def thing = ['@id': null]
+        when:
+        manageIds('auth', record, thing)
+        then:
+        record == ['@id': '/fnrblgr', 'sameAs': [r('auth/123')], controlNumber: "123"]
+        thing == ['@id': '/fnrblgr#it', 'sameAs': [r('resource/auth/123')]]
+    }
+
+    def "should use thing id"() {
+        given:
+        def record = ['@id': null, controlNumber: "123"]
+        def thing = ['@id': '/thing']
+        when:
+        manageIds('auth', record, thing)
+        then:
+        record == ['@id': r('auth/123'), controlNumber: "123"]
+        thing == ['@id': r('/thing'), 'sameAs': [r('resource/auth/123')]]
+    }
+
+    def "should use record and thing id"() {
+        given:
+        def record = ['@id': '/fnrblgr', controlNumber: "123"]
+        def thing = ['@id': '/thing']
+        when:
+        manageIds('auth', record, thing)
+        then:
+        record == ['@id': '/fnrblgr', 'sameAs': [r('auth/123')], controlNumber: "123"]
+        thing == ['@id': '/thing', 'sameAs': [r('resource/auth/123')]]
     }
 
     void assertJsonEquals(result, expected) {
