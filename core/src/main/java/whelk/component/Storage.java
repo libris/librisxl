@@ -15,6 +15,6 @@ public interface Storage {
     Location locate(String uri, boolean loadDocumentIfFound);
     Document load(String id);
     Iterable<Document> loadAll(String dataset);
-    boolean remove(String id, String dataset);
+    boolean remove(String id);
     Map<String,Object> query(Map<String,String[]> queryParameters, String dataset, StorageType storageType);
 }

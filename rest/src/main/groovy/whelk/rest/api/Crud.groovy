@@ -200,7 +200,7 @@ class Crud extends HttpServlet {
         if (!document && path ==~ /(.*\.\w+)/) {
             log.debug("Found extension in $path")
             if (!document && extensionContentType) {
-                document = whelk.storage.load(path.substring(0, path.lastIndexOf(".")))
+                document = whelk.storage.load(path.substring(1, path.lastIndexOf(".")))
             }
             accepting = [extensionContentType]
         }
@@ -284,11 +284,11 @@ class Crud extends HttpServlet {
             }
         }
         if (request.method == "PUT") {
-            identifier = request.pathInfo
             if (request.pathInfo == "/") {
                 response.sendError(response.SC_BAD_REQUEST, "PUT not allowed to ROOT")
                 return null
             }
+            identifier = request.pathInfo.substring(1)
         }
         Map dataMap
         if (Document.isJson(cType)) {
@@ -424,12 +424,13 @@ class Crud extends HttpServlet {
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
         try {
-            def doc = whelk.storage.load(request.pathInfo)
+            String id = request.pathInfo.substring(1)
+            def doc = whelk.storage.load(id)
             if (doc && !hasPermission(request.getAttribute("user"), doc, null)) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
             } else {
-                log.debug("Removing resource at ${request.pathInfo}")
-                whelk.remove(request.pathInfo, getDatasetBasedOnPath(request.pathInfo))
+                log.debug("Removing resource at ${id}")
+                whelk.remove(id)
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
 
             }

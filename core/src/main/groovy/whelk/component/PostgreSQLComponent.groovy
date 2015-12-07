@@ -443,6 +443,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     void findIdentifiers(Document doc) {
+        doc.addIdentifier(doc.getURI().toString())
         for (entry in doc.data.get(Document.GRAPH_KEY)) {
             URI entryURI = new URI(entry['@id'])
             if (entryURI.getPath().substring(1) == doc.id) {
@@ -696,10 +697,10 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    boolean remove(String identifier, String dataset) {
+    boolean remove(String identifier) {
         if (versioning) {
             log.debug("Creating tombstone record with id ${identifier}")
-            return store(createTombstone(identifier, dataset))
+            return store(createTombstone(identifier))
         } else {
             Connection connection = getConnection()
             PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
@@ -716,8 +717,8 @@ class PostgreSQLComponent implements Storage {
     }
 
 
-    protected Document createTombstone(id, dataset) {
-        def tombstone = new Document(id, ["@type":"Tombstone"]).withContentType("application/ld+json").withDataset(dataset)
+    protected Document createTombstone(id) {
+        def tombstone = new Document(id, ["@type":"Tombstone"]).withContentType("application/ld+json")
         tombstone.setDeleted(true)
         return tombstone
     }
