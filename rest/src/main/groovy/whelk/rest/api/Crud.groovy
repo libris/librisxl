@@ -8,10 +8,10 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
+import whelk.IdGenerator
 import whelk.component.ElasticSearch
 import whelk.component.StorageType
 import whelk.converter.FormatConverter
-import whelk.URIMinter
 import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.exception.WhelkAddException
@@ -417,7 +417,7 @@ class Crud extends HttpServlet {
         if (data) {
             id = JsonLd.findIdentifier(data)
         }
-        return id ?: URIMinter.mint(new Date().getTime())
+        return id ?: IdGenerator.generate()
     }
 
 

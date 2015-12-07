@@ -9,6 +9,7 @@ import java.security.MessageDigest
 
 @Log
 class Document {
+    static final String GRAPH_KEY = "@graph"
     static final String ID_KEY = "identifier"
     static final String CREATED_KEY = "created";
     static final String MODIFIED_KEY = "modified";
@@ -17,7 +18,9 @@ class Document {
     static final String CONTENT_TYPE_KEY = "contentType";
     static final String CHECKUM_KEY = "checksum";
     static final String NON_JSON_CONTENT_KEY = "content"
-    static final String ALTERNATE_ID_KEY = "alternateIdentifiers"
+    static final String ALTERNATE_ID_KEY = "identifiers"
+
+    private final URI baseUri = new URI("https://libris.kb.se/")
 
     @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()
@@ -100,6 +103,10 @@ class Document {
         def bin = new ByteArrayInputStream(bos.toByteArray())
         def ois = new ObjectInputStream(bin)
         return ois.readObject()
+    }
+
+    URI getURI() {
+        return baseUri.resolve(id)
     }
 
     @JsonIgnore

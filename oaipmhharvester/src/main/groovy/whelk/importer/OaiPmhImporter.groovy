@@ -8,6 +8,7 @@ import whelk.converter.JsonLDLinkCompleterFilter
 import whelk.URIMinter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.WhelkAddException
+import whelk.util.LegacyIntegrationTools
 
 import java.text.*
 import java.util.concurrent.*
@@ -299,7 +300,7 @@ class OaiPmhImporter {
         def documentMap = [:]
         log.trace("Record preparation starts.")
         String recordId = "/"+this.dataset+"/"+record.getControlfields("001").get(0).getData()
-        String xlId = URIMinter.mint(recordId)
+        String xlId = LegacyIntegrationTools.generateId(recordId)
 
         def manifest = ["identifier":xlId,"dataset":ds]
         if (preserveTimestamps) {

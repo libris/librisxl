@@ -8,6 +8,7 @@ import whelk.converter.JsonLDLinkCompleterFilter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.converter.MarcJSONConverter
 import whelk.util.Tools
+import whelk.util.LegacyIntegrationTools
 
 import java.sql.*
 import java.util.concurrent.*
@@ -23,7 +24,6 @@ class MySQLImporter {
     Whelk whelk
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
-    URIMinter minter = new URIMinter()
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
     static String EPLIKT_RECORD_DATASET_PREFIX = "e"
@@ -78,6 +78,8 @@ class MySQLImporter {
 
         log.debug("Turning off versioning in storage")
         this.whelk.storage.versioning = false
+
+        eligibleDatasets = [dataset]
 
         try {
 
@@ -217,7 +219,7 @@ class MySQLImporter {
             log.trace("building document $identifier")
             try {
                 String oldStyleIdentifier = "/"+type+"/"+record.getControlfields("001").get(0).getData()
-                identifier = minter.mint(oldStyleIdentifier)
+                identifier = LegacyIntegrationTools.generateId(oldStyleIdentifier)
                 buildingMetaRecord.get(identifier, [:]).put("record", record)
                 buildingMetaRecord.get(identifier).put("manifest", ["identifier":identifier,"dataset":dataset, "alternateIdentifiers": [oldStyleIdentifier]])
             } catch (Exception e) {
@@ -267,13 +269,12 @@ class MySQLImporter {
                     if (!convertedDocs.containsKey(it.manifest.dataset)) { // Create new list
                         convertedDocs.put(it.manifest.dataset, [])
                     }
-                    if (it.manifest.dataset.startsWith(EPLIKT_RECORD_DATASET_PREFIX) || converter == null) {
-                        it.manifest['contentType'] = "application/x-marc-json"
-                        convertedDocs[(it.manifest.dataset)] << new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)
-                    } else {
-                        Document doc = converter.doConvert(it.record, it.manifest)
-                        convertedDocs[(doc.dataset)] << doc
+                    it.manifest['contentType'] = "application/x-marc-json"
+                    Document doc = new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)
+                    if (converter) {
+                        doc = converter.convert(doc)
                     }
+                    convertedDocs[(it.manifest.dataset)] << doc
                 }
                 convertedDocs.each { ds, docList ->
                     if (isEligible(ds)) {
