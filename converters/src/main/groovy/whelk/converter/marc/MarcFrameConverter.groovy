@@ -311,7 +311,7 @@ class MarcConversion {
         if (givenRecId == null) {
             record['@id'] = builtRecId
         } else {
-            record.get('sameAs', []) << builtRecId
+            record.get('sameAs', []) << ['@id': builtRecId]
         }
 
         def givenThingId = thing['@id']
@@ -321,12 +321,12 @@ class MarcConversion {
         if (givenThingId == null) {
             if (givenRecId) {
                 thing['@id'] = givenRecId + '#it'
-                thing.get('sameAs', []) << builtThingId
+                thing.get('sameAs', []) << ['@id': builtThingId]
             } else {
                 thing['@id'] = builtThingId
             }
         } else {
-            thing.get('sameAs', []) << builtThingId
+            thing.get('sameAs', []) << ['@id': builtThingId]
         }
 
     }
