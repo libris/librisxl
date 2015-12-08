@@ -1823,13 +1823,7 @@
       "$c": {"aboutEntity": "?thing", "property": "termsOfAvailability"},
       "$q": {"property": "identifierNote"},
       "$z": {
-        "property": "identifierValue",
-        "splitValuePattern": "([^ ()]*)(?:\\s*\\(([^)]+)\\))?",
-        "splitValueProperties": ["identifierValue", "identifierNote"],
-        "defaults": {
-          "identifierScheme": {"@id": "/def/identifiers/isbn"},
-          "identifierStatus": "canceledInvalid"
-        }
+        "addProperty": "hiddenValue"
       },
       "_spec": [
         {
@@ -1852,21 +1846,44 @@
         },
         {
           "source": {
-            "020": {"ind1":" ","ind2":" ","subfields":[
-              {"z":"9780240811444 (pbk. : alk. paper)"} ]}
+            "020": {
+              "ind1":" ", "ind2":" ", "subfields": [
+                {"a": "9781137368331 (e-book)"},
+                {"z": "9780230274396 (print)"}
+              ]
+            }
           },
           "normalized": {
-            "020": {"ind1": " ", "ind2": " ", "subfields": [
-              {"q": "pbk. : alk. paper"}, {"z": "9780240811444"} ]}
+            "020": {
+              "ind1":" ", "ind2":" ", "subfields": [
+                {"a": "9781137368331"},
+                {"q": "e-book"},
+                {"z": "9780230274396 (print)"}
+              ]
+            }
           },
           "result": {"about": {
             "identifier": [
               {
                 "@type": "Identifier",
-                "identifierNote": "pbk. : alk. paper",
+                "hiddenValue": ["9780230274396 (print)"],
+                "identifierNote": "e-book",
                 "identifierScheme": {"@id": "/def/identifiers/isbn"},
-                "identifierStatus": "canceledInvalid",
-                "identifierValue": "9780240811444"
+                "identifierValue": "9781137368331"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {
+            "020": {"ind1":" ", "ind2":" ", "subfields":[
+              {"z":"9780240811444 (pbk. : alk. paper)"} ]}
+          },
+          "result": {"about": {
+            "identifier": [
+              {
+                "@type": "Identifier",
+                "hiddenValue": ["9780240811444 (pbk. : alk. paper)"]
               }
             ]
           }}
