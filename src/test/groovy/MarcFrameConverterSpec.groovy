@@ -239,8 +239,9 @@ class MarcFrameConverterSpec extends Specification {
         item << postProcStepSpecs
     }
 
-    def r = converter.conversion.&resolve
     def manageIds = converter.conversion.&manageIds
+    def r = converter.conversion.&resolve
+    def link(v) { ['@id': r(v)] }
 
     def "should make ids"() {
         given:
@@ -260,8 +261,8 @@ class MarcFrameConverterSpec extends Specification {
         when:
         manageIds('auth', record, thing)
         then:
-        record == ['@id': '/fnrblgr', 'sameAs': [r('auth/123')], controlNumber: "123"]
-        thing == ['@id': '/fnrblgr#it', 'sameAs': [r('resource/auth/123')]]
+        record == ['@id': '/fnrblgr', 'sameAs': [link('auth/123')], controlNumber: "123"]
+        thing == ['@id': '/fnrblgr#it', 'sameAs': [link('resource/auth/123')]]
     }
 
     def "should use thing id"() {
@@ -272,7 +273,7 @@ class MarcFrameConverterSpec extends Specification {
         manageIds('auth', record, thing)
         then:
         record == ['@id': r('auth/123'), controlNumber: "123"]
-        thing == ['@id': r('/thing'), 'sameAs': [r('resource/auth/123')]]
+        thing == ['@id': r('/thing'), 'sameAs': [link('resource/auth/123')]]
     }
 
     def "should use record and thing id"() {
@@ -282,8 +283,8 @@ class MarcFrameConverterSpec extends Specification {
         when:
         manageIds('auth', record, thing)
         then:
-        record == ['@id': '/fnrblgr', 'sameAs': [r('auth/123')], controlNumber: "123"]
-        thing == ['@id': '/thing', 'sameAs': [r('resource/auth/123')]]
+        record == ['@id': '/fnrblgr', 'sameAs': [link('auth/123')], controlNumber: "123"]
+        thing == ['@id': '/thing', 'sameAs': [link('resource/auth/123')]]
     }
 
     void assertJsonEquals(result, expected) {
