@@ -447,12 +447,9 @@ class PostgreSQLComponent implements Storage {
         for (entry in doc.data.get(Document.GRAPH_KEY)) {
             URI entryURI = new URI(entry['@id'])
             if (entryURI.getPath().substring(1) == doc.id) {
-                def sameAs = entry.get(JSONLD_ALT_ID_KEY)
-                if (sameAs instanceof String) {
-                    doc.addIdentifier(sameAs)
-                } else {
-                    for (sameId in sameAs) {
-                        doc.addIdentifier(sameId)
+                for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
+                    if (sameAs instanceof Map && sameAs.containsKey("@id")) {
+                        doc.addIdentifier(sameAs.get("@id"))
                     }
                 }
             }

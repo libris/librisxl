@@ -5,8 +5,6 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 
-import java.security.MessageDigest
-
 @Log
 class Document {
     static final String GRAPH_KEY = "@graph"
@@ -20,7 +18,7 @@ class Document {
     static final String NON_JSON_CONTENT_KEY = "content"
     static final String ALTERNATE_ID_KEY = "identifiers"
 
-    private final URI baseUri = new URI("https://libris.kb.se/")
+    static final URI BASE_URI = new URI("/")
 
     @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()
@@ -106,7 +104,7 @@ class Document {
     }
 
     URI getURI() {
-        return baseUri.resolve(id)
+        return BASE_URI.resolve(id)
     }
 
     @JsonIgnore
