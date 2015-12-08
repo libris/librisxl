@@ -65,6 +65,7 @@ public class JsonLd {
 
 
     public static Map frame(String mainId, Map flatJsonLd) {
+        mainId = Document.BASE_URI.resolve(mainId)
         if (isFramed(flatJsonLd)) {
             return flatJsonLd
         }
