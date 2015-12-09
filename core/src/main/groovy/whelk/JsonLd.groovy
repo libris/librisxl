@@ -113,19 +113,23 @@ public class JsonLd {
     }
 
     static String findIdentifier(Map jsonLd) {
+        String foundIdentifier = null
         if (!jsonLd) {
             return null
         }
         if (isFlat(jsonLd)) {
             if (jsonLd.containsKey(GRAPH_KEY)) {
-                return new URI(jsonLd.get(GRAPH_KEY).first().get(ID_KEY)).getPath().substring(1)
+                foundIdentifier = jsonLd.get(GRAPH_KEY).first().get(ID_KEY)
             }
             if (jsonLd.containsKey(DESCRIPTIONS_KEY)) {
-                return new URI(jsonLd.get(DESCRIPTIONS_KEY).get("entry").get(ID_KEY)).getPath().substring(1)
+                foundIdentifier = jsonLd.get(DESCRIPTIONS_KEY).get("entry").get(ID_KEY)
             }
         }
         if (isFramed(jsonLd)) {
-            return new URI(jsonLd.get(ID_KEY)).getPath().substring(1)
+            foundIdentifier = jsonLd.get(ID_KEY)
+        }
+        if (foundIdentifier) {
+            return new URI(foundIdentifier).getPath().substring(1)
         }
         return null
     }

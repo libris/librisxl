@@ -262,7 +262,7 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE , wae.message)
         } catch (Exception e) {
             log.error("Operation failed", e)
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.message)
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.message)
         }
     }
 
