@@ -5,8 +5,11 @@ import groovy.util.logging.Slf4j as Log
 import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
+import org.postgresql.util.PSQLException
 import whelk.Document
+import whelk.JsonLd
 import whelk.Location
+import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkException
 
 import java.security.MessageDigest
@@ -30,7 +33,7 @@ class PostgreSQLComponent implements Storage {
     boolean versioning = true
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE
+    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
 
@@ -81,6 +84,7 @@ class PostgreSQLComponent implements Storage {
         UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ? " +
                 "OR manifest @> ? RETURNING *) " +
             "INSERT INTO $mainTableName (id, data, quoted, manifest, deleted) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
+        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,quoted,manifest,deleted) VALUES (?,?,?,?,?)"
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"// (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)" +
 
@@ -157,35 +161,42 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    Document store(Document doc) {
-        if (!doc.dataset) {
-            log.error("Can't save document without dataset.")
-            throw new WhelkException("Can't save document without dataset.")
-        }
+    Document store(Document doc, boolean upsert) {
         log.debug("Saving ${doc.id}")
         Connection connection = getConnection()
         connection.setAutoCommit(false)
         try {
-            PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT)
             findIdentifiers(doc)
             calculateChecksum(doc)
             Date now = new Date()
-            if (versioning) {
-                log.debug("Document has checksum ${doc.checksum} before saving version.")
+            PreparedStatement insert
+
+            if (upsert) {
                 if (!saveVersion(doc, connection, now)) {
                     return doc // Same document already in storage.
                 }
+                insert = rigUpsertStatement(connection, doc, now)
+                insert.executeUpdate()
+            } else {
+                insert = rigInsertStatement(connection, doc)
+                insert.executeUpdate()
+                saveVersion(doc, connection, now)
             }
-            insert = rigUpsertStatement(insert, doc, now)
-            insert.executeUpdate()
             connection.commit()
             def status = status(doc.identifier, connection)
             doc.setCreated(status['created'])
             doc.setModified(status['modified'])
             log.debug("Saved document ${doc.identifier} with timestamps ${doc.created} / ${doc.modified}")
             return doc
+        } catch (PSQLException psqle) {
+            log.debug("SQL failed: ${psqle.message}")
+            if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
+                throw new StorageCreateFailedException(doc.id)
+            } else {
+                throw psqle
+            }
         } catch (Exception e) {
-            log.error("Failed to save document: ${e.message}")
+            log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
             throw e
         } finally {
@@ -195,7 +206,18 @@ class PostgreSQLComponent implements Storage {
         return null
     }
 
-    private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime) {
+    private PreparedStatement rigInsertStatement(Connection connection, Document doc) {
+        PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
+        insert.setString(1, doc.id)
+        insert.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
+        insert.setObject(3, doc.quotedAsString, java.sql.Types.OTHER)
+        insert.setObject(4, doc.manifestAsJson, java.sql.Types.OTHER)
+        insert.setBoolean(5, doc.isDeleted())
+        return insert
+    }
+
+    private PreparedStatement rigUpsertStatement(Connection connection, Document doc, Date modTime) {
+        PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT)
         insert.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
         insert.setObject(2, doc.quotedAsString, java.sql.Types.OTHER)
         insert.setObject(3, doc.manifestAsJson, java.sql.Types.OTHER)
@@ -218,16 +240,20 @@ class PostgreSQLComponent implements Storage {
     }
 
     boolean saveVersion(Document doc, Connection connection, Date modTime) {
-        PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
-        try {
-            log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: $modTime")
-            insvers = rigVersionStatement(insvers, doc, modTime)
-            int updated =  insvers.executeUpdate()
-            log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
-            return (updated > 0)
-        } catch (Exception e) {
-            log.error("Failed to save document version: ${e.message}")
-            throw e
+        if (versioning) {
+            PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
+            try {
+                log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: $modTime")
+                insvers = rigVersionStatement(insvers, doc, modTime)
+                int updated = insvers.executeUpdate()
+                log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
+                return (updated > 0)
+            } catch (Exception e) {
+                log.error("Failed to save document version: ${e.message}")
+                throw e
+            }
+        } else {
+            return false
         }
     }
 
@@ -243,7 +269,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    boolean bulkStore(final List<Document> docs) {
+    boolean bulkStore(final List<Document> docs, boolean upsert) {
         if (!docs || docs.isEmpty()) {
             return
         }
@@ -445,11 +471,11 @@ class PostgreSQLComponent implements Storage {
     void findIdentifiers(Document doc) {
         doc.addIdentifier(doc.getURI().toString())
         for (entry in doc.data.get(Document.GRAPH_KEY)) {
-            URI entryURI = new URI(entry['@id'])
+            URI entryURI = new URI(entry[JsonLd.ID_KEY])
             if (entryURI.getPath().substring(1) == doc.id) {
                 for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
-                    if (sameAs instanceof Map && sameAs.containsKey("@id")) {
-                        doc.addIdentifier(sameAs.get("@id"))
+                    if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
+                        doc.addIdentifier(sameAs.get(JsonLd.ID_KEY))
                     }
                 }
             }

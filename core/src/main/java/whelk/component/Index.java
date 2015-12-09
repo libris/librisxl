@@ -11,6 +11,6 @@ import java.util.Map;
 public interface Index {
     void index(Document document);
     void bulkIndex(List<Document> documents);
-    void remove(String id, String dataset);
+    void remove(String id);
     Map query(Map dslQuery, String dataset);
 }

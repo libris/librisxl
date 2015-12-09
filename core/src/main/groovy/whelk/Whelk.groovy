@@ -81,8 +81,8 @@ class Whelk {
         return pico
     }
 
-    Document store(Document document) {
-        if (storage.store(document)) {
+    Document store(Document document, boolean createOrUpdate = true) {
+        if (storage.store(document, createOrUpdate)) {
             if (elastic) {
                 elastic.index(document)
             }
@@ -96,8 +96,8 @@ class Whelk {
         return document
     }
 
-    void bulkStore(List<Document> documents) {
-        if (storage.bulkStore(documents)) {
+    void bulkStore(List<Document> documents, boolean createOrUpdate) {
+        if (storage.bulkStore(documents, createOrUpdate)) {
             if (elastic) {
                 elastic.bulkIndex(documents)
             }

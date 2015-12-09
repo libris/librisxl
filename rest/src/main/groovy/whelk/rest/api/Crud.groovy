@@ -14,6 +14,7 @@ import whelk.component.StorageType
 import whelk.converter.FormatConverter
 import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.JsonLD2MarcXMLConverter
+import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
@@ -244,16 +245,18 @@ class Crud extends HttpServlet {
         try {
             Document doc = createDocumentIfOkToSave(data, dataset, request, response)
             if (doc) {
-            //if (okToSave(data, dataset, request, response)) {
                 if (doc.contentType == "application/ld+json") {
                     log.debug("Flattening ${doc.id}")
                     doc.data = JsonLd.flatten(doc.data)
                 }
                 log.debug("Saving document (${doc.identifier})")
-                doc = whelk.store(doc)
+                doc = whelk.store(doc, (request.getMethod() == "PUT"))
 
                 sendDocumentSavedResponse(response, getResponseUrl(request, doc.identifier, doc.dataset), doc.modified.getTime() as String)
             }
+        } catch (StorageCreateFailedException scfe) {
+            log.warn("Already have document with id ${scfe.duplicateId}")
+            response.sendError(HttpServletResponse.SC_CONFLICT, "Document with id \"${scfe.duplicateId}\" already exists.")
         } catch (WhelkAddException wae) {
             log.warn("Whelk failed to store document: ${wae.message}")
             response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE , wae.message)

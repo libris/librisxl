@@ -118,14 +118,14 @@ public class JsonLd {
         }
         if (isFlat(jsonLd)) {
             if (jsonLd.containsKey(GRAPH_KEY)) {
-                return jsonLd.get(GRAPH_KEY).first().get(ID_KEY)
+                return new URI(jsonLd.get(GRAPH_KEY).first().get(ID_KEY)).getPath().substring(1)
             }
             if (jsonLd.containsKey(DESCRIPTIONS_KEY)) {
-                return jsonLd.get(DESCRIPTIONS_KEY).get("entry").get(ID_KEY)
+                return new URI(jsonLd.get(DESCRIPTIONS_KEY).get("entry").get(ID_KEY)).getPath().substring(1)
             }
         }
         if (isFramed(jsonLd)) {
-            return jsonLd.get(ID_KEY)
+            return new URI(jsonLd.get(ID_KEY)).getPath().substring(1)
         }
         return null
     }
