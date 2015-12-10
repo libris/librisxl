@@ -169,16 +169,16 @@ class PostgreSQLComponent implements Storage {
             findIdentifiers(doc)
             calculateChecksum(doc)
             Date now = new Date()
-            PreparedStatement insert
+            PreparedStatement insert = connection.prepareStatement((upsert ? UPSERT_DOCUMENT : INSERT_DOCUMENT))
 
             if (upsert) {
                 if (!saveVersion(doc, connection, now)) {
                     return doc // Same document already in storage.
                 }
-                insert = rigUpsertStatement(connection, doc, now)
+                insert = rigUpsertStatement(insert, doc, now)
                 insert.executeUpdate()
             } else {
-                insert = rigInsertStatement(connection, doc)
+                insert = rigInsertStatement(insert, doc)
                 insert.executeUpdate()
                 saveVersion(doc, connection, now)
             }
@@ -206,8 +206,7 @@ class PostgreSQLComponent implements Storage {
         return null
     }
 
-    private PreparedStatement rigInsertStatement(Connection connection, Document doc) {
-        PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
+    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc) {
         insert.setString(1, doc.id)
         insert.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
         insert.setObject(3, doc.quotedAsString, java.sql.Types.OTHER)
@@ -216,8 +215,7 @@ class PostgreSQLComponent implements Storage {
         return insert
     }
 
-    private PreparedStatement rigUpsertStatement(Connection connection, Document doc, Date modTime) {
-        PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT)
+    private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime) {
         insert.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
         insert.setObject(2, doc.quotedAsString, java.sql.Types.OTHER)
         insert.setObject(3, doc.manifestAsJson, java.sql.Types.OTHER)
@@ -275,7 +273,7 @@ class PostgreSQLComponent implements Storage {
         }
         log.trace("Bulk storing ${docs.size()} documents.")
         Connection connection = getConnection()
-        PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT)
+        PreparedStatement batch = connection.prepareStatement((upsert ? UPSERT_DOCUMENT : INSERT_DOCUMENT))
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             docs.each { doc ->
