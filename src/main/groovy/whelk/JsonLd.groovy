@@ -71,6 +71,10 @@ public class JsonLd {
         }
         def idMap = getIdMap(flatJsonLd)
         def mainItemMap = idMap.get(mainId)
+        if (!mainItemMap) {
+            // Try to find an identifier to frame around
+            mainItemMap = idMap.get(findRecordURI(flatJsonLd).toString())
+        }
         Map framedMap
         try {
             framedMap = embed(mainId, mainItemMap, idMap, new HashSet<String>())
@@ -110,6 +114,10 @@ public class JsonLd {
             }
         }
         return o
+    }
+
+    static URI findRecordURI(Map jsonLd) {
+        return Document.BASE_URI.resolve(findIdentifier(jsonLd))
     }
 
     static String findIdentifier(Map jsonLd) {
