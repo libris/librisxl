@@ -357,13 +357,15 @@ class Crud extends HttpServlet {
             locationRef.deleteCharAt(locationRef.length() - 1)
         }
 
+        /*
         if (dataset && locationRef.toString().endsWith(dataset)) {
             int endPos = locationRef.length()
             int startPos = endPos - dataset.length() - 1
             locationRef.delete(startPos, endPos)
         }
-
+        */
         if (!locationRef.toString().endsWith(identifier)) {
+            locationRef.append("/")
             locationRef.append(identifier)
         }
 

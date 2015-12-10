@@ -144,7 +144,7 @@ public class JsonLd {
     }
 
     static boolean isFramed(Map jsonLd) {
-        if ((jsonLd.size() > 1 && !jsonLd.containsKey(GRAPH_KEY) && !jsonLd.containsKey(DESCRIPTIONS_KEY)) || jsonLd.containsKey(ID_KEY)) {
+        if (jsonLd.size() > 1 && !jsonLd.containsKey(GRAPH_KEY) && !jsonLd.containsKey(DESCRIPTIONS_KEY)) {
             return true
         }
         return false
