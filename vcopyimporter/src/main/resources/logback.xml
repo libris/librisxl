@@ -16,7 +16,7 @@
     <logger name="org.apache.activemq" level="warn"/>
     <logger name="whelk.Document" level="info"/>
     <logger name="whelk.component.PostgreSQLComponent" level="info"/>
-    <logger name="whelk.component.ElasticSearch" level="info"/>
+    <logger name="whelk.component.ElasticSearch" level="trace"/>
     <logger name="whelk.filter.JsonLDLinkExpander" level="info"/>
     <logger name="whelk.importer.MySQLImporter" level="info"/>
 

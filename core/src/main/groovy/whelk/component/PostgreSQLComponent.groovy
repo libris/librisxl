@@ -27,7 +27,7 @@ class PostgreSQLComponent implements Storage {
 
     public final static mapper = new ObjectMapper()
 
-    private final static LOCATION_PRECURSOR = "/resource"
+    private final static LOCATION_PRECURSOR = "/resource/"
     private final static JSONLD_ALT_ID_KEY = "sameAs"
 
     boolean versioning = true
@@ -247,9 +247,9 @@ class PostgreSQLComponent implements Storage {
                 log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
                 return (updated > 0)
             } catch (Exception e) {
-                log.error("Failed to save document version: ${e.message}")
-                throw e
-            }
+            log.error("Failed to save document version: ${e.message}")
+            throw e
+        }
         } else {
             return false
         }
@@ -468,6 +468,7 @@ class PostgreSQLComponent implements Storage {
 
     void findIdentifiers(Document doc) {
         doc.addIdentifier(doc.getURI().toString())
+        doc.addIdentifier(JsonLd.findRecordURI(doc.data).toString())
         for (entry in doc.data.get(Document.GRAPH_KEY)) {
             URI entryURI = new URI(entry[JsonLd.ID_KEY])
             if (entryURI.getPath().substring(1) == doc.id) {
@@ -510,6 +511,10 @@ class PostgreSQLComponent implements Storage {
     Location locate(String uri, boolean loadDoc) {
         log.debug("Locating $uri")
         if (uri) {
+            if (uri.startsWith("/")) {
+                uri = uri.substring(1)
+            }
+
             def doc = load(uri)
             if (doc) {
                 return new Location(doc)
@@ -538,7 +543,7 @@ class PostgreSQLComponent implements Storage {
                 if (loadDoc) {
                     return new Location(doc).withResponseCode(301)
                 } else {
-                    return new Location().withURI(new URI(doc.identifier)).withResponseCode(301)
+                    return new Location().withURI(new URI("/").resolve(doc.identifier)).withResponseCode(301)
                 }
             }
         }

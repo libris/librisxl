@@ -10,6 +10,7 @@ import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
 
 import groovy.util.logging.Slf4j as Log
+import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
 
 @Log
@@ -27,23 +28,45 @@ class ImporterMain {
 
         pico.addComponent(new MarcFrameConverter())
         pico.as(Characteristics.USE_NAMES).addComponent(MySQLImporter.class)
+        pico.addComponent(ElasticReindexer.class)
+        pico.addComponent(DefinitionsImporter.class)
 
         pico.start()
 
         log.info("Started ...")
     }
 
-    void go(String dataset) {
+    void goMysql(String dataset) {
         def importer = pico.getComponent(MySQLImporter.class)
         importer.doImport(dataset)
     }
 
+    void goReindex() {
+        def reindex = pico.getComponent(ElasticReindexer.class)
+        reindex.reindex()
+    }
+
+    void goDefs(String fname) {
+        def defsimport = pico.getComponent(DefinitionsImporter.class)
+        defsimport.go(fname)
+    }
+
     static void main(String... args) {
         if (args.length == 0) {
-            println("Usage: <progam> [dataset]")
+            println("Usage: <progam> [action] [dataset]")
             System.exit(1)
         }
-        new ImporterMain().go(args[0])
+        def main = new ImporterMain()
+        if (args[0] == "vcopy") {
+            main.goMysql(args[1])
+        } else if (args[0] == "defs") {
+            main.goDefs(args[1])
+        } else if (args[0] == "reindex") {
+            main.goReindex()
+        } else {
+            println("Unknown action ${args[0]}")
+            System.exit(1)
+        }
     }
 
 }

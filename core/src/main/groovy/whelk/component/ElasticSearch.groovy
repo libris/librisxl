@@ -133,7 +133,7 @@ class ElasticSearch implements Index {
                     log.error("Failed to create indexrequest for document ${doc.id}. Reason: ${e.message}")
                 }
             } else {
-                log.warn("Document ${doc.id} is ${doc.contentType}. Will not index.")
+                log.warn("Document ${doc.id} is not JSON (${doc.contentType}). Will not index.")
             }
         }
         BulkResponse response = performExecute(bulk)
