@@ -12,7 +12,7 @@ class Document {
     static final String CREATED_KEY = "created";
     static final String MODIFIED_KEY = "modified";
     static final String DELETED_KEY = "deleted";
-    static final String DATASET_KEY = "dataset";
+    static final String COLLECTION_KEY = "collection";
     static final String CONTENT_TYPE_KEY = "contentType";
     static final String CHECKUM_KEY = "checksum";
     static final String NON_JSON_CONTENT_KEY = "content"
@@ -115,7 +115,7 @@ class Document {
     Map getData() { data }
 
     @JsonIgnore
-    String getDataset() { manifest[DATASET_KEY] }
+    String getCollection() { manifest[COLLECTION_KEY] }
 
     @JsonIgnore
     String getIdentifier() { id }
@@ -195,8 +195,8 @@ class Document {
         return this
     }
 
-    Document withDataset(String ds) {
-        manifest[DATASET_KEY] = ds
+    Document inCollection(String ds) {
+        manifest[COLLECTION_KEY] = ds
         return this
     }
 

@@ -28,7 +28,7 @@ class ScheduledOperatorSpec extends Specification {
         }
 
         when: "first import"
-        def sjob = new ScheduledJob(importer, ds, null, is)
+        def sjob = new ScheduledJob(importer, ds, null)
         sjob.run()
         then:
         Date.parse(ScheduledJob.DATE_FORMAT, is[ds].lastImport) == Date.parse(ScheduledJob.DATE_FORMAT, imports[0])

@@ -61,7 +61,7 @@ class MySQLImporter {
         connectionUrl = mysqlConnectionUrl
     }
 
-    void doImport(String dataset, int nrOfDocs = -1, boolean silent = false, boolean picky = true) {
+    void doImport(String collection, int nrOfDocs = -1, boolean silent = false, boolean picky = true) {
         recordCount = 0
         startTime = System.currentTimeMillis()
         cancelled = false
@@ -78,7 +78,7 @@ class MySQLImporter {
         log.debug("Turning off versioning in storage")
         this.whelk.storage.versioning = false
 
-        eligibleDatasets = [dataset]
+        eligibleDatasets = [collection]
 
         try {
 
@@ -88,22 +88,22 @@ class MySQLImporter {
             conn = connectToUri(new URI(connectionUrl))
             conn.setAutoCommit(false)
 
-            if (dataset == "auth") {
+            if (collection == "auth") {
                 log.info("Creating auth load statement.")
                 statement = conn.prepareStatement("SELECT auth_id, data FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
                 //statement = conn.prepareStatement("SELECT auth_id, data FROM auth_record WHERE auth_id = ? AND deleted = 0 ORDER BY auth_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
             }
-            if (dataset == "bib") {
+            if (collection == "bib") {
                 log.info("Creating bib load statement.")
                 statement = conn.prepareStatement("SELECT bib.bib_id, bib.data, auth.auth_id FROM bib_record bib LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
             }
-            if (dataset == "hold") {
+            if (collection == "hold") {
                 log.info("Creating hold load statement.")
                 statement = conn.prepareStatement("SELECT mfhd_id, data, bib_id, shortname FROM mfhd_record WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
             }
 
             if (!statement) {
-                throw new Exception("No valid dataset selected")
+                throw new Exception("No valid collection selected")
             }
             statement.setFetchSize(Integer.MIN_VALUE)
 
@@ -121,29 +121,29 @@ class MySQLImporter {
                 recordId = resultSet.getInt(1)
                 record = Iso2709Deserializer.deserialize(normalizeString(new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
 
-                //buildDocument(recordId, record, dataset, null)
+                //buildDocument(recordId, record, collection, null)
 
-                if (dataset == "auth") {
+                if (collection == "auth") {
                     int auth_id = resultSet.getInt("auth_id")
                     if (auth_id > 0) {
-                        buildDocument(recordId, record, dataset, null)
+                        buildDocument(recordId, record, collection, null)
                     }
-                } else if (dataset == "bib") {
+                } else if (collection == "bib") {
                     int auth_id = resultSet.getInt("auth_id")
                     if (auth_id > 0) {
                         log.trace("Found auth_id $auth_id for $recordId Adding to oaipmhSetSpecs")
-                        buildDocument(recordId, record, dataset, "authority:"+auth_id)
+                        buildDocument(recordId, record, collection, "authority:"+auth_id)
                     }
-                } else if (dataset == "hold") {
+                } else if (collection == "hold") {
                     int bib_id = resultSet.getInt("bib_id")
                     String sigel = resultSet.getString("shortname")
                     if (bib_id > 0) {
                         log.trace("Found bib_id $bib_id for $recordId Adding to oaipmhSetSpecs")
-                        buildDocument(recordId, record, dataset, "bibid:" + bib_id)
+                        buildDocument(recordId, record, collection, "bibid:" + bib_id)
                     }
                     if (sigel) {
                         log.trace("Found sigel $sigel for $recordId Adding to oaipmhSetSpecs")
-                        buildDocument(recordId, record, dataset, "location:" + sigel)
+                        buildDocument(recordId, record, collection, "location:" + sigel)
                     }
                 }
                 if (nrOfDocs > 0 && recordCount > nrOfDocs) {
@@ -155,8 +155,8 @@ class MySQLImporter {
                 }
             }
             log.debug("Clearing out remaining docs ...")
-            buildDocument(null, null, dataset, null)
-            buildDocument(null, null, dataset, null)
+            buildDocument(null, null, collection, null)
+            buildDocument(null, null, collection, null)
 
             queue.execute({
                 log.debug("Resetting versioning setting for storages")
@@ -182,7 +182,7 @@ class MySQLImporter {
 
     void buildDocument(Integer recordId, MarcRecord record, String type, String oaipmhSetSpecValue) {
         String identifier = null
-        String dataset = type
+        String collection = type
         if (documentList.size() >= addBatchSize || record == null) {
             if (tickets.availablePermits() < 1) {
                 if (!log.isDebugEnabled()) {
@@ -212,15 +212,15 @@ class MySQLImporter {
         if (record) {
             def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
             if ("SUPPRESSRECORD" in aList) {
-                log.debug("Record ${identifier} is suppressed. Setting dataset to ${EPLIKT_RECORD_DATASET_PREFIX+dataset} ...")
-                dataset = EPLIKT_RECORD_DATASET_PREFIX + dataset
+                log.debug("Record ${identifier} is suppressed. Setting collection to ${EPLIKT_RECORD_DATASET_PREFIX+collection} ...")
+                collection = EPLIKT_RECORD_DATASET_PREFIX + collection
             }
             log.trace("building document $identifier")
             try {
                 String oldStyleIdentifier = "/"+type+"/"+record.getControlfields("001").get(0).getData()
                 identifier = LegacyIntegrationTools.generateId(oldStyleIdentifier)
                 buildingMetaRecord.get(identifier, [:]).put("record", record)
-                buildingMetaRecord.get(identifier).put("manifest", [(Document.ID_KEY):identifier,(Document.DATASET_KEY):dataset, (Document.ALTERNATE_ID_KEY): [oldStyleIdentifier]])
+                buildingMetaRecord.get(identifier).put("manifest", [(Document.ID_KEY):identifier,(Document.DATASET_KEY):collection, (Document.ALTERNATE_ID_KEY): [oldStyleIdentifier]])
             } catch (Exception e) {
                 log.error("Problem getting field 001 from marc record $recordId. Skipping document.", e)
             }
@@ -265,15 +265,15 @@ class MySQLImporter {
             try {
                 def convertedDocs = [:]
                 recordList.each {
-                    if (!convertedDocs.containsKey(it.manifest.dataset)) { // Create new list
-                        convertedDocs.put(it.manifest.dataset, [])
+                    if (!convertedDocs.containsKey(it.manifest.collection)) { // Create new list
+                        convertedDocs.put(it.manifest.collection, [])
                     }
                     it.manifest['contentType'] = "application/x-marc-json"
                     Document doc = new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)
                     if (converter) {
                         doc = converter.convert(doc)
                     }
-                    convertedDocs[(it.manifest.dataset)] << doc
+                    convertedDocs[(it.manifest.collection)] << doc
                 }
                 convertedDocs.each { ds, docList ->
                     if (isEligible(ds)) {

@@ -22,13 +22,13 @@ import whelk.converter.MarcJSONConverter
 @Log
 class OaiPmhImporter {
 
-    static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
+    static SERVICE_BASE_URL = "http://data.libris.kb.se/{collection}/oaipmh"
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
     static final String EPLIKT_DATASET_PREFIX = "e"
 
 
-    String dataset
+    String collection
 
     String serviceUrl
 
@@ -88,22 +88,22 @@ class OaiPmhImporter {
 
     OaiPmhImporter(){}
 
-    ImportResult doImport(String dataset, int nrOfDocs) {
-        return doImport(dataset, null, nrOfDocs)
+    ImportResult doImport(String collection, int nrOfDocs) {
+        return doImport(collection, null, nrOfDocs)
     }
 
     @groovy.transform.Synchronized
-    ImportResult doImport(String dataset, String startResumptionToken = null, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
+    ImportResult doImport(String collection, String startResumptionToken = null, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
         getAuthentication()
         this.cancelled = false
-        this.dataset = dataset
+        this.collection = collection
         this.recordCount = 0
         this.skippedRecordCount = 0
         this.nrDeleted = 0
         if (!serviceUrl) {
             serviceUrl = SERVICE_BASE_URL
         }
-        String baseUrl = serviceUrl.replace("{dataset}", dataset)
+        String baseUrl = serviceUrl.replace("{collection}", collection)
 
         String urlString = baseUrl + "?verb=ListRecords&metadataPrefix=marcxml"
 
@@ -143,7 +143,7 @@ class OaiPmhImporter {
             try {
                 harvestResult = harvest(url, harvestResult?.lastRecordDatestamp ?: from ?: new Date(0))
             } catch (XmlParsingFailedException xpfe) {
-                log.warn("[$dataset / $recordCount] Harvesting failed. Retrying ...")
+                log.warn("[$collection / $recordCount] Harvesting failed. Retrying ...")
             } catch (Exception e) {
                 log.error("Caught exception in doImport loop", e)
                 break
@@ -152,7 +152,7 @@ class OaiPmhImporter {
             resumptionToken = harvestResult.resumptionToken
             elapsed = System.currentTimeMillis() - loadUrlTime
             if (elapsed > 6000) {
-                log.warn("[$dataset / $recordCount] Harvest took more than 6 seconds ($elapsed)")
+                log.warn("[$collection / $recordCount] Harvest took more than 6 seconds ($elapsed)")
             }
             log.debug("resumptionToken: $resumptionToken")
         }
@@ -193,7 +193,7 @@ class OaiPmhImporter {
             return new HarvestResult(resumptionToken: null, lastRecordDatestamp: recordDate)
         }
         if ((System.currentTimeMillis() - elapsed) > 5000) {
-            log.warn("[$dataset / $recordCount] Load from URL ${url.toString()} took more than 5 seconds (${System.currentTimeMillis() - elapsed})")
+            log.warn("[$collection / $recordCount] Load from URL ${url.toString()} took more than 5 seconds (${System.currentTimeMillis() - elapsed})")
         }
         def OAIPMH
         elapsed = System.currentTimeMillis()
@@ -214,13 +214,13 @@ class OaiPmhImporter {
             }
         }
         if ((System.currentTimeMillis() - elapsed) > 1000) {
-            log.warn("[$dataset / $recordCount] XML slurping took more than 1 second (${System.currentTimeMillis() - elapsed})")
+            log.warn("[$collection / $recordCount] XML slurping took more than 1 second (${System.currentTimeMillis() - elapsed})")
         }
         def documents = []
         elapsed = System.currentTimeMillis()
         def resumptionToken = OAIPMH.ListRecords.resumptionToken.text()
         for (it in OAIPMH.ListRecords.record) {
-            String ds = this.dataset
+            String ds = this.collection
             String mdrecord = createString(it.metadata.record)
             if (mdrecord) {
                 try {
@@ -241,7 +241,7 @@ class OaiPmhImporter {
                     log.trace("Marc record instantiated from XML.")
                     def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
                     if ("SUPPRESSRECORD" in aList) {
-                        log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed. Setting dataset to ${EPLIKT_DATASET_PREFIX+ds} ...")
+                        log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed. Setting collection to ${EPLIKT_DATASET_PREFIX+ds} ...")
 
                         ds = EPLIKT_DATASET_PREFIX + ds
                     }
@@ -275,7 +275,7 @@ class OaiPmhImporter {
                 }
                 String deleteIdentifier = URIMinter.mint("/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/"))
                     try {
-                        whelk.remove(deleteIdentifier, this.dataset)
+                        whelk.remove(deleteIdentifier, this.collection)
                     } catch (Exception e2) {
                         log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
                     }
@@ -287,7 +287,7 @@ class OaiPmhImporter {
             }
         }
         if ((System.currentTimeMillis() - elapsed) > 5000) {
-            log.warn("[$dataset / $recordCount] Conversion of documents took more than 5 seconds (${System.currentTimeMillis() - elapsed})")
+            log.warn("[$collection / $recordCount] Conversion of documents took more than 5 seconds (${System.currentTimeMillis() - elapsed})")
         }
         if (documents?.size() > 0) {
             addDocuments(documents)
@@ -296,13 +296,13 @@ class OaiPmhImporter {
         return new HarvestResult(resumptionToken: resumptionToken, lastRecordDatestamp: recordDate)
     }
 
-    Map createDocumentMap(MarcRecord record, Date recordDate, def header, String ds = this.dataset) {
+    Map createDocumentMap(MarcRecord record, Date recordDate, def header, String ds = this.collection) {
         def documentMap = [:]
         log.trace("Record preparation starts.")
-        String recordId = "/"+this.dataset+"/"+record.getControlfields("001").get(0).getData()
+        String recordId = "/"+this.collection+"/"+record.getControlfields("001").get(0).getData()
         String xlId = LegacyIntegrationTools.generateId(recordId)
 
-        def manifest = ["identifier":xlId,"dataset":ds]
+        def manifest = ["identifier":xlId,"collection":ds]
         if (preserveTimestamps) {
             log.trace("Setting date: $recordDate")
             manifest.put(Document.MODIFIED_KEY, recordDate.getTime())
@@ -379,7 +379,7 @@ class OaiPmhImporter {
                 def convertedDocs = [:]
                 documents.each {
                     try {
-                        if (marcFrameConverter && !it.manifest.dataset?.startsWith(EPLIKT_DATASET_PREFIX)) {
+                        if (marcFrameConverter && !it.manifest.collection?.startsWith(EPLIKT_DATASET_PREFIX)) {
                             log.trace("Conversion starts.")
                             def doc = marcFrameConverter.doConvert(it.record, it.manifest)
                             //Files.write(Paths.get("/tmp/${doc.id}_flat.jsonld"), doc.dataAsString.getBytes("utf-8"), StandardOpenOption.CREATE)
@@ -390,7 +390,7 @@ class OaiPmhImporter {
                                 def dataMap = doc.data
                                 dataMap['controlNumber'] = it.record.getControlfields("001").get(0).getData()
                                 doc = doc.withData(dataMap)
-                                doc.addIdentifier("/"+this.dataset+"/"+it.record.getControlfields("001").get(0).getData())
+                                doc.addIdentifier("/"+this.collection+"/"+it.record.getControlfields("001").get(0).getData())
                             }
                             if (enhancer) {
                                 log.trace("Enhancing starts.")
@@ -398,17 +398,17 @@ class OaiPmhImporter {
                                 log.trace("Enhancing finished.")
                             }
                             if (doc) {
-                                if (!convertedDocs.containsKey(doc.dataset)) {
-                                    convertedDocs.put(doc.dataset, [])
+                                if (!convertedDocs.containsKey(doc.collection)) {
+                                    convertedDocs.put(doc.collection, [])
                                 }
-                                convertedDocs[(doc.dataset)] << doc
+                                convertedDocs[(doc.collection)] << doc
                             }
-                        } else if (it.manifest.dataset.startsWith(EPLIKT_DATASET_PREFIX)) {
-                            if (!convertedDocs.containsKey(it.manifest.dataset)) {
-                                convertedDocs.put(it.manifest.dataset, [])
+                        } else if (it.manifest.collection.startsWith(EPLIKT_DATASET_PREFIX)) {
+                            if (!convertedDocs.containsKey(it.manifest.collection)) {
+                                convertedDocs.put(it.manifest.collection, [])
                             }
                             it.manifest['contentType'] = "application/x-marc-json"
-                            convertedDocs[(it.manifest.dataset)] << new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)// whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.manifest)
+                            convertedDocs[(it.manifest.collection)] << new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)// whelk.createDocument(MarcJSONConverter.toJSONMap(it.record), it.manifest)
                         }
                     } catch (Exception e) {
                         log.error("Exception in conversion", e)
@@ -420,11 +420,11 @@ class OaiPmhImporter {
                         log.debug("Adding ${convertedDocs.size()} documents to whelk.")
                         long elapsed = System.currentTimeMillis()
                         convertedDocs.each { ds, docList ->
-                            log.debug("Bulk saving ${docList.size()} documents to dataset $ds ...")
+                            log.debug("Bulk saving ${docList.size()} documents to collection $ds ...")
                             this.whelk.bulkStore(docList)
                         }
                         if ((System.currentTimeMillis() - elapsed) > 10000) {
-                            log.warn("[$dataset / $recordCount] Bulk add took more than 10 seconds (${System.currentTimeMillis() - elapsed})")
+                            log.warn("[$collection / $recordCount] Bulk add took more than 10 seconds (${System.currentTimeMillis() - elapsed})")
                         }
                     } catch (WhelkAddException wae) {
                         log.warn("Failed adding: ${wae.message} (${wae.failedIdentifiers})")

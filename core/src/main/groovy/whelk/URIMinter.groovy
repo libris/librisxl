@@ -74,30 +74,30 @@ class URIMinter extends IdGenerator {
         computePath(doc.data)
     }
 
-    Map computePaths(Map data, String dataset) {
+    Map computePaths(Map data, String collection) {
         def results = [:]
         def object = data
         if (objectLink) {
             object = data[objectLink]
         }
         if (documentUriTemplate) {
-            def thingUri = computePath(object, dataset)
+            def thingUri = computePath(object, collection)
             results['thing'] = thingUri
             results['document'] = UriTemplate.expand(documentUriTemplate,
                     [thing: thingUri])
         } else {
-            def documentUri = computePath(object, dataset)
+            def documentUri = computePath(object, collection)
             results['document'] = documentUri
             if (thingUriTemplate) {
                 results['thing'] = UriTemplate.expand(thingUriTemplate,
                         [document: documentUri])
             }
         }
-        log.debug "Computed ${results} for object in ${dataset}"
+        log.debug "Computed ${results} for object in ${collection}"
         return results
     }
 
-    String computePath(Map data, String dataset) {
+    String computePath(Map data, String collection) {
         def vars = [:]
         if (timestampVariable) {
             vars[timestampVariable] = baseEncode(createTimestamp(), timestampCaesarCipher)
@@ -113,7 +113,7 @@ class URIMinter extends IdGenerator {
         if (type instanceof List) {
             type = type[0]
         }
-        def ruleset = rulesByDataset[dataset]
+        def ruleset = rulesByDataset[collection]
         def rule = ruleset.ruleByType[type] ?: ruleset.ruleByType['*']
 
         vars['basePath'] = rule.basePath

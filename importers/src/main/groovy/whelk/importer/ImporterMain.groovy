@@ -36,9 +36,9 @@ class ImporterMain {
         log.info("Started ...")
     }
 
-    void goMysql(String dataset) {
+    void goMysql(String collection) {
         def importer = pico.getComponent(MySQLImporter.class)
-        importer.doImport(dataset)
+        importer.doImport(collection)
     }
 
     void goReindex() {
@@ -53,7 +53,7 @@ class ImporterMain {
 
     static void main(String... args) {
         if (args.length == 0) {
-            println("Usage: <progam> [action] [dataset]")
+            println("Usage: <progam> [action] [collection]")
             System.exit(1)
         }
         def main = new ImporterMain()

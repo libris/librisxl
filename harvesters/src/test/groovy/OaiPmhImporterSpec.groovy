@@ -28,11 +28,11 @@ class OaiPmhImporterSpec extends Specification {
     def setup() {
         whelk = new Whelk() {
             @Override
-            void bulkStore(List document, String ds) {
+            void bulkStore(List document) {
                 documents = document
             }
             @Override
-            void remove(String id, String ds) {
+            void remove(String id) {
             }
 
             def documents
@@ -50,7 +50,7 @@ class OaiPmhImporterSpec extends Specification {
         given:
         currentPageSet = okPageSet
         when:
-        def result = importer.doImport("dataset")
+        def result = importer.doImport("collection")
         then:
         importer.documents.size() == 2
         result.numberOfDocuments == 2
@@ -62,7 +62,7 @@ class OaiPmhImporterSpec extends Specification {
         given:
         currentPageSet = emptyFirstPagePageSet
         when:
-        def result = importer.doImport("dataset")
+        def result = importer.doImport("collection")
         then:
         result.numberOfDocuments == 1
         result.lastRecordDatestamp == date("2002-02-02T00:00:00Z")
@@ -72,7 +72,7 @@ class OaiPmhImporterSpec extends Specification {
         given:
         currentPageSet = brokenPageSet
         when:
-        def result = importer.doImport("dataset")
+        def result = importer.doImport("collection")
         then:
         result.lastRecordDatestamp == date("2002-02-02T00:00:00Z")
     }
@@ -81,22 +81,22 @@ class OaiPmhImporterSpec extends Specification {
         given:
         currentPageSet = selfOriginPageSet
         when:
-        def result = importer.doImport("dataset")
+        def result = importer.doImport("collection")
         then:
         result.numberOfDocuments == 0
         result.numberOfDocumentsSkipped == 1
         result.lastRecordDatestamp == date("2007-01-01T00:00:00Z")
     }
 
-    def "should put suppressed records in specified dataset"() {
+    def "should put suppressed records in specified collection"() {
         given:
         currentPageSet = suppressedPageSet
         when:
-        def result = importer.doImport("dataset")
+        def result = importer.doImport("collection")
         then:
         result.numberOfDocuments == 1
         result.numberOfDocumentsSkipped == 0
-        whelk.documents.first().dataset == OaiPmhImporter.EPLIKT_DATASET_PREFIX
+        whelk.documents.first().collection.startsWith(OaiPmhImporter.EPLIKT_DATASET_PREFIX)
         result.lastRecordDatestamp == date("2015-05-28T12:43:00Z")
     }
 
@@ -104,7 +104,7 @@ class OaiPmhImporterSpec extends Specification {
         given:
         currentPageSet = badDateOrderPageSet
         when: "one is correct"
-        def result = importer.doImport("dataset", null, -1, false, true, date("2015-05-29T00:00:00Z"))
+        def result = importer.doImport("collection", null, -1, false, true, date("2015-05-29T00:00:00Z"))
         then:
         result.numberOfDocuments == 1
         result.numberOfDeleted == 0
@@ -116,7 +116,7 @@ class OaiPmhImporterSpec extends Specification {
         badDateOrderPageSet[(BASE+'?verb=ListRecords&metadataPrefix=marcxml&from=2015-05-29T09:00:00Z')] = badDateOrderPageSet[(BASE+'?verb=ListRecords&metadataPrefix=marcxml&from=2015-05-29T00:00:00Z')]
         currentPageSet = badDateOrderPageSet
         when: "none is correct"
-        def result = importer.doImport("dataset", null, -1, false, true, date("2015-05-29T09:00:00Z"))
+        def result = importer.doImport("collection", null, -1, false, true, date("2015-05-29T09:00:00Z"))
         then:
         result.numberOfDocuments == 0
         result.numberOfDeleted == 0

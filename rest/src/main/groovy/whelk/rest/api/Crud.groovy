@@ -330,7 +330,7 @@ class Crud extends HttpServlet {
 
         log.debug("dataset is now $dataset")
 
-        doc = doc.withDataset(dataset)
+        doc = doc.inCollection(dataset)
                 .withContentType(ContentType.parse(request.getContentType()).getMimeType())
                 .withIdentifier(identifier)
                 .withDeleted(false)

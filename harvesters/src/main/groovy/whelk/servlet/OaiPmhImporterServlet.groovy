@@ -53,17 +53,17 @@ class OaiPmhImporterServlet extends HttpServlet {
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         def storage = pico.getComponent(PostgreSQLComponent)
 
-        List datasets = props.scheduledDatasets.split(",")
+        List collections = props.scheduledDatasets.split(",")
         def state = [:]
         StringBuilder table = new StringBuilder("<table cellspacing=\"10\"><tr><th>&nbsp;</th>")
         table.append("<form method=\"post\">")
 
         Set catSet = new TreeSet<String>()
 
-        for (dataset in datasets) {
-            state[dataset] = storage.loadSettings(dataset)
-            catSet.addAll(state[dataset].keySet())
-            table.append("<th>$dataset</th>")
+        for (collection in collections) {
+            state[collection] = storage.loadSettings(collection)
+            catSet.addAll(state[collection].keySet())
+            table.append("<th>$collection</th>")
         }
         table.append("</tr>")
         List categories = catSet.toList()
@@ -74,17 +74,17 @@ class OaiPmhImporterServlet extends HttpServlet {
         int i = 0
         for (cat in categories) {
             table.append("<tr><td align=\"right\"><b>$cat</b></td>")
-            for (dataset in datasets) {
-                table.append("<td>${state.get(dataset).get(cat) != null ? state.get(dataset).get(cat) : "&nbsp;"}</td>")
+            for (collection in collections) {
+                table.append("<td>${state.get(collection).get(cat) != null ? state.get(collection).get(cat) : "&nbsp;"}</td>")
             }
             table.append("</tr>")
         }
         table.append("<tr><td><input type=\"submit\" name=\"action_all\" value=\"stop all\"></td>")
-        for (dataset in datasets) {
-            table.append("<td><input type=\"submit\" name=\"action_${dataset}\" value=\"${jobs[dataset].active ? "stop" : "start"}\">")
-            if (!jobs[dataset].active) {
-                String lastImportDate = jobs[dataset].getLastImportValue().format("yyyy-MM-dd'T'HH:mm")
-                table.append("&nbsp;<input type=\"submit\" name=\"reset_${dataset}\" value=\"reload $dataset from\"/>&nbsp;<input type=\"datetime-local\" name=\"datevalue\" value=\"${lastImportDate}\"/>")
+        for (collection in collections) {
+            table.append("<td><input type=\"submit\" name=\"action_${collection}\" value=\"${jobs[collection].active ? "stop" : "start"}\">")
+            if (!jobs[collection].active) {
+                String lastImportDate = jobs[collection].getLastImportValue().format("yyyy-MM-dd'T'HH:mm")
+                table.append("&nbsp;<input type=\"submit\" name=\"reset_${collection}\" value=\"reload $collection from\"/>&nbsp;<input type=\"datetime-local\" name=\"datevalue\" value=\"${lastImportDate}\"/>")
             }
             table.append("</td>")
         }
@@ -119,7 +119,7 @@ class OaiPmhImporterServlet extends HttpServlet {
                 log.info("Got these jobs: $jobs")
                 def job = jobs.get(reqs.substring(6))
                 Date startDate = Date.parse("yyyy-MM-dd'T'HH:mm", request.getParameter("datevalue"))
-                log.info("Resetting harvester for ${job.dataset} to $startDate")
+                log.info("Resetting harvester for ${job.collection} to $startDate")
                 job.setStartDate(startDate)
                 //job.enable()
             } else if (reqs.startsWith("action_")) {
@@ -132,11 +132,11 @@ class OaiPmhImporterServlet extends HttpServlet {
     void init() {
 
         ScheduledExecutorService ses = Executors.newScheduledThreadPool(3)
-        List datasets = props.scheduledDatasets.split(",")
-        for (dataset in datasets) {
-            log.info("Setting up schedule for $dataset")
-            def job = new ScheduledJob(pico.getComponent(OaiPmhImporter.class), dataset, pico.getComponent(PostgreSQLComponent.class))
-            jobs[dataset] = job
+        List collections = props.scheduledDatasets.split(",")
+        for (collection in collections) {
+            log.info("Setting up schedule for $collection")
+            def job = new ScheduledJob(pico.getComponent(OaiPmhImporter.class), collection, pico.getComponent(PostgreSQLComponent.class))
+            jobs[collection] = job
             try {
                 ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
             } catch (RejectedExecutionException ree) {
@@ -152,7 +152,7 @@ class ScheduledJob implements Runnable {
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
 
-    String dataset
+    String collection
     OaiPmhImporter importer
     PostgreSQLComponent storage
     Map whelkState = null
@@ -161,34 +161,34 @@ class ScheduledJob implements Runnable {
 
     ScheduledJob(OaiPmhImporter imp, String ds, PostgreSQLComponent pg) {
         this.importer = imp
-        this.dataset = ds
+        this.collection = ds
         this.storage = pg
         assert storage
-        assert dataset
+        assert collection
     }
 
     void toggleActive() {
         active = !active
         loadWhelkState().put("status", (active ? "IDLE" : "STOPPED"))
-        storage.saveSettings(dataset, whelkState)
+        storage.saveSettings(collection, whelkState)
     }
 
     void disable() {
         active = false
         println("Setting ws: stopped")
         loadWhelkState().put("status", "STOPPED")
-        storage.saveSettings(dataset, whelkState)
+        storage.saveSettings(collection, whelkState)
     }
 
     void enable() {
         active = true
         loadWhelkState().put("status", "IDLE")
-        storage.saveSettings(dataset, whelkState)
+        storage.saveSettings(collection, whelkState)
     }
 
     void setStartDate(Date startDate) {
         loadWhelkState().put("lastImport", startDate.format(DATE_FORMAT))
-        storage.saveSettings(dataset, whelkState)
+        storage.saveSettings(collection, whelkState)
     }
 
     Date getLastImportValue() {
@@ -203,8 +203,8 @@ class ScheduledJob implements Runnable {
     Map loadWhelkState() {
         if (!whelkState) {
             log.info("Loading current state from storage ...")
-            whelkState = storage.loadSettings(dataset)
-            log.info("Loaded state for $dataset : $whelkState")
+            whelkState = storage.loadSettings(collection)
+            log.info("Loaded state for $collection : $whelkState")
         }
         return whelkState
     }
@@ -226,29 +226,29 @@ class ScheduledJob implements Runnable {
                     def lastWeeksDate = nextSince[Calendar.DATE] - 7
                     nextSince.set(date: lastWeeksDate)
                     currentSince = nextSince
-                    log.info("Importer has no state for last import from $dataset. Setting last week (${nextSince})")
+                    log.info("Importer has no state for last import from $collection. Setting last week (${nextSince})")
                 }
                 //nextSince = new Date(0) //sneeking past next date
                 if (nextSince.after(new Date())) {
                     log.warn("Since is slipping ... Is now ${nextSince}. Resetting to now()")
                     nextSince = new Date()
                 }
-                log.debug("Executing OAIPMH import for $dataset since $nextSince from ${importer.serviceUrl}")
+                log.debug("Executing OAIPMH import for $collection since $nextSince from ${importer.serviceUrl}")
                 whelkState.put("status", "RUNNING")
 
-                storage.saveSettings(dataset, whelkState)
-                def result = importer.doImport(dataset, null, -1, true, true, nextSince)
+                storage.saveSettings(collection, whelkState)
+                def result = importer.doImport(collection, null, -1, true, true, nextSince)
                 log.trace("Import completed, result: $result")
 
                 if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
-                    log.info("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $dataset. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
+                    log.info("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
                     whelkState.put("lastImportNrImported", result.numberOfDocuments)
                     whelkState.put("lastImportNrDeleted", result.numberOfDeleted)
                     whelkState.put("lastImportNrSkipped", result.numberOfDocumentsSkipped)
                     whelkState.put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
 
                 } else {
-                    log.debug("Imported ${result.numberOfDocuments} document for $dataset.")
+                    log.debug("Imported ${result.numberOfDocuments} document for $collection.")
                     whelkState.put("lastImport", currentSince.format(DATE_FORMAT))
                 }
                 whelkState.put("status", "IDLE")
@@ -258,7 +258,7 @@ class ScheduledJob implements Runnable {
                 log.error("Something failed: ${e.message}", e)
             } finally {
                 log.debug("Saving state $whelkState")
-                storage.saveSettings(dataset, whelkState)
+                storage.saveSettings(collection, whelkState)
             }
         }
     }

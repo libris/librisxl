@@ -27,7 +27,7 @@ class DefinitionsImporter {
         defFile.eachLine {
             def data = mapper.readValue(it.getBytes("UTF-8"), Map)
             def newId = IdGenerator.generate()
-            Document doc = new Document(newId, data, ["mintedBy":"defintions"]).withContentType("application/ld+json").withDataset("defintions")
+            Document doc = new Document(newId, data).withContentType("application/ld+json").inCollection("definitions")
             documentList.add(doc)
             counter++
         }

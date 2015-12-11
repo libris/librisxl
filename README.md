@@ -10,12 +10,12 @@ The project layout is as follows:
 * Applications
     * rest/
         A servlet web application. The REST and other HTTP APIs
-    * oaipmhharvester/
+    * harvesters/
         An OAIPMH harvester. Servlet web application.
-    * oaipmhexporter/
+    * oaipmh/
         Servlet web application. OAIPMH service for LIBRISXL
-    * vcopyimporter/
-        A java application to load data from the vcopy database
+    * importers/
+        Java application to load or reindex data into the system.
     * integration/
         A standalone camel application, responsible for asynchronous tasks performed by
         the other applications
@@ -86,12 +86,12 @@ There are two property files in the core module that needs configuring.
 * secret.properties
   * Contains passwords and and such. Make a copy of the secret.properties.in file and enter proper settings.
 
-#### VCopyImporter module
+#### importers module
 
 * mysql.properties
   * Copy the mysql.properties.in file and supply connection settings for mysql
 
-#### OAIPMHharvester module
+#### harvesters module
 
 * oaipmh.properties
   * Copy the oaipmh.properties.in file and supply settings for the OAIPMH server
@@ -107,12 +107,12 @@ directories, and fill out details:
     Used to decide which implementations are used for e.g. index and storage
 * core/src/main/resources/secret.properties
     Passwords and stuff for databases and such
-* vcopyimporter/src/main/resources/mysql.properties
+* importers/src/main/resources/mysql.properties
     Passwords and connection uri's for vcopy imports
 
 Then:
 
-    $ cd vcopyimporter/
+    $ cd importers/
 
 and run the following to import and index data into a whelk (psql/es-combo)
 from a mysql-backed vcopy:
@@ -142,9 +142,22 @@ Get/create/update datasets:
 
     $ python datasets.py
 
+Go back to the importers module.
+
+    $ cd ../librisxl/importers
+
+If you want to clear out any existing definitions (for reload or refresh)
+
+    $ echo "DELETE FROM lddb WHERE manifest->>'collection' = 'definitions';" \
+     |psql [-U <yourdatabaseuser>] <yourdatabaseschema>
+    $ echo "DELETE FROM lddb__versions WHERE manifest->>'collection' = 'definitions';" \
+      |psql [-U <yourdatabaseuser>] <yourdatabaseschema>
+    $ curl -XDELETE http://localhost:9200/<yourindexname>/definitions/\_query \
+     -d '{"query":{"match_all": {}}}'
+
 Load the resulting resources into the running whelk:
 
-    $ scripts/load-defs-whelk.sh http://localhost:8180/whelk
+    $ gradle -Dargs="defs ../definitions/build/definitions.jsonld.lines" doRun
 
 
 ### Import/update local storage from test data
