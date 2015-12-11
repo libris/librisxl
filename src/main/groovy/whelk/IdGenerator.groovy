@@ -3,11 +3,12 @@ package whelk
 import java.util.zip.CRC32
 
 class IdGenerator {
+
     static final char[] ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyz".chars
     static final char[] VOWELS = "aoueiy".chars
     static final char[] CONSONANTS = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
-    static final int IDENTIFIER_LENGTH = 14
+    static final int MIN_IDENTIFIER_LENGTH = 16
 
     static char[] alphabet = CONSONANTS
 
@@ -15,17 +16,17 @@ class IdGenerator {
         return generate(System.currentTimeMillis(), null)
     }
 
-    static String generate(long timestamp, String data, int idLength = IDENTIFIER_LENGTH) {
+    static String generate(long timestamp, String data, int minIdLength = MIN_IDENTIFIER_LENGTH) {
         StringBuilder identifier = new StringBuilder(baseEncode(timestamp, true))
         if (data) {
             CRC32 crc32 = new CRC32()
             crc32.update(data.getBytes("UTF-8"))
             identifier.append(baseEncode(crc32.value, false))
-            if (identifier.length() > idLength) {
-                identifier = new StringBuilder(identifier.substring(0, idLength))
+            while (identifier.length() < minIdLength) {
+                identifier.append('0')
             }
         } else {
-            while (identifier.length() < idLength) {
+            while (identifier.length() < minIdLength) {
                 identifier.append(CONSONANTS[new Random().nextInt(CONSONANTS.length)])
             }
         }
@@ -36,10 +37,7 @@ class IdGenerator {
         int base = alphabet.length
         int[] positions = basePositions(n, base)
         if (lastDigitBasedCaesarCipher) {
-            int rotation = positions[-1]
-            for (int i=0; i < positions.length - 1; i++) {
-                positions[i] = rotate(positions[i], rotation, base)
-            }
+            rotate(positions, base)
         }
         return baseEncode((int[]) positions)
     }
@@ -58,13 +56,16 @@ class IdGenerator {
         return chars.join("")
     }
 
+    static void rotate(int[] positions, int ceil) {
+        int rotation = positions[-1]
+        for (int i=0; i < positions.length - 1; i++) {
+            positions[i] = rotatePosition(positions[i], rotation, ceil)
+        }
+    }
 
-    static int rotate(int i, int rotation, int ceil) {
+    static int rotatePosition(int i, int rotation, int ceil) {
         int j = i + rotation
         return (j >= ceil)? j - ceil : j
     }
-
-
-
 
 }
