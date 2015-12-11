@@ -28,10 +28,10 @@
   <logger name="org.apache.activemq">
       <level value="warn"/>
   </logger>
- <logger name="whelk.component.PostgreSQLComponent" level="info"/>
+ <logger name="whelk.component.PostgreSQLComponent" level="debug"/>
  <logger name="whelk.component.ElasticSearch" level="info"/>
     <logger name="whelk.servlet.OaiPmhImporterServlet" level="info"/>
- <logger name="whelk.importer.libris.OaiPmhImporter" level="info"/>
+ <logger name="whelk.importer.OaiPmhImporter" level="info"/>
 
   <root level="info">
     <appender-ref ref="STDOUT" />

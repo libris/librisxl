@@ -12,4 +12,4 @@ CREATE INDEX idx_lddb__versions_id ON lddb__versions (id);
 CREATE INDEX idx_lddb__versions_modified ON lddb__versions (modified);
 CREATE INDEX idx_lddb__versions_checksum ON lddb__versions (checksum);
 CREATE INDEX idx_lddb__versions_manifest ON lddb__versions USING GIN (manifest jsonb_path_ops);
-CREATE INDEX idx_lddb__versions_collectoin ON lddb__versions USING GIN ((manifest->>'collection'));
+CREATE INDEX idx_lddb__versions_collection ON lddb__versions ((manifest->>'collection'));

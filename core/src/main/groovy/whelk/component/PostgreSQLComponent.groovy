@@ -467,13 +467,27 @@ class PostgreSQLComponent implements Storage {
 
     void findIdentifiers(Document doc) {
         doc.addIdentifier(doc.getURI().toString())
-        doc.addIdentifier(JsonLd.findRecordURI(doc.data).toString())
-        for (entry in doc.data.get(Document.GRAPH_KEY)) {
-            URI entryURI = new URI(entry[JsonLd.ID_KEY])
-            if (entryURI.getPath().substring(1) == doc.id) {
-                for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
-                    if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
-                        doc.addIdentifier(sameAs.get(JsonLd.ID_KEY))
+        URI docId = JsonLd.findRecordURI(doc.data)
+        if (docId) {
+            log.debug("Found @id in data: ${docId}")
+            doc.addIdentifier(docId.toString())
+        }
+        if (doc.data.containsKey(JsonLd.DESCRIPTIONS_KEY)){
+            def entry = doc.data.get(JsonLd.DESCRIPTIONS_KEY).get("entry")
+            for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
+                if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
+                    doc.addIdentifier(sameAs.get(JsonLd.ID_KEY))
+                    log.debug("Added ${sameAs.get(JsonLd.ID_KEY)} to ${doc.getURI()}")
+                }
+            }
+        } else {
+            for (entry in doc.data.get(Document.GRAPH_KEY)) {
+                URI entryURI = new URI(entry[JsonLd.ID_KEY])
+                if (entryURI == doc.getURI()) {
+                    for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
+                        if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
+                            doc.addIdentifier(sameAs.get(JsonLd.ID_KEY))
+                        }
                     }
                 }
             }
@@ -725,7 +739,7 @@ class PostgreSQLComponent implements Storage {
     boolean remove(String identifier) {
         if (versioning) {
             log.debug("Creating tombstone record with id ${identifier}")
-            return store(createTombstone(identifier))
+            return store(createTombstone(identifier), true)
         } else {
             Connection connection = getConnection()
             PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)

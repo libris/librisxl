@@ -22,7 +22,7 @@ import whelk.converter.MarcJSONConverter
 @Log
 class OaiPmhImporter {
 
-    static SERVICE_BASE_URL = "http://data.libris.kb.se/{collection}/oaipmh"
+    static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
     static final String EPLIKT_DATASET_PREFIX = "e"
@@ -51,7 +51,6 @@ class OaiPmhImporter {
     static final ObjectMapper mapper = new ObjectMapper()
 
     String username, password
-    List<String> eligibleDatasets = null
 
     boolean cancelled = false
 
@@ -69,21 +68,6 @@ class OaiPmhImporter {
         marcFrameConverter = mfc
         username = oaipmhUsername
         password = oaipmhPassword
-    }
-    OaiPmhImporter(Whelk w, MarcFrameConverter mfc, String oaipmhServiceUrl, String oaipmhUsername, String oaipmhPassword, String datasetsToSave) {
-        whelk = w
-        serviceUrl = oaipmhServiceUrl
-        marcFrameConverter = mfc
-        username = oaipmhUsername
-        password = oaipmhPassword
-        if (datasetsToSave) {
-            this.eligibleDatasets = []
-            datasetsToSave.split(",").each {
-                String ds = it.trim()
-                this.eligibleDatasets.add(ds)
-            }
-        }
-
     }
 
     OaiPmhImporter(){}
@@ -103,7 +87,7 @@ class OaiPmhImporter {
         if (!serviceUrl) {
             serviceUrl = SERVICE_BASE_URL
         }
-        String baseUrl = serviceUrl.replace("{collection}", collection)
+        String baseUrl = serviceUrl.replace("{dataset}", collection)
 
         String urlString = baseUrl + "?verb=ListRecords&metadataPrefix=marcxml"
 
@@ -163,11 +147,6 @@ class OaiPmhImporter {
 
         return new ImportResult(numberOfDocuments: recordCount, numberOfDeleted: nrDeleted, numberOfDocumentsSkipped: skippedRecordCount, lastRecordDatestamp: lastRecordDatestamp)
     }
-
-    private boolean isEligible(String ds) {
-        return (eligibleDatasets == null) || ds in eligibleDatasets
-    }
-
 
     String washXmlOfBadCharacters(String xmlString) {
         log.warn("Trying to recuperate by washing XML ...")
@@ -245,10 +224,7 @@ class OaiPmhImporter {
 
                         ds = EPLIKT_DATASET_PREFIX + ds
                     }
-                    def document
-                    if (isEligible(ds)) {
-                        document = createDocumentMap(record, recordDate, it.header, ds)
-                    }
+                    def document = createDocumentMap(record, recordDate, it.header, ds)
                     if (document) {
                         documents << document
                         recordCount++
@@ -273,9 +249,9 @@ class OaiPmhImporter {
                     resumptionToken = null
                     break
                 }
-                String deleteIdentifier = URIMinter.mint("/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/"))
+                String deleteIdentifier = LegacyIntegrationTools.generateId("/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/"))
                     try {
-                        whelk.remove(deleteIdentifier, this.collection)
+                        whelk.remove(deleteIdentifier)
                     } catch (Exception e2) {
                         log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
                     }
@@ -381,7 +357,10 @@ class OaiPmhImporter {
                     try {
                         if (marcFrameConverter && !it.manifest.collection?.startsWith(EPLIKT_DATASET_PREFIX)) {
                             log.trace("Conversion starts.")
-                            def doc = marcFrameConverter.doConvert(it.record, it.manifest)
+                            it.manifest['contentType'] = "application/x-marc-json"
+                            Document doc = new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)
+
+                            doc = marcFrameConverter.convert(doc)
                             //Files.write(Paths.get("/tmp/${doc.id}_flat.jsonld"), doc.dataAsString.getBytes("utf-8"), StandardOpenOption.CREATE)
 
 
