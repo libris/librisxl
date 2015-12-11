@@ -117,7 +117,11 @@ public class JsonLd {
     }
 
     static URI findRecordURI(Map jsonLd) {
-        return Document.BASE_URI.resolve(findIdentifier(jsonLd))
+        String foundIdentifier = findIdentifier(jsonLd)
+        if (foundIdentifier) {
+            return Document.BASE_URI.resolve(foundIdentifier)
+        }
+        return null
     }
 
     static String findIdentifier(Map jsonLd) {
