@@ -32,13 +32,14 @@ class IdGeneratorSpec extends Specification {
         generator.generate(n, data) == id
         where:
         n               | data          | id
-        139409779957    | "auth-1245"   | "flg72dq7b1pfpr"
-        139419779957    | "bib-245555"  | "rxs0q35k5mzw5h"
-        139429779957    | "hold-11111"  | "384qdslw337qmh"
+        1449846940756   | "auth-1245"   | "lqsb00csjb1pfpr0"
+        1449846940756   | "bib-245555"  | "lqsb00csj5mzw5hp"
+        1449846940756   | "hold-11111"  | "lqsb00csj337qmh2"
+        99999999999999  | "far future"  | "gcprhmd0d910qkbbj"
     }
 
     def "should generated time-based random id"() {
         expect:
-        generator.generate() =~ /[bcdfghjklmnpqrstvxyz0-9]{14,}/
+        generator.generate() =~ /[bcdfghjklmnpqrstvwxz0-9]{16,}/
     }
 }
