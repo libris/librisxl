@@ -1,0 +1,71 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "1993-12-15T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "191493",
+  "modified": "2012-10-02T12:23:15.0+02:00",
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "systemNumber": [
+    "(LIBRIS)9918360852"
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "NE (artikeln om Tove Jansson)"
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "focus": {
+    "@id": "/resource/auth/191493",
+    "familyName": "Jansson",
+    "note": [
+      "Finlandssvensk författare och konstnär (\"Mumintrollen\"); bror till Tove Jansson"
+    ],
+    "birthYear": "1926",
+    "nationality": {
+      "@id": "/def/nationalities/e-fi---"
+    },
+    "givenName": "Lars",
+    "deathYear": "2000",
+    "@type": "Person"
+  },
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=SRo"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=L"
+  },
+  "@id": "/auth/191493",
+  "@type": "PersonTerm"
+}

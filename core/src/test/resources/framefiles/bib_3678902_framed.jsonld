@@ -1,0 +1,311 @@
+{
+  "about": {
+    "comment": [
+      "Översättning från engelska"
+    ],
+    "classification": [
+      {
+        "@id": "/some?type=Concept&notation=05"
+      },
+      {
+        "@id": "/topic/kssb/8/Hci%28p%29"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "",
+        "subtitle": "Stålmannens nya jätte-tidning",
+        "@type": "Title",
+        "coverage": "1963-1964:2",
+        "titleValue": "Gigant"
+      },
+      {
+        "titleType": "",
+        "subtitle": "Stålmannens jätte-tidning",
+        "@type": "Title",
+        "coverage": "1964:3-1965:1",
+        "titleValue": "Gigant"
+      },
+      {
+        "titleType": "",
+        "subtitle": "tidernas mest eftertraktade hjälteberättelser",
+        "@type": "Title",
+        "coverage": "1965:2-1966:1",
+        "titleValue": "Gigant"
+      }
+    ],
+    "publishingDirector": [
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-7"
+      },
+      {
+        "@id": "_:b-8"
+      }
+    ],
+    "regularity": {
+      "@id": "/def/enum/content/Regular"
+    },
+    "frequency": "10 nr/år",
+    "publication": [
+      {
+        "scopeNote": "Sammanfattad utgivningstid:",
+        "place": {
+          "@id": "/some?type=Place&label=%5BStockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Centerförlaget]",
+        "providerDate": "1963-1985"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=%5BStockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Centerförlaget]",
+        "providerDate": "1963-1969"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Bromma"
+        },
+        "@type": "ProviderEvent",
+        "providerDate": "1970-1976"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Sundbyberg"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Semic",
+        "providerDate": "1977-1982"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Sundbyberg"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Semic press",
+        "providerDate": "1976-1977, 1982-1985"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/SuccessiveEntry"
+    },
+    "alphabet": {
+      "@id": "/def/enum/content/ExtendedRoman"
+    },
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      },
+      {
+        "@id": "_:b-6"
+      },
+      {
+        "@id": "_:b-7"
+      },
+      {
+        "@id": "_:b-8"
+      }
+    ],
+    "keyTitle": [
+      {
+        "titleQualifier": "(Stockholm. 1963)",
+        "@type": "Title",
+        "titleValue": "Gigant"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Rotopress)"
+      },
+      {
+        "@type": "ProviderEvent",
+        "providerName": "Williams"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Periodical"
+      }
+    ],
+    "temporalCoverageNote": "1963-1985",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "dimensions": "32 cm (1963), 36-38 cm (1964-1965:1), 25 cm (1965:2-1985)"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/Serietidningar"
+      }
+    ],
+    "@id": "/resource/bib/3678902",
+    "replaces": [
+      {
+        "date": "1963, 1965, 1969",
+        "frequency": "2-3 nr/år,",
+        "@type": "Serial"
+      },
+      {
+        "date": "1964, 1966-1968, 1970-1972",
+        "frequency": "1 nr/kvartal,",
+        "@type": "Serial"
+      },
+      {
+        "date": "1973-1978",
+        "frequency": "Varannan månad,",
+        "@type": "Serial"
+      },
+      {
+        "date": "1979-1984",
+        "frequency": "7-9 nr/år,",
+        "@type": "Serial"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "responsibleParty": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      },
+      {
+        "@id": "_:b-6"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "performerNote": [
+      "Red.: Peter Tillberg (1972:2-1973:1), Mats Nyberg (1973:2-1974:2), Cristian Hammarström (1974:3-1985)",
+      "Ansv. utg.: K. Ljungcrantz (1963-1967:1, 1970-1973:3), J. Brydner (1967:2-1969), Ove Lundgren (1973:4-1981:7), Torgny Litzell (1981:8-1984:1, 8), Michael Journath (1984:2-7), Ulf Granberg (1985)"
+    ],
+    "instanceTitle": {
+      "subtitle": "Stålmannens nya jätte-tidning",
+      "@type": "Title",
+      "titleValue": "Gigant"
+    },
+    "issueNumber": [
+      "1963: nr 1-1985: nr 10"
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/issn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "0345-407X"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Serial"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=NLT"
+    }
+  ],
+  "created": "1984-06-26T00:00:00.0+02:00",
+  "modified": "2008-08-18T11:32:35.0+02:00",
+  "controlNumber": "3678902",
+  "librisIIINumber": [
+    "0345407X"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "2"
+      ],
+      "022": {
+        "subfields": [
+          {
+            "a": "0345-407X"
+          },
+          {
+            "2": "f"
+          }
+        ],
+        "ind1": "0",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Serietidningar"
+          },
+          {
+            "2": "sgp"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/3678902",
+  "@type": "Record"
+}

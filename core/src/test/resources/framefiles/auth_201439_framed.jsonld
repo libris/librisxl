@@ -1,0 +1,229 @@
+{
+  "sameAs": [
+    {
+      "birthYear": "1860",
+      "givenName": "Антон Павлович",
+      "familyName": "Чехов",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1860",
+      "givenName": "Anton Pavlovič",
+      "familyName": "Čechov",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1860",
+      "givenName": "Antoša",
+      "familyName": "Čechonte",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1860",
+      "givenName": "Anton",
+      "familyName": "Tschekhow",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1860",
+      "givenName": "Anton",
+      "familyName": "Tschechoff",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1860",
+      "givenName": "Anton",
+      "familyName": "Tšehov",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1860",
+      "givenName": "Anton",
+      "familyName": "Csehov",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1860",
+      "givenName": "Anton",
+      "familyName": "Tjekhov",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1860",
+      "givenName": "Anton",
+      "familyName": "Tschéckov",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1860",
+      "givenName": "Anton",
+      "familyName": "Tchekhov",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1860",
+      "givenName": "Anton Pavlovich",
+      "familyName": "Chekhov",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1860",
+      "givenName": "Anton Pavlovîç",
+      "familyName": "Çêxov",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "scopeNote": "Forskningsbiblioteksform:",
+      "familyName": "Čechov",
+      "birthYear": "1860",
+      "givenName": "Anton Pavlovič",
+      "deathYear": "1904",
+      "@type": "Person"
+    },
+    {
+      "scopeNote": "Originalform",
+      "familyName": "Чехов",
+      "birthYear": "1860",
+      "givenName": "Антон Пaвлович",
+      "deathYear": "1904",
+      "@type": "Person"
+    }
+  ],
+  "catalogingSource": {
+    "@id": "/def/enum/content/OtherSource"
+  },
+  "focus": {
+    "@id": "/resource/auth/201439",
+    "familyName": "Tjechov",
+    "note": [
+      "Rysk skönlitterär författare"
+    ],
+    "birthYear": "1860",
+    "nationality": {
+      "@id": "/def/nationalities/e-ru---"
+    },
+    "givenName": "Anton",
+    "deathYear": "1904",
+    "@type": "Person"
+  },
+  "modified": "2013-11-08T14:56:22.0+01:00",
+  "closeMatch": [
+    {
+      "@id": "http://dewey.info/class/891.723/e23/"
+    }
+  ],
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "Rysk kärlek /  af Anton Tschechoff, 1902"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Noveller /  Anton Tjechov, 1954"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "LC Auth"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Bolʹšaja sovetskaja ėnciklopedija (3. izd.)"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "w"
+      ],
+      "400": {
+        "subfields": [
+          {
+            "i": "Forskningsbiblioteksform:"
+          },
+          {
+            "a": "Čechov, Anton Pavlovič,"
+          },
+          {
+            "d": "1860-1904"
+          },
+          {
+            "w": "i"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    },
+    {
+      "700": {
+        "subfields": [
+          {
+            "a": "Chekhov, Anton Pavlovich,"
+          },
+          {
+            "d": "1860-1904"
+          },
+          {
+            "0": "(DLC)n 79130807"
+          }
+        ],
+        "ind1": "1",
+        "ind2": "0"
+      }
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "systemNumber": [
+    "(LIBRIS)9916566976"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/auth/201439",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "1993-05-19T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "201439",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "PersonTerm"
+}

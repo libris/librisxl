@@ -1,0 +1,147 @@
+{
+  "about": {
+    "comment": [
+      "Kartan ritad av Nicolaus Germanus efter Claudius Clavus enligt: Ehrensvärd, Ulla, Nordiska kartans historia. Helsingfors, 2006. S. 40-45"
+    ],
+    "mediaTerm": "Kartografiskt material",
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Nb%2FK"
+      }
+    ],
+    "attributedTo": {
+      "@id": "_:b-0"
+    },
+    "cartographicCoordinates": "(V 23°-Ö 30°/N 80°-N 53°)",
+    "cartographicScale": "Skala [ca 1:6 500 000]",
+    "subject": [
+      {
+        "@id": "/topic/sao/Skandinavien/1400-talet/kartor"
+      }
+    ],
+    "listOfContents": [
+      "Karta över Norden. - Höjder schematiskt utsatta. - Orter utsatta. - Med Grönland placerat omedelbart norr om Skandinavien"
+    ],
+    "publication": [
+      {
+        "providerDate": "1482"
+      }
+    ],
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&linkNote=Digitaliserad%20version&title=%5BKarta%20%C3%B6ver%20Skandinavien%5D"
+      }
+    ],
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&controlledLabel=Ptolemaios%2C%20Klaudios&title=Cosmographia&placePublisherAndDateOfPublication=1482"
+      }
+    ],
+    "cartographer": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "hasPart": [
+      {
+        "@id": "/some?type=Cartography"
+      }
+    ],
+    "material": {
+      "@id": "/def/enum/content/MapBoundAsPartOfAnotherWork"
+    },
+    "hasFormat": [
+      {
+        "@id": "/some?type=Map"
+      },
+      {
+        "otherPhysicalDetails": "träsnitt",
+        "@type": "Product",
+        "extent": "1 karta",
+        "dimensions": "28 x 52 cm på ark 41 x 57 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/gw"
+      }
+    ],
+    "@id": "/resource/bib/10393902",
+    "language": [
+      {
+        "@id": "/def/languages/lat"
+      }
+    ],
+    "workExample": [
+      {
+        "@type": "Product",
+        "itemCondition": [
+          "Kungl. bibliotekets KoB exemplar: Handkolorerat"
+        ]
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "[Karta över Skandinavien]"
+    },
+    "@type": [
+      "Cartography",
+      "ComponentPart"
+    ],
+    "cartographicAscensionAndDeclination": [
+      {
+        "northernmostLatitudeCoordinates": "n0800000",
+        "westernmostLongitudeCoordinates": "w0230000",
+        "constantRatioLinearHorizontalScale": [
+          "6500000"
+        ],
+        "southernmostLatitudeCoordinates": "n0530000",
+        "easternmostLongitudeCoordinates": "e0300000",
+        "cartographicScale": "a",
+        "@type": "CartographyCoordinates"
+      }
+    ]
+  },
+  "created": "2007-03-27T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "10393902",
+  "modified": "2014-12-15T15:09:43.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "651": {
+        "subfields": [
+          {
+            "a": "Skandinavien"
+          },
+          {
+            "y": "1400-talet"
+          },
+          {
+            "v": "kartor"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/bib/10393902",
+  "@type": "Record"
+}

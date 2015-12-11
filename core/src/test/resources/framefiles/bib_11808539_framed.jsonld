@@ -1,0 +1,270 @@
+{
+  "about": {
+    "comment": [
+      "Ur: GSD-Röda kartan / Lantmäteriverket"
+    ],
+    "mediaTerm": "Kartografiskt material] =",
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Ncaf"
+      },
+      {
+        "@id": "/topic/kssb/8/Pd-caf%3Ak"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "1",
+        "@type": "Title",
+        "titleValue": "Entdecke die Geschichte des Bergbaus in Dalarna"
+      }
+    ],
+    "hasUniformWork": {
+      "@id": "/some?type=UniformWork&uniformTitle=Uppt%C3%A4ck%20Dalarnas%20bergslag."
+    },
+    "cartographicCoordinates": "(Ö 14°23'-Ö 16°37'/N 60°58'-N 59°51')",
+    "languageNote": [
+      "Parallelltext på engelska och tyska"
+    ],
+    "cartographicScale": "Skala [ca 1:250 000]",
+    "subject": [
+      {
+        "@id": "/topic/sao/Bergsbruk%20-%20historia/Sverige/Dalarna/kartor"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/IndexPresent"
+    },
+    "listOfContents": [
+      "Förteckning med bilder och beskrivande text. - Kulturhistorisk informationstext"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Falun"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kulturmiljöenheten, Länsstyrelsen Dalarnas län",
+        "providerDate": "2001"
+      }
+    ],
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=2.%20ed."
+      }
+    ],
+    "author": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "photographer": [
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      }
+    ],
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      },
+      {
+        "@id": "_:b-6"
+      },
+      {
+        "@id": "_:b-7"
+      },
+      {
+        "@id": "_:b-8"
+      },
+      {
+        "@id": "_:b-9"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=G%C3%A4vle"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Gävle offset)"
+      }
+    ],
+    "cartographer": [
+      {
+        "@id": "_:b-9"
+      }
+    ],
+    "publisher": [
+      {
+        "@id": "_:b-8"
+      }
+    ],
+    "responsibilityStatement": "text: Margareta Andersson, Örjan Hamrin ; photography/Foto: Lars Dahlström ; illustrations/Illustrationen: Roland Andersson ; graphic design/grafische Form: Titti Lorentzson ; project manager/verantwortlich: Anders Gottberg ; translation/Übersetzung: Alan Crozier, Gottfried Steinbach",
+    "material": {
+      "@id": "/def/enum/content/SingleMap"
+    },
+    "hasFormat": [
+      {
+        "@id": "/some?type=Map"
+      },
+      {
+        "otherPhysicalDetails": "färg",
+        "@type": "Product",
+        "extent": "1 karta",
+        "dimensions": "på ark 50 x 70 cm vikt till 25 x 18 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/Turistkartor"
+      }
+    ],
+    "@id": "/resource/bib/11808539",
+    "translator": [
+      {
+        "@id": "_:b-6"
+      },
+      {
+        "@id": "_:b-7"
+      }
+    ],
+    "illustrator": [
+      {
+        "@id": "_:b-3"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      },
+      {
+        "@id": "/def/languages/ger"
+      }
+    ],
+    "summary": [
+      "Redovisar gruvor, hyttor, bruk - smedjor samt bebyggelse"
+    ],
+    "instanceTitle": {
+      "subtitle": "Entdecke die Geschichte des Bergbaus in Dalarna",
+      "@type": "Title",
+      "titleValue": "Discover the mining district of Dalarna"
+    },
+    "relief": {
+      "@id": "/def/enum/content/Contour"
+    },
+    "@type": [
+      "Cartography",
+      "Monograph"
+    ],
+    "cartographicAscensionAndDeclination": [
+      {
+        "northernmostLatitudeCoordinates": "n0605800",
+        "westernmostLongitudeCoordinates": "e0142300",
+        "constantRatioLinearHorizontalScale": [
+          "250000"
+        ],
+        "southernmostLatitudeCoordinates": "n0595100",
+        "easternmostLongitudeCoordinates": "e0163700",
+        "cartographicScale": "a",
+        "@type": "CartographyCoordinates"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2010-04-06T00:00:00.0+02:00",
+  "modified": "2010-04-06T17:54:00.0+02:00",
+  "controlNumber": "11808539",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Bergsbruk - historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "z": "Dalarna"
+          },
+          {
+            "v": "kartor"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Turistkartor"
+          },
+          {
+            "2": "gmgpc//swe"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/bib/11808539",
+  "@type": "Record"
+}

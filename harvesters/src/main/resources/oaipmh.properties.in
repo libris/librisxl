@@ -1,0 +1,4 @@
+oaipmhServiceUrl  = URL
+oaipmhUsername    = USERNAME
+oaipmhPassword    = PASSWORD
+scheduledDatasets = ONE,OR,MORE,DATASETS

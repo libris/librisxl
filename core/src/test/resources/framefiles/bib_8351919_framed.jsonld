@@ -1,0 +1,184 @@
+{
+  "about": {
+    "comment": [
+      "T.o.m. Supplement 27 med upphovsuppgift: Nils-Fredrik Carlsson, Christer Silfverberg, Yvonne Svenström",
+      "Supplement med ändringsblad utkommer fortlöpande",
+      "På pärmen: 1"
+    ],
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "1 vol. (lösbl.)",
+        "dimensions": "25 cm"
+      }
+    ],
+    "@id": "/resource/bib/8351919",
+    "contentType": [
+      {
+        "@id": "/def/enum/content/UpdatingLooseLeaf"
+      }
+    ],
+    "classification": [
+      {
+        "@id": "/topic/kssb/6/Qafbac-c%3Aoe"
+      },
+      {
+        "@id": "/topic/sab/Qafbac-c%3Aoe"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/SuccessiveEntry"
+    },
+    "author": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      }
+    ],
+    "temporalCoverageNote": "1998-",
+    "series": [
+      {
+        "issn": "99-0404269-1",
+        "@type": "Serial",
+        "title": "Norstedts laghandböcker"
+      }
+    ],
+    "responsibilityStatement": "Pia Blank Thörnroos ...",
+    "subject": [
+      {
+        "@id": "/topic/sao/Sociala%20avgifter/juridik%20och%20lagstiftning/Sverige"
+      }
+    ],
+    "regularity": {
+      "@id": "/def/enum/content/CompletelyIrregular"
+    },
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "partTitle": [
+        "Supplement /"
+      ],
+      "@type": "Title",
+      "titleValue": "Socialavgifter."
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "i ringpärm",
+        "@type": "Identifier",
+        "identifierValue": "91-39-00307-8"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "i ringpärm",
+        "@type": "Identifier",
+        "identifierValue": "91-39-00506-2"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "Supplement 24",
+        "@type": "Identifier",
+        "identifierValue": "9789139014379"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Integrating"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Norstedts juridik",
+        "providerDate": "1998-"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "1999-01-27T00:00:00.0+01:00",
+  "technicalNote": [
+    "Li:S"
+  ],
+  "modified": "2013-02-20T10:26:41.0+01:00",
+  "controlNumber": "8351919",
+  "librisIIINumber": [
+    "9139003078"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Sociala avgifter"
+          },
+          {
+            "x": "juridik och lagstiftning"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=R"
+  },
+  "@id": "/bib/8351919",
+  "@type": "Record"
+}

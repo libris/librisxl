@@ -1,0 +1,80 @@
+{
+  "sameAs": [
+    {
+      "birthYear": "1947",
+      "givenName": "Stiven",
+      "familyName": "King",
+      "@type": "Person"
+    }
+  ],
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "focus": {
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Bachman&givenName=Richard&birthYear=1947"
+    },
+    "familyName": "King",
+    "note": [
+      "Amerikansk författare,  Skriver ibland under pseudonymen Richard Bachman"
+    ],
+    "birthYear": "1947",
+    "nationality": {
+      "@id": "/def/nationalities/n-us---"
+    },
+    "givenName": "Stephen",
+    "@id": "/resource/auth/193552",
+    "@type": "Person"
+  },
+  "modified": "2015-06-29T14:31:06.0+02:00",
+  "closeMatch": [
+    {
+      "@id": "http://dewey.info/class/813.54/e23/"
+    }
+  ],
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "editorialNote": [
+    "Uppdaterad med Dewey-klassning 2011-01-19/S/NB/evacra"
+  ],
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "systemNumber": [
+    "(LIBRIS)9920275123"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=L"
+  },
+  "@id": "/auth/193552",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "1994-12-20T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "193552",
+  "@type": "PersonTerm",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  }
+}

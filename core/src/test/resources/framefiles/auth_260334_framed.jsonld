@@ -1,0 +1,65 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2005-09-02T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "subjectHeading": {
+    "@id": "/def/enum/content/LibraryOfCongressSubjectHeading"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/OtherSource"
+  },
+  "controlNumber": "260334",
+  "modified": "2012-10-29T09:02:31.0+01:00",
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "source": [
+    {
+      "citation": "t.p. (Karin Johansson)",
+      "@type": "CreativeWork",
+      "label": "Johansson, Karin. Tjälgränsmätningar på grusvägar, 2005:"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "focus": {
+    "familyName": "Johansson",
+    "birthYear": "1976",
+    "nationality": {
+      "@id": "/def/nationalities/e-sw---"
+    },
+    "givenName": "Karin",
+    "@id": "/resource/auth/260334",
+    "@type": "Person"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=La"
+  },
+  "@id": "/auth/260334",
+  "@type": "PersonTerm"
+}

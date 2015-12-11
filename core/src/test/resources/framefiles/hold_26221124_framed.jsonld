@@ -1,0 +1,80 @@
+{
+  "about": {
+    "holdingFor": {
+      "@id": "/resource/bib/2413961"
+    },
+    "workExample": [
+      {
+        "@type": "Product",
+        "custodialHistoryOfItem": [
+          "O. Pontén; J. Pontén. Joh. Pontén; Carl Ekerman?; C. Ekerman?; Zschai Zscher"
+        ]
+      }
+    ],
+    "offers": [
+      {
+        "heldBy": [
+          {
+            "@id": "/some?type=Organization&notation=SRo"
+          }
+        ],
+        "@type": "Offer",
+        "classificationPart": "Strängnästryck"
+      }
+    ],
+    "numberOfItems": 1,
+    "heldBy": {
+      "@type": "Organization",
+      "notation": "SRo"
+    },
+    "@id": "/resource/hold/26221124",
+    "@type": "HeldMaterial"
+  },
+  "created": "2010-04-16T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/HoldingsLevel1"
+  },
+  "controlNumber": "26221124",
+  "modified": "2010-04-16T10:33:20.0+02:00",
+  "holdingType": {
+    "@id": "/def/enum/record/SinglePartItemHolding"
+  },
+  "_marcUncompleted": [
+    {
+      "700": {
+        "subfields": [
+          {
+            "a": "Pontén, Johan,"
+          },
+          {
+            "d": "1776-1857"
+          },
+          {
+            "4": "fmo"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    },
+    {
+      "700": {
+        "subfields": [
+          {
+            "a": "Pontén, Jonas Otto,"
+          },
+          {
+            "d": "1813-1887"
+          },
+          {
+            "4": "fmo"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    }
+  ],
+  "@id": "/hold/26221124",
+  "@type": "Record"
+}

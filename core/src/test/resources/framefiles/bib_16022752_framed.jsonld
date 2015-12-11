@@ -1,0 +1,125 @@
+{
+  "about": {
+    "classification": [
+      {
+        "@id": "http://dewey.info/class//e23/"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Lang&givenName=Maria&birthYear=1914&deathYear=1991"
+    },
+    "contributor": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "additionalCarrierType": {
+      "@id": "/def/enum/content/RegularPrintReproduction"
+    },
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=Rosor%2C%20kyssar%20och%20d%C3%B6den."
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/Essay"
+    },
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "responsibilityStatement": "Maria Lang ; oversatt av Peter Grøn ; bearbeidet av Kari Wærum",
+    "translator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/rm"
+      }
+    ],
+    "@id": "/resource/bib/16022752",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Oslo"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Silke forlag",
+        "providerDate": "2014"
+      }
+    ],
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "221 s."
+      }
+    ],
+    "nationalBibliographicNumber": "(BIBBI)0378428",
+    "language": [
+      {
+        "@id": "/def/languages/nor"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Roser, kyss og døden"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9788282700863"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SUEC"
+    }
+  ],
+  "created": "2014-03-10T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "technicalNote": [
+    "Imported from: z3950.bibsys.no:2100/BIBSYS (Do not remove)",
+    "S: Förvärvas ej av KB (annan utgåva finns)"
+  ],
+  "controlNumber": "16022752",
+  "modified": "2014-05-14T15:26:24.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "systemNumber": [
+    "133472086"
+  ],
+  "@id": "/bib/16022752",
+  "@type": "Record"
+}

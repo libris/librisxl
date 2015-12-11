@@ -1,0 +1,208 @@
+{
+  "about": {
+    "comment": [
+      "Övers. från danskt orig.-ms."
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/909/e22/"
+      },
+      {
+        "@id": "/topic/kssb/5/K"
+      },
+      {
+        "@id": "/topic/sab/K"
+      }
+    ],
+    "termsOfAvailability": "165:50 (Bra bok). (Inb.) : 155:00 (tills. med 2 andra böcker). - Ej i bokh. (Bra böcker)",
+    "index": {
+      "@id": "/def/enum/content/IndexPresent"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Uppt%C3%A4ckternas%20tid"
+      }
+    ],
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "editor": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "isPartOf": [
+      {
+        "@id": "/some?type=CreativeWork&title=Bra%20b%C3%B6ckers%20v%C3%A4rldshistoria&qualifyingNote=redakt%C3%B6rer%3A%20Knut%20Helle%20...&placePublisherAndDateOfPublication=H%C3%B6gan%C3%A4s%20%3A%20Bra%20b%C3%B6cker%2C%201982-&partNumber=07"
+      }
+    ],
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/dan"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Belgien"
+        },
+        "@type": "ProviderEvent"
+      }
+    ],
+    "responsibilityStatement": "av Niels Steensgaard ; övers.: Ingrid och Tryggve Emond",
+    "translator": [
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "@id": "/resource/bib/335431",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=H%C3%B6gan%C3%A4s"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Bra böcker",
+        "providerDate": "1985"
+      }
+    ],
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "diagr., ill., kart.",
+        "@type": "Product",
+        "extent": "271, [1] s."
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "partNumber": [
+        "Bd 7,"
+      ],
+      "partTitle": [
+        "Upptäckternas tid : 1350-1500 /"
+      ],
+      "@type": "Title",
+      "titleValue": "Bra böckers världshistoria."
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "inb.",
+        "@type": "Identifier",
+        "identifierValue": "91-86102-89-3"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "1985-07-09T00:00:00.0+02:00",
+  "technicalNote": [
+    "NB: Uppl. 1995- innehållsmässigt oförändrad",
+    "NB: Ny uppl., 1995- under signum Sv95Q/2228",
+    "NB: Publicerad i norsk övers. men översatt till svenska från danskt orig.-ms. Endast en utg. med olika skyddsomslag"
+  ],
+  "controlNumber": "335431",
+  "modified": "2011-02-04T12:23:31.0+01:00",
+  "librisIIINumber": [
+    "9186102893"
+  ],
+  "_marcUncompleted": [
+    {
+      "249": {
+        "subfields": [
+          {
+            "a": "Verlden på oppdagelsenes tid ((norska))."
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "_unhandled": [
+        "7"
+      ],
+      "772": {
+        "subfields": [
+          {
+            "7": "nn"
+          },
+          {
+            "t": "Bra böckers världshistoria"
+          },
+          {
+            "c": "redaktörer: Knut Helle ..."
+          },
+          {
+            "d": "Höganäs : Bra böcker, 1982-"
+          },
+          {
+            "w": "9903414129"
+          },
+          {
+            "9": "07"
+          }
+        ],
+        "ind1": "0",
+        "ind2": "0"
+      }
+    }
+  ],
+  "@type": "Record",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/335431",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

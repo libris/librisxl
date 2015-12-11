@@ -1,0 +1,32 @@
+{
+  "about": {
+    "holdingFor": {
+      "@id": "/resource/bib/7149593"
+    },
+    "heldBy": {
+      "@type": "Organization",
+      "notation": "Gbg"
+    },
+    "offers": [
+      {
+        "heldBy": [
+          {
+            "@id": "/some?type=Organization&notation=Gbg"
+          }
+        ],
+        "@type": "Offer"
+      }
+    ],
+    "numberOfItems": 1,
+    "@id": "/resource/hold/22266746",
+    "@type": "HeldMaterial"
+  },
+  "created": "2008-08-19T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/HoldingsLevel1"
+  },
+  "modified": "2008-08-19T11:32:27.0+02:00",
+  "controlNumber": "22266746",
+  "@id": "/hold/22266746",
+  "@type": "Record"
+}

@@ -1,0 +1,324 @@
+{
+  "about": {
+    "comment": [
+      "Previous ed.: 2006"
+    ],
+    "classification": [
+      {
+        "@id": "/some?type=Concept&notation=65.01"
+      },
+      {
+        "@id": "http://dewey.info/class/658.4092/e22/"
+      },
+      {
+        "@id": "http://dewey.info/class/303.34/e22/"
+      },
+      {
+        "@id": "/topic/kssb/8/Oaba"
+      },
+      {
+        "@id": "/topic/kssb/8/Qbab"
+      },
+      {
+        "@id": "/topic/kssb/8/Qbaab"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Yukl&givenName=Gary%20A.&birthYear=1940"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "subject": [
+      {
+        "@id": "/topic/lcsh/Leadership."
+      },
+      {
+        "@id": "/topic/lcsh/Executive%20ability."
+      },
+      {
+        "@id": "/topic/sao/Ledarskap"
+      },
+      {
+        "@id": "/topic/sao/Organisationssociologi"
+      },
+      {
+        "@id": "/topic/sao/Organisationsteori"
+      },
+      {
+        "@id": "/topic/sao/Organisationsutveckling"
+      },
+      {
+        "@id": "/topic/sao/Beslutsfattande"
+      },
+      {
+        "@id": "/topic/shbe/Leadership"
+      },
+      {
+        "@id": "/topic/shbe/Organization%20theory"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/IndexPresent"
+    },
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Upper%20Saddle%20River%2C%20N.J.%20%3B"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Pearson Education",
+        "providerDate": "cop. 2010 [dvs 2009]"
+      }
+    ],
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=7.%20ed."
+      }
+    ],
+    "@id": "/resource/bib/11357644",
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "illustrations": {
+      "@id": "/def/enum/content/Illustration"
+    },
+    "_providerYear": "2010",
+    "responsibilityStatement": "Gary Yukl",
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "644 s."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxu"
+      }
+    ],
+    "supplementaryContentNote": [
+      "Includes bibliographical references and index"
+    ],
+    "nationalBibliographicNumber": "GBA8D0808",
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Leadership in organizations"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "pbk.",
+        "@type": "Identifier",
+        "identifierValue": "9780138157142"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "pbk.",
+        "@type": "Identifier",
+        "identifierValue": "0138157146"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "created": "2009-03-26T00:00:00.0+01:00",
+  "technicalNote": [
+    "Indexeringslänk",
+    "Dawson"
+  ],
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "transcribingAgency": {
+    "@id": "/some?type=Organization&name=UKM"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "11357644",
+  "modified": "2011-10-24T10:46:30.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "2"
+      ],
+      "015": {
+        "subfields": [
+          {
+            "a": "GBA8D0808"
+          },
+          {
+            "2": "bnb"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "016": {
+        "subfields": [
+          {
+            "a": "014821121"
+          },
+          {
+            "2": "Uk"
+          }
+        ],
+        "ind1": "7",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Ledarskap"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Organisationssociologi"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Organisationsteori"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Organisationsutveckling"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Beslutsfattande"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Leadership"
+          },
+          {
+            "2": "shbe"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Organization theory"
+          },
+          {
+            "2": "shbe"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=YDXCP"
+  },
+  "systemNumber": [
+    "(OCoLC)ocn276223671"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=UKM"
+  },
+  "@id": "/bib/11357644",
+  "@type": "Record"
+}

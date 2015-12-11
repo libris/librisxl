@@ -1,0 +1,134 @@
+apply plugin: 'groovy'
+apply plugin: 'java'
+apply plugin: 'maven'
+
+archivesBaseName = "xlcore"
+
+group = 'se.kb.libris'
+version = '1.0'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+sourceSets {
+    main {
+        java { srcDirs = [] }
+        groovy { srcDir 'src/main/' }
+    }
+    test {
+        groovy { srcDir 'src/test/groovy/' }
+    }
+}
+
+test.testLogging {
+    showStandardStreams true
+    exceptionFormat "full"
+}
+
+repositories {
+    mavenCentral()
+    maven { url "http://repository.codehaus.org/" }
+}
+
+dependencies {
+    def camelVersion = "2.14.1"
+    def activeMQVersion = "5.11.1"
+    def groovyVersion="2.3.10"
+    def jettyVersion="8.1.16.v20140903"
+
+    // Java EE
+    compile "javax.jms:jms-api:1.1-rev-1"
+
+    // Common tools
+    compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
+    compile 'commons-cli:commons-cli:1.2'
+    compile 'commons-io:commons-io:2.4'
+    compile 'commons-codec:commons-codec:1.7'
+    compile "com.google.guava:guava:16.0.1"
+    compile 'commons-collections:commons-collections:3.2.1'
+    compile "org.apache.httpcomponents:httpclient:4.3.1"
+    compile "stax:stax:1.2.0"
+    compile "stax:stax-api:1.0.1"
+    compile 'com.damnhandy:handy-uri-templates:2.0.4'
+    compile 'ch.qos.logback:logback-core:1.1.2'
+    compile 'ch.qos.logback:logback-classic:1.1.2'
+    compile 'org.slf4j:slf4j-api:1.7.6'
+    compile 'org.slf4j:log4j-over-slf4j:1.7.6'
+    compile 'org.apache.commons:commons-dbcp2:2.0.1'
+    // Integration
+    compile "org.elasticsearch:elasticsearch:1.4.4"
+    compile "org.apache.commons:commons-lang3:3.3.2"
+    compile "org.apache.activemq:activemq-camel:${activeMQVersion}"
+    /*
+    compile "org.apache.camel:camel-core:${camelVersion}"
+    compile "org.apache.camel:camel-elasticsearch:2.15.0"
+    compile "org.apache.camel:camel-jackson:${camelVersion}"
+    compile "org.apache.camel:camel-http4:${camelVersion}"
+    compile "org.apache.camel:camel-groovy:${camelVersion}"
+    compile "org.apache.activemq:activemq-broker:${activeMQVersion}"
+    compile "org.apache.jena:jena-core:2.12.0"
+    compile "org.apache.jena:jena-fuseki:1.1.0"
+    compile "org.apache.jena:jena-tdb:1.1.0"
+    */
+    compile 'com.vividsolutions:jts:1.13'
+    compile 'mysql:mysql-connector-java:5.1.33'
+    compile 'org.postgresql:postgresql:9.4-1200-jdbc41'
+    compile 'org.picocontainer:picocontainer:2.15'
+
+    // profiling and test
+    testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"
+    testCompile 'cglib:cglib-nodep:3.1'
+    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
+
+    // Standalone
+    /*
+    executableWarDeps "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    executableWarDeps 'commons-cli:commons-cli:1.2'
+    */
+}
+
+configurations {
+    all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
+}
+
+/*
+war {
+    baseName = "whelk"
+
+    // Prevent circular log redirection; use slf4j
+    from {configurations.executableWarDeps.collect {
+            //it.isDirectory() ? it : project.zipTree(it)
+            it.isDirectory() ? it : project.zipTree(it).matching {
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+            }
+        }
+    }
+    from "$buildDir/classes/main"
+
+     def manifestClasspath = configurations.compile.collect { "/WEB-INF/lib/${it.getName()}" }.join(',') 
+
+    manifest {
+        attributes 'Implementation-Title': 'Standalone Whelk',
+        'Implementation-Version': version,
+        'Main-Class': 'whelk.component.support.JettyServer',
+        'Class-Path': manifestClasspath
+    }
+
+
+}
+*/
+
+
+task(groovy, dependsOn: "classes", type: JavaExec) {
+    description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
+    classpath = sourceSets.test.runtimeClasspath
+    main = "groovy.ui.GroovyMain"
+    args(System.getProperty("args", "").split() as String[])
+}
+
+task(console, dependsOn: 'classes', type: JavaExec) {
+  description "Launch a Groovy Console"
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'groovy.ui.Console'
+}

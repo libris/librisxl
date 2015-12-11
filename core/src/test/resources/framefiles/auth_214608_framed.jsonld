@@ -1,0 +1,90 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "reference": {
+    "@id": "/def/enum/content/TracingsAreConsistentWithTheHeading"
+  },
+  "created": "2003-01-13T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/OtherSource"
+  },
+  "controlNumber": "214608",
+  "modified": "2005-02-14T19:20:20.0+01:00",
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "Uniforma titlar för musik. 1998"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "_marcUncompleted": [
+    {
+      "100": {
+        "subfields": [
+          {
+            "a": "Beethoven, Ludwig van,"
+          },
+          {
+            "d": "1770-1827."
+          },
+          {
+            "t": "Fantasi,"
+          },
+          {
+            "m": "piano, blandad kör, orkester,"
+          },
+          {
+            "n": "op. 80,"
+          },
+          {
+            "r": "c-moll"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      },
+      "_unhandled": [
+        "r",
+        "m",
+        "n"
+      ]
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "focus": {
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Beethoven&givenName=Ludwig%20van&birthYear=1770&deathYear=1827"
+    },
+    "@id": "/resource/auth/214608",
+    "@type": "UniformWork",
+    "title": "Fantasi,"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=X"
+  },
+  "@id": "/auth/214608",
+  "@type": "WorkTerm"
+}

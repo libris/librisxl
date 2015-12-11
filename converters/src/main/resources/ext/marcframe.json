@@ -1,0 +1,4475 @@
+{
+
+  "marcTypeFromTypeOfRecord": {
+    "*": "bib",
+    "u": "hold",
+    "v": "hold",
+    "x": "hold",
+    "y": "hold",
+    "z": "auth"
+  },
+
+  "baseUri": "/",
+  "uriTemplates": {
+    "record": "{marcType}/{controlNumber}",
+    "thing": "resource/{marcType}/{controlNumber}"
+  },
+
+  "tokenMaps": [
+    "marcenums.json",
+    {
+      "thesaurus": {
+        "0": "lcsh",
+        "1": "lcsh/csh",
+        "2": "mesh",
+        "3": "nal",
+        "4": null,
+        "5": "csh",
+        "6": "rvm",
+        "7": null
+      },
+      "relatorCode": "relatorcodes.json"
+    }
+
+  ],
+
+  "postProcessing": [
+    {
+      "type": "SetUpdatedStatus",
+      "statusFlag": "status",
+      "statusFlagNewValue": "/def/enum/record/New",
+      "statusFlagUpdatedValue": "/def/enum/record/CorrectedOrRevised",
+      "dateProperty": "created",
+      "updatedProperty": "modified",
+      "_spec": [
+        {
+          "source": {
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:00Z",
+            "status": {"@id": "/def/enum/record/New"}
+          },
+          "result": {
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:00Z"
+          },
+          "back": true
+        },
+        {
+          "source": {
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:01Z",
+            "status": {"@id": "/def/enum/record/New"}
+          },
+          "result": {
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:01Z"
+          },
+          "back": {
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:01Z",
+            "status": {"@id": "/def/enum/record/CorrectedOrRevised"}
+          }
+        },
+        {
+          "source": {
+            "status": null
+          },
+          "result": {
+            "status": null
+          },
+          "back": true
+        }
+      ]
+    }
+  ],
+
+  "patterns": {
+    "termbase": {
+      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
+      "uriTemplateDefaults": {"inScheme.notation": "_"},
+      "$a": {"property": "prefLabel"},
+      "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
+      "match-code": {
+        "v x y z": {
+          "uriTemplate": null,
+          "uriTemplate": "/topic/{+inScheme.notation}{/termParts.prefLabel*}",
+          "resourceType": "ComplexTerm",
+          "$a": {"addLink": "termParts",
+                 "resourceType": "TopicalTerm",
+                 "property": "prefLabel", "required": true},
+          "$v": {"addLink": "termParts",
+               "TODO": "use /topic/saogf/{_}, but only if $2=sao",
+                 "resourceType": "GenreTerm",
+                 "property": "prefLabel"},
+          "$x": {"addLink": "termParts",
+                 "resourceType": "SubdivisionTerm",
+                 "property": "prefLabel"},
+          "$y": {"addLink": "termParts",
+                 "resourceType": "ChronologicalTerm",
+                 "property": "prefLabel"},
+          "$z": {"addLink": "termParts",
+                 "TODO": "use /place/{_}, but only if $2=sao",
+                 "resourceType": "GeographicalTerm",
+                 "property": "prefLabel"}
+        }
+      }
+    }
+  },
+
+  "bib": {
+
+    "thingLink": "about",
+
+    "postProcessing": [
+      {
+        "type": "FoldLinkedProperty",
+        "statusFlag": "_providerDateStatus",
+        "statusFlagValue": "/def/enum/content/SingleKnownDateProbableDate",
+        "sourceProperty": "_providerYear",
+        "matchValuePattern": "^[0-9u]{4}$",
+        "property": "providerDate",
+        "defaultLink": "publication",
+        "typeLinkMap": {
+          "Manuscript": "manufacture"
+        },
+        "_name": "fold publication date",
+        "_spec": [
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977"
+            },
+            "result": {
+              "publication": [ {"providerDate": "1977"} ]
+            }
+          },
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977",
+              "publication": [ {"@type": "ProviderEvent", "providerDate": "1977"} ]
+            },
+            "result": {
+              "publication": [ {"@type": "ProviderEvent", "providerDate": "1977"} ]
+            }
+          },
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977",
+              "publication": [ {"@type": "ProviderEvent", "providerDate": "ca 1977"} ]
+            },
+            "result": {
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977",
+              "publication": [
+                {
+                  "@type": "ProviderEvent",
+                  "providerDate": "ca 1977"
+                }
+              ]
+            }
+          },
+          {
+            "source": {
+              "@type": ["ManuscriptText"],
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear": "1977"
+            },
+            "result": {
+              "@type": ["ManuscriptText"],
+              "manufacture": [ {"providerDate": "1977"} ]
+            }
+          }
+        ]
+      },
+      {
+        "type": "FoldJoinedProperties",
+        "statusFlag": "_providerDateStatus",
+        "statusFlagValue": "/def/enum/content/ContinuingResourceCurrentlyPublished",
+        "sourceProperties": ["_providerYear", "_providerOtherYear"],
+        "matchValuePattern": "^[0-9u]{4}$",
+        "property": "temporalCoverageNote",
+        "separator": "-",
+        "_spec": [
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/ContinuingResourceCurrentlyPublished"},
+              "_providerYear": "1977",
+              "_providerOtherYear": "9999"
+            },
+            "result": {
+              "temporalCoverageNote": "1977-"
+            }
+          }
+        ]
+      },
+      {
+        "type": "FoldJoinedProperties",
+        "statusFlag": "_providerDateStatus",
+        "statusFlagValue": "/def/enum/content/ContinuingResourceCeasedPublication",
+        "sourceProperties": ["_providerYear", "_providerOtherYear"],
+        "matchValuePattern": "^[0-9u]{4}$",
+        "property": "temporalCoverageNote",
+        "separator": "-",
+        "_spec": [
+          {
+            "source": {
+              "_providerDateStatus": {"@id": "/def/enum/content/ContinuingResourceCeasedPublication"},
+              "_providerYear": "1977",
+              "_providerOtherYear": "2017"
+            },
+            "result": {
+              "temporalCoverageNote": "1977-2017"
+            }
+          }
+        ]
+      }
+    ],
+
+    "000": {
+      "[5:6]": {
+        "aboutEntity": "?record",
+        "link": "status",
+        "uriTemplate": "{_}",
+        "tokenMap": "status"
+      },
+      "[6:7]": {
+        "aboutEntity": "?thing",
+        "tokenMap": "typeOfRecord",
+        "addProperty": "@type"
+      },
+      "[7:8]": {
+        "aboutEntity": "?thing",
+        "tokenMap": "bibLevel",
+        "addProperty": "@type"
+      },
+      "[8:9]": {
+        "aboutEntity": "?record",
+        "link": "typeOfControl",
+        "uriTemplate": "{_}",
+        "tokenMap": "typeOfControl"
+      },
+      "[9:10]": {
+        "aboutEntity": "?record",
+        "link": "characterCoding",
+        "uriTemplate": "{_}",
+        "fixedDefault": "a",
+        "tokenMap": "characterCoding"
+      },
+      "[17:18]": {
+        "aboutEntity": "?record",
+        "link": "encLevel",
+        "uriTemplate": "{_}",
+        "tokenMap": "encLevel"
+      },
+      "[18:19]": {
+        "aboutEntity": "?record",
+        "TODO:deriveFrom": "bibliography/bibliographyCode",
+        "link": "catForm",
+        "uriTemplate": "{_}",
+        "tokenMap": "catForm"
+      },
+      "[19:20]": {
+        "aboutEntity": "?record",
+        "link": "linked",
+        "uriTemplate": "{_}",
+        "tokenMap": "linked"
+      },
+      "[20:24]": {
+        "aboutEntity": "?record",
+        "property": "entryMap",
+        "fixedDefault": "4500",
+        "TODO:patternMap": "entryMap"
+      },
+      "repeatable": false,
+      "_spec": [
+        {
+          "originalLeader": "00887cam a2200277 a 4500",
+          "source": {"leader": "     cam a        a 4500", "fields": [{"001": "0000000"}]},
+          "result": {
+            "@type": "Record",
+            "@id": "/bib/0000000",
+            "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
+            "catForm": {"@id": "/def/enum/record/AACR2"},
+            "controlNumber": "0000000",
+            "about": {"@type": ["Text", "Monograph"], "@id": "/resource/bib/0000000"}
+          }
+        }
+      ]
+    },
+
+    "001": {
+      "aboutType": "Record",
+      "aboutEntity": "?record", "property": "controlNumber",
+      "_spec": [
+        {
+          "source": {"fields": [{"001": "7149593"}]},
+          "result": {"controlNumber": "7149593"}
+        }
+      ]
+    },
+
+    "003": {"aboutEntity": "?record", "property": "systemName"},
+    "005": {
+      "aboutEntity": "?record", "property": "modified",
+      "parseDateTime": "yyyyMMddHHmmss.S", "timeZone": "CET",
+      "_spec": [
+        {
+          "source": {"005": "20130814170612.0"},
+          "result": {"modified": "2013-08-14T17:06:12.0+02:00"}
+        }
+      ]
+    },
+
+    "006": {
+      "TODO:tokenSyncedWith": "typeOfRecord",
+      "TODO:repeats": "008",
+      "addLink": "hasPart",
+      "[0:1]": {
+        "tokenMap": {
+          "a": "Text",
+          "t": "Text",
+          "c": "Audio",
+          "d": "Audio",
+          "i": "Audio",
+          "j": "Audio",
+          "e": "Cartography",
+          "f": "Cartography",
+          "g": "Visual",
+          "k": "Visual",
+          "o": "Visual",
+          "r": "Visual",
+          "m": "Digital",
+          "p": "Mixed",
+          "s": "Serial"
+        },
+        "addProperty": "@type"
+      },
+      "tokenTypeMap": "[0:1]",
+      "Text": {
+        "[1:2]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[2:3]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[3:4]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[4:5]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[5:6]": {
+          "link": "audience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
+        },
+        "[6:7]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksItem"
+        },
+        "[7:8]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        },
+        "[8:9]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        },
+        "[9:10]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        },
+        "[10:11]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        },
+        "[11:12]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[12:13]": {
+          "link": "confPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksConfPub"
+        },
+        "[13:14]": {
+          "link": "festschrift",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksFestschrift"
+        },
+        "[14:15]": {
+          "link": "index",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIndex"
+        },
+        "[16:17]": {
+          "link": "literaryForm",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksLiteraryForm"
+        },
+        "[17:18]": {
+          "link": "biography",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksBiography"
+        }
+      },
+      "Audio": {
+        "[1:3]": {
+          "link": "composition",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicComposition"
+        },
+        "[3:4]": {
+          "link": "additionalType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicFormat"
+        },
+        "[4:5]": {
+          "link": "parts",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicParts"
+        },
+        "[5:6]": {
+          "link": "audience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
+        },
+        "[6:7]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[7:8]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[8:9]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[9:10]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[10:11]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[11:12]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[12:13]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[13:14]": {
+          "link": "text",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicText"
+        },
+        "[14:15]": {
+          "link": "text",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicText"
+        },
+        "[16:17]": {
+          "link": "transposition",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicTransposition"
+        }
+      },
+      "Cartography": {
+        "[1:2]": {
+          "link": "relief",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsRelief"
+        },
+        "[2:3]": {
+          "link": "relief",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsRelief"
+        },
+        "[3:4]": {
+          "link": "relief",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsRelief"
+        },
+        "[4:5]": {
+          "link": "relief",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsRelief"
+        },
+        "[5:7]": {
+          "link": "projection",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsProjection"
+        },
+        "[8:9]": {
+          "link": "material",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsMaterial"
+        },
+        "[11:12]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[12:13]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[14:15]": {
+          "link": "index",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIndex"
+        },
+        "[16:17]": {
+          "link": "additionalType",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsFormat"
+        },
+        "[17:18]": {
+          "link": "additionalType",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsFormat"
+        },
+        "[7:8]": {
+          "link": "primeMeridian",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsPrimeMeridian"
+        }
+      },
+      "Visual": {
+        "[1:4]": {
+          "property": "runningTime",
+          "TODO:patternMap": "visualRunningTime"
+        },
+        "[5:6]": {
+          "link": "audience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
+        },
+        "[11:12]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[12:13]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[16:17]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMaterial"
+        },
+        "[17:18]": {
+          "link": "technique",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualTechnique"
+        },
+        "[6:7]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        },
+        "[7:8]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        },
+        "[8:9]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        },
+        "[9:10]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        },
+        "[10:11]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        }
+      },
+      "Digital": {
+        "[5:6]": {
+          "link": "audience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
+        },
+        "[6:7]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerItem"
+        },
+        "[9:10]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerTypeOfFile"
+        },
+        "[11:12]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        }
+      },
+      "Mixed": {
+        "[6:7]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[7:8]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        }
+      },
+      "Serial": {
+        "[1:2]": {
+          "link": "frequencyCategory",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsFrequency"
+        },
+        "[2:3]": {
+          "link": "regularity",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsRegularity"
+        },
+        "[3:4]": {
+          "link": "iSSN",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsISSN"
+        },
+        "[4:5]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsTypeOfSerial"
+        },
+        "[5:6]": {
+          "link": "originalItem",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsOriginalItem"
+        },
+        "[6:7]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[7:8]": {
+          "link": "nature",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsNature"
+        },
+        "[8:9]": {
+          "link": "contents",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsContents"
+        },
+        "[9:10]": {
+          "link": "contents",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsContents"
+        },
+        "[10:11]": {
+          "link": "contents",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsContents"
+        },
+        "[11:12]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[12:13]": {
+          "link": "confPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksConfPub"
+        },
+        "[16:17]": {
+          "link": "alphabet",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsAlphabet"
+        },
+        "[17:18]": {
+          "link": "typeOfEntry",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsTypeOfEntry"
+        }
+      },
+      "repeatable": true
+    },
+
+    "007": {
+      "addLink": "hasFormat",
+      "[0:1]": {
+        "addProperty": "@type",
+        "tokenMap": {
+          "a": "Map",
+          "c": "Electronic",
+          "d": "Globe",
+          "f": "Tactile",
+          "g": "ProjectedImage",
+          "h": "Microform",
+          "k": "StillImage",
+          "m": "MovingImage",
+          "o": "Kit",
+          "q": "NotatedMusic",
+          "r": "RemoteSensingImage",
+          "s": "SoundRecording",
+          "t": "Text",
+          "v": "VideoRecording",
+          "z": null
+        }
+      },
+      "tokenTypeMap": "[0:1]",
+      "Map": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapMaterial"
+        },
+        "[3:4]": {
+          "link": "color",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapColor"
+        },
+        "[4:5]": {
+          "link": "medium",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapMedium"
+        },
+        "[5:6]": {
+          "link": "reproduction",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapReproduction"
+        },
+        "[6:7]": {
+          "link": "details",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapDetails"
+        },
+        "[7:8]": {
+          "link": "posNeg",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapPosNeg"
+        },
+        "[2:3]": {
+          "link": "aspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
+        }
+      },
+      "Electronic": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerMaterial"
+        },
+        "[3:4]": {
+          "link": "color",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerColor"
+        },
+        "[4:5]": {
+          "link": "dimensionsCategory",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerDimensions"
+        },
+        "[5:6]": {
+          "link": "sound",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerSound"
+        },
+        "[6:9]": {
+          "property": "imageBitDepth",
+          "TODO:patternMap": "computerImageBitDepth"
+        },
+        "[9:10]": {
+          "link": "fileFormats",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerFileFormats"
+        },
+        "[10:11]": {
+          "link": "qATarget",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerQATarget"
+        },
+        "[11:12]": {
+          "link": "antecedent",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerAntecedent"
+        },
+        "[12:13]": {
+          "link": "compression",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerCompression"
+        },
+        "[13:14]": {
+          "link": "reformattingQuality",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerReformattingQuality"
+        },
+        "[2:3]": {
+          "link": "fileAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
+        }
+      },
+      "Globe": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "globeMaterial"
+        },
+        "[3:4]": {
+          "link": "color",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapColor"
+        },
+        "[4:5]": {
+          "link": "medium",
+          "uriTemplate": "{_}",
+          "tokenMap": "globeMedium"
+        },
+        "[5:6]": {
+          "link": "reproduction",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapReproduction"
+        },
+        "[2:3]": {
+          "link": "aspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
+        }
+      },
+      "TactileMaterial": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "tacMaterial"
+        },
+        "[3:4]": {
+          "link": "tacBrailleWriting",
+          "uriTemplate": "{_}",
+          "tokenMap": "tacBrailleWriting"
+        },
+        "[4:5]": {
+          "link": "tacBrailleWriting",
+          "uriTemplate": "{_}",
+          "tokenMap": "tacBrailleWriting"
+        },
+        "[5:6]": {
+          "link": "tacContraction",
+          "uriTemplate": "{_}",
+          "tokenMap": "tacContraction"
+        },
+        "[6:7]": {
+          "link": "tacBrailleMusic",
+          "uriTemplate": "{_}",
+          "tokenMap": "tacBrailleMusic"
+        },
+        "[7:8]": {
+          "link": "tacBrailleMusic",
+          "uriTemplate": "{_}",
+          "tokenMap": "tacBrailleMusic"
+        },
+        "[8:9]": {
+          "link": "tacBrailleMusic",
+          "uriTemplate": "{_}",
+          "tokenMap": "tacBrailleMusic"
+        },
+        "[9:10]": {
+          "link": "tacSpecPhysicalChar",
+          "uriTemplate": "{_}",
+          "tokenMap": "tacSpecPhysicalChar"
+        }
+      },
+      "ProjectedImage": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphMaterial"
+        },
+        "[3:4]": {
+          "link": "projGraphColor",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphColor"
+        },
+        "[4:5]": {
+          "link": "projGraphEmulsion",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphEmulsion"
+        },
+        "[5:6]": {
+          "link": "projGraphSound",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphSound"
+        },
+        "[6:7]": {
+          "link": "projGraphMedium",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphMedium"
+        },
+        "[7:8]": {
+          "link": "projGraphDimensions",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphDimensions"
+        },
+        "[8:9]": {
+          "link": "projGraphSupport",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphSupport"
+        },
+        "[2:3]": {
+          "link": "projGraphAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
+        }
+      },
+      "Microform": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "microformMaterial"
+        },
+        "[3:4]": {
+          "link": "posNeg",
+          "uriTemplate": "{_}",
+          "tokenMap": "microformPosNeg"
+        },
+        "[4:5]": {
+          "link": "dimensionsCategory",
+          "uriTemplate": "{_}",
+          "tokenMap": "microformDimensions"
+        },
+        "[5:6]": {
+          "link": "range",
+          "uriTemplate": "{_}",
+          "tokenMap": "microformRange"
+        },
+        "[6:9]": {"property": "reductionRatioExactRightJustifiedWithLeadingZero"},
+        "[9:10]": {
+          "link": "color",
+          "uriTemplate": "{_}",
+          "tokenMap": "microformColor"
+        },
+        "[10:11]": {
+          "link": "emulsion",
+          "uriTemplate": "{_}",
+          "tokenMap": "microformEmulsion"
+        },
+        "[11:12]": {
+          "link": "generation",
+          "uriTemplate": "{_}",
+          "tokenMap": "microformGeneration"
+        },
+        "[12:13]": {
+          "link": "base",
+          "uriTemplate": "{_}",
+          "tokenMap": "microformBase"
+        },
+        "[2:3]": {
+          "link": "aspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
+        }
+      },
+      "StillImage": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "nonProjMaterial"
+        },
+        "[3:4]": {
+          "link": "nonProjColor",
+          "uriTemplate": "{_}",
+          "tokenMap": "nonProjColor"
+        },
+        "[4:5]": {
+          "link": "nonProjPrimary",
+          "uriTemplate": "{_}",
+          "tokenMap": "nonProjPrimary"
+        },
+        "[5:6]": {
+          "link": "nonProjSecondary",
+          "uriTemplate": "{_}",
+          "tokenMap": "nonProjPrimary"
+        },
+        "[2:3]": {
+          "link": "nonProjAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
+        }
+      },
+      "MovingImage": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicMaterial"
+        },
+        "[3:4]": {
+          "link": "motionPicColor",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicColor"
+        },
+        "[4:5]": {
+          "link": "motionPicFormat",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicFormat"
+        },
+        "[5:6]": {
+          "link": "motionPicSound",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphSound"
+        },
+        "[6:7]": {
+          "link": "motionPicMedium",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphMedium"
+        },
+        "[7:8]": {
+          "link": "motionPicDimensions",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicDimensions"
+        },
+        "[8:9]": {
+          "link": "motionPicConfiguration",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicConfiguration"
+        },
+        "[9:10]": {
+          "link": "motionPicElements",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicElements"
+        },
+        "[10:11]": {
+          "link": "motionPicPosNeg",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicPosNeg"
+        },
+        "[11:12]": {
+          "link": "motionPicGeneration",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicGeneration"
+        },
+        "[12:13]": {
+          "link": "motionPicBase",
+          "uriTemplate": "{_}",
+          "tokenMap": "microformBase"
+        },
+        "[13:14]": {
+          "link": "motionPicCategories",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicCategories"
+        },
+        "[14:15]": {
+          "link": "motionPicColorStock",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicColorStock"
+        },
+        "[15:16]": {
+          "link": "motionPicDeterioration",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicDeterioration"
+        },
+        "[16:17]": {
+          "link": "motionPicCompleteness",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicCompleteness"
+        },
+        "[17:23]": {"property": "timeOfExamination"},
+        "[2:3]": {
+          "link": "motionPicAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
+        }
+      },
+      "Kit": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "kitMaterial"
+        }
+      },
+      "NotatedMusic": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "kitMaterial"
+        }
+      },
+      "RemoteSensingImage": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "kitMaterial"
+        },
+        "[3:4]": {
+          "link": "remoteSensImageAltitude",
+          "uriTemplate": "{_}",
+          "tokenMap": "remoteSensImageAltitude"
+        },
+        "[4:5]": {
+          "link": "remoteSensImageAttitude",
+          "uriTemplate": "{_}",
+          "tokenMap": "remoteSensImageAttitude"
+        },
+        "[5:6]": {
+          "link": "remoteSensImageCloud",
+          "uriTemplate": "{_}",
+          "tokenMap": "remoteSensImageCloud"
+        },
+        "[6:7]": {
+          "link": "remoteSensImageConstruction",
+          "uriTemplate": "{_}",
+          "tokenMap": "remoteSensImageConstruction"
+        },
+        "[7:8]": {
+          "link": "remoteSensImageUse",
+          "uriTemplate": "{_}",
+          "tokenMap": "remoteSensImageUse"
+        },
+        "[8:9]": {
+          "link": "remoteSensImageSensor",
+          "uriTemplate": "{_}",
+          "tokenMap": "remoteSensImageSensor"
+        },
+        "[9:11]": {
+          "link": "remoteSensImageData",
+          "uriTemplate": "{_}",
+          "tokenMap": "remoteSensImageData"
+        }
+      },
+      "SoundRecording": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "soundMaterial"
+        },
+        "[3:4]": {
+          "link": "soundSpeed",
+          "uriTemplate": "{_}",
+          "tokenMap": "soundSpeed"
+        },
+        "[4:5]": {
+          "link": "soundPlaybackChannel",
+          "uriTemplate": "{_}",
+          "tokenMap": "soundPlaybackChannel"
+        },
+        "[5:6]": {
+          "link": "soundGroove",
+          "uriTemplate": "{_}",
+          "tokenMap": "soundGroove"
+        },
+        "[6:7]": {
+          "link": "soundDimensions",
+          "uriTemplate": "{_}",
+          "tokenMap": "soundDimensions"
+        },
+        "[7:8]": {
+          "link": "soundTapeWidth",
+          "uriTemplate": "{_}",
+          "tokenMap": "soundTapeWidth"
+        },
+        "[8:9]": {
+          "link": "soundTapeConfiguration",
+          "uriTemplate": "{_}",
+          "tokenMap": "soundTapeConfiguration"
+        },
+        "[9:10]": {
+          "link": "soundKindOfDisc",
+          "uriTemplate": "{_}",
+          "tokenMap": "soundKindOfDisc"
+        },
+        "[10:11]": {
+          "link": "soundKindOfMaterial",
+          "uriTemplate": "{_}",
+          "tokenMap": "soundKindOfMaterial"
+        },
+        "[11:12]": {
+          "link": "soundKindOfCutting",
+          "uriTemplate": "{_}",
+          "tokenMap": "soundKindOfCutting"
+        },
+        "[12:13]": {
+          "link": "soundPlaybackCharacter",
+          "uriTemplate": "{_}",
+          "tokenMap": "soundPlaybackCharacter"
+        },
+        "[13:14]": {
+          "link": "soundCapture",
+          "uriTemplate": "{_}",
+          "tokenMap": "soundCapture"
+        },
+        "[2:3]": {
+          "link": "soundAspect",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapAspect"
+        }
+      },
+      "Text": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "textMaterial"
+        }
+      },
+      "VideoRecording": {
+        "[1:2]": {
+          "addLink": "carrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "videoMaterial"
+        },
+        "[3:4]": {
+          "link": "videoColor",
+          "uriTemplate": "{_}",
+          "tokenMap": "videoColor"
+        },
+        "[4:5]": {
+          "link": "videoFormat",
+          "uriTemplate": "{_}",
+          "tokenMap": "videoFormat"
+        },
+        "[5:6]": {
+          "link": "videoSound",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphSound"
+        },
+        "[6:7]": {
+          "link": "videoMedium",
+          "uriTemplate": "{_}",
+          "tokenMap": "projGraphMedium"
+        },
+        "[7:8]": {
+          "link": "videoDimensions",
+          "uriTemplate": "{_}",
+          "tokenMap": "videoDimensions"
+        },
+        "[8:9]": {
+          "link": "videoPlayback",
+          "uriTemplate": "{_}",
+          "tokenMap": "motionPicConfiguration"
+        }
+      },
+      "Unspecified": {},
+      "repeatable": true,
+      "_spec": [
+        {
+          "source": {"007":"aj |a|||"},
+          "normalized": {"007":"aj |a|||               "},
+          "result": {
+            "about": {
+              "hasFormat": [
+                {
+                  "@type": ["Map"],
+                  "carrierType": [{"@id": "/def/enum/carrier/MapATwoDimensionalMap"}],
+                  "medium": {"@id": "/def/enum/carrier/Paper"}
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    "008": {
+      "TODO:repeatedBy": "006",
+      "[0:6]": {
+        "aboutEntity": "?record",
+        "property": "created",
+        "parseDateTime": "yyMMdd", "timeZone": "CET"
+      },
+      "[6:7]": {
+        "link": "_providerDateStatus",
+        "uriTemplate": "{_}",
+        "tokenMap": "publicationStatus",
+        "TODO:specialRule": "foldPublicationDate"
+      },
+      "[7:11]": {
+        "property": "_providerYear"
+      },
+      "[11:15]": {
+        "property": "_providerOtherYear"
+      },
+      "[15:18]": {
+        "addLink": "publicationCountry",
+        "uriTemplate": "/def/countries/{_}",
+        "TODO:linkedEntity": {
+          "link": "place",
+          "linkedEntity": {
+            "link": "containedIn",
+            "resourceType": "Country",
+            "uriTemplate": "/def/countries/{_}"
+          }
+        }
+      },
+      "[35:38]": {
+        "NOTE:candidate:aboutEntity": "?work",
+        "addLink": "language",
+        "uriTemplate": "/def/languages/{_}",
+        "matchUriToken": "^\\w{2,3}$",
+        "spec": {
+          "matches": ["swe", "sv"], "notMatches": ["N/A", " ", "---", "en-US", "en_us"]
+        }
+      },
+      "[38:39]": {
+        "aboutEntity": "?record",
+        "link": "modifiedRecord",
+        "uriTemplate": "{_}",
+        "tokenMap": "modifiedRecord"
+      },
+      "[39:40]": {
+        "aboutEntity": "?record",
+        "link": "catalogingSource",
+        "uriTemplate": "{_}",
+        "tokenMap": "catalogingSource"
+      },
+
+      "recTypeBibLevelMap": {
+        "a,h,t": {
+          "Text": ["a", "c", "d", "m"],
+          "Serial": ["9", "b", "i", "p", "s"]
+        },
+        "b": {
+          "Mixed": ["9", "a", "c", "d", "i", "m", "p"],
+          "Serial": ["b", "s"]
+        },
+        "c,d,i,j": {
+          "Audio": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
+        },
+        "e,f": {
+          "Cartography": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
+        },
+        "g,k,n,o,r": {
+          "Visual": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
+        },
+        "m": {
+          "Digital": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
+        },
+        "p": {
+          "Mixed": ["a", "c", "d", "i", "m", "p"],
+          "Serial": ["b", "s"],
+          "Visual": ["9"]
+        }
+      },
+
+      "Text": {
+        "[18:19]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[19:20]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[20:21]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[21:22]": {
+          "link": "illustrations",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIllustrations"
+        },
+        "[22:23]": {
+          "link": "audience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
+        },
+        "[23:24]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksItem"
+        },
+        "[24:25]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        },
+        "[25:26]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        },
+        "[26:27]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        },
+        "[27:28]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksContents"
+        },
+        "[28:29]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[29:30]": {
+          "link": "confPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksConfPub"
+        },
+        "[30:31]": {
+          "link": "festschrift",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksFestschrift"
+        },
+        "[31:32]": {
+          "link": "index",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIndex"
+        },
+        "[33:34]": {
+          "link": "literaryForm",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksLiteraryForm"
+        },
+        "[34:35]": {
+          "link": "biography",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksBiography"
+        }
+      },
+      "Digital": {
+        "[22:23]": {
+          "link": "audience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
+        },
+        "[23:24]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerItem"
+        },
+        "[26:27]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerTypeOfFile"
+        },
+        "[28:29]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[18:19]": {
+          "link": "frequencyCategory",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerFrequency"
+        },
+        "[19:20]": {
+          "link": "regularity",
+          "uriTemplate": "{_}",
+          "tokenMap": "computerRegularity"
+        }
+      },
+      "Cartography": {
+        "[18:19]": {
+          "link": "relief",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsRelief"
+        },
+        "[19:20]": {
+          "link": "relief",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsRelief"
+        },
+        "[20:21]": {
+          "link": "relief",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsRelief"
+        },
+        "[21:22]": {
+          "link": "relief",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsRelief"
+        },
+        "[22:24]": {
+          "link": "projection",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsProjection"
+        },
+        "[25:26]": {
+          "link": "material",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsMaterial"
+        },
+        "[28:29]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[29:30]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[31:32]": {
+          "link": "index",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksIndex"
+        },
+        "[33:34]": {
+          "link": "additionalType",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsFormat"
+        },
+        "[34:35]": {
+          "link": "additionalType",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsFormat"
+        },
+        "[24:25]": {
+          "link": "primeMeridian",
+          "uriTemplate": "{_}",
+          "tokenMap": "mapsPrimeMeridian"
+        }
+      },
+      "Mixed": {
+        "[23:24]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        }
+      },
+      "Audio": {
+        "[18:20]": {
+          "link": "composition",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicComposition"
+        },
+        "[20:21]": {
+          "link": "additionalType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicFormat"
+        },
+        "[21:22]": {
+          "link": "parts",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicParts"
+        },
+        "[22:23]": {
+          "link": "audience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
+        },
+        "[23:24]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[24:25]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[25:26]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[26:27]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[27:28]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[28:29]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[29:30]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicMatter"
+        },
+        "[30:31]": {
+          "link": "text",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicText"
+        },
+        "[31:32]": {
+          "link": "text",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicText"
+        },
+        "[33:34]": {
+          "link": "transposition",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicTransposition"
+        }
+      },
+      "Serial": {
+        "[18:19]": {
+          "link": "frequencyCategory",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsFrequency"
+        },
+        "[19:20]": {
+          "link": "regularity",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsRegularity"
+        },
+        "[20:21]": {
+          "link": "iSSN",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsISSN"
+        },
+        "[21:22]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsTypeOfSerial"
+        },
+        "[22:23]": {
+          "link": "originalItem",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsOriginalItem"
+        },
+        "[23:24]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[24:25]": {
+          "link": "nature",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsNature"
+        },
+        "[25:26]": {
+          "link": "contents",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsContents"
+        },
+        "[26:27]": {
+          "link": "contents",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsContents"
+        },
+        "[27:28]": {
+          "link": "contents",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsContents"
+        },
+        "[28:29]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[29:30]": {
+          "link": "confPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksConfPub"
+        },
+        "[33:34]": {
+          "link": "alphabet",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsAlphabet"
+        },
+        "[34:35]": {
+          "link": "typeOfEntry",
+          "uriTemplate": "{_}",
+          "tokenMap": "serialsTypeOfEntry"
+        }
+      },
+      "Visual": {
+        "[18:21]": {
+          "property": "runningTime",
+          "TODO:patternMap": "visualRunningTime"
+        },
+        "[22:23]": {
+          "link": "audience",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksAudience"
+        },
+        "[28:29]": {
+          "link": "govtPub",
+          "uriTemplate": "{_}",
+          "tokenMap": "booksGovtPub"
+        },
+        "[29:30]": {
+          "link": "additionalCarrierType",
+          "uriTemplate": "{_}",
+          "tokenMap": "musicItem"
+        },
+        "[33:34]": {
+          "addLink": "contentType",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMaterial"
+        },
+        "[34:35]": {
+          "link": "technique",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualTechnique"
+        },
+        "[23:24]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        },
+        "[24:25]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        },
+        "[25:26]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        },
+        "[26:27]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        },
+        "[27:28]": {
+          "link": "matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "visualMatter"
+        }
+      },
+      "repeatable": false,
+      "_spec": [
+        {
+          "source": [
+            {"008": "900101s1977    sw |||||||||||000 0aswe| "}
+          ],
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "about": {
+              "language": [{"@id": "/def/languages/swe"}],
+              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
+              "_providerYear":  "1977",
+              "publicationCountry": [{"@id": "/def/countries/sw"}],
+              "biography": {"@id": "/def/enum/content/Autobiography"},
+              "confPub": {"@id": "/def/enum/content/NotAConferencePublication"},
+              "festschrift": {"@id": "/def/enum/content/NotAFestschrift"},
+              "index": {"@id": "/def/enum/content/NoIndex"},
+              "literaryForm": {"@id": "/def/enum/content/NotFictionNotFurtherSpecified"}
+            }
+          }
+        }
+      ]
+    },
+
+    "010": {"aboutEntity": "?thing", "$a": {"property": "lccn"}},
+
+    "013": {},
+    "015": {
+      "TODO:inherit": "024?",
+      "$a": {"property": "nationalBibliographicNumber"},
+      "TODO:$z": "canceledInvalid",
+      "TODO:$2": "restrictedTo: http://www.loc.gov/standards/sourcelist/national-bibliography.html"
+    },
+
+    "016": {},
+    "017": {},
+    "018": {},
+
+    "020": {
+      "aboutEntity": "?thing",
+      "addLink": "identifier",
+      "embedded": true,
+      "match-domain": {
+        "EBook": {"addLink": "commonEndeavor"}
+      },
+      "resourceType": "Identifier",
+      "$a": {
+        "property": "identifierValue",
+        "splitValuePattern": "([^ ()]*)(?:\\s*\\(([^)]+)\\))?",
+        "splitValueProperties": ["identifierValue", "identifierNote"],
+        "defaults": {
+          "identifierScheme": {"@id": "/def/identifiers/isbn"},
+          "identifierStatus": null
+        }
+      },
+      "$c": {"aboutEntity": "?thing", "property": "termsOfAvailability"},
+      "$q": {"property": "identifierNote"},
+      "$z": {
+        "addProperty": "hiddenValue"
+      },
+      "_spec": [
+        {
+          "source": {
+            "020": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "91-0-056322-6 (inb.)"}, {"c": "310:00"} ]}
+          },
+          "normalized": {
+            "020": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "91-0-056322-6"}, {"c": "310:00"}, {"q": "inb."} ]}
+          },
+          "result": {"about": {
+            "identifier": [
+              {"@type": "Identifier",
+                "identifierValue": "91-0-056322-6",
+                "identifierNote": "inb.",
+                "identifierScheme": {"@id": "/def/identifiers/isbn"}}],
+            "termsOfAvailability": "310:00"
+          }}
+        },
+        {
+          "source": {
+            "020": {
+              "ind1":" ", "ind2":" ", "subfields": [
+                {"a": "9781137368331 (e-book)"},
+                {"z": "9780230274396 (print)"}
+              ]
+            }
+          },
+          "normalized": {
+            "020": {
+              "ind1":" ", "ind2":" ", "subfields": [
+                {"a": "9781137368331"},
+                {"q": "e-book"},
+                {"z": "9780230274396 (print)"}
+              ]
+            }
+          },
+          "result": {"about": {
+            "identifier": [
+              {
+                "@type": "Identifier",
+                "hiddenValue": ["9780230274396 (print)"],
+                "identifierNote": "e-book",
+                "identifierScheme": {"@id": "/def/identifiers/isbn"},
+                "identifierValue": "9781137368331"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {
+            "020": {"ind1":" ", "ind2":" ", "subfields":[
+              {"z":"9780240811444 (pbk. : alk. paper)"} ]}
+          },
+          "result": {"about": {
+            "identifier": [
+              {
+                "@type": "Identifier",
+                "hiddenValue": ["9780240811444 (pbk. : alk. paper)"]
+              }
+            ]
+          }}
+        },
+        {
+          "source": {
+            "020":
+            {"ind1":" ","ind2":" ","subfields":[{"a":"(US)"} ]}
+          },
+          "normalized": {
+            "020": {"ind1": " ", "ind2": " ", "subfields": [
+              {"q": "US"} ]}
+          },
+          "result": {"about": {
+            "identifier": [
+              {
+                "@type": "Identifier",
+                "identifierNote": "US",
+                "identifierScheme": {"@id": "/def/identifiers/isbn"}
+              }
+            ]
+          }}
+        }
+      ]
+    },
+
+    "022": {
+      "aboutEntity": "?thing",
+      "addLink": "identifier",
+      "embedded": true,
+      "resourceType": "Identifier",
+      "TODO:i1": {},
+      "$a": {
+        "property": "identifierValue",
+        "defaults": {"identifierScheme": {"@id": "/def/identifiers/issn"}}
+      },
+      "$m": {"TODO:addProperty": "canceledIssnL"},
+      "$l": {"TODO:property": "issnL"},
+      "$2": {"TODO:link": "identifierScheme"},
+      "$y": {"TODO": "inherit:$z + specific: incorrectIssn"},
+      "$z": {
+        "property": "identifierValue",
+        "defaults": {
+          "identifierScheme": {"@id": "/def/identifiers/issn"},
+          "identifierStatus": "canceledInvalid"
+        }
+      }
+    },
+
+    "024": {
+      "aboutEntity": "?thing",
+      "addLink": "identifier",
+      "embedded": true,
+      "resourceType": "Identifier",
+      "i1": {
+        "link": "identifierScheme",
+        "tokenMap": {
+          "0": "isrc",
+          "1": "upc",
+          "2": "ismn",
+          "3": "ean",
+          "4": "sici"
+        },
+        "definedElsewhereToken": "7",
+        "uriTemplate": "/def/identifiers/{_}",
+        "property": "notation",
+        "matchUriToken": "^\\S+$"
+      },
+      "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
+      "$a": {"property": "identifierValue"},
+      "$q": {"property": "identifierNote"},
+      "$2": {
+        "requires-i1": "7",
+        "link": "identifierScheme",
+        "uriTemplate": "/def/identifiers/{_}",
+        "property": "notation",
+        "matchUriToken": "^\\S+$",
+        "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
+      },
+      "_spec": [
+        {
+          "name": "indicator as tokenMap",
+          "source": {
+            "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "1234567890"}]}
+          },
+          "result": {
+            "about": {
+              "identifier": [
+                {
+                  "@type": "Identifier",
+                  "identifierValue":  "1234567890",
+                  "identifierScheme": {"@id": "/def/identifiers/ean", "notation": "ean"}
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "xyz"}]}
+          },
+          "result": {
+            "about": {
+              "identifier": [
+                {
+                  "@type": "Identifier",
+                  "identifierValue":  "1234567890",
+                  "identifierScheme": {"@id": "/def/identifiers/xyz", "notation": "xyz"}
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    "025": {},
+    "026": {},
+    "027": {},
+
+    "028": {
+      "aboutEntity": "?thing",
+      "match-i1": {
+        "0": {"$a": {"property": "audioIssueNumber"}},
+        "1": {"$a": {"property": "audioMatrixNumber"}},
+        "2": {"$a": {"property": "musicPlate"}},
+        "3": {"$a": {"property": "musicPublisher"}},
+        "4": {"$a": {"property": "videorecordingNumber"}},
+        "5": {"$a": {"property": "publisherNumber"}}
+      },
+      "TODO:i2": {},
+      "$a": {"property": "publisherNumber"},
+      "$b": {
+        "link": "identifierAssigner", "resourceType": "Organization", "property": "name"
+      },
+      "TODO": "repeatable, use addProperty or wrap in Identifier object?",
+      "_spec": [
+        {
+          "name": "use indicator as property switch",
+          "source": {"028": {"ind1": "0", "ind2": " ", "subfields": [{"a": "1"}]}},
+          "result": {"about": {
+            "audioIssueNumber": "1"
+          }}
+        }
+      ]
+    },
+
+    "034": {
+      "NOTE:domain": "Cartography",
+      "addLink": "cartographicAscensionAndDeclination",
+      "embedded": true,
+      "resourceType": "CartographyCoordinates",
+      "TODO": "draft",
+      "TODO:i1": {},
+      "TODO:i2": {"0": "OuterRing", "1": "ExcludingRing"},
+      "$2": {"property": "source"},
+      "$3": {"property": "scopeNote"},
+      "$a": {"property": "cartographicScale"},
+      "$b": {"addProperty": "constantRatioLinearHorizontalScale"},
+      "$c": {"addProperty": "constantRatioLinearVerticalScale"},
+      "$d": {"property": "westernmostLongitudeCoordinates"},
+      "$e": {"property": "easternmostLongitudeCoordinates"},
+      "$f": {"property": "northernmostLatitudeCoordinates"},
+      "$g": {"property": "southernmostLatitudeCoordinates"},
+      "$h": {"addProperty": "angularScale"},
+      "$j": {"property": "declinationNorthernLimit"},
+      "$k": {"property": "declinationSouthernLimit"},
+      "$m": {"property": "rightAscensionEasternLimit"},
+      "$n": {"property": "rightAscensionWesternLimit"},
+      "$p": {"property": "cartographicEquinox"},
+      "$r": {"property": "distanceFromEarth"},
+      "$s": {"addProperty": "gRingLatitude"},
+      "$t": {"addProperty": "gRingLongitude"},
+      "$x": {"property": "startDate"},
+      "$y": {"property": "endDate"},
+      "$z": {"link": "extraterrestrialBody", "resourceType": "PlanetaryObject", "property": "name"},
+      "_spec": [
+        {
+          "result": {"about": {
+          }}
+        }
+      ]
+    },
+
+    "030": {},
+    "031": {},
+    "032": {},
+    "033": {},
+
+    "035": {
+      "aboutEntity": "?record",
+      "match-pattern": {
+        "$a": {
+          "^http://dbpedia\\.org/": {
+            "aboutEntity": "?thing",
+            "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"}
+          }
+        }
+      },
+      "$a": {"addProperty": "systemNumber"},
+      "$9": {"addProperty": "librisIIINumber"},
+      "_spec": [
+        {
+          "name": "interpret dbpedia URI as sameAs of instance",
+          "source": [
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "123"}]}},
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "http://dbpedia.org/resource/August_Strindberg"}]}}
+          ],
+          "result": {
+            "systemNumber": ["123"],
+            "about": {
+              "sameAs":  [{"@id": "http://dbpedia.org/resource/August_Strindberg"}]
+            }
+          }
+        }
+      ]
+    },
+
+    "036": {},
+    "037": {},
+    "038": {},
+
+    "040": {
+      "aboutEntity": "?record",
+      "$a": {"link": "originalCatalogingAgency", "resourceType": "Organization", "property": "name"},
+      "$b": {
+        "addLink": "language",
+        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
+      },
+      "$c": {"link": "transcribingAgency", "resourceType": "Organization", "property": "name"},
+      "$d": {"link": "modifyingAgency", "resourceType": "Organization", "property": "name"},
+      "$e": {"property": "descriptionRules"},
+      "$9": {"property": "license"}
+    },
+    "041": {
+      "TODO:match-repetition": {
+        "addLink": "hasPart",
+        "embedded": true
+      },
+      "$a": {
+        "TODO:unifyWith": ["008:language", "240.a?", "546"],
+        "TODO": "not repeated if equal with existing",
+        "addLink": "language",
+        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
+      },
+      "$b": {
+        "link": "hasSummaryLanguage"
+      },
+      "$h": {
+        "TODO": "sync with some isVersionOf/translationOf built from many fields",
+        "addLink": "originalLanguage",
+        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
+      },
+      "$k": {
+        "link": "translatedFromLanguage"
+      }
+    },
+    "042": {
+      "aboutEntity": "?record",
+      "$a": {"property": "authenticationCode"},
+      "$9": {"addLink": "bibliography", "resourceType": "Organization", "property": "notation"}
+    },
+    "043": {"ignored": true},
+
+    "044": {},
+    "045": {},
+    "046": {},
+    "047": {},
+    "048": {},
+    "049": {},
+
+    "050": {
+      "NOTE:candidate:aboutEntity": "?work",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "$a": {"property": "classificationLcc"},
+      "$b": {"ignored": true}
+    },
+
+    "051": {},
+    "052": {},
+    "055": {},
+    "060": {
+      "addLink": "classification",
+      "resourceType": "Concept",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "$a": {
+        "property": "notation",
+        "defaults": {
+          "inScheme": {
+            "@id": "/ext/scheme/nlm",
+            "@type": "ConceptScheme",
+            "notation": "NLM"
+          }
+        }
+      },
+      "$b": {"property": "classificationItem", "ignored": true}
+    },
+    "061": {},
+    "066": {},
+    "070": {},
+    "071": {},
+
+    "072": {
+      "inherit": "084",
+      "addLink": "subject",
+      "resourceType": "Concept",
+      "TOOO:i2": {},
+      "$b": {"addProperty": "classificationItem"}
+    },
+
+    "074": {},
+
+    "080": {
+      "NOTE:candidate:aboutEntity": "?work",
+      "TOOO:i1": {},
+      "addLink": "classification",
+      "resourceType": "Concept",
+      "$a": {
+        "property": "notation",
+        "defaults": {
+          "inScheme": {
+            "@id": "http://udcdata.info/udc-schema",
+            "@type": "ConceptScheme",
+            "notation": "UDC"
+          }
+        }
+      },
+      "_spec": [
+        {
+          "source": {
+            "080": {"ind1": " ", "ind2": " ", "subfields": [{"a": "030"}]}
+          },
+          "result": {
+            "about": {
+              "classification": [
+                {
+                  "@type": "Concept",
+                  "notation": "030",
+                  "inScheme": {"@id": "http://udcdata.info/udc-schema",
+                    "@type": "ConceptScheme", "notation": "UDC"}
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    "082": {
+      "NOTE:candidate:aboutEntity": "?work",
+      "TODO:$a": {"property": "classificationDdc", "note": "use this flattened form?"},
+      "addLink": "classification",
+      "resourceType": "Concept",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}/",
+      "$a": {"property": "notation", "required": true},
+      "$2": {
+        "note": "ignorable (just use defaults)?",
+        "link": "inScheme", "resourceType": "ConceptScheme",
+        "required": true,
+        "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
+        "defaults": {
+          "notation": "DDC",
+          "isVersionOf": {"@id": "http://dewey.info/scheme/ddc/"}
+        },
+        "property": "version",
+        "splitValuePattern": "(\\d+)(?:/(swe))?",
+        "splitValueProperties": ["version", "language"],
+        "rejoin": "/"
+      },
+      "_spec": [
+        {
+          "name": "TODO",
+          "result": {"about": {
+          }}
+        }
+      ]
+    },
+    "083": {
+      "inherit": "082",
+      "i2": null
+    },
+
+    "084": {
+      "NOTE:candidate:aboutEntity": "?work",
+      "addLink": "classification",
+      "resourceType": "Concept",
+      "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
+      "uriTemplateDefaults": {"inScheme.notation": "kssb"},
+      "$a": {"property": "notation", "required": true},
+      "$2": {"link": "inScheme",
+             "resourceType": "ConceptScheme", "uriTemplate": "/scheme/{+_}",
+             "property": "notation"},
+      "$b": {"property": "classificationItem", "ignored": true},
+      "_spec": [
+        {
+          "name": "TODO",
+          "result": {"about": {
+          }}
+        }
+      ]
+    },
+
+    "085": {},
+    "086": {},
+    "088": {},
+    "090": {},
+    "099": {},
+
+    "100": {
+      "NOTE:candidate:aboutEntity": "?work",
+      "resourceType": "Person",
+      "match-i1": {
+        "0": {
+          "$a": {"property": "name", "required": true}
+        },
+        "1": {
+          "$a": {
+            "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
+            "required": true
+          }
+        },
+        "3": {
+          "resourceType": "Family",
+          "$a": {"property": "name", "required": true}
+        }
+      },
+      "link": "attributedTo",
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "$a": {"required": true},
+      "$b": {"property": "numeration"},
+      "$c": {"addProperty": "personTitle"},
+      "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
+        "splitValueProperties": ["birthYear", "deathYear"], "rejoin": "-", "allowEmpty": true},
+      "$j": {"property": "comment"},
+      "$q": {"property": "label"},
+      "_spec": [
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove,"},
+              {"d": "1914-2001"}
+          ]}},
+          "normalized": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove"},
+              {"d": "1914-2001"}
+          ]}},
+          "result": {"about": {
+            "attributedTo": {"@type": "Person",
+              "familyName":  "Jansson",
+              "givenName":  "Tove",
+              "birthYear":  "1914",
+              "deathYear":  "2001"}
+          }}
+        }
+      ]
+    },
+    "110": {
+      "NOTE:candidate:aboutEntity": "?work",
+      "resourceType": "Organization",
+      "link": "attributedTo",
+      "TODO": [
+        "change splitValueProperties to work on result, to handle match combo",
+        "splitByRepetitionAndInterpunctionPattern ($n $d ...)?"
+      ],
+      "i1": {"marcDefault": "2"},
+      "match-i1": {
+        "0": {
+          "$a": {"property": "name", "required": true}
+        },
+        "1": {
+          "$a": {
+            "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
+            "required": true
+          }
+        }
+      },
+      "match-code": {
+        "b": {
+          "$a": {"link": "isPartOf", "resourceType": "Organization", "property": "name"},
+          "$b": {"property": "name"}
+        }
+      },
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "$a": {"property": "name"}
+    },
+    "111": {
+      "inherit": "110",
+      "resourceType": "Meeting",
+      "$c": {"link": "location", "resourceType": "Place", "property": "label"},
+      "$d": {"property": "date"}
+    },
+    "130": {
+      "link": "hasUniformWork",
+      "resourceType": "UniformWork",
+      "TODO": "Similar to 240. Could use link:exampleOfWork if 130 XOR 240",
+      "$a": {"property": "uniformTitle"},
+      "$d": {"property": "date"},
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"}
+    },
+
+    "210": {
+      "aboutEntity": "?thing",
+      "addLink": "abbreviatedTitle",
+      "embedded": true,
+      "resourceType": "Title",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "$a": {"property": "titleValue"},
+      "$b": {"property": "titleQualifier"},
+      "$2": {"property": "titleSource"}
+    },
+    "222": {
+      "inherit": "210",
+      "NOTE:domain": "Serial/Periodical",
+      "addLink": "keyTitle",
+      "$2": null
+    },
+    "240": {
+      "TODO:i1": {},
+      "TODO:i2": {},
+      "link": "exampleOfWork",
+      "resourceType": "UniformWork",
+      "$0": {
+        "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
+        "uriTemplate": "/auth/{_}"
+      },
+      "$a": {"property": "title"},
+      "$k": {"addProperty": "subtitle"},
+      "$p": {"addProperty": "partTitle"},
+      "$n": {"addProperty": "partNumber"},
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+      "$f": {"property": "date"},
+      "$d": {"addProperty": "treatySigningDate"},
+      "$s": {"property": "version"},
+      "$g": {"property": "comment"},
+      "$h": {"property": "medium"},
+      "$m": {"addProperty": "musicPerformanceMedium"},
+      "$o": {"property": "musicArrangement"},
+      "$r": {"property": "musicKey"}
+    },
+    "242": {
+      "inherit": "245",
+      "addLink": "translatedTitle",
+      "$f": null,
+      "$g": null,
+      "$y": {"link": "language", "property": "notation"},
+      "TODO": "Correct property? merge into 245?"
+    },
+
+    "243": {},
+
+    "245": {
+      "i1": {"property": "searchElement", "tokenMap": {"0": false}, "marcDefault": "1"},
+      "i2": {"marcDefault": "0"},
+      "aboutEntity": "?thing",
+      "link": "instanceTitle",
+      "embedded": true,
+      "resourceType": "Title",
+      "$a": {
+        "property": "titleValue",
+        "interpunctionChars": ":/",
+        "TODO:interpunctionRules": {
+          " :": {"$b": {"property": "subtitle"}},
+          " =": {"$b": {"property": "parallellTitle"}},
+          " .": {"TODO": "$a and $b represent equal titles"}
+        }
+      },
+      "$b": {"property": "subtitle", "interpunctionChars": "/"},
+      "$c": {
+        "aboutEntity": "?thing", "property": "responsibilityStatement",
+        "NOTE": "interpunction may include data about included parts (e.g. short stories)"
+      },
+      "$f": {"aboutEntity": "?thing", "property": "temporalCoverageNote"},
+      "$g": {"aboutEntity": "?thing", "property": "generalTemporalCoverageNote"},
+      "$h": {"aboutEntity": "?thing", "property": "mediaTerm", "surroundingChars": "[]"},
+      "$n": {"addProperty": "partNumber"},
+      "$p": {"addProperty": "partTitle"},
+      "$s": {"property": "version"},
+      "_spec": [
+        {
+          "source": {
+            "245": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Anteckningar från en ö"}
+          ]}},
+          "result": {"about": {
+            "instanceTitle": {"@type": "Title",
+              "titleValue":  "Anteckningar från en ö"
+            }
+          }}
+        },
+        {
+          "source": {
+            "245": {"ind1": "0", "ind2": "0", "subfields": [
+              {"a": "Anteckningar från en ö"},
+              {"c": "Tove Jansson, Tuulikki Pietilä"}
+          ]}},
+          "result": {"about": {
+            "instanceTitle": {"@type": "Title",
+              "titleValue":  "Anteckningar från en ö",
+              "searchElement": false
+            },
+            "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
+          }}
+        }
+      ]
+    },
+    "246": {
+      "inherit": "245",
+      "addLink": "titleVariation",
+      "i2": {
+        "property": "titleType",
+        "TODO:tokenMap": {}, "TODO:if _": "use $i"
+      },
+      "$i": {"property": "titleType"},
+      "$f": {"property": "coverage"},
+      "$g": {"property": "note"},
+      "$h": {"property": "mediaTerm", "surroundingChars": "[]"}
+    },
+    "247": {
+      "NOTE:domain": "Integrating",
+      "inherit": "245",
+      "addLink": "previousTitle",
+      "TODO": "Previously misused as 246?"
+    },
+
+    "249": {},
+
+    "250": {
+      "aboutEntity": "?thing",
+      "TODO:match-repetition?": {
+      },
+      "addLink": "hasVersion", "resourceType": "Product",
+      "$a": {"property": "edition"},
+      "$b": {"property": "editionResponsibility"}
+    },
+
+    "254": {},
+
+    "255": {
+      "TODO:match-repetition?": {
+        "addLink": "hasFormat", "resourceType": "Product", "embedded": true
+      },
+      "NOTE:domain": "Cartography",
+      "$a": {"property": "cartographicScale"},
+      "$c": {"property": "cartographicCoordinates"},
+      "$b": {"property": "cartographicProjection"},
+      "$e": {"property": "cartographicEquinox"},
+      "$d": {"property": "cartographicZone"},
+      "$g": {"property": "cartographicExclusionGRing"},
+      "$f": {"property": "cartographicOuterGRing"},
+      "TODO": "repeatable, use addProperty for all or wrap in object?"
+    },
+
+    "256": {
+      "aboutEntity": "?thing",
+      "$a": {"property": "fileType"}
+    },
+
+    "257": {},
+    "258": {},
+
+    "260": {
+      "aboutEntity": "?thing",
+      "addLink": "provision",
+      "embedded": true,
+      "splitLink": [
+        {"codes": ["3", "a", "b", "c"], "addLink": "publication"},
+        {"codes": ["e", "f", "g"], "addLink": "manufacture"}
+      ],
+      "TODO": "splitByRepetitionAndInterpunctionPattern",
+      "resourceType": "ProviderEvent",
+      "TODO:i1": {"property": "latest", "tokenMap": {"2": false, "3": true}},
+      "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
+      "$b": {"property": "providerName", "interpunctionChars": ",:;"},
+      "$c": {"property": "providerDate", "interpunctionChars": ",;"},
+      "$e": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
+      "$f": {"property": "providerName", "interpunctionChars": ",:;"},
+      "$g": {"property": "providerDate", "interpunctionChars": ",;"},
+      "$3": {"property": "scopeNote", "position": 0, "TODO": "put in first out-split entity"},
+      "_spec": [
+        {
+          "source": {
+            "260": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}, {"e": "Finland"}
+              ]}
+          },
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}
+            ]}},
+            {"264": {"ind1": " ", "ind2": "3", "subfields": [
+              {"a": "Finland"}
+            ]}}
+          ],
+          "result": {"about": {
+            "publication": [
+              {"@type": "ProviderEvent",
+                "place": {"@type": "Place", "label":  "Stockholm"},
+                  "providerName":  "Bonnier",
+                  "providerDate":  "1996"}
+            ],
+            "manufacture": [
+              {"@type": "ProviderEvent",
+                "place": {"@type": "Place", "label":  "Finland"}}
+            ]
+          }}
+        }, {
+          "source": {
+            "260": {"subfields": [{"a": "London ;"}, {"a": "New York :"}, {"b": "Routledge Falmer ;"}, {"a": "[London] :"}, {"b": "Open University,"}, {"c": "2002"}]}
+          },
+          "TODO:result": {"about": {
+            "publication": [
+              {"@type": "ProviderEvent",
+                "place": [{"@type": "Place", "label":  "London"},
+                        {"@type": "Place", "label":  "New York"}],
+                  "providerName":  "Routledge Falmer"},
+              {"@type": "ProviderEvent",
+                "assumedPlace": {"@type": "Place", "label":  "London"},
+                  "providerName":  "Open University",
+                  "providerDate":  "2002"}
+            ]
+          }}
+        },
+        {
+          "name": "Upprepade utgivarbyten för fortlöpande resurser",
+          "source": {
+            "fields": [
+              {"260": {"ind1": "_", "ind2": "_", "subfields":
+                [{"3": "Sammanfattad utgivningstid:"}, {"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-"}, {"e": "(Stockholm :"}, {"f": "Fram)"}]}},
+              {"260": {"ind1": "_", "ind2": "_", "subfields": 
+                [{"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-1925"}]}},
+              {"260": {"ind1": "2", "ind2": "_", "subfields": 
+                [{"a": "Lund :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1926-1927"}]}},
+              {"260": {"ind1": "2", "ind2": "_", "subfields": 
+                [{"a": "Stockholm :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1928-1931"}]}},
+              {"260": {"ind1": "2", "ind2": "_", "subfields": 
+                [{"a": "Stockholm :"}, {"b": "Svenska Clartéförbundet,"}, {"c": "1932-1953"}]}},
+              {"260": {"ind1": "2", "ind2": "_", "subfields": 
+                [{"a": "Hägersten :"}, {"b": "Clarté,"}, {"c": "1991-1995"}]}},
+              {"260": {"ind1": "3", "ind2": "_", "subfields": 
+                [{"a": "Stockholm :"}, {"b": "Clarté,"}, {"c": "1953-1991, 1995-"}]}}
+            ]
+          },
+          "TODO:result": null
+        }
+      ]
+    },
+
+    "261": {},
+    "262": {},
+    "263": {},
+
+    "264": {
+      "TOOO:i1": {},
+      "match-i2": {
+        "0": {"addLink": "production"},
+        "1": {"addLink": "publication"},
+        "2": {"addLink": "distribution"},
+        "3": {"addLink": "manufacture"},
+        "4": {"addLink": "copyright"}
+      },
+      "addLink": "provision",
+      "embedded": true,
+      "resourceType": "ProviderEvent",
+      "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
+      "$b": {"property": "providerName", "interpunctionChars": ",:;"},
+      "$c": {"property": "providerDate", "interpunctionChars": ",;"},
+      "_spec": [
+        {
+          "source": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}
+            ]}},
+            {"264": {"ind1": " ", "ind2": "3", "subfields": [
+              {"a": "Finland"}
+            ]}}
+          ],
+          "result": {"about": {
+            "publication": [
+              {"@type": "ProviderEvent",
+                "place": {"@type": "Place", "label":  "Stockholm"},
+                  "providerName":  "Bonnier",
+                  "providerDate":  "1996"}
+            ],
+            "manufacture": [
+              {"@type": "ProviderEvent",
+                "place": {"@type": "Place", "label":  "Finland"}}
+            ]
+          }}
+        }
+      ]
+    },
+
+    "265": {},
+    "270": {},
+
+    "300": {
+      "TODO:match-repetition?": {
+        "addLink": "hasFormat"
+      },
+      "aboutEntity": "?thing",
+      "addLink": "hasFormat",
+      "embedded": true,
+      "resourceType": "Product",
+      "$a": {"property": "extent", "interpunctionChars": "+:;"},
+      "$c": {"property": "dimensions", "interpunctionChars": ":;+"},
+      "$b": {"property": "otherPhysicalDetails", "interpunctionChars": ";+"},
+      "$e": {"property": "accompanyingMaterial"},
+      "$f": {"link": "device", "resourceType": "Device", "property": "label"},
+      "$3": {
+        "TODO:previousEndsWith": "+",
+        "property": "materialsSpecified"
+      }
+    },
+
+    "306": {},
+    "307": {},
+
+    "310": {
+      "aboutEntity": "?thing",
+      "$a": {"property": "frequency"}
+    },
+
+    "321": {
+      "addLink": "replaces",
+      "embedded": true,
+      "resourceType": "Serial",
+      "$a": {"property": "frequency"},
+      "$b": {"property": "date"}
+    },
+
+    "336": {
+      "addLink": "hasPart",
+      "resourceType": "CreativeWork",
+      "pendingResources": {
+        "_:contentType": {"link": "contentType", "resourceType": "Class"}
+      },
+      "$a": {"about": "_:contentType", "property": "label"},
+      "$b": {"about": "_:contentType", "property": "notation"},
+      "$2": {"about": "_:contentType", "property": "termGroup"},
+      "$8": {"about": "_:contentType", "property": "_groupID"}
+    },
+    "337": {
+      "pendingResources": {
+        "_:mediaType": {"link": "mediaType", "resourceType": "MediaType"}
+      },
+      "addLink": "hasFormat",
+      "resourceType": "Product",
+      "$a": {"about": "_:mediaType", "property": "label"},
+      "$b": {"about": "_:mediaType", "property": "notation"},
+      "$2": {"about": "_:mediaType", "property": "termGroup"},
+      "$8": {"about": "_:mediaType", "property": "_groupID"}
+    },
+    "338": {
+      "pendingResources": {
+        "_:carrierType": {"link": "carrierType", "resourceType": "CarrierType"}
+      },
+      "addLink": "hasFormat", "resourceType": "Product",
+      "$a": {"about": "_:carrierType", "property": "label"},
+      "$b": {"about": "_:carrierType", "property": "notation"},
+      "$2": {"about": "_:carrierType", "property": "termGroup"},
+      "$8": {"about": "_:carrierType", "property": "_groupID"},
+      "_spec": [
+        {
+          "source": {
+            "338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"b": "nc"}, {"2": "rdacarrier"}]}
+          },
+          "result": {
+            "about": {
+              "hasFormat": [{
+                "@type": "Product",
+                "carrierType": {"@type": "CarrierType", "notation": "nc", "label": "volume", "termGroup": "rdacarrier"}
+              }]
+            }
+          }
+        }
+      ]
+    },
+
+    "340": {},
+    "342": {},
+    "343": {},
+    "344": {},
+    "345": {},
+    "346": {},
+    "347": {},
+    "351": {},
+    "352": {},
+    "355": {},
+    "357": {},
+    "362": {
+      "aboutEntity": "?thing",
+      "$a": {"addProperty": "issueNumber"}
+    },
+    "363": {},
+    "365": {},
+    "366": {},
+    "377": {},
+    "380": {},
+    "381": {},
+    "382": {},
+    "383": {},
+    "384": {},
+    "385": {},
+    "386": {},
+
+    "400": {},
+    "410": {},
+    "411": {},
+
+    "440": {
+      "NOTE:candidate:aboutEntity": "?work",
+      "TODO:prefer": "490 or 773? See also mapping for 240",
+      "addLink": "series",
+      "embedded": true,
+      "resourceType": "Serial",
+      "TOOO:i2": {},
+      "$a": {"property": "title", "interpunctionChars": ".,=;"},
+      "$0": {"TODO:property": "authorityRecordControlNumber"},
+      "$n": {"addProperty": "numberOfPartOfAWork"},
+      "$p": {"addProperty": "nameOfPartOfAWork", "interpunctionChars": ".,=;"},
+      "$w": {"addProperty": "bibliographicRecordControlNumber"},
+      "$v": {"property": "volumeNumberSequentialDesignation"},
+      "$x": {"property": "issn", "interpunctionChars": ".,=;"}
+    },
+    "490": {
+      "inherit": "440",
+      "TOOO:i1": {},
+      "i2": null,
+      "TODO:preferLinkedVersion": "773?",
+      "$l": {"link": "callno", "resourceType": "Concept", "property": "notation"}
+    },
+
+    "500": {"$a": {"aboutEntity": "?thing", "addProperty": "comment"}},
+    "501": {},
+    "502": {
+      "addLink": "hasAnnotation", "resourceType": "DissertationAnnotation",
+      "embedded": true,
+      "$a": {"property": "note"},
+      "$b": {"property": "degree"},
+      "$c": {"property": "location"},
+      "$d": {"property": "date"},
+      "$g": {"property": "comment"}
+    },
+    "504": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}},
+
+    "505": {
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "$a": {"aboutEntity": "?thing", "addProperty": "listOfContents", "TODO": "$t, $r"}
+    },
+
+    "506": {},
+    "507": {},
+    "508": {"$a": {"aboutEntity": "?thing", "addProperty": "creditsNote"}},
+
+    "510": {
+      "addProperty": "citedBy",
+      "resourceType": "CreativeWork",
+      "TOOO:i1": {},
+      "$a": {"property": "title"},
+      "$c": {"property": "pagination"}
+    },
+
+    "511": {
+      "match-i1": {"1": {"$a": {"addProperty": "participantNote"}}},
+      "$a": {
+        "aboutEntity": "?thing",
+        "addProperty": "performerNote"
+      }
+    },
+
+    "513": {},
+    "514": {},
+    "515": {},
+    "516": {},
+    "518": {},
+
+    "520": {
+      "aboutEntity": "?thing",
+      "TOOO:i1": {},
+      "$a": {"addProperty": "summary"},
+      "match-code": {
+        "u": {
+          "TODO": "unify with summary or the generic annotation model?",
+          "addLink": "describedBy",
+          "embedded": true,
+          "resourceType": "WebPage",
+          "$a": {"property": "label"},
+          "$u": {"property": "@id"}
+        }
+      }
+    },
+
+    "521": {
+      "addLink": "audience",
+      "embedded": true,
+      "resourceType": "Audience",
+      "TOOO:i1": {},
+      "$a": {"property": "label"}
+    },
+    "522": {},
+    "524": {},
+    "525": {},
+    "526": {},
+
+    "530": {"addLink": "hasFormat", "$a": {"addProperty": "comment"}, "embedded": true},
+
+    "533": {
+      "addLink": "reproduction",
+      "embedded": true,
+      "resourceType": "CreativeWork",
+      "pendingResources": {
+        "_:event": {"addLink": "provision", "resourceType": "ProviderEvent"}
+      },
+      "$a": {"property": "description", "interpunctionChars": ":"},
+      "$b": {"about": "_:event", "addLink": "providerPlace", "resourceType": "Place", "property": "label", "interpunctionChars": ":"},
+      "$c": {"about": "_:event", "addProperty": "providerName", "interpunctionChars": ","},
+      "$d": {"about": "_:event", "property": "providerDate"},
+      "$e": {"property": "physicalDescription"},
+      "$f": {"addProperty": "seriesStatement"},
+      "$m": {"addProperty": "datesAndOrSequentialDesignationOfIssuesReproduced"},
+      "$n": {"addProperty": "note"},
+      "$3": {"property": "materialsSpecified"},
+      "$5": {"property": "institutionToWhichFieldApplies"},
+      "$7": {"TODO:fixedField": "fixedLengthDataElementsOfReproduction"},
+      "_spec": [
+        {
+          "name": "group properties into nested entities",
+          "source": {
+            "533": {"ind1": " ", "ind2": " ",
+              "subfields": [
+                {"a": "Digitalt faksimil och elektronisk text"},
+                {"c": "Litteraturbanken"},
+                {"d": "2010"} ]}},
+          "result": {"about": {
+            "reproduction": [
+              {
+                "@type": "CreativeWork",
+                "description":  "Digitalt faksimil och elektronisk text",
+                "provision":  [
+                    {"@type": "ProviderEvent",
+                        "providerDate":  "2010",
+                        "providerName":  ["Litteraturbanken"]
+                    }]
+              }
+            ]
+          }}
+        }
+      ]
+    },
+
+    "534": {},
+    "535": {},
+    "536": {},
+    "538": {"$a": {"aboutEntity": "?thing", "addProperty": "systemRequirements"}},
+    "540": {},
+    "541": {},
+    "542": {},
+    "544": {},
+    "545": {},
+    "546": {"aboutEntity": "?thing", "$a": {"addProperty": "languageNote"}},
+    "547": {},
+
+    "550": {},
+    "552": {},
+    "555": {},
+    "556": {},
+    "561": {},
+    "562": {
+      "addLink": "workExample",
+      "embedded": true,
+      "resourceType": "Product",
+      "$a": {"addProperty": "itemCondition"},
+      "$b": {"addProperty": "copyIdentification"},
+      "$c": {"addProperty": "versionIdentification"},
+      "$d": {"addProperty": "presentationFormat"},
+      "$e": {"addProperty": "inventoryLevel"},
+      "$3": {"property": "materialsSpecified"}
+    },
+    "563": {},
+    "565": {},
+    "567": {},
+    "580": {},
+    "581": {},
+    "583": {},
+    "584": {},
+    "585": {},
+    "586": {},
+    "588": {"$a": {"aboutEntity": "?record", "addProperty": "sourceNote"}},
+    "590": {},
+    "599": {
+      "TOOO:i1": {},
+      "$a": {"aboutEntity": "?record", "addProperty": "technicalNote"}
+    },
+
+    "600": {
+      "inherit": "100",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "match-code": {
+        "t": {
+          "$t": {"property": "title"},
+          "splitLink": [
+            {"codes": ["t"], "addLink": "subject", "spliceEntity": "UniformWork"}
+          ],
+          "link": "attributedTo"
+        }
+      },
+      "addLink": "subject", "resourceType": "Person"
+    },
+    "610": {
+      "inherit": "110",
+      "i1": {"marcDefault": "1"},
+      "match-i1": {
+        "0": {
+          "$a": {
+            "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
+            "required": true
+          }
+        },
+        "1": {
+          "TODO": "name of administrative unit",
+          "$a": {"property": "name", "required": true}
+        },
+        "2": {
+          "$a": {"property": "name", "required": true}
+        }
+      },
+      "i2": {
+        "about": "_:concept",
+        "link": "inScheme",
+        "resourceType": "ConceptScheme",
+        "uriTemplate": "/scheme/{+_}",
+        "property": "notation",
+        "tokenMap": "thesaurus",
+        "definedElsewhereToken": "7"
+      },
+      "match-code": {
+        "b": {
+          "$a": {"link": "isPartOf", "resourceType": "Organization", "property": "name"},
+          "$b": {"property": "name"}
+        },
+        "x": {
+          "$x": {"property": "name"},
+          "$a": {"link": "isPartOf", "resourceType": "Organization", "property": "name"}
+        }
+      },
+      "addLink": "subject",
+      "resourceType": "Organization",
+      "pendingResources": {
+        "_:concept": {"link": "focusOf", "resourceType": "Concept"}
+      },
+      "$2": {
+        "requires-i2": "7",
+        "about": "_:concept",
+        "link": "inScheme",
+        "uriTemplate": "/scheme/{+_}",
+        "resourceType": "ConceptScheme",
+        "property": "notation"
+      },
+      "_spec": [
+        {
+          "source": {
+            "610": {
+              "ind1": "2",
+              "ind2": "7",
+              "subfields": [{"a": "Kungl. biblioteket"}, {"x": "samlingar"}, {"2": "sao"}]
+            }
+          },
+          "result": {"about": {
+            "subject": [
+              {
+                "@type": "Organization",
+                "isPartOf": {"@type": "Organization", "name": "Kungl. biblioteket"},
+                "name": "samlingar",
+                "focusOf": {
+                  "@type": "Concept",
+                  "inScheme": {
+                    "@id": "/scheme/sao",
+                    "@type": "ConceptScheme",
+                    "notation": "sao"
+                  }
+                }
+              }
+            ]
+          }}
+        }
+      ]
+    },
+    "611": {
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "inherit": "111", "addLink": "subject", "resourceType": "MeetingTerm"
+    },
+    "630": {
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "inherit": "130", "addLink": "subject", "resourceType": "UniformWork"
+    },
+    "648": {
+      "inherit": "650",
+      "resourceType": "ChronologicalTerm",
+      "$a": {
+        "property": "prefLabel",
+        "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
+      }
+    },
+    "650": {
+      "inherit": "patterns:termbase",
+      "NOTE:candidate:aboutEntity": "?work",
+      "addLink": "subject",
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "resourceType": "TopicalTerm",
+      "TOOO:i1": {
+        "property": "level",
+        "marcDefault": "_",
+        "0": "unspecified",
+        "1": "primary",
+        "2": "secondary"
+      },
+      "i2": {
+        "link": "inScheme",
+        "resourceType": "ConceptScheme",
+        "uriTemplate": "/scheme/{+_}",
+        "property": "notation",
+        "tokenMap": "thesaurus"
+      },
+      "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
+             "ignored": true},
+      "$2": {
+        "requires-i2": "7",
+        "link": "inScheme",
+        "resourceType": "ConceptScheme", "uriTemplate": "/scheme/{+_}",
+        "property": "notation"
+      },
+      "_spec": [
+        {
+          "source": {"650": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Information"},
+            {"y": "Information Age"}
+          ]}},
+          "result": {"about": {
+            "subject": [
+              {
+                "@type": "ComplexTerm",
+                "@id":"/topic/lcsh/Information/Information%20Age",
+                "termParts": [
+                  {
+                    "@type": "TopicalTerm",
+                    "prefLabel": "Information"
+                  },
+                  {
+                    "@type": "ChronologicalTerm",
+                    "prefLabel": "Information Age"
+                  }
+                ],
+                "inScheme": {
+                  "@id": "/scheme/lcsh",
+                  "@type": "ConceptScheme",
+                  "notation": "lcsh"
+                }
+              }
+            ]
+          }}
+        }
+      ]
+    },
+    "651": {
+      "inherit": "650",
+      "resourceType": "GeographicalTerm",
+      "TOOO:i2": {},
+      "i1": null,
+      "$a": {"property": "prefLabel"}
+    },
+    "653": {
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "$a": {"aboutEntity": "?thing", "property": "keyword"}
+    },
+
+    "654": {
+      "ignored": true,
+      "TODO": "facet term (i1:like 650, i2: null)"
+    },
+
+    "655" : {
+      "inherit": "650",
+      "addLink": "genre",
+      "resourceType": "GenreTerm",
+      "uriTemplate": "/topic/saogf/{prefLabel}"
+    },
+
+    "658": {},
+
+    "656" : {
+      "TOOO:i2": {},
+      "resourceType": "Profession", "ignored": true
+    },
+    "657" : {
+      "TOOO:i2": {},
+      "resourceType": "FunctionOrRole", "ignored": true
+    },
+
+    "662": {},
+    "690": {},
+
+    "700": {
+      "inherit": "100",
+      "match-code": {
+        "t": {
+          "$t": {"property": "title"},
+          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+          "splitLink": [
+            {"codes": ["t", "l"], "addLink": "influencedBy", "spliceEntity": "UniformWork"}
+          ],
+          "link": "attributedTo"
+        }
+      },
+      "addLink": "influencedBy", "resourceType": "Person",
+      "TOOO:i2": {},
+      "_spec": [
+        {
+          "source": {"700":
+            {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}
+            ]}
+          },
+          "result": {"about": {
+            "influencedBy": [
+              {"@type": "Person",
+                "familyName":  "Pietilä",
+                "givenName":  "Tuulikki",
+                "birthYear":  "1917"}
+            ]
+          }}
+        }
+      ]
+    },
+
+    "710": {"inherit": "110", "TOOO:i2": {}, "addLink": "influencedBy"},
+    "711": {"inherit": "111"},
+
+    "720": {},
+
+    "730": {
+      "TOOO:i1": {},
+      "TODO:match-i2": {
+        "2": {"addLink": "influentialPart"}
+      },
+      "addLink": "influentialRelation",
+      "resourceType": "UniformWork",
+      "$a": {"property": "title"}
+    },
+
+
+    "740": {
+      "inherit": "730",
+      "$a": {"property": "title"}
+    },
+
+    "751": {},
+    "752": {},
+    "753": {},
+    "754": {},
+    "755": {},
+
+    "760": {"inherit": "772", "addLink": "subseriesOf", "resourceType": "Serial"},
+    "762": {"inherit": "772", "addLink": "subseries", "resourceType": "Serial"},
+    "765": {"inherit": "772", "addLink": "translationOf"},
+    "767": {"inherit": "772", "addLink": "translation"},
+    "770": {"inherit": "772", "addLink": "contains"},
+    "772": {
+      "addLink": "isPartOf",
+      "resourceType": "CreativeWork",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "$a": {"property": "controlledLabel", "TODO:targetMatch": "1xx"},
+      "$b": {"property": "edition", "TODO:targetMatch": "250"},
+      "$c": {"property": "qualifyingNote"},
+      "$d": {"property": "placePublisherAndDateOfPublication", "TODO:targetMatch": "260$c"},
+      "$g": {"addProperty": "scopeNote"},
+      "$h": {"property": "physicalDescription"},
+      "$i": {"addProperty": "linkNote"},
+      "$k": {"addProperty": "seriesLabel", "TODO:targetMatch": "4xx, 8xx"},
+      "$m": {"property": "mediaNote"},
+      "$n": {"addProperty": "note"},
+      "$o": {
+        "addLink": "identifier",
+        "embedded": true,
+        "resourceType": "Identifier",
+        "addProperty": "identifierValue",
+        "defaults": {"identifierScheme": null}
+      },
+      "$r": {"addProperty": "reportNumber", "TODO:targetMatch": "088"},
+      "$s": {"property": "uniformTitle", "TODO:targetMatch": "240"},
+      "$t": {"property": "title", "TODO:targetMatch": "222, 245"},
+      "$u": {"property": "standardTechnicalReportNumber", "TODO:targetMatch": "027"},
+      "$w": {
+        "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
+        "uriTemplate": "/bib/{_}"
+      },
+      "$x": {
+        "TODO:targetMatch": "022",
+        "link": "identifier",
+        "embedded": true,
+        "resourceType": "Identifier",
+        "property": "identifierValue",
+        "defaults": {"identifierScheme": {"@id": "/def/identifiers/issn"}}
+      },
+      "$y": {"property": "coden", "TODO:targetMatch": "030"},
+      "$z": {
+        "TODO:targetMatch": "020",
+        "addLink": "identifier",
+        "embedded": true,
+        "resourceType": "Identifier",
+        "property": "identifierValue",
+        "defaults": {"identifierScheme": {"@id": "/def/identifiers/isbn"}}
+      },
+      "$9": {"addProperty": "partNumber"},
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "_spec": [
+        {
+          "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
+            {"s": "Main Thing"},
+            {"z": "00-0-000000-0"}
+          ]}},
+          "result": {"about": {
+            "isPartOf": [
+              {
+                "@type": "CreativeWork",
+                "uniformTitle": "Main Thing",
+                "identifier": [
+                  {
+                    "@type": "Identifier",
+                    "identifierScheme": {"@id": "/def/identifiers/isbn"},
+                    "identifierValue": "00-0-000000-0"
+                  }
+                ]
+              }
+            ]
+          }}
+        }
+      ]
+    },
+    "773": {
+      "inherit": "772",
+      "addLink": "isPartOf",
+      "resourceType": "Aggregate",
+      "$c": null,
+      "$p": {"property": "abbrevTitle", "TODO:targetMatch": "210"},
+      "$q": {"property": "pagination"}
+    },
+    "774": {
+      "inherit": "772",
+      "addLink": "hasPart",
+      "domainIncludes": "Serial",
+      "resourceType": "CreativeWork"
+    },
+    "775": {
+      "inherit": "772",
+      "TODO:note": "uncommon",
+      "addLink": "alternateEdition",
+      "$e": {"link": "language", "resourceType": "Language", "property": "label", "TODO:inherit": "008:[35:38]"},
+      "$f": {"property": "publicationCountry", "TODO:inherit": "008:[15:18]"}
+    },
+    "776": {
+      "inherit": "772",
+      "addLink": "alternateFormat",
+      "resourceType": "Product"
+    },
+    "777": {
+      "inherit": "772",
+      "addLink": "inConjunctionWith", "TODO": "determine link"
+    },
+    "780": {
+      "inherit": "772",
+      "TOOO:i1": {},
+      "TOOO:i2": {},
+      "addLink": "precededBy",
+      "resourceType": "Serial"
+    },
+    "785": {
+      "inherit": "780",
+      "addLink": "succeededBy",
+      "resourceType": "Serial"
+    },
+    "786": {
+      "aboutEntity": "?record",
+      "inherit": "772",
+      "addLink": "source",
+      "resourceType": "Dataset"
+    },
+    "787": {
+      "inherit": "772",
+      "addLink": "relation"
+    },
+
+    "800": {},
+    "810": {},
+    "811": {},
+    "830": {
+      "addLink": "isPartOf", "resourceType": "PublicationVolume",
+      "TODO:i2": {},
+      "$a": {"property": "uniformTitle"},
+      "$d": {"addProperty": "date"},
+      "$v": {"property": "volumeNumber"},
+      "$x": {"property": "issn", "interpunctionChars": ".,=;"}
+    },
+    "841": {},
+    "842": {},
+    "843": {},
+    "844": {},
+    "845": {},
+    "850": {},
+    "852": {},
+    "853": {},
+    "854": {},
+    "855": {},
+
+    "856": {
+      "addLink": true,
+      "embedded": true,
+      "TODO:i1": {
+        "0": "mailto:",
+        "1": "ftp:",
+        "2": "telnet:",
+        "3": "tel:",
+        "4": "http:",
+        "7": "$2"
+      },
+      "i1": {
+        "marcDefault": "4"
+      },
+      "match-i2": {
+        "0": {"addLink": "associatedMedia", "resourceType": "MediaObject"},
+        "1": {"addLink": "alternateFormat", "resourceType": "Electronic"},
+        "2": {"addLink": "isPrimaryTopicOf", "resourceType": "Document"},
+        "8": {"addLink": "relation", "resourceType": "Document"}
+      },
+      "TODO?": {
+        "if $x=digipic or $y=bild": {"addLink": "depiction"},
+        "if $z=Wikipedia|IMDB": {"addLink": "isPrimaryTopicOf"}
+      },
+      "$3": {"property": "description"},
+      "$u": {"property": "@id"},
+      "$x": {
+        "addProperty": "cataloguersNote", "uriTemplate": "{+_}"
+      },
+      "$y": {"property": "altLabel"},
+      "$z": {"addProperty": "copyNote"},
+      "_spec": [
+        {
+          "source": {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/review"}]}},
+          "result": {"about": {
+            "isPrimaryTopicOf": [{"@type": "Document", "@id": "http://example.org/review"}]
+          }}
+        },
+        {
+          "source": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
+          "result": {"about": {
+            "associatedMedia": [{"@type": "MediaObject", "@id": "http://example.com/doc.pdf"}]
+          }}
+        },
+        {
+          "source": [
+            {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
+            {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/page"}]}}
+          ],
+          "result": {"about": {
+            "associatedMedia": [{"@type": "MediaObject", "@id": "http://example.com/doc.pdf"}],
+            "isPrimaryTopicOf": [{"@type": "Document", "@id": "http://example.org/page"}]
+          }}
+        }
+      ]
+    },
+
+    "863": {},
+    "864": {},
+    "865": {},
+    "866": {},
+    "867": {},
+    "868": {},
+    "876": {},
+    "877": {},
+    "878": {},
+
+    "880": {},
+    "882": {},
+    "883": {},
+
+    "886": {
+      "TODO:i1": {},
+      "TODO:addLink": "quotedMARC", "datatype": "XMLLiteral", "$_": {}
+    },
+    "887": {
+      "TODO:addLink": "quotedRaw", "$_": {}
+    },
+
+    "976": {
+      "NOTE:candidate:aboutEntity": "?work",
+      "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
+      "addLink": "classification",
+      "resourceType": "Concept",
+      "i2": {
+        "link": "inScheme", "resourceType": "ConceptScheme",
+        "uriTemplate": "/scheme/{+_}",
+        "property": "notation",
+        "tokenMap": {"0": "sab/6", "1": "sab/5", "2": "sab"},
+        "TODO": "proper code for sab förkortad"
+      },
+      "$a": {"property": "notation"},
+      "$b": {"property": "prefLabel"},
+      "TODO": "ta bort? automatiskt pålagda - ska gå att få fram via 084.broader"
+    }
+
+  },
+
+  "auth": {
+
+    "thingLink": "focus",
+
+    "000": {
+      "inherit": "bib",
+      "[7:8]": null,
+      "[17:18]": {
+        "aboutEntity": "?record",
+        "link": "encLevel",
+        "tokenMap": "auth-encLevel",
+        "uriTemplate": "{_}"
+      },
+      "_spec": [
+        {
+          "originalLeader": "01341cz  a2200397n  4500",
+          "source": {
+            "leader": "     cz  a       n  4500",
+            "fields": [{"001": "140482"}]
+          },
+          "result": {
+            "@type": "Record",
+            "@id": "/auth/140482",
+            "controlNumber": "140482",
+            "encLevel": {"@id": "/def/enum/record/CompleteAuthorityRecord"},
+            "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
+            "focus": {
+              "@type": ["Authority"],
+              "@id": "/resource/auth/140482"
+            }
+          }
+        }
+      ]
+    },
+    "001" : {"inherit": "bib"},
+    "005": {"inherit": "bib"},
+
+    "008": {
+      "[0:6]": {
+        "aboutEntity": "?record",
+        "property": "created",
+        "parseDateTime": "yyMMdd", "timeZone": "CET"
+      },
+      "[6:7]": {
+        "aboutEntity": "?record",
+        "link": "subdivision",
+        "uriTemplate": "{_}",
+        "tokenMap": "subdivision"
+      },
+      "[7:8]": {
+        "aboutEntity": "?record",
+        "link": "romanization",
+        "uriTemplate": "{_}",
+        "tokenMap": "romanization"
+      },
+      "[8:9]": {
+        "aboutEntity": "?record",
+        "link": "languageOfCatalog",
+        "uriTemplate": "{_}",
+        "tokenMap": "languageOfCatalog"
+      },
+      "[9:10]": {
+        "aboutEntity": "?record",
+        "link": "kindOfRecord",
+        "uriTemplate": "{_}",
+        "tokenMap": "kindOfRecord"
+      },
+      "[10:11]": {
+        "aboutEntity": "?record",
+        "link": "catalogingRules",
+        "uriTemplate": "{_}",
+        "tokenMap": "catalogingRules"
+      },
+      "[11:12]": {
+        "aboutEntity": "?record",
+        "link": "subjectHeading",
+        "uriTemplate": "{_}",
+        "tokenMap": "subjectHeading"
+      },
+      "[12:13]": {
+        "aboutEntity": "?record",
+        "link": "typeOfSeries",
+        "uriTemplate": "{_}",
+        "tokenMap": "typeOfSeries"
+      },
+      "[13:14]": {
+        "aboutEntity": "?record",
+        "link": "numberedSeries",
+        "uriTemplate": "{_}",
+        "tokenMap": "numberedSeries"
+      },
+      "[16:17]": {
+        "aboutEntity": "?record",
+        "link": "headingSeries",
+        "uriTemplate": "{_}",
+        "tokenMap": "headingSeries"
+      },
+      "[17:18]": {
+        "aboutEntity": "?record",
+        "link": "subjectSubdivision",
+        "uriTemplate": "{_}",
+        "tokenMap": "subjectSubdivision"
+      },
+      "[28:29]": {
+        "aboutEntity": "?record",
+        "link": "govtAgency",
+        "uriTemplate": "{_}",
+        "tokenMap": "govtAgency"
+      },
+      "[29:30]": {
+        "aboutEntity": "?record",
+        "link": "reference",
+        "uriTemplate": "{_}",
+        "tokenMap": "reference"
+      },
+      "[31:32]": {
+        "aboutEntity": "?record",
+        "link": "recordUpdate",
+        "uriTemplate": "{_}",
+        "tokenMap": "recordUpdate"
+      },
+      "[32:33]": {
+        "aboutEntity": "?record",
+        "link": "personalName",
+        "uriTemplate": "{_}",
+        "tokenMap": "personalName"
+      },
+      "[33:34]": {
+        "aboutEntity": "?record",
+        "link": "level",
+        "uriTemplate": "{_}",
+        "tokenMap": "level"
+      },
+      "[38:39]": {
+        "aboutEntity": "?record",
+        "link": "modifiedRecord",
+        "uriTemplate": "{_}",
+        "tokenMap": "modifiedRecord"
+      },
+      "[39:40]": {
+        "aboutEntity": "?record",
+        "link": "catalogingSource",
+        "uriTemplate": "{_}",
+        "tokenMap": "catalogingSource"
+      },
+      "[14:15]": {
+        "aboutEntity": "?record",
+        "link": "headingMain",
+        "uriTemplate": "{_}",
+        "tokenMap": "headingSeries"
+      },
+      "[15:16]": {
+        "aboutEntity": "?record",
+        "link": "headingSubject",
+        "uriTemplate": "{_}",
+        "tokenMap": "headingSeries"
+      },
+      "repeatable": false
+    },
+
+    "035" : {"inherit": "bib"},
+    "040" : {
+      "inherit": "bib",
+      "TODO": "if no $f, drop entire record (or mark as obsolete)",
+      "$f": {
+        "aboutEntity": "?record",
+        "IMPROVE:about": "$thing if Concept else $record",
+        "TODO": "inCollection if . = sgp?",
+        "link": "inScheme", "resourceType": "ConceptScheme",
+        "uriTemplate": "/scheme/{_}",
+        "property": "notation"
+      },
+      "_spec": [
+        {
+          "source": {"040": {"subfields": [{"f":"barn"}]}},
+          "result": {
+            "inScheme":  {"@type": "ConceptScheme", "@id": "/scheme/barn", "notation": "barn"}
+          }
+        }
+      ]
+    },
+    "042": {
+      "aboutEntity": "?record",
+      "$a": {"property": "authenticationCode"},
+      "$9": {"addLink": "inCollection", "resourceType": "TermCollection", "property": "notation"}
+    },
+    "043" : {
+      "$a": {
+        "link": "nationality",
+        "uriTemplate": "/def/nationalities/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "notation"
+      }
+    },
+    "046" : {
+        "TODO": "parseDateTimeUsingFormatHints",
+        "$f": {"property": "birthDate"},
+        "$g": {"property": "deathDate"}
+    },
+    "065" : {
+      "inherit": "083",
+      "addLink": "broadMatch",
+      "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
+      "$2": {
+        "link": "inScheme", "resourceType": "ConceptScheme",
+        "uriTemplate": "/scheme/{+_}",
+        "property": "notation"
+      }
+    },
+
+    "073": {
+      "aboutEntity": "?record",
+      "addLink": "broader",
+      "resourceType": "TopicalTerm",
+      "$a": {"property": "prefLabel"},
+      "$z": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
+      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}"
+    },
+
+    "082" : {"inherit": "bib"},
+    "083" : {
+      "inherit": "bib:082",
+      "aboutEntity": "?record",
+      "addLink": "closeMatch",
+      "match-domain": {
+        "Concept": {"addLink": "closeMatch"},
+        "Place": {"addLink": "closeMatch"},
+        "UniformWork": {"addLink": "subject"}
+      }
+    },
+
+    "100" : {
+      "inherit": "bib",
+      "aboutEntity": "?record",
+      "aboutType": "PersonTerm",
+      "link": "focus", "embedded": true, "resourceType": "Person",
+      "match-code": {
+        "t v x y z": {
+          "aboutType": "WorkTerm",
+          "splitLink": [
+            {"codes": ["t"], "link": "focus", "spliceEntity": "UniformWork"}
+          ],
+          "link": "attributedTo",
+          "embedded": false,
+          "resourceType": "Person",
+          "$t": {"property": "title"}
+        }
+      },
+      "_spec": [
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove"}
+          ]}},
+          "result": {
+            "@type": "PersonTerm",
+            "focus": {
+              "@type": "Person",
+              "familyName":  "Jansson", "givenName":  "Tove"
+            }
+          }
+        },
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove"},
+              {"t": "Anteckningar från en ö"}
+          ]}},
+          "result": {
+            "@type": "WorkTerm",
+            "focus": {
+              "@type": "UniformWork",
+              "title": "Anteckningar från en ö",
+              "attributedTo": {"@type": "Person",
+                "familyName":  "Jansson", "givenName":  "Tove"}
+            }
+          }
+        }
+      ]
+    },
+    "110" : {
+      "inherit": "bib",
+      "aboutEntity": "?record",
+      "aboutType": "OrganizationTerm",
+      "link": "focus", "embedded": true
+    },
+    "111" : {
+      "inherit": "bib",
+      "aboutEntity": "?record",
+      "aboutType": "MeetingTerm",
+      "link": "focus", "embedded": true
+    },
+    "130" : {
+      "inherit": "bib",
+      "aboutEntity": "?record",
+      "aboutType": "WorkTerm",
+      "link": "focus", "embedded": true,
+      "resourceType": "UniformWork"
+    },
+    "148" : {
+      "aboutEntity": "?record",
+      "aboutType": "ChronologicalTerm",
+      "link": null, "resourceType": null,
+      "$a": {
+        "property": "prefLabel",
+        "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
+      },
+      "uriTemplate": "/topic/sao/{prefLabel}"
+    },
+    "150" : {
+      "inherit": "patterns:termbase",
+      "aboutEntity": "?record",
+      "resourceType": "TopicalTerm",
+      "uriTemplateDefaults": {"inScheme.notation": "sao"},
+      "dependsOn": ["040", "042"],
+      "$0": null,
+      "_spec": [
+        {
+          "name": "",
+          "source": {"150": {"subfields": [{"a": "Barnpsykologi"}]}},
+          "result": {
+            "@type": "TopicalTerm",
+            "@id": "/auth/140482",
+            "prefLabel": "Barnpsykologi",
+            "sameAs":  [{"@id": "/topic/sao/Barnpsykologi"}]
+          }
+        }
+      ]
+    },
+    "151" : {
+      "inherit": "patterns:termbase",
+      "aboutEntity": "?record",
+      "resourceType": "GeographicalTerm"
+    },
+    "155" : {
+      "inherit": "patterns:termbase",
+      "aboutEntity": "?record",
+      "resourceType": "GenreTerm",
+      "TODO:just-assert-inScheme=saogf?:uriTemplate": "/topic/saogf/{prefLabel}"
+    },
+    "162" : {
+      "inherit": "patterns:termbase",
+      "TODO": "besättning - musik",
+      "aboutEntity": "?record",
+      "resourceType": "OrchestraTerm"
+    },
+
+    "180" : {
+      "inherit": null,
+      "aboutEntity": "?record",
+      "resourceType": "SubdivisionTerm",
+      "$x": {
+        "property": "prefLabel",
+        "defaults": {"inCollection": {"@id": "/topic/aspects/", "notation": "aspects"}}
+      }
+    },
+    "181" : {
+      "inherit": null,
+      "aboutEntity": "?record",
+      "resourceType": "GeographicalSubdivisionTerm",
+      "$z": {"property": "prefLabel"}
+    },
+    "182" : {
+      "inherit": null,
+      "aboutEntity": "?record",
+      "resourceType": "ChronologicalSubdivisionTerm",
+      "$y": {"property": "prefLabel"}
+    },
+    "185" : {
+      "inherit": null,
+      "aboutEntity": "?record",
+      "resourceType": "GenreSubdivisionTerm",
+      "$v": {"property": "prefLabel"}
+    },
+
+    "400": {
+      "inherit": "bib:100",
+      "match-code": {
+        "t": {
+          "$t": {"property": "title"},
+          "splitLink": [
+            {"codes": ["t"], "addLink": "hasVersion", "spliceEntity": "UniformWork"}
+          ],
+          "link": "attributedTo"
+        }
+      },
+      "match-domain": {
+        "PersonTerm": {
+          "addLink": "sameAs",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
+        }
+      },
+      "aboutEntity": "?record",
+      "addLink": "attributedTo",
+      "resourceType": "Person"
+    },
+    "410": {
+      "inherit": "bib:610",
+      "i2": null,
+      "aboutEntity": "?record",
+      "addLink": "hasVersion",
+      "resourceType": "OrganizationTerm"
+    },
+    "411": {
+      "aboutEntity": "?record",
+      "inherit": "bib:611",
+      "addLink": "hasVersion",
+      "resourceType": "MeetingTerm"
+    },
+    "450" : {
+      "aboutEntity": "?record",
+      "$a": {"addProperty": "altLabel"},
+      "match-code": {
+        "x": {
+          "addLink": "replaces",
+          "resourceType": "ComplexTerm",
+          "uriTemplate": "/topic/sao/{termParts.prefLabel*}",
+          "$a": {"addLink": "termParts", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
+          "$x": {"addLink": "termParts", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
+        }
+      },
+      "TODO": "whatIs w||e"
+      },
+    "455" : {"inherit": "450"},
+    "500": {
+      "inherit": "bib:100",
+      "TODO": "this is really a link to other auth post..",
+      "aboutEntity": "?thing", "NOTE": "not really though - see 100",
+      "match-domain": {
+        "Person": {
+          "addLink": "hasPersona",
+          "embedded": true,
+          "resourceType": "Person"
+        }
+      }
+    },
+    "510" : {"inherit": "bib:110", "aboutEntity": null, "addLink": "seeAlso"},
+    "511" : {"inherit": "bib:111", "aboutType": null, "addLink": "seeAlso"},
+    "550" : {
+      "inherit": "150",
+      "aboutEntity": "?record",
+      "aboutType": null,
+      "resourceType": "TopicalTerm",
+      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
+      "_spec": [
+        {
+          "source": {"550": {"subfields": [{"a": "Other"}]}},
+          "result": {
+            "related": [
+              {"@type": "TopicalTerm", "@id": "/topic/sao/Other", "prefLabel":  "Other"}
+            ]
+          }
+        },
+        {
+          "source": {"550": {"subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}]}},
+          "result": {
+            "broader": [
+              {"@type": "TopicalTerm",
+                "@id": "/topic/sao/Commedia%20dell%60arte",
+                "prefLabel":  "Commedia dell`arte"}
+            ]
+          }
+        }
+      ]
+    },
+    "551" : {
+        "inherit": "550",
+      "resourceType": "GeographicalTerm",
+      "uriTemplate": "/place/{prefLabel}"
+    },
+    "555" : {
+      "inherit": "550",
+      "resourceType": "GenreTerm",
+      "uriTemplate": "/topic/saogf/{prefLabel}"
+    },
+    "580" : {
+      "TODO": "incomplete",
+      "inherit": "180",
+      "aboutType": null,
+      "resourceType": "SubdivisionTerm"
+    },
+    "667" : {
+      "aboutEntity": "?record",
+      "$a": {"addProperty": "editorialNote"}
+    },
+    "670" : {
+      "aboutEntity": "?record",
+      "addLink": "source",
+      "embedded": true,
+      "resourceType": "CreativeWork",
+      "$a": {"property": "label"},
+      "$b": {"property": "citation"},
+      "$u": {"property": "url"}
+    },
+    "675" : {
+      "$a": {"property": "label"}
+    },
+    "678" : {
+      "TODO:i1": {},
+      "$a": {"addProperty": "note"}
+    },
+    "680" : {
+      "aboutEntity": "?record",
+      "$i": {"addProperty": "scopeNote"}
+    },
+    "688" : {
+      "aboutEntity": "?record",
+      "$a": {"addProperty": "historyNote"}
+    },
+
+    "750" : {
+      "inherit": "bib:650",
+      "i1": null,
+      "aboutEntity": "?record",
+      "computeLinks": null,
+      "addLink": "closeMatch",
+      "match-domain": {
+        "TopicalTerm": {"addLink": "closeMatch"},
+        "WorkTerm": {"addLink": "subject"}
+      },
+      "i1": null,
+      "$0": {"addProperty": "notation"},
+      "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html"
+    },
+    "755" : {
+      "inherit": "750",
+      "resourceType": "GenreTerm",
+      "uriTemplate": "/topic/saogf/{prefLabel}",
+      "$2": {
+        "requires-i2": "7",
+        "link": "inScheme",
+        "resourceType": "ConceptScheme", "uriTemplate": "/scheme/{+_}",
+        "property": "notation",
+        "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
+      }
+    },
+    "780" : {
+      "inherit": "750",
+      "$x": {"property": "prefLabel"}
+    },
+    "781" : {
+      "inherit": "750",
+      "resourceType": "GeographicalSubdivisionTerm",
+      "$z": {"property": "prefLabel"}
+    },
+    "782" : {
+      "inherit": "750",
+      "resourceType": "ChronologicalSubdivisionTerm",
+      "$y": {"property": "prefLabel"}
+    },
+    "785" : {
+      "inherit": "755",
+      "$v": {"property": "prefLabel"}
+    },
+
+    "856": {
+      "inherit": "bib",
+      "TODO:i1": {},
+      "TODO:match-i2": {
+        "0": {"addLink": "sameAs"},
+        "1": {"addLink": "isPrimaryTopicOf", "resourceType": "Electronic"},
+        "2": {"addLink": "relation", "resourceType": "Document"},
+        "8": {"addLink": "seeAlso", "resourceType": "Document"}
+      }
+    }
+  },
+
+  "hold": {
+
+    "thingLink": "about",
+
+    "postProcessing": [
+      {
+        "type": "MappedProperty",
+        "sourceEntity": "?thing",
+        "sourceLink": "holdingFor",
+        "sourceProperty": "@type",
+        "targetEntity": "?record",
+        "targetProperty": "holdingType",
+        "valueMap": {
+          "ComponentPart": {"@id": "/def/enum/record/SinglePartItemHolding"},
+          "Collection": {"@id": "/def/enum/record/SinglePartItemHolding"},
+          "SubCollection": {"@id": "/def/enum/record/SinglePartItemHolding"},
+          "Monograph": {"@id": "/def/enum/record/SinglePartItemHolding"},
+          "SerialComponentPart": {"@id": "/def/enum/record/SerialItemHolding"},
+          "Integrating": {"@id": "/def/enum/record/SerialItemHolding"},
+          "Serial": {"@id": "/def/enum/record/SerialItemHolding"},
+          "?": {"@id": "/def/enum/record/MultipartItemHolding"},
+          "Periodical": null
+        },
+        "_spec": [
+          {
+            "source": {
+              "about": {
+                "holdingFor": {
+                  "@type": ["Monograph"]
+                }
+              }
+            },
+            "result": {
+              "holdingType": {"@id": "/def/enum/record/SinglePartItemHolding"},
+              "about": {
+                "holdingFor": {
+                  "@type": ["Monograph"]
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+
+    "000": {
+      "[5:6]": {
+        "aboutEntity": "?record",
+        "link": "status",
+        "uriTemplate": "{_}",
+        "tokenMap": "status"
+      },
+      "[6:7]": {
+        "aboutEntity": "?record",
+        "link": "holdingType",
+        "uriTemplate": "{_}",
+        "tokenMap": "holdingType"
+      },
+      "[7:8]": {
+        "aboutEntity": "?record",
+        "link": "statistics",
+        "uriTemplate": "{_}",
+        "tokenMap": "statistics"
+      },
+      "[9:10]": {
+        "aboutEntity": "?record",
+        "link": "characterCoding",
+        "uriTemplate": "{_}",
+        "fixedDefault": "a",
+        "tokenMap": "characterCoding"
+      },
+      "[17:18]": {
+        "aboutEntity": "?record",
+        "link": "encLevel",
+        "uriTemplate": "{_}",
+        "tokenMap": "hold-encLevel"
+      },
+      "[18:19]": {
+        "aboutEntity": "?record",
+        "link": "itemInfoInRecord",
+        "uriTemplate": "{_}",
+        "tokenMap": "itemInfoInRecord"
+      },
+      "[20:24]": {
+        "aboutEntity": "?record",
+        "property": "entryMap",
+        "fixedDefault": "4500",
+        "TODO:patternMap": "entryMap"
+      },
+      "repeatable": false,
+      "_spec": [
+        {
+          "originalLeader": "00236nxa a22001091n44500",
+          "source": {"leader": "     nx  a       1n 4500", "fields": [
+            {"001": "0000000"},
+            {"004": "7149593"}
+          ]},
+          "result": {
+            "@type": "Record",
+            "@id": "/hold/0000000",
+            "controlNumber": "0000000",
+            "encLevel": {"@id": "/def/enum/record/HoldingsLevel1"},
+            "itemInfoInRecord": {"@id": "/def/enum/record/NoItemInformation"},
+            "status": {"@id": "/def/enum/record/New"},
+            "holdingType": {"@id": "/def/enum/record/SinglePartItemHolding"},
+            "about": {
+              "@type": "HeldMaterial",
+              "@id": "/resource/hold/0000000",
+              "holdingFor": {"@id": "/resource/bib/7149593"}
+            }
+          }
+        }
+      ]
+    },
+
+    "001" : {"inherit": "bib"},
+
+    "003": {
+      "ignored": true,
+      "TODO:systemNumber-with-default": "SE-LIBR", "note": "used-for-exports"
+    },
+
+    "004": {
+      "aboutType": "HeldMaterial",
+      "link": "holdingFor", "uriTemplate": "/resource/bib/{_}",
+      "TODO:recordDescription(@reverse:about)": {"property": "controlNumber"}
+    },
+
+    "005": {"inherit": "bib"},
+
+    "007": {"inherit": "bib"},
+
+    "008": {
+      "[0:6]": {
+        "aboutEntity": "?record",
+        "property": "created",
+        "parseDateTime": "yyMMdd", "timeZone": "CET"
+      },
+      "[6:7]": {
+        "link": "acquisitionStatus",
+        "uriTemplate": "{_}",
+        "tokenMap": "acquisitionStatus"
+      },
+      "[7:8]": {
+        "link": "acquisitionMethod",
+        "uriTemplate": "{_}",
+        "tokenMap": "acquisitionMethod"
+      },
+      "[8:12]": {
+        "property": "expectedAcquisitionEndDate",
+        "TODO:parseDateTime": "yyMM", "timeZone": "CET",
+        "fixedDefault": "    ",
+        "matchAsDefault": "^ *0+ *$|^ +$|^\\|+$"
+      },
+      "[12:13]": {
+        "link": "generalRetentionPolicy",
+        "uriTemplate": "{_}",
+        "tokenMap": "generalRetentionPolicy"
+      },
+      "[13:14]": {
+        "link": "retentionPolicyType",
+        "uriTemplate": "{_}",
+        "tokenMap": "retentionPolicyType"
+      },
+      "[14:15]": {
+        "property": "retentionPolicyNumberOfUnits"
+      },
+      "[15:16]": {
+        "link": "retentionPolicyUnitType",
+        "uriTemplate": "{_}",
+        "tokenMap": "retentionPolicyUnitType"
+      },
+      "[16:17]": {
+        "link": "completeness",
+        "uriTemplate": "{_}",
+        "tokenMap": "completeness"
+      },
+      "[17:20]": {
+        "property": "numberOfItems",
+        "parseZeroPaddedNumber": true,
+        "fixedDefault": "|||"
+      },
+      "[20:21]": {
+        "link": "lendingPolicy",
+        "uriTemplate": "{_}",
+        "tokenMap": "lendingPolicy"
+      },
+      "[21:22]": {
+        "link": "reproductionPolicy",
+        "uriTemplate": "{_}",
+        "tokenMap": "reproductionPolicy"
+      },
+      "[22:25]": {
+        "addLink": "language",
+        "uriTemplate": "/def/languages/{_}",
+        "matchUriToken": "^\\w{2,3}$",
+        "fixedDefault": "und"
+      },
+      "[25:26]": {
+        "link": "copyReport",
+        "uriTemplate": "{_}",
+        "tokenMap": "copyReport"
+      },
+      "[26:32]": {
+        "aboutEntity": "?record",
+        "property": "date",
+        "parseDateTime": "yyMMdd", "timeZone": "CET",
+        "fixedDefault": "000000",
+        "matchAsDefault": "^ *0+ *$|^ +$|^\\|+$"
+      },
+      "repeatable": false,
+      "_spec": [
+        {
+          "source": {"008": "900101||    |   ||||||swe|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "about": {
+              "language": [{"@id": "/def/languages/swe"}]
+            }
+          }
+        },
+        {
+          "name": "keep broken date values verbatim",
+          "source": {"008": "900101||    |   ||||||und|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00"
+          }
+        },
+        {
+          "name": "parse zero padded numberOfItems",
+          "source": {"008": "900101||    |   |001||und|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "about": {
+              "numberOfItems": 1
+            }
+          }
+        },
+        {
+          "name": "broken numberOfItems",
+          "source": {"008": "900101||    |   |NaN||und|000000"},
+          "normalized": {"008": "900101||    |   ||||||und|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "about": {
+              "numberOfItems": "NaN"
+            }
+          }
+        },
+        {
+          "name": "non-zero-padded numberOfItems and odd dates",
+          "source": {"008": "121102||0   |||||1  b ||| 0     "},
+          "normalized": {"008": "121102||    |   |001b|und|000000"},
+          "result": {
+            "created": "2012-11-02T00:00:00.0+01:00",
+            "about": {
+              "numberOfItems": 1,
+              "lendingPolicy": {"@id": "/def/enum/content/WillNotLend"}
+            }
+          }
+        }
+      ]
+    },
+
+    "014": {
+      "aboutEntity": "?record",
+      "TODO:i1": {},
+      "$a": {"addProperty": "librisIIINumber"}
+    },
+
+    "024": {
+      "inherit": "bib"
+    },
+
+    "084": {"inherit": "bib", "addLink": "callno"},
+
+    "541": {
+      "addProperty": "immediateSourceOfAcquisitionOfItem",
+      "repeatable": true
+    },
+
+    "561": {
+      "addLink": "workExample", "embedded": true, "resourceType": "Product",
+      "$a": {"addProperty": "custodialHistoryOfItem"}
+    },
+
+    "562": {
+      "inherit": "bib"
+    },
+
+    "563": {
+      "addLink": "workExample", "embedded": true, "resourceType": "Product",
+      "$a": {"addProperty": "bindingInformation"}
+    },
+
+    "600": {"inherit": "bib:100", "addLink": "subject"},
+    "650": {"inherit": "bib:650"},
+    "653": {},
+    "698": {},
+
+    "852": {
+      "aboutType": "HeldMaterial",
+      "addLink": "offers",
+      "embedded": true,
+      "resourceType": "Offer",
+      "TODO:i1": {},
+      "FIXME:i2": {
+        "property": "shelfOrder"
+      },
+      "$2": {"property": "sourceOfClassificationOrShelfMarkScheme"},
+      "$3": {"property": "materialsSpecified"},
+      "$8": {"property": "sequenceNumber"},
+      "$a": {"property": "location"},
+      "$b": {
+        "addLink": "heldBy",
+        "resourceType": "Organization",
+        "property": "notation",
+        "TODO": "move to about-resource and auto-repeat here",
+        "NOTE": "libris deviates from standard (sublocationOrCollection)"
+      },
+      "$c": {"addProperty": "shelfLocation"},
+      "$d": {"addProperty": "formerShelfLocation"},
+      "$e": {"addProperty": "address"},
+      "$f": {"addProperty": "codedLocationQualifier"},
+      "$g": {"addProperty": "nonCodedLocationQualifier"},
+      "$h": {
+        "property": "classificationPart",
+        "TODO:property": "shelfMark? only for HeldItem?",
+        "NOTE": "libris deviates from standard (used for all kinds of shelfControlNumber?)"
+      },
+      "$i": {
+        "addProperty": "availability",
+        "TODO:property": "change to copyNote?",
+        "NOTE": "deviates from standard (itemPart)?",
+        "TODO": "optional controlled values (see websearch holdings interface)"
+      },
+      "$j": {"property": "shelfControlNumber"},
+      "$k": {"addProperty": "callNumberPrefix"},
+      "$l": {"property": "shelfLabel"},
+      "$m": {"addProperty": "callNumberSuffix"},
+      "$n": {"property": "countryCode"},
+      "$p": {"property": "pieceDesignation"},
+      "$q": {"property": "itemCondition"},
+      "$s": {"addProperty": "copyrightArticleFeeCode"},
+      "$t": {"property": "copyNumber"},
+      "$u": {"addProperty": "url"},
+      "$x": {"addProperty": "cataloguersNote"},
+      "$z": {
+        "addProperty": "copyNote",
+        "TODO:property": "change to comment?"
+      },
+      "_spec": [
+        {
+          "source": {"852": {
+            "ind1": " ",
+            "ind2": " ",
+            "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
+          }},
+          "result": {
+            "about": {
+              "@type": "HeldMaterial",
+              "offers": [
+                {
+                  "@type": "Offer",
+                  "copyNumber": "1",
+                  "heldBy": [{"@type": "Organization", "notation": "H"}],
+                  "shelfControlNumber": "65.465",
+                  "shelfLocation": ["MAG"]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    "856": {
+      "inherit": "bib"
+    },
+    "866": {
+      "NOTE:domainIncludes": "Aggregate",
+      "addLink": "workExample",
+      "embedded": true,
+      "resourceType": "SomeProducts",
+      "TODO:i1": {},
+      "TODO:i2": {},
+      "$a": {"property": "description"},
+      "$x": {"addProperty": "cataloguersNote"},
+      "$z": {"addProperty": "copyNote"}
+    }
+  }
+
+}

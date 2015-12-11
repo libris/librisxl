@@ -1,0 +1,84 @@
+{
+  "sameAs": [
+    {
+      "@id": "/topic/sao/Medeltiden"
+    }
+  ],
+  "scopeNote": [
+    "Även allmänt ämnesord.",
+    "Allmänt kronologiskt ämnesord. Används endast för Europa."
+  ],
+  "focus": {
+    "@id": "/resource/auth/355057",
+    "@type": [
+      "Authority"
+    ]
+  },
+  "modified": "2012-11-15T12:48:53.0+01:00",
+  "subjectSubdivision": {
+    "@id": "/def/enum/content/Topical"
+  },
+  "inScheme": {
+    "@id": "/scheme/sao"
+  },
+  "prefLabel": "Medeltiden",
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "_marcUncompleted": [
+    {
+      "548": {
+        "subfields": [
+          {
+            "a": "500-1500"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "inCollection": {
+    "@id": "/topic/chronological/",
+    "notation": "chronological"
+  },
+  "@id": "/auth/355057",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2012-08-10T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "355057",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "romanization": {
+    "@id": "/def/enum/content/NationalStandard"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "ChronologicalTerm"
+}

@@ -1,0 +1,355 @@
+{
+  "about": {
+    "comment": [
+      "Title from t.p. of accompanying text.",
+      "Bilaga med titeln: Maps from the collection of the Rajhrad archives",
+      "Facsimiles.",
+      "The maps variously include text, index, insets, tables, ill., and small ancillary maps."
+    ],
+    "mediaTerm": "kartografiskt material] =",
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Nfdaz%20M%C3%A4hren"
+      },
+      {
+        "@id": "/topic/kssb/8/Nfda%2FK"
+      }
+    ],
+    "series": [
+      {
+        "volumeNumberSequentialDesignation": "15",
+        "@type": "Serial",
+        "title": "Knižnice Jižní Moravy"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Organization&name=St%C3%A1tn%C3%AD%20okresn%C3%AD%20archiv%20Brno-venkov"
+    },
+    "govtPub": {
+      "@id": "/def/enum/content/FederalNational"
+    },
+    "cartographicScale": "Scales differ.",
+    "subject": [
+      {
+        "@id": "/topic/sao/Historiska%20kartor/M%C3%A4hren/faksimiler"
+      },
+      {
+        "@id": "/topic/sao/M%C3%A4hren/historia/kartor"
+      },
+      {
+        "@id": "/topic/lcsh/Moravia%20%28Czech%20Republic%29/Maps/Early%20works%20to%201800/Facsimiles."
+      },
+      {
+        "@id": "/topic/lcsh/Moravia%20%28Czech%20Republic%29/Maps/Facsimiles."
+      },
+      {
+        "@id": "/topic/lcsh/Silesia%20%28Czech%20Republic%29/Maps/Facsimiles."
+      },
+      {
+        "@id": "/topic/lcsh/Brno%20Region%20%28Czech%20Republic%29/Maps/Facsimiles."
+      },
+      {
+        "@id": "/topic/lcsh/Austria/Maps/Facsimiles."
+      },
+      {
+        "@id": "/topic/lcsh/Europe/Maps%2C%20Pictorial/Facsimiles."
+      },
+      {
+        "@id": "/topic/lcsh/Astronomy/Charts%2C%20diagrams%2C%20etc./Facsimiles."
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/IndexPresent"
+    },
+    "listOfContents": [
+      "Mapa Moravy od P. Fabricia 1573 -- Mapa Moravy od G. Mercatora 1606 -- Mapa Moravy od J.A. Komenského 1633 -- Mapa Moravy od J. Ch. Müllera 1720 -- Mapa zemí Koruny české od M. Kauffera 1734 -- Mapa Moravy a Slezska od F. Raffelspergera 1851 -- Mapa Země moravskoslezské od J. Havránka 1938 -- Mapa Rakouského císařství vydaná F. Raffelspergerem v roce 1850 -- Mapa obléhání Brna Švédy v r. 1645, 2. pol. 18. století -- Mapa bitvy u Slavkova, 2. pol. 19. století -- Mapa železničního úseku Floridsdorf-Rajhrad od F. rytíře Collara 40. leta 19. století [2 sections on 1 sheet] -- Mapa Ferdinandinovy Severní dráhy úsek Vídeň-Brno kolem r. 1840 [2 sections on 1 sheet] -- Rukopisná mapa jižní části katastrálního území obce Hlíny od D. Fischbacha po r. 1750 -- Mapa františkánských klášterů česko-moravské provincie 1737 -- Mapa obecných škol na Moravě 1888 -- Mapa českých hospodářských družstev na Moravě od O. Vašíčka 1910 -- Tabulkové schéma vzdáleností a statistický přehled rakousko-uherského mocnářství od M. Birkenthala 1834 -- Mapa Brna a okolí od F. rytíře Collara 1845 -- Humoristická mapa Evropy v r. 1914 od K. Lehmanna-Dumonta kolem r. 1918 -- Mapa hvězdného nebe podle Bodeho od J. Hesse, 1. pol. 19. století."
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Brno%20%5BCzech%20Republic%5D"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Státní okresní archiv Brno-venkov",
+        "providerDate": "1995"
+      }
+    ],
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=1.%20vyd."
+      }
+    ],
+    "@id": "/resource/bib/10601945",
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Mapa%20Moravy"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "1",
+        "@type": "Title",
+        "titleValue": "Mapy z fondů rajhradského archivu"
+      },
+      {
+        "titleType": "3",
+        "@type": "Title",
+        "titleValue": "Maps from the collection of the Rajhrad archives"
+      }
+    ],
+    "responsibilityStatement": "M.V. Drápela ... [et al.]",
+    "material": {
+      "@id": "/def/enum/content/MapSeries"
+    },
+    "hasFormat": [
+      {
+        "@id": "/some?type=Map"
+      },
+      {
+        "accompanyingMaterial": "1 bilaga ([36] s.)",
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "1 mapp (1 häfte [40 s.], 20 lösa vikta kartbl.)"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xr"
+      }
+    ],
+    "supplementaryContentNote": [
+      "Bibliography in accompanying text."
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/lat"
+      },
+      {
+        "@id": "/def/languages/cze"
+      },
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "lccn": "97684878",
+    "classificationLcc": "G6513.M6 svar",
+    "instanceTitle": {
+      "subtitle": "Mapy z fondů rajhradského archivu : sv. I, dvacet reprodukcí map 1573-1938",
+      "@type": "Title",
+      "titleValue": "Tabulae de collectionibus archivi Raygradensis"
+    },
+    "relief": {
+      "@id": "/def/enum/content/Hachure"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "8085048639"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9788085048636"
+      }
+    ],
+    "@type": [
+      "Cartography",
+      "Monograph"
+    ],
+    "cartographicAscensionAndDeclination": [
+      {
+        "@type": "CartographyCoordinates",
+        "cartographicScale": "a"
+      }
+    ]
+  },
+  "created": "1997-06-30T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "transcribingAgency": {
+    "@id": "/some?type=Organization&name=DLC"
+  },
+  "controlNumber": "10601945",
+  "modified": "2009-07-21T10:58:22.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "043": {
+        "subfields": [
+          {
+            "a": "e-xr---"
+          },
+          {
+            "a": "e-au---"
+          },
+          {
+            "a": "e------"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "045": {
+        "subfields": [
+          {
+            "b": "d1573"
+          },
+          {
+            "b": "d1938"
+          }
+        ],
+        "ind1": "2",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "b"
+      ],
+      "050": {
+        "subfields": [
+          {
+            "a": "G6513.M6 svar"
+          },
+          {
+            "b": ".S8 MLC"
+          }
+        ],
+        "ind1": "0",
+        "ind2": "0"
+      }
+    },
+    {
+      "052": {
+        "subfields": [
+          {
+            "a": "6513"
+          },
+          {
+            "b": "M6"
+          },
+          {
+            "b": "S5"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "052": {
+        "subfields": [
+          {
+            "a": "6514"
+          },
+          {
+            "b": "B8"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "052": {
+        "subfields": [
+          {
+            "a": "6480"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "052": {
+        "subfields": [
+          {
+            "a": "5701"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "052": {
+        "subfields": [
+          {
+            "a": "3190"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Historiska kartor"
+          },
+          {
+            "z": "Mähren"
+          },
+          {
+            "v": "faksimiler"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "651": {
+        "subfields": [
+          {
+            "a": "Mähren"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "v": "kartor"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=OCLCQ"
+  },
+  "systemNumber": [
+    "(OCoLC)ocm37372848",
+    "(OCoLC)37372848"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=DLC"
+  },
+  "@id": "/bib/10601945",
+  "@type": "Record"
+}

@@ -1,0 +1,160 @@
+{
+  "about": {
+    "comment": [
+      "Översättning från engelska"
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/839.738/e22/"
+      },
+      {
+        "@id": "/topic/kssb/8/Hveaec.01"
+      },
+      {
+        "@id": "/topic/kssb/8/Hccvea.01"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Larsson&givenName=Stieg&birthYear=1954&deathYear=2004"
+    },
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=Flickan%20som%20lekte%20med%20elden."
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/Novel"
+    },
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "_providerYear": "2010",
+    "responsibilityStatement": "Stieg Larsson ; người dịch, Trà̂n Đĩnh.",
+    "translator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/vm"
+      }
+    ],
+    "@id": "/resource/bib/12230456",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=H%C3%A0%20N%E1%BB%99i"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Phụ nữ",
+        "providerDate": "2010."
+      }
+    ],
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "607 p.",
+        "dimensions": "23 cm."
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/vie"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "subtitle": "tiẻ̂u thuyé̂t",
+      "@type": "Title",
+      "titleValue": "Cô gái đùa với lửa"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "8935069912075"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SUEC"
+    }
+  ],
+  "language": [
+    {
+      "@id": "/def/languages/eng"
+    }
+  ],
+  "created": "2011-06-03T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "transcribingAgency": {
+    "@id": "/some?type=Organization&name=AU%40"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "12230456",
+  "modified": "2014-10-27T13:19:38.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "800": {
+        "subfields": [
+          {
+            "a": "Larsson, Stieg,"
+          },
+          {
+            "d": "1954-2004."
+          },
+          {
+            "t": "Millennium."
+          },
+          {
+            "l": "Vietnamesiska"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Ilc"
+  },
+  "systemNumber": [
+    "(OCoLC)ocn728442323"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=AU%40"
+  },
+  "@id": "/bib/12230456",
+  "@type": "Record"
+}

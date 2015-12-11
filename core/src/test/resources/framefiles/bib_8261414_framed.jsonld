@@ -1,0 +1,486 @@
+{
+  "about": {
+    "comment": [
+      "1991-1997 vissa nummer med titeln: Bild-Vi, och i något större format",
+      "Medlemstidning för Kooperativa förbundet",
+      "Utkom i flera upplagor",
+      "Bilagor med varierande utseende och innehåll under hela utgivningstiden",
+      "1988:51/52: \"Vi 75 år\"",
+      "2006:augusti med bilaga: Hur man botar en fanatiker och om att skriva / Amos Oz"
+    ],
+    "classification": [
+      {
+        "@id": "/some?type=Concept&notation=05"
+      },
+      {
+        "@id": "http://dewey.info/class/058.7/e23/"
+      },
+      {
+        "@id": "/topic/kssb/7/Bd-c"
+      },
+      {
+        "@id": "/topic/sab/Bd-c"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "",
+        "subtitle": "veckotidningen som äges av sin läsekrets",
+        "@type": "Title",
+        "coverage": "1937, 1942:23-1953:50",
+        "titleValue": "Vi"
+      },
+      {
+        "titleType": "",
+        "subtitle": "konsumentbladet : veckotidningen som äges av sin läsekrets",
+        "@type": "Title",
+        "coverage": "1938-1942:22",
+        "titleValue": "Vi"
+      },
+      {
+        "titleType": "",
+        "subtitle": "Sveriges ledande magasin om kultur och samhälle",
+        "@type": "Title",
+        "titleValue": "Vi"
+      },
+      {
+        "titleType": "3",
+        "@type": "Title",
+        "coverage": "1953:51/52-1957:41",
+        "titleValue": "Veckotidningen Vi"
+      },
+      {
+        "titleType": "3",
+        "@type": "Title",
+        "coverage": "1967:9-1978, 1979:40-",
+        "titleValue": "Tidningen Vi"
+      },
+      {
+        "titleType": "2",
+        "@type": "Title",
+        "coverage": "1991-1997",
+        "titleValue": "Bild-Vi"
+      }
+    ],
+    "publishingDirector": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      },
+      {
+        "@id": "_:b-6"
+      },
+      {
+        "@id": "_:b-7"
+      },
+      {
+        "@id": "_:b-8"
+      },
+      {
+        "@id": "_:b-9"
+      },
+      {
+        "@id": "_:b-10"
+      },
+      {
+        "@id": "_:b-11"
+      }
+    ],
+    "regularity": {
+      "@id": "/def/enum/content/Regular"
+    },
+    "frequency": "1 nr/månad",
+    "relation": [
+      {
+        "@id": "http://www.vi-tidningen.se",
+        "@type": "Document",
+        "copyNote": [
+          "Tidskriftens webbplats"
+        ]
+      }
+    ],
+    "publication": [
+      {
+        "scopeNote": "Sammanfattad utgivningstid:",
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Vi",
+        "providerDate": "1937-"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Vi",
+        "providerDate": "1937-1988"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kooperativa förbundet",
+        "providerDate": "1988"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "AB Tidningen Vi på uppdrag av Kooperativa förbundet",
+        "providerDate": "1988-"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/SuccessiveEntry"
+    },
+    "alphabet": {
+      "@id": "/def/enum/content/ExtendedRoman"
+    },
+    "contains": [
+      {
+        "@id": "/some?type=CreativeWork&linkNote=1950-1957%20vissa%20nr%20med%20bilaga%3A&title=Vi%20husm%C3%B6drar"
+      }
+    ],
+    "@id": "/resource/bib/8261414",
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      },
+      {
+        "@id": "_:b-6"
+      },
+      {
+        "@id": "_:b-7"
+      },
+      {
+        "@id": "_:b-8"
+      },
+      {
+        "@id": "_:b-9"
+      },
+      {
+        "@id": "_:b-10"
+      },
+      {
+        "@id": "_:b-11"
+      },
+      {
+        "@id": "_:b-12"
+      }
+    ],
+    "keyTitle": [
+      {
+        "titleQualifier": "(Stockholm)",
+        "@type": "Title",
+        "titleValue": "Vi"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Nordisk rotogravyr)"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Periodical"
+      }
+    ],
+    "temporalCoverageNote": "1937-",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "dimensions": "37 cm (1937-1942:22), 34 cm (1942:23-1963), 27-30 cm (1964-)"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "frequencyCategory": {
+      "@id": "/def/enum/content/MonthlyIncludes91011Or12NumbersAYear"
+    },
+    "genre": [
+      {
+        "@id": "/topic/saogf/Popul%C3%A4rpress"
+      },
+      {
+        "@id": "/topic/saogf/Familjetidningar"
+      },
+      {
+        "@id": "/topic/saogf/Organisationspress"
+      }
+    ],
+    "supplementaryContentNote": [
+      "Chöler, Claes: Vi 1937-1941 : en förteckning över skönlitterärt material"
+    ],
+    "publisher": [
+      {
+        "@id": "_:b-12"
+      }
+    ],
+    "replaces": [
+      {
+        "date": "1937-1997:12",
+        "frequency": "1 nr/vecka,",
+        "@type": "Serial"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "precededBy": [
+      {
+        "@id": "/some?type=Serial&title=Konsumentbladet"
+      }
+    ],
+    "responsibleParty": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-6"
+      },
+      {
+        "@id": "_:b-7"
+      },
+      {
+        "@id": "_:b-8"
+      },
+      {
+        "@id": "_:b-9"
+      },
+      {
+        "@id": "_:b-10"
+      },
+      {
+        "@id": "_:b-11"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "performerNote": [
+      "Red.: Seved Apelqvist (1937-1939:29). Chefred.: Seved Apelqvist (1939:30-1945:18). Red. : Nils Thedin, andre red.: Birger Lundberg (1945:19-1957). Verkställande red.: Birger Lundberg (1958-1959:5), andre red.: Elly Jannes (1958-1969). Chefred.: Birger Lundberg (1959:6-1966:27/28), Örjan Wallqvist (1966:29/30-1968:40), Bo Präntare (1968:41-1970:9), Sten Lundgren (1970:10-14). Red.: Sten Lundgren (1970:15-1978), Allan Larsson (1979-1982), Monica Boëthius (1983-1986:18). Andre red.: Hasse Enström (1972:15-1986:18). Chefred.: Monica Boëthius (1986:19-1988:5), Mats Ekdahl (1988:6-1991). Red.: Mats Ekdahl, chefred.: Göran Gynne (1992:1/2-1993:39). Chefred.: Göran Gynne (1993:40-1999)",
+      "Ansv. utg.: Seved Apelqvist (1937-1939:29, 1944:3-1945:18), Nils Thedin (1945:19-1959:5), Birger Lundberg (1959:6-1966:27/28), Örjan Wallqvist (1966:29/30-1968:40), Bo Präntare (1968:41-1970:9), Sten Lundgren (1970:10-1978), Allan Larsson (1979-1982), Monica Boëthius (1983-1988:5), Mats Ekdahl (1988:6-1991), Göran Gynne (1992-1999)"
+    ],
+    "instanceTitle": {
+      "subtitle": "veckotidningen som äges av sin läsekrets",
+      "@type": "Title",
+      "titleValue": "Vi"
+    },
+    "issueNumber": [
+      "Årg. 24(1937): nr 1-årg. 78(1991): nr 51/52 ; 1992: nr 1/2-2005: nr 10 ; 2005: dec-2007:dec ; 2008:nr 1-"
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/issn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "0346-4180"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Serial"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=NLT"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SFbB"
+    }
+  ],
+  "created": "1979-11-23T00:00:00.0+01:00",
+  "technicalNote": [
+    "Indexeringslänk"
+  ],
+  "controlNumber": "8261414",
+  "@type": "Record",
+  "librisIIINumber": [
+    "03464180"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "2"
+      ],
+      "022": {
+        "subfields": [
+          {
+            "a": "0346-4180"
+          },
+          {
+            "2": "f"
+          }
+        ],
+        "ind1": "0",
+        "ind2": " "
+      }
+    },
+    {
+      "082": {
+        "subfields": [
+          {
+            "a": "058.7"
+          },
+          {
+            "2": "23/swe"
+          },
+          {
+            "q": "Smm"
+          }
+        ],
+        "ind1": "0",
+        "ind2": "4"
+      },
+      "_unhandled": [
+        "q"
+      ]
+    },
+    {
+      "515": {
+        "subfields": [
+          {
+            "a": "Enstaka nummer 1937-1991 saknar årgångsbeteckning"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "515": {
+        "subfields": [
+          {
+            "a": "1997:13/14-2000 utgörs av dubbelnummer"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Populärpress"
+          },
+          {
+            "2": "sgp"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Familjetidningar"
+          },
+          {
+            "2": "sgp"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Organisationspress"
+          },
+          {
+            "2": "sgp"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "sourceNote": [
+    "NLT: Saknar uppgift om ansv. utg. 1939:30-1944:2. - 1937-1999 bibliograferad för NLT. - Vid bibliografins slut 1999 utkom tidskriften med 1 nr/månad"
+  ],
+  "modified": "2013-07-03T10:37:32.0+02:00",
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Smm"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/8261414",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

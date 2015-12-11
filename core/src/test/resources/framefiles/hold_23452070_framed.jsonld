@@ -1,0 +1,107 @@
+{
+  "about": {
+    "holdingFor": {
+      "@id": "/resource/bib/7149593"
+    },
+    "offers": [
+      {
+        "heldBy": [
+          {
+            "@id": "/some?type=Organization&notation=Mo"
+          }
+        ],
+        "@type": "Offer",
+        "classificationPart": "Gcz Jansson, Tove"
+      }
+    ],
+    "callno": [
+      {
+        "@id": "/topic/kssb/8/Gcz%20Jansson%2C%20Tove"
+      },
+      {
+        "@id": "/topic/kssb/8/Lz%20Jansson%2C%20Tove"
+      },
+      {
+        "@id": "/topic/kssb/8/Ibz%20Pietil%C3%A4%2C%20Tuulikki"
+      },
+      {
+        "@id": "/topic/kssb/8/Lz%20Pietil%C3%A4%2C%20Tuulikki"
+      }
+    ],
+    "numberOfItems": 1,
+    "heldBy": {
+      "@type": "Organization",
+      "notation": "Mo"
+    },
+    "@id": "/resource/hold/23452070",
+    "@type": "HeldMaterial",
+    "subject": [
+      {
+        "@id": "/some?type=Person&familyName=Jansson&givenName=Tove&birthYear=1914&deathYear=2001"
+      },
+      {
+        "@id": "/some?type=Person&familyName=Pietil%C3%A4&givenName=Tuulikki&birthYear=1917"
+      }
+    ]
+  },
+  "created": "2009-02-23T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/HoldingsLevel1"
+  },
+  "controlNumber": "23452070",
+  "itemInfoInRecord": {
+    "@id": "/def/enum/record/NoItemInformation"
+  },
+  "holdingType": {
+    "@id": "/def/enum/record/SinglePartItemHolding"
+  },
+  "_marcUncompleted": [
+    {
+      "035": {
+        "subfields": [
+          {
+            "a": "(Mo)b1035190"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "500": {
+        "subfields": [
+          {
+            "a": "SAMB 960-17"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "546": {
+        "subfields": [
+          {
+            "a": "svenska"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "655": {
+        "subfields": [
+          {
+            "a": "Bok"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    }
+  ],
+  "modified": "2009-02-23T13:14:06.0+01:00",
+  "@id": "/hold/23452070",
+  "@type": "Record"
+}

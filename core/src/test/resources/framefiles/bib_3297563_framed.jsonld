@@ -1,0 +1,228 @@
+{
+  "about": {
+    "comment": [
+      "Ingår i: Modée bd 11 s. 372"
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "classification": [
+      {
+        "@id": "/topic/kssb/7/Ohia-c%3Aoe"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&linkNote=Digitaliserad%20version%3A&title=%C3%96fwer-St%C3%A5th%C3%A5llare-Embetets%20Kung%C3%B6relse%2C%20at%20Kr%C3%B6gare%20och%20N%C3%A4rings-Idkare%20h%C3%A4r%20i%20Staden%2C%20b%C3%B6ra%2C%20then%2019%2C%2020%20och%2021%20i%20thenna%20m%C3%A5nad%2C%20uti%20Stadsens%20Handels-Collegio%20uttaga%20the%20f%C3%B6r%20them%20inr%C3%A4ttade%20B%C3%B6cker%20til%20afhemtning%20af%20thet%20them%20tilslagne%20Br%C3%A4nwins-quantum%2C%20och%20at%20them%20icke%20%C3%A4r%20till%C3%A5tit%20at%20s%C3%A4lja%20annat%20Br%C3%A4nwin%2C%20%C3%A4n%20thet%20som%20%C3%A4r%20prof-haltigt%20och%20s%C3%A5dant%20som%20til%20them%20p%C3%A5%20Kronans%20F%C3%B6rs%C3%A4lgnings-st%C3%A4lle%20utlefwereras.%20Gifwen%20Stockholm%20then%2017%20januarii%201778.&placePublisherAndDateOfPublication=%5B1778%5D"
+      },
+      {
+        "altLabel": "Läs förordningen i Stockholmskällan i fulltext",
+        "@id": "http://www.stockholmskallan.se/index.php?sokning=1&action=visaPost&countPlace=0&mediaId=9444&start=0&fritext=n%E4rings-idkare",
+        "@type": "Electronic"
+      }
+    ],
+    "@id": "/resource/bib/3297563",
+    "_providerYear": "1778",
+    "govtPub": {
+      "@id": "/def/enum/content/GovernmentPublicationLevelUndetermined"
+    },
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "@type": "Title",
+      "titleValue": "Öfwer-Ståthållare-Embetets Kungörelse, at Krögare och Närings-Idkare här i Staden, böra, then 19, 20 och 21 i thenna månad, uti Stadsens Handels-Collegio uttaga the för them inrättade Böcker til afhemtning af thet them tilslagne Bränwins-quantum, och at them icke är tillåtit at sälja annat Bränwin, än thet som är prof-haltigt och sådant som til them på Kronans Försälgnings-ställe utlefwereras. Gifwen Stockholm then 17 januarii 1778."
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "[4] s.",
+        "dimensions": "4:o"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "subject": [
+      {
+        "@id": "/topic/sao/Alkohollagstiftning"
+      },
+      {
+        "@id": "/topic/sao/Br%C3%A4nnvin"
+      },
+      {
+        "@id": "/topic/sao/Krogar/Stockholm"
+      },
+      {
+        "@id": "/topic/sao/Kronobr%C3%A4nnerier"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "/some?type=Person&familyName=Sparre&givenName=Carl&birthYear=1723&deathYear=1791"
+      },
+      {
+        "@id": "/some?type=Organization&name=%C3%96verst%C3%A5th%C3%A5llar%C3%A4mbetet"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm%2C%20tryckt%20i%20Kongl.%20tryckeriet."
+        },
+        "@type": "ProviderEvent",
+        "providerDate": "[1778]"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SOT"
+    }
+  ],
+  "created": "2001-04-12T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "3297563",
+  "modified": "2009-01-13T15:35:36.0+01:00",
+  "librisIIINumber": [
+    "9934545047"
+  ],
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Alkohollagstiftning"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Brännvin"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Krogar"
+          },
+          {
+            "z": "Stockholm"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Kronobrännerier"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "d"
+      ],
+      "710": {
+        "subfields": [
+          {
+            "a": "Sverige."
+          },
+          {
+            "b": "Överståthållarämbetet"
+          },
+          {
+            "d": "(1778-01-17)"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    },
+    {
+      "752": {
+        "subfields": [
+          {
+            "a": "Sverige"
+          },
+          {
+            "d": "Stockholm"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SOT"
+  },
+  "@id": "/bib/3297563",
+  "@type": "Record"
+}

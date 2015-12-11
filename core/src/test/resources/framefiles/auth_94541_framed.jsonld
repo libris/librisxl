@@ -1,0 +1,212 @@
+{
+  "sameAs": [
+    {
+      "birthYear": "1849",
+      "givenName": "Johan August",
+      "familyName": "Strindberg",
+      "deathYear": "1912",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1849",
+      "deathYear": "1912",
+      "@type": "Person",
+      "name": "Härved Ulf,"
+    },
+    {
+      "birthYear": "1849",
+      "givenName": "Avgust Juchan",
+      "familyName": "Strindberg",
+      "deathYear": "1912",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1849",
+      "givenName": "Agūst",
+      "familyName": "Estrīndberg",
+      "deathYear": "1912",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1849",
+      "givenName": "August",
+      "familyName": "Strintmperg",
+      "deathYear": "1912",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1849",
+      "givenName": "Yōhan A.",
+      "familyName": "Sutorindoberi",
+      "deathYear": "1912",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1849",
+      "deathYear": "1912",
+      "@type": "Person",
+      "name": "ストリンドベリ,"
+    },
+    {
+      "birthYear": "1849",
+      "givenName": "Август Юхан",
+      "familyName": "Стриндберг",
+      "deathYear": "1912",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1849",
+      "givenName": "August",
+      "familyName": "Strindberj",
+      "deathYear": "1912",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1849",
+      "givenName": "Avgust",
+      "familyName": "Strindberj",
+      "deathYear": "1912",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1849",
+      "givenName": "Аугуст",
+      "familyName": "Стриндберг",
+      "deathYear": "1912",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1849",
+      "givenName": "Ogust",
+      "familyName": "Strindberg",
+      "deathYear": "1912",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1849",
+      "givenName": "Огуст",
+      "familyName": "Стриндберг",
+      "deathYear": "1912",
+      "@type": "Person"
+    }
+  ],
+  "catalogingSource": {
+    "@id": "/def/enum/content/OtherSource"
+  },
+  "focus": {
+    "deathDate": "19120514",
+    "sameAs": [
+      {
+        "@id": "http://dbpedia.org/resource/August_Strindberg"
+      }
+    ],
+    "@id": "/resource/auth/94541",
+    "familyName": "Strindberg",
+    "birthDate": "18490122",
+    "note": [
+      "Skönlitterär författare och dramatiker. Skrev ett par verk under pseudonymen Härved Ulf, bland annat Fritänkaren, Det sjunkande Hellas"
+    ],
+    "birthYear": "1849",
+    "relation": [
+      {
+        "@id": "http://sv.wikipedia.org/wiki/August_Strindberg",
+        "@type": "Document",
+        "copyNote": [
+          "Wikipedia"
+        ]
+      },
+      {
+        "altLabel": "bild",
+        "@id": "http://libris.kb.se/images/August_Strindberg.jpg",
+        "@type": "Document"
+      }
+    ],
+    "nationality": {
+      "@id": "/def/nationalities/e-sw---"
+    },
+    "givenName": "August",
+    "deathYear": "1912",
+    "@type": "Person"
+  },
+  "modified": "2015-07-21T10:25:57.0+02:00",
+  "subjectSubdivision": {
+    "@id": "/def/enum/content/Topical"
+  },
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "editorialNote": [
+    "Pseudonymen ändrad efter påpekande till den form som anges i Nationalupplagan av August Strindbergs Samlade verk (Ungdomsdramer 1). Tidigare: Härved, Ulf // 2012-02-06, SEK."
+  ],
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "Röda rummet / af August Strindberg, 1879"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "NE"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Fritänkaren / Härved Ulf, 1891"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "_marcUncompleted": [
+    {
+      "375": {
+        "subfields": [
+          {
+            "a": "man"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "systemNumber": [
+    "(LIBRIS)A000063495"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/auth/94541",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2001-12-06T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "94541",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "PersonTerm",
+  "closeMatch": [
+    {
+      "@id": "http://dewey.info/class/839.7267/e23/"
+    }
+  ]
+}

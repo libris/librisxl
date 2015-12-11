@@ -1,0 +1,740 @@
+{
+  "about": {
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/948.5005/e23/"
+      },
+      {
+        "@id": "/topic/kssb/7/Jc%28p%29"
+      },
+      {
+        "@id": "/topic/kssb/7/Kc%28p%29"
+      },
+      {
+        "@id": "/topic/kssb/7/Fbr%28p%29"
+      },
+      {
+        "@id": "/topic/sab/Jc%28p%29"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "1",
+        "@type": "Title",
+        "coverage": "1956-",
+        "titleValue": "Journal of Swedish antiquarian research"
+      },
+      {
+        "titleType": "",
+        "subtitle": "meddelanden från K. Vitterhets, historie och antikvitets akademien",
+        "@type": "Title",
+        "coverage": "1906-1941",
+        "titleValue": "Fornvännen"
+      },
+      {
+        "titleType": "",
+        "subtitle": "meddelanden från K. Vitterhets, historie och antikvitets akademien och Svenska fornminnesföreningen",
+        "@type": "Title",
+        "coverage": "1942-1955",
+        "titleValue": "Fornvännen"
+      },
+      {
+        "titleType": "",
+        "subtitle": "tidskrift för svensk antikvarisk forskning  / utgiven av Kungl.  Vitterhets, historie och antikvitetsakademien under medverkan av Svenska fornminnesföreningen = Journal of Swedish antiquarian research / published by The Royal Academy of Letters, History and Antiquities in collaboration with The Swedish Archaeological Association",
+        "@type": "Title",
+        "coverage": "1956-1965",
+        "titleValue": "Fornvännen"
+      },
+      {
+        "titleType": "",
+        "subtitle": "tidskrift för svensk antikvarisk forskning / utgiven av Kungl.  Vitterhets, historie och antikvitetsakademien = Journal of Swedish antiquarian research / published by The Royal Academy of Letters, History and Antiquities",
+        "@type": "Title",
+        "coverage": "1966-1981",
+        "titleValue": "Fornvännen"
+      },
+      {
+        "titleType": "",
+        "subtitle": "tidskrift för svensk antikvarisk forskning  / utgiven av Kungl.  Vitterhets, historie och antikvitetsakademien i samarbete med Riksantikvarieämbetet och Statens historiska museer = Journal of Swedish antiquarian research / published by The Royal Academy of Letters, History and Antiquities",
+        "@type": "Title",
+        "coverage": "1982-1997:1",
+        "titleValue": "Fornvännen"
+      },
+      {
+        "titleType": "",
+        "subtitle": "tidskrift för svensk antikvarisk forskning  / utgiven av Kungl.  Vitterhets, historie och antikvitetsakademien i samarbete med  Statens historiska museer = Journal of Swedish antiquarian research / published by The Royal Academy of Letters, History and Antiquities",
+        "@type": "Title",
+        "coverage": "1997:2-1998",
+        "titleValue": "Fornvännen"
+      },
+      {
+        "titleType": "",
+        "subtitle": "utgiven av Kungl.  Vitterhets, historie och antikvitetsakademien i samarbete med  Statens historiska museer = Journal of Swedish antiquarian research / published by The Royal Academy of Letters, History and Antiquities",
+        "@type": "Title",
+        "coverage": "1999-2004",
+        "titleValue": "Fornvännen"
+      },
+      {
+        "titleType": "",
+        "subtitle": "tidskrift för svensk antikvarisk forskning  / utgiven av Kungl.  Vitterhets, historie och antikvitetsakademien med stöd från Vetenskapsrådet = Journal of Swedish antiquarian research / published by The Royal Academy of Letters, History and Antiquities",
+        "@type": "Title",
+        "coverage": "2005:1",
+        "titleValue": "Fornvännen"
+      },
+      {
+        "titleType": "",
+        "subtitle": "utgiven av Kungl.  Vitterhets, historie och antikvitetsakademien med stöd från Vetenskapsrådet = Journal of Swedish antiquarian research / published by The Royal Academy of Letters, History and Antiquities",
+        "@type": "Title",
+        "coverage": "2005:2-2007:2",
+        "titleValue": "Fornvännen"
+      },
+      {
+        "titleType": "",
+        "subtitle": "utgiven av Kungl.  Vitterhets, historie och antikvitetsakademien i samarbete med Historiska museet = Journal of Swedish antiquarian research / published by The Royal Academy of Letters, History and Antiquities",
+        "@type": "Title",
+        "coverage": "2007:3",
+        "titleValue": "Fornvännen"
+      },
+      {
+        "titleType": "",
+        "subtitle": "utgiven av Kungl.  Vitterhets, historie och antikvitetsakademien i samarbete med Historiska museet och med stöd från Vetenskapsrådet = Journal of Swedish antiquarian research / published by The Royal Academy of Letters, History and Antiquities",
+        "@type": "Title",
+        "coverage": "2008:1-",
+        "titleValue": "Fornvännen"
+      }
+    ],
+    "publishingDirector": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      },
+      {
+        "@id": "_:b-6"
+      },
+      {
+        "@id": "_:b-7"
+      },
+      {
+        "@id": "_:b-8"
+      },
+      {
+        "@id": "_:b-10"
+      },
+      {
+        "@id": "_:b-11"
+      },
+      {
+        "@id": "_:b-12"
+      },
+      {
+        "@id": "_:b-13"
+      },
+      {
+        "@id": "_:b-14"
+      },
+      {
+        "@id": "_:b-16"
+      },
+      {
+        "@id": "_:b-17"
+      }
+    ],
+    "regularity": {
+      "@id": "/def/enum/content/Regular"
+    },
+    "frequency": "1 nr/kvartal",
+    "relation": [
+      {
+        "@id": "http://www.vitterhetsakad.se/",
+        "@type": "Document",
+        "copyNote": [
+          "Utgivarens webbplats"
+        ]
+      }
+    ],
+    "subject": [
+      {
+        "@id": "/topic/sao/Arkitektur/Sverige/periodika"
+      },
+      {
+        "@id": "/topic/sao/Ortnamn/Sverige/periodika"
+      },
+      {
+        "@id": "/topic/sao/Arkeologi/Sverige/periodika"
+      },
+      {
+        "@id": "/topic/sao/Runinskrifter/Sverige/periodika"
+      },
+      {
+        "@id": "/topic/sao/Svensk%20konst/periodika"
+      },
+      {
+        "@id": "/topic/sao/Kulturminnesv%C3%A5rd/Sverige/periodika"
+      }
+    ],
+    "publication": [
+      {
+        "scopeNote": "Sammanfattad utgivningstid:",
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kungl. Vitterhets historie och antikvitetsakademien",
+        "providerDate": "1906-"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kungl. Vitterhets historie och antikvitetsakademien",
+        "providerDate": "1906-1925"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kungl. Vitterhets historie och antikvitetsakademien",
+        "providerDate": "1926-1953"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kungl. Vitterhets historie och antikvitetsakademien",
+        "providerDate": "1954-1955, 1966-1981, 2005-2007"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kungl. Vitterhets historie och antikvitetsakademien",
+        "providerDate": "1956-1965"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kungl. Vitterhets historie och antikvitetsakademien",
+        "providerDate": "1982-1997"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kungl. Vitterhets historie och antikvitetsakademien",
+        "providerDate": "1997-2004"
+      },
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kungl. Vitterhets historie och antikvitetsakademien",
+        "providerDate": "2007-"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/SuccessiveEntry"
+    },
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&title=Fornv%C3%A4nnen%20%28Online%29"
+      },
+      {
+        "@id": "http://samla.raa.se/xmlui/handle/raa/378",
+        "@type": "Electronic",
+        "copyNote": [
+          "Fulltext online fritt tillgänglig"
+        ]
+      }
+    ],
+    "alphabet": {
+      "@id": "/def/enum/content/ExtendedRoman"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Tidskrift%20f%C3%B6r%20svensk%20antikvarisk%20forskning"
+      }
+    ],
+    "@id": "/resource/bib/8257615",
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      },
+      {
+        "@id": "_:b-6"
+      },
+      {
+        "@id": "_:b-7"
+      },
+      {
+        "@id": "_:b-8"
+      },
+      {
+        "@id": "_:b-9"
+      },
+      {
+        "@id": "_:b-10"
+      },
+      {
+        "@id": "_:b-11"
+      },
+      {
+        "@id": "_:b-12"
+      },
+      {
+        "@id": "_:b-13"
+      },
+      {
+        "@id": "_:b-14"
+      },
+      {
+        "@id": "_:b-15"
+      },
+      {
+        "@id": "_:b-16"
+      },
+      {
+        "@id": "_:b-17"
+      },
+      {
+        "@id": "_:b-18"
+      },
+      {
+        "@id": "_:b-19"
+      },
+      {
+        "@id": "_:b-20"
+      },
+      {
+        "@id": "_:b-21"
+      }
+    ],
+    "keyTitle": [
+      {
+        "titleQualifier": "(Print)",
+        "@type": "Title",
+        "titleValue": "Fornvännen"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Justus Cederquist)"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Periodical"
+      }
+    ],
+    "temporalCoverageNote": "1906-",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "dimensions": "23 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "frequencyCategory": {
+      "@id": "/def/enum/content/QuarterlyIncludes4NumbersAYear"
+    },
+    "genre": [
+      {
+        "@id": "/topic/saogf/Vetenskapliga%20tidskrifter"
+      }
+    ],
+    "supplementaryContentNote": [
+      "Kumulerade tioårsregister för 1906-1923 i 1923:5,  för 1924-1933 i 1933:6, för 1934-1943 i 1943:6, för 1944-1953 i 1953:5/6, för 1956-1965 i 1965:4/6, för 1976-1985 i 1986:4, för 1986-1995 i 1996:4",
+      "Kumulerade register för 1906-1955 i 1955:6, för 1956-1975 i 1976:5"
+    ],
+    "publisher": [
+      {
+        "@id": "_:b-18"
+      },
+      {
+        "@id": "_:b-19"
+      },
+      {
+        "@id": "_:b-20"
+      },
+      {
+        "@id": "_:b-21"
+      }
+    ],
+    "replaces": [
+      {
+        "date": "1906-1924, 1976",
+        "frequency": "5 nr/år,",
+        "@type": "Serial"
+      },
+      {
+        "date": "1926-1947, 1949-1965",
+        "frequency": "Varannan månad,",
+        "@type": "Serial"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/mul"
+      }
+    ],
+    "precededBy": [
+      {
+        "@id": "/some?type=Serial&title=Svenska%20fornminnesf%C3%B6reningens%20tidskrift"
+      },
+      {
+        "@id": "/some?type=Serial&title=Kongl.%20Vitterhets-%2C%20historie-%20och%20antiqvitetsakademiens%20m%C3%A5nadsblad"
+      }
+    ],
+    "responsibleParty": [
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-6"
+      },
+      {
+        "@id": "_:b-9"
+      },
+      {
+        "@id": "_:b-10"
+      },
+      {
+        "@id": "_:b-13"
+      },
+      {
+        "@id": "_:b-15"
+      },
+      {
+        "@id": "_:b-17"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "performerNote": [
+      "Red.: Emil Ekhoff (1906-1922), Emil Ekhoff och Sigurd Curman (1923:1-4), Sigurd Curman (1923:5-1946), Mårten Stenberger (1947-1952), Erik Bohrn (1953-1960), Gösta Selling (1961-1965), Egon Thun, Ingrid Swartling (1966:1), Bo Gräslund,  Ingrid Swartling (1966:2-1971), Bo Gräslund ... (1972), Åke Hyenstrand, Lars O. Lagerqvist (1973-1975:2), Åke Hyenstrand, Göran Tegnér (1975:3/4), Jan Peder Lamm, Ingvar Jansson, Göran Tegnér (1976:1/2). Huvudred.: Torgny Säve-Söderbergh (1976:3/4-1985), Bo Gräslund (1986-1996), Gustaf Trotzig (1997-1999)",
+      "Ansv. utg.: Emil Ekhoff (1906-1924), Sigurd Curman (1924-1946). Utgiven genom Martin Olsson (1947-1951), Bengt Thordeman (1952-1955). Ansv. utg.: Bengt Thordeman (1956-1960), Gösta Selling (1961-1966), Sven B.F. Jansson (1967-1976:1/2), Torgny Säve-Söderbergh (1976:3/4-1985), Bo Gräslund (1986-1996), Gustaf Trotzig (1997-1999)"
+    ],
+    "instanceTitle": {
+      "subtitle": "meddelanden från K. Vitterhets, historie och antikvitets akademien",
+      "@type": "Title",
+      "titleValue": "Fornvännen"
+    },
+    "issueNumber": [
+      "1906: h. 1-1955: h. 6 ; 1956: 1-"
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/issn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "0015-7813"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Serial"
+    ],
+    "languageNote": [
+      "Text på svenska, danska, norska, engelska och tyska och med sammanfattningar på engelska och tyska"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=KMV"
+    },
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SAMB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=NLT"
+    },
+    {
+      "@id": "/some?type=Organization&notation=OSGOK"
+    }
+  ],
+  "created": "1978-04-01T00:00:00.0+01:00",
+  "technicalNote": [
+    "Indexeringslänk"
+  ],
+  "controlNumber": "8257615",
+  "@type": "Record",
+  "librisIIINumber": [
+    "00157813"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "2"
+      ],
+      "022": {
+        "subfields": [
+          {
+            "a": "0015-7813"
+          },
+          {
+            "2": "f"
+          }
+        ],
+        "ind1": "0",
+        "ind2": " "
+      }
+    },
+    {
+      "082": {
+        "subfields": [
+          {
+            "a": "948.5005"
+          },
+          {
+            "2": "23/swe"
+          },
+          {
+            "q": "Smm"
+          }
+        ],
+        "ind1": "0",
+        "ind2": "4"
+      },
+      "_unhandled": [
+        "q"
+      ]
+    },
+    {
+      "515": {
+        "subfields": [
+          {
+            "a": "1928 utkom tilläggshäfte utan nummerbeteckning"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Arkitektur"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "v": "periodika"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Ortnamn"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "v": "periodika"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Arkeologi"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "v": "periodika"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Runinskrifter"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "v": "periodika"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Svensk konst"
+          },
+          {
+            "v": "periodika"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Kulturminnesvård"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "v": "periodika"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Vetenskapliga tidskrifter"
+          },
+          {
+            "2": "sgp"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "sourceNote": [
+    "NLT: 1906-1999 bibliograferad för NLT. - Vid bibliografins slut 1999 utkom tidskriften med 1 nr/kvartal"
+  ],
+  "modified": "2015-06-15T11:42:50.0+02:00",
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Smm"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/8257615",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

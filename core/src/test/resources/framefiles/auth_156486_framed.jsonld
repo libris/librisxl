@@ -1,0 +1,103 @@
+{
+  "historyNote": [
+    "Tidigare endast SAB-kod Qci. Ändrat 2004-02-05."
+  ],
+  "sameAs": [
+    {
+      "@id": "/topic/sao/Pengar"
+    }
+  ],
+  "scopeNote": [
+    "- penningväsen Qaea, - privatekonomi Qci."
+  ],
+  "narrower": [
+    {
+      "@id": "/topic/sao/Digitala%20pengar"
+    },
+    {
+      "@id": "/topic/sao/Mynt"
+    },
+    {
+      "@id": "/topic/sao/Penningm%C3%A4ngd"
+    },
+    {
+      "@id": "/topic/sao/Sedlar"
+    }
+  ],
+  "focus": {
+    "@id": "/resource/auth/156486",
+    "@type": [
+      "Authority"
+    ]
+  },
+  "related": [
+    {
+      "@id": "/topic/sao/Myntsystem"
+    },
+    {
+      "@id": "/topic/sao/Valuta"
+    }
+  ],
+  "modified": "2015-04-29T13:46:33.0+02:00",
+  "closeMatch": [
+    {
+      "@id": "/topic/kssb/7/Qaea"
+    },
+    {
+      "@id": "/topic/kssb/7/Qci"
+    },
+    {
+      "@id": "/topic/lcsh/Money"
+    }
+  ],
+  "broader": [
+    {
+      "@id": "/topic/sao/Penningv%C3%A4sen"
+    }
+  ],
+  "inScheme": {
+    "@id": "/scheme/sao"
+  },
+  "prefLabel": "Pengar",
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "systemNumber": [
+    "(sao)37235"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "inCollection": [
+    {
+      "@id": "/some?type=TermCollection&notation=Fack"
+    }
+  ],
+  "@id": "/auth/156486",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2002-04-09T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "156486",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "TopicalTerm"
+}

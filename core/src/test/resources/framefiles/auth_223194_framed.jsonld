@@ -1,0 +1,132 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "hasVersion": [
+    {
+      "attributedTo": [
+        {
+          "@id": "/some?type=Person&familyName=Beethoven&givenName=Ludwig%20van&birthYear=1770&deathYear=1827"
+        }
+      ],
+      "@type": "UniformWork",
+      "title": "Konsert,"
+    }
+  ],
+  "reference": {
+    "@id": "/def/enum/content/TracingsAreConsistentWithTheHeading"
+  },
+  "created": "2003-09-09T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/OtherSource"
+  },
+  "controlNumber": "223194",
+  "modified": "2006-07-09T17:50:32.0+02:00",
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "Uniforma titlar för musik. 1998"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "_marcUncompleted": [
+    {
+      "100": {
+        "subfields": [
+          {
+            "a": "Beethoven, Ludwig van,"
+          },
+          {
+            "d": "1770-1827."
+          },
+          {
+            "t": "Konsert,"
+          },
+          {
+            "m": "pianotrio, orkester,"
+          },
+          {
+            "n": "op. 56,"
+          },
+          {
+            "r": "C-dur, \"Trippelkonserten\""
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      },
+      "_unhandled": [
+        "r",
+        "m",
+        "n"
+      ]
+    },
+    {
+      "_unhandled": [
+        "r",
+        "m",
+        "n"
+      ],
+      "400": {
+        "subfields": [
+          {
+            "a": "Beethoven, Ludwig van,"
+          },
+          {
+            "d": "1770-1827."
+          },
+          {
+            "t": "Konsert,"
+          },
+          {
+            "m": "piano, violin, violoncell, orkester,"
+          },
+          {
+            "n": "op. 56,"
+          },
+          {
+            "r": "C-dur, \"Trippelkonserten\""
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "focus": {
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Beethoven&givenName=Ludwig%20van&birthYear=1770&deathYear=1827"
+    },
+    "@id": "/resource/auth/223194",
+    "@type": "UniformWork",
+    "title": "Konsert,"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=X"
+  },
+  "@id": "/auth/223194",
+  "@type": "WorkTerm"
+}

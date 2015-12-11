@@ -1,0 +1,202 @@
+{
+    "@graph": [
+    {
+        "@id": "/auth/74212",
+            "@type": "PersonTerm",
+            "_marcUncompleted": [
+            {
+                "700": {
+                    "ind1": "1",
+                    "ind2": "0",
+                    "subfields": [
+                    {
+                        "a": "Mao, Zedong,"
+                    },
+                    {
+                        "d": "1893-1976"
+                    },
+                    {
+                        "0": "(DLC) n 78087649"
+                    }
+                    ]
+                }
+            }
+        ],
+            "catalogingRules": {
+                "@id": "/def/enum/content/Aacr2"
+            },
+            "catalogingSource": {
+                "@id": "/def/enum/content/OtherSource"
+            },
+            "closeMatch": [
+            {
+                "@id": "http://dewey.info/class/951.05/e23/"
+            }
+        ],
+            "controlNumber": "74212",
+            "created": "2001-12-06T00:00:00.0+01:00",
+            "encLevel": {
+                "@id": "/def/enum/record/CompleteAuthorityRecord"
+            },
+            "focus": {
+                "@id": "/resource/auth/74212"
+            },
+            "headingMain": {
+                "@id": "/def/enum/content/Appropriate"
+            },
+            "headingSeries": {
+                "@id": "/def/enum/content/NotAppropriate"
+            },
+            "headingSubject": {
+                "@id": "/def/enum/content/Appropriate"
+            },
+            "kindOfRecord": {
+                "@id": "/def/enum/content/EstablishedHeadingRecord"
+            },
+            "language": [
+            {
+                "@id": "/def/languages/swe"
+            }
+        ],
+            "level": {
+                "@id": "/def/enum/content/FullyEstablishedHeading"
+            },
+            "modified": "2013-04-25T13:51:03.0+02:00",
+            "originalCatalogingAgency": {
+                "@id": "/some?type=Organization&name=H"
+            },
+            "personalName": {
+                "@id": "/def/enum/content/DifferentiatedPersonalName"
+            },
+            "recordUpdate": {
+                "@id": "/def/enum/content/RecordCanBeUsed"
+            },
+            "romanization": {
+                "@id": "/def/enum/content/NationalStandard"
+            },
+            "sameAs": [
+            {
+                "@type": "Person",
+                "birthYear": "1893",
+                "deathYear": "1976",
+                "name": "Mao Ze-Dung,"
+            },
+            {
+                "@type": "Person",
+                "birthYear": "1893",
+                "deathYear": "1976",
+                "familyName": "Mao",
+                "givenName": "Tse-toung"
+            },
+            {
+                "@type": "Person",
+                "birthYear": "1893",
+                "deathYear": "1976",
+                "name": "Mao Tsetung,"
+            },
+            {
+                "@type": "Person",
+                "birthYear": "1893",
+                "deathYear": "1976",
+                "familyName": "Mao",
+                "givenName": "Tse-Tung"
+            },
+            {
+                "@type": "Person",
+                "birthYear": "1893",
+                "deathYear": "1976",
+                "familyName": "Mao",
+                "givenName": "Zedung"
+            },
+            {
+                "@type": "Person",
+                "birthYear": "1893",
+                "deathYear": "1976",
+                "familyName": "M\u00e1o",
+                "givenName": "Z\u00e9d\u014dng"
+            },
+            {
+                "@type": "Person",
+                "birthYear": "1893",
+                "deathYear": "1976",
+                "name": "Mao Tse Tung,"
+            },
+            {
+                "@type": "Person",
+                "birthYear": "1893",
+                "deathYear": "1976",
+                "name": "\u6bdb\u6cfd\u4e1c,",
+                "scopeNote": "F\u00f6renklad kinesisk skrift:"
+            }
+        ],
+            "source": [
+            {
+                "@type": "CreativeWork",
+                "label": "NE"
+            },
+            {
+                "@type": "CreativeWork",
+                "label": "LC auth"
+            }
+        ],
+            "systemNumber": [
+                "(LIBRIS)A000043166"
+                ]
+    },
+    {
+        "@id": "/resource/auth/74212",
+        "@type": "Person",
+        "birthYear": "1893",
+        "deathYear": "1976",
+        "familyName": "Mao",
+        "givenName": "Zedong",
+        "nationality": {
+            "@id": "/def/nationalities/a-cc---"
+        },
+        "note": [
+            "\u00c4ldre transkription Mao Tse-tung, f. 26 december 1893, d. 9 september 1976, kinesisk politiker, ordf\u00f6rande f\u00f6r Kinas kommunistiska parti fr\u00e5n 1943, Folkrepubliken Kinas president 1954-1959."
+            ]
+    },
+    {
+        "@graph": {
+            "@id": "/some?type=Organization&name=H",
+            "@type": "Organization",
+            "name": "H"
+        }
+    },
+    {
+        "@graph": {
+            "@id": "/def/languages/swe",
+            "notation": "swe"
+        }
+    },
+    {
+        "@graph": {
+            "@id": "/def/nationalities/a-cc---",
+            "notation": "a-cc---"
+        }
+    },
+    {
+        "@graph": {
+            "@id": "http://dewey.info/class/951.05/e23/",
+            "@type": "Concept",
+            "inScheme": {
+                "@id": "http://dewey.info/scheme/edition/e23/swe/"
+            },
+            "notation": "951.05"
+        }
+    },
+    {
+        "@graph": {
+            "@id": "http://dewey.info/scheme/edition/e23/swe/",
+            "@type": "ConceptScheme",
+            "isVersionOf": {
+                "@id": "http://dewey.info/scheme/ddc/"
+            },
+            "language": "swe",
+            "notation": "DDC",
+            "version": "23"
+        }
+    }
+    ]
+}

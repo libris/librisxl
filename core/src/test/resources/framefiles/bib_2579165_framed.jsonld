@@ -1,0 +1,224 @@
+{
+  "status": {
+    "@id": "/def/enum/record/IncreaseInEncodingLevel"
+  },
+  "about": {
+    "comment": [
+      "Överst på titelsidan: B. c. D.",
+      "Ursprungligen författad år 1745 av Sven Lagerbring (preses) och Hans Nehrman (respondent), men opublicerad. Jfr s. 4 i förordet.",
+      "Ref.: Marklin, Catalogus disputationum II, s. 14."
+    ],
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Ckb"
+      },
+      {
+        "@id": "/topic/kssb/8/Cj"
+      }
+    ],
+    "attributedTo": {
+      "@id": "_:b-0"
+    },
+    "thesisAdvisor": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "subject": [
+      {
+        "@id": "/topic/sao/Kyrkotukt/historia/verk%20f%C3%B6re%201800"
+      },
+      {
+        "@id": "/topic/sao/Bannlysning/historia/verk%20f%C3%B6re%201800"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=De%20banno%20majori%20et%20minori"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "influencedBy": [
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      }
+    ],
+    "hasAnnotation": [
+      {
+        "note": "Diss. Lund : Lunds universitet, 1795.",
+        "@type": "DissertationAnnotation"
+      }
+    ],
+    "printer": [
+      {
+        "@id": "_:b-4"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Thesis"
+      }
+    ],
+    "_providerYear": "1795",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "26 s.",
+        "dimensions": "4:o"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "@id": "/resource/bib/2579165",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Lund%C3%A6%2C%20typis%20Berlingianis."
+        },
+        "@type": "ProviderEvent",
+        "providerDate": "[1795]"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/lat"
+      },
+      {
+        "@id": "/def/languages/grc"
+      },
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Dissertatio historica de banno majori et minori, quam tantummodo manuscriptam sub præsidio polyhistoris ... d:ni Sven Lagerbring ... postmodum ... dom. Hans Nehrman ... nunc autem in lucem publicam profert nec non præside mag. Erland Samuel Bring ... consentiente amplissima facult. philosophica in regia academia Carolina pro summis in philosophia honoribus adjectas qualescunque notas placidæ bonorum censuræ ea qua par est modestia subjicit Andreas Roos, Scanus. Ad diem XXI. Decembr. MDCCXCV. L. H. Q. S."
+    },
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "dissertant": [
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-3"
+      }
+    ]
+  },
+  "created": "1998-10-07T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "2579165",
+  "modified": "2010-04-07T09:25:13.0+02:00",
+  "librisIIINumber": [
+    "9927143699"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Kyrkotukt"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "v": "verk före 1800"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Bannlysning"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "v": "verk före 1800"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "752": {
+        "subfields": [
+          {
+            "a": "Sverige"
+          },
+          {
+            "d": "Lund"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Osz"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=ARJ"
+  },
+  "@id": "/bib/2579165",
+  "@type": "Record"
+}

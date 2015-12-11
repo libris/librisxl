@@ -1,0 +1,70 @@
+{
+  "about": {
+    "comment": [
+      "Hammarström besvarar Aron Anderssons inlägg \"Lögner om Sigismund\" (Förr och nu, 1977:3, s. 62-63)"
+    ],
+    "publication": [
+      {
+        "providerDate": "1977"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "responsibilityStatement": "Tommy Hammarström",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Hammarstr%C3%B6m&givenName=Tommy&birthYear=1946"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Historiska museets tomma luft"
+    },
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&title=F%C3%B6rr%20och%20nu&scopeNote=1977%3A3%2C%20s.%2063"
+      }
+    ],
+    "relation": [
+      {
+        "@id": "/some?type=CreativeWork&linkNote=Kommentar%20nr%204%20till%3A&controlledLabel=Hammarstr%C3%B6m%2C%20Tommy&title=L%C3%B6gnen%20om%20Sigismund"
+      }
+    ],
+    "@id": "/resource/bib/8435506",
+    "@type": [
+      "Text",
+      "ComponentPart"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    }
+  ],
+  "created": "2002-06-07T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "8435506",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modified": "2004-04-20T14:50:18.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SHB"
+  },
+  "@id": "/bib/8435506",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

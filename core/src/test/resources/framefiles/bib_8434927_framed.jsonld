@@ -1,0 +1,72 @@
+{
+  "about": {
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Review"
+      }
+    ],
+    "publication": [
+      {
+        "providerDate": "2002"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "responsibilityStatement": "Nils Edling",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Edling&givenName=Nils&birthYear=1961"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Hur gammal är arbetslösheten?"
+    },
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&title=Historisk%20tidskrift%20%28Stockholm%29&scopeNote=2002%28122%29%3A1%2C%20s.%20%5B99%5D-108"
+      }
+    ],
+    "relation": [
+      {
+        "@id": "/some?type=CreativeWork&linkNote=Recension%20av%3A&controlledLabel=Olofsson%2C%20Jonas&title=Arbetsl%C3%B6shetsfr%C3%A5gan%20i%20historisk%20belysning%20%3A%20%20en%20diskussion%20om%20arbetsl%C3%B6shet%20och%20social%20politik%20i%20Sverige%201830-1920&placePublisherAndDateOfPublication=1996"
+      }
+    ],
+    "@id": "/resource/bib/8434927",
+    "@type": [
+      "Text",
+      "ComponentPart"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    }
+  ],
+  "created": "2002-06-05T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "8434927",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modified": "2004-04-20T14:47:27.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SHB"
+  },
+  "@id": "/bib/8434927",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

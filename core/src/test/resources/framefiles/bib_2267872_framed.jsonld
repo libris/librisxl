@@ -1,0 +1,92 @@
+{
+  "about": {
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "classification": [
+      {
+        "@id": "/topic/kssb/6/Ijz%20Rosenberg%2C%20Hilding"
+      },
+      {
+        "@id": "/topic/sab/Ijz"
+      }
+    ],
+    "listOfContents": [
+      "40 verk, bl.a. part. till två symfonier, skisser till pianokonsert, melodramen Dödsfången, pianostycken och sånger, samt korrespondens med Wilhelm Stenhammar och med familjen Bomgren i Nora, där samlingen återfunnits"
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Broman&givenName=Per%20Olov&birthYear=1967"
+    },
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Nyupptäckta ungdomsverk av Hilding Rosenberg."
+    },
+    "publication": [
+      {
+        "providerDate": "1997"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&title=Svenska%20dagbladet&scopeNote=1997-02-23%2C%20s.%20%5B19%5D-20&partNumber=1997"
+      }
+    ],
+    "@id": "/resource/bib/2267872",
+    "@type": [
+      "Text",
+      "ComponentPart"
+    ],
+    "subject": [
+      {
+        "@id": "/some?type=Person&familyName=Rosenberg&givenName=Hilding&birthYear=1892&deathYear=1985"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SMHB"
+    }
+  ],
+  "created": "1997-02-23T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "2267872",
+  "@type": "Record",
+  "librisIIINumber": [
+    "9923905500"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modified": "2004-04-20T09:56:49.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=X"
+  },
+  "@id": "/bib/2267872",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

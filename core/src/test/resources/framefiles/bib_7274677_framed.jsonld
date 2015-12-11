@@ -1,0 +1,298 @@
+{
+  "about": {
+    "comment": [
+      "2.-3. tr., 2000 ; 4. tr., 2001 ; 5. tr., 2002 ; 6. tr., 2003  ; 7. tr., 2004 ; 8. tr., 2005 ; 9. tr., 2006 ; 11. tr., 2008 ; 13. tr., 2010 ; 14. tr., 2010"
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/907.2/e22/"
+      },
+      {
+        "@id": "/topic/kssb/6/K%3Ak"
+      },
+      {
+        "@id": "/topic/kssb/6/K%3Add"
+      },
+      {
+        "@id": "/topic/sab/K%3Ak"
+      },
+      {
+        "@id": "/topic/sab/K%3Add"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Kjeldstadli&givenName=Knut"
+    },
+    "termsOfAvailability": "380:00",
+    "subject": [
+      {
+        "@id": "/topic/sao/Historieforskning/historia"
+      },
+      {
+        "@id": "/topic/sao/Historieforskning/metodik"
+      },
+      {
+        "@id": "/topic/sao/Historieforskning/teori%2C%20filosofi"
+      },
+      {
+        "@id": "/topic/albt//swe/Historieforskning"
+      },
+      {
+        "@id": "/topic/albt//swe/Historieforskning"
+      },
+      {
+        "@id": "/topic/albt//swe/Historieforskning"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/IndexPresent"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/nor"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Lund"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Studentlitteratur)"
+      }
+    ],
+    "responsibilityStatement": "Knut Kjeldstadli ; svensk anpassning: Bo Persson och Klas Åmark ; översättning: Sven-Erik Torhell",
+    "translator": [
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "@id": "/resource/bib/7274677",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Lund"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Studentlitteratur",
+        "providerDate": "1998"
+      }
+    ],
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "308 s.",
+        "dimensions": "23 cm"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Det förflutna är inte vad det en gång var"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "91-44-00505-9"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "11. tr., 2008",
+        "@type": "Identifier",
+        "identifierValue": "9789144005058"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SEE"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=ARB"
+    }
+  ],
+  "created": "1998-03-26T00:00:00.0+01:00",
+  "modified": "2015-07-09T09:01:40.0+02:00",
+  "controlNumber": "7274677",
+  "_marcUncompleted": [
+    {
+      "249": {
+        "subfields": [
+          {
+            "a": "Fortida er ikke hva den en gang var (norska)."
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Historieforskning"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Historieforskning"
+          },
+          {
+            "x": "metodik"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Historieforskning"
+          },
+          {
+            "x": "teori, filosofi"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Historieforskning"
+          },
+          {
+            "2": "albt//swe"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Historieforskning"
+          },
+          {
+            "2": "albt//swe"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Historieforskning"
+          },
+          {
+            "2": "albt//swe"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/7274677",
+  "@type": "Record"
+}
