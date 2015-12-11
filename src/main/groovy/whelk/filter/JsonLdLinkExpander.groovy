@@ -39,7 +39,7 @@ class JsonLdLinkExpander {
     }
 
     boolean valid(Document doc) {
-        if (doc && doc.contentType == "application/ld+json" && this.nodesToExpand.containsKey(doc.dataset)) {
+        if (doc && doc.contentType == "application/ld+json" && this.nodesToExpand.containsKey(doc.collection)) {
             return true
         }
         return false
@@ -68,15 +68,15 @@ class JsonLdLinkExpander {
 
     Document filter(Document doc) {
         log.debug("Expanding ${doc.identifier}")
-        def dataMap = doFilter(doc.data, doc.dataset)
+        def dataMap = doFilter(doc.data, doc.collection)
         return doc.withData(dataMap)
     }
 
-    Map doFilter(Map dataMap, String dataset) {
+    Map doFilter(Map dataMap, String collection) {
         if (!cachedDocuments) {
             loadCachedDocuments()
         }
-        nodesToExpand[dataset].each { key, instructions ->
+        nodesToExpand[collection].each { key, instructions ->
             log.trace("key: $key, instructions: $instructions")
             def mapSegment = getNestedObject(key, dataMap)
             if (mapSegment instanceof List) {

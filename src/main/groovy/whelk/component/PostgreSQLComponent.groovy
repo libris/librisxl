@@ -10,7 +10,6 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Location
 import whelk.exception.StorageCreateFailedException
-import whelk.exception.WhelkException
 
 import java.security.MessageDigest
 import java.sql.ResultSet
@@ -33,7 +32,7 @@ class PostgreSQLComponent implements Storage {
     boolean versioning = true
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE
+    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION, LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
 
@@ -94,7 +93,7 @@ class PostgreSQLComponent implements Storage {
         GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest @> '{ \"${Document.ALTERNATE_ID_KEY}\": [?] }'"
         LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
-        LOAD_ALL_DOCUMENTS_BY_DATASET = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND manifest->>'dataset' = ?"
+        LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND manifest->>'collection' = ?"
         LOAD_ALL_DOCUMENTS_WITH_LINKS = """
             SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
             FROM (
@@ -105,13 +104,13 @@ class PostgreSQLComponent implements Storage {
                 ) AS links GROUP by id,link
             ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
             """
-        LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET = """
+        LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION = """
             SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
             FROM (
                 SELECT * FROM (
-                    SELECT identifier as id, identifier as link FROM $mainTableName WHERE dataset = ?
+                    SELECT identifier as id, identifier as link FROM $mainTableName WHERE collection = ?
                     UNION ALL
-                    SELECT identifier as id, jsonb_array_elements_text(manifest->'links') as link FROM $mainTableName WHERE dataset = ?
+                    SELECT identifier as id, jsonb_array_elements_text(manifest->'links') as link FROM $mainTableName WHERE collection = ?
                 ) AS links GROUP by id,link
             ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
             """
@@ -291,7 +290,7 @@ class PostgreSQLComponent implements Storage {
             }
             ver_batch.executeBatch()
             batch.executeBatch()
-            log.debug("Stored ${docs.size()} documents with dataset ${docs.first().dataset} (versioning: ${versioning})")
+            log.debug("Stored ${docs.size()} documents in collection ${docs.first().collection} (versioning: ${versioning})")
             return true
         } catch (Exception e) {
             log.error("Failed to save batch: ${e.message}", e)
@@ -303,7 +302,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    Map<String, Object> query(Map queryParameters, String dataset, StorageType storageType) {
+    Map<String, Object> query(Map queryParameters, String collection, StorageType storageType) {
         log.debug("Performing query with type $storageType : $queryParameters")
         long startTime = System.currentTimeMillis()
         Connection connection = getConnection()
@@ -315,12 +314,12 @@ class PostgreSQLComponent implements Storage {
         queryParameters.remove("_orderBy") // Not supported
         queryParameters.remove("_select") // Not supported
 
-        def (whereClause, values) = buildQueryString(queryParameters, dataset, storageType)
+        def (whereClause, values) = buildQueryString(queryParameters, collection, storageType)
 
         int limit = pageSize as int
         int offset = (Integer.parseInt(page)-1) * limit
 
-        StringBuilder finalQuery = new StringBuilder("${values ? QUERY_LD_API + whereClause : (dataset ? LOAD_ALL_DOCUMENTS_BY_DATASET : LOAD_ALL_DOCUMENTS)+ " AND deleted IS NOT true"} OFFSET $offset LIMIT $limit")
+        StringBuilder finalQuery = new StringBuilder("${values ? QUERY_LD_API + whereClause : (collection ? LOAD_ALL_DOCUMENTS_BY_COLLECTION : LOAD_ALL_DOCUMENTS)+ " AND deleted IS NOT true"} OFFSET $offset LIMIT $limit")
 
         if (sort) {
             finalQuery.append(" ORDER BY ${translateSort(sort, storageType)}")
@@ -335,8 +334,8 @@ class PostgreSQLComponent implements Storage {
         if (!values) {
             query.setTimestamp(1, new Timestamp(0L))
             query.setTimestamp(2, new Timestamp(PGStatement.DATE_POSITIVE_INFINITY))
-            if (dataset) {
-                query.setString(3, dataset)
+            if (collection) {
+                query.setString(3, collection)
             }
         }
 
@@ -358,15 +357,15 @@ class PostgreSQLComponent implements Storage {
         return results
     }
 
-    def buildQueryString(Map queryParameters, String dataset, StorageType storageType) {
+    def buildQueryString(Map queryParameters, String collection, StorageType storageType) {
         boolean firstKey = true
         List values = []
 
         StringBuilder whereClause = new StringBuilder("(")
 
-        if (dataset) {
-            whereClause.append("manifest->>'dataset' = ?")
-            values.add(dataset)
+        if (collection) {
+            whereClause.append("manifest->>'collection' = ?")
+            values.add(collection)
             firstKey = false
         }
 
@@ -639,8 +638,8 @@ class PostgreSQLComponent implements Storage {
         return docList
     }
 
-    Iterable<Document> loadAll(String dataset) {
-        return loadAllDocuments(dataset, false)
+    Iterable<Document> loadAll(String collection) {
+        return loadAllDocuments(collection, false)
     }
 
     private Document assembleDocument(ResultSet rs) {
@@ -651,8 +650,8 @@ class PostgreSQLComponent implements Storage {
         return doc
     }
 
-    private Iterable<Document> loadAllDocuments(String dataset, boolean withLinks, Date since = null, Date until = null) {
-        log.debug("Load all called with dataset: $dataset")
+    private Iterable<Document> loadAllDocuments(String collection, boolean withLinks, Date since = null, Date until = null) {
+        log.debug("Load all called with collection: $collection")
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
                 Connection connection = getConnection()
@@ -661,11 +660,11 @@ class PostgreSQLComponent implements Storage {
                 long untilTS = until?.getTime() ?: PGStatement.DATE_POSITIVE_INFINITY
                 long sinceTS = since?.getTime() ?: 0L
 
-                if (dataset) {
+                if (collection) {
                     if (withLinks) {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET)
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION)
                     } else {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_BY_DATASET)
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_BY_COLLECTION)
                     }
                 } else {
                     if (withLinks) {
@@ -677,8 +676,8 @@ class PostgreSQLComponent implements Storage {
                 loadAllStatement.setFetchSize(100)
                 loadAllStatement.setTimestamp(1, new Timestamp(sinceTS))
                 loadAllStatement.setTimestamp(2, new Timestamp(untilTS))
-                if (dataset) {
-                    loadAllStatement.setString(3, dataset)
+                if (collection) {
+                    loadAllStatement.setString(3, collection)
                 }
                 ResultSet rs = loadAllStatement.executeQuery()
 

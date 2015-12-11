@@ -128,7 +128,7 @@ class ElasticSearch implements Index {
                             doc = expander.filter(doc)
                         }
                     }
-                    bulk.add(new IndexRequest(getIndexName(), (doc.dataset ?: defaultType), toElasticId(doc.id)).source(doc.data))
+                    bulk.add(new IndexRequest(getIndexName(), (doc.collection ?: defaultType), toElasticId(doc.id)).source(doc.data))
                 } catch (Exception e) {
                     log.error("Failed to create indexrequest for document ${doc.id}. Reason: ${e.message}")
                 }
@@ -156,9 +156,9 @@ class ElasticSearch implements Index {
                     doc = expander.filter(doc)
                 }
             }
-            def idxReq = new IndexRequest(getIndexName(), (doc.dataset ?: defaultType), toElasticId(doc.id)).source(doc.data)
+            def idxReq = new IndexRequest(getIndexName(), (doc.collection ?: defaultType), toElasticId(doc.id)).source(doc.data)
             def response = performExecute(idxReq)
-            log.debug("Indexed the document ${doc.id} as ${indexName}/${(doc.dataset ?: defaultType)}/${response.getId()} as version ${response.getVersion()}")
+            log.debug("Indexed the document ${doc.id} as ${indexName}/${(doc.collection ?: defaultType)}/${response.getId()} as version ${response.getVersion()}")
         } else {
             log.warn("Document ${doc.id} is ${doc.contentType}. Will not index.")
         }
@@ -167,18 +167,14 @@ class ElasticSearch implements Index {
     @Override
     public void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
-        String dataset = defaultType
-        if (identifier.contains("/")) {
-            dataset = identifier.split("/")[1]
-        }
-        client.delete(new DeleteRequest(defaultIndex, dataset, toElasticId(identifier)))
+        client.delete(new DeleteRequest(defaultIndex).id(toElasticId(identifier)))
     }
 
     @Override
-    Map query(Map jsonDsl, String dataset) {
+    Map query(Map jsonDsl, String collection) {
         def idxlist = [defaultIndex] as String[]
 
-        def response = client.search(new SearchRequest(idxlist, mapper.writeValueAsBytes(jsonDsl)).searchType(SearchType.DFS_QUERY_THEN_FETCH).types([dataset] as String[])).actionGet()
+        def response = client.search(new SearchRequest(idxlist, mapper.writeValueAsBytes(jsonDsl)).searchType(SearchType.DFS_QUERY_THEN_FETCH).types([collection] as String[])).actionGet()
 
         def results = [:]
         results.numberOfHits = 0
