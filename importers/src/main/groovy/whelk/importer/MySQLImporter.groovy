@@ -220,7 +220,7 @@ class MySQLImporter {
                 String oldStyleIdentifier = "/"+type+"/"+record.getControlfields("001").get(0).getData()
                 identifier = LegacyIntegrationTools.generateId(oldStyleIdentifier)
                 buildingMetaRecord.get(identifier, [:]).put("record", record)
-                buildingMetaRecord.get(identifier).put("manifest", [(Document.ID_KEY):identifier,(Document.DATASET_KEY):collection, (Document.ALTERNATE_ID_KEY): [oldStyleIdentifier]])
+                buildingMetaRecord.get(identifier).put("manifest", [(Document.ID_KEY):identifier,(Document.COLLECTION_KEY):collection, (Document.ALTERNATE_ID_KEY): [oldStyleIdentifier]])
             } catch (Exception e) {
                 log.error("Problem getting field 001 from marc record $recordId. Skipping document.", e)
             }
