@@ -18,11 +18,11 @@ class ImporterMain {
 
     PicoContainer pico
 
-    ImporterMain() {
+    ImporterMain(String... propNames) {
 
         log.info("Setting up import program.")
 
-        Properties props = PropertyLoader.loadProperties("secret", "mysql")
+        Properties props = PropertyLoader.loadProperties(propNames)
 
         pico = Whelk.getPreparedComponentsContainer(props)
 
@@ -56,12 +56,14 @@ class ImporterMain {
             println("Usage: <progam> [action] [collection]")
             System.exit(1)
         }
-        def main = new ImporterMain()
         if (args[0] == "vcopy") {
+            def main = new ImporterMain("secret", "mysql")
             main.goMysql(args[1])
         } else if (args[0] == "defs") {
+            def main = new ImporterMain("secret")
             main.goDefs(args[1])
         } else if (args[0] == "reindex") {
+            def main = new ImporterMain("secret", "mysql")
             main.goReindex()
         } else {
             println("Unknown action ${args[0]}")
