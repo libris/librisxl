@@ -1,34 +1,20 @@
 package whelk
 
-import groovy.util.logging.Slf4j as Log
+import java.util.zip.CRC32
 
 import com.damnhandy.uri.template.UriTemplate
 
-import java.util.zip.CRC32
+import groovy.util.logging.Slf4j as Log
 
 
 @Log
-class URIMinter {
-
-    static final char[] ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyz".chars
-    static final char[] VOWELS = "auoeiy".chars
-    static final char[] DEVOWELLED = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
-
-    static final Map<String,Long> BASETIMES = [
-            "auth": Date.parse("yyyy-MM-dd", "1999-01-01").getTime(),
-             "bib": Date.parse("yyyy-MM-dd", "2000-01-01").getTime(),
-            "hold": Date.parse("yyyy-MM-dd", "2001-01-01").getTime()
-    ]
-
-    static final int IDENTIFIER_LENGTH = 14
-
+class URIMinter extends IdGenerator {
     URI base = new URI("/")
     String typeKey = '@type'
     String documentUriTemplate
     String thingUriTemplate
     String objectLink
     String epochDate
-    static char[] alphabet = DEVOWELLED
     String randomVariable = null
     int maxRandom = 0
     String timestampVariable = null
@@ -39,11 +25,8 @@ class URIMinter {
     String compoundSlugSeparator = ""
     Map<String, MintRuleSet> rulesByDataset
     int minSlugSize = 2
-    int maxWordsInSlug = 6
-    int shortWordSize = 3
 
     private long epochOffset
-    private int checkForWordsMinSize = maxWordsInSlug * (shortWordSize + 1)
 
     URIMinter() {
         this.timestampCaesarCipher = timestampCaesarCipher
@@ -57,7 +40,7 @@ class URIMinter {
 
     void setEpochDate(String epochDate) {
         if (epochDate instanceof String) {
-            epochOffset = Date.parse("yyyy-MM-dd", epochDate).getTime()
+            epochOffset = DateUtil.parseDate(epochDate).getTime()
         }
         this.epochDate = epochDate
     }
@@ -86,58 +69,35 @@ class URIMinter {
         return base.resolve(computePath(doc))
     }
 
-    static String mint(String originalIdentifier, URI base = new URI("/")) {
-        String[] parts = originalIdentifier.split("/")
-        String dataset = parts[1]
-        int numericId = Integer.parseInt(parts.last())
-        return mint(BASETIMES.get(dataset)+numericId, originalIdentifier, base, 12)
-    }
-
-    static String mint(long timestamp, String seed = null, URI base = new URI("/"), idLength = IDENTIFIER_LENGTH) {
-        StringBuilder identifier = new StringBuilder(baseEncode(timestamp, true))
-        if (seed) {
-            CRC32 crc32 = new CRC32()
-            crc32.update(seed.getBytes("UTF-8"))
-            identifier.append(baseEncode(crc32.value, false))
-            if (identifier.length() > idLength) {
-                identifier = new StringBuilder(identifier.substring(0, idLength))
-            }
-        } else {
-            while (identifier.length() < idLength) {
-                identifier.append(DEVOWELLED[new Random().nextInt(DEVOWELLED.length)])
-            }
-        }
-        return base.resolve(identifier.toString()).toString()
-    }
 
     String computePath(Document doc) {
         computePath(doc.data)
     }
 
-    Map computePaths(Map data, String dataset) {
+    Map computePaths(Map data, String collection) {
         def results = [:]
         def object = data
         if (objectLink) {
             object = data[objectLink]
         }
         if (documentUriTemplate) {
-            def thingUri = computePath(object, dataset)
+            def thingUri = computePath(object, collection)
             results['thing'] = thingUri
             results['document'] = UriTemplate.expand(documentUriTemplate,
                     [thing: thingUri])
         } else {
-            def documentUri = computePath(object, dataset)
+            def documentUri = computePath(object, collection)
             results['document'] = documentUri
             if (thingUriTemplate) {
                 results['thing'] = UriTemplate.expand(thingUriTemplate,
                         [document: documentUri])
             }
         }
-        log.debug "Computed ${results} for object in ${dataset}"
+        log.debug "Computed ${results} for object in ${collection}"
         return results
     }
 
-    String computePath(Map data, String dataset) {
+    String computePath(Map data, String collection) {
         def vars = [:]
         if (timestampVariable) {
             vars[timestampVariable] = baseEncode(createTimestamp(), timestampCaesarCipher)
@@ -153,7 +113,7 @@ class URIMinter {
         if (type instanceof List) {
             type = type[0]
         }
-        def ruleset = rulesByDataset[dataset]
+        def ruleset = rulesByDataset[collection]
         def rule = ruleset.ruleByType[type] ?: ruleset.ruleByType['*']
 
         vars['basePath'] = rule.basePath
@@ -207,7 +167,7 @@ class URIMinter {
             } else {
                 def value = data[key]
                 if (value) {
-                    compound << shorten(value)
+                    compound << value
                     if (pickFirst) {
                         return compound
                     }
@@ -228,49 +188,6 @@ class URIMinter {
             }
         }
         return s
-    }
-
-    String shorten(String s) {
-        if (maxWordsInSlug && s.size() > checkForWordsMinSize) {
-            def words = s.split(/\s+|-/)
-            if (words.size() > maxWordsInSlug) {
-                return words.collect {
-                    it.size() > shortWordSize? it.substring(0, shortWordSize) : it
-                }.join(" ")
-            }
-        }
-        return s
-    }
-
-   static String baseEncode(long n, boolean lastDigitBasedCaesarCipher=false) {
-        int base = alphabet.length
-        int[] positions = basePositions(n, base)
-        if (lastDigitBasedCaesarCipher) {
-            int rotation = positions[-1]
-            for (int i=0; i < positions.length - 1; i++) {
-                positions[i] = rotate(positions[i], rotation, base)
-            }
-        }
-        return baseEncode((int[]) positions)
-    }
-
-    static String baseEncode(int[] positions) {
-        def chars = positions.collect { alphabet[it] }
-        return chars.join("")
-    }
-
-    static int[] basePositions(long n, int base) {
-        int maxExp = Math.floor(Math.log(n) / Math.log(base))
-        int[] positions = new int[maxExp + 1]
-        for (int i=maxExp; i > -1; i--) {
-            positions[maxExp-i] = (int) (((n / (base ** i)) as long) % base)
-        }
-        return positions
-    }
-
-    static int rotate(int i, int rotation, int ceil) {
-        int j = i + rotation
-        return (j >= ceil)? j - ceil : j
     }
 
     static class MintRuleSet {

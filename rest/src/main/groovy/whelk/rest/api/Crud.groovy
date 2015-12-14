@@ -3,23 +3,22 @@ package whelk.rest.api
 import groovy.util.logging.Slf4j as Log
 import org.apache.http.entity.ContentType
 import org.codehaus.jackson.map.ObjectMapper
-import org.picocontainer.Characteristics
-import org.picocontainer.DefaultPicoContainer
 import org.picocontainer.PicoContainer
-import org.picocontainer.containers.PropertiesPicoContainer
 import whelk.Document
 import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
-import whelk.component.PostgreSQLComponent
+import whelk.IdGenerator
+import whelk.component.ElasticSearch
 import whelk.component.StorageType
 import whelk.converter.FormatConverter
-import whelk.URIMinter
 import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.JsonLD2MarcXMLConverter
+import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
+import whelk.util.PropertyLoader
 
 import javax.activation.MimetypesFileTypeMap
 import javax.servlet.http.HttpServlet
@@ -56,28 +55,17 @@ class Crud extends HttpServlet {
         super()
         log.info("Setting up httpwhelk.")
 
-        // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
-        InputStream secretsConfig = ( System.getProperty("xl.secret.properties")
-                ? new FileInputStream(System.getProperty("xl.secret.properties"))
-                : this.getClass().getClassLoader().getResourceAsStream("secret.properties") )
+        Properties props = PropertyLoader.loadProperties("secret")
 
-        Properties props = new Properties()
+        // Get a properties pico container, pre-wired with components according to components.properties
+        pico = Whelk.getPreparedComponentsContainer(props)
 
-        props.load(secretsConfig)
-
-        pico = new DefaultPicoContainer(new PropertiesPicoContainer(props))
-
-        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ElasticSearch.class)
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(PostgreSQLComponent.class)
-        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ApixClientCamel.class)
         pico.addComponent(JsonLD2MarcConverter.class)
         pico.addComponent(JsonLD2MarcXMLConverter.class)
-
-        pico.addComponent(Whelk.class)
-
-        //pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
-
         pico.addComponent(ISXNTool.class)
+
+        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ApixClientCamel.class)
+        //pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
 
         pico.start()
     }
@@ -102,8 +90,20 @@ class Crud extends HttpServlet {
     void handleQuery(HttpServletRequest request, HttpServletResponse response, String dataset) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String callback = queryParameters.remove("callback")
-
-        def results = whelk.storage.linkedDataApiQuery(queryParameters, dataset, autoDetectQueryMode(queryParameters))
+        Map results = null
+        if (queryParameters.containsKey("q")) {
+            // If general q-parameter chosen, use elastic for query
+            def dslQuery = ElasticSearch.createJsonDsl(queryParameters)
+            if (whelk.elastic) {
+                results = whelk.elastic.query(dslQuery, dataset)
+            } else {
+                log.error("Attempted elastic query, but whelk has no elastic component configured.")
+                response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "Attempted to use elastic for query, but no elastic component is configured.")
+                return
+            }
+        } else {
+            results = whelk.storage.query(queryParameters, dataset, autoDetectQueryMode(queryParameters))
+        }
 
         def jsonResult = (callback ? callback + "(" : "") + mapper.writeValueAsString(results) + (callback ? ");" : "")
 
@@ -145,7 +145,7 @@ class Crud extends HttpServlet {
                 if (mode == HttpTools.DisplayMode.META) {
                     def versions = whelk.storage.loadAllVersions(document.identifier)
                     if (versions) {
-                        document.manifest.versions = versions.collect { ["modified": it.modified, "checksum":it.checksum] }
+                        document.manifest.versions = versions.collect { ["version":it.version, "modified": it.modified as String, "checksum":it.manifest.checksum] }
                     }
                     sendResponse(response, document.getManifestAsJson(), "application/json")
                 } else {
@@ -154,7 +154,7 @@ class Crud extends HttpServlet {
                         response.setHeader("Link", "<$ctheader>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"")
                     }
                 }
-                response.setHeader("ETag", document.modified as String)
+                response.setHeader("ETag", document.modified.getTime() as String)
                 String contentType = getMajorContentType(document.contentType)
                 if (path in contextHeaders.collect { it.value }) {
                     log.debug("request is for context file. Must serve original content-type ($contentType).")
@@ -201,7 +201,7 @@ class Crud extends HttpServlet {
         if (!document && path ==~ /(.*\.\w+)/) {
             log.debug("Found extension in $path")
             if (!document && extensionContentType) {
-                document = whelk.storage.load(path.substring(0, path.lastIndexOf(".")))
+                document = whelk.storage.load(path.substring(1, path.lastIndexOf(".")))
             }
             accepting = [extensionContentType]
         }
@@ -245,22 +245,24 @@ class Crud extends HttpServlet {
         try {
             Document doc = createDocumentIfOkToSave(data, dataset, request, response)
             if (doc) {
-            //if (okToSave(data, dataset, request, response)) {
                 if (doc.contentType == "application/ld+json") {
                     log.debug("Flattening ${doc.id}")
                     doc.data = JsonLd.flatten(doc.data)
                 }
                 log.debug("Saving document (${doc.identifier})")
-                doc = whelk.store(doc)
+                doc = whelk.store(doc, (request.getMethod() == "PUT"))
 
-                sendDocumentSavedResponse(response, getResponseUrl(request, doc.identifier, doc.dataset), doc.modified as String)
+                sendDocumentSavedResponse(response, getResponseUrl(request, doc.identifier, doc.dataset), doc.modified.getTime() as String)
             }
+        } catch (StorageCreateFailedException scfe) {
+            log.warn("Already have document with id ${scfe.duplicateId}")
+            response.sendError(HttpServletResponse.SC_CONFLICT, "Document with id \"${scfe.duplicateId}\" already exists.")
         } catch (WhelkAddException wae) {
             log.warn("Whelk failed to store document: ${wae.message}")
             response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE , wae.message)
         } catch (Exception e) {
             log.error("Operation failed", e)
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.message)
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.message)
         }
     }
 
@@ -285,11 +287,11 @@ class Crud extends HttpServlet {
             }
         }
         if (request.method == "PUT") {
-            identifier = request.pathInfo
             if (request.pathInfo == "/") {
                 response.sendError(response.SC_BAD_REQUEST, "PUT not allowed to ROOT")
                 return null
             }
+            identifier = request.pathInfo.substring(1)
         }
         Map dataMap
         if (Document.isJson(cType)) {
@@ -328,7 +330,7 @@ class Crud extends HttpServlet {
 
         log.debug("dataset is now $dataset")
 
-        doc = doc.withDataset(dataset)
+        doc = doc.inCollection(dataset)
                 .withContentType(ContentType.parse(request.getContentType()).getMimeType())
                 .withIdentifier(identifier)
                 .withDeleted(false)
@@ -355,13 +357,15 @@ class Crud extends HttpServlet {
             locationRef.deleteCharAt(locationRef.length() - 1)
         }
 
+        /*
         if (dataset && locationRef.toString().endsWith(dataset)) {
             int endPos = locationRef.length()
             int startPos = endPos - dataset.length() - 1
             locationRef.delete(startPos, endPos)
         }
-
+        */
         if (!locationRef.toString().endsWith(identifier)) {
+            locationRef.append("/")
             locationRef.append(identifier)
         }
 
@@ -418,19 +422,20 @@ class Crud extends HttpServlet {
         if (data) {
             id = JsonLd.findIdentifier(data)
         }
-        return id ?: URIMinter.mint(new Date().getTime())
+        return id ?: IdGenerator.generate()
     }
 
 
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
         try {
-            def doc = whelk.storage.load(request.pathInfo)
+            String id = request.pathInfo.substring(1)
+            def doc = whelk.storage.load(id)
             if (doc && !hasPermission(request.getAttribute("user"), doc, null)) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
             } else {
-                log.debug("Removing resource at ${request.pathInfo}")
-                whelk.remove(request.pathInfo, getDatasetBasedOnPath(request.pathInfo))
+                log.debug("Removing resource at ${id}")
+                whelk.remove(id)
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
 
             }

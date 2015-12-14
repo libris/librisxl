@@ -20,7 +20,7 @@ class PostgreSQLComponentSpec extends Specification {
 
     static private final ObjectMapper mapper = new ObjectMapper()
 
-    static String documentManifest = mapper.writeValueAsString(["identifier":"testid", "dataset": "test"])
+    static String documentManifest = mapper.writeValueAsString(["identifier":"testid", "collection": "test"])
     static String documentData = mapper.writeValueAsString(["@id":"testid","name":"foobar"])
 
     def setup() {
@@ -45,11 +45,11 @@ class PostgreSQLComponentSpec extends Specification {
 
         Document doc = null
         when:
-        doc = new Document("hej", ["@id": "hej"]).withDataset("test")
+        doc = new Document("hej", ["@id": "hej"]).inCollection("test")
         then:
         doc.checksum == null
         doc.id == "hej"
-        doc.dataset == "test"
+        doc.collection == "test"
         doc.created == null
         doc.modified == null
         and:
@@ -57,7 +57,7 @@ class PostgreSQLComponentSpec extends Specification {
         then:
         r.created != null
         r.modified != null
-        r.dataset == "test"
+        r.collection == "test"
         r.id == "hej"
         r.checksum != null
     }
@@ -85,7 +85,7 @@ class PostgreSQLComponentSpec extends Specification {
         r.id == "testid"
         r.created != null
         r.modified != null
-        r.dataset == "test"
+        r.collection == "test"
         r.deleted == false
     }
 
@@ -127,9 +127,9 @@ class PostgreSQLComponentSpec extends Specification {
     def "should calculate correct checksum regardless of created, modified or previous checksum"() {
         given:
         String cs
-        Document doc = new Document("testid", ["key":"some data", "@id": "testid"], ["identifier": "testid", "dataset": "test", "created": 1298619287, "modified": 10284701287, "checksum": "qwudhqiuwhdiu12872"])
+        Document doc = new Document("testid", ["key":"some data", "@id": "testid"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 10284701287, "checksum": "qwudhqiuwhdiu12872"])
         and:
-        doc = new Document("testid", ["@id": "testid", "key":"some data"], ["identifier": "testid", "dataset": "test", "created": 1298619287, "modified": 1298461982639, "checksum": "qwudhqiuwhdiu1287ssss2"])
+        doc = new Document("testid", ["@id": "testid", "key":"some data"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 1298461982639, "checksum": "qwudhqiuwhdiu1287ssss2"])
         when:
         cs = storage.calculateChecksum(doc)
         then:

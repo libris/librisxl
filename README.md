@@ -10,12 +10,15 @@ The project layout is as follows:
 * Applications
     * rest/
         A servlet web application. The REST and other HTTP APIs
-    * oaipmhharvester/
+    * harvesters/
         An OAIPMH harvester. Servlet web application.
-    * oaipmhexporter/
+    * oaipmh/
         Servlet web application. OAIPMH service for LIBRISXL
-    * vcopyimporter/
-        A java application to load data from the vcopy database
+    * importers/
+        Java application to load or reindex data into the system.
+    * integration/
+        A standalone camel application, responsible for asynchronous tasks performed by
+        the other applications
 * Other
     * dep/
         Third party libraries not available from maven central or other online repositories.
@@ -27,6 +30,7 @@ The project layout is as follows:
 
 1. Install gradle from <http://gradle.org/> (or use a package manager, e.g.: brew install gradle). Check gradle -version and make sure that Groovy version matches groovyVersion in build.gradle.
 2. Install elasticsearch from <http://elasticsearch.org/> (or use a package manager, e.g.: brew install elasticsearch).
+3. Install postgresql. At least version 9.4 (brew install postgresql)
 
 Optionally, see details about using a Graph Store at the end of this document.
 
@@ -34,36 +38,95 @@ Optionally, see details about using a Graph Store at the end of this document.
 
 ## Working locally
 
+### Using PostgreSQL
+
+1. Install postgresql; e.g. by running:
+
+    $ brew install postgresql
+
+2. Launch:
+
+    $ postgres -D /usr/local/var/postgres
+
+3. Create database
+
+    $ createdb whelk
+
+### Creating tables in postgresql
+
+  $ psql [-U yourdatabaseuser] <yourdatabaseschema> \
+   < librisxl-tools/postgresql/tables.sql
+  $ psql [-U yourdatabaseuser] <yourdatabaseschema> \
+   < librisxl-tools/postgresql/indexes.sql
+
+### Creating index and mappings in elasticsearch
+
+From the librisxl repository root
+
+  $ curl -XPOST http://localhost:9200/<yourindexname> \
+      -d@librisxl-tools/elasticsearch/libris_config.json
+
+### Setup whelk properties
+
+Any properties bundled in the applications can be overridden by adding a -Dxl.<property> system property when starting.
+
+For example:
+
+  $ java -Dxl.component.properties=/srv/component.properties <application>
+
+If no -D system property is specified, the system will look for the property file in classpath.
+
+#### Core Module
+
+There are two property files in the core module that needs configuring.
+
+* component.properties
+  * Determines which components (classes) are used for storage, index and apix implementations.
+  The file is preconfigured with sensible defaults and you probably won't need to change them. IF, however you want to use something different. Make a copy of the file and use the -Dxl.component.properties setting to indicate your own custom file.
+* secret.properties
+  * Contains passwords and and such. Make a copy of the secret.properties.in file and enter proper settings.
+
+#### importers module
+
+* mysql.properties
+  * Copy the mysql.properties.in file and supply connection settings for mysql
+
+#### harvesters module
+
+* oaipmh.properties
+  * Copy the oaipmh.properties.in file and supply settings for the OAIPMH server
+
+For all modules: ask for directions if you don't know the proper settings.
+
 ### Importing data (NEW)
 
 First, create these config files from corresponding ".in"-files in the same
 directories, and fill out details:
 
-    vcopyimporter/src/main/resources/mysql.properties
-    core/src/main/resources/secret.properties
+* core/src/main/resources/component.properties
+    Used to decide which implementations are used for e.g. index and storage
+* core/src/main/resources/secret.properties
+    Passwords and stuff for databases and such
+* importers/src/main/resources/mysql.properties
+    Passwords and connection uri's for vcopy imports
 
 Then:
 
-    $ cd vcopyimporter/
+    $ cd importers/
 
 and run the following to import and index data into a whelk (psql/es-combo)
 from a mysql-backed vcopy:
 
     $ gradle doRun -Dargs="auth"
 
-### Setup whelk.properties
-
-Copy etc/resources/libris/whelk.properties.in into etc/resources/libris/whelk.properties and replace the placeholder values with proper ones.
-Ask for directions if you don't know the proper settings.
-
 ### Start the whelk
 
+    $ cd rest/
     $ export JAVA_OPTS="-Dfile.encoding=utf-8"
     $ gradle jettyRun
 
 .. Running at <http://localhost:8180/>
 
-This starts a local whelk, using an embedded elasticsearch and storage configured in `src/main/resources/env/dev/whelk.json`.
 
 ### Get/create/update and load Definition Datasets
 
@@ -79,47 +142,60 @@ Get/create/update datasets:
 
     $ python datasets.py
 
+Go back to the importers module.
+
+    $ cd ../librisxl/importers
+
+If you want to clear out any existing definitions (for reload or refresh)
+
+    $ echo "DELETE FROM lddb WHERE manifest->>'collection' = 'definitions';" \
+     |psql [-U <yourdatabaseuser>] <yourdatabaseschema>
+    $ echo "DELETE FROM lddb__versions WHERE manifest->>'collection' = 'definitions';" \
+      |psql [-U <yourdatabaseuser>] <yourdatabaseschema>
+    $ curl -XDELETE http://localhost:9200/<yourindexname>/definitions/\_query \
+     -d '{"query":{"match_all": {}}}'
+
 Load the resulting resources into the running whelk:
 
-    $ scripts/load-defs-whelk.sh http://localhost:8180/whelk
+    $ gradle -Dargs="defs ../definitions/build/definitions.jsonld.lines" doRun
 
 
 ### Import/update local storage from test data
 
-Create a local OAI-PMH dump of examples and run a full import, load into running whelk:
+Create a local OAI-PMH dump of examples and run a full import:
 
     $ python librisxl-tools/scripts/assemble_oaipmh_records.py src/main/resources/secrets.json librisxl-tools/scripts/example_records.tsv /tmp/oaidump
     $ (cd /tmp/oaidump && python -m SimpleHTTPServer) &
 
-    Make sure whelk is running
+Modify your oaipmh.properties to indicate oaipmhServiceUrl as http://localhost:8000/{dataset}/oaipmh
+
+    $ cd oaipmhharvester/
 
     $ gradle jettyrun
 
-    and go to http://localhost:8180/whelk/_operations using a browser
+    and go to http://localhost:8180/oaipmhharvester using a browser.
+
+    To make sure all data is loaded, stop all harvester threads, set the "reload from" value to 1970 or equally old and restart them. The data will now load from your mock OAIPMH server.
 
 
 (Using the OAI-PMH dump makes out-of-band metadata available, which is necessary to create links from bib data to auth data.)
-
-Unless you have set up a graph store (see below), you need to add `-Ddisable.plugins="fusekigraphstore"` to the invocations above to avoid error messages.
 
 There is also a script, `librisxl-tools/scripts/update_mock_storage.sh`, for uploading test documents into your local whelk. (See the script for how the actual HTTP PUT is constructed.) However, this does not create the necessary links between bib and auth.
 
 
 ### Import a single record from Libris OAI-PMH (in marcxml format) to locally running whelk (converting it to Libris JSON-Linked-Data format)
 
-1. Configure mock whelk with suitable converters, src/main/resources/env/dev/whelk.json
-
-3. Run a local mock-configured Http standard whelk. From root librisxl folder:
+1. Run a local mock-configured Http standard whelk. From root librisxl/rest folder:
 
         $ export JAVA_OPTS="-Dfile.encoding=utf-8"
         $ gradle jettyrun
 
-4. Run get-and-put-record script:
+2. Run get-and-put-record script:
 
         $ cd scripts
         $ get-and-put-record.sh <bib|auth|hold> <id>
 
-5. To see JsonLD record, go to <http://localhost:8180/whelk/bib/7149593>
+3. To see JsonLD record, go to <http://localhost:8180/whelk/bib/7149593>
 
 ### Run standalone data conversion on a single document
 
@@ -200,53 +276,22 @@ This is now available as:
     graphstoreUpdateAuthPass=...
 
 
-### Using PostgreSQL
-
-1. Install postgresql; e.g. by running:
-
-    $ brew install postgresql
-
-2. Launch:
-
-    $ postgres -D /usr/local/var/postgres
-
-3. Create database
-
-    $ createdb whelk
-
-4. Create tables (config is found in libris/lddb -repo.
-
-    $ psql whelk < ../lddb/config/lddb.sql
-
 
 ## Whelk maintenance (rebuilding and reloading)
-
-All whelk maintenance is controlled from the operations interface (<whelkhost>/\_operations).
 
 ### New Index Config
 
 If a new index is to be set up, and unless you run locally in a pristine setup, you need to put the config to the index, like (replace localhost with target machine):
 
-  $ curl -XPUT http://localhost:9200/<indexname> -d @librisxl-tools/elasticsearch/libris\_config.json
+    $ curl -XPUT http://localhost:9200/<indexname> -d @librisxl-tools/elasticsearch/libris_config.json
 
 (To replace an existing setup with entirely new configuration, you need to delete the index `curl -XDELETE http://localhost:9200/<indexname>/` and read all data again (even locally).)
 
 ### New format
 
-If the JSONLD format has been updated, in such a way that the marcframeconverter need to be run, the only options are either to reload the data from a marcxml storage (currently untested and probably not working) or reloading the data from OAIPMH.
+If the JSONLD format has been updated, in such a way that the marcframeconverter need to be run, the only options is to reload the data from vcopy using vcopyimporter.
 
-#### From OAIPMH
-
-1.  In the operations gui, under "import", select which dataset to import (auth/bib/hold). If loading data from data.libris.kb.se, just erase everything from the "service url" field. Finally, hit "go".
-
-2.  The import will now start. The current velocity and import count can be viewed from the operations-page.
-
-##### Alternatively
-
-1.  $ curl -XPOST http://localhost:8180/whelk/\_operations -d 'operation=import&dataset=auth,bib,hold&url=http://localhost:8000/{dataset}/oaipmh&importer=oaipmhimporter'
-
-
-### Reindexing
+### Reindexing (DEPRECATED)
 
 If no significant changes are made to the format, but the elasticsearch index (the search index) is somehow out of alignment with the storage, a reindexing might be appropriate.
 
@@ -255,37 +300,6 @@ If this option is used, the whelk will reindex by loading data from storage acco
 
 If a full reindex is requested (by leaving the dataset field empty), the whelk will first create a brand new index. Once reindexing is completed, the current alias (libris) will be removed from the old index and set to the new index instead. This operation is required if new global settings, filters or mappings must be added to the index.
 
-
-## Rebuilding meta
-
-If you suspect that the metaentry index is unaligned with storage, you can rebuild it by letting the whelk load all documents from disk and creating new meta entries.
-
-1. It is recommended to remove the old metaindex before rebuilding (but not always necessary).
-
-    $ curl -XDELETE http://elastichost:9200/<metaindex>
-
-    <metaindex> is typically .libris_pairtree for the primary storage metaindex. Check http://elastichost:9200/_plugin/head/ for available indices.
-
-2. Call the rebuild operation
-
-    $ curl http://<whelkhost>/_operations?operation=rebuild
-
-## Re-convert data
-
-To run the conversion from MARC to JSON-LD again for all records, call transfer:
-
-    $ curl http://<whelkhost>/_operations?operation=transfer&fromStorage=pairtreeoaistorage&toStorage=pairtreehybridstorage
-
-## Component synchronization
-
-When starting up the whelk, each component checks if it needs to update it's data. This happens automatically by each component loading it's state, stored in WHELK\_WORK\_DIR/componentname.state. WHELK\_WORK\_DIR is configured in whelk.json.
-If no state file can be found for a component, it is automatically created and the "last\_updated" parameter is set to epoch. Since this would be a big operation to catch up at startup, it needs to be forcibly requested by a human to start. 
-
-    $ curl http://<whelkhost>/_operations?operation=ping
-
-This is analogous to a full reindex, except that no new index will be created. 
-
-If the statefiles are missing, but you know that the index is in a reasonable state, you could just create a statefile by hand with a more recent "last\_updated".
 
 ## Disaster recovery
 
@@ -303,34 +317,22 @@ http://<host>:<PORT>/whelk/bib/7149593
 
 ELASTIC SEARCH, INDEX SEARCH API:
 Find 'tove' in libris index, index-typedoc 'person':
-http://<host>:9200/libris/auth/_search?q=tove
-
-ELASTIC SEARCH, MAPPING:
-PUT mapping with prop config:
-curl -XPUT http://<host>:9200/libris/bib/_mapping -d@etc/resources/_all/default_mapping.json
+http://<host>:9200/libris/auth/\_search?q=tove
 
 ELASTIC SEARCH, ANALYZE INDEXED VALUES FOR A SPECIFIC FIELD:
-curl -XGET http://<host>:9200/libris/auth/_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.raw" } } } }'
+curl -XGET http://<host>:9200/libris/auth/\_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.raw" } } } }'
 
 whelk, SEARCH API:
-http://<host>:<PORT>/whelk/<indextype>/_search?q=(<field>:)strindberg
-OR 
-http://<host>:<PORT>/whelk/<indextype>?<field>:strindberg
+http://<host>:<PORT>/whelk/<indextype>/?<field>=<value>
 
 INDEX TYPES:
 bib, auth, person, def, sys
 
 EXPAND AUTOCOMPLETE:
-http://<host>:<PORT>/whelk/_expand?name=Jansson,%20Tove,%201914-2001.
+http://<host>:<PORT>/whelk/\_expand?name=Jansson,%20Tove,%201914-2001.
 
 REMOTESEARCH
-http://<host>:<PORT>/whelk/_remotesearch?q=astrid
+http://<host>:<PORT>/whelk/\_remotesearch?q=astrid
 
 HOLDINGCOUNT
-http://<host>:<PORT>/whelk/_libcount?id=/resource/bib/7149593
-
-## Dependencies
-
-### Elastic Search Component for Camel
-
-Built for ES 1.3.4, needs to be recompiled. Also, remove the log4j.properties before building to get rid of the target-catalog.
+http://<host>:<PORT>/whelk/\_libcount?id=/resource/bib/7149593

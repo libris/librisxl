@@ -5,19 +5,20 @@ import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 
-import java.security.MessageDigest
-
 @Log
 class Document {
+    static final String GRAPH_KEY = "@graph"
     static final String ID_KEY = "identifier"
     static final String CREATED_KEY = "created";
     static final String MODIFIED_KEY = "modified";
     static final String DELETED_KEY = "deleted";
-    static final String DATASET_KEY = "dataset";
+    static final String COLLECTION_KEY = "collection";
     static final String CONTENT_TYPE_KEY = "contentType";
     static final String CHECKUM_KEY = "checksum";
     static final String NON_JSON_CONTENT_KEY = "content"
-    static final String ALTERNATE_ID_KEY = "alternateIdentifiers"
+    static final String ALTERNATE_ID_KEY = "identifiers"
+
+    static final URI BASE_URI = new URI("/")
 
     @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()
@@ -102,6 +103,10 @@ class Document {
         return ois.readObject()
     }
 
+    URI getURI() {
+        return BASE_URI.resolve(id)
+    }
+
     @JsonIgnore
     String getDataAsString() {
         return mapper.writeValueAsString(data)
@@ -110,7 +115,7 @@ class Document {
     Map getData() { data }
 
     @JsonIgnore
-    String getDataset() { manifest[DATASET_KEY] }
+    String getCollection() { manifest[COLLECTION_KEY] }
 
     @JsonIgnore
     String getIdentifier() { id }
@@ -180,9 +185,6 @@ class Document {
             deleted = entrydata[DELETED_KEY]
         }
         if (entrydata != null) {
-            for (sensitiveKey in [Document.CHECKUM_KEY]) {
-                entrydata.remove(sensitiveKey)
-            }
             this.manifest.putAll(entrydata)
         }
         return this
@@ -193,8 +195,8 @@ class Document {
         return this
     }
 
-    Document withDataset(String ds) {
-        manifest[DATASET_KEY] = ds
+    Document inCollection(String ds) {
+        manifest[COLLECTION_KEY] = ds
         return this
     }
 

@@ -18,40 +18,35 @@ import whelk.JsonLd
 
 import whelk.converter.FormatConverter
 import whelk.converter.MarcJSONConverter
-import whelk.URIMinter
 
 import com.damnhandy.uri.template.UriTemplate
 
 @Log
 class MarcFrameConverter implements FormatConverter {
 
-    URIMinter uriMinter
     ObjectMapper mapper = new ObjectMapper()
     String cfgBase = "ext"
 
     protected MarcConversion conversion
 
     MarcFrameConverter(uriSpacePath=null) {
-        uriMinter = readConfig(uriSpacePath ?: "$cfgBase/oldspace.json") {
-            new URIMinter(mapper.readValue(it, Map))
-        }
         def config = readConfig("$cfgBase/marcframe.json") {
             mapper.readValue(it, Map)
         }
-        initialize(uriMinter, config)
+        initialize(config)
     }
 
-    MarcFrameConverter(URIMinter uriMinter, Map config) {
-        initialize(uriMinter, config)
+    MarcFrameConverter(Map config) {
+        initialize(config)
     }
 
     def readConfig(String path, Closure picker) {
         return getClass().classLoader.getResourceAsStream(path).withStream(picker)
     }
 
-    void initialize(URIMinter uriMinter, Map config) {
+    void initialize(Map config) {
         def tokenMaps = loadTokenMaps(config.tokenMaps)
-        conversion = new MarcConversion(config, uriMinter, tokenMaps)
+        conversion = new MarcConversion(config, tokenMaps)
     }
 
     Map loadTokenMaps(tokenMaps) {
@@ -85,8 +80,8 @@ class MarcFrameConverter implements FormatConverter {
         return result
     }
 
-    Map runConvert(Map marcSource, Map extraData=null) {
-        return conversion.convert(marcSource, null, extraData)
+    Map runConvert(Map marcSource, String recordId=null, Map extraData=null) {
+        return conversion.convert(marcSource, recordId, extraData)
     }
 
     Map runRevert(Map data) {
@@ -99,24 +94,11 @@ class MarcFrameConverter implements FormatConverter {
     @Override
     String getRequiredContentType() { "application/x-marc-json" }
 
-    Document doConvert(final Object record, final Map metaentry) {
-        try {
-            def source = MarcJSONConverter.toJSONMap(record)
-            def result = runConvert(source, metaentry?.extraData)
-            log.trace("Created frame: $result")
-
-            return new Document(result, metaentry).withContentType(getResultContentType())
-        } catch (Exception e) {
-            log.error("Failed marc conversion (${e.message}). Metaentry: $metaentry")
-            throw e
-        }
-    }
-
     @Override
     Document convert(final Document doc) {
         def source = doc.data
         def meta = doc.manifest?.extraData
-        def result = runConvert(source, meta)
+        def result = runConvert(source, doc.identifier, meta)
         log.trace("Created frame: $result")
 
         return new Document(result, doc.manifest).withIdentifier(((String)doc.identifier)).withContentType(getResultContentType())
@@ -144,7 +126,7 @@ class MarcFrameConverter implements FormatConverter {
             }
             result = converter.runRevert(source)
         } else {
-            result = converter.runConvert(source)
+            result = converter.runConvert(source, fpath)
         }
         converter.mapper.writeValue(System.out, result)
     }
@@ -163,12 +145,18 @@ class MarcConversion {
     Map marcTypeMap = [:]
     Map tokenMaps
 
-    URIMinter uriMinter
+    URI baseUri
+    String recordUriTemplate
+    String thingUriTemplate
 
-    MarcConversion(Map config, URIMinter uriMinter, Map tokenMaps) {
+    MarcConversion(Map config, Map tokenMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord
-        this.uriMinter = uriMinter
         this.tokenMaps = tokenMaps
+        this.baseUri = new URI(config.baseUri ?: '/')
+        if (config.uriTemplates) {
+            recordUriTemplate = config.uriTemplates.record
+            thingUriTemplate = config.uriTemplates.thing
+        }
 
         this.sharedPostProcSteps = config.postProcessing.collect {
             parsePostProcStep(it)
@@ -227,13 +215,19 @@ class MarcConversion {
         return selected ?: marcRuleSets['bib']
     }
 
+    String resolve(String uri) {
+        if (uri == null)
+            return null
+        return baseUri.resolve(uri).toString()
+    }
+
     Map convert(Map marcSource, String recordId=null, Map extraData=null) {
 
         def leader = marcSource.leader
         def marcCat = getMarcCategory(leader)
         def marcRuleSet = marcRuleSets[marcCat]
 
-        def record = ["@id": recordId]
+        def record = ["@id": resolve(recordId)]
         def thing = [:]
 
         def marcRemains = [failedFixedFields: [:], uncompleted: [], broken: []]
@@ -267,12 +261,7 @@ class MarcConversion {
             }
         }
 
-        // TODO: make this configurable
-        if (record['@id'] == null) {
-            def uriMap = uriMinter.computePaths(record, marcCat)
-            record['@id'] = uriMap['document']
-            thing['@id'] = uriMap['thing']
-        }
+        manageIds(marcCat, record, thing)
 
         // TODO: move this to an "extra data" section in marcframe.json?
         extraData?.get("oaipmhSetSpecs")?.each {
@@ -314,6 +303,34 @@ class MarcConversion {
         }
     }
 
+    void manageIds(String marcCat, Map record, Map thing) {
+        def givenRecId = record['@id']
+        def builtRecId = resolve(UriTemplate.fromTemplate(
+                recordUriTemplate).set('marcType', marcCat).set(record).expand())
+
+        if (givenRecId == null) {
+            record['@id'] = builtRecId
+        } else {
+            record.get('sameAs', []) << ['@id': builtRecId]
+        }
+
+        def givenThingId = thing['@id']
+        def builtThingId = resolve(UriTemplate.fromTemplate(
+                thingUriTemplate).set('marcType', marcCat).set(record).expand())
+
+        if (givenThingId == null) {
+            if (givenRecId) {
+                thing['@id'] = givenRecId + '#it'
+                thing.get('sameAs', []) << ['@id': builtThingId]
+            } else {
+                thing['@id'] = builtThingId
+            }
+        } else {
+            thing.get('sameAs', []) << ['@id': builtThingId]
+        }
+
+    }
+
     def toFlatQuotedForm(state, thingLink) {
         def record = state.entityMap['?record']
         def thing = record[thingLink]
@@ -326,10 +343,10 @@ class MarcConversion {
         def quotedIds = new HashSet()
 
         state.quotedEntities.each { ent ->
-            //def entId = ent['@id']
-            //    ?: ent['sameAs']?.getAt(0)?.get('@id')
-            //    ?: makeSomeId(ent)
-            def entId = ent['@id'] ?: makeSomeId(ent)
+            // TODO: move to quoted-processing step in storage loading?
+            def entId = ent['@id']
+                ?: ent['sameAs']?.getAt(0)?.get('@id')
+                ?: makeSomeId(ent)
             if (entId) {
                 def copy = ent.clone()
                 ent.clear()
@@ -694,8 +711,12 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         } else {
             link = fieldDfn.link
         }
+        if (!link && !definesDomainEntityType && !fieldDfn.computeLinks) {
+            definesDomainEntityType = fieldDfn.resourceType
+        } else {
+            resourceType = fieldDfn.resourceType
+        }
         embedded = fieldDfn.embedded == true
-        resourceType = fieldDfn.resourceType
     }
 
     abstract ConvertResult convert(state, value)

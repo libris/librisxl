@@ -9,6 +9,12 @@
     "z": "auth"
   },
 
+  "baseUri": "/",
+  "uriTemplates": {
+    "record": "{marcType}/{controlNumber}",
+    "thing": "resource/{marcType}/{controlNumber}"
+  },
+
   "tokenMaps": [
     "marcenums.json",
     {
@@ -86,22 +92,22 @@
       "match-code": {
         "v x y z": {
           "uriTemplate": null,
-          "uriTemplate": "/topic/{+inScheme.notation}{/componentList.prefLabel*}",
-          "aboutType": "ComplexSubject",
-          "$a": {"addLink": "componentList",
+          "uriTemplate": "/topic/{+inScheme.notation}{/termParts.prefLabel*}",
+          "resourceType": "ComplexTerm",
+          "$a": {"addLink": "termParts",
                  "resourceType": "TopicalTerm",
                  "property": "prefLabel", "required": true},
-          "$v": {"addLink": "componentList",
+          "$v": {"addLink": "termParts",
                "TODO": "use /topic/saogf/{_}, but only if $2=sao",
                  "resourceType": "GenreTerm",
                  "property": "prefLabel"},
-          "$x": {"addLink": "componentList",
+          "$x": {"addLink": "termParts",
                  "resourceType": "SubdivisionTerm",
                  "property": "prefLabel"},
-          "$y": {"addLink": "componentList",
+          "$y": {"addLink": "termParts",
                  "resourceType": "ChronologicalTerm",
                  "property": "prefLabel"},
-          "$z": {"addLink": "componentList",
+          "$z": {"addLink": "termParts",
                  "TODO": "use /place/{_}, but only if $2=sao",
                  "resourceType": "GeographicalTerm",
                  "property": "prefLabel"}
@@ -1817,13 +1823,7 @@
       "$c": {"aboutEntity": "?thing", "property": "termsOfAvailability"},
       "$q": {"property": "identifierNote"},
       "$z": {
-        "property": "identifierValue",
-        "splitValuePattern": "([^ ()]*)(?:\\s*\\(([^)]+)\\))?",
-        "splitValueProperties": ["identifierValue", "identifierNote"],
-        "defaults": {
-          "identifierScheme": {"@id": "/def/identifiers/isbn"},
-          "identifierStatus": "canceledInvalid"
-        }
+        "addProperty": "hiddenValue"
       },
       "_spec": [
         {
@@ -1846,21 +1846,44 @@
         },
         {
           "source": {
-            "020": {"ind1":" ","ind2":" ","subfields":[
-              {"z":"9780240811444 (pbk. : alk. paper)"} ]}
+            "020": {
+              "ind1":" ", "ind2":" ", "subfields": [
+                {"a": "9781137368331 (e-book)"},
+                {"z": "9780230274396 (print)"}
+              ]
+            }
           },
           "normalized": {
-            "020": {"ind1": " ", "ind2": " ", "subfields": [
-              {"q": "pbk. : alk. paper"}, {"z": "9780240811444"} ]}
+            "020": {
+              "ind1":" ", "ind2":" ", "subfields": [
+                {"a": "9781137368331"},
+                {"q": "e-book"},
+                {"z": "9780230274396 (print)"}
+              ]
+            }
           },
           "result": {"about": {
             "identifier": [
               {
                 "@type": "Identifier",
-                "identifierNote": "pbk. : alk. paper",
+                "hiddenValue": ["9780230274396 (print)"],
+                "identifierNote": "e-book",
                 "identifierScheme": {"@id": "/def/identifiers/isbn"},
-                "identifierStatus": "canceledInvalid",
-                "identifierValue": "9780240811444"
+                "identifierValue": "9781137368331"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {
+            "020": {"ind1":" ", "ind2":" ", "subfields":[
+              {"z":"9780240811444 (pbk. : alk. paper)"} ]}
+          },
+          "result": {"about": {
+            "identifier": [
+              {
+                "@type": "Identifier",
+                "hiddenValue": ["9780240811444 (pbk. : alk. paper)"]
               }
             ]
           }}
@@ -3116,9 +3139,9 @@
           "result": {"about": {
             "subject": [
               {
-                "@type": "TopicalTerm",
+                "@type": "ComplexTerm",
                 "@id":"/topic/lcsh/Information/Information%20Age",
-                "broader": [
+                "termParts": [
                   {
                     "@type": "TopicalTerm",
                     "prefLabel": "Information"
@@ -3799,7 +3822,7 @@
     "150" : {
       "inherit": "patterns:termbase",
       "aboutEntity": "?record",
-      "aboutType": "TopicalTerm",
+      "resourceType": "TopicalTerm",
       "uriTemplateDefaults": {"inScheme.notation": "sao"},
       "dependsOn": ["040", "042"],
       "$0": null,
@@ -3819,25 +3842,25 @@
     "151" : {
       "inherit": "patterns:termbase",
       "aboutEntity": "?record",
-      "aboutType": "GeographicalTerm"
+      "resourceType": "GeographicalTerm"
     },
     "155" : {
       "inherit": "patterns:termbase",
       "aboutEntity": "?record",
-      "aboutType": "GenreTerm",
+      "resourceType": "GenreTerm",
       "TODO:just-assert-inScheme=saogf?:uriTemplate": "/topic/saogf/{prefLabel}"
     },
     "162" : {
       "inherit": "patterns:termbase",
       "TODO": "besättning - musik",
       "aboutEntity": "?record",
-      "aboutType": "OrchestraTerm"
+      "resourceType": "OrchestraTerm"
     },
 
     "180" : {
       "inherit": null,
       "aboutEntity": "?record",
-      "aboutType": "SubdivisionTerm",
+      "resourceType": "SubdivisionTerm",
       "$x": {
         "property": "prefLabel",
         "defaults": {"inCollection": {"@id": "/topic/aspects/", "notation": "aspects"}}
@@ -3846,19 +3869,19 @@
     "181" : {
       "inherit": null,
       "aboutEntity": "?record",
-      "aboutType": "GeographicalSubdivisionTerm",
+      "resourceType": "GeographicalSubdivisionTerm",
       "$z": {"property": "prefLabel"}
     },
     "182" : {
       "inherit": null,
       "aboutEntity": "?record",
-      "aboutType": "ChronologicalSubdivisionTerm",
+      "resourceType": "ChronologicalSubdivisionTerm",
       "$y": {"property": "prefLabel"}
     },
     "185" : {
       "inherit": null,
       "aboutEntity": "?record",
-      "aboutType": "GenreSubdivisionTerm",
+      "resourceType": "GenreSubdivisionTerm",
       "$v": {"property": "prefLabel"}
     },
 
@@ -3905,10 +3928,10 @@
       "match-code": {
         "x": {
           "addLink": "replaces",
-          "resourceType": "TopicalTerm",
-          "uriTemplate": "/topic/sao/{broader.prefLabel*}",
-          "$a": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
-          "$x": {"addLink": "broader", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
+          "resourceType": "ComplexTerm",
+          "uriTemplate": "/topic/sao/{termParts.prefLabel*}",
+          "$a": {"addLink": "termParts", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
+          "$x": {"addLink": "termParts", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
         }
       },
       "TODO": "whatIs w||e"

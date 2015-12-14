@@ -65,14 +65,22 @@ public class JsonLd {
 
 
     public static Map frame(String mainId, Map flatJsonLd) {
+        mainId = Document.BASE_URI.resolve(mainId)
         if (isFramed(flatJsonLd)) {
             return flatJsonLd
         }
         def idMap = getIdMap(flatJsonLd)
         def mainItemMap = idMap.get(mainId)
+        if (!mainItemMap) {
+            // Try to find an identifier to frame around
+            mainItemMap = idMap.get(findRecordURI(flatJsonLd).toString())
+        }
         Map framedMap
         try {
             framedMap = embed(mainId, mainItemMap, idMap, new HashSet<String>())
+            if (!framedMap) {
+                throw new FramingException("Failed to frame JSONLD ($flatJsonLd)")
+            }
         } catch (StackOverflowError sofe) {
             throw new FramingException("Unable to frame JSONLD ($flatJsonLd). Recursive loop?)", sofe)
         }
@@ -108,20 +116,32 @@ public class JsonLd {
         return o
     }
 
+    static URI findRecordURI(Map jsonLd) {
+        String foundIdentifier = findIdentifier(jsonLd)
+        if (foundIdentifier) {
+            return Document.BASE_URI.resolve(foundIdentifier)
+        }
+        return null
+    }
+
     static String findIdentifier(Map jsonLd) {
+        String foundIdentifier = null
         if (!jsonLd) {
             return null
         }
         if (isFlat(jsonLd)) {
             if (jsonLd.containsKey(GRAPH_KEY)) {
-                return jsonLd.get(GRAPH_KEY).first().get(ID_KEY)
+                foundIdentifier = jsonLd.get(GRAPH_KEY).first().get(ID_KEY)
             }
             if (jsonLd.containsKey(DESCRIPTIONS_KEY)) {
-                return jsonLd.get(DESCRIPTIONS_KEY).get("entry").get(ID_KEY)
+                foundIdentifier = jsonLd.get(DESCRIPTIONS_KEY).get("entry").get(ID_KEY)
             }
         }
         if (isFramed(jsonLd)) {
-            return jsonLd.get(ID_KEY)
+            foundIdentifier = jsonLd.get(ID_KEY)
+        }
+        if (foundIdentifier) {
+            return new URI(foundIdentifier).getPath().substring(1)
         }
         return null
     }
@@ -136,7 +156,7 @@ public class JsonLd {
     }
 
     static boolean isFramed(Map jsonLd) {
-        if ((jsonLd.size() > 1 && !jsonLd.containsKey(GRAPH_KEY) && !jsonLd.containsKey(DESCRIPTIONS_KEY)) || jsonLd.containsKey(ID_KEY)) {
+        if (jsonLd.size() > 1 && !jsonLd.containsKey(GRAPH_KEY) && !jsonLd.containsKey(DESCRIPTIONS_KEY)) {
             return true
         }
         return false

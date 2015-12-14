@@ -5,12 +5,12 @@ import groovy.util.logging.Slf4j as Log
 import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
+import org.postgresql.util.PSQLException
 import whelk.Document
 import whelk.JsonLd
 import whelk.Location
-import whelk.exception.WhelkException
+import whelk.exception.StorageCreateFailedException
 
-import javax.print.Doc
 import java.security.MessageDigest
 import java.sql.ResultSet
 import java.sql.Timestamp
@@ -26,12 +26,13 @@ class PostgreSQLComponent implements Storage {
 
     public final static mapper = new ObjectMapper()
 
-    private final static LOCATION_PRECURSOR = "/resource"
+    private final static LOCATION_PRECURSOR = "/resource/"
+    private final static JSONLD_ALT_ID_KEY = "sameAs"
 
     boolean versioning = true
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET, LOAD_ALL_DOCUMENTS_BY_DATASET, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE
+    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION, LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
 
@@ -82,6 +83,7 @@ class PostgreSQLComponent implements Storage {
         UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ? " +
                 "OR manifest @> ? RETURNING *) " +
             "INSERT INTO $mainTableName (id, data, quoted, manifest, deleted) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
+        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,quoted,manifest,deleted) VALUES (?,?,?,?,?)"
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"// (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)" +
 
@@ -91,7 +93,7 @@ class PostgreSQLComponent implements Storage {
         GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest @> '{ \"${Document.ALTERNATE_ID_KEY}\": [?] }'"
         LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
-        LOAD_ALL_DOCUMENTS_BY_DATASET = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND manifest->>'dataset' = ?"
+        LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND manifest->>'collection' = ?"
         LOAD_ALL_DOCUMENTS_WITH_LINKS = """
             SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
             FROM (
@@ -102,13 +104,13 @@ class PostgreSQLComponent implements Storage {
                 ) AS links GROUP by id,link
             ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
             """
-        LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET = """
+        LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION = """
             SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
             FROM (
                 SELECT * FROM (
-                    SELECT identifier as id, identifier as link FROM $mainTableName WHERE dataset = ?
+                    SELECT identifier as id, identifier as link FROM $mainTableName WHERE collection = ?
                     UNION ALL
-                    SELECT identifier as id, jsonb_array_elements_text(manifest->'links') as link FROM $mainTableName WHERE dataset = ?
+                    SELECT identifier as id, jsonb_array_elements_text(manifest->'links') as link FROM $mainTableName WHERE collection = ?
                 ) AS links GROUP by id,link
             ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
             """
@@ -158,34 +160,42 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    Document store(Document doc) {
-        if (!doc.dataset) {
-            log.error("Can't save document without dataset.")
-            throw new WhelkException("Can't save document without dataset.")
-        }
+    Document store(Document doc, boolean upsert) {
         log.debug("Saving ${doc.id}")
         Connection connection = getConnection()
         connection.setAutoCommit(false)
         try {
+            findIdentifiers(doc)
             calculateChecksum(doc)
             Date now = new Date()
-            if (versioning) {
-                log.debug("Document has checksum ${doc.checksum} before saving version.")
+            PreparedStatement insert = connection.prepareStatement((upsert ? UPSERT_DOCUMENT : INSERT_DOCUMENT))
+
+            if (upsert) {
                 if (!saveVersion(doc, connection, now)) {
                     return doc // Same document already in storage.
                 }
+                insert = rigUpsertStatement(insert, doc, now)
+                insert.executeUpdate()
+            } else {
+                insert = rigInsertStatement(insert, doc)
+                insert.executeUpdate()
+                saveVersion(doc, connection, now)
             }
-            PreparedStatement insert = connection.prepareStatement(UPSERT_DOCUMENT)
-            insert = rigUpsertStatement(insert, doc, now)
-            insert.executeUpdate()
             connection.commit()
             def status = status(doc.identifier, connection)
             doc.setCreated(status['created'])
             doc.setModified(status['modified'])
             log.debug("Saved document ${doc.identifier} with timestamps ${doc.created} / ${doc.modified}")
             return doc
+        } catch (PSQLException psqle) {
+            log.debug("SQL failed: ${psqle.message}")
+            if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
+                throw new StorageCreateFailedException(doc.id)
+            } else {
+                throw psqle
+            }
         } catch (Exception e) {
-            log.error("Failed to save document: ${e.message}")
+            log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
             throw e
         } finally {
@@ -193,6 +203,15 @@ class PostgreSQLComponent implements Storage {
             log.debug("[store] Closed connection.")
         }
         return null
+    }
+
+    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc) {
+        insert.setString(1, doc.id)
+        insert.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
+        insert.setObject(3, doc.quotedAsString, java.sql.Types.OTHER)
+        insert.setObject(4, doc.manifestAsJson, java.sql.Types.OTHER)
+        insert.setBoolean(5, doc.isDeleted())
+        return insert
     }
 
     private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime) {
@@ -218,16 +237,20 @@ class PostgreSQLComponent implements Storage {
     }
 
     boolean saveVersion(Document doc, Connection connection, Date modTime) {
-        PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
-        try {
-            log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: $modTime")
-            insvers = rigVersionStatement(insvers, doc, modTime)
-            int updated =  insvers.executeUpdate()
-            log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
-            return (updated > 0)
-        } catch (Exception e) {
+        if (versioning) {
+            PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
+            try {
+                log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: $modTime")
+                insvers = rigVersionStatement(insvers, doc, modTime)
+                int updated = insvers.executeUpdate()
+                log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
+                return (updated > 0)
+            } catch (Exception e) {
             log.error("Failed to save document version: ${e.message}")
             throw e
+        }
+        } else {
+            return false
         }
     }
 
@@ -243,17 +266,18 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    boolean bulkStore(final List<Document> docs) {
+    boolean bulkStore(final List<Document> docs, boolean upsert) {
         if (!docs || docs.isEmpty()) {
             return
         }
         log.trace("Bulk storing ${docs.size()} documents.")
         Connection connection = getConnection()
-        PreparedStatement batch = connection.prepareStatement(UPSERT_DOCUMENT)
+        PreparedStatement batch = connection.prepareStatement((upsert ? UPSERT_DOCUMENT : INSERT_DOCUMENT))
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             docs.each { doc ->
                 Date now = new Date()
+                findIdentifiers(doc)
                 calculateChecksum(doc)
                 if (versioning) {
                     ver_batch = rigVersionStatement(ver_batch, doc, now)
@@ -266,7 +290,7 @@ class PostgreSQLComponent implements Storage {
             }
             ver_batch.executeBatch()
             batch.executeBatch()
-            log.debug("Stored ${docs.size()} documents with dataset ${docs.first().dataset} (versioning: ${versioning})")
+            log.debug("Stored ${docs.size()} documents in collection ${docs.first().collection} (versioning: ${versioning})")
             return true
         } catch (Exception e) {
             log.error("Failed to save batch: ${e.message}", e)
@@ -278,7 +302,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    Map<String, Object> linkedDataApiQuery(Map queryParameters, String dataset, StorageType storageType) {
+    Map<String, Object> query(Map queryParameters, String collection, StorageType storageType) {
         log.debug("Performing query with type $storageType : $queryParameters")
         long startTime = System.currentTimeMillis()
         Connection connection = getConnection()
@@ -290,12 +314,12 @@ class PostgreSQLComponent implements Storage {
         queryParameters.remove("_orderBy") // Not supported
         queryParameters.remove("_select") // Not supported
 
-        def (whereClause, values) = buildQueryString(queryParameters, dataset, storageType)
+        def (whereClause, values) = buildQueryString(queryParameters, collection, storageType)
 
         int limit = pageSize as int
         int offset = (Integer.parseInt(page)-1) * limit
 
-        StringBuilder finalQuery = new StringBuilder("${values ? QUERY_LD_API + whereClause : (dataset ? LOAD_ALL_DOCUMENTS_BY_DATASET : LOAD_ALL_DOCUMENTS)+ " AND deleted IS NOT true"} OFFSET $offset LIMIT $limit")
+        StringBuilder finalQuery = new StringBuilder("${values ? QUERY_LD_API + whereClause : (collection ? LOAD_ALL_DOCUMENTS_BY_COLLECTION : LOAD_ALL_DOCUMENTS)+ " AND deleted IS NOT true"} OFFSET $offset LIMIT $limit")
 
         if (sort) {
             finalQuery.append(" ORDER BY ${translateSort(sort, storageType)}")
@@ -310,8 +334,8 @@ class PostgreSQLComponent implements Storage {
         if (!values) {
             query.setTimestamp(1, new Timestamp(0L))
             query.setTimestamp(2, new Timestamp(PGStatement.DATE_POSITIVE_INFINITY))
-            if (dataset) {
-                query.setString(3, dataset)
+            if (collection) {
+                query.setString(3, collection)
             }
         }
 
@@ -333,15 +357,15 @@ class PostgreSQLComponent implements Storage {
         return results
     }
 
-    def buildQueryString(Map queryParameters, String dataset, StorageType storageType) {
+    def buildQueryString(Map queryParameters, String collection, StorageType storageType) {
         boolean firstKey = true
         List values = []
 
         StringBuilder whereClause = new StringBuilder("(")
 
-        if (dataset) {
-            whereClause.append("manifest->>'dataset' = ?")
-            values.add(dataset)
+        if (collection) {
+            whereClause.append("manifest->>'collection' = ?")
+            values.add(collection)
             firstKey = false
         }
 
@@ -441,6 +465,35 @@ class PostgreSQLComponent implements Storage {
         return [jsonbPath.toString(), value]
     }
 
+    void findIdentifiers(Document doc) {
+        doc.addIdentifier(doc.getURI().toString())
+        URI docId = JsonLd.findRecordURI(doc.data)
+        if (docId) {
+            log.debug("Found @id in data: ${docId}")
+            doc.addIdentifier(docId.toString())
+        }
+        if (doc.data.containsKey(JsonLd.DESCRIPTIONS_KEY)){
+            def entry = doc.data.get(JsonLd.DESCRIPTIONS_KEY).get("entry")
+            for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
+                if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
+                    doc.addIdentifier(sameAs.get(JsonLd.ID_KEY))
+                    log.debug("Added ${sameAs.get(JsonLd.ID_KEY)} to ${doc.getURI()}")
+                }
+            }
+        } else {
+            for (entry in doc.data.get(Document.GRAPH_KEY)) {
+                URI entryURI = new URI(entry[JsonLd.ID_KEY])
+                if (entryURI == doc.getURI()) {
+                    for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
+                        if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
+                            doc.addIdentifier(sameAs.get(JsonLd.ID_KEY))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     String calculateChecksum(Document doc) {
         log.trace("Calculating checksum with manifest: ${doc.manifest}")
         MessageDigest m = MessageDigest.getInstance("MD5")
@@ -471,6 +524,10 @@ class PostgreSQLComponent implements Storage {
     Location locate(String uri, boolean loadDoc) {
         log.debug("Locating $uri")
         if (uri) {
+            if (uri.startsWith("/")) {
+                uri = uri.substring(1)
+            }
+
             def doc = load(uri)
             if (doc) {
                 return new Location(doc)
@@ -499,7 +556,7 @@ class PostgreSQLComponent implements Storage {
                 if (loadDoc) {
                     return new Location(doc).withResponseCode(301)
                 } else {
-                    return new Location().withURI(new URI(doc.identifier)).withResponseCode(301)
+                    return new Location().withURI(new URI("/").resolve(doc.identifier)).withResponseCode(301)
                 }
             }
         }
@@ -595,8 +652,8 @@ class PostgreSQLComponent implements Storage {
         return docList
     }
 
-    Iterable<Document> loadAll(String dataset) {
-        return loadAllDocuments(dataset, false)
+    Iterable<Document> loadAll(String collection) {
+        return loadAllDocuments(collection, false)
     }
 
     private Document assembleDocument(ResultSet rs) {
@@ -607,8 +664,8 @@ class PostgreSQLComponent implements Storage {
         return doc
     }
 
-    private Iterable<Document> loadAllDocuments(String dataset, boolean withLinks, Date since = null, Date until = null) {
-        log.debug("Load all called with dataset: $dataset")
+    private Iterable<Document> loadAllDocuments(String collection, boolean withLinks, Date since = null, Date until = null) {
+        log.debug("Load all called with collection: $collection")
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
                 Connection connection = getConnection()
@@ -617,11 +674,11 @@ class PostgreSQLComponent implements Storage {
                 long untilTS = until?.getTime() ?: PGStatement.DATE_POSITIVE_INFINITY
                 long sinceTS = since?.getTime() ?: 0L
 
-                if (dataset) {
+                if (collection) {
                     if (withLinks) {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_DATASET)
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION)
                     } else {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_BY_DATASET)
+                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_BY_COLLECTION)
                     }
                 } else {
                     if (withLinks) {
@@ -633,8 +690,8 @@ class PostgreSQLComponent implements Storage {
                 loadAllStatement.setFetchSize(100)
                 loadAllStatement.setTimestamp(1, new Timestamp(sinceTS))
                 loadAllStatement.setTimestamp(2, new Timestamp(untilTS))
-                if (dataset) {
-                    loadAllStatement.setString(3, dataset)
+                if (collection) {
+                    loadAllStatement.setString(3, collection)
                 }
                 ResultSet rs = loadAllStatement.executeQuery()
 
@@ -679,10 +736,10 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    boolean remove(String identifier, String dataset) {
+    boolean remove(String identifier) {
         if (versioning) {
             log.debug("Creating tombstone record with id ${identifier}")
-            return store(createTombstone(identifier, dataset))
+            return store(createTombstone(identifier), true)
         } else {
             Connection connection = getConnection()
             PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
@@ -699,8 +756,8 @@ class PostgreSQLComponent implements Storage {
     }
 
 
-    protected Document createTombstone(id, dataset) {
-        def tombstone = new Document(id, ["@type":"Tombstone"]).withContentType("application/ld+json").withDataset(dataset)
+    protected Document createTombstone(id) {
+        def tombstone = new Document(id, ["@type":"Tombstone"]).withContentType("application/ld+json")
         tombstone.setDeleted(true)
         return tombstone
     }

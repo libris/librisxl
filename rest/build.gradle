@@ -162,6 +162,10 @@ task jettyRun(type: JettyRun, overwrite: true) {
     def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
     System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
     System.setProperty('whelk.mode', System.getProperty("whelk.mode", "ops"))
+    def componentProps = System.getProperty("xl.component.properties")
+    if (componentProps) {
+        System.setProperty("xl.component.properties", componentProps)
+    }
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {

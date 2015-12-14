@@ -3,11 +3,14 @@ package whelk.component
 import groovy.util.logging.Slf4j as Log
 
 import org.apache.commons.codec.binary.Base64
+import org.codehaus.jackson.map.ObjectMapper
 import org.elasticsearch.action.ActionRequest
 import org.elasticsearch.action.ActionResponse
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.bulk.BulkResponse
 import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.action.search.SearchRequest
+import org.elasticsearch.action.search.SearchType
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.*
 import org.elasticsearch.common.transport.*
@@ -25,6 +28,7 @@ class ElasticSearch implements Index {
     static final int WARN_AFTER_TRIES = 1000
     static final int RETRY_TIMEOUT = 300
     static final int MAX_RETRY_TIMEOUT = 60*60*1000
+    static final int DEFAULT_PAGE_SIZE = 50
 
     Client client
     private String elastichost, elasticcluster
@@ -32,6 +36,8 @@ class ElasticSearch implements Index {
     String defaultIndex = null
 
     JsonLdLinkExpander expander
+
+    private static final ObjectMapper mapper = new ObjectMapper()
 
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex, JsonLdLinkExpander ex) {
@@ -115,25 +121,26 @@ class ElasticSearch implements Index {
             if (doc.isJson()) {
                 try {
                     if (doc.isJsonLd()) {
-                        log.trace("Framing ${doc.id}")
+                        log.debug("Framing ${doc.id}")
                         doc.data = JsonLd.frame(doc.id, doc.data)
+                        log.trace("Framed data: ${doc.data}")
                         if (expander) {
                             doc = expander.filter(doc)
                         }
                     }
-                    bulk.add(new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)).source(doc.data))
+                    bulk.add(new IndexRequest(getIndexName(), (doc.collection ?: defaultType), toElasticId(doc.id)).source(doc.data))
                 } catch (Exception e) {
                     log.error("Failed to create indexrequest for document ${doc.id}. Reason: ${e.message}")
                 }
             } else {
-                log.warn("Document ${doc.id} is ${doc.contentType}. Will not index.")
+                log.warn("Document ${doc.id} is not JSON (${doc.contentType}). Will not index.")
             }
         }
         BulkResponse response = performExecute(bulk)
         if (response.hasFailures()) {
             response.iterator().each {
                 if (it.failed) {
-                    log.error("Indexing of ${it.id} (${fromElasticId(it.id)}) failed: ${it.failureMessage}")
+                    log.error("Indexing of ${it.id} failed: ${it.failureMessage}")
                 }
             }
         }
@@ -149,190 +156,71 @@ class ElasticSearch implements Index {
                     doc = expander.filter(doc)
                 }
             }
-            def idxReq = new IndexRequest(getIndexName(), doc.dataset, toElasticId(doc.id)).source(doc.data)
+            def idxReq = new IndexRequest(getIndexName(), (doc.collection ?: defaultType), toElasticId(doc.id)).source(doc.data)
             def response = performExecute(idxReq)
-            log.debug("Indexed the document ${doc.id} as ${indexName}/${doc.dataset}/${response.getId()} as version ${response.getVersion()}")
+            log.debug("Indexed the document ${doc.id} as ${indexName}/${(doc.collection ?: defaultType)}/${response.getId()} as version ${response.getVersion()}")
         } else {
             log.warn("Document ${doc.id} is ${doc.contentType}. Will not index.")
         }
     }
 
     @Override
-    public void remove(String identifier, String dataset) {
+    public void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
-
-        client.delete(new DeleteRequest(defaultIndex, dataset, toElasticId(identifier)))
+        client.delete(new DeleteRequest(defaultIndex).id(toElasticId(identifier)))
     }
 
+    @Override
+    Map query(Map jsonDsl, String collection) {
+        def idxlist = [defaultIndex] as String[]
 
+        def response = client.search(new SearchRequest(idxlist, mapper.writeValueAsBytes(jsonDsl)).searchType(SearchType.DFS_QUERY_THEN_FETCH).types([collection] as String[])).actionGet()
 
-    /*
-    void flush() {
-        log.debug("Flusing ${this.id}")
-        def flushresponse = performExecute(new FlushRequestBuilder(client.admin().indices()))
-    }
-
-
-    public boolean index(String identifier, String dataset, Map data) {
-        log.trace("Indexing with identifier $identifier, dataset(type): $dataset, data: $data")
-        try {
-            IndexResponse response = performExecute(new IndexRequest(getIndexName(), dataset, toElasticId(identifier)).source(data))
-            def esIdentifier = response.getId()
-            if (esIdentifier) {
-                log.debug("Document $identifier indexed with es id: $esIdentifier")
-                return true
-            }
-            throw WhelkIndexException("No elasticsearch identifier received for $identifier")
-        } catch (Exception e) {
-            log.error("Indexing failed", e)
-        }
-        return false
-    }
-
-    public IndexRequest
-
-    //@Override
-    public void remove(String identifier, String dataset) {
-        log.debug("Peforming deletebyquery to remove documents extracted from $identifier")
-        def delQuery = termQuery("extractedFrom.@id", identifier)
-        log.debug("DelQuery: $delQuery")
-
-        def response = performExecute(client.prepareDeleteByQuery(defaultIndex).setQuery(delQuery))
-
-        log.debug("Delbyquery response: $response")
-        for (r in response.iterator()) {
-            log.debug("r: $r success: ${r.successfulShards} failed: ${r.failedShards}")
-        }
-
-        log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
-
-        client.delete(new DeleteRequest(defaultIndex, calculateTypeFromIdentifier(identifier), toElasticId(identifier)))
-    }
-
-    SearchResult query(Query q) {
-        def indexTypes = []
-        if (q instanceof ElasticQuery) {
-            for (t in q.indexTypes) {
-                if (configuredTypes[t]) {
-                    log.debug("Adding configuredTypes for ${t}: ${configuredTypes[t]}")
-                    indexTypes.add(t)
-                    indexTypes.addAll(configuredTypes[t])
-                } else {
-                    indexTypes.add(t)
-                }
-            }
-        } else {
-            indexTypes = [defaultType]
-        }
-        log.debug("Assembled indexTypes: $indexTypes")
-        return query(q, defaultIndex, indexTypes as String[])
-    }
-
-    SearchResult query(Query q, String indexName, String[] indexTypes, Class resultClass = searchResultClass) {
-        log.trace "Doing query on $q"
-        return query(q.toJsonQuery(), q.start, q.n, indexName, indexTypes, resultClass, q.highlights, q.facets)
-    }
-
-    SearchResult query(String jsonDsl, int start, int n, String indexName, String[] indexTypes, Class resultClass = searchResultClass, List highlights = null, List facets = null) {
-        log.trace "Querying index $indexName and indextype $indexTypes"
-        def idxlist = [indexName]
-        if (indexName.contains(",")) {
-            idxlist = indexName.split(",").collect{it.trim()}
-        }
-        log.trace("Searching in indexes: $idxlist")
-        def response = client.search(new SearchRequest(idxlist as String[], jsonDsl.getBytes("utf-8")).searchType(SearchType.DFS_QUERY_THEN_FETCH).types(indexTypes)).actionGet()
-        log.trace("SearchResponse: " + response)
-
-        def results
-        if (resultClass) {
-            results = resultClass.newInstance()
-        } else {
-            results = new SearchResult()
-        }
+        def results = [:]
         results.numberOfHits = 0
         results.resultSize = 0
-        results.startIndex = start
+        results.startIndex = jsonDsl.from
         results.searchCompletedInISO8601duration = "PT" + response.took.secondsFrac + "S"
+        results.items = []
 
         if (response) {
             results.resultSize = response.hits.hits.size()
-            log.trace "Total hits: ${response.hits.totalHits}"
             results.numberOfHits = response.hits.totalHits
-            response.hits.hits.each {
-                if (highlights) {
-                    results.addHit(createResultDocumentFromHit(it, indexName), convertHighlight(it.highlightFields))
-                } else {
-                    results.addHit(createResultDocumentFromHit(it, indexName))
-                }
-            }
-            if (facets) {
-                results.facets = convertFacets(response.facets.facets(), facets)
-            }
+            results.items = response.hits.hits.collect { it.source }
         }
         return results
     }
 
-    def Map<String, String[]> convertHighlight(Map<String, HighlightField> hfields) {
-        def map = new TreeMap<String, String[]>()
-        hfields.each {
-            map.put(it.value.name, it.value.fragments)
-        }
-        return map
-    }
 
-    def convertFacets(eFacets, queryfacets) {
-        def facets = new HashMap<String, Map<String, Integer>>()
-        for (def f : eFacets) {
-            def termcounts = [:]
-            try {
-                for (def entry : f.entries) {
-                    termcounts[entry.term] = entry.count
-                }
-                facets.put(f.name, termcounts.sort { a, b -> b.value <=> a.value })
-            } catch (MissingMethodException mme) {
-                def group = queryfacets.facets.find {it.name == f.name}.group
-                termcounts = facets.get(group, [:])
-                if (f.count) {
-                    termcounts[f.name] = f.count
-                }
-                facets.put(group, termcounts.sort { a, b -> b.value <=> a.value })
+    static Map createJsonDsl(Map queryParameters) {
+        // Extract LDAPI parameters
+        String pageSize = queryParameters.remove("_pageSize")?.first() ?: ""+DEFAULT_PAGE_SIZE
+        String page = queryParameters.remove("_page")?.first() ?: "1"
+        String sort = queryParameters.remove("_sort")?.first()
+        queryParameters.remove("_where") // Not supported
+        queryParameters.remove("_orderBy") // Not supported
+        queryParameters.remove("_select") // Not supported
+        String queryString = queryParameters.remove("q")?.first()
+        def dslQuery = ["from": (Integer.parseInt(page)-1) * (pageSize as int), "size": (pageSize as int)]
+
+        if (queryString) {
+            if (queryString == "*") {
+                dslQuery["query"] = ["match_all": [:]]
+            } else {
+                dslQuery["query"] = ['query_string' : ['query': queryString, "default_operator": "and"]]
             }
         }
-        return facets
-    }
+        for (values in queryParameters) {
 
-    Document createResultDocumentFromHit(hit, queriedIndex) {
-        log.trace("creating document. ID: ${hit?.id}, index: $queriedIndex")
-        return whelk.createDocument("application/json").withData(hit.source()).withIdentifier(fromElasticId(hit.id))
+        }
+        return dslQuery
     }
-    */
 
     public String getIndexName() { defaultIndex }
     public String getElasticHost() { elastichost.split(":").first() }
     public String getElasticCluster() { elasticcluster }
     public int getElasticPort() {
         try { new Integer(elastichost.split(",").first().split(":").last()).intValue() } catch (NumberFormatException nfe) { 9300 }
-    }
-
-    /**
-     * ShapeComputer methods
-     */
-
-    String calculateTypeFromIdentifier(String id) {
-        String identifier = new URI(id).path.toString()
-        log.debug("Received uri $identifier")
-        String idxType
-        try {
-            def identParts = identifier.split("/")
-            idxType = (identParts[1] == whelk.id && identParts.size() > 3 ? identParts[2] : identParts[1])
-        } catch (Exception e) {
-            log.error("Tried to use first part of URI ${identifier} as type. Failed: ${e.message}")
-        }
-        if (!idxType) {
-            idxType = defaultType
-        }
-        log.debug("Using type $idxType for ${identifier}")
-        return idxType
     }
 
     static String toElasticId(String id) {
@@ -344,6 +232,7 @@ class ElasticSearch implements Index {
         }
     }
 
+    @Deprecated
     String fromElasticId(String id) {
         if (id.contains("::")) {
             log.warn("Using old style index id's for $id")
