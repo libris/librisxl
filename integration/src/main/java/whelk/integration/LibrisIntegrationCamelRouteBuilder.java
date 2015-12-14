@@ -21,8 +21,6 @@ import org.apache.log4j.Logger;
 
 public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
 
-    //final static String VALID_CONTENTTYPE_REGEX = "application\\/(\\w+\\+)*json|application\\/x-(\\w+)-json|text/plain";
-
     Logger logger = Logger.getLogger(LibrisIntegrationCamelRouteBuilder.class.getName());
 
     PostgreSQLComponent postgreSQLComponent = null;
@@ -36,29 +34,20 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
         logger.info("Configuring camel context...");
 
         Properties properties = getProperties();
-        String elasticCluster = properties.getProperty("elastic_cluster");
-        String elasticHost = properties.getProperty("elastic_host");
-        String elasticIndex = properties.getProperty("elastic_index");
         String postgresqlUrl = properties.getProperty("postgresql_url");
         String postgresqlMainTable = properties.getProperty("postgresql_maintable");
         String activemqApixQueue = properties.getProperty("activemq_apix_queue");
         String activemqApixRetriesQueue = properties.getProperty("activemq_apix_retries_queue");
         String apixUrl = properties.getProperty("apixUrl");
         String apixPath = properties.getProperty("apixPath");
-        //String activemqIndexQueue = properties.getProperty("activemq_es_index_queue");
 
         postgreSQLComponent = new PostgreSQLComponent(postgresqlUrl, postgresqlMainTable);
-        elastic = new ElasticSearch(elasticHost, elasticCluster, elasticIndex);
 
         whelk = new Whelk(postgreSQLComponent, elastic);
-
-        BulkRequestAggregationStrategy bulkRequestAggregationStrategy = new BulkRequestAggregationStrategy();
 
         APIXProcessor apixProcessor = new APIXProcessor(apixPath, whelk, new JsonLD2MarcXMLConverter());
         APIXResponseProcessor apixResponseProcessor = new APIXResponseProcessor(whelk);
         APIXHttpResponseFailureBean apixHttpResponseFailureBean = new APIXHttpResponseFailureBean(apixResponseProcessor);
-
-        //ElasticProcessor elasticProcessor = new ElasticProcessor(elasticCluster, elasticHost, elasticPort, new JsonLdLinkExpander(postgreSQLComponent));
 
         // APIX exception handling
         onException(HttpOperationFailedException.class)
@@ -88,23 +77,6 @@ public class LibrisIntegrationCamelRouteBuilder extends RouteBuilder {
         from("activemq:" + activemqApixRetriesQueue)
                 .delay(60000)
                 .routingSlip(header("next"));
-
-
-        // Activemq to Elasticsearch
-//        from("activemq:" + activemqIndexQueue)
-//                .filter(header("document:contentType").regex(VALID_CONTENTTYPE_REGEX))
-//                .process(elasticProcessor)
-//                .aggregate(header("document:dataset"), bulkRequestAggregationStrategy).completionSize(2000).completionTimeout(5000)
-//                .routingSlip(header("elasticDestination"));
-        //.to("elasticsearch:local?operation=INDEX&indexName=test&indexType=test");
-
-
-//        from("activemq:" + activemqApixQueue)
-//                .process(new APIXTestProcessor());
-
-//        from(activemqIndexQueue)
-//                .process(new APIXProcessor(apixPath, whelk))
-//                .to("elasticsearch:local?operation=INDEX&indexName=test&indexType=test");
 
 
     }
