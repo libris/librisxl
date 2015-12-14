@@ -1,0 +1,166 @@
+{
+  "about": {
+    "comment": [
+      "Uppdaterad t.o.m. supplement 11, februari 2004"
+    ],
+    "classification": [
+      {
+        "@id": "/topic/kssb/7/Qafbac-c%3Aoe"
+      }
+    ],
+    "series": [
+      {
+        "issn": "99-0404269-1",
+        "@type": "Serial",
+        "title": "Norstedts laghandböcker"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "4",
+        "@type": "Title",
+        "titleValue": "Socialavgifter 2004"
+      }
+    ],
+    "subject": [
+      {
+        "@id": "/topic/sao/Sociala%20avgifter/juridik%20och%20lagstiftning/Sverige"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=%5BNy%20utg.%5D"
+      }
+    ],
+    "alternateEdition": [
+      {
+        "@id": "/some?type=CreativeWork&title=Socialavgifter&placePublisherAndDateOfPublication=1998"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "influencedBy": [
+      {
+        "@id": "/some?type=Person&familyName=Silfverberg&givenName=Christer&birthYear=1951"
+      },
+      {
+        "@id": "/some?type=Person&familyName=Svenstr%C3%B6m&givenName=Yvonne&birthYear=1945"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Elander Infologics väst)"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Carlsson&givenName=Nils-Fredrik&birthYear=1952"
+    },
+    "responsibilityStatement": "Nils-Fredrik Carlsson, Christer Silfverberg, Yvonne Svenström",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "Ca 800 s. med var. pag."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "@id": "/resource/bib/9773188",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Norstedts juridik",
+        "providerDate": "2004"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "searchElement": false,
+      "@type": "Title",
+      "titleValue": "Socialavgifter"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "91-39-01058-9"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2005-01-11T00:00:00.0+01:00",
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "9773188",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Sociala avgifter"
+          },
+          {
+            "x": "juridik och lagstiftning"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modified": "2008-10-17T14:22:19.0+02:00",
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Q"
+  },
+  "@id": "/bib/9773188",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

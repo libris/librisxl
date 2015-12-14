@@ -1,0 +1,188 @@
+{
+  "about": {
+    "comment": [
+      "Se även Humlegården"
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/914.873520222/e23/"
+      }
+    ],
+    "mediaTerm": "Bild",
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Picture"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/InclusiveDatesOfCollection"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/zxx"
+      }
+    ],
+    "_providerYear": "1900",
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "[Kungliga biblioteket i Stockholm - samling av vykort]"
+    },
+    "genre": [
+      {
+        "@id": "/topic/saogf/Vykort"
+      },
+      {
+        "@id": "/topic/saogf/Bilder"
+      }
+    ],
+    "_providerOtherYear": "9999",
+    "@id": "/resource/bib/13538239",
+    "@type": [
+      "StillImage",
+      "Collection"
+    ],
+    "subject": [
+      {
+        "@id": "/some?type=Organization&name=Kungl.%20biblioteket"
+      },
+      {
+        "@id": "/topic/sao/Nationalbibliotek"
+      },
+      {
+        "@id": "/topic/sao/Interi%C3%B6rer%20%28arkitektur%29"
+      },
+      {
+        "@id": "/topic/sao/Sverige/Stockholm/%C3%96stermalm"
+      }
+    ]
+  },
+  "created": "2012-10-01T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/AbbreviatedLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "13538239",
+  "modified": "2012-10-01T12:13:19.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "610": {
+        "subfields": [
+          {
+            "a": "Kungl. biblioteket"
+          }
+        ],
+        "ind1": "2",
+        "ind2": "4"
+      },
+      "_unhandled": [
+        "ind2"
+      ]
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Nationalbibliotek"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Interiörer (arkitektur)"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "651": {
+        "subfields": [
+          {
+            "a": "Sverige"
+          },
+          {
+            "z": "Stockholm"
+          },
+          {
+            "z": "Östermalm"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Vykort"
+          },
+          {
+            "2": "gmgpc//swe"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Bilder"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/bib/13538239",
+  "@type": "Record"
+}

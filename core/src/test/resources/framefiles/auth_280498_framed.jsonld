@@ -1,0 +1,56 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "broader": [
+    {
+      "@id": "/topic/barn/Naturkatastrofer"
+    }
+  ],
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2006-10-24T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "inScheme": {
+    "@id": "/scheme/barn"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "focus": {
+    "@id": "/resource/auth/280498",
+    "@type": [
+      "Authority"
+    ]
+  },
+  "controlNumber": "280498",
+  "modified": "2013-02-25T09:26:22.0+01:00",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "sameAs": [
+    {
+      "@id": "/topic/barn/Tsunamier"
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/auth/280498",
+  "@type": "TopicalTerm",
+  "prefLabel": "Tsunamier"
+}

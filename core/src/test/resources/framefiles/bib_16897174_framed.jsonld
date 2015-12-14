@@ -1,0 +1,73 @@
+{
+  "about": {
+    "mediaTerm": "Elektronisk resurs",
+    "publication": [
+      {
+        "@type": "ProviderEvent",
+        "providerName": "Policy Press",
+        "providerDate": "2014"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "additionalCarrierType": {
+      "@id": "/def/enum/content/Online"
+    },
+    "hasFormat": [
+      {
+        "@id": "/some?type=Electronic"
+      }
+    ],
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&linkNote=Print%3A&title=Austerity%20Bites"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xx"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Austerity Bites"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "print",
+        "identifierStatus": "canceledInvalid",
+        "@type": "Identifier",
+        "identifierValue": "144731560X"
+      }
+    ],
+    "@id": "/resource/bib/16897174",
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "created": "2015-06-09T00:00:00.0+02:00",
+  "technicalNote": [
+    "SFX",
+    "Maskinellt genererad post. Ändra kod för fullständighetsnivå (leader/17), annars kommer manuellt gjorda ändringar att försvinna."
+  ],
+  "encLevel": {
+    "@id": "/def/enum/record/PartialPreliminaryLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/OtherSource"
+  },
+  "controlNumber": "16897174",
+  "modified": "2015-06-10T15:40:59.0+02:00",
+  "systemNumber": [
+    "(SFX)3710000000117809"
+  ],
+  "@id": "/bib/16897174",
+  "@type": "Record"
+}

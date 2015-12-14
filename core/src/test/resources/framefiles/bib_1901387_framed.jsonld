@@ -1,0 +1,95 @@
+{
+  "about": {
+    "comment": [
+      "För solo-gitarr och tape eller ensemble av 12 gitarrer, varav 2 basgitarrer",
+      "Speltid: ca 15 min."
+    ],
+    "classification": [
+      {
+        "@id": "/topic/kssb/6/Xki"
+      },
+      {
+        "@id": "/topic/kssb/6/Xgb.09"
+      },
+      {
+        "@id": "/topic/sab/Xki"
+      },
+      {
+        "@id": "/topic/sab/Xgb.09"
+      }
+    ],
+    "mediaTerm": "Musiktryck] :",
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/zxx"
+      }
+    ],
+    "responsibilityStatement": "Steve Reich",
+    "_providerYear": "1987",
+    "attributedTo": {
+      "@id": "_:b-0"
+    },
+    "hasFormat": [
+      {
+        "accompanyingMaterial": "1 solost.",
+        "@type": "Product",
+        "extent": "1 part."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxk"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "subtitle": "for guitar and tape or guitar ensemble",
+      "@type": "Title",
+      "titleValue": "Electric counterpoint"
+    },
+    "musicPlate": "SRB 70",
+    "composer": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "@id": "/resource/bib/1901387",
+    "@type": [
+      "NotatedMusic",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=New%20York"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Hendon Music",
+        "providerDate": "cop. 1987"
+      }
+    ]
+  },
+  "created": "1994-10-11T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "1901387",
+  "modified": "2010-09-15T14:58:27.0+02:00",
+  "librisIIINumber": [
+    "9919912190"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=X"
+  },
+  "@id": "/bib/1901387",
+  "@type": "Record"
+}

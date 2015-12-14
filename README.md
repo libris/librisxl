@@ -2,24 +2,54 @@
 
 The project layout is as follows:
 
-* etc/
-    Configuration files for different environments and configurations. The files from here are copied into build/resources/main on project build.
-* src/
-    Standard gradle/maven source-layout
-* dep/
-    Third party libraries not available from maven central or other online repositories.
-* librisxl-tools/
-    Various scripts used for maintenance and operations.
+* General modules
+    * core/
+        The LIBRISXL core. Database, index and basic infrastructure components.
+    * converters/
+        Module containing data converters.
+* Applications
+    * rest/
+        A servlet web application. The REST and other HTTP APIs
+    * oaipmhharvester/
+        An OAIPMH harvester. Servlet web application.
+    * oaipmhexporter/
+        Servlet web application. OAIPMH service for LIBRISXL
+    * vcopyimporter/
+        A java application to load data from the vcopy database
+* Other
+    * dep/
+        Third party libraries not available from maven central or other online repositories.
+    * librisxl-tools/
+        Various scripts used for maintenance and operations.
 
 
 ## Dependencies
 
-1. Install gradle from <http://gradle.org/> (or use a package manager, e.g.: brew install gradle).
+1. Install gradle from <http://gradle.org/> (or use a package manager, e.g.: brew install gradle). Check gradle -version and make sure that Groovy version matches groovyVersion in build.gradle.
 2. Install elasticsearch from <http://elasticsearch.org/> (or use a package manager, e.g.: brew install elasticsearch).
 
 Optionally, see details about using a Graph Store at the end of this document.
 
+*IMPORTANT*: Some instructions below are obsolete. Some needs updating, some to be removed.
+
 ## Working locally
+
+### Importing data (NEW)
+
+First, create these config files from corresponding ".in"-files in the same
+directories, and fill out details:
+
+    vcopyimporter/src/main/resources/mysql.properties
+    core/src/main/resources/secret.properties
+
+Then:
+
+    $ cd vcopyimporter/
+
+and run the following to import and index data into a whelk (psql/es-combo)
+from a mysql-backed vcopy:
+
+    $ gradle doRun -Dargs="auth"
 
 ### Setup whelk.properties
 
@@ -47,11 +77,11 @@ Install script requirements
 
 Get/create/update datasets:
 
-    $ python scripts/compile_defs.py -c cache/ -o build/
+    $ python datasets.py
 
 Load the resulting resources into the running whelk:
 
-    $ scripts/load_defs_whelk.sh http://localhost:8180/whelk
+    $ scripts/load-defs-whelk.sh http://localhost:8180/whelk
 
 
 ### Import/update local storage from test data
@@ -168,6 +198,26 @@ This is now available as:
     # Virtuoso credentials
     graphstoreUpdateAuthUser=dba
     graphstoreUpdateAuthPass=...
+
+
+### Using PostgreSQL
+
+1. Install postgresql; e.g. by running:
+
+    $ brew install postgresql
+
+2. Launch:
+
+    $ postgres -D /usr/local/var/postgres
+
+3. Create database
+
+    $ createdb whelk
+
+4. Create tables (config is found in libris/lddb -repo.
+
+    $ psql whelk < ../lddb/config/lddb.sql
+
 
 ## Whelk maintenance (rebuilding and reloading)
 

@@ -1,0 +1,107 @@
+{
+  "about": {
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "classification": [
+      {
+        "@id": "/topic/kssb/6/Ucebc"
+      },
+      {
+        "@id": "/topic/sab/Ucebc"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Thesis"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "responsibilityStatement": "by Kari Aaljoki",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Aaljoki&givenName=Kari"
+    },
+    "hasAnnotation": [
+      {
+        "note": "Diss. Turku : Turun yliop.",
+        "@type": "DissertationAnnotation"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/fi"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "@type": "Title",
+      "titleValue": "¹H and ¹³C NMR in the study of the configurations, conformations, and ring-chain tautomerism of alkyl-substituted 1,3-oxazolidines"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "tab.",
+        "@type": "Product",
+        "extent": "120 s."
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "951-99740-8-3"
+      }
+    ],
+    "@id": "/resource/bib/8040794",
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "languageNote": [
+      "\"With a summary in English\""
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Turku"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Dep. of Chemistry and Biochemistry, Univ. of Turku",
+        "providerDate": "1986"
+      }
+    ]
+  },
+  "created": "1986-10-15T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "8040794",
+  "librisIIINumber": [
+    "9519974083"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=U"
+  },
+  "@id": "/bib/8040794",
+  "@type": "Record"
+}

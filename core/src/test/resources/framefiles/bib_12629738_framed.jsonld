@@ -1,0 +1,272 @@
+{
+  "about": {
+    "comment": [
+      "Digital talbok (DAISY 2.02), ljud.",
+      "Inläst ur: Stockholm : Verbum, 2000."
+    ],
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Ceab%2FTC"
+      },
+      {
+        "@id": "/topic/sab/6/"
+      },
+      {
+        "@id": "/topic/sab/6/"
+      },
+      {
+        "@id": "/topic/sab/6/"
+      }
+    ],
+    "mediaTerm": "Ljudupptagning] :",
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "responsibilityStatement": "Gösta Hallonsten & Per Erik Persson (red.).",
+    "@id": "/resource/bib/12629738",
+    "_providerYear": "2002",
+    "audience": {
+      "@id": "/def/enum/content/General"
+    },
+    "hasFormat": [
+      {
+        "@id": "/some?type=SoundRecording"
+      },
+      {
+        "otherPhysicalDetails": "mono",
+        "@type": "Product",
+        "extent": "1 CD-R (7 tim., 17 min.)"
+      }
+    ],
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&linkNote=Inl%C3%A4st%20ur&title=-att%20i%20allt%20bek%C3%A4nna%20Kristus"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "performerNote": [
+      "Inläsare: Elisabet Lindberg."
+    ],
+    "instanceTitle": {
+      "subtitle": "den gemensamma deklarationen om rättfärdiggörelseläran : tillkomst, texter, kommentarer",
+      "@type": "Title",
+      "titleValue": "-att i allt bekänna Kristus"
+    },
+    "editor": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/Talb%C3%B6cker"
+      },
+      {
+        "@id": "/topic/saogf/DAISY"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/TPB"
+        },
+        "@type": "Identifier",
+        "identifierValue": "C14616"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "@type": [
+      "Audio",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Enskede"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "TPB",
+        "providerDate": "2002."
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=Mtm"
+    }
+  ],
+  "created": "2001-06-28T00:00:00.0+02:00",
+  "technicalNote": [
+    "Posten ändrad i BURK 20020218"
+  ],
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/OtherSource"
+  },
+  "controlNumber": "12629738",
+  "modified": "2013-02-12T07:26:30.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "506": {
+        "subfields": [
+          {
+            "a": "Tillgänglig för personer med läsnedsättning enligt § 17 Upphovsrättslagen"
+          },
+          {
+            "u": "http://mtm.se/om_mtm/uppdrag/upphovsrattslagen/"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Talböcker"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "DAISY"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    },
+    {
+      "_unhandled": [
+        "2",
+        "b"
+      ],
+      "886": {
+        "subfields": [
+          {
+            "2": "BURK IV"
+          },
+          {
+            "b": "KICASWSW0190SWES BD"
+          }
+        ],
+        "ind1": "0",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "a",
+        "2",
+        "b"
+      ],
+      "886": {
+        "subfields": [
+          {
+            "2": "BURK IV"
+          },
+          {
+            "a": "008"
+          },
+          {
+            "b": "s2002"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "a",
+        "2",
+        "b"
+      ],
+      "886": {
+        "subfields": [
+          {
+            "2": "BURK IV"
+          },
+          {
+            "a": "500"
+          },
+          {
+            "b": "k aDigital talbok (DAISY 2.02), ljud#"
+          }
+        ],
+        "ind1": "2",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "a",
+        "2",
+        "b"
+      ],
+      "886": {
+        "subfields": [
+          {
+            "2": "BURK IV"
+          },
+          {
+            "a": "503"
+          },
+          {
+            "b": "aInläst ur: Stockholm : Verbum, 2000#"
+          }
+        ],
+        "ind1": "2",
+        "ind2": " "
+      }
+    }
+  ],
+  "systemNumber": [
+    "(SwLnBT)BTJ43927734B",
+    "(TPB)C14616"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SwLnBT"
+  },
+  "@id": "/bib/12629738",
+  "@type": "Record"
+}

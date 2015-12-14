@@ -1,0 +1,124 @@
+{
+  "about": {
+    "comment": [
+      "TV-spel (Xbox 360)",
+      "Avsett för 1-4 spelare"
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/797.2/e237/"
+      },
+      {
+        "@id": "/topic/kssb/8/Rdcb%2FD"
+      }
+    ],
+    "mediaTerm": "Elektronisk resurs",
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Game"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "_providerYear": "2013",
+    "audience": [
+      {
+        "@type": "Audience",
+        "label": "Rekommendras från 16 år"
+      }
+    ],
+    "hasFormat": [
+      {
+        "device": {
+          "@id": "/some?type=Device&label=1%20DVD-ROM%20%2B"
+        },
+        "accompanyingMaterial": "handledning 5 s. :",
+        "@type": "Product",
+        "otherPhysicalDetails": "ljud, färg"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxk"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "WWE 2k14"
+    },
+    "systemRequirements": [
+      "Systemkrav: Xbox 360"
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/TV-spel"
+      }
+    ],
+    "identifier": [
+      {
+        "@type": "Identifier",
+        "identifierValue": "5026555260909"
+      }
+    ],
+    "@id": "/resource/bib/15203202",
+    "@type": [
+      "Multimedia",
+      "Monograph"
+    ],
+    "languageNote": [
+      "Tal, text och manual på engelska."
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Windsor%2C%20Berkshire"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "2K",
+        "providerDate": "cop 2013"
+      }
+    ]
+  },
+  "created": "2014-02-10T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "15203202",
+  "modified": "2015-03-03T18:05:01.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "TV-spel"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Gbg"
+  },
+  "@id": "/bib/15203202",
+  "@type": "Record"
+}

@@ -1,0 +1,107 @@
+{
+  "about": {
+    "comment": [
+      "Tidigare utg. med titeln: Mumin",
+      "Originaluppl. 1957-74"
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "classification": [
+      {
+        "@id": "/topic/kssb/6/Hci"
+      },
+      {
+        "@id": "/topic/sab/Hci"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/MultipleDates"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "responsibilityStatement": "[av Tove Jansson, Lars Jansson]",
+    "@id": "/resource/bib/816912",
+    "_providerYear": "1989",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Jansson&givenName=Tove&birthYear=1914&deathYear=2001"
+    },
+    "audience": {
+      "@id": "/def/enum/content/Juvenile"
+    },
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=Nyutg."
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "@type": "Title",
+      "titleValue": "Mumintrollet"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "dimensions": "18 x 23 cm"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "_providerOtherYear": "9999",
+    "influencedBy": [
+      {
+        "@id": "/some?type=Person&familyName=Jansson&givenName=Lars&birthYear=1926&deathYear=2000"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Norstedt",
+        "providerDate": "1989-"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SEE"
+    }
+  ],
+  "created": "1989-05-12T00:00:00.0+02:00",
+  "technicalNote": [
+    "Huvudpost (flerbandsverk)"
+  ],
+  "controlNumber": "816912",
+  "librisIIINumber": [
+    "9908390546"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/816912",
+  "@type": "Record"
+}

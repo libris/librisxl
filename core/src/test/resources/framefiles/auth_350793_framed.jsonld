@@ -1,0 +1,157 @@
+{
+  "historyNote": [
+    "Tidigare även Historiska deckare; Hårdkokta deckare; Polisromaner; Psykologiska deckare; och Pusseldeckare. Ändrat 2013-09-03."
+  ],
+  "sameAs": [
+    {
+      "@id": "/topic/saogf/Deckare"
+    }
+  ],
+  "scopeNote": [
+    "Genre/formterm för skönlitteratur",
+    "Skildringar av brott och dess uppklarande med tonvikt på underhållning snarare än realism."
+  ],
+  "focus": {
+    "@id": "/resource/auth/350793",
+    "@type": [
+      "Authority"
+    ]
+  },
+  "modified": "2013-09-09T14:00:14.0+02:00",
+  "inScheme": {
+    "@id": "/scheme/saogf"
+  },
+  "prefLabel": "Deckare",
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "w"
+      ],
+      "455": {
+        "subfields": [
+          {
+            "w": "||e"
+          },
+          {
+            "a": "Historiska deckare"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "w"
+      ],
+      "455": {
+        "subfields": [
+          {
+            "w": "||e"
+          },
+          {
+            "a": "Hårdkokta deckare"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "w"
+      ],
+      "455": {
+        "subfields": [
+          {
+            "w": "||e"
+          },
+          {
+            "a": "Polisromaner"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "w"
+      ],
+      "455": {
+        "subfields": [
+          {
+            "w": "||e"
+          },
+          {
+            "a": "Psykologiska deckare"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "w"
+      ],
+      "455": {
+        "subfields": [
+          {
+            "w": "||e"
+          },
+          {
+            "a": "Pusseldeckare"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "altLabel": [
+    "Historiska deckare",
+    "Hårdkokta deckare",
+    "Polisromaner",
+    "Psykologiska deckare",
+    "Pusseldeckare"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "inCollection": [
+    {
+      "@id": "/some?type=TermCollection&notation=Skon"
+    }
+  ],
+  "@id": "/auth/350793",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2012-02-17T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "350793",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "GenreTerm"
+}

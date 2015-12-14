@@ -18,6 +18,7 @@ import whelk.result.*
 import whelk.exception.*
 
 import whelk.util.Tools
+import whelk.util.JsonLd
 
 import org.codehaus.jackson.map.ObjectMapper
 
@@ -93,7 +94,8 @@ class StandardWhelk implements Whelk {
         if (saved) {
             if (index) {
                 // Index synchronously for single documents.
-                getIndex().index(doc.identifier, doc.dataset, ((JsonDocument)doc).getDataAsMap())
+                Map dataMap = JsonLd.frame(doc.identifier, ((JsonDocument)doc).getDataAsMap())
+                getIndex().index(doc.identifier, doc.dataset, dataMap)
             }
             if (!minorUpdate) {
                 notifyCamel(doc, ADD_OPERATION, [:])
@@ -111,7 +113,7 @@ class StandardWhelk implements Whelk {
         Storage storage = getStorage()
         if (storage) {
             def stateCopy = new HashMap<String,Object>(whelkState)
-            def stateDoc = new JsonDocument().withEntry(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(stateCopy)
+            def stateDoc = new JsonDocument().withManifest(["dataset":"sys"]).withContentType("application/json").withIdentifier(WHELKSTATE_ID).withData(stateCopy)
             if (!storage.store(stateDoc, false)) {
                 log.error("Failed to save state!")
             }
@@ -329,12 +331,12 @@ class StandardWhelk implements Whelk {
         }
     }
 
-    @Override
+    //@Override
     SearchResult search(Query query) {
         return index?.query(query)
     }
 
-    @Override
+    //@Override
     InputStream sparql(String query) {
         return sparqlEndpoint?.sparql(query)
     }
@@ -348,6 +350,7 @@ class StandardWhelk implements Whelk {
             if (map.containsKey("about") && !map.get("about")?.containsKey("@id")) {
                 map.get("about").put("@id", "/resource"+doc.identifier)
             }
+            map = JsonLd.flatten(map)
             doc.withData(map)
         }
         return doc
@@ -397,59 +400,8 @@ class StandardWhelk implements Whelk {
         }
     }
 
-    @Override
-    Document createDocument(String contentType) {
-        if (contentType == "application/ld+json") {
-            return new JsonLdDocument().withContentType(contentType)
-        } else if (contentType ==~ /application\/(\w+\+)*json/ || contentType ==~ /application\/x-(\w+)-json/) {
-            return new JsonDocument().withContentType(contentType)
-        } else {
-            return new DefaultDocument().withContentType(contentType)
-        }
-    }
 
-    @Override
-    Document createDocumentFromJson(String json) {
-        try {
-            Document document = mapper.readValue(json, DefaultDocument)
-            if (document.isJson()) {
-                if (document.contentType == "application/ld+json") {
-                    return new JsonLdDocument().fromDocument(document)
-                } else {
-                    return new JsonDocument().fromDocument(document)
-                }
-            }
-            return document
-        } catch (org.codehaus.jackson.JsonParseException jpe) {
-            throw new DocumentException(jpe)
-        }
-    }
-
-    @Override
-    Document createDocument(byte[] data, Map entry, Map meta) {
-        Document document = new DefaultDocument().withData(data).withMeta(meta).withEntry(entry)
-        if (document.isJson()) {
-            if (document.contentType == "application/ld+json") {
-                return new JsonLdDocument().fromDocument(document)
-            } else {
-                return new JsonDocument().fromDocument(document)
-            }
-        }
-        return document
-    }
-
-    @Override
-    Document createDocument(Map data, Map entry, Map meta) {
-        Document document = new JsonDocument().withData(data).withMeta(meta).withEntry(entry)
-        if (document.contentType == "application/ld+json") {
-            return new JsonLdDocument().fromDocument(document)
-        } else {
-            return new JsonDocument().fromDocument(document)
-        }
-        return document
-    }
-
-    @Override
+    //@Override
     void flush() {
         log.debug("Flushing data.")
         // TODO: Implement storage and graphstore flush if necessary
@@ -465,7 +417,7 @@ class StandardWhelk implements Whelk {
     }
 
 
-    @Override
+    //@Override
     void notifyCamel(String identifier, String dataset, String operation, Map extraInfo) {
         if (camelContext) {
             Exchange exchange = createAndPrepareExchange(identifier, dataset, operation, "text/plain", 0, identifier, extraInfo)
@@ -474,12 +426,12 @@ class StandardWhelk implements Whelk {
         }
     }
 
-    @Override
+    //@Override
     void notifyCamel(Document document, String operation, Map extraInfo) {
         if (camelContext) {
             Exchange exchange = createAndPrepareExchange(document.identifier, document.dataset, operation, document.contentType, document.modified, (document.isJson() ? document.dataAsMap : document.data), extraInfo)
             log.trace("Sending document in message to camel regaring ${document.identifier} with operation $operation")
-            exchange.getIn().setHeader("document:metaentry", document.metadataAsJson)
+            exchange.getIn().setHeader("document:manifest", document.manifestAsJson)
             sendCamelMessage(operation, exchange)
         }
     }
@@ -523,7 +475,7 @@ class StandardWhelk implements Whelk {
         return comp+":"+(prefix? prefix + "." :"")+this.id + (withConfig && config ? "?"+config : "")
     }
 
-    @Override
+    //@Override
     void setProps(final Map global) {
         global.each { key, value ->
             if (value instanceof String) {
@@ -550,7 +502,7 @@ class StandardWhelk implements Whelk {
         return "badly deployed version (bananas)"
     }
 
-    @Override
+    //@Override
     String mintIdentifier(Document d) {
         String identifier
         for (minter in uriMinters) {
@@ -558,8 +510,8 @@ class StandardWhelk implements Whelk {
         }
         if (!identifier) {
             try {
-                if (d.entry.dataset) {
-                    identifier = new URI("/" + d.entry.dataset + "/" + UUID.randomUUID()).toString();
+                if (d.manifest.dataset) {
+                    identifier = new URI("/" + d.manifest.dataset + "/" + UUID.randomUUID()).toString();
                 } else {
                     identifier = new URI("/"+ UUID.randomUUID()).toString();
                 }
@@ -574,7 +526,7 @@ class StandardWhelk implements Whelk {
         return getStorage().status(identifier)
     }
 
-    @Override
+    //@Override
     void init() {
         def ctxThread
         try {
@@ -649,7 +601,7 @@ class StandardWhelk implements Whelk {
     /*
      * Setup and configuration methods
      ************************************/
-    @Override
+    //@Override
     void addPlugin(Plugin plugin) {
         if (!this.id) {
             throw new WhelkException("Can not add plugins to id-less whelk. Use correct constructor, or make sure init() is run before adding plugins.")

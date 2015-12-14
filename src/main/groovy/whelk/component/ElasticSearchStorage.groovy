@@ -14,7 +14,7 @@ import whelk.exception.*
 
 
 @Log
-class ElasticSearchStorage extends ElasticSearch implements Storage {
+abstract class ElasticSearchStorage extends ElasticSearch implements Storage {
 
     final static String ELASTIC_STORAGE_TYPE = "document"
     boolean versioning
@@ -42,7 +42,6 @@ class ElasticSearchStorage extends ElasticSearch implements Storage {
         log.info("Elastic Storage using index name $indexName")
     }
 
-    @Override
     void onStart() {
         log.info("Starting ${this.id} with index name $indexName")
         createIndexIfNotExists(indexName)

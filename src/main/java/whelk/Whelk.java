@@ -14,13 +14,11 @@ public interface Whelk {
     static final String BULK_ADD_OPERATION = "BULK_ADD";
     static final String REMOVE_OPERATION = "DELETE";
 
+    /*
     // storage
     public String add(Document d);
     public void bulkAdd(List<Document> d, String dataset, String contentType);
     public void remove(String identifier);
-    /**
-     * For conveniance. If the dataset is known, then pass it along.
-     */
     public void remove(String identifier, String dataset);
 
     // get/search/lookup
@@ -54,4 +52,5 @@ public interface Whelk {
     public CamelContext getCamelContext();
     public void notifyCamel(Document doc, String operation, Map extraInfo);
     public void notifyCamel(String identifier, String dataset, String operation, Map extraInfo);
+    */
 }

@@ -615,7 +615,7 @@
     },
     "elasticprocessor": {
         "_class": "whelk.camel.ElasticRouteProcessor",
-        "_plugins" : ["index", "linkexpander", "termreducer", "cleanupindexconverter" ]
+        "_plugins" : ["index", "linkexpander" ]
     },
    "indexroutebuilder": {
         "_class" : "whelk.camel.route.ElasticIndexingRouteBuilder",
@@ -682,7 +682,8 @@
         "_params" : {
             "availableTypes": "_property:AVAILABLE_TYPES",
             "databaseUrl": "_property:DATABASE_URL",
-            "contentTypes": ["application/ld+json","application/x-marc-json"],
+            "tableName": "_property:DATABASE_TABLENAME",
+            "contentTypes": ["application/ld+json","application/x-marc-json", "application/json"],
             "versioning" : true
         }
     },

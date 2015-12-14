@@ -1,0 +1,154 @@
+{
+  "sameAs": [
+    {
+      "birthYear": "1893",
+      "deathYear": "1976",
+      "@type": "Person",
+      "name": "Mao Ze-Dung,"
+    },
+    {
+      "birthYear": "1893",
+      "givenName": "Tse-toung",
+      "familyName": "Mao",
+      "deathYear": "1976",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1893",
+      "deathYear": "1976",
+      "@type": "Person",
+      "name": "Mao Tsetung,"
+    },
+    {
+      "birthYear": "1893",
+      "givenName": "Tse-Tung",
+      "familyName": "Mao",
+      "deathYear": "1976",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1893",
+      "givenName": "Zedung",
+      "familyName": "Mao",
+      "deathYear": "1976",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1893",
+      "givenName": "Zédōng",
+      "familyName": "Máo",
+      "deathYear": "1976",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1893",
+      "deathYear": "1976",
+      "@type": "Person",
+      "name": "Mao Tse Tung,"
+    },
+    {
+      "birthYear": "1893",
+      "scopeNote": "Förenklad kinesisk skrift:",
+      "deathYear": "1976",
+      "@type": "Person",
+      "name": "毛泽东,"
+    }
+  ],
+  "catalogingSource": {
+    "@id": "/def/enum/content/OtherSource"
+  },
+  "focus": {
+    "@id": "/resource/auth/74212",
+    "familyName": "Mao",
+    "note": [
+      "Äldre transkription Mao Tse-tung, f. 26 december 1893, d. 9 september 1976, kinesisk politiker, ordförande för Kinas kommunistiska parti från 1943, Folkrepubliken Kinas president 1954-1959."
+    ],
+    "birthYear": "1893",
+    "nationality": {
+      "@id": "/def/nationalities/a-cc---"
+    },
+    "givenName": "Zedong",
+    "deathYear": "1976",
+    "@type": "Person"
+  },
+  "modified": "2013-04-25T13:51:03.0+02:00",
+  "closeMatch": [
+    {
+      "@id": "http://dewey.info/class/951.05/e23/"
+    }
+  ],
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "NE"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "LC auth"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "_marcUncompleted": [
+    {
+      "700": {
+        "subfields": [
+          {
+            "a": "Mao, Zedong,"
+          },
+          {
+            "d": "1893-1976"
+          },
+          {
+            "0": "(DLC) n 78087649"
+          }
+        ],
+        "ind1": "1",
+        "ind2": "0"
+      }
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "systemNumber": [
+    "(LIBRIS)A000043166"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=H"
+  },
+  "@id": "/auth/74212",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2001-12-06T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "74212",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "romanization": {
+    "@id": "/def/enum/content/NationalStandard"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "PersonTerm"
+}

@@ -11,34 +11,26 @@
         "GRAPHSTORE_UPDATE_URI": "http://localhost:3030/libris/update",
         "GRAPHSTORE_UPDATE_AUTHENTICATION_REQUIRED": false,
         "ACTIVEMQ_BROKER_URL": "tcp://localhost:61616",
-        "APIX_HOST": "http://localhost:8001",
+        "APIX_HOST": "http://localhost:8100",
         "DATABASE_URL": "jdbc:postgresql://localhost/whelk",
         "UPDATE_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",
         "UPDATE_HOLD_OAIPMH_URL":"http://localhost:8000/{dataset}/oaipmh",
-        "UPDATE_INTERVAL":3000
-    },
-    "_docMetaMapping" : {
-        "hold": [
-            "about.heldBy.notation"
-        ]
+        "UPDATE_INTERVAL":10
     },
     "_supportplugins": [
         "elasticnode",
-        "activemqbroker",
-        "fusekiserver"
+        "activemqbroker"
     ],
     "_plugins": {
         "_camel": [
-            "indexroutebuilder",
-            "graphstoreroutebuilder"
+            "indexroutebuilder"
             ],
         "_components": [
-            "jsonldstorage",
-            "index",
-            "graphstore"
+            "postgrestorage",
+            "index"
         ],
         "_maintenance": [
-            null
+            "scheduledoperator"
         ]
     }
 }

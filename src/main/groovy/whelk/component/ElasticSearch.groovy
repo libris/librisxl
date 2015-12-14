@@ -45,7 +45,7 @@ import whelk.exception.*
 import static whelk.util.Tools.*
 
 @Log
-class ElasticSearchClient extends ElasticSearch implements Index {
+class ElasticSearchClient extends ElasticSearch {
 
     ElasticSearchClient(String ident = null, Map params) {
         super(params)
@@ -54,9 +54,8 @@ class ElasticSearchClient extends ElasticSearch implements Index {
 }
 
 @Log
-abstract class ElasticSearch extends BasicComponent implements Index, ShapeComputer {
+abstract class ElasticSearch { //extends BasicComponent implements Index, ShapeComputer {
 
-    static final String METAENTRY_INDEX_TYPE = "entry"
     static final String DEFAULT_CLUSTER = "whelks"
     static final int WARN_AFTER_TRIES = 1000
     static final int RETRY_TIMEOUT = 300
@@ -74,30 +73,29 @@ abstract class ElasticSearch extends BasicComponent implements Index, ShapeCompu
 
     Class searchResultClass = null
 
-    ElasticSearch(Map settings) {
-        this.elastichost = settings.get('elasticHost')
+    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
+        this.elastichost = elasticHost
+        this.elasticcluster = elasticCluster
+        this.defaultIndex = elasticIndex
+
+        //this.elastichost = props.getProperty("elastic.host")
         if (!elastichost) {
             this.elastichost = System.getProperty("elastic.host")
         }
-        this.elasticcluster = settings.get('elasticCluster')
+        //this.elasticcluster = props.getProperty("elastic.cluster")
         if (!elasticcluster) {
             this.elasticcluster = System.getProperty("elastic.cluster", DEFAULT_CLUSTER)
         }
-        this.defaultType = settings.get("defaultType", DEFAULT_TYPE)
+        configuredTypes = [:] // (props ? props.getProperty("typeConfiguration", [:]) : [:])
+        availableTypes = [] // (props ? props.getProperty("availableTypes", []) : [])
         connectClient()
-        configuredTypes = (settings ? settings.get("typeConfiguration", [:]) : [:])
-        availableTypes = (settings ? settings.get("availableTypes", []) : [])
-        this.defaultIndex = (settings ? settings.get("indexName") : null)
-        if (settings.searchResultClass) {
-            this.searchResultClass = Class.forName(settings.searchResultClass)
-        }
-    }
 
-    @Override
-    void componentBootstrap(String whelkName) {
-        if (!defaultIndex) {
-            this.defaultIndex = whelkName
+        //this.defaultIndex = (props ? props.getProperty("indexName") : null)
+        /*
+        if (props.getProperty("searchresultclass") {
+            this.searchResultClass = Class.forName(props.getProperty("searchresultclass"))
         }
+        */
     }
 
     void connectClient() {
@@ -153,7 +151,7 @@ abstract class ElasticSearch extends BasicComponent implements Index, ShapeCompu
         def flushresponse = performExecute(new FlushRequestBuilder(client.admin().indices()))
     }
 
-    @Override
+    //@Override
     public boolean index(String identifier, String dataset, Map data) {
         try {
             def response = performExecute(client.prepareIndex(getIndexName(), dataset, toElasticId(identifier)).setSource(data))
@@ -169,7 +167,7 @@ abstract class ElasticSearch extends BasicComponent implements Index, ShapeCompu
         return false
     }
 
-    @Override
+    //@Override
     public void remove(String identifier, String dataset) {
         log.debug("Peforming deletebyquery to remove documents extracted from $identifier")
         def delQuery = termQuery("extractedFrom.@id", identifier)
@@ -189,7 +187,7 @@ abstract class ElasticSearch extends BasicComponent implements Index, ShapeCompu
             // Kanske en matchall-query filtrerad på _type och _id?
     }
 
-    @Override
+    //@Override
     SearchResult query(Query q) {
         def indexTypes = []
         if (q instanceof ElasticQuery) {
@@ -334,7 +332,6 @@ abstract class ElasticSearch extends BasicComponent implements Index, ShapeCompu
         }
     }
 
-    @Override
     public Map getStatus() {
         def status = [:]
         status['indexName'] = getIndexName()

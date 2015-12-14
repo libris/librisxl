@@ -1,0 +1,83 @@
+{
+  "sameAs": [
+    {
+      "@id": "/topic/sao/843-1517"
+    }
+  ],
+  "scopeNote": [
+    "Kronologiskt ämnesord för Tyskland."
+  ],
+  "focus": {
+    "@id": "/resource/auth/357848",
+    "@type": [
+      "Authority"
+    ]
+  },
+  "modified": "2012-11-15T10:12:37.0+01:00",
+  "subjectSubdivision": {
+    "@id": "/def/enum/content/Topical"
+  },
+  "inScheme": {
+    "@id": "/scheme/sao"
+  },
+  "prefLabel": "843-1517",
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "_marcUncompleted": [
+    {
+      "448": {
+        "subfields": [
+          {
+            "a": "Medeltiden (Tyskland)"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "inCollection": {
+    "@id": "/topic/chronological/",
+    "notation": "chronological"
+  },
+  "@id": "/auth/357848",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2012-11-15T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "357848",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "romanization": {
+    "@id": "/def/enum/content/NationalStandard"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "ChronologicalTerm"
+}

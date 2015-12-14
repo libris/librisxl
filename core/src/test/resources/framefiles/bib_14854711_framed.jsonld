@@ -1,0 +1,202 @@
+{
+  "about": {
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Kina"
+        },
+        "@type": "ProviderEvent",
+        "providerDate": "2013"
+      }
+    ],
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "[13] s.",
+        "dimensions": "28 cm"
+      }
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/629.04/e23/"
+      }
+    ],
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Hundraen%20saker%20som%20r%C3%B6r%20sig"
+      }
+    ],
+    "responsibilityStatement": "[översättning: Annette Voigt]",
+    "subject": [
+      {
+        "@id": "/topic/barn/Fordon"
+      },
+      {
+        "@id": "/topic/barn/Maskiner"
+      }
+    ],
+    "audience": {
+      "@id": "/def/enum/content/Juvenile"
+    },
+    "comment": [
+      "Orig:s titel: 101 first things that go"
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "101 saker som rör sig"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "genre": [
+      {
+        "@id": "/topic/saogf/Faktab%C3%B6cker"
+      },
+      {
+        "@id": "/topic/saogf/Barn-%20och%20ungdomslitteratur"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "inb.",
+        "@type": "Identifier",
+        "identifierValue": "9789157026880"
+      }
+    ],
+    "@id": "/resource/bib/14854711",
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Malm%C3%B6"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Egmont Kärnan",
+        "providerDate": "2014"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2014-02-17T00:00:00.0+01:00",
+  "catalogingSource": {
+    "@id": "/def/enum/content/OtherSource"
+  },
+  "controlNumber": "14854711",
+  "modified": "2015-05-15T08:26:08.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Fordon"
+          },
+          {
+            "2": "barn"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Maskiner"
+          },
+          {
+            "2": "barn"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Faktaböcker"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Barn- och ungdomslitteratur"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "systemNumber": [
+    "(BOKR)9789157026880"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=BOKR"
+  },
+  "@id": "/bib/14854711",
+  "@type": "Record"
+}

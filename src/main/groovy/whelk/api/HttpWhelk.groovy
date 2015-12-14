@@ -134,8 +134,8 @@ class HttpWhelk extends HttpServlet {
     void init() {
         whelk = Class.forName(servletConfig.getInitParameter("whelkClass")).newInstance()
         whelk.init()
-        def (whelkConfig, pluginConfig) = whelk.loadConfig()
-        setConfig(whelkConfig, pluginConfig)
+        //def (whelkConfig, pluginConfig) = whelk.loadConfig()
+        //setConfig(whelkConfig, pluginConfig)
     }
 
     protected void setConfig(whelkConfig, pluginConfig) {

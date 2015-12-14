@@ -59,10 +59,9 @@ class ReindexProcessor extends BasicPlugin implements Processor {
 
                         Exchange ex = new DefaultExchange(exchange.getContext())
                         Message msg = new DefaultMessage()
-                        msg.setHeader("document:metaentry", document.entry.inspect())
                         msg.setHeader("document:identifier", document.identifier)
                         msg.setHeader("document:dataset", document.dataset)
-                        msg.setHeader("document:metaentry", document.metadataAsJson)
+                        msg.setHeader("document:manifest", document.manifestAsJson)
                         msg.setHeader("whelk:operation", Whelk.BULK_ADD_OPERATION)
                         msg.setBody(document.dataAsMap, Map)
 

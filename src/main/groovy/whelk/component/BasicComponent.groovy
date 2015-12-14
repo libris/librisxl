@@ -16,15 +16,12 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     final static String VERSION_STORAGE_SUFFIX = "_versions"
 
     final void bootstrap() {
-        assert whelk
-
-        componentBootstrap(whelk.id)
+        componentBootstrap(whelk?.id)
     }
 
     abstract void componentBootstrap(String str)
 
     public final void start() {
-        assert whelk
         log.debug("Calling onStart() on sub classes")
         onStart()
     }
@@ -39,9 +36,9 @@ abstract class BasicComponent extends BasicPlugin implements Component {
     }
 
     protected Document createTombstone(id, dataset) {
-        def tombstone = whelk.createDocument("text/plain").withIdentifier(id).withData("DELETED ENTRY")
-        tombstone.entry['deleted'] = true
-        tombstone.entry['dataset'] = dataset
+        def tombstone = whelk.createDocument("application/ld+json").withIdentifier(id).withData(["@type":"Tombstone"])
+        tombstone.manifest['deleted'] = true
+        tombstone.manifest['dataset'] = dataset
         return tombstone
     }
 

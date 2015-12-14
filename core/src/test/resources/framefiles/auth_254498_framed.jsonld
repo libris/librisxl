@@ -1,0 +1,368 @@
+{
+  "sameAs": [
+    {
+      "birthYear": "1858",
+      "givenName": "Selma Ottiliana Lovisa",
+      "familyName": "Lagerlöf",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Selma",
+      "familyName": "Lagerlʹof",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Selma",
+      "familyName": "Lagerlef",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Selma",
+      "familyName": "Lagerlœf",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Selma",
+      "familyName": "Lagerloef",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Selma",
+      "familyName": "Lankerleph",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Zelma",
+      "familyName": "Lagerlef",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Sel'ma",
+      "familyName": "Laherlef",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Salma",
+      "familyName": "Lajiruf",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Selma",
+      "familyName": "Lagelroep'ŭ",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Salmá",
+      "familyName": "Lāgharlūf",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Silmā",
+      "familyName": "Lāgirlūv",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Sælmăh",
+      "familyName": "Lagærlæp",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Xelma",
+      "familyName": "Layerlop",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Selma",
+      "familyName": "Lāgerlēva",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Selma",
+      "familyName": "Lagerlefa",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Selmy",
+      "familyName": "Lagerlöfové",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Selma",
+      "familyName": "Lagerlöfová",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Saierma",
+      "familyName": "Lageluofu",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Selma",
+      "familyName": "Logerlof",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Sel'ma",
+      "familyName": "Lagerlyof",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Seruma",
+      "familyName": "Rāgerurēvu",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Seruma",
+      "familyName": "Ragerurefu",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Seruma",
+      "familyName": "Ragerureefu",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Сельма",
+      "familyName": "Лагерлёф",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Селма",
+      "familyName": "Лагерльоф",
+      "deathYear": "1940",
+      "@type": "Person"
+    },
+    {
+      "birthYear": "1858",
+      "givenName": "Селма",
+      "familyName": "Лагерлеф",
+      "deathYear": "1940",
+      "@type": "Person"
+    }
+  ],
+  "focus": {
+    "sameAs": [
+      {
+        "@id": "http://dbpedia.org/resource/Selma_Lagerl%25C3%25B6f"
+      }
+    ],
+    "@id": "/resource/auth/254498",
+    "familyName": "Lagerlöf",
+    "note": [
+      "Skönlitterär författare, nobelpristagare 1909, första kvinnliga ledamot av Svenska akademien 1914"
+    ],
+    "birthYear": "1858",
+    "relation": [
+      {
+        "@id": "http://sv.wikipedia.org/wiki/Selma_Lagerlöf",
+        "@type": "Document",
+        "copyNote": [
+          "Wikipedia"
+        ]
+      }
+    ],
+    "nationality": {
+      "@id": "/def/nationalities/e-sw---"
+    },
+    "givenName": "Selma",
+    "deathYear": "1940",
+    "@type": "Person"
+  },
+  "modified": "2015-02-09T13:31:23.0+01:00",
+  "subjectSubdivision": {
+    "@id": "/def/enum/content/Topical"
+  },
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "editorialNote": [
+    "Uppdaterat. 2012-06-27. S/NB/evaabr"
+  ],
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "NE"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "VIAF (2012-06-27)"
+    },
+    {
+      "citation": "t.p. (Selma Lagerlöf)",
+      "@type": "CreativeWork",
+      "label": "Lagerlöf, Selma. Jerusalem, 1901-1902:"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Niersi qi e li xian ji. 1 /  Lageluofu Saierma, zhu ; Shi Qin'e, yi, 2006"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Gēstas Berlinga sāga / Selma Lāgerlēva ; no zviedru valodas tulkojusi Elija Kliene, 2006"
+    },
+    {
+      "citation": "Selma Lankerleph : meletē, 1958",
+      "@type": "CreativeWork",
+      "label": "Selma Lagerlœf :"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Gesuta Beruringe / Seruma Ragerureefu saku ; [övers. i sammandrag av Yaeko Nogami], 1921"
+    },
+    {
+      "citation": "Toonselspel in 3 bedrijven naar een novelle van Selma Lagerloef ; Met de toestemming van de schrijfster bewerkt, 1924",
+      "@type": "CreativeWork",
+      "label": "Pluimpje :"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Cuôc lu hanh ky diêu cua Nilx Hôlyerxôn vong quanh nuoc Thuy Diên. Tâp 1. /  Xelma Layerlop ; Hoang Thiêu Son, dich, gioi thiêu va chu thich, 2003"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "E-ru-sa-re-mu / Seruma Ragerurefu saku ; Maeda Akira yaku, 1942"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Kiyoshi konoyoru / Seruma Rāgerurēvu saku ; Dominiku Rukurēru e ; Nakamura Taeko yaku, 1992"
+    },
+    {
+      "citation": "romans / Zelma Lagerlef ; no zviedru valodas tulkojusi L. Skalbe, 1920",
+      "@type": "CreativeWork",
+      "label": "Dalarnes meita :"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Carot od Portugalija / Selma Lagerlef ; prevod od švedski jazik  Ivica Čelikoviḱ, 2005"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Čudnoto pătuvane na Nils Cholgerson / Selma Lagerlʹof ; prevede ot švedski Stojan Kajnarov ; iljustracii Bertil Ljubek, 1980"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Al-badīl / Salmá Lāgharlūf, taʼlīf ; May Fagharbayragh, rusūm ; Sukaynah Ibrahīm, al-naṣṣ al-ʼarabīy bi-qalam, 1998"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Āshuftigān-i shīftah / nivishtah-ʾi Silmā Lāgirlūv ; tarjamah-yi Parviz-i Dāryūsh, 1987"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Arnes kunga manta / Selma Lagerlefa ; tulk. Aleksandrs Sehja, 1935"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "ʻAgādôt wisipûrîm / Sælmăh Lagærlæp ; ʼibrît: J. Liktænbom, 1963"
+    },
+    {
+      "citation": "roman / od Selmy Lagerlöfové ; ze švédského přeložil O.S. Veti, s.a.",
+      "@type": "CreativeWork",
+      "label": "Antikristovy zázraky :"
+    },
+    {
+      "citation": "román / Selma Lagerlöfová ; [prelozil Karel V. Rypácek], 1933",
+      "@type": "CreativeWork",
+      "label": "Anna Svärdová :"
+    },
+    {
+      "citation": "povistʹ-kazka dlja molodšoho škilʹnoho viku / Sel'ma Laherlef ; skoročennyj pereklad zi švedskoï Olʹhy Senjuk, 1978",
+      "@type": "CreativeWork",
+      "label": "Čudesna mandrivka Nil'sa Hol'hersona z dykymy hus'my :"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "systemNumber": [
+    "(LIBRIS)A000038591"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/auth/254498",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2005-04-22T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "254498",
+  "@type": "PersonTerm",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "closeMatch": [
+    {
+      "@id": "http://dewey.info/class/839.7372/e23/"
+    }
+  ]
+}

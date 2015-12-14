@@ -1,0 +1,255 @@
+{
+  "about": {
+    "comment": [
+      "Med varierande titel vartannat nummer 1986-1987: Kul med Blondie; Kul med Åsa-Nisse; 1988-: Kul med Blondie; Kul med Karl-Alfred"
+    ],
+    "classification": [
+      {
+        "@id": "/some?type=Concept&notation=00"
+      },
+      {
+        "@id": "/topic/kssb/8/Hci%28p%29"
+      },
+      {
+        "@id": "/topic/sab/Hci%28p%29"
+      }
+    ],
+    "publishingDirector": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      }
+    ],
+    "regularity": {
+      "@id": "/def/enum/content/Regular"
+    },
+    "frequency": "1 nr/månad",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Sundbyberg"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Semic press",
+        "providerDate": "1986-1988"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/SuccessiveEntry"
+    },
+    "alphabet": {
+      "@id": "/def/enum/content/ExtendedRoman"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Blondie"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=%C3%85sa-Nisse"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=Karl-Alfred"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=Kul%20med%20Blondie"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=Kul%20med%20%C3%85sa-Nisse"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=Kul%20med%20Karl-Alfred"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      }
+    ],
+    "keyTitle": [
+      {
+        "@type": "Title",
+        "titleValue": "Kul med ..."
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Finland"
+        },
+        "@type": "ProviderEvent"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Periodical"
+      }
+    ],
+    "temporalCoverageNote": "1986-1988",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "dimensions": "26 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "frequencyCategory": {
+      "@id": "/def/enum/content/MonthlyIncludes91011Or12NumbersAYear"
+    },
+    "genre": [
+      {
+        "@id": "/topic/saogf/Serietidningar"
+      }
+    ],
+    "@id": "/resource/bib/3618984",
+    "succeededBy": [
+      {
+        "@id": "/some?type=Serial&title=Blondie%20%26%20Karl-Alfred"
+      },
+      {
+        "@id": "/some?type=Serial&title=%C3%85sa-Nisse%20%281988%29"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "precededBy": [
+      {
+        "@id": "/some?type=Serial&title=%C3%85sa-Nisse%20%281975%29"
+      },
+      {
+        "@id": "/some?type=Serial&title=Blondie"
+      },
+      {
+        "@id": "/some?type=Serial&title=Karl-Alfred"
+      }
+    ],
+    "responsibleParty": [
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "performerNote": [
+      "I red.: Hans Ruta, Leif Bergendorff (1986:1). Red.: Hans Ruta (1986:2-1987:8, 1988:1-3), Karin Thorell (1987:10-12), Siv Jensing (1988:4), Birgitta Bengtsson (1988:6-12)",
+      "Ansv. utg.: Börje Nilsson (1986), Siv Jensing (1987-1988)"
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Kul med ..."
+    },
+    "issueNumber": [
+      "1986: nr 1-1988: nr 12"
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/issn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "0282-9487"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Serial"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=NLT"
+    }
+  ],
+  "created": "1986-09-24T00:00:00.0+02:00",
+  "controlNumber": "3618984",
+  "@type": "Record",
+  "librisIIINumber": [
+    "02829487"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "2"
+      ],
+      "022": {
+        "subfields": [
+          {
+            "a": "0282-9487"
+          },
+          {
+            "2": "f"
+          }
+        ],
+        "ind1": "0",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Serietidningar"
+          },
+          {
+            "2": "sgp"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modified": "2008-08-20T12:51:48.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/3618984",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

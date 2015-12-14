@@ -1,0 +1,212 @@
+{
+  "about": {
+    "classification": [
+      {
+        "@id": "/some?type=Concept&notation=00"
+      },
+      {
+        "@id": "/topic/kssb/8/Hci%28p%29"
+      },
+      {
+        "@id": "/topic/sab/Hci%28p%29"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "0",
+        "@type": "Title",
+        "titleValue": "Blondie och Karl-Alfred"
+      }
+    ],
+    "publishingDirector": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "regularity": {
+      "@id": "/def/enum/content/Regular"
+    },
+    "frequency": "1 nr/månad",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Sundbyberg"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Semic press",
+        "providerDate": "1989"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/SuccessiveEntry"
+    },
+    "alphabet": {
+      "@id": "/def/enum/content/ExtendedRoman"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Blondie"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=Karl-Alfred"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "keyTitle": [
+      {
+        "@type": "Title",
+        "titleValue": "Blondie & Karl-Alfred"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Finland"
+        },
+        "@type": "ProviderEvent"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Periodical"
+      }
+    ],
+    "temporalCoverageNote": "1989-1989",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "dimensions": "26 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "frequencyCategory": {
+      "@id": "/def/enum/content/MonthlyIncludes91011Or12NumbersAYear"
+    },
+    "genre": [
+      {
+        "@id": "/topic/saogf/Serietidningar"
+      }
+    ],
+    "@id": "/resource/bib/3621577",
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "precededBy": [
+      {
+        "@id": "/some?type=Serial&title=Kul%20med%20..."
+      }
+    ],
+    "responsibleParty": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "performerNote": [
+      "I red.: Birgitta Bengtsson, Hans Ruta",
+      "Ansv. utg.: Siv Jensing"
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Blondie & Karl-Alfred"
+    },
+    "issueNumber": [
+      "1989: nr 1-nr 9"
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/issn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "0284-9909"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Serial"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=NLT"
+    }
+  ],
+  "created": "1990-05-14T00:00:00.0+02:00",
+  "controlNumber": "3621577",
+  "@type": "Record",
+  "librisIIINumber": [
+    "02849909"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "2"
+      ],
+      "022": {
+        "subfields": [
+          {
+            "a": "0284-9909"
+          },
+          {
+            "2": "f"
+          }
+        ],
+        "ind1": "0",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Serietidningar"
+          },
+          {
+            "2": "sgp"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modified": "2008-08-20T13:01:34.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/3621577",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

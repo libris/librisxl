@@ -1,0 +1,80 @@
+{
+  "about": {
+    "classification": [
+      {
+        "@id": "/topic/kssb/5/Hc%28p%29"
+      },
+      {
+        "@id": "/topic/kssb/5/Hce%28p%29"
+      },
+      {
+        "@id": "/topic/sab/Hc%28p%29"
+      },
+      {
+        "@id": "/topic/sab/Hce%28p%29"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/MonographicSeries"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/und"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/SuccessiveEntry"
+    },
+    "temporalCoverageNote": "1971-1984",
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "hasUniformWork": {
+      "@id": "/some?type=UniformWork&uniformTitle=Kalla%20k%C3%A5rar"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "subtitle": "ryslig midnattsläsning",
+      "@type": "Title",
+      "titleValue": "Kalla kårar"
+    },
+    "issueNumber": [
+      "1-82"
+    ],
+    "@id": "/resource/bib/136803",
+    "@type": [
+      "Text",
+      "Serial"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "B. Wahlström",
+        "providerDate": "1971-1984"
+      }
+    ]
+  },
+  "created": "1977-11-16T00:00:00.0+01:00",
+  "controlNumber": "136803",
+  "librisIIINumber": [
+    "990129617X"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/136803",
+  "@type": "Record"
+}

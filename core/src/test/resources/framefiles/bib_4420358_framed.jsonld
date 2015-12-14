@@ -1,0 +1,288 @@
+{
+  "about": {
+    "comment": [
+      "Titel från CSA Illumina's ingångssida",
+      "Katalogiserad 2005-02-16 (uppdatering)"
+    ],
+    "mediaTerm": "Elektronisk resurs] :",
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/016.7/e22/"
+      },
+      {
+        "@id": "/topic/kssb/7/Aai%28p%29%2FDR"
+      },
+      {
+        "@id": "/topic/kssb/7/Aaih%28p%29%2FDR"
+      },
+      {
+        "@id": "/topic/kssb/7/Aapni%28p%29%2FDR"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "3",
+        "@type": "Title",
+        "titleValue": "ART bibliographies modern"
+      },
+      {
+        "titleType": "3",
+        "@type": "Title",
+        "titleValue": "ARTbibliographies modern database"
+      },
+      {
+        "titleType": "3",
+        "@type": "Title",
+        "titleValue": "ARTbibliographies modern on the web"
+      },
+      {
+        "titleType": "0",
+        "@type": "Title",
+        "titleValue": "ABM"
+      }
+    ],
+    "frequency": "Uppdateras 6 ggr/år",
+    "subject": [
+      {
+        "@id": "/topic/sao/Modern%20konst/bibliografi/databaser"
+      },
+      {
+        "@id": "/topic/sao/Konsthantverk/bibliografi/databaser"
+      },
+      {
+        "@id": "/topic/sao/Fotokonst/bibliografi/databaser"
+      }
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Bethesda%2C%20Md."
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Cambridge Scientific Abstracts (CSA)",
+        "providerDate": "[1999]-"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/IntegratingEntry"
+    },
+    "additionalCarrierType": {
+      "@id": "/def/enum/content/Online"
+    },
+    "originalItem": {
+      "@id": "/def/enum/content/Online"
+    },
+    "describedBy": [
+      {
+        "@id": "http://www.csa.com/factsheets/artbm-set-c.php",
+        "@type": "WebPage",
+        "label": "Innehåll:"
+      },
+      {
+        "@id": "http://www.csa.com/factsheets/supplements/artbmcomp.php",
+        "@type": "WebPage",
+        "label": "Complete serials source list:"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/UpdatingDatabase"
+      }
+    ],
+    "nature": {
+      "@id": "/def/enum/content/Bibliography"
+    },
+    "temporalCoverageNote": "1999-",
+    "hasFormat": [
+      {
+        "@id": "/some?type=Electronic"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxu"
+      }
+    ],
+    "frequencyCategory": {
+      "@id": "/def/enum/content/BimonthlyIncludes67Or8NumbersAYear"
+    },
+    "genre": [
+      {
+        "@id": "/topic/saogf/Referensdatabaser"
+      }
+    ],
+    "@id": "/resource/bib/4420358",
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "summary": [
+      "ARTbibliographies Modern (ABM) provides full abstracts of journal articles, books, essays, exhibition catalogs, PhD dissertations, and exhibition reviews on all forms of modern and contemporary art, with approximately 12-13,000 new entries being added each year. Dates of coverage: 1974 - current"
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&title=Artbibliographies%20modern"
+      },
+      {
+        "@id": "/some?type=Product&title=Artbibliographies%20modern%20on%20disc"
+      },
+      {
+        "@id": "/some?type=Product&title=Artbibliographies%20modern%20on%20disc%20%28expanded%20ed.%29"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "(ABM)",
+      "@type": "Title",
+      "titleValue": "ARTbibliographies modern"
+    },
+    "keyTitle": [
+      {
+        "titleQualifier": "(Online)",
+        "@type": "Title",
+        "titleValue": "ARTbibliographies modern"
+      }
+    ],
+    "abbreviatedTitle": [
+      {
+        "@type": "Title",
+        "titleValue": "ARTbibliogr. mod."
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/issn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "1528-3461"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Integrating"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=DBAS"
+    }
+  ],
+  "created": "2000-06-20T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "4420358",
+  "@type": "Record",
+  "librisIIINumber": [
+    "15283461"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Modern konst"
+          },
+          {
+            "v": "bibliografi"
+          },
+          {
+            "v": "databaser"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Konsthantverk"
+          },
+          {
+            "v": "bibliografi"
+          },
+          {
+            "v": "databaser"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Fotokonst"
+          },
+          {
+            "v": "bibliografi"
+          },
+          {
+            "v": "databaser"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Referensdatabaser"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modified": "2013-04-10T13:41:54.0+02:00",
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=ISDS"
+  },
+  "@id": "/bib/4420358",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

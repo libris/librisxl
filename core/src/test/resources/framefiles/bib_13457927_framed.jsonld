@@ -1,0 +1,309 @@
+{
+  "about": {
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/634.9809488744/e23/"
+      },
+      {
+        "@id": "/topic/kssb/8/Mx-cc"
+      },
+      {
+        "@id": "/topic/kssb/8/Ncci"
+      }
+    ],
+    "series": [
+      {
+        "issn": "0065-0897",
+        "volumeNumberSequentialDesignation": "119",
+        "@type": "Serial",
+        "title": "Acta Academiae Regiae Gustavi Adolphi"
+      },
+      {
+        "issn": "1403-6568",
+        "volumeNumberSequentialDesignation": "65",
+        "@type": "Serial",
+        "title": "CBM:s skriftserie"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Kjellstr%C3%B6m&givenName=Rolf&birthYear=1936"
+    },
+    "subject": [
+      {
+        "@id": "/topic/sao/Nybyggarliv/historia"
+      },
+      {
+        "@id": "/topic/sao/Etnobotanik/historia"
+      },
+      {
+        "@id": "/topic/agrovoc/rural%20population"
+      },
+      {
+        "@id": "/topic/agrovoc/rural%20settlement"
+      },
+      {
+        "@id": "/topic/agrovoc/history"
+      },
+      {
+        "@id": "/topic/agrovoc/sweden"
+      },
+      {
+        "@id": "/topic/sao/Sverige/Lappland/Vilhelmina"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "hasSummaryLanguage": {
+      "@id": "/some"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Tr%C3%A4d%20och%20v%C3%A4xter%20som%20resurs"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "illustrations": {
+      "@id": "/def/enum/content/Illustration"
+    },
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=%5BSverige%5D"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Elanders Sverige AB)"
+      }
+    ],
+    "responsibilityStatement": "Rolf Kjellström",
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "168 s.",
+        "dimensions": "25 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "@id": "/resource/bib/13457927",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Uppsala"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kungl. Gustav Adolfs akademien för svensk folkkultur",
+        "providerDate": "2012"
+      }
+    ],
+    "publisher": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "partNumber": [
+        "1,"
+      ],
+      "partTitle": [
+        "Träd och växter som resurs /"
+      ],
+      "@type": "Title",
+      "titleValue": "Nybyggarliv i Vilhelmina."
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierStatus": "canceledInvalid",
+        "@type": "Identifier",
+        "identifierValue": "9789185352950"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2012-06-13T00:00:00.0+02:00",
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "13457927",
+  "modified": "2013-05-21T10:19:51.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Nybyggarliv"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Etnobotanik"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "rural population"
+          },
+          {
+            "2": "agrovoc"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "rural settlement"
+          },
+          {
+            "2": "agrovoc"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "history"
+          },
+          {
+            "2": "agrovoc"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "sweden"
+          },
+          {
+            "2": "agrovoc"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "651": {
+        "subfields": [
+          {
+            "a": "Sverige"
+          },
+          {
+            "z": "Lappland"
+          },
+          {
+            "z": "Vilhelmina"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=J"
+  },
+  "@id": "/bib/13457927",
+  "@type": "Record"
+}

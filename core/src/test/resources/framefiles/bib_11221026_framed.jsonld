@@ -1,0 +1,122 @@
+{
+  "about": {
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Lowitz&givenName=Georg%20Moritz&birthYear=1722&deathYear=1774"
+    },
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/U"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/ger"
+      }
+    ],
+    "material": {
+      "@id": "/def/enum/content/SingleMap"
+    },
+    "subject": [
+      {
+        "@id": "/topic/sao/Astronomi"
+      },
+      {
+        "@id": "/topic/sao/Solf%C3%B6rm%C3%B6rkelser"
+      }
+    ],
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "färg, kopparstick",
+        "@type": "Product",
+        "extent": "1 karta",
+        "dimensions": "plåt 48 x 57 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/gw"
+      }
+    ],
+    "mediaTerm": "Kartografiskt material",
+    "instanceTitle": {
+      "partNumber": [
+        "Zweytes Blat. ="
+      ],
+      "subtitle": "Representation de l'éclipse du soleil, qui arrivera le 25 iuill. 1748 contenant la representation du chemin du centre de la pénombre aussi bien que des autres parties de l'éclipse a l'égard des endroits de l'Europe ...",
+      "@type": "Title",
+      "titleValue": "Vorstellung der Sonnen oder Erd Finsternis den 25ten Julii 1748, in welchem der Weg des Mittelpuncts vom Halb Schatten so wohl als die übrigen Theile der Finsternis in absicht auf die Örter von Europa ins besondere vorgestellet, und in erste Minuten Berliner Zeit eingetheilet ist ..."
+    },
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/fre"
+      }
+    ],
+    "@id": "/resource/bib/11221026",
+    "@type": [
+      "Cartography",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=%5BN%C3%BCrnberg%5D%20Prostat%20in%20Officina%20Homanniana%20Norimb.%201747."
+        },
+        "@type": "ProviderEvent",
+        "providerDate": "1747"
+      }
+    ]
+  },
+  "created": "2008-11-17T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "11221026",
+  "modified": "2008-11-17T11:30:41.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Astronomi"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Solförmörkelser"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NoF"
+  },
+  "@id": "/bib/11221026",
+  "@type": "Record"
+}

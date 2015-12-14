@@ -13,6 +13,7 @@ import whelk.*
 import whelk.component.*
 import whelk.plugin.*
 import whelk.exception.*
+import whelk.util.JsonLd
 
 @Log
 class DocumentAPI extends BasicAPI {
@@ -136,6 +137,7 @@ class DocumentAPI extends BasicAPI {
         def mode = DisplayMode.DOCUMENT
         (path, mode) = determineDisplayMode(path)
         def version = request.getParameter("version")
+        boolean flat = request.getParameter("flat") == "true"
         def accepting = request.getHeader("accept")?.split(",").collect {
             int last = (it.indexOf(';') == -1 ? it.length() : it.indexOf(';'))
             it.substring(0,last)
@@ -177,12 +179,12 @@ class DocumentAPI extends BasicAPI {
                 }
             }
 
-            if (d && (mode== DisplayMode.META || !d.entry['deleted'])) {
+            if (d && (mode== DisplayMode.META || !d.manifest['deleted'])) {
 
                 if (mode == DisplayMode.META) {
                     def versions = whelk.getVersions(d.identifier)
                     if (versions) {
-                        d.entry.versions = versions
+                        d.manifest.versions = versions
                     }
                     sendResponse(response, d.metadataAsJson, "application/json")
                 } else {
@@ -196,7 +198,12 @@ class DocumentAPI extends BasicAPI {
                         contentType = d.contentType
                         log.debug("request is for context file. Must serve original content-type ($contentType).")
                     }
-                    sendResponse(response, d.data, contentType)
+                    if (flat) {
+                        sendResponse(response, JsonLd.flatten(d.dataAsMap), contentType)
+                    } else {
+                        log.info("Framing ${d.identifier} ...")
+                        sendResponse(response, JsonLd.frame(d.identifier, d.dataAsMap), contentType)
+                    }
                 }
             } else {
                 log.debug("Failed to find a document with URI $path")
@@ -213,7 +220,7 @@ class DocumentAPI extends BasicAPI {
             if (path == "/") {
                 throw new WhelkRuntimeException("PUT requires a proper URI.")
             }
-            def entry = [:]
+            def manifest = [:]
             def meta = [:]
             Document existingDoc = null
 
@@ -227,12 +234,12 @@ class DocumentAPI extends BasicAPI {
                         response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
                         return
                     }
-                    entry = existingDoc.entry
-                    entry.remove("deleted")
+                    manifest = existingDoc.manifest
+                    manifest.remove("deleted")
                     meta = existingDoc.meta
                 }
                 else {
-                    entry['identifier'] = path
+                    manifest['identifier'] = path
                 }
             }
             String cType = ContentType.parse(request.getContentType()).getMimeType()
@@ -240,9 +247,9 @@ class DocumentAPI extends BasicAPI {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Content-Type application/x-www-form-urlencoded is not supported")
             }
 
-            entry["contentType"] = cType
-            log.debug("Set ct: ${entry.contentType}")
-            entry["dataset"] = getDatasetBasedOnPath(path)
+            manifest["contentType"] = cType
+            log.debug("Set ct: ${manifest.contentType}")
+            manifest["dataset"] = getDatasetBasedOnPath(path)
 
             if (request.getParameterMap()) {
                 meta = request.getParameterMap()
@@ -250,7 +257,7 @@ class DocumentAPI extends BasicAPI {
             }
 
             try {
-                Document doc = whelk.createDocument(entry["contentType"]).withMetaEntry(["entry":entry,"meta":meta]).withData(request.getInputStream().getBytes())
+                Document doc = whelk.createDocument(manifest["contentType"]).withManifest(manifest).withData(request.getInputStream().getBytes())
 
                 if (!hasPermission(request.getAttribute("user"), doc, existingDoc)) {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
@@ -273,9 +280,9 @@ class DocumentAPI extends BasicAPI {
                         locationRef.deleteCharAt(locationRef.length()-1)
                     }
 
-                    if (entry['dataset'] && locationRef.toString().endsWith(entry['dataset'])) {
+                    if (manifest['dataset'] && locationRef.toString().endsWith(manifest['dataset'])) {
                         int endPos = locationRef.length()
-                        int startPos = endPos - entry['dataset'].length() - 1
+                        int startPos = endPos - manifest['dataset'].length() - 1
                         locationRef.delete(startPos, endPos)
                     }
 

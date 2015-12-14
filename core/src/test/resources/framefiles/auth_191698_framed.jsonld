@@ -1,0 +1,118 @@
+{
+  "sameAs": [
+    {
+      "name": "John",
+      "personTitle": [
+        "Pope,"
+      ],
+      "birthYear": "1881",
+      "deathYear": "1963",
+      "@type": "Person",
+      "numeration": "XXIII,"
+    },
+    {
+      "name": "Jean",
+      "personTitle": [
+        "Pope,"
+      ],
+      "birthYear": "1881",
+      "deathYear": "1963",
+      "@type": "Person",
+      "numeration": "XXIII,"
+    },
+    {
+      "birthYear": "1881",
+      "givenName": "Angelo Giuseppe",
+      "familyName": "Roncalli",
+      "deathYear": "1963",
+      "@type": "Person"
+    },
+    {
+      "name": "Giovanni",
+      "personTitle": [
+        "Pope,"
+      ],
+      "birthYear": "1881",
+      "deathYear": "1963",
+      "@type": "Person",
+      "numeration": "XXIII,"
+    }
+  ],
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "focus": {
+    "name": "Johannes",
+    "personTitle": [
+      "påve,"
+    ],
+    "@id": "/resource/auth/191698",
+    "birthYear": "1881",
+    "nationality": {
+      "@id": "/def/nationalities/e-vc---"
+    },
+    "deathYear": "1963",
+    "@type": "Person",
+    "numeration": "XXIII,"
+  },
+  "modified": "2012-10-02T12:23:16.0+02:00",
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "Jean XXIII / Paul Dreyfus, 2000"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "NE"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "LC Auth"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "systemNumber": [
+    "(LIBRIS)9918362936"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=L"
+  },
+  "@id": "/auth/191698",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "1993-12-15T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "191698",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=SHB"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "PersonTerm"
+}

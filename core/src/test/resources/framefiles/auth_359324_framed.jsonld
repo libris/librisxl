@@ -1,0 +1,73 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "editorialNote": [
+    "2013-01-13/S/NB/berhel"
+  ],
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2013-01-10T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "focus": {
+    "note": [
+      "Dreamhack är ett svenskt LAN-party som utvecklats till världens största datorfestival, enligt Guinness Rekordbok. Dreamhack anordnas sedan år 2001 på mässanläggningen Elmia i Jönköping samt sedan 2008 även på Expolaris Kongresscenter i Skellefteå"
+    ],
+    "nationality": {
+      "@id": "/def/nationalities/e-sw---"
+    },
+    "@id": "/resource/auth/359324",
+    "@type": "Meeting",
+    "name": "Dreamhack (festival)"
+  },
+  "controlNumber": "359324",
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "source": [
+    {
+      "citation": "t.p. (Dreamhack)",
+      "@type": "CreativeWork",
+      "label": "DHM, 2008-:"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Wikipedia (2013-01-13)"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "romanization": {
+    "@id": "/def/enum/content/NationalStandard"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "modified": "2013-01-10T12:48:33.0+01:00",
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/auth/359324",
+  "@type": "MeetingTerm",
+  "subjectSubdivision": {
+    "@id": "/def/enum/content/Topical"
+  }
+}

@@ -1,0 +1,396 @@
+{
+  "about": {
+    "comment": [
+      "E-bok"
+    ],
+    "mediaTerm": "Elektronisk resurs] :",
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/025.04/e23/"
+      }
+    ],
+    "series": [
+      {
+        "issn": "0065-1060",
+        "volumeNumberSequentialDesignation": "84",
+        "@type": "Serial",
+        "title": "Acta Bibliothecae regiae Stockholmiensis"
+      }
+    ],
+    "associatedMedia": [
+      {
+        "@id": "http://urn.kb.se/resolve?urn=urn:nbn:se:kb:publ-19",
+        "@type": "MediaObject",
+        "copyNote": [
+          "Fritt tillgänglig via KB:s webbplats"
+        ]
+      }
+    ],
+    "subject": [
+      {
+        "@id": "/topic/sao/Libris%20%28bibliotekskatalog%29/historia"
+      },
+      {
+        "@id": "/topic/sao/Samkataloger/historia/Sverige/1945-"
+      },
+      {
+        "@id": "/topic/sao/Onlinekataloger/historia/Sverige/1945-"
+      },
+      {
+        "@id": "/topic/sao/Biblioteksautomatisering/historia/Sverige/1945-"
+      },
+      {
+        "@id": "/topic/agrovoc/databases"
+      },
+      {
+        "@id": "/topic/agrovoc/data%20processing"
+      },
+      {
+        "@id": "/topic/agrovoc/information%20retrieval"
+      },
+      {
+        "@id": "/topic/agrovoc/automation"
+      },
+      {
+        "@id": "/topic/agrovoc/libraries"
+      },
+      {
+        "@id": "/topic/agrovoc/history"
+      },
+      {
+        "@id": "/topic/agrovoc/sweden"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "additionalCarrierType": {
+      "@id": "/def/enum/content/Online"
+    },
+    "fileType": "Text och bild",
+    "editor": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "responsibilityStatement": "[redaktör: Barbro Thomas]",
+    "hasFormat": [
+      {
+        "@id": "/some?type=Electronic"
+      },
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "211 s."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "systemRequirements": [
+      "PDF"
+    ],
+    "@id": "/resource/bib/12743333",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Kungl. biblioteket",
+        "providerDate": "2012"
+      }
+    ],
+    "publisher": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&linkNote=%C3%84ven%20utgiven%20tryckt&title=Att%20bryta%20ny%20marc"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "LIBRIS 40 : en jubileumsskrift",
+      "@type": "Title",
+      "titleValue": "Att bryta ny marc"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9789170002908"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/urn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "urn:nbn:se:kb:publ-19"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2012-03-27T00:00:00.0+02:00",
+  "modified": "2013-10-24T07:53:20.0+02:00",
+  "controlNumber": "12743333",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Libris (bibliotekskatalog)"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Samkataloger"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "y": "1945-"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Onlinekataloger"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "y": "1945-"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Biblioteksautomatisering"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "y": "1945-"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "databases"
+          },
+          {
+            "2": "agrovoc"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "data processing"
+          },
+          {
+            "2": "agrovoc"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "information retrieval"
+          },
+          {
+            "2": "agrovoc"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "automation"
+          },
+          {
+            "2": "agrovoc"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "libraries"
+          },
+          {
+            "2": "agrovoc"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "history"
+          },
+          {
+            "2": "agrovoc"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "sweden"
+          },
+          {
+            "2": "agrovoc"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/bib/12743333",
+  "@type": "Record"
+}
