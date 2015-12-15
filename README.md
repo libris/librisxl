@@ -28,8 +28,8 @@ The project layout is as follows:
 
 ## Dependencies
 
-1. Install gradle from <http://gradle.org/> (or use a package manager, e.g.: brew install gradle). Check gradle -version and make sure that Groovy version matches groovyVersion in build.gradle.
-2. Install elasticsearch from <http://elasticsearch.org/> (or use a package manager, e.g.: brew install elasticsearch).
+1. Install gradle from \<http://gradle.org/\> (or use a package manager, e.g.: brew install gradle). Check gradle -version and make sure that Groovy version matches groovyVersion in build.gradle.
+2. Install elasticsearch from \<http://elasticsearch.org/\> (or use a package manager, e.g.: brew install elasticsearch).
 3. Install postgresql. At least version 9.4 (brew install postgresql)
 
 Optionally, see details about using a Graph Store at the end of this document.
@@ -54,29 +54,25 @@ Optionally, see details about using a Graph Store at the end of this document.
 
 ### Creating tables in postgresql
 
-  $ psql [-U yourdatabaseuser] <yourdatabaseschema>
-   < librisxl-tools/postgresql/tables.sql
-  $ psql [-U yourdatabaseuser] <yourdatabaseschema>
-   < librisxl-tools/postgresql/indexes.sql
+  $ psql [-U yourdatabaseuser] yourdatabaseschema
+   \< librisxl-tools/postgresql/tables.sql
+  $ psql [-U yourdatabaseuser] yourdatabaseschema
+   \< librisxl-tools/postgresql/indexes.sql
 
 ### Creating index and mappings in elasticsearch
 
 From the librisxl repository root
 
-  $ curl -XPOST http://localhost:9200/<yourindexname>\_<versionnumber>
+  $ curl -XPOST http://localhost:9200/yourindexname
       -d@librisxl-tools/elasticsearch/libris_config.json
-
-Create an alias for your index
-
-  $ curl -XPOST http://localhost:9200/\_aliases -d  '{"actions":[{"add":{"index":"<yourindexname>\_<versionnumber>","alias":"<yourindexname>"}}]}'
 
 ### Setup whelk properties
 
-Any properties bundled in the applications can be overridden by adding a -Dxl.<property> system property when starting.
+Any properties bundled in the applications can be overridden by adding a -Dxl."property" system property when starting.
 
 For example:
 
-  $ java -Dxl.component.properties=/srv/component.properties <application>
+  $ java -Dxl.component.properties=/srv/component.properties application
 
 If no -D system property is specified, the system will look for the property file in classpath.
 
@@ -129,7 +125,7 @@ from a mysql-backed vcopy:
     $ export JAVA_OPTS="-Dfile.encoding=utf-8"
     $ gradle jettyRun
 
-.. Running at <http://localhost:8180/>
+.. Running at \<http://localhost:8180/\>
 
 
 ### Get/create/update and load Definition Datasets
@@ -152,11 +148,11 @@ Go back to the importers module.
 
 If you want to clear out any existing definitions (for reload or refresh)
 
-    $ echo "DELETE FROM lddb WHERE manifest->>'collection' = 'definitions';"
-     |psql [-U <yourdatabaseuser>] <yourdatabaseschema>
-    $ echo "DELETE FROM lddb__versions WHERE manifest->>'collection' = 'definitions';"
-      |psql [-U <yourdatabaseuser>] <yourdatabaseschema>
-    $ curl -XDELETE http://localhost:9200/<yourindexname>/definitions/\_query 
+    $ echo "DELETE FROM lddb WHERE manifest-\>\>'collection' = 'definitions';"
+     |psql [-U yourdatabaseuser] yourdatabaseschema
+    $ echo "DELETE FROM lddb__versions WHERE manifest-\>\>'collection' = 'definitions';"
+      |psql [-U yourdatabaseuser] yourdatabaseschema
+    $ curl -XDELETE http://localhost:9200/yourindexname/definitions/\_query
      -d '{"query":{"match_all": {}}}'
 
 Load the resulting resources into the running whelk:
@@ -197,9 +193,9 @@ There is also a script, `librisxl-tools/scripts/update_mock_storage.sh`, for upl
 2. Run get-and-put-record script:
 
         $ cd scripts
-        $ get-and-put-record.sh <bib|auth|hold> <id>
+        $ get-and-put-record.sh \<bib|auth|hold\> \<id\>
 
-3. To see JsonLD record, go to <http://localhost:8180/whelk/bib/7149593>
+3. To see JsonLD record, go to \<http://localhost:8180/whelk/bib/7149593\>
 
 ### Run standalone data conversion on a single document
 
@@ -207,7 +203,7 @@ In order to 1) Get a source record and 2) convert it to "marc-as-json", use this
 
     BIB_ID=7149593
     curl -s http://libris.kb.se/data/bib/$BIB_ID?format=ISO2709 -o /tmp/bibtest.iso2709
-    gradle -q convertIso2709ToJson -Dargs=/tmp/bibtest.iso2709 | grep '^{' > /tmp/bibtest.json
+    gradle -q convertIso2709ToJson -Dargs=/tmp/bibtest.iso2709 | grep '^{' \> /tmp/bibtest.json
 
 Run the marcframe converter on that to print out the resulting JSON-LD:
 
@@ -223,13 +219,13 @@ In principle, any Graph Store supporting the SPARQL 1.1 Graph Store HTTP Protoco
 
         $ brew install tomcat
 
-2. Download the Sesame distro (SDK) from <http://openrdf.org/>.
+2. Download the Sesame distro (SDK) from \<http://openrdf.org/\>.
 
 3. Unpack and put the two war files into a running Tomcat. E.g.:
 
         $ cp war/openrdf-{sesame,workbench}.war /usr/local/Cellar/tomcat/7.0.39/libexec/webapps/
 
-4. Go to <http://localhost:8080/openrdf-workbench/> and create a new repository (named e.g. "dev-libris", using indexes "spoc,posc,opsc,cspo").
+4. Go to \<http://localhost:8080/openrdf-workbench/\> and create a new repository (named e.g. "dev-libris", using indexes "spoc,posc,opsc,cspo").
 
 If you like to, test the repository endpoint:
 
@@ -240,7 +236,7 @@ If you like to, test the repository endpoint:
 
 ### Using Fuseki
 
-1. Download Fuseki from <http://jena.apache.org/download/>
+1. Download Fuseki from \<http://jena.apache.org/download/\>
 2. Unpack it where you prefer 3d party tools/services (e.g. in /opt/fuseki)
 3. Start a non-persistent in-memory server for quick local testing:
 
@@ -262,7 +258,7 @@ This is now available as:
     $ cd cd /usr/local/Cellar/virtuoso/7.1.0/var/lib/virtuoso/db/
     $ virtuoso-t -f
 
-3. Find your way through the Conductor interface at <http://127.0.0.1:8890/>.
+3. Find your way through the Conductor interface at \<http://127.0.0.1:8890/\>.
    Add a user with `SPARQL_UPDATE` access and set sparql-auth to Basic HTTP
    authentication (due to Camel http4 having problems using Digest ...).
 
@@ -287,9 +283,14 @@ This is now available as:
 
 If a new index is to be set up, and unless you run locally in a pristine setup, you need to put the config to the index, like (replace localhost with target machine):
 
-    $ curl -XPUT http://localhost:9200/<indexname> -d @librisxl-tools/elasticsearch/libris_config.json
+    $ curl -XPUT http://localhost:9200/indexname\_versionnumber -d @librisxl-tools/elasticsearch/libris_config.json
 
-(To replace an existing setup with entirely new configuration, you need to delete the index `curl -XDELETE http://localhost:9200/<indexname>/` and read all data again (even locally).)
+Create an alias for your index
+
+    $ curl -XPOST http://localhost:9200/\_aliases -d  '{"actions":[{"add":{"index":"indexname\_versionnumber","alias":"indexname"}}]}'
+
+
+(To replace an existing setup with entirely new configuration, you need to delete the index `curl -XDELETE http://localhost:9200/\<indexname\>/` and read all data again (even locally).)
 
 ### New format
 
@@ -317,26 +318,26 @@ Say that the server has melted into a tiny puddle of silicon and plastic. After 
 
 ## APIs and URLs
 whelk, DOCUMENT API:
-http://<host>:<PORT>/whelk/bib/7149593
+http://\<host\>:\<PORT\>/whelk/bib/7149593
 
 ELASTIC SEARCH, INDEX SEARCH API:
 Find 'tove' in libris index, index-typedoc 'person':
-http://<host>:9200/libris/auth/\_search?q=tove
+http://\<host\>:9200/libris/auth/\_search?q=tove
 
 ELASTIC SEARCH, ANALYZE INDEXED VALUES FOR A SPECIFIC FIELD:
-curl -XGET http://<host>:9200/libris/auth/\_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.raw" } } } }'
+curl -XGET http://\<host\>:9200/libris/auth/\_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.raw" } } } }'
 
 whelk, SEARCH API:
-http://<host>:<PORT>/whelk/<indextype>/?<field>=<value>
+http://\<host\>:\<PORT\>/whelk/\<indextype\>/?\<field\>=\<value\>
 
 INDEX TYPES:
 bib, auth, person, def, sys
 
 EXPAND AUTOCOMPLETE:
-http://<host>:<PORT>/whelk/\_expand?name=Jansson,%20Tove,%201914-2001.
+http://\<host\>:\<PORT\>/whelk/\_expand?name=Jansson,%20Tove,%201914-2001.
 
 REMOTESEARCH
-http://<host>:<PORT>/whelk/\_remotesearch?q=astrid
+http://\<host\>:\<PORT\>/whelk/\_remotesearch?q=astrid
 
 HOLDINGCOUNT
-http://<host>:<PORT>/whelk/\_libcount?id=/resource/bib/7149593
+http://\<host\>:\<PORT\>/whelk/\_libcount?id=/resource/bib/7149593
