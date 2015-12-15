@@ -7,6 +7,7 @@ public class JsonLd {
     static final String GRAPH_KEY = "@graph"
     static final String ID_KEY = "@id"
     static final String DESCRIPTIONS_KEY = "descriptions"
+    static final URI SLASH_URI = new URI("/")
 
     // TODO: This flatten-method does not create description-based flat json (i.e. with entry, items and quoted)
     static Map flatten(Map framedJsonLd) {
@@ -73,7 +74,10 @@ public class JsonLd {
         def mainItemMap = idMap.get(mainId)
         if (!mainItemMap) {
             // Try to find an identifier to frame around
-            mainItemMap = idMap.get(findRecordURI(flatJsonLd).toString())
+            String foundIdentifier = findIdentifier(flatJsonLd)
+            if (foundIdentifier) {
+                mainItemMap = idMap.get(SLASH_URI.resolve(foundIdentifier).toString())
+            }
         }
         Map framedMap
         try {
