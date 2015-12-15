@@ -47,8 +47,10 @@ class PostgreSQLComponent implements Storage {
             (StorageType.MARC21_JSON): "data->'fields'"
     ]
 
+    String mainTableName
+
     PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
-        String mainTableName = sqlMaintable
+        mainTableName = sqlMaintable
         String versionsTableName = mainTableName + "__versions"
         String settingsTableName = mainTableName + "__settings"
 
@@ -338,23 +340,26 @@ class PostgreSQLComponent implements Storage {
                 query.setString(3, collection)
             }
         }
-
-        ResultSet rs = query.executeQuery()
-        Map results = new HashMap<String, Object>()
-        List items= []
-        while (rs.next()) {
-            def manifest = mapper.readValue(rs.getString("manifest"), Map)
-            Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
-            doc.setCreated(rs.getTimestamp("created").getTime())
-            doc.setModified(rs.getTimestamp("modified").getTime())
-            log.trace("Created document with id ${doc.id}")
-            items.add(doc.data)
+        try {
+            ResultSet rs = query.executeQuery()
+            Map results = new HashMap<String, Object>()
+            List items = []
+            while (rs.next()) {
+                def manifest = mapper.readValue(rs.getString("manifest"), Map)
+                Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
+                doc.setCreated(rs.getTimestamp("created").getTime())
+                doc.setModified(rs.getTimestamp("modified").getTime())
+                log.trace("Created document with id ${doc.id}")
+                items.add(doc.data)
+            }
+            results.put("startIndex", offset)
+            results.put("itemsPerPage", (limit > items.size() ? items.size() : limit))
+            results.put("duration", "PT" + (System.currentTimeMillis() - startTime) / 1000 + "S")
+            results.put("items", items)
+            return results
+        } finally {
+            connection.close()
         }
-        results.put("startIndex", offset)
-        results.put("itemsPerPage", (limit > items.size() ? items.size() : limit))
-        results.put("duration", "PT"+(System.currentTimeMillis()-startTime)/1000+"S")
-        results.put("items", items)
-        return results
     }
 
     def buildQueryString(Map queryParameters, String collection, StorageType storageType) {
