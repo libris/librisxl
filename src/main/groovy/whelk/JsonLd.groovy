@@ -145,7 +145,10 @@ public class JsonLd {
             foundIdentifier = jsonLd.get(ID_KEY)
         }
         if (foundIdentifier) {
-            return new URI(foundIdentifier).getPath().substring(1)
+            if (foundIdentifier.startsWith("/") || foundIdentifier.startsWith(Document.BASE_URI.toString())) {
+                return Document.BASE_URI.resolve(foundIdentifier).getPath().substring(1)
+            }
+            return foundIdentifier
         }
         return null
     }
