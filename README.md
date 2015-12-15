@@ -54,21 +54,21 @@ Optionally, see details about using a Graph Store at the end of this document.
 
 ### Creating tables in postgresql
 
-  $ psql [-U yourdatabaseuser] <yourdatabaseschema> \
+  $ psql [-U yourdatabaseuser] <yourdatabaseschema>
    < librisxl-tools/postgresql/tables.sql
-  $ psql [-U yourdatabaseuser] <yourdatabaseschema> \
+  $ psql [-U yourdatabaseuser] <yourdatabaseschema>
    < librisxl-tools/postgresql/indexes.sql
 
 ### Creating index and mappings in elasticsearch
 
 From the librisxl repository root
 
-  $ curl -XPOST http://localhost:9200/<yourindexname>\_<versionnumber> \
+  $ curl -XPOST http://localhost:9200/<yourindexname>\_<versionnumber>
       -d@librisxl-tools/elasticsearch/libris_config.json
 
 Create an alias for your index
 
-  $ curl -XPOST http://localhost:9200/\_aliases -d \ '{"actions":[{"add":{"index":"<yourindexname>\_<versionnumber>","alias":"<yourindexname>"}}]}'
+  $ curl -XPOST http://localhost:9200/\_aliases -d  '{"actions":[{"add":{"index":"<yourindexname>\_<versionnumber>","alias":"<yourindexname>"}}]}'
 
 ### Setup whelk properties
 
@@ -152,11 +152,11 @@ Go back to the importers module.
 
 If you want to clear out any existing definitions (for reload or refresh)
 
-    $ echo "DELETE FROM lddb WHERE manifest->>'collection' = 'definitions';" \
+    $ echo "DELETE FROM lddb WHERE manifest->>'collection' = 'definitions';"
      |psql [-U <yourdatabaseuser>] <yourdatabaseschema>
-    $ echo "DELETE FROM lddb__versions WHERE manifest->>'collection' = 'definitions';" \
+    $ echo "DELETE FROM lddb__versions WHERE manifest->>'collection' = 'definitions';"
       |psql [-U <yourdatabaseuser>] <yourdatabaseschema>
-    $ curl -XDELETE http://localhost:9200/<yourindexname>/definitions/\_query \
+    $ curl -XDELETE http://localhost:9200/<yourindexname>/definitions/\_query 
      -d '{"query":{"match_all": {}}}'
 
 Load the resulting resources into the running whelk:
