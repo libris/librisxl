@@ -18,7 +18,7 @@ class Document {
     static final String NON_JSON_CONTENT_KEY = "content"
     static final String ALTERNATE_ID_KEY = "identifiers"
 
-    static final URI BASE_URI = new URI("/")
+    static final URI BASE_URI = new URI("https://libris.kb.se/")
 
     @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()

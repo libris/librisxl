@@ -31,31 +31,36 @@ class LinkFinder {
 
 
     Document findLinks(Document doc) {
-        if (doc.isJsonLd()) {
+        boolean found = false
+        if (doc && doc.isJsonLd()) {
             // Check entry
             locateSomeEntity(doc.data.get("descriptions").get("entry"))
             for (item in doc.data.get("descriptions").get("items")) {
-                locateSomeEntity(item)
+                found = (locateSomeEntity(item) || found)
             }
+        }
+        if (found) {
+            log.info("New and updated record: ${doc.data}")
         }
         return doc
     }
 
-    void locateSomeEntity(Map node) {
+    boolean locateSomeEntity(Map node) {
+        boolean found = false
         for (item in node) {
             if (item.value instanceof Map && item.value.get("@id") ==~ /\/some\?.+/) {
-                log.info("Trying to find link ${item.value} for ${item.key} ...")
                 String foundLink = queryForLink(item.value.get("@id").substring(6))
-                log.info("Found link: $foundLink")
                 if (foundLink) {
+                    log.info("Found link: $foundLink")
                     item.value = foundLink
+                    found = true
                 }
             }
         }
+        return found
     }
 
     String queryForLink(String queryString) {
-        long startTime = System.currentTimeMillis()
         def parameterList = []
         StringBuilder queryAppendage = new StringBuilder("(")
         def queryMap = [:]
@@ -85,7 +90,6 @@ class LinkFinder {
                 stmt.setString(parameterIndex++, value)
             }
             ResultSet rs = stmt.executeQuery()
-            log.info("Timed: ${System.currentTimeMillis() - startTime}")
             if (rs.next()) {
                 return rs.getString("uri")
             }

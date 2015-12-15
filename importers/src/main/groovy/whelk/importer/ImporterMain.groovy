@@ -1,15 +1,14 @@
 package whelk.importer
 
 import org.picocontainer.Characteristics
-import org.picocontainer.DefaultPicoContainer
 import org.picocontainer.PicoContainer
-import org.picocontainer.containers.PropertiesPicoContainer
+import whelk.Document
 import whelk.Whelk
-import whelk.component.ElasticSearch
-import whelk.component.PostgreSQLComponent
+import whelk.component.Storage
 import whelk.converter.marc.MarcFrameConverter
 
 import groovy.util.logging.Slf4j as Log
+import whelk.filter.LinkFinder
 import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
 
@@ -30,6 +29,7 @@ class ImporterMain {
         pico.as(Characteristics.USE_NAMES).addComponent(MySQLImporter.class)
         pico.addComponent(ElasticReindexer.class)
         pico.addComponent(DefinitionsImporter.class)
+        pico.addComponent(LinkFinder.class)
 
         pico.start()
 
@@ -51,6 +51,19 @@ class ImporterMain {
         defsimport.go(fname)
     }
 
+    void goLinkFind(String collection) {
+        def whelk = pico.getComponent(Whelk.class)
+        def lf = pico.getComponent(LinkFinder.class)
+        /*
+        println("Result1: " + lf.queryForLink("type=Organization&name=NB"))
+        println("Result2: " + lf.queryForLink("type=Place&label=Lund"))
+        println("Result3: " + lf.queryForLink("type=Person&givenName=Markus&familyName=Sköld"))
+        */
+        for (doc in whelk.storage.loadAll(collection)) {
+            doc = lf.findLinks(doc)
+        }
+    }
+
     static void main(String... args) {
         if (args.length == 0) {
             println("Usage: <progam> [action] [collection]")
@@ -65,6 +78,9 @@ class ImporterMain {
         } else if (args[0] == "reindex") {
             def main = new ImporterMain("secret")
             main.goReindex()
+        } else if (args[0] == "linkfind") {
+            def main = new ImporterMain("secret")
+            main.goLinkFind(args[1])
         } else {
             println("Unknown action ${args[0]}")
             System.exit(1)
