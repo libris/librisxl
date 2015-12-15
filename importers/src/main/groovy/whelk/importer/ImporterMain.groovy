@@ -63,7 +63,7 @@ class ImporterMain {
             def main = new ImporterMain("secret")
             main.goDefs(args[1])
         } else if (args[0] == "reindex") {
-            def main = new ImporterMain("secret", "mysql")
+            def main = new ImporterMain("secret")
             main.goReindex()
         } else {
             println("Unknown action ${args[0]}")
