@@ -989,8 +989,12 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
                     value = combined.join("")
                 }
             }
+            // TODO: revert column lists instead and skip if isActualValue is
+            // false for all. Filter below is poor since both "_" and "0" are
+            // meaningful in some places!
             if (value.find { it != MarcFixedFieldHandler.FIXED_NONE &&
-                    it != MarcFixedFieldHandler.FIXED_UNDEF }) {
+                    it != MarcFixedFieldHandler.FIXED_UNDEF &&
+                    it != "0" }) {
                 values << value
             }
         }

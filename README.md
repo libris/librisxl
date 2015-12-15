@@ -63,8 +63,12 @@ Optionally, see details about using a Graph Store at the end of this document.
 
 From the librisxl repository root
 
-  $ curl -XPOST http://localhost:9200/<yourindexname> \
+  $ curl -XPOST http://localhost:9200/<yourindexname>\_<versionnumber> \
       -d@librisxl-tools/elasticsearch/libris_config.json
+
+Create an alias for your index
+
+  $ curl -XPOST http://localhost:9200/\_aliases -d \ '{"actions":[{"add":{"index":"<yourindexname>\_<versionnumber>","alias":"<yourindexname>"}}]}'
 
 ### Setup whelk properties
 

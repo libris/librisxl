@@ -1,11 +1,7 @@
 activemq_broker_url         = tcp://localhost:61616
-activemq_es_index_queue     = libris.index?concurrentConsumers=5
 activemq_apix_queue         = apix.queue
 activemq_apix_retries_queue = apix.retries
 apixUrl                     = http://localhost:8100
 apixPath                    = /apix/0.1/cat/libris/
-elastic_cluster             = whelks
-elastic_host                = localhost:9300
-elastic_index               = libris
 postgresql_url              = jdbc:postgresql://localhost/whelk
 postgresql_maintable        = lddb

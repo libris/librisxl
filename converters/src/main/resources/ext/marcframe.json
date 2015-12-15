@@ -9,6 +9,7 @@
     "z": "auth"
   },
 
+  "TODO:baseUri": "http://libris.kb.se/",
   "baseUri": "/",
   "uriTemplates": {
     "record": "{marcType}/{controlNumber}",
@@ -16,8 +17,11 @@
   },
 
   "tokenMaps": [
+
     "marcenums.json",
+
     {
+      "relatorCode": "relatorcodes.json",
       "thesaurus": {
         "0": "lcsh",
         "1": "lcsh/csh",
@@ -27,8 +31,53 @@
         "5": "csh",
         "6": "rvm",
         "7": null
+      }
+    },
+
+    {
+      "TypeOfRecordType": {
+        "a": "Text",
+        "b": "ArchivalUnit",
+        "c": "NotatedMusic",
+        "d": "ManuscriptNotatedMusic",
+        "e": "Cartography",
+        "f": "ManuscriptCartography",
+        "g": "ProjectedImage",
+        "i": "Audio",
+        "j": "Music",
+        "k": "StillImage",
+        "m": "Multimedia",
+        "o": "Kit",
+        "p": "MixedMaterial",
+        "r": "Realia",
+        "t": "ManuscriptText",
+        "u": "HeldMaterial",
+        "v": "HeldMaterial",
+        "x": "HeldMaterial",
+        "y": "HeldMaterial",
+        "z": "Thing"
       },
-      "relatorCode": "relatorcodes.json"
+      "BibLevelType": {
+        "9": "LicenseAgreementBoundDescription",
+        "a": "ComponentPart",
+        "b": "SerialComponentPart",
+        "c": "Collection",
+        "d": "SubCollection",
+        "i": "Integrating",
+        "m": "Monograph",
+        "p": "Periodical",
+        "s": "Serial"
+      },
+      "StatusType": {
+        "a": "marc:IncreaseInEncodingLevel",
+        "c": "marc:CorrectedOrRevised",
+        "d": "marc:Deleted",
+        "n": "marc:New",
+        "o": "marc:Obsolete",
+        "p": "marc:IncreaseInEncodingLevelFromPrepublication",
+        "s": "marc:DeletedHeadingSplitIntoTwoOrMoreHeading",
+        "x": "marc:DeletedHeadingReplacedByAnotherHeading"
+      }
     }
 
   ],
@@ -36,9 +85,9 @@
   "postProcessing": [
     {
       "type": "SetUpdatedStatus",
-      "statusFlag": "status",
-      "statusFlagNewValue": "/def/enum/record/New",
-      "statusFlagUpdatedValue": "/def/enum/record/CorrectedOrRevised",
+      "statusFlag": "marc:status",
+      "statusFlagNewValue": "marc:New",
+      "statusFlagUpdatedValue": "marc:CorrectedOrRevised",
       "dateProperty": "created",
       "updatedProperty": "modified",
       "_spec": [
@@ -46,7 +95,7 @@
           "source": {
             "created": "2015-02-18T00:00:00Z",
             "modified": "2015-02-18T00:00:00Z",
-            "status": {"@id": "/def/enum/record/New"}
+            "marc:status": {"@id": "marc:New"}
           },
           "result": {
             "created": "2015-02-18T00:00:00Z",
@@ -58,7 +107,7 @@
           "source": {
             "created": "2015-02-18T00:00:00Z",
             "modified": "2015-02-18T00:00:01Z",
-            "status": {"@id": "/def/enum/record/New"}
+            "marc:status": {"@id": "marc:New"}
           },
           "result": {
             "created": "2015-02-18T00:00:00Z",
@@ -67,15 +116,15 @@
           "back": {
             "created": "2015-02-18T00:00:00Z",
             "modified": "2015-02-18T00:00:01Z",
-            "status": {"@id": "/def/enum/record/CorrectedOrRevised"}
+            "marc:status": {"@id": "marc:CorrectedOrRevised"}
           }
         },
         {
           "source": {
-            "status": null
+            "marc:status": null
           },
           "result": {
-            "status": null
+            "marc:status": null
           },
           "back": true
         }
@@ -123,9 +172,9 @@
     "postProcessing": [
       {
         "type": "FoldLinkedProperty",
-        "statusFlag": "_providerDateStatus",
-        "statusFlagValue": "/def/enum/content/SingleKnownDateProbableDate",
-        "sourceProperty": "_providerYear",
+        "statusFlag": "marc:publicationStatus",
+        "statusFlagValue": "marc:SingleKnownDateProbableDate",
+        "sourceProperty": "marc:publishedYear",
         "matchValuePattern": "^[0-9u]{4}$",
         "property": "providerDate",
         "defaultLink": "publication",
@@ -136,8 +185,8 @@
         "_spec": [
           {
             "source": {
-              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-              "_providerYear": "1977"
+              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publishedYear": "1977"
             },
             "result": {
               "publication": [ {"providerDate": "1977"} ]
@@ -145,8 +194,8 @@
           },
           {
             "source": {
-              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-              "_providerYear": "1977",
+              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publishedYear": "1977",
               "publication": [ {"@type": "ProviderEvent", "providerDate": "1977"} ]
             },
             "result": {
@@ -155,13 +204,13 @@
           },
           {
             "source": {
-              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-              "_providerYear": "1977",
+              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publishedYear": "1977",
               "publication": [ {"@type": "ProviderEvent", "providerDate": "ca 1977"} ]
             },
             "result": {
-              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-              "_providerYear": "1977",
+              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publishedYear": "1977",
               "publication": [
                 {
                   "@type": "ProviderEvent",
@@ -173,8 +222,8 @@
           {
             "source": {
               "@type": ["ManuscriptText"],
-              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-              "_providerYear": "1977"
+              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publishedYear": "1977"
             },
             "result": {
               "@type": ["ManuscriptText"],
@@ -185,18 +234,18 @@
       },
       {
         "type": "FoldJoinedProperties",
-        "statusFlag": "_providerDateStatus",
-        "statusFlagValue": "/def/enum/content/ContinuingResourceCurrentlyPublished",
-        "sourceProperties": ["_providerYear", "_providerOtherYear"],
+        "statusFlag": "marc:publicationStatus",
+        "statusFlagValue": "marc:ContinuingResourceCurrentlyPublished",
+        "sourceProperties": ["marc:publishedYear", "marc:otherYear"],
         "matchValuePattern": "^[0-9u]{4}$",
         "property": "temporalCoverageNote",
         "separator": "-",
         "_spec": [
           {
             "source": {
-              "_providerDateStatus": {"@id": "/def/enum/content/ContinuingResourceCurrentlyPublished"},
-              "_providerYear": "1977",
-              "_providerOtherYear": "9999"
+              "marc:publicationStatus": {"@id": "marc:ContinuingResourceCurrentlyPublished"},
+              "marc:publishedYear": "1977",
+              "marc:otherYear": "9999"
             },
             "result": {
               "temporalCoverageNote": "1977-"
@@ -206,18 +255,18 @@
       },
       {
         "type": "FoldJoinedProperties",
-        "statusFlag": "_providerDateStatus",
-        "statusFlagValue": "/def/enum/content/ContinuingResourceCeasedPublication",
-        "sourceProperties": ["_providerYear", "_providerOtherYear"],
+        "statusFlag": "marc:publicationStatus",
+        "statusFlagValue": "marc:ContinuingResourceCeasedPublication",
+        "sourceProperties": ["marc:publishedYear", "marc:otherYear"],
         "matchValuePattern": "^[0-9u]{4}$",
         "property": "temporalCoverageNote",
         "separator": "-",
         "_spec": [
           {
             "source": {
-              "_providerDateStatus": {"@id": "/def/enum/content/ContinuingResourceCeasedPublication"},
-              "_providerYear": "1977",
-              "_providerOtherYear": "2017"
+              "marc:publicationStatus": {"@id": "marc:ContinuingResourceCeasedPublication"},
+              "marc:publishedYear": "1977",
+              "marc:otherYear": "2017"
             },
             "result": {
               "temporalCoverageNote": "1977-2017"
@@ -230,57 +279,59 @@
     "000": {
       "[5:6]": {
         "aboutEntity": "?record",
-        "link": "status",
+        "link": "marc:status",
         "uriTemplate": "{_}",
-        "tokenMap": "status"
+        "tokenMap": "StatusType"
       },
       "[6:7]": {
         "aboutEntity": "?thing",
-        "tokenMap": "typeOfRecord",
+        "tokenMap": "TypeOfRecordType",
         "addProperty": "@type"
       },
       "[7:8]": {
         "aboutEntity": "?thing",
-        "tokenMap": "bibLevel",
+        "tokenMap": "BibLevelType",
         "addProperty": "@type"
       },
       "[8:9]": {
         "aboutEntity": "?record",
-        "link": "typeOfControl",
+        "link": "marc:typeOfControl",
         "uriTemplate": "{_}",
-        "tokenMap": "typeOfControl"
+        "tokenMap": "TypeOfControlType",
+        "fixedDefault": " "
       },
       "[9:10]": {
         "aboutEntity": "?record",
-        "link": "characterCoding",
+        "link": "marc:characterCoding",
         "uriTemplate": "{_}",
         "fixedDefault": "a",
-        "tokenMap": "characterCoding"
+        "tokenMap": "CharacterCodingType"
       },
       "[17:18]": {
         "aboutEntity": "?record",
-        "link": "encLevel",
+        "link": "marc:encLevel",
         "uriTemplate": "{_}",
-        "tokenMap": "encLevel"
+        "tokenMap": "EncLevelType"
       },
       "[18:19]": {
         "aboutEntity": "?record",
         "TODO:deriveFrom": "bibliography/bibliographyCode",
-        "link": "catForm",
+        "link": "marc:catForm",
         "uriTemplate": "{_}",
-        "tokenMap": "catForm"
+        "tokenMap": "CatFormType",
+        "fixedDefault": " "
       },
       "[19:20]": {
         "aboutEntity": "?record",
-        "link": "linked",
+        "link": "marc:linked",
         "uriTemplate": "{_}",
-        "tokenMap": "linked"
+        "tokenMap": "LinkedType",
+        "fixedDefault": " "
       },
       "[20:24]": {
         "aboutEntity": "?record",
-        "property": "entryMap",
-        "fixedDefault": "4500",
-        "TODO:patternMap": "entryMap"
+        "property": "marc:entryMap",
+        "fixedDefault": "4500"
       },
       "repeatable": false,
       "_spec": [
@@ -290,8 +341,8 @@
           "result": {
             "@type": "Record",
             "@id": "/bib/0000000",
-            "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
-            "catForm": {"@id": "/def/enum/record/AACR2"},
+            "marc:status": {"@id": "marc:CorrectedOrRevised"},
+            "marc:catForm": {"@id": "marc:Aacr2"},
             "controlNumber": "0000000",
             "about": {"@type": ["Text", "Monograph"], "@id": "/resource/bib/0000000"}
           }
@@ -349,380 +400,382 @@
       "tokenTypeMap": "[0:1]",
       "Text": {
         "[1:2]": {
-          "link": "illustrations",
+          "link": "marc:illustrations",
           "uriTemplate": "{_}",
-          "tokenMap": "booksIllustrations"
+          "tokenMap": "BooksIllustrationsType"
         },
         "[2:3]": {
-          "link": "illustrations",
+          "link": "marc:illustrations",
           "uriTemplate": "{_}",
-          "tokenMap": "booksIllustrations"
+          "tokenMap": "BooksIllustrationsType"
         },
         "[3:4]": {
-          "link": "illustrations",
+          "link": "marc:illustrations",
           "uriTemplate": "{_}",
-          "tokenMap": "booksIllustrations"
+          "tokenMap": "BooksIllustrationsType"
         },
         "[4:5]": {
-          "link": "illustrations",
+          "link": "marc:illustrations",
           "uriTemplate": "{_}",
-          "tokenMap": "booksIllustrations"
+          "tokenMap": "BooksIllustrationsType"
         },
         "[5:6]": {
           "link": "audience",
           "uriTemplate": "{_}",
-          "tokenMap": "booksAudience"
+          "tokenMap": "AudienceType"
         },
         "[6:7]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "booksItem"
+          "tokenMap": "BooksItemType"
         },
         "[7:8]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "booksContents"
+          "tokenMap": "BooksContentsType"
         },
         "[8:9]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "booksContents"
+          "tokenMap": "BooksContentsType"
         },
         "[9:10]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "booksContents"
+          "tokenMap": "BooksContentsType"
         },
         "[10:11]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "booksContents"
+          "tokenMap": "BooksContentsType"
         },
         "[11:12]": {
-          "link": "govtPub",
+          "link": "marc:govtPub",
           "uriTemplate": "{_}",
-          "tokenMap": "booksGovtPub"
+          "tokenMap": "GovernmentPublicationType"
         },
         "[12:13]": {
-          "link": "confPub",
-          "uriTemplate": "{_}",
-          "tokenMap": "booksConfPub"
+          "property": "marc:confPub",
+          "fixedDefault": "0",
+          "tokenMap": {"1": true, "0": false}
         },
         "[13:14]": {
-          "link": "festschrift",
-          "uriTemplate": "{_}",
-          "tokenMap": "booksFestschrift"
+          "property": "marc:festschrift",
+          "fixedDefault": "0",
+          "tokenMap": {"1": true, "0": false}
         },
         "[14:15]": {
-          "link": "index",
+          "link": "marc:index",
           "uriTemplate": "{_}",
-          "tokenMap": "booksIndex"
+          "tokenMap": "IndexType",
+          "fixedDefault": "0"
         },
         "[16:17]": {
-          "link": "literaryForm",
+          "link": "marc:literaryForm",
           "uriTemplate": "{_}",
-          "tokenMap": "booksLiteraryForm"
+          "tokenMap": "BooksLiteraryFormType"
         },
         "[17:18]": {
-          "link": "biography",
+          "link": "marc:biography",
           "uriTemplate": "{_}",
-          "tokenMap": "booksBiography"
+          "tokenMap": "BooksBiographyType"
         }
       },
       "Audio": {
         "[1:3]": {
-          "link": "composition",
+          "link": "marc:composition",
           "uriTemplate": "{_}",
-          "tokenMap": "musicComposition"
+          "tokenMap": "MusicCompositionType"
         },
         "[3:4]": {
-          "link": "additionalType",
+          "link": "marc:additionalType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicFormat"
+          "tokenMap": "MusicFormatType"
         },
         "[4:5]": {
-          "link": "parts",
+          "link": "marc:parts",
           "uriTemplate": "{_}",
-          "tokenMap": "musicParts"
+          "tokenMap": "MusicPartsType"
         },
         "[5:6]": {
           "link": "audience",
           "uriTemplate": "{_}",
-          "tokenMap": "booksAudience"
+          "tokenMap": "AudienceType"
         },
         "[6:7]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicItem"
+          "tokenMap": "ItemType"
         },
         "[7:8]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "musicMatter"
+          "tokenMap": "MusicMatterType"
         },
         "[8:9]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "musicMatter"
+          "tokenMap": "MusicMatterType"
         },
         "[9:10]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "musicMatter"
+          "tokenMap": "MusicMatterType"
         },
         "[10:11]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "musicMatter"
+          "tokenMap": "MusicMatterType"
         },
         "[11:12]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "musicMatter"
+          "tokenMap": "MusicMatterType"
         },
         "[12:13]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "musicMatter"
+          "tokenMap": "MusicMatterType"
         },
         "[13:14]": {
-          "link": "text",
+          "link": "marc:text",
           "uriTemplate": "{_}",
-          "tokenMap": "musicText"
+          "tokenMap": "MusicTextType"
         },
         "[14:15]": {
-          "link": "text",
+          "link": "marc:text",
           "uriTemplate": "{_}",
-          "tokenMap": "musicText"
+          "tokenMap": "MusicTextType"
         },
         "[16:17]": {
-          "link": "transposition",
+          "link": "marc:transposition",
           "uriTemplate": "{_}",
-          "tokenMap": "musicTransposition"
+          "tokenMap": "MusicTranspositionType"
         }
       },
       "Cartography": {
         "[1:2]": {
-          "link": "relief",
+          "link": "marc:relief",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsRelief"
+          "tokenMap": "MapsReliefType"
         },
         "[2:3]": {
-          "link": "relief",
+          "link": "marc:relief",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsRelief"
+          "tokenMap": "MapsReliefType"
         },
         "[3:4]": {
-          "link": "relief",
+          "link": "marc:relief",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsRelief"
+          "tokenMap": "MapsReliefType"
         },
         "[4:5]": {
-          "link": "relief",
+          "link": "marc:relief",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsRelief"
+          "tokenMap": "MapsReliefType"
         },
         "[5:7]": {
-          "link": "projection",
+          "link": "marc:projection",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsProjection"
+          "tokenMap": "MapsProjectionType"
         },
         "[8:9]": {
-          "link": "material",
+          "link": "marc:material",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsMaterial"
+          "tokenMap": "MapsMaterialType"
         },
         "[11:12]": {
-          "link": "govtPub",
+          "link": "marc:govtPub",
           "uriTemplate": "{_}",
-          "tokenMap": "booksGovtPub"
+          "tokenMap": "GovernmentPublicationType"
         },
         "[12:13]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicItem"
+          "tokenMap": "ItemType"
         },
         "[14:15]": {
-          "link": "index",
+          "link": "marc:index",
           "uriTemplate": "{_}",
-          "tokenMap": "booksIndex"
+          "tokenMap": "IndexType",
+          "fixedDefault": "0"
         },
         "[16:17]": {
-          "link": "additionalType",
+          "link": "marc:additionalType",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsFormat"
+          "tokenMap": "MapsFormatType"
         },
         "[17:18]": {
-          "link": "additionalType",
+          "link": "marc:additionalType",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsFormat"
+          "tokenMap": "MapsFormatType"
         },
         "[7:8]": {
-          "link": "primeMeridian",
+          "link": "marc:primeMeridian",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsPrimeMeridian"
+          "tokenMap": "MapsPrimeMeridianType"
         }
       },
       "Visual": {
         "[1:4]": {
-          "property": "runningTime",
+          "property": "marc:runningTime",
           "TODO:patternMap": "visualRunningTime"
         },
         "[5:6]": {
           "link": "audience",
           "uriTemplate": "{_}",
-          "tokenMap": "booksAudience"
+          "tokenMap": "AudienceType"
         },
         "[11:12]": {
-          "link": "govtPub",
+          "link": "marc:govtPub",
           "uriTemplate": "{_}",
-          "tokenMap": "booksGovtPub"
+          "tokenMap": "GovernmentPublicationType"
         },
         "[12:13]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicItem"
+          "tokenMap": "ItemType"
         },
         "[16:17]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "visualMaterial"
+          "tokenMap": "VisualMaterialType"
         },
         "[17:18]": {
-          "link": "technique",
+          "link": "marc:technique",
           "uriTemplate": "{_}",
-          "tokenMap": "visualTechnique"
+          "tokenMap": "VisualTechniqueType"
         },
         "[6:7]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "visualMatter"
+          "tokenMap": "VisualMatterType"
         },
         "[7:8]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "visualMatter"
+          "tokenMap": "VisualMatterType"
         },
         "[8:9]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "visualMatter"
+          "tokenMap": "VisualMatterType"
         },
         "[9:10]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "visualMatter"
+          "tokenMap": "VisualMatterType"
         },
         "[10:11]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "visualMatter"
+          "tokenMap": "VisualMatterType"
         }
       },
       "Digital": {
         "[5:6]": {
           "link": "audience",
           "uriTemplate": "{_}",
-          "tokenMap": "booksAudience"
+          "tokenMap": "AudienceType"
         },
         "[6:7]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "computerItem"
+          "tokenMap": "ComputerItemType"
         },
         "[9:10]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "computerTypeOfFile"
+          "tokenMap": "ComputerTypeOfFileType"
         },
         "[11:12]": {
-          "link": "govtPub",
+          "link": "marc:govtPub",
           "uriTemplate": "{_}",
-          "tokenMap": "booksGovtPub"
+          "tokenMap": "GovernmentPublicationType"
         }
       },
       "Mixed": {
         "[6:7]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicItem"
+          "tokenMap": "ItemType"
         },
         "[7:8]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicItem"
+          "tokenMap": "ItemType"
         }
       },
       "Serial": {
         "[1:2]": {
-          "link": "frequencyCategory",
+          "link": "marc:frequencyCategory",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsFrequency"
+          "tokenMap": "SerialsFrequencyType"
         },
         "[2:3]": {
-          "link": "regularity",
+          "link": "marc:regularity",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsRegularity"
+          "tokenMap": "SerialsRegularityType"
         },
         "[3:4]": {
-          "link": "iSSN",
+          "link": "marc:iSSN",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsISSN"
+          "tokenMap": "SerialsISSNType"
         },
         "[4:5]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsTypeOfSerial"
+          "tokenMap": "SerialsTypeOfSerialType"
         },
         "[5:6]": {
-          "link": "originalItem",
+          "link": "marc:originalItem",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsOriginalItem"
+          "tokenMap": "SerialsOriginalItemType"
         },
         "[6:7]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicItem"
+          "tokenMap": "ItemType"
         },
         "[7:8]": {
-          "link": "nature",
+          "link": "marc:nature",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsNature"
+          "tokenMap": "SerialsNatureType"
         },
         "[8:9]": {
-          "link": "contents",
+          "link": "marc:contents",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsContents"
+          "tokenMap": "SerialsContentsType"
         },
         "[9:10]": {
-          "link": "contents",
+          "link": "marc:contents",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsContents"
+          "tokenMap": "SerialsContentsType"
         },
         "[10:11]": {
-          "link": "contents",
+          "link": "marc:contents",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsContents"
+          "tokenMap": "SerialsContentsType"
         },
         "[11:12]": {
-          "link": "govtPub",
+          "link": "marc:govtPub",
           "uriTemplate": "{_}",
-          "tokenMap": "booksGovtPub"
+          "tokenMap": "GovernmentPublicationType"
         },
         "[12:13]": {
-          "link": "confPub",
-          "uriTemplate": "{_}",
-          "tokenMap": "booksConfPub"
+          "property": "marc:confPub",
+          "fixedDefault": "0",
+          "tokenMap": {"1": true, "0": false}
         },
         "[16:17]": {
-          "link": "alphabet",
+          "link": "marc:alphabet",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsAlphabet"
+          "tokenMap": "SerialsAlphabetType"
         },
         "[17:18]": {
-          "link": "typeOfEntry",
+          "link": "marc:typeOfEntry",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsTypeOfEntry"
+          "tokenMap": "SerialsTypeOfEntryType"
         }
       },
       "repeatable": true
@@ -755,529 +808,537 @@
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "mapMaterial"
+          "tokenMap": "MapMaterialType"
         },
         "[3:4]": {
-          "link": "color",
+          "link": "marc:color",
           "uriTemplate": "{_}",
-          "tokenMap": "mapColor"
+          "tokenMap": "MapColorType"
         },
         "[4:5]": {
-          "link": "medium",
+          "link": "marc:medium",
           "uriTemplate": "{_}",
-          "tokenMap": "mapMedium"
+          "tokenMap": "MapMediumType"
         },
         "[5:6]": {
-          "link": "reproduction",
+          "link": "marc:reproduction",
           "uriTemplate": "{_}",
-          "tokenMap": "mapReproduction"
+          "tokenMap": "ReproductionType"
         },
         "[6:7]": {
-          "link": "details",
+          "link": "marc:details",
           "uriTemplate": "{_}",
-          "tokenMap": "mapDetails"
+          "tokenMap": "MapDetailsType"
         },
         "[7:8]": {
-          "link": "posNeg",
+          "link": "marc:posNeg",
           "uriTemplate": "{_}",
-          "tokenMap": "mapPosNeg"
+          "tokenMap": "PolarityType"
         },
         "[2:3]": {
-          "link": "aspect",
+          "link": "marc:aspect",
           "uriTemplate": "{_}",
-          "tokenMap": "mapAspect"
+          "tokenMap": "MapAspectType",
+        "fixedDefault": " "
         }
       },
       "Electronic": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "computerMaterial"
+          "tokenMap": "ComputerMaterialType"
         },
         "[3:4]": {
-          "link": "color",
+          "link": "marc:color",
           "uriTemplate": "{_}",
-          "tokenMap": "computerColor"
+          "tokenMap": "ComputerColorType"
         },
         "[4:5]": {
-          "link": "dimensionsCategory",
+          "link": "marc:dimensionsCategory",
           "uriTemplate": "{_}",
-          "tokenMap": "computerDimensions"
+          "tokenMap": "ComputerDimensionsType"
         },
         "[5:6]": {
-          "link": "sound",
+          "link": "marc:sound",
           "uriTemplate": "{_}",
-          "tokenMap": "computerSound"
+          "tokenMap": "ComputerSoundType"
         },
         "[6:9]": {
           "property": "imageBitDepth",
           "TODO:patternMap": "computerImageBitDepth"
         },
         "[9:10]": {
-          "link": "fileFormats",
+          "link": "marc:fileFormats",
           "uriTemplate": "{_}",
-          "tokenMap": "computerFileFormats"
+          "tokenMap": "ComputerFileFormatsType"
         },
         "[10:11]": {
-          "link": "qATarget",
+          "link": "marc:qATarget",
           "uriTemplate": "{_}",
-          "tokenMap": "computerQATarget"
+          "tokenMap": "ComputerQATargetType"
         },
         "[11:12]": {
-          "link": "antecedent",
+          "link": "marc:antecedent",
           "uriTemplate": "{_}",
-          "tokenMap": "computerAntecedent"
+          "tokenMap": "ComputerAntecedentType"
         },
         "[12:13]": {
-          "link": "compression",
+          "link": "marc:compression",
           "uriTemplate": "{_}",
-          "tokenMap": "computerCompression"
+          "tokenMap": "ComputerCompressionType"
         },
         "[13:14]": {
-          "link": "reformattingQuality",
+          "link": "marc:reformattingQuality",
           "uriTemplate": "{_}",
-          "tokenMap": "computerReformattingQuality"
+          "tokenMap": "ComputerReformattingQualityType"
         },
         "[2:3]": {
-          "link": "fileAspect",
+          "link": "marc:fileAspect",
           "uriTemplate": "{_}",
-          "tokenMap": "mapAspect"
+          "tokenMap": "MapAspectType",
+        "fixedDefault": " "
         }
       },
       "Globe": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "globeMaterial"
+          "tokenMap": "GlobeMaterialType"
         },
         "[3:4]": {
-          "link": "color",
+          "link": "marc:color",
           "uriTemplate": "{_}",
-          "tokenMap": "mapColor"
+          "tokenMap": "MapColorType"
         },
         "[4:5]": {
-          "link": "medium",
+          "link": "marc:medium",
           "uriTemplate": "{_}",
-          "tokenMap": "globeMedium"
+          "tokenMap": "GlobeMediumType"
         },
         "[5:6]": {
-          "link": "reproduction",
+          "link": "marc:reproduction",
           "uriTemplate": "{_}",
-          "tokenMap": "mapReproduction"
+          "tokenMap": "ReproductionType"
         },
         "[2:3]": {
-          "link": "aspect",
+          "link": "marc:aspect",
           "uriTemplate": "{_}",
-          "tokenMap": "mapAspect"
+          "tokenMap": "MapAspectType",
+        "fixedDefault": " "
         }
       },
       "TactileMaterial": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "tacMaterial"
+          "tokenMap": "TacMaterialType"
         },
         "[3:4]": {
-          "link": "tacBrailleWriting",
+          "link": "marc:tacBrailleWriting",
           "uriTemplate": "{_}",
-          "tokenMap": "tacBrailleWriting"
+          "tokenMap": "TacBrailleWritingType"
         },
         "[4:5]": {
-          "link": "tacBrailleWriting",
+          "link": "marc:tacBrailleWriting",
           "uriTemplate": "{_}",
-          "tokenMap": "tacBrailleWriting"
+          "tokenMap": "TacBrailleWritingType"
         },
         "[5:6]": {
-          "link": "tacContraction",
+          "link": "marc:tacContraction",
           "uriTemplate": "{_}",
-          "tokenMap": "tacContraction"
+          "tokenMap": "TacContractionType"
         },
         "[6:7]": {
-          "link": "tacBrailleMusic",
+          "link": "marc:tacBrailleMusic",
           "uriTemplate": "{_}",
-          "tokenMap": "tacBrailleMusic"
+          "tokenMap": "TacBrailleMusicType"
         },
         "[7:8]": {
-          "link": "tacBrailleMusic",
+          "link": "marc:tacBrailleMusic",
           "uriTemplate": "{_}",
-          "tokenMap": "tacBrailleMusic"
+          "tokenMap": "TacBrailleMusicType"
         },
         "[8:9]": {
-          "link": "tacBrailleMusic",
+          "link": "marc:tacBrailleMusic",
           "uriTemplate": "{_}",
-          "tokenMap": "tacBrailleMusic"
+          "tokenMap": "TacBrailleMusicType"
         },
         "[9:10]": {
-          "link": "tacSpecPhysicalChar",
+          "link": "marc:tacSpecPhysicalChar",
           "uriTemplate": "{_}",
-          "tokenMap": "tacSpecPhysicalChar"
+          "tokenMap": "TacSpecPhysicalCharType"
         }
       },
       "ProjectedImage": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "projGraphMaterial"
+          "tokenMap": "ProjGraphMaterialType"
         },
         "[3:4]": {
-          "link": "projGraphColor",
+          "link": "marc:projGraphColor",
           "uriTemplate": "{_}",
-          "tokenMap": "projGraphColor"
+          "tokenMap": "ColorType"
         },
         "[4:5]": {
-          "link": "projGraphEmulsion",
+          "link": "marc:projGraphEmulsion",
           "uriTemplate": "{_}",
-          "tokenMap": "projGraphEmulsion"
+          "tokenMap": "ProjGraphEmulsionType"
         },
         "[5:6]": {
-          "link": "projGraphSound",
+          "link": "marc:projGraphSound",
           "uriTemplate": "{_}",
-          "tokenMap": "projGraphSound"
+          "tokenMap": "SoundType"
         },
         "[6:7]": {
-          "link": "projGraphMedium",
+          "link": "marc:projGraphMedium",
           "uriTemplate": "{_}",
-          "tokenMap": "projGraphMedium"
+          "tokenMap": "MediumType"
         },
         "[7:8]": {
-          "link": "projGraphDimensions",
+          "link": "marc:projGraphDimensions",
           "uriTemplate": "{_}",
-          "tokenMap": "projGraphDimensions"
+          "tokenMap": "ProjGraphDimensionsType"
         },
         "[8:9]": {
-          "link": "projGraphSupport",
+          "link": "marc:projGraphSupport",
           "uriTemplate": "{_}",
-          "tokenMap": "projGraphSupport"
+          "tokenMap": "ProjGraphSupportType"
         },
         "[2:3]": {
-          "link": "projGraphAspect",
+          "link": "marc:projGraphAspect",
           "uriTemplate": "{_}",
-          "tokenMap": "mapAspect"
+          "tokenMap": "MapAspectType",
+        "fixedDefault": " "
         }
       },
       "Microform": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "microformMaterial"
+          "tokenMap": "MicroformMaterialType"
         },
         "[3:4]": {
-          "link": "posNeg",
+          "link": "marc:posNeg",
           "uriTemplate": "{_}",
-          "tokenMap": "microformPosNeg"
+          "tokenMap": "PolarityType"
         },
         "[4:5]": {
-          "link": "dimensionsCategory",
+          "link": "marc:dimensionsCategory",
           "uriTemplate": "{_}",
-          "tokenMap": "microformDimensions"
+          "tokenMap": "MicroformDimensionsType"
         },
         "[5:6]": {
-          "link": "range",
+          "link": "marc:range",
           "uriTemplate": "{_}",
-          "tokenMap": "microformRange"
+          "tokenMap": "MicroformRangeType"
         },
         "[6:9]": {"property": "reductionRatioExactRightJustifiedWithLeadingZero"},
         "[9:10]": {
-          "link": "color",
+          "link": "marc:color",
           "uriTemplate": "{_}",
-          "tokenMap": "microformColor"
+          "tokenMap": "MicroformColorType"
         },
         "[10:11]": {
-          "link": "emulsion",
+          "link": "marc:emulsion",
           "uriTemplate": "{_}",
-          "tokenMap": "microformEmulsion"
+          "tokenMap": "MicroformEmulsionType"
         },
         "[11:12]": {
-          "link": "generation",
+          "link": "marc:generation",
           "uriTemplate": "{_}",
-          "tokenMap": "microformGeneration"
+          "tokenMap": "MicroformGenerationType"
         },
         "[12:13]": {
-          "link": "base",
+          "link": "marc:base",
           "uriTemplate": "{_}",
-          "tokenMap": "microformBase"
+          "tokenMap": "FilmBaseType"
         },
         "[2:3]": {
-          "link": "aspect",
+          "link": "marc:aspect",
           "uriTemplate": "{_}",
-          "tokenMap": "mapAspect"
+          "tokenMap": "MapAspectType",
+        "fixedDefault": " "
         }
       },
       "StillImage": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "nonProjMaterial"
+          "tokenMap": "NonProjMaterialType"
         },
         "[3:4]": {
-          "link": "nonProjColor",
+          "link": "marc:nonProjColor",
           "uriTemplate": "{_}",
-          "tokenMap": "nonProjColor"
+          "tokenMap": "ColorType"
         },
         "[4:5]": {
-          "link": "nonProjPrimary",
+          "link": "marc:nonProjPrimary",
           "uriTemplate": "{_}",
-          "tokenMap": "nonProjPrimary"
+          "tokenMap": "NonProjectedType"
         },
         "[5:6]": {
-          "link": "nonProjSecondary",
+          "link": "marc:nonProjSecondary",
           "uriTemplate": "{_}",
-          "tokenMap": "nonProjPrimary"
+          "tokenMap": "NonProjectedType"
         },
         "[2:3]": {
-          "link": "nonProjAspect",
+          "link": "marc:nonProjAspect",
           "uriTemplate": "{_}",
-          "tokenMap": "mapAspect"
+          "tokenMap": "MapAspectType",
+        "fixedDefault": " "
         }
       },
       "MovingImage": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicMaterial"
+          "tokenMap": "MotionPicMaterialType"
         },
         "[3:4]": {
-          "link": "motionPicColor",
+          "link": "marc:motionPicColor",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicColor"
+          "tokenMap": "MotionPicColorType"
         },
         "[4:5]": {
-          "link": "motionPicFormat",
+          "link": "marc:motionPicFormat",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicFormat"
+          "tokenMap": "MotionPicFormatType"
         },
         "[5:6]": {
-          "link": "motionPicSound",
+          "link": "marc:motionPicSound",
           "uriTemplate": "{_}",
-          "tokenMap": "projGraphSound"
+          "tokenMap": "SoundType"
         },
         "[6:7]": {
-          "link": "motionPicMedium",
+          "link": "marc:motionPicMedium",
           "uriTemplate": "{_}",
-          "tokenMap": "projGraphMedium"
+          "tokenMap": "MediumType"
         },
         "[7:8]": {
-          "link": "motionPicDimensions",
+          "link": "marc:motionPicDimensions",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicDimensions"
+          "tokenMap": "MotionPicDimensionsType"
         },
         "[8:9]": {
-          "link": "motionPicConfiguration",
+          "link": "marc:motionPicConfiguration",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicConfiguration"
+          "tokenMap": "MotionPicConfigurationOrVideoPlaybackType"
         },
         "[9:10]": {
-          "link": "motionPicElements",
+          "link": "marc:motionPicElements",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicElements"
+          "tokenMap": "MotionPicElementsType"
         },
         "[10:11]": {
-          "link": "motionPicPosNeg",
+          "link": "marc:motionPicPosNeg",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicPosNeg"
+          "tokenMap": "MotionPicPosNegType"
         },
         "[11:12]": {
-          "link": "motionPicGeneration",
+          "link": "marc:motionPicGeneration",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicGeneration"
+          "tokenMap": "MotionPicGenerationType"
         },
         "[12:13]": {
-          "link": "motionPicBase",
+          "link": "marc:motionPicBase",
           "uriTemplate": "{_}",
-          "tokenMap": "microformBase"
+          "tokenMap": "FilmBaseType"
         },
         "[13:14]": {
-          "link": "motionPicCategories",
+          "link": "marc:motionPicCategories",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicCategories"
+          "tokenMap": "MotionPicCategoriesType"
         },
         "[14:15]": {
-          "link": "motionPicColorStock",
+          "link": "marc:motionPicColorStock",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicColorStock"
+          "tokenMap": "MotionPicColorStockType"
         },
         "[15:16]": {
-          "link": "motionPicDeterioration",
+          "link": "marc:motionPicDeterioration",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicDeterioration"
+          "tokenMap": "MotionPicDeteriorationType"
         },
         "[16:17]": {
-          "link": "motionPicCompleteness",
+          "link": "marc:motionPicCompleteness",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicCompleteness"
+          "tokenMap": "MotionPicCompletenessType"
         },
         "[17:23]": {"property": "timeOfExamination"},
         "[2:3]": {
-          "link": "motionPicAspect",
+          "link": "marc:motionPicAspect",
           "uriTemplate": "{_}",
-          "tokenMap": "mapAspect"
+          "tokenMap": "MapAspectType",
+        "fixedDefault": " "
         }
       },
       "Kit": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "kitMaterial"
+          "tokenMap": "KitMaterialType"
         }
       },
       "NotatedMusic": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "kitMaterial"
+          "tokenMap": "KitMaterialType"
         }
       },
       "RemoteSensingImage": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "kitMaterial"
+          "tokenMap": "KitMaterialType"
         },
         "[3:4]": {
-          "link": "remoteSensImageAltitude",
+          "link": "marc:remoteSensImageAltitude",
           "uriTemplate": "{_}",
-          "tokenMap": "remoteSensImageAltitude"
+          "tokenMap": "RemoteSensImageAltitudeType"
         },
         "[4:5]": {
-          "link": "remoteSensImageAttitude",
+          "link": "marc:remoteSensImageAttitude",
           "uriTemplate": "{_}",
-          "tokenMap": "remoteSensImageAttitude"
+          "tokenMap": "RemoteSensImageAttitudeType"
         },
         "[5:6]": {
-          "link": "remoteSensImageCloud",
+          "link": "marc:remoteSensImageCloud",
           "uriTemplate": "{_}",
-          "tokenMap": "remoteSensImageCloud"
+          "tokenMap": "RemoteSensImageCloudType"
         },
         "[6:7]": {
-          "link": "remoteSensImageConstruction",
+          "link": "marc:remoteSensImageConstruction",
           "uriTemplate": "{_}",
-          "tokenMap": "remoteSensImageConstruction"
+          "tokenMap": "RemoteSensImageConstructionType"
         },
         "[7:8]": {
-          "link": "remoteSensImageUse",
+          "link": "marc:remoteSensImageUse",
           "uriTemplate": "{_}",
-          "tokenMap": "remoteSensImageUse"
+          "tokenMap": "RemoteSensImageUseType"
         },
         "[8:9]": {
-          "link": "remoteSensImageSensor",
+          "link": "marc:remoteSensImageSensor",
           "uriTemplate": "{_}",
-          "tokenMap": "remoteSensImageSensor"
+          "tokenMap": "RemoteSensImageSensorType"
         },
         "[9:11]": {
-          "link": "remoteSensImageData",
+          "link": "marc:remoteSensImageData",
           "uriTemplate": "{_}",
-          "tokenMap": "remoteSensImageData"
+          "tokenMap": "RemoteSensImageDataType"
         }
       },
       "SoundRecording": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "soundMaterial"
+          "tokenMap": "SoundMaterialType"
         },
         "[3:4]": {
-          "link": "soundSpeed",
+          "link": "marc:soundSpeed",
           "uriTemplate": "{_}",
-          "tokenMap": "soundSpeed"
+          "tokenMap": "SoundSpeedType"
         },
         "[4:5]": {
-          "link": "soundPlaybackChannel",
+          "link": "marc:soundPlaybackChannel",
           "uriTemplate": "{_}",
-          "tokenMap": "soundPlaybackChannel"
+          "tokenMap": "SoundPlaybackChannelType"
         },
         "[5:6]": {
-          "link": "soundGroove",
+          "link": "marc:soundGroove",
           "uriTemplate": "{_}",
-          "tokenMap": "soundGroove"
+          "tokenMap": "SoundGrooveType"
         },
         "[6:7]": {
-          "link": "soundDimensions",
+          "link": "marc:soundDimensions",
           "uriTemplate": "{_}",
-          "tokenMap": "soundDimensions"
+          "tokenMap": "SoundDimensionsType"
         },
         "[7:8]": {
-          "link": "soundTapeWidth",
+          "link": "marc:soundTapeWidth",
           "uriTemplate": "{_}",
-          "tokenMap": "soundTapeWidth"
+          "tokenMap": "SoundTapeWidthType"
         },
         "[8:9]": {
-          "link": "soundTapeConfiguration",
+          "link": "marc:soundTapeConfiguration",
           "uriTemplate": "{_}",
-          "tokenMap": "soundTapeConfiguration"
+          "tokenMap": "SoundTapeConfigurationType"
         },
         "[9:10]": {
-          "link": "soundKindOfDisc",
+          "link": "marc:soundKindOfDisc",
           "uriTemplate": "{_}",
-          "tokenMap": "soundKindOfDisc"
+          "tokenMap": "SoundKindOfDiscType"
         },
         "[10:11]": {
-          "link": "soundKindOfMaterial",
+          "link": "marc:soundKindOfMaterial",
           "uriTemplate": "{_}",
-          "tokenMap": "soundKindOfMaterial"
+          "tokenMap": "SoundKindOfMaterialType"
         },
         "[11:12]": {
-          "link": "soundKindOfCutting",
+          "link": "marc:soundKindOfCutting",
           "uriTemplate": "{_}",
-          "tokenMap": "soundKindOfCutting"
+          "tokenMap": "SoundKindOfCuttingType"
         },
         "[12:13]": {
-          "link": "soundPlaybackCharacter",
+          "link": "marc:soundPlaybackCharacter",
           "uriTemplate": "{_}",
-          "tokenMap": "soundPlaybackCharacter"
+          "tokenMap": "SoundPlaybackCharacterType"
         },
         "[13:14]": {
-          "link": "soundCapture",
+          "link": "marc:soundCapture",
           "uriTemplate": "{_}",
-          "tokenMap": "soundCapture"
+          "tokenMap": "SoundCaptureType"
         },
         "[2:3]": {
-          "link": "soundAspect",
+          "link": "marc:soundAspect",
           "uriTemplate": "{_}",
-          "tokenMap": "mapAspect"
+          "tokenMap": "MapAspectType",
+        "fixedDefault": " "
         }
       },
       "Text": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "textMaterial"
+          "tokenMap": "TextMaterialType"
         }
       },
       "VideoRecording": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "videoMaterial"
+          "tokenMap": "VideoMaterialType"
         },
         "[3:4]": {
-          "link": "videoColor",
+          "link": "marc:videoColor",
           "uriTemplate": "{_}",
-          "tokenMap": "videoColor"
+          "tokenMap": "VideoColorType"
         },
         "[4:5]": {
-          "link": "videoFormat",
+          "link": "marc:videoFormat",
           "uriTemplate": "{_}",
-          "tokenMap": "videoFormat"
+          "tokenMap": "VideoFormatType"
         },
         "[5:6]": {
-          "link": "videoSound",
+          "link": "marc:videoSound",
           "uriTemplate": "{_}",
-          "tokenMap": "projGraphSound"
+          "tokenMap": "SoundType"
         },
         "[6:7]": {
-          "link": "videoMedium",
+          "link": "marc:videoMedium",
           "uriTemplate": "{_}",
-          "tokenMap": "projGraphMedium"
+          "tokenMap": "MediumType"
         },
         "[7:8]": {
-          "link": "videoDimensions",
+          "link": "marc:videoDimensions",
           "uriTemplate": "{_}",
-          "tokenMap": "videoDimensions"
+          "tokenMap": "VideoDimensionsType"
         },
         "[8:9]": {
-          "link": "videoPlayback",
+          "link": "marc:videoPlayback",
           "uriTemplate": "{_}",
-          "tokenMap": "motionPicConfiguration"
+          "tokenMap": "MotionPicConfigurationOrVideoPlaybackType"
         }
       },
       "Unspecified": {},
@@ -1291,8 +1352,8 @@
               "hasFormat": [
                 {
                   "@type": ["Map"],
-                  "carrierType": [{"@id": "/def/enum/carrier/MapATwoDimensionalMap"}],
-                  "medium": {"@id": "/def/enum/carrier/Paper"}
+                  "carrierType": [{"@id": "marc:MapATwoDimensionalMap"}],
+                  "marc:medium": {"@id": "marc:Paper"}
                 }
               ]
             }
@@ -1309,16 +1370,15 @@
         "parseDateTime": "yyMMdd", "timeZone": "CET"
       },
       "[6:7]": {
-        "link": "_providerDateStatus",
+        "link": "marc:publicationStatus",
         "uriTemplate": "{_}",
-        "tokenMap": "publicationStatus",
-        "TODO:specialRule": "foldPublicationDate"
+        "tokenMap": "PublicationStatusType"
       },
       "[7:11]": {
-        "property": "_providerYear"
+        "property": "marc:publishedYear"
       },
       "[11:15]": {
-        "property": "_providerOtherYear"
+        "property": "marc:otherYear"
       },
       "[15:18]": {
         "addLink": "publicationCountry",
@@ -1343,15 +1403,15 @@
       },
       "[38:39]": {
         "aboutEntity": "?record",
-        "link": "modifiedRecord",
+        "link": "marc:modifiedRecord",
         "uriTemplate": "{_}",
-        "tokenMap": "modifiedRecord"
+        "tokenMap": "ModifiedRecordType"
       },
       "[39:40]": {
         "aboutEntity": "?record",
-        "link": "catalogingSource",
+        "link": "marc:catalogingSource",
         "uriTemplate": "{_}",
-        "tokenMap": "catalogingSource"
+        "tokenMap": "CatalogingSourceType"
       },
 
       "recTypeBibLevelMap": {
@@ -1384,385 +1444,387 @@
 
       "Text": {
         "[18:19]": {
-          "link": "illustrations",
+          "link": "marc:illustrations",
           "uriTemplate": "{_}",
-          "tokenMap": "booksIllustrations"
+          "tokenMap": "BooksIllustrationsType"
         },
         "[19:20]": {
-          "link": "illustrations",
+          "link": "marc:illustrations",
           "uriTemplate": "{_}",
-          "tokenMap": "booksIllustrations"
+          "tokenMap": "BooksIllustrationsType"
         },
         "[20:21]": {
-          "link": "illustrations",
+          "link": "marc:illustrations",
           "uriTemplate": "{_}",
-          "tokenMap": "booksIllustrations"
+          "tokenMap": "BooksIllustrationsType"
         },
         "[21:22]": {
-          "link": "illustrations",
+          "link": "marc:illustrations",
           "uriTemplate": "{_}",
-          "tokenMap": "booksIllustrations"
+          "tokenMap": "BooksIllustrationsType"
         },
         "[22:23]": {
           "link": "audience",
           "uriTemplate": "{_}",
-          "tokenMap": "booksAudience"
+          "tokenMap": "AudienceType"
         },
         "[23:24]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "booksItem"
+          "tokenMap": "BooksItemType"
         },
         "[24:25]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "booksContents"
+          "tokenMap": "BooksContentsType"
         },
         "[25:26]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "booksContents"
+          "tokenMap": "BooksContentsType"
         },
         "[26:27]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "booksContents"
+          "tokenMap": "BooksContentsType"
         },
         "[27:28]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "booksContents"
+          "tokenMap": "BooksContentsType"
         },
         "[28:29]": {
-          "link": "govtPub",
+          "link": "marc:govtPub",
           "uriTemplate": "{_}",
-          "tokenMap": "booksGovtPub"
+          "tokenMap": "GovernmentPublicationType"
         },
         "[29:30]": {
-          "link": "confPub",
-          "uriTemplate": "{_}",
-          "tokenMap": "booksConfPub"
+          "property": "marc:confPub",
+          "fixedDefault": "0",
+          "tokenMap": {"1": true, "0": false}
         },
         "[30:31]": {
-          "link": "festschrift",
-          "uriTemplate": "{_}",
-          "tokenMap": "booksFestschrift"
+          "property": "marc:festschrift",
+          "fixedDefault": "0",
+          "tokenMap": {"1": true, "0": false}
         },
         "[31:32]": {
-          "link": "index",
+          "link": "marc:index",
           "uriTemplate": "{_}",
-          "tokenMap": "booksIndex"
+          "tokenMap": "IndexType",
+          "fixedDefault": "0"
         },
         "[33:34]": {
-          "link": "literaryForm",
+          "link": "marc:literaryForm",
           "uriTemplate": "{_}",
-          "tokenMap": "booksLiteraryForm"
+          "tokenMap": "BooksLiteraryFormType"
         },
         "[34:35]": {
-          "link": "biography",
+          "link": "marc:biography",
           "uriTemplate": "{_}",
-          "tokenMap": "booksBiography"
+          "tokenMap": "BooksBiographyType"
         }
       },
       "Digital": {
         "[22:23]": {
           "link": "audience",
           "uriTemplate": "{_}",
-          "tokenMap": "booksAudience"
+          "tokenMap": "AudienceType"
         },
         "[23:24]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "computerItem"
+          "tokenMap": "ComputerItemType"
         },
         "[26:27]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "computerTypeOfFile"
+          "tokenMap": "ComputerTypeOfFileType"
         },
         "[28:29]": {
-          "link": "govtPub",
+          "link": "marc:govtPub",
           "uriTemplate": "{_}",
-          "tokenMap": "booksGovtPub"
+          "tokenMap": "GovernmentPublicationType"
         },
         "[18:19]": {
-          "link": "frequencyCategory",
+          "link": "marc:frequencyCategory",
           "uriTemplate": "{_}",
-          "tokenMap": "computerFrequency"
+          "tokenMap": "ComputerFrequencyType"
         },
         "[19:20]": {
-          "link": "regularity",
+          "link": "marc:regularity",
           "uriTemplate": "{_}",
-          "tokenMap": "computerRegularity"
+          "tokenMap": "ComputerRegularityType"
         }
       },
       "Cartography": {
         "[18:19]": {
-          "link": "relief",
+          "link": "marc:relief",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsRelief"
+          "tokenMap": "MapsReliefType"
         },
         "[19:20]": {
-          "link": "relief",
+          "link": "marc:relief",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsRelief"
+          "tokenMap": "MapsReliefType"
         },
         "[20:21]": {
-          "link": "relief",
+          "link": "marc:relief",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsRelief"
+          "tokenMap": "MapsReliefType"
         },
         "[21:22]": {
-          "link": "relief",
+          "link": "marc:relief",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsRelief"
+          "tokenMap": "MapsReliefType"
         },
         "[22:24]": {
-          "link": "projection",
+          "link": "marc:projection",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsProjection"
+          "tokenMap": "MapsProjectionType"
         },
         "[25:26]": {
-          "link": "material",
+          "link": "marc:material",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsMaterial"
+          "tokenMap": "MapsMaterialType"
         },
         "[28:29]": {
-          "link": "govtPub",
+          "link": "marc:govtPub",
           "uriTemplate": "{_}",
-          "tokenMap": "booksGovtPub"
+          "tokenMap": "GovernmentPublicationType"
         },
         "[29:30]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicItem"
+          "tokenMap": "ItemType"
         },
         "[31:32]": {
-          "link": "index",
+          "link": "marc:index",
           "uriTemplate": "{_}",
-          "tokenMap": "booksIndex"
+          "tokenMap": "IndexType",
+          "fixedDefault": "0"
         },
         "[33:34]": {
-          "link": "additionalType",
+          "link": "marc:additionalType",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsFormat"
+          "tokenMap": "MapsFormatType"
         },
         "[34:35]": {
-          "link": "additionalType",
+          "link": "marc:additionalType",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsFormat"
+          "tokenMap": "MapsFormatType"
         },
         "[24:25]": {
-          "link": "primeMeridian",
+          "link": "marc:primeMeridian",
           "uriTemplate": "{_}",
-          "tokenMap": "mapsPrimeMeridian"
+          "tokenMap": "MapsPrimeMeridianType"
         }
       },
       "Mixed": {
         "[23:24]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicItem"
+          "tokenMap": "ItemType"
         }
       },
       "Audio": {
         "[18:20]": {
-          "link": "composition",
+          "link": "marc:composition",
           "uriTemplate": "{_}",
-          "tokenMap": "musicComposition"
+          "tokenMap": "MusicCompositionType"
         },
         "[20:21]": {
-          "link": "additionalType",
+          "link": "marc:additionalType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicFormat"
+          "tokenMap": "MusicFormatType"
         },
         "[21:22]": {
-          "link": "parts",
+          "link": "marc:parts",
           "uriTemplate": "{_}",
-          "tokenMap": "musicParts"
+          "tokenMap": "MusicPartsType"
         },
         "[22:23]": {
           "link": "audience",
           "uriTemplate": "{_}",
-          "tokenMap": "booksAudience"
+          "tokenMap": "AudienceType"
         },
         "[23:24]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicItem"
+          "tokenMap": "ItemType"
         },
         "[24:25]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "musicMatter"
+          "tokenMap": "MusicMatterType"
         },
         "[25:26]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "musicMatter"
+          "tokenMap": "MusicMatterType"
         },
         "[26:27]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "musicMatter"
+          "tokenMap": "MusicMatterType"
         },
         "[27:28]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "musicMatter"
+          "tokenMap": "MusicMatterType"
         },
         "[28:29]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "musicMatter"
+          "tokenMap": "MusicMatterType"
         },
         "[29:30]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "musicMatter"
+          "tokenMap": "MusicMatterType"
         },
         "[30:31]": {
-          "link": "text",
+          "link": "marc:text",
           "uriTemplate": "{_}",
-          "tokenMap": "musicText"
+          "tokenMap": "MusicTextType"
         },
         "[31:32]": {
-          "link": "text",
+          "link": "marc:text",
           "uriTemplate": "{_}",
-          "tokenMap": "musicText"
+          "tokenMap": "MusicTextType"
         },
         "[33:34]": {
-          "link": "transposition",
+          "link": "marc:transposition",
           "uriTemplate": "{_}",
-          "tokenMap": "musicTransposition"
+          "tokenMap": "MusicTranspositionType"
         }
       },
       "Serial": {
         "[18:19]": {
-          "link": "frequencyCategory",
+          "link": "marc:frequencyCategory",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsFrequency"
+          "tokenMap": "SerialsFrequencyType"
         },
         "[19:20]": {
-          "link": "regularity",
+          "link": "marc:regularity",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsRegularity"
+          "tokenMap": "SerialsRegularityType"
         },
         "[20:21]": {
-          "link": "iSSN",
+          "link": "marc:iSSN",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsISSN"
+          "tokenMap": "SerialsISSNType"
         },
         "[21:22]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsTypeOfSerial"
+          "tokenMap": "SerialsTypeOfSerialType"
         },
         "[22:23]": {
-          "link": "originalItem",
+          "link": "marc:originalItem",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsOriginalItem"
+          "tokenMap": "SerialsOriginalItemType"
         },
         "[23:24]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicItem"
+          "tokenMap": "ItemType"
         },
         "[24:25]": {
-          "link": "nature",
+          "link": "marc:nature",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsNature"
+          "tokenMap": "SerialsNatureType"
         },
         "[25:26]": {
-          "link": "contents",
+          "link": "marc:contents",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsContents"
+          "tokenMap": "SerialsContentsType"
         },
         "[26:27]": {
-          "link": "contents",
+          "link": "marc:contents",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsContents"
+          "tokenMap": "SerialsContentsType"
         },
         "[27:28]": {
-          "link": "contents",
+          "link": "marc:contents",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsContents"
+          "tokenMap": "SerialsContentsType"
         },
         "[28:29]": {
-          "link": "govtPub",
+          "link": "marc:govtPub",
           "uriTemplate": "{_}",
-          "tokenMap": "booksGovtPub"
+          "tokenMap": "GovernmentPublicationType"
         },
         "[29:30]": {
-          "link": "confPub",
-          "uriTemplate": "{_}",
-          "tokenMap": "booksConfPub"
+          "property": "marc:confPub",
+          "fixedDefault": "0",
+          "tokenMap": {"1": true, "0": false}
         },
         "[33:34]": {
-          "link": "alphabet",
+          "link": "marc:alphabet",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsAlphabet"
+          "tokenMap": "SerialsAlphabetType"
         },
         "[34:35]": {
-          "link": "typeOfEntry",
+          "link": "marc:typeOfEntry",
           "uriTemplate": "{_}",
-          "tokenMap": "serialsTypeOfEntry"
+          "tokenMap": "SerialsTypeOfEntryType"
         }
       },
       "Visual": {
         "[18:21]": {
-          "property": "runningTime",
+          "property": "marc:runningTime",
           "TODO:patternMap": "visualRunningTime"
         },
         "[22:23]": {
           "link": "audience",
           "uriTemplate": "{_}",
-          "tokenMap": "booksAudience"
+          "tokenMap": "AudienceType"
         },
         "[28:29]": {
-          "link": "govtPub",
+          "link": "marc:govtPub",
           "uriTemplate": "{_}",
-          "tokenMap": "booksGovtPub"
+          "tokenMap": "GovernmentPublicationType"
         },
         "[29:30]": {
-          "link": "additionalCarrierType",
+          "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "musicItem"
+          "tokenMap": "ItemType"
         },
         "[33:34]": {
           "addLink": "contentType",
           "uriTemplate": "{_}",
-          "tokenMap": "visualMaterial"
+          "tokenMap": "VisualMaterialType"
         },
         "[34:35]": {
-          "link": "technique",
+          "link": "marc:technique",
           "uriTemplate": "{_}",
-          "tokenMap": "visualTechnique"
+          "tokenMap": "VisualTechniqueType"
         },
         "[23:24]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "visualMatter"
+          "tokenMap": "VisualMatterType"
         },
         "[24:25]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "visualMatter"
+          "tokenMap": "VisualMatterType"
         },
         "[25:26]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "visualMatter"
+          "tokenMap": "VisualMatterType"
         },
         "[26:27]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "visualMatter"
+          "tokenMap": "VisualMatterType"
         },
         "[27:28]": {
-          "link": "matter",
+          "link": "marc:matter",
           "uriTemplate": "{_}",
-          "tokenMap": "visualMatter"
+          "tokenMap": "VisualMatterType"
         }
       },
       "repeatable": false,
@@ -1775,14 +1837,11 @@
             "created": "1990-01-01T00:00:00.0+01:00",
             "about": {
               "language": [{"@id": "/def/languages/swe"}],
-              "_providerDateStatus": {"@id": "/def/enum/content/SingleKnownDateProbableDate"},
-              "_providerYear":  "1977",
+              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publishedYear":  "1977",
               "publicationCountry": [{"@id": "/def/countries/sw"}],
-              "biography": {"@id": "/def/enum/content/Autobiography"},
-              "confPub": {"@id": "/def/enum/content/NotAConferencePublication"},
-              "festschrift": {"@id": "/def/enum/content/NotAFestschrift"},
-              "index": {"@id": "/def/enum/content/NoIndex"},
-              "literaryForm": {"@id": "/def/enum/content/NotFictionNotFurtherSpecified"}
+              "marc:biography": {"@id": "marc:Autobiography"},
+              "marc:literaryForm": {"@id": "marc:NotFictionNotFurtherSpecified"}
             }
           }
         }
@@ -1821,7 +1880,7 @@
         }
       },
       "$c": {"aboutEntity": "?thing", "property": "termsOfAvailability"},
-      "$q": {"property": "identifierNote"},
+      "$q": {"property": "identifierNote", "TODO": "addProperty"},
       "$z": {
         "addProperty": "hiddenValue"
       },
@@ -2110,7 +2169,7 @@
 
     "040": {
       "aboutEntity": "?record",
-      "$a": {"link": "originalCatalogingAgency", "resourceType": "Organization", "property": "name"},
+      "$a": {"link": "marc:originalCatalogingAgency", "resourceType": "Organization", "property": "name"},
       "$b": {
         "addLink": "language",
         "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
@@ -3521,8 +3580,8 @@
       "[7:8]": null,
       "[17:18]": {
         "aboutEntity": "?record",
-        "link": "encLevel",
-        "tokenMap": "auth-encLevel",
+        "link": "marc:encLevel",
+        "tokenMap": "AuthorityEncLevelType",
         "uriTemplate": "{_}"
       },
       "_spec": [
@@ -3536,10 +3595,10 @@
             "@type": "Record",
             "@id": "/auth/140482",
             "controlNumber": "140482",
-            "encLevel": {"@id": "/def/enum/record/CompleteAuthorityRecord"},
-            "status": {"@id": "/def/enum/record/CorrectedOrRevised"},
+            "marc:encLevel": {"@id": "marc:CompleteAuthorityRecord"},
+            "marc:status": {"@id": "marc:CorrectedOrRevised"},
             "focus": {
-              "@type": ["Authority"],
+              "@type": ["Thing"],
               "@id": "/resource/auth/140482"
             }
           }
@@ -3557,117 +3616,114 @@
       },
       "[6:7]": {
         "aboutEntity": "?record",
-        "link": "subdivision",
+        "link": "marc:subdivision",
         "uriTemplate": "{_}",
-        "tokenMap": "subdivision"
+        "tokenMap": "SubdivisionType"
       },
       "[7:8]": {
         "aboutEntity": "?record",
-        "link": "romanization",
+        "link": "marc:romanization",
         "uriTemplate": "{_}",
-        "tokenMap": "romanization"
+        "tokenMap": "RomanizationType"
       },
       "[8:9]": {
         "aboutEntity": "?record",
-        "link": "languageOfCatalog",
+        "link": "marc:languageOfCatalog",
         "uriTemplate": "{_}",
-        "tokenMap": "languageOfCatalog"
+        "tokenMap": "LanguageOfCatalogType"
       },
       "[9:10]": {
         "aboutEntity": "?record",
-        "link": "kindOfRecord",
+        "link": "marc:kindOfRecord",
         "uriTemplate": "{_}",
-        "tokenMap": "kindOfRecord"
+        "tokenMap": "KindOfRecordType"
       },
       "[10:11]": {
         "aboutEntity": "?record",
-        "link": "catalogingRules",
+        "link": "marc:catalogingRules",
         "uriTemplate": "{_}",
-        "tokenMap": "catalogingRules"
+        "tokenMap": "CatalogingRulesType"
       },
       "[11:12]": {
         "aboutEntity": "?record",
-        "link": "subjectHeading",
+        "link": "marc:subjectHeading",
         "uriTemplate": "{_}",
-        "tokenMap": "subjectHeading"
+        "tokenMap": "SubjectHeadingType"
       },
       "[12:13]": {
         "aboutEntity": "?record",
-        "link": "typeOfSeries",
+        "link": "marc:typeOfSeries",
         "uriTemplate": "{_}",
-        "tokenMap": "typeOfSeries"
+        "tokenMap": "TypeOfSeriesType"
       },
       "[13:14]": {
         "aboutEntity": "?record",
-        "link": "numberedSeries",
+        "link": "marc:numberedSeries",
         "uriTemplate": "{_}",
-        "tokenMap": "numberedSeries"
+        "tokenMap": "NumberedSeriesType"
       },
       "[16:17]": {
         "aboutEntity": "?record",
-        "link": "headingSeries",
-        "uriTemplate": "{_}",
-        "tokenMap": "headingSeries"
+        "property": "marc:headingSeries",
+        "tokenMap": "HeadingType"
       },
       "[17:18]": {
         "aboutEntity": "?record",
-        "link": "subjectSubdivision",
+        "link": "marc:subjectSubdivision",
         "uriTemplate": "{_}",
-        "tokenMap": "subjectSubdivision"
+        "tokenMap": "SubjectSubdivisionType"
       },
       "[28:29]": {
         "aboutEntity": "?record",
-        "link": "govtAgency",
+        "link": "marc:govtAgency",
         "uriTemplate": "{_}",
-        "tokenMap": "govtAgency"
+        "tokenMap": "GovtAgencyType"
       },
       "[29:30]": {
         "aboutEntity": "?record",
-        "link": "reference",
+        "link": "marc:reference",
         "uriTemplate": "{_}",
-        "tokenMap": "reference"
+        "tokenMap": "ReferenceType"
       },
       "[31:32]": {
         "aboutEntity": "?record",
-        "link": "recordUpdate",
+        "link": "marc:recordUpdate",
         "uriTemplate": "{_}",
-        "tokenMap": "recordUpdate"
+        "tokenMap": "RecordUpdateType"
       },
       "[32:33]": {
         "aboutEntity": "?record",
-        "link": "personalName",
+        "link": "marc:personalName",
         "uriTemplate": "{_}",
-        "tokenMap": "personalName"
+        "tokenMap": "PersonalNameType"
       },
       "[33:34]": {
         "aboutEntity": "?record",
-        "link": "level",
+        "link": "marc:level",
         "uriTemplate": "{_}",
-        "tokenMap": "level"
+        "tokenMap": "LevelType"
       },
       "[38:39]": {
         "aboutEntity": "?record",
-        "link": "modifiedRecord",
+        "link": "marc:modifiedRecord",
         "uriTemplate": "{_}",
-        "tokenMap": "modifiedRecord"
+        "tokenMap": "ModifiedRecordType"
       },
       "[39:40]": {
         "aboutEntity": "?record",
-        "link": "catalogingSource",
+        "link": "marc:catalogingSource",
         "uriTemplate": "{_}",
-        "tokenMap": "catalogingSource"
+        "tokenMap": "CatalogingSourceType"
       },
       "[14:15]": {
         "aboutEntity": "?record",
-        "link": "headingMain",
-        "uriTemplate": "{_}",
-        "tokenMap": "headingSeries"
+        "property": "marc:headingMain",
+        "tokenMap": "HeadingType"
       },
       "[15:16]": {
         "aboutEntity": "?record",
-        "link": "headingSubject",
-        "uriTemplate": "{_}",
-        "tokenMap": "headingSeries"
+        "property": "marc:headingSubject",
+        "tokenMap": "HeadingType"
       },
       "repeatable": false
     },
@@ -4093,14 +4149,14 @@
         "targetEntity": "?record",
         "targetProperty": "holdingType",
         "valueMap": {
-          "ComponentPart": {"@id": "/def/enum/record/SinglePartItemHolding"},
-          "Collection": {"@id": "/def/enum/record/SinglePartItemHolding"},
-          "SubCollection": {"@id": "/def/enum/record/SinglePartItemHolding"},
-          "Monograph": {"@id": "/def/enum/record/SinglePartItemHolding"},
-          "SerialComponentPart": {"@id": "/def/enum/record/SerialItemHolding"},
-          "Integrating": {"@id": "/def/enum/record/SerialItemHolding"},
-          "Serial": {"@id": "/def/enum/record/SerialItemHolding"},
-          "?": {"@id": "/def/enum/record/MultipartItemHolding"},
+          "ComponentPart": {"@id": "marc:SinglePartItemHolding"},
+          "Collection": {"@id": "marc:SinglePartItemHolding"},
+          "SubCollection": {"@id": "marc:SinglePartItemHolding"},
+          "Monograph": {"@id": "marc:SinglePartItemHolding"},
+          "SerialComponentPart": {"@id": "marc:SerialItemHolding"},
+          "Integrating": {"@id": "marc:SerialItemHolding"},
+          "Serial": {"@id": "marc:SerialItemHolding"},
+          "?": {"@id": "marc:MultipartItemHolding"},
           "Periodical": null
         },
         "_spec": [
@@ -4113,7 +4169,7 @@
               }
             },
             "result": {
-              "holdingType": {"@id": "/def/enum/record/SinglePartItemHolding"},
+              "holdingType": {"@id": "marc:SinglePartItemHolding"},
               "about": {
                 "holdingFor": {
                   "@type": ["Monograph"]
@@ -4128,44 +4184,44 @@
     "000": {
       "[5:6]": {
         "aboutEntity": "?record",
-        "link": "status",
+        "link": "marc:status",
         "uriTemplate": "{_}",
-        "tokenMap": "status"
+        "tokenMap": "StatusType"
       },
       "[6:7]": {
         "aboutEntity": "?record",
-        "link": "holdingType",
+        "link": "marc:holdingType",
         "uriTemplate": "{_}",
-        "tokenMap": "holdingType"
+        "tokenMap": "HoldingType"
       },
       "[7:8]": {
         "aboutEntity": "?record",
-        "link": "statistics",
+        "link": "marc:statistics",
         "uriTemplate": "{_}",
-        "tokenMap": "statistics"
+        "tokenMap": "StatisticsType"
       },
       "[9:10]": {
         "aboutEntity": "?record",
-        "link": "characterCoding",
+        "link": "marc:characterCoding",
         "uriTemplate": "{_}",
         "fixedDefault": "a",
-        "tokenMap": "characterCoding"
+        "tokenMap": "CharacterCodingType"
       },
       "[17:18]": {
         "aboutEntity": "?record",
-        "link": "encLevel",
+        "link": "marc:encLevel",
         "uriTemplate": "{_}",
-        "tokenMap": "hold-encLevel"
+        "tokenMap": "HoldingEncLevelType"
       },
       "[18:19]": {
         "aboutEntity": "?record",
-        "link": "itemInfoInRecord",
-        "uriTemplate": "{_}",
-        "tokenMap": "itemInfoInRecord"
+        "property": "marc:itemInfoInRecord",
+        "tokenMap": {"i": true, "n": false},
+        "fixedDefault": "n"
       },
       "[20:24]": {
         "aboutEntity": "?record",
-        "property": "entryMap",
+        "property": "marc:entryMap",
         "fixedDefault": "4500",
         "TODO:patternMap": "entryMap"
       },
@@ -4181,10 +4237,9 @@
             "@type": "Record",
             "@id": "/hold/0000000",
             "controlNumber": "0000000",
-            "encLevel": {"@id": "/def/enum/record/HoldingsLevel1"},
-            "itemInfoInRecord": {"@id": "/def/enum/record/NoItemInformation"},
-            "status": {"@id": "/def/enum/record/New"},
-            "holdingType": {"@id": "/def/enum/record/SinglePartItemHolding"},
+            "marc:encLevel": {"@id": "marc:HoldingsLevel1"},
+            "marc:status": {"@id": "marc:New"},
+            "marc:holdingType": {"@id": "marc:SinglePartItemHolding"},
             "about": {
               "@type": "HeldMaterial",
               "@id": "/resource/hold/0000000",
@@ -4219,58 +4274,60 @@
         "parseDateTime": "yyMMdd", "timeZone": "CET"
       },
       "[6:7]": {
-        "link": "acquisitionStatus",
+        "link": "marc:acquisitionStatus",
         "uriTemplate": "{_}",
-        "tokenMap": "acquisitionStatus"
+        "tokenMap": "AcquisitionStatusType"
       },
       "[7:8]": {
-        "link": "acquisitionMethod",
+        "link": "marc:acquisitionMethod",
         "uriTemplate": "{_}",
-        "tokenMap": "acquisitionMethod"
+        "tokenMap": "AcquisitionMethodType"
       },
       "[8:12]": {
-        "property": "expectedAcquisitionEndDate",
+        "property": "marc:expectedAcquisitionEndDate",
         "TODO:parseDateTime": "yyMM", "timeZone": "CET",
         "fixedDefault": "    ",
         "matchAsDefault": "^ *0+ *$|^ +$|^\\|+$"
       },
       "[12:13]": {
-        "link": "generalRetentionPolicy",
+        "link": "marc:retentionPolicy",
         "uriTemplate": "{_}",
-        "tokenMap": "generalRetentionPolicy"
+        "tokenMap": "RetentionPolicyType"
       },
       "[13:14]": {
-        "link": "retentionPolicyType",
+        "link": "marc:specificRetentionPolicy",
         "uriTemplate": "{_}",
-        "tokenMap": "retentionPolicyType"
+        "tokenMap": "SpecificRetentionPolicyType",
+        "fixedDefault": " "
       },
       "[14:15]": {
-        "property": "retentionPolicyNumberOfUnits"
+        "property": "marc:retentionPolicyNumberOfUnits"
       },
       "[15:16]": {
-        "link": "retentionPolicyUnitType",
+        "link": "marc:retentionPolicyUnitType",
         "uriTemplate": "{_}",
-        "tokenMap": "retentionPolicyUnitType"
+        "tokenMap": "RetentionPolicyUnitType",
+        "fixedDefault": " "
       },
       "[16:17]": {
-        "link": "completeness",
+        "link": "marc:completeness",
         "uriTemplate": "{_}",
-        "tokenMap": "completeness"
+        "tokenMap": "CompletenessType"
       },
       "[17:20]": {
-        "property": "numberOfItems",
+        "property": "marc:numberOfItems",
         "parseZeroPaddedNumber": true,
         "fixedDefault": "|||"
       },
       "[20:21]": {
-        "link": "lendingPolicy",
+        "link": "marc:lendingPolicy",
         "uriTemplate": "{_}",
-        "tokenMap": "lendingPolicy"
+        "tokenMap": "LendingPolicyType"
       },
       "[21:22]": {
-        "link": "reproductionPolicy",
+        "link": "marc:reproductionPolicy",
         "uriTemplate": "{_}",
-        "tokenMap": "reproductionPolicy"
+        "tokenMap": "ReproductionPolicyType"
       },
       "[22:25]": {
         "addLink": "language",
@@ -4279,9 +4336,9 @@
         "fixedDefault": "und"
       },
       "[25:26]": {
-        "link": "copyReport",
+        "link": "marc:copyReport",
         "uriTemplate": "{_}",
-        "tokenMap": "copyReport"
+        "tokenMap": "CopyReportType"
       },
       "[26:32]": {
         "aboutEntity": "?record",
@@ -4314,7 +4371,7 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "about": {
-              "numberOfItems": 1
+              "marc:numberOfItems": 1
             }
           }
         },
@@ -4325,7 +4382,7 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "about": {
-              "numberOfItems": "NaN"
+              "marc:numberOfItems": "NaN"
             }
           }
         },
@@ -4336,8 +4393,8 @@
           "result": {
             "created": "2012-11-02T00:00:00.0+01:00",
             "about": {
-              "numberOfItems": 1,
-              "lendingPolicy": {"@id": "/def/enum/content/WillNotLend"}
+              "marc:numberOfItems": 1,
+              "marc:lendingPolicy": {"@id": "marc:WillNotLend"}
             }
           }
         }
