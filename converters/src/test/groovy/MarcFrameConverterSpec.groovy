@@ -273,7 +273,7 @@ class MarcFrameConverterSpec extends Specification {
         manageIds('auth', record, thing)
         then:
         record == ['@id': r('auth/123'), controlNumber: "123"]
-        thing == ['@id': r('/thing'), 'sameAs': [link('resource/auth/123')]]
+        thing == ['@id': '/thing', 'sameAs': [link('resource/auth/123')]]
     }
 
     def "should use record and thing id"() {
