@@ -13,6 +13,10 @@ import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
 import whelk.util.Tools
 
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+
 @Log
 class ImporterMain {
 
@@ -39,6 +43,7 @@ class ImporterMain {
 
     void goMysql(String collection) {
         def importer = pico.getComponent(MySQLImporter.class)
+        importer.storeOnly = true
         importer.doImport(collection)
         println("Starting LinkFinder for collection $collection")
         goLinkFind(collection)
@@ -55,6 +60,8 @@ class ImporterMain {
     }
 
     void goLinkFind(String collection) {
+        ExecutorService queue = Executors.newFixedThreadPool(10)
+
         def whelk = pico.getComponent(Whelk.class)
         def lf = pico.getComponent(LinkFinder.class)
         long startTime = System.currentTimeMillis()
@@ -64,14 +71,23 @@ class ImporterMain {
             doc = lf.findLinks(doc)
             doclist << doc
             if (++counter % 1000 == 0) {
-                whelk.bulkStore(doclist)
+                Document[] saveList = new Document[doclist.size()]
+                System.arraycopy(doclist.toArray(), 0, saveList, 0, doclist.size())
+                queue.execute({
+                    whelk.bulkStore(Arrays.asList(saveList))
+                } as Runnable)
                 doclist = []
             }
             Tools.printSpinner("Finding links. $counter documents analyzed ...", counter)
         }
         if (doclist.size() > 0) {
-            whelk.bulkStore(doclist)
+            queue.execute({
+                whelk.bulkStore(doclist)
+            } as Runnable)
         }
+        queue.shutdown()
+        queue.awaitTermination(7, TimeUnit.DAYS)
+
         println("Linkfinding completed. Elapsed time: ${System.currentTimeMillis()-startTime}")
     }
 

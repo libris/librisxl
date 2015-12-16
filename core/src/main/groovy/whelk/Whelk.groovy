@@ -96,7 +96,7 @@ class Whelk {
         return document
     }
 
-    void bulkStore(List<Document> documents, boolean createOrUpdate = true) {
+    void bulkStore(final List<Document> documents, boolean createOrUpdate = true) {
         if (storage.bulkStore(documents, createOrUpdate)) {
             if (elastic) {
                 elastic.bulkIndex(documents)

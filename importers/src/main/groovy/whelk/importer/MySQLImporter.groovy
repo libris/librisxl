@@ -27,6 +27,7 @@ class MySQLImporter {
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
 
     boolean cancelled = false
+    boolean storeOnly = false
 
     ExecutorService queue
     Semaphore tickets
@@ -76,8 +77,6 @@ class MySQLImporter {
 
         log.debug("Turning off versioning in storage")
         this.whelk.storage.versioning = false
-
-        eligibleDatasets = [collection]
 
         try {
 
@@ -275,7 +274,9 @@ class MySQLImporter {
                     convertedDocs[(it.manifest.collection)] << doc
                 }
                 convertedDocs.each { ds, docList ->
-                    if (isEligible(ds)) {
+                    if (storeOnly) {
+                        this.whelk.storage.bulkStore(docList, false)
+                    } else {
                         this.whelk.bulkStore(docList)
                     }
                 }
@@ -284,11 +285,6 @@ class MySQLImporter {
             }
         }
     }
-
-    private boolean isEligible(String ds) {
-        return (eligibleDatasets == null) || ds in eligibleDatasets
-    }
-
 
     Connection connectToUri(URI uri) {
         log.info("connect uri: $uri")
