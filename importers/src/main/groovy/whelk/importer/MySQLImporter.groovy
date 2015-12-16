@@ -27,7 +27,7 @@ class MySQLImporter {
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
 
     boolean cancelled = false
-    boolean storeOnly = false
+    boolean storageOnly = false
 
     ExecutorService queue
     Semaphore tickets
@@ -274,7 +274,7 @@ class MySQLImporter {
                     convertedDocs[(it.manifest.collection)] << doc
                 }
                 convertedDocs.each { ds, docList ->
-                    if (storeOnly) {
+                    if (storageOnly) {
                         this.whelk.storage.bulkStore(docList, false)
                     } else {
                         this.whelk.bulkStore(docList)

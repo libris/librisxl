@@ -4,7 +4,6 @@ import org.picocontainer.Characteristics
 import org.picocontainer.PicoContainer
 import whelk.Document
 import whelk.Whelk
-import whelk.component.Storage
 import whelk.converter.marc.MarcFrameConverter
 
 import groovy.util.logging.Slf4j as Log
@@ -43,7 +42,7 @@ class ImporterMain {
 
     void goMysql(String collection) {
         def importer = pico.getComponent(MySQLImporter.class)
-        importer.storeOnly = true
+        importer.storageOnly = true
         importer.doImport(collection)
         println("Starting LinkFinder for collection $collection")
         goLinkFind(collection)
