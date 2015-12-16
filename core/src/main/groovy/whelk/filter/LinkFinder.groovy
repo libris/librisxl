@@ -19,83 +19,92 @@ class LinkFinder {
     PostgreSQLComponent postgres
 
     static String ENTITY_QUERY
-    static String ENTRY_PATH = "data->'descriptions'->'entry'->>"
     static final ObjectMapper mapper = new ObjectMapper()
+
+    Map<String,String> CACHED_LINKS = [:]
+    //List<String> NOCHECK_LIST = []
 
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql
         ENTITY_QUERY = "SELECT data->'descriptions'->'items'->0->>'@id' AS uri FROM ${postgres.mainTableName} WHERE " +
-                "data->'descriptions'->'items' @> ?"
-
+                "data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
     }
 
+    int numCalls = 0
 
     Document findLinks(Document doc) {
-        boolean found = false
+        long startTime = System.currentTimeMillis()
+        numCalls = 0
         if (doc && doc.isJsonLd()) {
             // Check entry
             locateSomeEntity(doc.data.get("descriptions").get("entry"))
             for (item in doc.data.get("descriptions").get("items")) {
-                found = (locateSomeEntity(item) || found)
+                locateSomeEntity(item)
             }
         }
-        if (found) {
-            log.info("New and updated record: ${doc.data}")
-        }
+        log.trace("Cache size: ${CACHED_LINKS.size()}. Document ${doc.id} checked ${numCalls} links. Time elapsed: ${System.currentTimeMillis()-startTime}")
         return doc
     }
 
-    boolean locateSomeEntity(Map node) {
-        boolean found = false
+    void locateSomeEntity(Map node) {
         for (item in node) {
+            if (item.key == "@id" && item.value ==~ /\/some\?.+/) {
+                log.trace("Checking ${item.value}")
+                String foundLink = queryForLink(item.value.substring(6))
+                if (foundLink) {
+                    log.debug("Found link from string: $foundLink")
+                    item.value = foundLink
+                }
+            }
             if (item.value instanceof Map && item.value.get("@id") ==~ /\/some\?.+/) {
                 String foundLink = queryForLink(item.value.get("@id").substring(6))
                 if (foundLink) {
-                    log.info("Found link: $foundLink")
-                    item.value = foundLink
-                    found = true
+                    log.debug("Found link: $foundLink")
+                    item.value.put("@id", foundLink)
+                }
+            }
+            if (item.value instanceof List) {
+                for (listitem in item.value) {
+                    if (listitem instanceof Map) {
+                        locateSomeEntity(listitem)
+                    }
                 }
             }
         }
-        return found
     }
 
     String queryForLink(String queryString) {
-        def parameterList = []
-        StringBuilder queryAppendage = new StringBuilder("(")
+        numCalls++
+        if (CACHED_LINKS.containsKey(queryString)) {
+            log.trace("Using cached value ${CACHED_LINKS.get(queryString)} for $queryString")
+            return CACHED_LINKS.get(queryString)
+        }
         def queryMap = [:]
-        boolean first = true
         queryString.split("&").each { keyval ->
             def (key, val) = keyval.split("=")
             if (key == "type") {
                 key = "@type"
             }
-            if (!first) {
-                queryAppendage.append(" AND ")
-            }
-            queryAppendage.append(ENTRY_PATH+"'$key' = ?")
-            parameterList.add(val)
+            val = URLDecoder.decode(val, "UTF-8")
             queryMap.put(key, val)
-            first = false
         }
-        queryAppendage.append(")")
         Connection connection = postgres.getConnection()
+        String uri = null
         try {
-            log.debug("SQL : " + ENTITY_QUERY + " OR " + queryAppendage.toString())
+            PreparedStatement stmt = connection.prepareStatement(ENTITY_QUERY)
+
+            log.debug(" SQL : " + ENTITY_QUERY)
             log.debug("JSON : " + mapper.writeValueAsString([queryMap]))
-            PreparedStatement stmt = connection.prepareStatement(ENTITY_QUERY + " OR " + queryAppendage.toString())
             stmt.setObject(1, mapper.writeValueAsString([queryMap]), java.sql.Types.OTHER)
-            int parameterIndex = 2
-            for (value in parameterList) {
-                stmt.setString(parameterIndex++, value)
-            }
+            stmt.setObject(2, mapper.writeValueAsString(queryMap), java.sql.Types.OTHER)
             ResultSet rs = stmt.executeQuery()
             if (rs.next()) {
-                return rs.getString("uri")
+                uri = rs.getString("uri")
             }
         } finally {
             connection.close()
         }
-        return null
+        CACHED_LINKS.put(queryString, uri)
+        return uri
     }
 }

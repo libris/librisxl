@@ -19,8 +19,9 @@
     <logger name="whelk.component.ElasticSearch" level="info"/>
     <logger name="whelk.filter.JsonLDLinkExpander" level="info"/>
     <logger name="whelk.importer.MySQLImporter" level="info"/>
+    <logger name="whelk.filter.LinkFinder" level="info"/>
 
-    <root level="info">
+    <root level=" info">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>

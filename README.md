@@ -148,11 +148,11 @@ Go back to the importers module.
 
 If you want to clear out any existing definitions (for reload or refresh)
 
-    $ echo "DELETE FROM lddb WHERE manifest-\>\>'collection' = 'definitions';"
+    $ echo "DELETE FROM lddb WHERE manifest->>'collection' = 'definitions';"
      |psql [-U yourdatabaseuser] yourdatabaseschema
-    $ echo "DELETE FROM lddb__versions WHERE manifest-\>\>'collection' = 'definitions';"
+    $ echo "DELETE FROM lddb__versions WHERE manifest->>'collection' = 'definitions';"
       |psql [-U yourdatabaseuser] yourdatabaseschema
-    $ curl -XDELETE http://localhost:9200/yourindexname/definitions/\_query
+    $ curl -XDELETE http://localhost:9200/yourindexname/definitions/_query
      -d '{"query":{"match_all": {}}}'
 
 Load the resulting resources into the running whelk:
@@ -283,11 +283,11 @@ This is now available as:
 
 If a new index is to be set up, and unless you run locally in a pristine setup, you need to put the config to the index, like (replace localhost with target machine):
 
-    $ curl -XPUT http://localhost:9200/indexname\_versionnumber -d @librisxl-tools/elasticsearch/libris_config.json
+    $ curl -XPUT http://localhost:9200/indexname_versionnumber -d @librisxl-tools/elasticsearch/libris_config.json
 
 Create an alias for your index
 
-    $ curl -XPOST http://localhost:9200/\_aliases -d  '{"actions":[{"add":{"index":"indexname\_versionnumber","alias":"indexname"}}]}'
+    $ curl -XPOST http://localhost:9200/_aliases -d  '{"actions":[{"add":{"index":"indexname_versionnumber","alias":"indexname"}}]}'
 
 
 (To replace an existing setup with entirely new configuration, you need to delete the index `curl -XDELETE http://localhost:9200/\<indexname\>/` and read all data again (even locally).)

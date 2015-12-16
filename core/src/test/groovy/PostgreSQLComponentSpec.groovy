@@ -53,7 +53,7 @@ class PostgreSQLComponentSpec extends Specification {
         doc.created == null
         doc.modified == null
         and:
-        Document r = storage.store(doc)
+        Document r = storage.store(doc, true)
         then:
         r.created != null
         r.modified != null
@@ -129,13 +129,13 @@ class PostgreSQLComponentSpec extends Specification {
         String cs
         Document doc = new Document("testid", ["key":"some data", "@id": "testid"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 10284701287, "checksum": "qwudhqiuwhdiu12872"])
         and:
-        doc = new Document("testid", ["@id": "testid", "key":"some data"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 1298461982639, "checksum": "qwudhqiuwhdiu1287ssss2"])
+                 doc = new Document("testid", ["@id": "testid", "key":"some data"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 1298461982639, "checksum": "qwudhqiuwhdiu1287ssss2"])
         when:
         cs = storage.calculateChecksum(doc)
         then:
-        cs == "52bfececee8e10e1ac8c19549b96811d"
+        cs == "16e8221f8f252482e4c12fd3fcc5703c"
         and:
-        cs == "52bfececee8e10e1ac8c19549b96811d"
+        cs == "16e8221f8f252482e4c12fd3fcc5703c"
 
     }
 

@@ -25,7 +25,6 @@ class MySQLImporter {
     JsonLDLinkCompleterFilter enhancer
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
-    static String EPLIKT_RECORD_DATASET_PREFIX = "e"
 
     boolean cancelled = false
 
@@ -82,7 +81,7 @@ class MySQLImporter {
 
         try {
 
-            Class.forName("com.mysql.jdbc.Driver")
+            Class.forName(JDBC_DRIVER)
 
             log.debug("Connecting to database...")
             conn = connectToUri(new URI(connectionUrl))
@@ -212,8 +211,8 @@ class MySQLImporter {
         if (record) {
             def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
             if ("SUPPRESSRECORD" in aList) {
-                log.debug("Record ${identifier} is suppressed. Setting collection to ${EPLIKT_RECORD_DATASET_PREFIX+collection} ...")
-                collection = EPLIKT_RECORD_DATASET_PREFIX + collection
+                log.debug("Record ${identifier} is suppressed.")
+                return
             }
             log.trace("building document $identifier")
             try {

@@ -25,13 +25,9 @@ class OaiPmhImporter {
     static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
-    static final String EPLIKT_DATASET_PREFIX = "e"
-
 
     String collection
-
     String serviceUrl
-
     int recordCount = 0
     int nrDeleted = 0
     int skippedRecordCount = 0
@@ -40,8 +36,6 @@ class OaiPmhImporter {
     boolean preserveTimestamps = true
 
     long runningTime = 0
-
-    boolean prepareDocuments = true
 
     ExecutorService queue
     Semaphore tickets
@@ -217,14 +211,13 @@ class OaiPmhImporter {
                         break
                     }
                     MarcRecord record = MarcXmlRecordReader.fromXml(mdrecord)
+                    Map document
                     log.trace("Marc record instantiated from XML.")
                     def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
-                    if ("SUPPRESSRECORD" in aList) {
-                        log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed. Setting collection to ${EPLIKT_DATASET_PREFIX+ds} ...")
-
-                        ds = EPLIKT_DATASET_PREFIX + ds
+                    if (!aList.contains("SUPPRESSRECORD")) {
+                        log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed.")
+                        document = createDocumentMap(record, recordDate, it.header, ds)
                     }
-                    def document = createDocumentMap(record, recordDate, it.header, ds)
                     if (document) {
                         documents << document
                         recordCount++
@@ -355,7 +348,7 @@ class OaiPmhImporter {
                 def convertedDocs = [:]
                 documents.each {
                     try {
-                        if (marcFrameConverter && !it.manifest.collection?.startsWith(EPLIKT_DATASET_PREFIX)) {
+                        if (marcFrameConverter) {
                             log.trace("Conversion starts.")
                             it.manifest['contentType'] = "application/x-marc-json"
                             Document doc = new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)
@@ -382,7 +375,7 @@ class OaiPmhImporter {
                                 }
                                 convertedDocs[(doc.collection)] << doc
                             }
-                        } else if (it.manifest.collection.startsWith(EPLIKT_DATASET_PREFIX)) {
+                        } else {
                             if (!convertedDocs.containsKey(it.manifest.collection)) {
                                 convertedDocs.put(it.manifest.collection, [])
                             }

@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    def groovyVersion="2.3.10"
+    def groovyVersion=GroovySystem.getVersion()
 
     // Sibling projects
     compile project(':../core')

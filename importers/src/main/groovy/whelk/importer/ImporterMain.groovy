@@ -11,6 +11,7 @@ import groovy.util.logging.Slf4j as Log
 import whelk.filter.LinkFinder
 import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
+import whelk.util.Tools
 
 @Log
 class ImporterMain {
@@ -39,6 +40,8 @@ class ImporterMain {
     void goMysql(String collection) {
         def importer = pico.getComponent(MySQLImporter.class)
         importer.doImport(collection)
+        println("Starting LinkFinder for collection $collection")
+        goLinkFind(collection)
     }
 
     void goReindex() {
@@ -54,14 +57,22 @@ class ImporterMain {
     void goLinkFind(String collection) {
         def whelk = pico.getComponent(Whelk.class)
         def lf = pico.getComponent(LinkFinder.class)
-        /*
-        println("Result1: " + lf.queryForLink("type=Organization&name=NB"))
-        println("Result2: " + lf.queryForLink("type=Place&label=Lund"))
-        println("Result3: " + lf.queryForLink("type=Person&givenName=Markus&familyName=Sköld"))
-        */
+        long startTime = System.currentTimeMillis()
+        def doclist = []
+        int counter = 0
         for (doc in whelk.storage.loadAll(collection)) {
             doc = lf.findLinks(doc)
+            doclist << doc
+            if (++counter % 1000 == 0) {
+                whelk.bulkStore(doclist)
+                doclist = []
+            }
+            Tools.printSpinner("Finding links. $counter documents analyzed ...", counter)
         }
+        if (doclist.size() > 0) {
+            whelk.bulkStore(doclist)
+        }
+        println("Linkfinding completed. Elapsed time: ${System.currentTimeMillis()-startTime}")
     }
 
     static void main(String... args) {
