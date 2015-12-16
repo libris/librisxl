@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 
 import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
+import org.elasticsearch.search.facet.FacetExecutor
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
 import whelk.Document
@@ -48,6 +49,9 @@ class PostgreSQLComponent implements Storage {
     ]
 
     String mainTableName
+
+    // for testing
+    PostgreSQLComponent() { }
 
     PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
         mainTableName = sqlMaintable
@@ -503,7 +507,8 @@ class PostgreSQLComponent implements Storage {
         log.trace("Calculating checksum with manifest: ${doc.manifest}")
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()
-        byte[] databytes = mapper.writeValueAsBytes(doc.data)
+        TreeMap sortedData = new TreeMap(doc.data)
+        byte[] databytes = mapper.writeValueAsBytes(sortedData)
         // Remove created and modified from manifest in preparation for checksum calculation
         Date created = doc.manifest.remove(Document.CREATED_KEY)
         Date modified = doc.manifest.remove(Document.MODIFIED_KEY)
