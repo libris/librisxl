@@ -30,13 +30,13 @@ class IdGeneratorSpec extends Specification {
 
     def "should encode and crc32 hash identifier"() {
         expect:
-        generator.generate(n, data) == id
+        generator.generate(n, data, 17) == id
         where:
         n               | data          | id
-        1449846940756   | "auth-1245"   | "lqsb00csjb1pfpr0"
-        1449846940756   | "bib-245555"  | "lqsb00csj5mzw5hp"
-        1449846940756   | "hold-11111"  | "lqsb00csj337qmh2"
-        99999999999999  | "far future"  | "gcprhmd0d910qkbb"
+        1449846940756   | "auth-1245"   | "lqsb00csjb1pfpr00"
+        1449846940756   | "bib-245555"  | "lqsb00csj5mzw5hp0"
+        1449846940756   | "hold-11111"  | "lqsb00csj337qmh20"
+        99999999999999  | "far future"  | "gcprhmd0d910qkbbj"
     }
 
     def "should generated time-based random id"() {
