@@ -8,7 +8,7 @@ class IdGenerator {
     static final char[] VOWELS = "aoueiy".chars
     static final char[] CONSONANTS = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
-    static final int IDENTIFIER_LENGTH = 16
+    static final int PADD_LENGTH = 7
 
     static char[] alphabet = CONSONANTS
 
@@ -16,21 +16,29 @@ class IdGenerator {
         return generate(System.currentTimeMillis(), null)
     }
 
-    static String generate(long timestamp, String data, int requiredIdLength = IDENTIFIER_LENGTH) {
-        StringBuilder identifier = new StringBuilder(baseEncode(timestamp, true))
+    static String generate(long timestamp, String data, int paddLength = PADD_LENGTH) {
+        StringBuilder padd = new StringBuilder()
         if (data) {
-            CRC32 crc32 = new CRC32()
-            crc32.update(data.getBytes("UTF-8"))
-            identifier.append(baseEncode(crc32.value, false))
-            while (identifier.length() < requiredIdLength) {
-                identifier.append('0')
+            String check = checksum(data)
+            if (check.length() > paddLength) {
+                check = check.substring(0, paddLength)
+            }
+            padd.append(check)
+            while (padd.length() < paddLength) {
+                padd.append('0')
             }
         } else {
-            while (identifier.length() < requiredIdLength) {
-                identifier.append(CONSONANTS[new Random().nextInt(CONSONANTS.length)])
+            while (padd.length() < paddLength) {
+                padd.append(CONSONANTS[new Random().nextInt(CONSONANTS.length)])
             }
         }
-        return identifier.substring(0,requiredIdLength).toString()
+        return baseEncode(timestamp, true) + padd.toString()
+    }
+
+    static String checksum(String data) {
+        CRC32 crc32 = new CRC32()
+        crc32.update(data.getBytes("UTF-8"))
+        return baseEncode(crc32.value, false)
     }
 
     static String baseEncode(long n, boolean lastDigitBasedCaesarCipher=false) {
