@@ -240,7 +240,7 @@ class MarcFrameConverterSpec extends Specification {
     }
 
     def manageIds = converter.conversion.&manageIds
-    def r = converter.conversion.&resolve
+    String r(path) { new URI("http://libris.kb.se/").resolve(path) }
     def link(v) { ['@id': r(v)] }
 
     def "should make ids"() {

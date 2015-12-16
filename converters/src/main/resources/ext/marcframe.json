@@ -9,11 +9,10 @@
     "z": "auth"
   },
 
-  "TODO:baseUri": "http://libris.kb.se/",
-  "baseUri": "/",
+  "baseUri": "https://libris.kb.se/",
   "uriTemplates": {
-    "record": "{marcType}/{controlNumber}",
-    "thing": "resource/{marcType}/{controlNumber}"
+    "record": "http://libris.kb.se/{marcType}/{controlNumber}",
+    "thing": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
   },
 
   "tokenMaps": [
@@ -134,20 +133,20 @@
 
   "patterns": {
     "termbase": {
-      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}",
+      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}{/inCollection.notation}/{prefLabel}",
+      "uriTemplateGlobals": ["?record.inCollection.notation"],
       "uriTemplateDefaults": {"inScheme.notation": "_"},
       "$a": {"property": "prefLabel"},
       "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
       "match-code": {
         "v x y z": {
-          "uriTemplate": null,
-          "uriTemplate": "/topic/{+inScheme.notation}{/termParts.prefLabel*}",
+          "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}{/inCollection.notation}{/termParts.prefLabel*}",
           "resourceType": "ComplexTerm",
           "$a": {"addLink": "termParts",
                  "resourceType": "TopicalTerm",
                  "property": "prefLabel", "required": true},
           "$v": {"addLink": "termParts",
-               "TODO": "use /topic/saogf/{_}, but only if $2=sao",
+               "TODO": "use /term/saogf/{_}, but only if $2=sao",
                  "resourceType": "GenreTerm",
                  "property": "prefLabel"},
           "$x": {"addLink": "termParts",
@@ -340,11 +339,11 @@
           "source": {"leader": "     cam a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
-            "@id": "/bib/0000000",
+            "@id": "http://libris.kb.se/bib/0000000",
             "marc:status": {"@id": "marc:CorrectedOrRevised"},
             "marc:catForm": {"@id": "marc:Aacr2"},
             "controlNumber": "0000000",
-            "about": {"@type": ["Text", "Monograph"], "@id": "/resource/bib/0000000"}
+            "about": {"@type": ["Text", "Monograph"], "@id": "http://libris.kb.se/resource/bib/0000000"}
           }
         }
       ]
@@ -488,7 +487,7 @@
           "tokenMap": "MusicCompositionType"
         },
         "[3:4]": {
-          "link": "marc:additionalType",
+          "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "MusicFormatType"
         },
@@ -601,12 +600,12 @@
           "fixedDefault": "0"
         },
         "[16:17]": {
-          "link": "marc:additionalType",
+          "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "MapsFormatType"
         },
         "[17:18]": {
-          "link": "marc:additionalType",
+          "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "MapsFormatType"
         },
@@ -1382,20 +1381,20 @@
       },
       "[15:18]": {
         "addLink": "publicationCountry",
-        "uriTemplate": "/def/countries/{_}",
+        "uriTemplate": "https://id.kb.se/country/{_}",
         "TODO:linkedEntity": {
           "link": "place",
           "linkedEntity": {
             "link": "containedIn",
             "resourceType": "Country",
-            "uriTemplate": "/def/countries/{_}"
+            "uriTemplate": "https://id.kb.se/country/{_}"
           }
         }
       },
       "[35:38]": {
         "NOTE:candidate:aboutEntity": "?work",
         "addLink": "language",
-        "uriTemplate": "/def/languages/{_}",
+        "uriTemplate": "https://id.kb.se/language/{_}",
         "matchUriToken": "^\\w{2,3}$",
         "spec": {
           "matches": ["swe", "sv"], "notMatches": ["N/A", " ", "---", "en-US", "en_us"]
@@ -1605,12 +1604,12 @@
           "fixedDefault": "0"
         },
         "[33:34]": {
-          "link": "marc:additionalType",
+          "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "MapsFormatType"
         },
         "[34:35]": {
-          "link": "marc:additionalType",
+          "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "MapsFormatType"
         },
@@ -1634,7 +1633,7 @@
           "tokenMap": "MusicCompositionType"
         },
         "[20:21]": {
-          "link": "marc:additionalType",
+          "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "MusicFormatType"
         },
@@ -1836,10 +1835,10 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "about": {
-              "language": [{"@id": "/def/languages/swe"}],
+              "language": [{"@id": "https://id.kb.se/language/swe"}],
               "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
               "marc:publishedYear":  "1977",
-              "publicationCountry": [{"@id": "/def/countries/sw"}],
+              "publicationCountry": [{"@id": "https://id.kb.se/country/sw"}],
               "marc:biography": {"@id": "marc:Autobiography"},
               "marc:literaryForm": {"@id": "marc:NotFictionNotFurtherSpecified"}
             }
@@ -1875,7 +1874,7 @@
         "splitValuePattern": "([^ ()]*)(?:\\s*\\(([^)]+)\\))?",
         "splitValueProperties": ["identifierValue", "identifierNote"],
         "defaults": {
-          "identifierScheme": {"@id": "/def/identifiers/isbn"},
+          "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"},
           "identifierStatus": null
         }
       },
@@ -1899,7 +1898,7 @@
               {"@type": "Identifier",
                 "identifierValue": "91-0-056322-6",
                 "identifierNote": "inb.",
-                "identifierScheme": {"@id": "/def/identifiers/isbn"}}],
+                "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"}}],
             "termsOfAvailability": "310:00"
           }}
         },
@@ -1927,7 +1926,7 @@
                 "@type": "Identifier",
                 "hiddenValue": ["9780230274396 (print)"],
                 "identifierNote": "e-book",
-                "identifierScheme": {"@id": "/def/identifiers/isbn"},
+                "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"},
                 "identifierValue": "9781137368331"
               }
             ]
@@ -1961,7 +1960,7 @@
               {
                 "@type": "Identifier",
                 "identifierNote": "US",
-                "identifierScheme": {"@id": "/def/identifiers/isbn"}
+                "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"}
               }
             ]
           }}
@@ -1977,7 +1976,7 @@
       "TODO:i1": {},
       "$a": {
         "property": "identifierValue",
-        "defaults": {"identifierScheme": {"@id": "/def/identifiers/issn"}}
+        "defaults": {"identifierScheme": {"@id": "https://id.kb.se/vocab/ISSN"}}
       },
       "$m": {"TODO:addProperty": "canceledIssnL"},
       "$l": {"TODO:property": "issnL"},
@@ -1986,7 +1985,7 @@
       "$z": {
         "property": "identifierValue",
         "defaults": {
-          "identifierScheme": {"@id": "/def/identifiers/issn"},
+          "identifierScheme": {"@id": "https://id.kb.se/vocab/ISSN"},
           "identifierStatus": "canceledInvalid"
         }
       }
@@ -2000,14 +1999,14 @@
       "i1": {
         "link": "identifierScheme",
         "tokenMap": {
-          "0": "isrc",
-          "1": "upc",
-          "2": "ismn",
-          "3": "ean",
-          "4": "sici"
+          "0": "ISRC",
+          "1": "UPC",
+          "2": "ISMN",
+          "3": "EAN",
+          "4": "SICI"
         },
         "definedElsewhereToken": "7",
-        "uriTemplate": "/def/identifiers/{_}",
+        "uriTemplate": "https://id.kb.se/vocab/{_}",
         "property": "notation",
         "matchUriToken": "^\\S+$"
       },
@@ -2017,7 +2016,6 @@
       "$2": {
         "requires-i1": "7",
         "link": "identifierScheme",
-        "uriTemplate": "/def/identifiers/{_}",
         "property": "notation",
         "matchUriToken": "^\\S+$",
         "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
@@ -2034,7 +2032,7 @@
                 {
                   "@type": "Identifier",
                   "identifierValue":  "1234567890",
-                  "identifierScheme": {"@id": "/def/identifiers/ean", "notation": "ean"}
+                  "identifierScheme": {"@id": "https://id.kb.se/vocab/EAN", "notation": "EAN"}
                 }
               ]
             }
@@ -2051,7 +2049,7 @@
                 {
                   "@type": "Identifier",
                   "identifierValue":  "1234567890",
-                  "identifierScheme": {"@id": "/def/identifiers/xyz", "notation": "xyz"}
+                  "identifierScheme": {"notation": "xyz"}
                 }
               ]
             }
@@ -2172,7 +2170,7 @@
       "$a": {"link": "marc:originalCatalogingAgency", "resourceType": "Organization", "property": "name"},
       "$b": {
         "addLink": "language",
-        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       },
       "$c": {"link": "transcribingAgency", "resourceType": "Organization", "property": "name"},
       "$d": {"link": "modifyingAgency", "resourceType": "Organization", "property": "name"},
@@ -2188,7 +2186,7 @@
         "TODO:unifyWith": ["008:language", "240.a?", "546"],
         "TODO": "not repeated if equal with existing",
         "addLink": "language",
-        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       },
       "$b": {
         "link": "hasSummaryLanguage"
@@ -2196,7 +2194,7 @@
       "$h": {
         "TODO": "sync with some isVersionOf/translationOf built from many fields",
         "addLink": "originalLanguage",
-        "uriTemplate": "/def/languages/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       },
       "$k": {
         "link": "translatedFromLanguage"
@@ -2335,11 +2333,11 @@
       "NOTE:candidate:aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "Concept",
-      "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
+      "uriTemplate": "http://id.kb.se/term/{+inScheme.notation}/{notation}",
       "uriTemplateDefaults": {"inScheme.notation": "kssb"},
       "$a": {"property": "notation", "required": true},
       "$2": {"link": "inScheme",
-             "resourceType": "ConceptScheme", "uriTemplate": "/scheme/{+_}",
+             "resourceType": "ConceptScheme", "uriTemplate": "https://id.kb.se/term/{+_}",
              "property": "notation"},
       "$b": {"property": "classificationItem", "ignored": true},
       "_spec": [
@@ -2476,7 +2474,7 @@
       "resourceType": "UniformWork",
       "$0": {
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
-        "uriTemplate": "/auth/{_}"
+        "uriTemplate": "http://libris.kb.se/auth/{_}"
       },
       "$a": {"property": "title"},
       "$k": {"addProperty": "subtitle"},
@@ -3086,7 +3084,7 @@
         "about": "_:concept",
         "link": "inScheme",
         "resourceType": "ConceptScheme",
-        "uriTemplate": "/scheme/{+_}",
+        "uriTemplate": "https://id.kb.se/term/{+_}",
         "property": "notation",
         "tokenMap": "thesaurus",
         "definedElsewhereToken": "7"
@@ -3110,7 +3108,7 @@
         "requires-i2": "7",
         "about": "_:concept",
         "link": "inScheme",
-        "uriTemplate": "/scheme/{+_}",
+        "uriTemplate": "https://id.kb.se/term/{+_}",
         "resourceType": "ConceptScheme",
         "property": "notation"
       },
@@ -3132,7 +3130,7 @@
                 "focusOf": {
                   "@type": "Concept",
                   "inScheme": {
-                    "@id": "/scheme/sao",
+                    "@id": "https://id.kb.se/term/sao",
                     "@type": "ConceptScheme",
                     "notation": "sao"
                   }
@@ -3156,10 +3154,7 @@
     "648": {
       "inherit": "650",
       "resourceType": "ChronologicalTerm",
-      "$a": {
-        "property": "prefLabel",
-        "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
-      }
+      "$a": {"property": "prefLabel"}
     },
     "650": {
       "inherit": "patterns:termbase",
@@ -3177,16 +3172,20 @@
       "i2": {
         "link": "inScheme",
         "resourceType": "ConceptScheme",
-        "uriTemplate": "/scheme/{+_}",
+        "uriTemplate": "https://id.kb.se/term/{+_}",
         "property": "notation",
         "tokenMap": "thesaurus"
       },
-      "$0": {"addLink": "sameAs", "uriTemplate": "/resource/auth/{_}", "property": "notation",
-             "ignored": true},
+      "$0": {
+        "addLink": "sameAs",
+        "uriTemplate": "http://libris.kb.se/resource/auth/{_}",
+        "property": "notation",
+        "ignored": true
+      },
       "$2": {
         "requires-i2": "7",
         "link": "inScheme",
-        "resourceType": "ConceptScheme", "uriTemplate": "/scheme/{+_}",
+        "resourceType": "ConceptScheme",
         "property": "notation"
       },
       "_spec": [
@@ -3199,7 +3198,7 @@
             "subject": [
               {
                 "@type": "ComplexTerm",
-                "@id":"/topic/lcsh/Information/Information%20Age",
+                "@id": "https://id.kb.se/term/lcsh/Information/Information%20Age",
                 "termParts": [
                   {
                     "@type": "TopicalTerm",
@@ -3211,7 +3210,7 @@
                   }
                 ],
                 "inScheme": {
-                  "@id": "/scheme/lcsh",
+                  "@id": "https://id.kb.se/term/lcsh",
                   "@type": "ConceptScheme",
                   "notation": "lcsh"
                 }
@@ -3243,7 +3242,7 @@
       "inherit": "650",
       "addLink": "genre",
       "resourceType": "GenreTerm",
-      "uriTemplate": "/topic/saogf/{prefLabel}"
+      "uriTemplate": "http://id.kb.se/term/saogf/{prefLabel}"
     },
 
     "658": {},
@@ -3353,7 +3352,7 @@
       "$u": {"property": "standardTechnicalReportNumber", "TODO:targetMatch": "027"},
       "$w": {
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
-        "uriTemplate": "/bib/{_}"
+        "uriTemplate": "http://libris.kb.se/bib/{_}"
       },
       "$x": {
         "TODO:targetMatch": "022",
@@ -3361,7 +3360,7 @@
         "embedded": true,
         "resourceType": "Identifier",
         "property": "identifierValue",
-        "defaults": {"identifierScheme": {"@id": "/def/identifiers/issn"}}
+        "defaults": {"identifierScheme": {"@id": "https://id.kb.se/vocab/ISSN"}}
       },
       "$y": {"property": "coden", "TODO:targetMatch": "030"},
       "$z": {
@@ -3370,7 +3369,7 @@
         "embedded": true,
         "resourceType": "Identifier",
         "property": "identifierValue",
-        "defaults": {"identifierScheme": {"@id": "/def/identifiers/isbn"}}
+        "defaults": {"identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"}}
       },
       "$9": {"addProperty": "partNumber"},
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
@@ -3388,7 +3387,7 @@
                 "identifier": [
                   {
                     "@type": "Identifier",
-                    "identifierScheme": {"@id": "/def/identifiers/isbn"},
+                    "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"},
                     "identifierValue": "00-0-000000-0"
                   }
                 ]
@@ -3554,12 +3553,12 @@
 
     "976": {
       "NOTE:candidate:aboutEntity": "?work",
-      "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
+      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{notation}",
       "addLink": "classification",
       "resourceType": "Concept",
       "i2": {
         "link": "inScheme", "resourceType": "ConceptScheme",
-        "uriTemplate": "/scheme/{+_}",
+        "uriTemplate": "https://id.kb.se/term/{+_}",
         "property": "notation",
         "tokenMap": {"0": "sab/6", "1": "sab/5", "2": "sab"},
         "TODO": "proper code for sab förkortad"
@@ -3593,13 +3592,13 @@
           },
           "result": {
             "@type": "Record",
-            "@id": "/auth/140482",
+            "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
             "marc:encLevel": {"@id": "marc:CompleteAuthorityRecord"},
             "marc:status": {"@id": "marc:CorrectedOrRevised"},
             "focus": {
               "@type": ["Thing"],
-              "@id": "/resource/auth/140482"
+              "@id": "http://libris.kb.se/resource/auth/140482"
             }
           }
         }
@@ -3737,14 +3736,14 @@
         "IMPROVE:about": "$thing if Concept else $record",
         "TODO": "inCollection if . = sgp?",
         "link": "inScheme", "resourceType": "ConceptScheme",
-        "uriTemplate": "/scheme/{_}",
+        "uriTemplate": "https://id.kb.se/term/{_}",
         "property": "notation"
       },
       "_spec": [
         {
           "source": {"040": {"subfields": [{"f":"barn"}]}},
           "result": {
-            "inScheme":  {"@type": "ConceptScheme", "@id": "/scheme/barn", "notation": "barn"}
+            "inScheme":  {"@type": "ConceptScheme", "@id": "https://id.kb.se/term/barn", "notation": "barn"}
           }
         }
       ]
@@ -3752,12 +3751,17 @@
     "042": {
       "aboutEntity": "?record",
       "$a": {"property": "authenticationCode"},
-      "$9": {"addLink": "inCollection", "resourceType": "TermCollection", "property": "notation"}
+      "$9": {
+        "addLink": "inCollection",
+        "resourceType": "TermCollection",
+        "uriTemplate": "https://id.kb.se/term/{_}",
+        "property": "notation"
+      }
     },
     "043" : {
       "$a": {
         "link": "nationality",
-        "uriTemplate": "/def/nationalities/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "notation"
+        "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "notation"
       }
     },
     "046" : {
@@ -3768,10 +3772,10 @@
     "065" : {
       "inherit": "083",
       "addLink": "broadMatch",
-      "uriTemplate": "/topic/{+inScheme.notation}/{notation}",
+      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{notation}",
       "$2": {
         "link": "inScheme", "resourceType": "ConceptScheme",
-        "uriTemplate": "/scheme/{+_}",
+        "uriTemplate": "https://id.kb.se/term/{+_}",
         "property": "notation"
       }
     },
@@ -3782,7 +3786,7 @@
       "resourceType": "TopicalTerm",
       "$a": {"property": "prefLabel"},
       "$z": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
-      "uriTemplate": "/topic/{+inScheme.notation}/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{prefLabel}"
     },
 
     "082" : {"inherit": "bib"},
@@ -3869,11 +3873,8 @@
       "aboutEntity": "?record",
       "aboutType": "ChronologicalTerm",
       "link": null, "resourceType": null,
-      "$a": {
-        "property": "prefLabel",
-        "defaults": {"inCollection": {"@id": "/topic/chronological/", "notation": "chronological"}}
-      },
-      "uriTemplate": "/topic/sao/{prefLabel}"
+      "$a": {"property": "prefLabel"},
+      "uriTemplate": "https://id.kb.se/term/sao/{prefLabel}"
     },
     "150" : {
       "inherit": "patterns:termbase",
@@ -3888,9 +3889,9 @@
           "source": {"150": {"subfields": [{"a": "Barnpsykologi"}]}},
           "result": {
             "@type": "TopicalTerm",
-            "@id": "/auth/140482",
+            "@id": "http://libris.kb.se/auth/140482",
             "prefLabel": "Barnpsykologi",
-            "sameAs":  [{"@id": "/topic/sao/Barnpsykologi"}]
+            "sameAs":  [{"@id": "https://id.kb.se/term/sao/Barnpsykologi"}]
           }
         }
       ]
@@ -3904,7 +3905,7 @@
       "inherit": "patterns:termbase",
       "aboutEntity": "?record",
       "resourceType": "GenreTerm",
-      "TODO:just-assert-inScheme=saogf?:uriTemplate": "/topic/saogf/{prefLabel}"
+      "TODO:just-assert-inScheme=saogf?:uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
     "162" : {
       "inherit": "patterns:termbase",
@@ -3919,7 +3920,7 @@
       "resourceType": "SubdivisionTerm",
       "$x": {
         "property": "prefLabel",
-        "defaults": {"inCollection": {"@id": "/topic/aspects/", "notation": "aspects"}}
+        "defaults": {"inCollection": {"@id": "https://id.kb.se/term/subdivisions", "notation": "subdivisions"}}
       }
     },
     "181" : {
@@ -3985,9 +3986,9 @@
         "x": {
           "addLink": "replaces",
           "resourceType": "ComplexTerm",
-          "uriTemplate": "/topic/sao/{termParts.prefLabel*}",
-          "$a": {"addLink": "termParts", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"},
-          "$x": {"addLink": "termParts", "uriTemplate": "/topic/sao/{_}", "property": "prefLabel"}
+          "uriTemplate": "https://id.kb.se/term/sao/{termParts.prefLabel*}",
+          "$a": {"addLink": "termParts", "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"},
+          "$x": {"addLink": "termParts", "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"}
         }
       },
       "TODO": "whatIs w||e"
@@ -4018,7 +4019,7 @@
           "source": {"550": {"subfields": [{"a": "Other"}]}},
           "result": {
             "related": [
-              {"@type": "TopicalTerm", "@id": "/topic/sao/Other", "prefLabel":  "Other"}
+              {"@type": "TopicalTerm", "@id": "https://id.kb.se/term/sao/Other", "prefLabel":  "Other"}
             ]
           }
         },
@@ -4027,7 +4028,7 @@
           "result": {
             "broader": [
               {"@type": "TopicalTerm",
-                "@id": "/topic/sao/Commedia%20dell%60arte",
+                "@id": "https://id.kb.se/term/sao/Commedia%20dell%60arte",
                 "prefLabel":  "Commedia dell`arte"}
             ]
           }
@@ -4037,12 +4038,12 @@
     "551" : {
         "inherit": "550",
       "resourceType": "GeographicalTerm",
-      "uriTemplate": "/place/{prefLabel}"
+      "uriTemplate": "http://id.kb.se/place/{prefLabel}"
     },
     "555" : {
       "inherit": "550",
       "resourceType": "GenreTerm",
-      "uriTemplate": "/topic/saogf/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
     "580" : {
       "TODO": "incomplete",
@@ -4096,11 +4097,11 @@
     "755" : {
       "inherit": "750",
       "resourceType": "GenreTerm",
-      "uriTemplate": "/topic/saogf/{prefLabel}",
+      "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "$2": {
         "requires-i2": "7",
         "link": "inScheme",
-        "resourceType": "ConceptScheme", "uriTemplate": "/scheme/{+_}",
+        "resourceType": "ConceptScheme", "uriTemplate": "https://id.kb.se/term/{+_}",
         "property": "notation",
         "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
       }
@@ -4235,15 +4236,15 @@
           ]},
           "result": {
             "@type": "Record",
-            "@id": "/hold/0000000",
+            "@id": "http://libris.kb.se/hold/0000000",
             "controlNumber": "0000000",
             "marc:encLevel": {"@id": "marc:HoldingsLevel1"},
             "marc:status": {"@id": "marc:New"},
             "marc:holdingType": {"@id": "marc:SinglePartItemHolding"},
             "about": {
               "@type": "HeldMaterial",
-              "@id": "/resource/hold/0000000",
-              "holdingFor": {"@id": "/resource/bib/7149593"}
+              "@id": "http://libris.kb.se/resource/hold/0000000",
+              "holdingFor": {"@id": "http://libris.kb.se/resource/bib/7149593"}
             }
           }
         }
@@ -4259,7 +4260,7 @@
 
     "004": {
       "aboutType": "HeldMaterial",
-      "link": "holdingFor", "uriTemplate": "/resource/bib/{_}",
+      "link": "holdingFor", "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
       "TODO:recordDescription(@reverse:about)": {"property": "controlNumber"}
     },
 
@@ -4331,7 +4332,7 @@
       },
       "[22:25]": {
         "addLink": "language",
-        "uriTemplate": "/def/languages/{_}",
+        "uriTemplate": "https://id.kb.se/language/{_}",
         "matchUriToken": "^\\w{2,3}$",
         "fixedDefault": "und"
       },
@@ -4354,7 +4355,7 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "about": {
-              "language": [{"@id": "/def/languages/swe"}]
+              "language": [{"@id": "https://id.kb.se/language/swe"}]
             }
           }
         },
