@@ -1,6 +1,7 @@
 package whelk
 
 import spock.lang.Specification
+import whelk.util.LegacyIntegrationTools
 
 class IdGeneratorSpec extends Specification {
 
@@ -35,11 +36,32 @@ class IdGeneratorSpec extends Specification {
         1449846940756   | "auth-1245"   | "lqsb00csjb1pfpr0"
         1449846940756   | "bib-245555"  | "lqsb00csj5mzw5hp"
         1449846940756   | "hold-11111"  | "lqsb00csj337qmh2"
-        99999999999999  | "far future"  | "gcprhmd0d910qkbbj"
+        99999999999999  | "far future"  | "gcprhmd0d910qkbb"
     }
 
     def "should generated time-based random id"() {
         expect:
         generator.generate() =~ /[bcdfghjklmnpqrstvwxz0-9]{16,}/
+    }
+
+    def "should generate valid id based on legacy id"() {
+        given:
+        def id = LegacyIntegrationTools.generateId(legacyId)
+        expect:
+        id.length() == 15
+        id.endsWith(endChar)
+        where:
+        legacyId          | endChar
+        "/auth/123551211" | "1"
+        "/bib/12312"      | "2"
+        "/hold/999999999" | "3"
+
+    }
+
+    def "should generate new id exactly 16 chars long"() {
+        given:
+        def id = IdGenerator.generate()
+        expect:
+        id.length() == 16
     }
 }
