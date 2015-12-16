@@ -15,7 +15,7 @@ class LegacyIntegrationTools {
         if (DATASET_ID_SEPARATOR.containsKey(parts[1])) {
             dataSetSuffix = DATASET_ID_SEPARATOR[parts[1]]
         }
-        return IdGenerator.generate(numericId, originalIdentifier, 14) + dataSetSuffix
+        return IdGenerator.generate(numericId, originalIdentifier, 5) + dataSetSuffix
     }
 
 }

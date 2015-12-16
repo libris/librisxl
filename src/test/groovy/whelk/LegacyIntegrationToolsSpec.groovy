@@ -17,4 +17,17 @@ class LegacyIntegrationToolsSpec extends Specification {
         "/hold/12345"   | "jz6g15x6h1ct513"
     }
 
+    def "should generate valid id based on legacy id"() {
+        given:
+        def id = tool.generateId(legacyId)
+        expect:
+        id.length() == 15
+        id.endsWith(endChar)
+        where:
+        legacyId          | endChar
+        "/auth/123551211" | "1"
+        "/bib/12312"      | "2"
+        "/hold/999999999" | "3"
+    }
+
 }
