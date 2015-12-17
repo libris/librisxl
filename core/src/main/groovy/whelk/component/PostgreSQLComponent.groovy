@@ -431,15 +431,12 @@ class PostgreSQLComponent implements Storage {
             }
             jsonbPath.append(" "+direction)
         }
-        println("orderstring: ${jsonbPath.toString()}")
         return jsonbPath.toString()
 
     }
 
     protected translateToSql(String key, String value, StorageType storageType) {
-        println("key: $key")
         def keyElements = key.split("\\.")
-        println("keyElements: $keyElements")
         StringBuilder jsonbPath = new StringBuilder(SQL_PREFIXES.get(storageType, ""))
         if (storageType == StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS) {
             if (keyElements[0] == "entry") {
@@ -458,7 +455,6 @@ class PostgreSQLComponent implements Storage {
                     nextMap = jsonbQueryStructure
                 }
                 nextMap.put(keyElements.last(), value)
-                println("queryStructure: $jsonbQueryStructure")
                 value = mapper.writeValueAsString([jsonbQueryStructure])
             }
         }
