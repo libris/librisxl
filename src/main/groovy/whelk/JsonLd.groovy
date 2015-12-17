@@ -121,7 +121,6 @@ public class JsonLd {
     }
 
     static URI findRecordURI(Map jsonLd) {
-        println("Looking in $jsonLd")
         String foundIdentifier = findIdentifier(jsonLd)
         if (foundIdentifier) {
             return Document.BASE_URI.resolve(foundIdentifier)
