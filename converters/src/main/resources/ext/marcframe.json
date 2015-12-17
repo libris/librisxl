@@ -132,10 +132,12 @@
   ],
 
   "patterns": {
-    "termbase": {
+    "termid": {
       "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}{/inCollection.notation}/{prefLabel}",
-      "uriTemplateGlobals": ["?record.inCollection.notation"],
-      "uriTemplateDefaults": {"inScheme.notation": "_"},
+      "uriTemplateDefaults": {"inScheme.notation": "_"}
+    },
+    "termbase": {
+      "inherit": "patterns:termid",
       "$a": {"property": "prefLabel"},
       "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
       "match-code": {
@@ -3781,6 +3783,7 @@
     },
 
     "073": {
+      "TODO": "ignore entirely (should be removed)",
       "aboutEntity": "?record",
       "addLink": "broader",
       "resourceType": "TopicalTerm",
@@ -3915,7 +3918,7 @@
     },
 
     "180" : {
-      "inherit": null,
+      "inherit": "patterns:termid",
       "aboutEntity": "?record",
       "resourceType": "SubdivisionTerm",
       "$x": {
@@ -3924,19 +3927,19 @@
       }
     },
     "181" : {
-      "inherit": null,
+      "inherit": "patterns:termid",
       "aboutEntity": "?record",
       "resourceType": "GeographicalSubdivisionTerm",
       "$z": {"property": "prefLabel"}
     },
     "182" : {
-      "inherit": null,
+      "inherit": "patterns:termid",
       "aboutEntity": "?record",
       "resourceType": "ChronologicalSubdivisionTerm",
       "$y": {"property": "prefLabel"}
     },
     "185" : {
-      "inherit": null,
+      "inherit": "patterns:termid",
       "aboutEntity": "?record",
       "resourceType": "GenreSubdivisionTerm",
       "$v": {"property": "prefLabel"}
