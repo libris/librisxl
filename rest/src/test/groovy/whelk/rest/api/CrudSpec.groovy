@@ -6,6 +6,7 @@ import whelk.Document
 import whelk.Location
 import whelk.Whelk
 import whelk.component.Storage
+import whelk.exception.StorageCreateFailedException
 
 import javax.servlet.ServletInputStream
 import javax.servlet.ServletOutputStream
@@ -54,16 +55,16 @@ class CrudSpec extends Specification {
 
     def "should return correct responseurl for PUT"() {
         when:
-        request.getRequestURL() >> { new StringBuffer("http://localhost:8180/whelk/bib/12354") }
-        String responseUrl = crud.getResponseUrl(request, "/bib/12354", "bib")
+        request.getRequestURL() >> { new StringBuffer("http://localhost:8180/whelk/fnörgel") }
+        String responseUrl = crud.getResponseUrl(request, "fnörgel")
         then:
-        responseUrl == "http://localhost:8180/whelk/bib/12354"
+        responseUrl == "http://localhost:8180/whelk/fnörgel"
     }
 
     def "should return correct responseurl for POST"() {
         when:
         request.getRequestURL() >> { new StringBuffer("http://localhost:8180/whelk/") }
-        String responseUrl = crud.getResponseUrl(request, "qwerty12345", "bib")
+        String responseUrl = crud.getResponseUrl(request, "qwerty12345")
         then:
         responseUrl == "http://localhost:8180/whelk/qwerty12345"
     }
@@ -186,8 +187,6 @@ class CrudSpec extends Specification {
         crud.doPost(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_CREATED
-
-
     }
 
     def "should create new document"() {
@@ -214,7 +213,35 @@ class CrudSpec extends Specification {
         then:
         response.getStatus() == HttpServletResponse.SC_CREATED
         response.getHeader("Location") == "https://libris.kb.se/dataset/identifier"
+    }
 
+    def "should deny create (POST) request for existing document"() {
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> { mapper.writeValueAsBytes(["@id":"/fnörgel","@type":"Record","contains":"some new data"]) }
+        request.getInputStream() >> { is }
+        request.getPathInfo() >> { "/" }
+        request.getMethod() >> { "POST" }
+        request.getContentType() >> { "application/ld+json" }
+        request.getAttribute(_) >> {
+            if (it.first() == "user") {
+                return ["user":"SYSTEM"]
+            }
+        }
+        request.getRequestURL() >> { return new StringBuffer("/") }
+        storage.locate(_,_) >> {
+            new Location(
+                    new Document(
+                            it.first(),
+                            ["@id":it.first(),"@type":"Record","contains":"some data"],
+                            ["collection":"dataset","modified":new Date().getTime(), "created":new Date(0).getTime()]
+                    ))
+        }
+        storage.store(_,_) >> { throw new Exception("This shouldn't happen") }
+        when:
+        Document doc = crud.createDocumentIfOkToSave(mapper.writeValueAsBytes(["@id":"/q1234","@type":"Record","contains":"some new data"]), "records", request, response)
+        then:
+        doc == null
+        response.getStatus() == HttpServletResponse.SC_CONFLICT
     }
 
     def "should set correct id from document if POSTing"() {
@@ -231,20 +258,13 @@ class CrudSpec extends Specification {
             }
         }
         request.getRequestURL() >> { return new StringBuffer("/records/") }
-        storage.load(_) >> {
-            new Document(
-                    it.first(),
-                    ["@id":it.first(),"@type":"Record","contains":"some data"],
-                    ["dataset":"dataset","modified":new Date().getTime(), "created":new Date(0).getTime()]
-            )
-        }
-        storage.store(_) >> { return it.first() }
+        storage.locate(_,_) >> { null }
         when:
         Document doc = crud.createDocumentIfOkToSave(mapper.writeValueAsBytes(["@id":"/q1234","@type":"Record","contains":"some new data"]), "records", request, response)
         then:
         doc != null
         doc.id == "q1234"
-        doc.dataset == "records"
+        doc.collection == "records"
     }
 
     def "should set correct id from path if PUTing"() {
@@ -299,7 +319,7 @@ class CrudSpec extends Specification {
                     ["dataset":"dataset","modified":new Date().getTime(), "created":new Date(0).getTime()]
             )
         }
-        storage.store(_) >> { throw new Exception("This shouldn't happen") }
+        storage.store(_,_) >> { throw new Exception("This shouldn't happen") }
         when:
         Document doc = crud.createDocumentIfOkToSave(mapper.writeValueAsBytes(["@id":"/dataset/id2","@type":"Record","contains":"some new data"]), "dataset", request, response)
         then:

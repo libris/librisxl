@@ -252,7 +252,7 @@ class Crud extends HttpServlet {
                 log.debug("Saving document (${doc.identifier})")
                 doc = whelk.store(doc, (request.getMethod() == "PUT"))
 
-                sendDocumentSavedResponse(response, getResponseUrl(request, doc.identifier, doc.dataset), doc.modified.getTime() as String)
+                sendDocumentSavedResponse(response, getResponseUrl(request, doc.identifier), doc.modified.getTime() as String)
             }
         } catch (StorageCreateFailedException scfe) {
             log.warn("Already have document with id ${scfe.duplicateId}")
@@ -277,13 +277,24 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Content-Type application/x-www-form-urlencoded is not supported")
             return null
         }
+
+        Map dataMap
+        if (Document.isJson(cType)) {
+            dataMap = mapper.readValue(data, Map)
+        } else {
+            dataMap = [(Document.NON_JSON_CONTENT_KEY): new String(data)]
+        }
+
         String identifier = null
         if (request.method == "POST") {
             int pathsize = request.pathInfo.split("/").size()
             log.debug("pathsize: $pathsize")
             if (pathsize != 0 && pathsize != 2) {
-                response.sendError(response.SC_BAD_REQUEST, "POST only allowed to root or dataset")
+                response.sendError(response.SC_BAD_REQUEST, "POST only allowed to root or collection")
                 return null
+            }
+            if (Document.isJsonLd(cType)) {
+                identifier = JsonLd.findIdentifier(dataMap)
             }
         }
         if (request.method == "PUT") {
@@ -292,12 +303,6 @@ class Crud extends HttpServlet {
                 return null
             }
             identifier = request.pathInfo.substring(1)
-        }
-        Map dataMap
-        if (Document.isJson(cType)) {
-            dataMap = mapper.readValue(data, Map)
-        } else {
-            dataMap = [(Document.NON_JSON_CONTENT_KEY): new String(data)]
         }
 
         Document existingDoc
@@ -312,6 +317,10 @@ class Crud extends HttpServlet {
         }
 
         if (existingDoc) {
+            if (request.method == "POST") {
+                response.sendError(HttpServletResponse.SC_CONFLICT, "Document with identifier ${identifier} already exists. Use PUT if you want to update.")
+                return null
+            }
             if (request.getHeader("If-Match") && existingDoc.modified as String != request.getHeader("If-Match")) {
                 log.debug("Document with identifier ${existingDoc.identifier} already exists.")
                 response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
@@ -351,7 +360,7 @@ class Crud extends HttpServlet {
     }
 
     // TODO: fix this for new URI:s
-    String getResponseUrl(HttpServletRequest request, String identifier, String dataset) {
+    String getResponseUrl(HttpServletRequest request, String identifier) {
         StringBuffer locationRef = request.getRequestURL()
         while (locationRef[-1] == '/') {
             locationRef.deleteCharAt(locationRef.length() - 1)
