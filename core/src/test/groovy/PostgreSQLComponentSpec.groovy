@@ -125,17 +125,14 @@ class PostgreSQLComponentSpec extends Specification {
     }
 
     def "should calculate correct checksum regardless of created, modified or previous checksum"() {
-        given:
-        String cs
-        Document doc = new Document("testid", ["key":"some data", "@id": "testid"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 10284701287, "checksum": "qwudhqiuwhdiu12872"])
-        and:
-                 doc = new Document("testid", ["@id": "testid", "key":"some data"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 1298461982639, "checksum": "qwudhqiuwhdiu1287ssss2"])
         when:
-        cs = storage.calculateChecksum(doc)
+        String cs1 = storage.calculateChecksum(new Document("testid", ["key":"some data", "@id": "testid"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 10284701287, "checksum": "qwudhqiuwhdiu12872"]))
+        String cs2 = storage.calculateChecksum(new Document("testid", ["@id": "testid", "key":"some data"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 1298461982639, "checksum": "qwudhqiuwhdiu1287ssss2"]))
+        String cs3 = storage.calculateChecksum(new Document("testid", ["@id": "testid", "key":"some new data"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 1298461982639, "checksum": "qwudhqiuwhdiu1287ssss2"]))
         then:
-        cs == "16e8221f8f252482e4c12fd3fcc5703c"
-        and:
-        cs == "16e8221f8f252482e4c12fd3fcc5703c"
+        cs1 == "16e8221f8f252482e4c12fd3fcc5703c"
+        cs2 == "16e8221f8f252482e4c12fd3fcc5703c"
+        cs3 == "eb5a60fe9ba7a02f1b2e58a30328762a"
 
     }
 

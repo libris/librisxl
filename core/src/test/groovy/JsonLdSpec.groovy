@@ -51,30 +51,25 @@ class JsonLdSpec extends Specification {
         JsonLd.isFlat(framedJson) == false
     }
 
-    static Map descriptionDocument = [
-            "descriptions": [
-                    "entry": [
-                            "@id": "/qowiudhqw",
-                            "name": "foo"
-                    ],
-                    "items": [
-                            ["@id":"/qowiudhqw#it"]
-                    ]
-            ]
-    ]
-
     def "should retrieve actual URI from @id in document"() {
-        given:
-        def data = new HashMap(descriptionDocument)
-        and:
-        data['descriptions']['entry']['@id'] = "http://id.kb.se/foo/bar"
         when:
-        URI uri = JsonLd.findRecordURI(data)
+        URI uri1 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "/qowiudhqw", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
+        URI uri2 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "http://id.kb.se/foo/bar", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
         then:
-        uri.toString() == "https://libris.kb.se/qowiudhqw"
-        and:
-        uri.toString() == "http://id.kb.se/foo/bar"
+        uri1.toString() == "https://libris.kb.se/qowiudhqw"
+        uri2.toString() == "http://id.kb.se/foo/bar"
 
+    }
+
+    def "should find database id from @id in document"() {
+        when:
+        String s1 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "/qowiudhqw", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
+        String s2 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "http://id.kb.se/foo/bar", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
+        String s3 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "https://libris.kb.se/qowiudhqw", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
+        then:
+        s1 == "qowiudhqw"
+        s2 == "http://id.kb.se/foo/bar"
+        s3 == "qowiudhqw"
     }
 
     static String loadJsonLdFile(String fileName) {
