@@ -31,6 +31,14 @@ class PropertyLoader {
             }
             props.load(propStream)
         }
+        // Load version property
+        InputStream verStream = PropertyLoader.class.getClassLoader().getResourceAsStream("version"+ PROPERTY_EXTENSION)
+        if (verStream == null) {
+            props.setProperty("version", "unknown")
+        } else {
+            props.load(verStream)
+        }
+
         return props
     }
 }

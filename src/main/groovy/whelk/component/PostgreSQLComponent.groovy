@@ -13,6 +13,7 @@ import whelk.exception.StorageCreateFailedException
 
 import java.security.MessageDigest
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.sql.Timestamp
 import java.sql.PreparedStatement
 import java.sql.Connection
@@ -94,7 +95,7 @@ class PostgreSQLComponent implements Storage {
         GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created' AS created,modified,manifest->>'deleted' AS deleted FROM $versionsTableName WHERE id = ? ORDER BY modified"
-        GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE manifest @> '{ \"${Document.ALTERNATE_ID_KEY}\": [?] }'"
+        GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
         LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND manifest->>'collection' = ?"
@@ -560,9 +561,9 @@ class PostgreSQLComponent implements Storage {
             doc = loadByAlternateIdentifier(identifier)
             if (doc) {
                 if (loadDoc) {
-                    return new Location(doc).withResponseCode(301)
+                    return new Location(doc).withResponseCode(303)
                 } else {
-                    return new Location().withURI(new URI("/").resolve(doc.identifier)).withResponseCode(301)
+                    return new Location().withURI(doc.getURI()).withResponseCode(303)
                 }
             }
         }
@@ -584,14 +585,17 @@ class PostgreSQLComponent implements Storage {
                 doc = docList[v]
             }
         } else if (version) {
-            doc = loadFromSql(id, version, GET_DOCUMENT_VERSION)
+            doc = loadFromSql(GET_DOCUMENT_VERSION, [1: id, 2: version])
         } else {
-            doc = loadFromSql(id, null, GET_DOCUMENT)
+            doc = loadFromSql(GET_DOCUMENT, [1: id])
         }
         return doc
     }
 
-    private Document loadFromSql(String id, String checksum, String sql) {
+
+
+
+    private Document oldLoadFromSql(String id, String checksum, String sql) {
         Document doc = null
         log.debug("loadFromSql $id ($sql)")
         Connection connection = getConnection()
@@ -631,9 +635,52 @@ class PostgreSQLComponent implements Storage {
         return doc
     }
 
+    private Document loadFromSql(String sql, Map<Integer, Object> parameters) {
+        Document doc = null
+        log.debug("loadFromSql $parameters ($sql)")
+        Connection connection = getConnection()
+        log.debug("Got connection.")
+        PreparedStatement selectstmt
+        ResultSet rs
+        try {
+            selectstmt = connection.prepareStatement(sql)
+            log.trace("Prepared statement")
+            for (items in parameters) {
+                if (items.value instanceof String) {
+                    selectstmt.setString(items.key, items.value)
+                }
+                if (items.value instanceof Map || items.value instanceof List) {
+                    selectstmt.setObject(items.key, mapper.writeValueAsString(items.value), java.sql.Types.OTHER)
+                }
+            }
+            log.trace("Executing query")
+            rs = selectstmt.executeQuery()
+            log.trace("Executed query.")
+            if (rs.next()) {
+                log.trace("next")
+                def manifest = mapper.readValue(rs.getString("manifest"), Map)
+                doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
+                doc.setModified(rs.getTimestamp("modified").getTime())
+                try {
+                    doc.setCreated(rs.getTimestamp("created").getTime())
+                    doc.deleted = rs.getBoolean("deleted")
+                } catch (SQLException sqle) {
+                    log.trace("Resultset didn't have created or deleted. Probably a version request.")
+                }
+                log.trace("Created document with id ${doc.id}")
+            } else if (log.isTraceEnabled()) {
+                log.trace("No results returned for get($id)")
+            }
+        } finally {
+            connection.close()
+        }
+
+        return doc
+    }
+
     Document loadByAlternateIdentifier(String identifier) {
-        String sql = GET_DOCUMENT_BY_ALTERNATE_ID.replace("?", '"' + identifier + '"')
-        return loadFromSql(null, null, sql)
+        //String sql = GET_DOCUMENT_BY_ALTERNATE_ID.replace("?", '"' + identifier + '"')
+        return loadFromSql(GET_DOCUMENT_BY_ALTERNATE_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]])
     }
 
     List<Document> loadAllVersions(String identifier) {
