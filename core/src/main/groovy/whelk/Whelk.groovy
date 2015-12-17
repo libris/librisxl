@@ -24,44 +24,51 @@ class Whelk {
     Index elastic
     APIX apix
     JsonLdLinkExpander expander
+    String version
 
-    public Whelk(Storage pg, Index es, APIX a, JsonLdLinkExpander ex) {
+    public Whelk(String version, Storage pg, Index es, APIX a, JsonLdLinkExpander ex) {
         this.storage = pg
         this.elastic = es
         this.apix = a
         this.expander = ex
+        this.version = version
         log.info("Whelk started with storage ${storage}, index $elastic, apix $apix and expander.")
     }
 
-    public Whelk(Storage pg, Index es, JsonLdLinkExpander ex) {
+    public Whelk(String version, Storage pg, Index es, JsonLdLinkExpander ex) {
         this.storage = pg
         this.elastic = es
         this.expander = ex
+        this.version = version
         log.info("Whelk started with storage ${storage}, index $elastic and expander.")
     }
 
-    public Whelk(Storage pg, Index es, APIX a) {
+    public Whelk(String version, Storage pg, Index es, APIX a) {
         this.storage = pg
         this.elastic = es
         this.apix = a
+        this.version = version
         log.info("Whelk started with storage $storage and index $elastic and apix $apix ")
     }
 
-    public Whelk(Storage pg, Index es) {
+    public Whelk(String version, Storage pg, Index es) {
         this.storage = pg
         this.elastic = es
+        this.version = version
         log.info("Whelk started with storage $storage and index $elastic")
     }
 
-    public Whelk(Storage pg, APIX a) {
+    public Whelk(String version, Storage pg, APIX a) {
         this.storage = pg
         this.apix = a
+        this.version = version
         log.info("Whelk started with storage $storage and apix $apix")
     }
 
 
-    public Whelk(Storage pg) {
+    public Whelk(String version, Storage pg) {
         this.storage = pg
+        this.version = version
         log.info("Whelk started with storage $storage")
     }
 
@@ -77,7 +84,7 @@ class Whelk {
                 pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(Class.forName(comProp.value))
             }
         }
-        pico.addComponent(Whelk.class)
+        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(Whelk.class)
         return pico
     }
 

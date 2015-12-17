@@ -66,6 +66,10 @@ class ImporterMain {
         def whelk = pico.getComponent(Whelk.class)
         def lf = pico.getComponent(LinkFinder.class)
         long startTime = System.currentTimeMillis()
+        /* some integration tests
+        println("Result1: " + lf.queryForLink("type=OrganizationTerm&controlNumber=63612"))
+        println("Result2: " + lf.queryForLink("type=Organization&name=St. Louis"))
+        */
         def doclist = []
         int counter = 0
         whelk.storage.versioning = false
@@ -89,7 +93,6 @@ class ImporterMain {
         }
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
-
         println("Linkfinding completed. Elapsed time: ${System.currentTimeMillis()-startTime}")
     }
 

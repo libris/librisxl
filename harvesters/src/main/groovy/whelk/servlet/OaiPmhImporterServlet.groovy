@@ -52,54 +52,64 @@ class OaiPmhImporterServlet extends HttpServlet {
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         def storage = pico.getComponent(PostgreSQLComponent)
+        String html
+        if (jobs) {
+            List collections = props.scheduledDatasets.split(",")
+            def state = [:]
+            StringBuilder table = new StringBuilder("<table cellspacing=\"10\"><tr><th>&nbsp;</th>")
+            table.append("<form method=\"post\">")
 
-        List collections = props.scheduledDatasets.split(",")
-        def state = [:]
-        StringBuilder table = new StringBuilder("<table cellspacing=\"10\"><tr><th>&nbsp;</th>")
-        table.append("<form method=\"post\">")
+            Set catSet = new TreeSet<String>()
 
-        Set catSet = new TreeSet<String>()
-
-        for (collection in collections) {
-            state[collection] = storage.loadSettings(collection)
-            catSet.addAll(state[collection].keySet())
-            table.append("<th>$collection</th>")
-        }
-        table.append("</tr>")
-        List categories = catSet.toList()
-
-        log.info("state: $state")
-        log.info("Categories: $catSet")
-
-        int i = 0
-        for (cat in categories) {
-            table.append("<tr><td align=\"right\"><b>$cat</b></td>")
             for (collection in collections) {
-                table.append("<td>${state.get(collection).get(cat) != null ? state.get(collection).get(cat) : "&nbsp;"}</td>")
+                state[collection] = storage.loadSettings(collection)
+                catSet.addAll(state[collection].keySet())
+                table.append("<th>$collection</th>")
             }
             table.append("</tr>")
-        }
-        table.append("<tr><td><input type=\"submit\" name=\"action_all\" value=\"stop all\"></td>")
-        for (collection in collections) {
-            table.append("<td><input type=\"submit\" name=\"action_${collection}\" value=\"${jobs[collection].active ? "stop" : "start"}\">")
-            if (!jobs[collection].active) {
-                String lastImportDate = jobs[collection].getLastImportValue().format("yyyy-MM-dd'T'HH:mm")
-                table.append("&nbsp;<input type=\"submit\" name=\"reset_${collection}\" value=\"reload $collection from\"/>&nbsp;<input type=\"datetime-local\" name=\"datevalue\" value=\"${lastImportDate}\"/>")
+            List categories = catSet.toList()
+
+            log.info("state: $state")
+            log.info("Categories: $catSet")
+
+            int i = 0
+            for (cat in categories) {
+                table.append("<tr><td align=\"right\"><b>$cat</b></td>")
+                for (collection in collections) {
+                    table.append("<td>${state.get(collection).get(cat) != null ? state.get(collection).get(cat) : "&nbsp;"}</td>")
+                }
+                table.append("</tr>")
             }
-            table.append("</td>")
-        }
-        table.append("</tr>")
+            table.append("<tr><td><input type=\"submit\" name=\"action_all\" value=\"stop all\"></td>")
+            for (collection in collections) {
+                table.append("<td><input type=\"submit\" name=\"action_${collection}\" value=\"${jobs[collection].active ? "stop" : "start"}\">")
+                if (!jobs[collection].active) {
+                    String lastImportDate = jobs[collection].getLastImportValue().format("yyyy-MM-dd'T'HH:mm")
+                    table.append("&nbsp;<input type=\"submit\" name=\"reset_${collection}\" value=\"reload $collection from\"/>&nbsp;<input type=\"datetime-local\" name=\"datevalue\" value=\"${lastImportDate}\"/>")
+                }
+                table.append("</td>")
+            }
+            table.append("</tr>")
 
-        table.append("</form></table>")
+            table.append("</form></table>")
 
-        String html =
-                """
+            html =
+                    """
                 <html><head><title>OAIPMH Harvester control panel</title></head>
                 <body>
                 ${table.toString()}
                 </form>
                 """
+        } else {
 
+            html = """
+                <html><head><title>OAIPMH Harvest Disabled</title></head>
+                <body>
+
+                HARVESTER DISABLED<br/>
+                System version ${props.version} is incompatible with data version ${loadDataVersion()}.
+                """
+        }
 
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
@@ -130,20 +140,29 @@ class OaiPmhImporterServlet extends HttpServlet {
     }
 
     void init() {
-
-        ScheduledExecutorService ses = Executors.newScheduledThreadPool(3)
-        List collections = props.scheduledDatasets.split(",")
-        for (collection in collections) {
-            log.info("Setting up schedule for $collection")
-            def job = new ScheduledJob(pico.getComponent(OaiPmhImporter.class), collection, pico.getComponent(PostgreSQLComponent.class))
-            jobs[collection] = job
-            try {
-                ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
-            } catch (RejectedExecutionException ree) {
-                log.error("execution failed", ree)
+        if (loadDataVersion() == props.version) {
+            log.info("Initializing OAIPMH harvester. System version: ${pico.getComponent(Whelk.class).version}")
+            ScheduledExecutorService ses = Executors.newScheduledThreadPool(3)
+            List collections = props.scheduledDatasets.split(",")
+            for (collection in collections) {
+                log.info("Setting up schedule for $collection")
+                def job = new ScheduledJob(pico.getComponent(OaiPmhImporter.class), collection, pico.getComponent(PostgreSQLComponent.class))
+                jobs[collection] = job
+                try {
+                    ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
+                } catch (RejectedExecutionException ree) {
+                    log.error("execution failed", ree)
+                }
             }
+            log.info("scheduler started")
+        } else {
+            log.error("INCOMPATIBLE VERSIONS! Not scheduling any harvesters.")
         }
-        log.info("scheduler started")
+    }
+
+    String loadDataVersion() {
+        def systemSettings = pico.getComponent(PostgreSQLComponent.class).loadSettings("system")
+        return systemSettings.get("version")
     }
 }
 

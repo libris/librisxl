@@ -94,7 +94,8 @@ class LinkFinder {
             PreparedStatement stmt = connection.prepareStatement(ENTITY_QUERY)
 
             log.debug(" SQL : " + ENTITY_QUERY)
-            log.debug("JSON : " + mapper.writeValueAsString([queryMap]))
+            log.debug("JSON 1: " + mapper.writeValueAsString([queryMap]))
+            log.debug("JSON 2: " + mapper.writeValueAsString(queryMap))
             stmt.setObject(1, mapper.writeValueAsString([queryMap]), java.sql.Types.OTHER)
             stmt.setObject(2, mapper.writeValueAsString(queryMap), java.sql.Types.OTHER)
             ResultSet rs = stmt.executeQuery()

@@ -1,7 +1,7 @@
 package whelk.importer
 
 import groovy.util.logging.Slf4j as Log
-
+import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
 import whelk.converter.JsonLDLinkCompleterFilter
 import whelk.converter.marc.MarcFrameConverter
@@ -62,6 +62,11 @@ class MySQLImporter {
     }
 
     void doImport(String collection, int nrOfDocs = -1, boolean silent = false, boolean picky = true) {
+        log.info("Preparing import. Noting version ${whelk.version} in system settings.")
+        def settings = whelk.storage.loadSettings("system")
+        settings.put("version", whelk.version)
+        whelk.storage.saveSettings("system", settings)
+
         recordCount = 0
         startTime = System.currentTimeMillis()
         cancelled = false

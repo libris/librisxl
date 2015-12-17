@@ -19,4 +19,6 @@ public interface Storage {
     void setVersioning(boolean v);
     boolean getVersioning();
     Map<String,Object> query(Map<String,String[]> queryParameters, String dataset, StorageType storageType);
+    Map<String,Object> loadSettings(String key);
+    void saveSettings(String key, Map<String,Object> settings);
 }
