@@ -224,11 +224,10 @@ class ElasticSearch implements Index {
     }
 
     static String toElasticId(String id) {
-        URI uri = new URI(id)
-        if (uri.path.substring(1).contains("/")) {
+        if (id.contains("/")) {
             return Base64.encodeBase64URLSafeString(id.getBytes("UTF-8"))
         } else {
-            return uri.path.substring(1) // If XL-minted identifier, use the same charsequence
+            return id // If XL-minted identifier, use the same charsequence
         }
     }
 
