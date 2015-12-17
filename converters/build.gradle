@@ -45,7 +45,6 @@ dependencies {
     compile 'commons-codec:commons-codec:1.7'
     compile "com.google.guava:guava:16.0.1"
     compile 'commons-collections:commons-collections:3.2.1'
-    compile "org.apache.httpcomponents:httpclient:4.3.1"
     compile "stax:stax:1.2.0"
     compile "stax:stax-api:1.0.1"
     compile 'com.damnhandy:handy-uri-templates:2.0.4'
@@ -53,9 +52,7 @@ dependencies {
     compile 'ch.qos.logback:logback-classic:1.1.2'
     compile 'org.slf4j:slf4j-api:1.7.6'
     compile 'org.slf4j:log4j-over-slf4j:1.7.6'
-    compile 'org.apache.commons:commons-dbcp2:2.0.1'
     // Integration
-    compile "org.elasticsearch:elasticsearch:1.4.4"
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile 'com.vividsolutions:jts:1.13'
     compile 'org.picocontainer:picocontainer:2.15'

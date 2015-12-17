@@ -4,7 +4,6 @@ import groovy.util.logging.Slf4j as Log
 
 import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
-import org.elasticsearch.search.facet.FacetExecutor
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
 import whelk.Document
@@ -27,7 +26,6 @@ class PostgreSQLComponent implements Storage {
 
     public final static mapper = new ObjectMapper()
 
-    private final static LOCATION_PRECURSOR = "/resource/"
     private final static JSONLD_ALT_ID_KEY = "sameAs"
 
     boolean versioning = true
@@ -122,7 +120,7 @@ class PostgreSQLComponent implements Storage {
             """
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
-        STATUS_OF_DOCUMENT = "SELECT created, modified, deleted FROM $mainTableName WHERE id = ?"
+        STATUS_OF_DOCUMENT = "SELECT id, created, modified, deleted FROM $mainTableName WHERE id = ? OR manifest->'identifiers' @> ?"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -145,8 +143,10 @@ class PostgreSQLComponent implements Storage {
             }
             PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
             statusStmt.setString(1, identifier)
+            statusStmt.setObject(2, mapper.writeValueAsString([identifier]), java.sql.Types.OTHER)
             def rs = statusStmt.executeQuery()
             if (rs.next()) {
+                statusMap['id'] = rs.getString("id")
                 statusMap['exists'] = true
                 statusMap['created'] = new Date(rs.getTimestamp("created").getTime())
                 statusMap['modified'] = new Date(rs.getTimestamp("modified").getTime())
@@ -289,13 +289,15 @@ class PostgreSQLComponent implements Storage {
                     ver_batch = rigVersionStatement(ver_batch, doc, now)
                     ver_batch.addBatch()
                 }
-
-                batch = rigUpsertStatement(batch, doc, now)
-
+                if (upsert) {
+                    batch = rigUpsertStatement(batch, doc, now)
+                } else {
+                    batch = rigInsertStatement(batch, doc)
+                }
                 batch.addBatch()
             }
-            ver_batch.executeBatch()
             batch.executeBatch()
+            ver_batch.executeBatch()
             log.debug("Stored ${docs.size()} documents in collection ${docs.first().collection} (versioning: ${versioning})")
             return true
         } catch (Exception e) {
@@ -478,7 +480,7 @@ class PostgreSQLComponent implements Storage {
         doc.addIdentifier(doc.getURI().toString())
         URI docId = JsonLd.findRecordURI(doc.data)
         if (docId) {
-            log.debug("Found @id in data: ${docId}")
+            log.debug("Found @id ${docId} in data for ${doc.id}")
             doc.addIdentifier(docId.toString())
         }
         if (doc.data.containsKey(JsonLd.DESCRIPTIONS_KEY)){
@@ -531,37 +533,31 @@ class PostgreSQLComponent implements Storage {
 
     // TODO: Update to real locate
     @Override
-    Location locate(String uri, boolean loadDoc) {
-        log.debug("Locating $uri")
-        if (uri) {
-            if (uri.startsWith("/")) {
-                uri = uri.substring(1)
+    Location locate(String identifier, boolean loadDoc) {
+        log.debug("Locating $identifier")
+        if (identifier) {
+            if (identifier.startsWith("/")) {
+                identifier = identifier.substring(1)
             }
 
-            def doc = load(uri)
+            def doc = load(identifier)
             if (doc) {
                 return new Location(doc)
             }
 
-            String identifier = new URI(uri).getPath().toString()
-            log.trace("Nothing found at identifier $identifier")
+            URI uri = Document.BASE_URI.resolve(identifier)
 
-            if (identifier.startsWith(LOCATION_PRECURSOR)) {
-                identifier = identifier.substring(LOCATION_PRECURSOR.length())
-                log.trace("New place to look: $identifier")
-            }
-            log.debug("Checking if new identifier (${identifier}) has something to get")
-            //if (load(identifier, null, [], false)) {
-            def docStatus = status(identifier)
+            def docStatus = status(uri)
             if (docStatus.exists && !docStatus.deleted) {
                 if (loadDoc) {
-                    return new Location(load(identifier)).withResponseCode(303)
+                    return new Location(load(docStatus.id)).withResponseCode(301)
                 } else {
-                    return new Location().withURI(new URI(identifier)).withResponseCode(303)
+                    return new Location().withURI(uri).withResponseCode(301)
                 }
             }
-            log.debug("Check alternate identifiers.")
-            doc = loadByAlternateIdentifier(uri)
+            // TODO: Make real sameAs query here
+            log.debug("Check sameAs identifiers.")
+            doc = loadByAlternateIdentifier(identifier)
             if (doc) {
                 if (loadDoc) {
                     return new Location(doc).withResponseCode(301)

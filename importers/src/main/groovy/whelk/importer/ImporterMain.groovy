@@ -46,11 +46,13 @@ class ImporterMain {
         importer.doImport(collection)
         println("Starting LinkFinder for collection $collection")
         goLinkFind(collection)
+        println("Starting reindexing for collection $collection")
+        goReindex(collection)
     }
 
-    void goReindex() {
+    void goReindex(String collection) {
         def reindex = pico.getComponent(ElasticReindexer.class)
-        reindex.reindex()
+        reindex.reindex(collection)
     }
 
     void goDefs(String fname) {
@@ -66,6 +68,7 @@ class ImporterMain {
         long startTime = System.currentTimeMillis()
         def doclist = []
         int counter = 0
+        whelk.storage.versioning = false
         for (doc in whelk.storage.loadAll(collection)) {
             doc = lf.findLinks(doc)
             doclist << doc
@@ -73,7 +76,7 @@ class ImporterMain {
                 Document[] saveList = new Document[doclist.size()]
                 System.arraycopy(doclist.toArray(), 0, saveList, 0, doclist.size())
                 queue.execute({
-                    whelk.bulkStore(Arrays.asList(saveList))
+                    whelk.storage.bulkStore(Arrays.asList(saveList), true)
                 } as Runnable)
                 doclist = []
             }
@@ -81,7 +84,7 @@ class ImporterMain {
         }
         if (doclist.size() > 0) {
             queue.execute({
-                whelk.bulkStore(doclist)
+                whelk.storage.bulkStore(doclist,true)
             } as Runnable)
         }
         queue.shutdown()
@@ -103,7 +106,11 @@ class ImporterMain {
             main.goDefs(args[1])
         } else if (args[0] == "reindex") {
             def main = new ImporterMain("secret")
-            main.goReindex()
+            String collection = null
+            if (args.length == 2) {
+                collection = args[1]
+            }
+            main.goReindex(collection)
         } else if (args[0] == "linkfind") {
             def main = new ImporterMain("secret")
             main.goLinkFind(args[1])
