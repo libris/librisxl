@@ -4,6 +4,7 @@ import com.google.common.base.Charsets
 import org.apache.commons.io.IOUtils
 import spock.lang.Specification
 import org.codehaus.jackson.map.*
+import whelk.Document
 import whelk.JsonLd
 
 
@@ -50,10 +51,38 @@ class JsonLdSpec extends Specification {
         JsonLd.isFlat(framedJson) == false
     }
 
+    static Map descriptionDocument = [
+            "descriptions": [
+                    "entry": [
+                            "@id": "/qowiudhqw",
+                            "name": "foo"
+                    ],
+                    "items": [
+                            ["@id":"/qowiudhqw#it"]
+                    ]
+            ]
+    ]
+
+    def "should retrieve actual URI from @id in document"() {
+        given:
+        def data = new HashMap(descriptionDocument)
+        and:
+        data['descriptions']['entry']['@id'] = "http://id.kb.se/foo/bar"
+        when:
+        URI uri = JsonLd.findRecordURI(data)
+        then:
+        uri.toString() == "https://libris.kb.se/qowiudhqw"
+        and:
+        uri.toString() == "http://id.kb.se/foo/bar"
+
+    }
+
     static String loadJsonLdFile(String fileName) {
         InputStream is = JsonLdSpec.class.getClassLoader().getResourceAsStream(fileName)
         return IOUtils.toString(is, "UTF-8")
     }
+
+
 
 
 }
