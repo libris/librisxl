@@ -97,6 +97,7 @@ class OaiPmhImporterServlet extends HttpServlet {
                     """
                 <html><head><title>OAIPMH Harvester control panel</title></head>
                 <body>
+                System version: ${props.version}<br><br>
                 ${table.toString()}
                 </form>
                 """
