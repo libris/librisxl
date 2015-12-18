@@ -42,12 +42,12 @@ class ImporterMain {
 
     void goMysql(String collection) {
         def importer = pico.getComponent(MySQLImporter.class)
-        importer.storageOnly = true
+        //importer.storageOnly = true
         importer.doImport(collection)
-        println("Starting LinkFinder for collection $collection")
-        goLinkFind(collection)
-        println("Starting reindexing for collection $collection")
-        goReindex(collection)
+        //println("Starting LinkFinder for collection $collection")
+        //goLinkFind(collection)
+        //println("Starting reindexing for collection $collection")
+        //goReindex(collection)
     }
 
     void goReindex(String collection) {
