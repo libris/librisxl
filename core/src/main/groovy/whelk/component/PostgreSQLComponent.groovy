@@ -544,7 +544,7 @@ class PostgreSQLComponent implements Storage {
 
             URI uri = Document.BASE_URI.resolve(identifier)
 
-            def docStatus = status(uri)
+            def docStatus = status(uri.toString())
             if (docStatus.exists && !docStatus.deleted) {
                 if (loadDoc) {
                     return new Location(load(docStatus.id)).withResponseCode(301)
@@ -805,7 +805,7 @@ class PostgreSQLComponent implements Storage {
     }
 
 
-    protected Document createTombstone(id) {
+    protected Document createTombstone(String id) {
         def tombstone = new Document(id, ["@type":"Tombstone"]).withContentType("application/ld+json")
         tombstone.setDeleted(true)
         return tombstone

@@ -6,8 +6,15 @@
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
+    <appender name="FILE-WHELK" class="ch.qos.logback.core.FileAppender">
+        <file>${catalina.base}/logs/whelk.log</file>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
-  <logger name="org.elasticsearch">
+
+    <logger name="org.elasticsearch">
       <level value="warn"/>
    </logger>
   <logger name="org.apache.camel">
@@ -35,6 +42,7 @@
 
   <root level="info">
     <appender-ref ref="STDOUT" />
+      <appender-ref ref="FILE-WHELK" />
   </root>
 </configuration>
 

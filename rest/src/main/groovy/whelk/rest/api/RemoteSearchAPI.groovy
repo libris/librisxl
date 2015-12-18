@@ -40,34 +40,37 @@ class RemoteSearchAPI extends HttpServlet {
         log.info("Starting Remote Search API")
         loadMetaProxyInfo(metaProxyInfoUrl)
         marcFrameConverter = new MarcFrameConverter()
-        log.info("Up and running")
     }
 
     List loadMetaProxyInfo(URL url) {
-        def xml = new XmlSlurper(false,false).parse(url.newInputStream())
+        List databases = []
+        try {
+            def xml = new XmlSlurper(false, false).parse(url.newInputStream())
 
-        def databases = xml.libraryCode.collect {
-            def map = ["database": createString(it.@id)]
-            it.children().each { node ->
-                def n = node.name().toString()
-                def o = node.text().toString()
-                def v = map[n]
-                if (v) {
-                    if (v instanceof String) {
-                        v = map[n] = [v]
+            databases = xml.libraryCode.collect {
+                def map = ["database": createString(it.@id)]
+                it.children().each { node ->
+                    def n = node.name().toString()
+                    def o = node.text().toString()
+                    def v = map[n]
+                    if (v) {
+                        if (v instanceof String) {
+                            v = map[n] = [v]
+                        }
+                        v << o
+                    } else {
+                        map[n] = o
                     }
-                    v << o
-                } else {
-                    map[n] = o
                 }
+                return map
             }
-            return map
-        }
 
-        remoteURLs = databases.inject( [:] ) { map, db ->
-            map << [(db.database) : metaProxyBaseUrl + "/" + db.database]
+            remoteURLs = databases.inject([:]) { map, db ->
+                map << [(db.database): metaProxyBaseUrl + "/" + db.database]
+            }
+        } catch (SocketException se) {
+            log.error("Unable to load database list.")
         }
-
         return databases
     }
 

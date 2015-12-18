@@ -80,9 +80,6 @@ class MySQLImporter {
         //queue = Executors.newWorkStealingPool()
         queue = Executors.newFixedThreadPool(poolSize)
 
-        log.debug("Turning off versioning in storage")
-        this.whelk.storage.versioning = false
-
         try {
 
             Class.forName(JDBC_DRIVER)
@@ -160,11 +157,6 @@ class MySQLImporter {
             log.debug("Clearing out remaining docs ...")
             buildDocument(null, null, collection, null)
             buildDocument(null, null, collection, null)
-
-            queue.execute({
-                log.debug("Resetting versioning setting for storages")
-                this.whelk.storage.versioning = true
-            } as Runnable)
 
             queue.shutdown()
             queue.awaitTermination(7, TimeUnit.DAYS)
