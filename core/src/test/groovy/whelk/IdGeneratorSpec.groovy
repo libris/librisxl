@@ -32,8 +32,8 @@ class IdGeneratorSpec extends Specification {
         generator.generate(n, data) == id
         where:
         n               | data          | id
-        1               | "old past"    | "1232k520"
-        1449846940756   | "auth-1245"   | "lqsb00csjb1pfpr0"
+        1               | "old past"    | "10232k52"
+        1449846940756   | "auth-1245"   | "lqsb00csj0b1pfpr"
         1449846940756   | "bib-245555"  | "lqsb00csj5mzw5hp"
         1449846940756   | "hold-11111"  | "lqsb00csj337qmh2"
         99999999999999  | "far future"  | "gcprhmd0d910qkbbj"

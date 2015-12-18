@@ -8,7 +8,7 @@ class IdGenerator {
     static final char[] VOWELS = "aoueiy".chars
     static final char[] CONSONANTS = ALPHANUM.findAll { !VOWELS.contains(it) } as char[]
 
-    static final int PADD_LENGTH = 7
+    static final int PAD_LENGTH = 7
 
     static char[] alphabet = CONSONANTS
 
@@ -16,23 +16,23 @@ class IdGenerator {
         return generate(System.currentTimeMillis(), null)
     }
 
-    static String generate(long timestamp, String data, int paddLength = PADD_LENGTH) {
-        StringBuilder padd = new StringBuilder()
+    static String generate(long timestamp, String data, int paddLength = PAD_LENGTH) {
+        StringBuilder pad = new StringBuilder()
         if (data) {
             String check = checksum(data)
             if (check.length() > paddLength) {
                 check = check.substring(0, paddLength)
             }
-            padd.append(check)
-            while (padd.length() < paddLength) {
-                padd.append('0')
+            pad.append(check)
+            while (pad.length() < paddLength) {
+                pad.insert(0, '0')
             }
         } else {
-            while (padd.length() < paddLength) {
-                padd.append(CONSONANTS[new Random().nextInt(CONSONANTS.length)])
+            while (pad.length() < paddLength) {
+                pad.append(CONSONANTS[new Random().nextInt(CONSONANTS.length)])
             }
         }
-        return baseEncode(timestamp, true) + padd.toString()
+        return baseEncode(timestamp, true) + pad.toString()
     }
 
     static String checksum(String data) {
