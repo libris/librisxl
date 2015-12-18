@@ -8,6 +8,7 @@ import org.elasticsearch.action.ActionRequest
 import org.elasticsearch.action.ActionResponse
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.bulk.BulkResponse
+import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest
 import org.elasticsearch.action.index.IndexRequest
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.action.search.SearchType
@@ -167,7 +168,8 @@ class ElasticSearch implements Index {
     @Override
     public void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
-        client.delete(new DeleteRequest(defaultIndex).id(toElasticId(identifier)))
+        DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(defaultIndex).source(["query":["term":["_id":toElasticId(identifier)]]])
+        client.deleteByQuery(deleteByQueryRequest)
     }
 
     @Override
