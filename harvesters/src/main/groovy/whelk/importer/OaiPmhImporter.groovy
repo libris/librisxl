@@ -242,8 +242,10 @@ class OaiPmhImporter {
                     resumptionToken = null
                     break
                 }
-                String deleteIdentifier = LegacyIntegrationTools.generateId("/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/"))
+                String legacyIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
+                String deleteIdentifier = LegacyIntegrationTools.generateId(legacyIdentifier)
                     try {
+                        log.info("Deleting recod $legacyIdentifier ($deleteIdentifier)")
                         whelk.remove(deleteIdentifier)
                     } catch (Exception e2) {
                         log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
