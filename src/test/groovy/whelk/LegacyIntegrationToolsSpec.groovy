@@ -10,24 +10,13 @@ class LegacyIntegrationToolsSpec extends Specification {
         expect:
         tool.generateId(data) == id
         where:
-        data            | id
-        "/auth/1"       | "2hq0kp11146kkh1"
-        "/auth/12345"   | "jz6g15x6h3bj0c1"
-        "/bib/12345"    | "jz6g15x6h5ft7l2"
-        "/hold/12345"   | "jz6g15x6h1ct513"
-    }
-
-    def "should generate valid id based on legacy id"() {
-        given:
-        def id = tool.generateId(legacyId)
-        expect:
-        id.length() == 15
-        id.endsWith(endChar)
-        where:
-        legacyId          | endChar
-        "/auth/123551211" | "1"
-        "/bib/12312"      | "2"
-        "/hold/999999999" | "3"
+        data                | id
+        "/auth/1"           | "hftwp11146kkhc1"
+        "/auth/12345"       | "zw9c5x6h3bj0c87"
+        "/bib/12345"        | "5ng15x6h05ft7lr"
+        "/hold/12345"       | "bgmp5x6h1ct51qd"
+        "/auth/123551211"   | "53nnvnsp2gq1qpz"
+        "/hold/999999999"   | "59snjbd943p7s0x"
     }
 
 }
