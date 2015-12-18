@@ -5,17 +5,17 @@ import whelk.IdGenerator
 
 class LegacyIntegrationTools {
 
-    static final long LEGACY_IDENTIFIER_BASETIME = DateUtil.parseDate("2001-01-01").getTime()
-    static Map<String, String> DATASET_ID_SEPARATOR = ["auth": "1", "bib": "2", "hold": "3"]
+    static final Map<String,Long> BASETIMES = [
+        "auth": DateUtil.parseDate("1980-01-01").getTime(),
+        "bib": DateUtil.parseDate("1984-01-01").getTime(),
+        "hold": DateUtil.parseDate("1988-01-01").getTime()
+    ]
 
     static String generateId(String originalIdentifier) {
         String[] parts = originalIdentifier.split("/")
-        long numericId = LEGACY_IDENTIFIER_BASETIME + Integer.parseInt(parts.last())
-        String dataSetSuffix = "4"
-        if (DATASET_ID_SEPARATOR.containsKey(parts[1])) {
-            dataSetSuffix = DATASET_ID_SEPARATOR[parts[1]]
-        }
-        return IdGenerator.generate(numericId, originalIdentifier, 5) + dataSetSuffix
+        long basetime = BASETIMES[parts[1]]
+        long numericId = basetime + Integer.parseInt(parts.last())
+        return IdGenerator.generate(numericId, originalIdentifier)
     }
 
 }
