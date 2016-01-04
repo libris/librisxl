@@ -32,15 +32,20 @@ class PostgreSQLComponent implements Storage {
     boolean versioning = true
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION, LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE
+    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION,
+            GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS,
+            LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE,
+            INSERT_IDENTIFIERS, LOAD_IDENTIFIERS, DELETE_IDENTIFIERS
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
+
+    // Deprecated
+    protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
 
     // Query defaults
     static final int DEFAULT_PAGE_SIZE=50
 
     // Query idiomatic data
-
 
     static final Map<StorageType, String> SQL_PREFIXES = [
             (StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS): "data->'descriptions'",
@@ -54,6 +59,7 @@ class PostgreSQLComponent implements Storage {
 
     PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
         mainTableName = sqlMaintable
+        String idTableName = mainTableName + "__identifiers"
         String versionsTableName = mainTableName + "__versions"
         String settingsTableName = mainTableName + "__settings"
 
@@ -89,6 +95,8 @@ class PostgreSQLComponent implements Storage {
                 "OR manifest @> ? RETURNING *) " +
             "INSERT INTO $mainTableName (id, data, quoted, manifest, deleted) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
         INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,quoted,manifest,deleted) VALUES (?,?,?,?,?)"
+        DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
+        INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, identifier) VALUES (?,?)"
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"// (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)" +
 
@@ -99,6 +107,21 @@ class PostgreSQLComponent implements Storage {
         LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND manifest->>'collection' = ?"
+        LOAD_IDENTIFIERS = "SELECT identifier from $idTableName WHERE id = ?"
+
+        DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
+        STATUS_OF_DOCUMENT = "SELECT id, created, modified, deleted FROM $mainTableName WHERE id = ? OR manifest->'identifiers' @> ?"
+
+        // Queries
+        QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
+
+        // SQL for settings management
+        LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
+        SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
+                "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
+
+
+        // Deprecated
         LOAD_ALL_DOCUMENTS_WITH_LINKS = """
             SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
             FROM (
@@ -119,17 +142,6 @@ class PostgreSQLComponent implements Storage {
                 ) AS links GROUP by id,link
             ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
             """
-
-        DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
-        STATUS_OF_DOCUMENT = "SELECT id, created, modified, deleted FROM $mainTableName WHERE id = ? OR manifest->'identifiers' @> ?"
-
-        // Queries
-        QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
-
-        // SQL for settings management
-        LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
-        SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
-                "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
 
     }
 
@@ -188,6 +200,7 @@ class PostgreSQLComponent implements Storage {
                 insert.executeUpdate()
                 saveVersion(doc, connection, now)
             }
+            saveIdentifiers(doc, connection)
             connection.commit()
             def status = status(doc.identifier, connection)
             doc.setCreated(status['created'])
@@ -210,6 +223,20 @@ class PostgreSQLComponent implements Storage {
             log.debug("[store] Closed connection.")
         }
         return null
+    }
+
+    private void saveIdentifiers(Document doc, Connection connection) {
+        PreparedStatement removeIdentifiers = connection.prepareStatement(DELETE_IDENTIFIERS)
+        removeIdentifiers.setString(1, doc.id)
+        int numRemoved = removeIdentifiers.executeUpdate()
+        log.debug("Removed $numRemoved identifiers for id ${doc.id}")
+        PreparedStatement altIdInsert = connection.prepareStatement(INSERT_IDENTIFIERS)
+        for (altId in doc.getIdentifiers()) {
+            altIdInsert.setString(1, doc.id)
+            altIdInsert.setString(2, altId)
+            altIdInsert.addBatch()
+        }
+        altIdInsert.executeBatch()
     }
 
     private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc) {
@@ -296,6 +323,7 @@ class PostgreSQLComponent implements Storage {
                     batch = rigInsertStatement(batch, doc)
                 }
                 batch.addBatch()
+                saveIdentifiers(doc, connection)
             }
             batch.executeBatch()
             ver_batch.executeBatch()
@@ -590,7 +618,7 @@ class PostgreSQLComponent implements Storage {
 
 
 
-
+/*
     private Document oldLoadFromSql(String id, String checksum, String sql) {
         Document doc = null
         log.debug("loadFromSql $id ($sql)")
@@ -630,6 +658,7 @@ class PostgreSQLComponent implements Storage {
 
         return doc
     }
+    */
 
     private Document loadFromSql(String sql, Map<Integer, Object> parameters) {
         Document doc = null
@@ -654,15 +683,7 @@ class PostgreSQLComponent implements Storage {
             log.trace("Executed query.")
             if (rs.next()) {
                 log.trace("next")
-                def manifest = mapper.readValue(rs.getString("manifest"), Map)
-                doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
-                doc.setModified(rs.getTimestamp("modified").getTime())
-                try {
-                    doc.setCreated(rs.getTimestamp("created").getTime())
-                    doc.deleted = rs.getBoolean("deleted")
-                } catch (SQLException sqle) {
-                    log.trace("Resultset didn't have created or deleted. Probably a version request.")
-                }
+                doc = assembleDocument(rs)
                 log.trace("Created document with id ${doc.id}")
             } else if (log.isTraceEnabled()) {
                 log.trace("No results returned for get($id)")
@@ -673,6 +694,8 @@ class PostgreSQLComponent implements Storage {
 
         return doc
     }
+
+
 
     Document loadByAlternateIdentifier(String identifier) {
         //String sql = GET_DOCUMENT_BY_ALTERNATE_ID.replace("?", '"' + identifier + '"')
@@ -706,11 +729,40 @@ class PostgreSQLComponent implements Storage {
     }
 
     private Document assembleDocument(ResultSet rs) {
+        /*
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map), mapper.readValue(rs.getString("manifest"), Map))
         doc.setCreated(rs.getTimestamp("created")?.getTime())
         doc.setModified(rs.getTimestamp("modified").getTime())
         doc.setDeleted(rs.getBoolean("deleted") ?: false)
+        */
+
+        def manifest = mapper.readValue(rs.getString("manifest"), Map)
+        manifest.remove(Document.ALTERNATE_ID_KEY)
+        Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
+        doc.setModified(rs.getTimestamp("modified").getTime())
+        try {
+            doc.setCreated(rs.getTimestamp("created")?.getTime())
+            doc.deleted = rs.getBoolean("deleted")
+        } catch (SQLException sqle) {
+            log.trace("Resultset didn't have created or deleted. Probably a version request.")
+        }
+
+        for (altId in loadIdentifiers(doc.id)) {
+            doc.addIdentifier(altId)
+        }
         return doc
+
+    }
+
+    private List<String> loadIdentifiers(String id) {
+        List<String> identifiers = []
+        PreparedStatement loadIds = getConnection().prepareStatement(LOAD_IDENTIFIERS)
+        loadIds.setString(1,id)
+        ResultSet rs = loadIds.executeQuery()
+        while (rs.next()) {
+            identifiers << rs.getString("identifier")
+        }
+        return identifiers
     }
 
     private Iterable<Document> loadAllDocuments(String collection, boolean withLinks, Date since = null, Date until = null) {
@@ -792,9 +844,12 @@ class PostgreSQLComponent implements Storage {
         } else {
             Connection connection = getConnection()
             PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
+            PreparedStatement delidstmt = connection.prepareStatement(DELETE_IDENTIFIERS)
             try {
                 delstmt.setString(1, identifier)
                 delstmt.executeUpdate()
+                delidstmt.setString(1, identifier)
+                delidstmt.executeUpdate()
                 return true
             } finally {
                 connection.close()

@@ -129,6 +129,15 @@ class Document {
     }
 
     @JsonIgnore
+    List<String> getIdentifiers() {
+        List<String> ids = []
+        if (manifest.containsKey(ALTERNATE_ID_KEY)) {
+            ids = manifest.get(ALTERNATE_ID_KEY) as List
+        }
+        return ids
+    }
+
+    @JsonIgnore
     String getChecksum() {
         manifest[CHECKUM_KEY]
     }
