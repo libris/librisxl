@@ -12,12 +12,15 @@ import whelk.Location
 import whelk.exception.StorageCreateFailedException
 
 import java.security.MessageDigest
+import java.sql.BatchUpdateException
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Timestamp
 import java.sql.PreparedStatement
 import java.sql.Connection
 import java.sql.Types
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 @Log
 class PostgreSQLComponent implements Storage {
@@ -33,9 +36,9 @@ class PostgreSQLComponent implements Storage {
 
     // SQL statements
     protected String UPSERT_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION,
-            GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS,
-            LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE,
-            INSERT_IDENTIFIERS, LOAD_IDENTIFIERS, DELETE_IDENTIFIERS
+                     GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
+                     LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE,
+                     INSERT_IDENTIFIERS, LOAD_IDENTIFIERS, DELETE_IDENTIFIERS
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
 
@@ -103,14 +106,15 @@ class PostgreSQLComponent implements Storage {
         GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created' AS created,modified,manifest->>'deleted' AS deleted FROM $versionsTableName WHERE id = ? ORDER BY modified"
-        GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
+        GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
         LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND manifest->>'collection' = ?"
         LOAD_IDENTIFIERS = "SELECT identifier from $idTableName WHERE id = ?"
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
-        STATUS_OF_DOCUMENT = "SELECT id, created, modified, deleted FROM $mainTableName WHERE id = ? OR manifest->'identifiers' @> ?"
+        //STATUS_OF_DOCUMENT = "SELECT id, created, modified, deleted FROM $mainTableName WHERE id = ? OR manifest->'identifiers' @> ?"
+        STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.id = ? t2.identifier = ?"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -156,7 +160,7 @@ class PostgreSQLComponent implements Storage {
             }
             PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
             statusStmt.setString(1, identifier)
-            statusStmt.setObject(2, mapper.writeValueAsString([identifier]), java.sql.Types.OTHER)
+            statusStmt.setString(2, identifier)
             def rs = statusStmt.executeQuery()
             if (rs.next()) {
                 statusMap['id'] = rs.getString("id")
@@ -210,7 +214,14 @@ class PostgreSQLComponent implements Storage {
         } catch (PSQLException psqle) {
             log.debug("SQL failed: ${psqle.message}")
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
-                throw new StorageCreateFailedException(doc.id)
+                Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
+                Matcher m = messageDetailPattern.matcher(psqle.message)
+                String duplicateId = doc.id
+                if (m.matches()) {
+                    log.debug("Problem is that ${m.group(1)} already contains value ${m.group(2)}")
+                    duplicateId = m.group(2)
+                }
+                throw new StorageCreateFailedException(duplicateId)
             } else {
                 throw psqle
             }
@@ -236,7 +247,11 @@ class PostgreSQLComponent implements Storage {
             altIdInsert.setString(2, altId)
             altIdInsert.addBatch()
         }
-        altIdInsert.executeBatch()
+        try {
+            altIdInsert.executeBatch()
+        } catch (BatchUpdateException bue) {
+            throw bue.getNextException()
+        }
     }
 
     private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc) {
@@ -502,6 +517,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     void findIdentifiers(Document doc) {
+        log.debug("Finding identifiers in ${doc.data}")
         doc.addIdentifier(doc.getURI().toString())
         URI docId = JsonLd.findRecordURI(doc.data)
         if (docId) {
@@ -518,11 +534,11 @@ class PostgreSQLComponent implements Storage {
             }
         } else {
             for (entry in doc.data.get(Document.GRAPH_KEY)) {
-                URI entryURI = new URI(entry[JsonLd.ID_KEY])
+                URI entryURI = Document.BASE_URI.resolve(entry[JsonLd.ID_KEY])
                 if (entryURI == doc.getURI()) {
                     for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
-                        if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
-                            doc.addIdentifier(sameAs.get(JsonLd.ID_KEY))
+                        if (sameAs.key == JsonLd.ID_KEY) {
+                            doc.addIdentifier(sameAs.value)
                         }
                     }
                 }
@@ -580,9 +596,9 @@ class PostgreSQLComponent implements Storage {
                     return new Location().withURI(uri).withResponseCode(301)
                 }
             }
-            // TODO: Make real sameAs query here
+
             log.debug("Check sameAs identifiers.")
-            doc = loadByAlternateIdentifier(identifier)
+            doc = loadBySameAsIdentifier(identifier)
             if (doc) {
                 if (loadDoc) {
                     return new Location(doc).withResponseCode(303)
@@ -616,50 +632,7 @@ class PostgreSQLComponent implements Storage {
         return doc
     }
 
-
-
-/*
-    private Document oldLoadFromSql(String id, String checksum, String sql) {
-        Document doc = null
-        log.debug("loadFromSql $id ($sql)")
-        Connection connection = getConnection()
-        log.debug("Got connection.")
-        PreparedStatement selectstmt
-        ResultSet rs
-        try {
-            selectstmt = connection.prepareStatement(sql)
-            log.trace("Prepared statement")
-            if (id) {
-                selectstmt.setString(1, id)
-            }
-            if (checksum) {
-                selectstmt.setString(2, checksum)
-            }
-            log.trace("Executing query")
-            rs = selectstmt.executeQuery()
-            log.trace("Executed query.")
-            if (rs.next()) {
-                log.trace("next")
-                def manifest = mapper.readValue(rs.getString("manifest"), Map)
-                log.trace("About to create document")
-                doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
-                if (!checksum) {
-                    doc.setCreated(rs.getTimestamp("created").getTime())
-                    doc.setModified(rs.getTimestamp("modified").getTime())
-                    doc.deleted = rs.getBoolean("deleted")
-                }
-                log.trace("Created document with id ${doc.id}")
-            } else if (log.isTraceEnabled()) {
-                log.trace("No results returned for get($id)")
-            }
-        } finally {
-            connection.close()
-        }
-
-        return doc
-    }
-    */
-
+    
     private Document loadFromSql(String sql, Map<Integer, Object> parameters) {
         Document doc = null
         log.debug("loadFromSql $parameters ($sql)")
@@ -697,9 +670,8 @@ class PostgreSQLComponent implements Storage {
 
 
 
-    Document loadByAlternateIdentifier(String identifier) {
-        //String sql = GET_DOCUMENT_BY_ALTERNATE_ID.replace("?", '"' + identifier + '"')
-        return loadFromSql(GET_DOCUMENT_BY_ALTERNATE_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]])
+    Document loadBySameAsIdentifier(String identifier) {
+        return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]])
     }
 
     List<Document> loadAllVersions(String identifier) {

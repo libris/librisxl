@@ -11,7 +11,7 @@ public class JsonLd {
 
     // TODO: This flatten-method does not create description-based flat json (i.e. with entry, items and quoted)
     static Map flatten(Map framedJsonLd) {
-        if (isFlat(framedJsonLd)) {
+        if (isFlat(framedJsonLd) || !framedJsonLd.containsKey(ID_KEY)) {
             return framedJsonLd
         }
 

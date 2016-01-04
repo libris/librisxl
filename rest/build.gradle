@@ -6,22 +6,6 @@ apply plugin: 'application'
 apply plugin: 'java'
 
 
-loadConfiguration()
-
-def loadConfiguration() {
-    ext {
-        try {
-           environment = env
-        } catch (MissingPropertyException mpe) {
-            environment = "dev"
-        }
-    }
-    def encoding = hasProperty('file.encoding') ? file.encoding : 'UTF-8'
-    System.setProperty 'file.encoding', encoding
-    System.setProperty 'whelk.environment', environment
-}
-
-
 def versionprops = new Properties()
 try {
     file("src/main/resources/version.properties").withInputStream { stream ->

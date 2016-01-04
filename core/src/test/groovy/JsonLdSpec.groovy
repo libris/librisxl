@@ -4,7 +4,6 @@ import com.google.common.base.Charsets
 import org.apache.commons.io.IOUtils
 import spock.lang.Specification
 import org.codehaus.jackson.map.*
-import whelk.Document
 import whelk.JsonLd
 
 
@@ -42,6 +41,13 @@ class JsonLdSpec extends Specification {
         framedJson << framefiles.collect { mapper.readValue(loadJsonLdFile("framefiles/${it}"), Map) }
     }
 
+    def "should preserve unframed json"() {
+        expect:
+        JsonLd.flatten(mundaneJson).equals(mundaneJson)
+        where:
+        mundaneJson = ["data":"foo","sameAs":"/some/other"]
+    }
+
     def "should detect flat jsonld"() {
         given:
         def flatJson = mapper.readValue(loadJsonLdFile("describedflatfiles/bib_13531679_flat.jsonld"), Map)
@@ -55,10 +61,11 @@ class JsonLdSpec extends Specification {
         when:
         URI uri1 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "/qowiudhqw", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
         URI uri2 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "http://id.kb.se/foo/bar", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
+        URI uri3 = JsonLd.findRecordURI(["data":"foo","sameAs":"/some/other"])
         then:
         uri1.toString() == "https://libris.kb.se/qowiudhqw"
         uri2.toString() == "http://id.kb.se/foo/bar"
-
+        uri3 == null
     }
 
     def "should find database id from @id in document"() {
