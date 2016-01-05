@@ -473,6 +473,7 @@ class PostgreSQLComponent implements Storage {
         return [jsonbPath.toString(), value]
     }
 
+    // TODO: Must find something other than sameAs to identify alternate identifiers for document
     void findIdentifiers(Document doc) {
         doc.addIdentifier(doc.getURI().toString())
         URI docId = JsonLd.findRecordURI(doc.data)
@@ -585,49 +586,6 @@ class PostgreSQLComponent implements Storage {
         } else {
             doc = loadFromSql(GET_DOCUMENT, [1: id])
         }
-        return doc
-    }
-
-
-
-
-    private Document oldLoadFromSql(String id, String checksum, String sql) {
-        Document doc = null
-        log.debug("loadFromSql $id ($sql)")
-        Connection connection = getConnection()
-        log.debug("Got connection.")
-        PreparedStatement selectstmt
-        ResultSet rs
-        try {
-            selectstmt = connection.prepareStatement(sql)
-            log.trace("Prepared statement")
-            if (id) {
-                selectstmt.setString(1, id)
-            }
-            if (checksum) {
-                selectstmt.setString(2, checksum)
-            }
-            log.trace("Executing query")
-            rs = selectstmt.executeQuery()
-            log.trace("Executed query.")
-            if (rs.next()) {
-                log.trace("next")
-                def manifest = mapper.readValue(rs.getString("manifest"), Map)
-                log.trace("About to create document")
-                doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
-                if (!checksum) {
-                    doc.setCreated(rs.getTimestamp("created").getTime())
-                    doc.setModified(rs.getTimestamp("modified").getTime())
-                    doc.deleted = rs.getBoolean("deleted")
-                }
-                log.trace("Created document with id ${doc.id}")
-            } else if (log.isTraceEnabled()) {
-                log.trace("No results returned for get($id)")
-            }
-        } finally {
-            connection.close()
-        }
-
         return doc
     }
 

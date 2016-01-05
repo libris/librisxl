@@ -52,7 +52,7 @@ class OaiPmhImporterServlet extends HttpServlet {
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         def storage = pico.getComponent(PostgreSQLComponent)
-        String html
+        String html, json
         if (jobs) {
             List collections = props.scheduledDatasets.split(",")
             def state = [:]
@@ -93,14 +93,14 @@ class OaiPmhImporterServlet extends HttpServlet {
 
             table.append("</form></table>")
 
-            html =
-                    """
+            html = """
                 <html><head><title>OAIPMH Harvester control panel</title></head>
                 <body>
                 System version: ${props.version}<br><br>
                 ${table.toString()}
                 </form>
                 """
+            json = mapper.writeValueAsString(state)
         } else {
 
             html = """
@@ -110,11 +110,18 @@ class OaiPmhImporterServlet extends HttpServlet {
                 HARVESTER DISABLED<br/>
                 System version ${props.version} is incompatible with data version ${loadDataVersion()}.
                 """
+            json = mapper.writeValueAsString(["state":"disabled", "system.version":props.version, "data.version":loadDataVersion()])
+        }
+        PrintWriter out = response.getWriter();
+
+        if (request.getPathInfo() == "/json") {
+            response.setContentType("application/json");
+            out.print(json);
+        } else {
+            response.setContentType("text/html");
+            out.print(html);
         }
 
-        response.setContentType("text/html");
-        PrintWriter out = response.getWriter();
-        out.print(html);
         out.flush();
     }
 
