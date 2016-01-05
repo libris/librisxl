@@ -142,6 +142,7 @@ class Crud extends HttpServlet {
                 Location location = whelk.storage.locate(path, false)
                 document = location?.document
                 if (!document && location?.uri) {
+                    log.debug("Redirecting to document location: ${location.uri}")
                     sendRedirect(request, response, location)
                     return
                 }

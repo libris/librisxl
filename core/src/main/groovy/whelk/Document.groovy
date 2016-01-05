@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
+import whelk.util.PropertyLoader
 
 @Log
 class Document {
@@ -18,7 +19,7 @@ class Document {
     static final String NON_JSON_CONTENT_KEY = "content"
     static final String ALTERNATE_ID_KEY = "identifiers"
 
-    static final URI BASE_URI = new URI("https://libris.kb.se/")
+    static final URI BASE_URI = new URI(PropertyLoader.loadProperties("component").get("baseUri", "https://libris.kb.se/"))
 
     @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()
