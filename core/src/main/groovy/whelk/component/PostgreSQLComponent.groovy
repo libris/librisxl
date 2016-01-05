@@ -115,7 +115,7 @@ class PostgreSQLComponent implements Storage {
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         //STATUS_OF_DOCUMENT = "SELECT id, created, modified, deleted FROM $mainTableName WHERE id = ? OR manifest->'identifiers' @> ?"
-        STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.id = ? t2.identifier = ?"
+        STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.identifier = ?"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -124,7 +124,6 @@ class PostgreSQLComponent implements Storage {
         LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
         SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
                 "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
-
 
         // Deprecated
         LOAD_ALL_DOCUMENTS_WITH_LINKS = """
@@ -151,8 +150,7 @@ class PostgreSQLComponent implements Storage {
     }
 
 
-
-    public Map status(String identifier, Connection connection = null) {
+    public Map status(URI uri, Connection connection = null) {
         Map statusMap = [:]
         boolean newConnection = (connection == null)
         try {
@@ -161,7 +159,6 @@ class PostgreSQLComponent implements Storage {
             }
             PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
             statusStmt.setString(1, identifier)
-            statusStmt.setString(2, identifier)
             def rs = statusStmt.executeQuery()
             if (rs.next()) {
                 statusMap['id'] = rs.getString("id")
@@ -171,7 +168,7 @@ class PostgreSQLComponent implements Storage {
                 statusMap['deleted'] = rs.getBoolean("deleted")
                 log.trace("StatusMap: $statusMap")
             } else {
-                log.debug("No results returned for $identifier")
+                log.debug("No results returned for $uri")
                 statusMap['exists'] = false
             }
         } finally {
@@ -179,7 +176,7 @@ class PostgreSQLComponent implements Storage {
                 connection.close()
             }
         }
-        log.debug("Loaded status for ${identifier}: $statusMap")
+        log.debug("Loaded status for ${uri}: $statusMap")
         return statusMap
     }
 
@@ -222,7 +219,7 @@ class PostgreSQLComponent implements Storage {
             }
             saveIdentifiers(doc, connection)
             connection.commit()
-            def status = status(doc.identifier, connection)
+            def status = status(doc.getURI(), connection)
             doc.setCreated(status['created'])
             doc.setModified(status['modified'])
             log.debug("Saved document ${doc.identifier} with timestamps ${doc.created} / ${doc.modified}")
@@ -605,7 +602,9 @@ class PostgreSQLComponent implements Storage {
 
             URI uri = Document.BASE_URI.resolve(identifier)
 
-            def docStatus = status(uri.toString())
+            log.debug("Finding location status for $uri")
+
+            def docStatus = status(uri)
             if (docStatus.exists && !docStatus.deleted) {
                 if (loadDoc) {
                     return new Location(load(docStatus.id)).withResponseCode(301)
