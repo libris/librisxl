@@ -14,6 +14,7 @@ public interface Storage {
     boolean bulkStore(List<Document> documents, boolean createOrUpdate);
     Location locate(String uri, boolean loadDocumentIfFound);
     Document load(String id);
+    List<String> loadCollections();
     Iterable<Document> loadAll(String dataset);
     boolean remove(String id);
     void setVersioning(boolean v);
