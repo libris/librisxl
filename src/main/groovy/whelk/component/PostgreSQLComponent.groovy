@@ -100,6 +100,18 @@ class PostgreSQLComponent implements Storage {
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT manifest->>'collection' as collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND manifest->>'collection' = ?"
+        DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
+        STATUS_OF_DOCUMENT = "SELECT id, created, modified, deleted FROM $mainTableName WHERE id = ? OR manifest->'identifiers' @> ?"
+
+        // Queries
+        QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
+
+        // SQL for settings management
+        LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
+        SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
+                "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
+
+        // Deprecated
         LOAD_ALL_DOCUMENTS_WITH_LINKS = """
             SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
             FROM (
@@ -121,22 +133,10 @@ class PostgreSQLComponent implements Storage {
             ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
             """
 
-        DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
-        STATUS_OF_DOCUMENT = "SELECT id, created, modified, deleted FROM $mainTableName WHERE id = ? OR manifest->'identifiers' @> ?"
-
-        // Queries
-        QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
-
-        // SQL for settings management
-        LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
-        SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
-                "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
-
     }
 
 
-
-    public Map status(String identifier, Connection connection = null) {
+    public Map status(URI uri, Connection connection = null) {
         Map statusMap = [:]
         boolean newConnection = (connection == null)
         try {
@@ -144,8 +144,8 @@ class PostgreSQLComponent implements Storage {
                 connection = getConnection()
             }
             PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
-            statusStmt.setString(1, identifier)
-            statusStmt.setObject(2, mapper.writeValueAsString([identifier]), java.sql.Types.OTHER)
+            statusStmt.setString(1, uri.path.substring(1))
+            statusStmt.setObject(2, mapper.writeValueAsString([uri.toString()]), java.sql.Types.OTHER)
             def rs = statusStmt.executeQuery()
             if (rs.next()) {
                 statusMap['id'] = rs.getString("id")
@@ -155,7 +155,7 @@ class PostgreSQLComponent implements Storage {
                 statusMap['deleted'] = rs.getBoolean("deleted")
                 log.trace("StatusMap: $statusMap")
             } else {
-                log.debug("No results returned for $identifier")
+                log.debug("No results returned for $uri")
                 statusMap['exists'] = false
             }
         } finally {
@@ -163,7 +163,7 @@ class PostgreSQLComponent implements Storage {
                 connection.close()
             }
         }
-        log.debug("Loaded status for ${identifier}: $statusMap")
+        log.debug("Loaded status for ${uri}: $statusMap")
         return statusMap
     }
 
@@ -205,7 +205,7 @@ class PostgreSQLComponent implements Storage {
                 saveVersion(doc, connection, now)
             }
             connection.commit()
-            def status = status(doc.identifier, connection)
+            def status = status(doc.getURI(), connection)
             doc.setCreated(status['created'])
             doc.setModified(status['modified'])
             log.debug("Saved document ${doc.identifier} with timestamps ${doc.created} / ${doc.modified}")
@@ -561,7 +561,9 @@ class PostgreSQLComponent implements Storage {
 
             URI uri = Document.BASE_URI.resolve(identifier)
 
-            def docStatus = status(uri.toString())
+            log.debug("Finding location status for $uri")
+
+            def docStatus = status(uri)
             if (docStatus.exists && !docStatus.deleted) {
                 if (loadDoc) {
                     return new Location(load(docStatus.id)).withResponseCode(301)
