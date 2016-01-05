@@ -110,12 +110,23 @@ class Crud extends HttpServlet {
         sendResponse(response, jsonResult, "application/json")
     }
 
-
+    void displayInfo(response) {
+        def info = [:]
+        info["system"] = "LIBRISXL"
+        info["version"] = whelk.storage.loadSettings("system").get("version")
+        info["format"] = "linked-data-api"
+        info["collections"] = whelk.storage.loadCollections()
+        sendResponse(response, mapper.writeValueAsString(info), "application/json")
+    }
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo.endsWith("/")) {
-            handleQuery(request, response, request.pathInfo.replaceAll("/", ""))
+            if (request.pathInfo == "/") {
+                displayInfo(response)
+            } else {
+                handleQuery(request, response, request.pathInfo.replaceAll("/", ""))
+            }
             return
         }
 
