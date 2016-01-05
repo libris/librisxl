@@ -38,7 +38,7 @@ class PostgreSQLComponent implements Storage {
     protected String UPSERT_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION,
                      GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
                      LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE,
-                     INSERT_IDENTIFIERS, LOAD_IDENTIFIERS, DELETE_IDENTIFIERS
+                     INSERT_IDENTIFIERS, LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
 
@@ -109,6 +109,7 @@ class PostgreSQLComponent implements Storage {
         GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
         LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
+        LOAD_COLLECTIONS = "SELECT DISTINCT manifest->>'collection' as collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND manifest->>'collection' = ?"
         LOAD_IDENTIFIERS = "SELECT identifier from $idTableName WHERE id = ?"
 
@@ -180,6 +181,21 @@ class PostgreSQLComponent implements Storage {
         }
         log.debug("Loaded status for ${identifier}: $statusMap")
         return statusMap
+    }
+
+    @Override
+    public List<String> loadCollections() {
+        Connection connection = getConnection()
+        PreparedStatement collectionStatement = connection.prepareStatement(LOAD_COLLECTIONS)
+        ResultSet collectionResults = collectionStatement.executeQuery()
+        List<String> collections = []
+        while (collectionResults.next()) {
+            String c = collectionResults.getString("collection")
+            if (c) {
+                collections.add(c)
+            }
+        }
+        return collections
     }
 
     @Override
@@ -516,6 +532,7 @@ class PostgreSQLComponent implements Storage {
         return [jsonbPath.toString(), value]
     }
 
+    // TODO: Must find something other than sameAs to identify alternate identifiers for document
     void findIdentifiers(Document doc) {
         log.debug("Finding identifiers in ${doc.data}")
         doc.addIdentifier(doc.getURI().toString())
@@ -632,7 +649,6 @@ class PostgreSQLComponent implements Storage {
         return doc
     }
 
-    
     private Document loadFromSql(String sql, Map<Integer, Object> parameters) {
         Document doc = null
         log.debug("loadFromSql $parameters ($sql)")
