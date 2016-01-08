@@ -7,6 +7,9 @@ import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
@@ -16,26 +19,44 @@ import java.util.Map;
 public class OaiPmh extends HttpServlet {
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        PrintWriter writer = res.getWriter();
-        Map params = req.getParameterMap();
-        writer.write("get ok, params = \n");
-        for (Object key : params.keySet())
-        {
-            String[] values = (String[])params.get(key);
-            for (String value : values)
-                writer.write(key + " -> " + value);
-        }
+        sendResponse(req, res);
     }
 
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        PrintWriter writer = res.getWriter();
-        Map params = req.getParameterMap();
-        writer.write("post ok, params = \n");
-        for (Object key : params.keySet())
+        sendResponse(req, res);
+    }
+
+    private void sendResponse(HttpServletRequest req, HttpServletResponse res) throws IOException
+    {
+        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder xmlBuilder = null;
+        try {
+            xmlBuilder = builderFactory.newDocumentBuilder();
+        } catch (ParserConfigurationException e)
         {
-            String[] values = (String[])params.get(key);
-            for (String value : values)
-                writer.write(key + " -> " + value);
+            res.sendError(500, e.getMessage());
+            return;
+        }
+
+        String verb = req.getParameter("verb");
+
+        switch (verb)
+        {
+            case "GetRecord":
+                break;
+            case "Identify":
+                break;
+            case "ListIdentifiers":
+                break;
+            case "ListMetadataFormats":
+                break;
+            case "ListRecords":
+                ListRecords.createResponse(req, xmlBuilder);
+                break;
+            case "ListSets":
+                break;
+            default:
+                res.sendError(400, "Correct OAI-PMH verb required.");
         }
     }
 
