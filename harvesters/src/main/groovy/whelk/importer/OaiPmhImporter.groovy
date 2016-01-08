@@ -245,7 +245,7 @@ class OaiPmhImporter {
                 String legacyIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
                 String deleteIdentifier = LegacyIntegrationTools.generateId(legacyIdentifier)
                     try {
-                        log.info("Deleting recod $legacyIdentifier ($deleteIdentifier)")
+                        log.info("Deleting record $legacyIdentifier ($deleteIdentifier)")
                         whelk.remove(deleteIdentifier)
                     } catch (Exception e2) {
                         log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
