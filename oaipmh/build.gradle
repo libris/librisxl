@@ -1,20 +1,10 @@
-import org.gradle.api.plugins.jetty.JettyRun
+apply plugin: 'java'
 apply plugin: 'jetty'
 apply plugin: 'war'
 apply plugin: 'maven'
-apply plugin: 'java'
-
-
-
-archivesBaseName = "oaipmhexporter"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-
-test.testLogging {
-    showStandardStreams true
-    exceptionFormat "full"
-}
 
 repositories {
     mavenCentral()
@@ -22,100 +12,18 @@ repositories {
     flatDir name: 'localDir', dirs: '../dep/lib'
 }
 
-configurations {
-    executableWarDeps
-}
-
-
 dependencies {
     compile project(':../core')
     compile project(':../converters')
 
-    def jettyVersion="8.1.16.v20140903"
+    def jettyVersion="9.3.6.v20151106"
 
-    // Common tools
-    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
-    compile 'commons-cli:commons-cli:1.2'
-    compile 'commons-io:commons-io:2.4'
-    compile 'commons-codec:commons-codec:1.7'
-    compile "com.google.guava:guava:16.0.1"
-    compile 'commons-collections:commons-collections:3.2.1'
-    compile "org.apache.httpcomponents:httpclient:4.3.1"
-    compile "stax:stax:1.2.0"
-    compile "stax:stax-api:1.0.1"
-    compile 'ch.qos.logback:logback-core:1.1.2'
-    compile 'ch.qos.logback:logback-classic:1.1.2'
-    compile 'org.slf4j:slf4j-api:1.7.6'
-    compile 'org.slf4j:log4j-over-slf4j:1.7.6'
-    compile 'org.apache.commons:commons-dbcp2:2.0.1'
-    // Integration
-    compile "org.apache.commons:commons-lang3:3.3.2"
-    compile 'com.vividsolutions:jts:1.13'
-    compile 'org.picocontainer:picocontainer:2.15'
-    /* Not needed?
-    compile 'com.thoughtworks.paranamer:paranamer:2.7'
-    compile 'asm:asm:3.3.1'
-    */
-    // Standalone
+    // Sql connection pool
+    compile 'com.zaxxer:HikariCP:2.4.3'
+
+    // Jetty
     compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
     compile "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    // Servlet dependencies
-    compile 'com.thetransactioncompany:cors-filter:2.1.2'
-    providedCompile 'javax.servlet:servlet-api:2.5'
-
-    // profiling and test
-    testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"
-    testCompile 'cglib:cglib-nodep:3.1'
-    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-
-    // Standalone
-    executableWarDeps "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    executableWarDeps "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
-    executableWarDeps 'commons-cli:commons-cli:1.2'
+    compile "org.eclipse.jetty:jetty-http:${jettyVersion}"
+    compile "org.eclipse.jetty:jetty-io:${jettyVersion}"
 }
-
-configurations {
-    all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
-}
-
-/*
-war {
-    baseName = archivesBaseName
-
-    // Prevent circular log redirection; use slf4j
-    from {configurations.executableWarDeps.collect {
-            //it.isDirectory() ? it : project.zipTree(it)
-            it.isDirectory() ? it : project.zipTree(it).matching {
-                exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
-            }
-        }
-    }
-    from "$buildDir/classes/main"
-
-     def manifestClasspath = configurations.compile.collect { "/WEB-INF/lib/${it.getName()}" }.join(',') 
-
-    manifest {
-        attributes 'Implementation-Title': 'Standalone Whelk',
-        'Implementation-Version': version,
-        'Main-Class': 'whelk.component.support.JettyServer',
-        'Class-Path': manifestClasspath
-    }
-
-
-}
-*/
-
-task jettyRun(type: JettyRun, overwrite: true) {
-    jettyRun.contextPath = archivesBaseName
-    jettyRun.httpPort = 8180
-    jettyRun.description = "Starts a jetty instance."
-
-    //reload = "automatic"
-    //scanIntervalSeconds = 1
-
-    def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
-    System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
-    System.setProperty('whelk.mode', System.getProperty("whelk.mode", "ops"))
-}
-
-

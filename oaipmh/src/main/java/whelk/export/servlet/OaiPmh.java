@@ -11,16 +11,41 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
 import java.util.HashMap;
+import java.util.Map;
 
-/**
- * Created by lisa on 15/10/15.
- */
 public class OaiPmh extends HttpServlet {
 
-    Connection connection = null;
+    public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        PrintWriter writer = res.getWriter();
+        Map params = req.getParameterMap();
+        writer.write("get ok, params = \n");
+        for (Object key : params.keySet())
+        {
+            String[] values = (String[])params.get(key);
+            for (String value : values)
+                writer.write(key + " -> " + value);
+        }
+    }
 
-    public void doGet(HttpServletRequest req, HttpServletResponse res){
-        try {
+    public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        PrintWriter writer = res.getWriter();
+        Map params = req.getParameterMap();
+        writer.write("post ok, params = \n");
+        for (Object key : params.keySet())
+        {
+            String[] values = (String[])params.get(key);
+            for (String value : values)
+                writer.write(key + " -> " + value);
+        }
+    }
+
+    /*
+    public void doGet(HttpServletRequest req, HttpServletResponse res)
+    {
+        System.out.println("Get is correctly wired!\n\n");
+
+        try
+        {
             System.out.println(req.getPathInfo());
             String dataset = req.getPathInfo().split("/")[1];
             System.out.println(dataset);
@@ -64,7 +89,7 @@ public class OaiPmh extends HttpServlet {
                 }
 
 
-            }*/
+            }*
 
             else {
                 PrintWriter out = res.getWriter();
@@ -80,7 +105,8 @@ public class OaiPmh extends HttpServlet {
     }
 
     @Override
-    public void init() {
+    public void init()
+    {
         System.out.println("initing");
         try {
             Class.forName("org.postgresql.Driver");
@@ -92,6 +118,7 @@ public class OaiPmh extends HttpServlet {
         }
         System.out.println("outiting");
 
-    }
-}
 
+    }
+    */
+}
