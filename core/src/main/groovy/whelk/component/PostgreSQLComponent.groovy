@@ -12,12 +12,15 @@ import whelk.Location
 import whelk.exception.StorageCreateFailedException
 
 import java.security.MessageDigest
+import java.sql.BatchUpdateException
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Timestamp
 import java.sql.PreparedStatement
 import java.sql.Connection
 import java.sql.Types
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 @Log
 class PostgreSQLComponent implements Storage {
@@ -32,15 +35,20 @@ class PostgreSQLComponent implements Storage {
     boolean versioning = true
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_ALTERNATE_ID, LOAD_ALL_DOCUMENTS, LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION, LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE, LOAD_COLLECTIONS
+    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION,
+                     GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
+                     LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE,
+                     INSERT_IDENTIFIERS, LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
+
+    // Deprecated
+    protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
 
     // Query defaults
     static final int DEFAULT_PAGE_SIZE=50
 
     // Query idiomatic data
-
 
     static final Map<StorageType, String> SQL_PREFIXES = [
             (StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS): "data->'descriptions'",
@@ -54,6 +62,7 @@ class PostgreSQLComponent implements Storage {
 
     PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
         mainTableName = sqlMaintable
+        String idTableName = mainTableName + "__identifiers"
         String versionsTableName = mainTableName + "__versions"
         String settingsTableName = mainTableName + "__settings"
 
@@ -89,19 +98,24 @@ class PostgreSQLComponent implements Storage {
                 "OR manifest @> ? RETURNING *) " +
             "INSERT INTO $mainTableName (id, data, quoted, manifest, deleted) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
         INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,quoted,manifest,deleted) VALUES (?,?,?,?,?)"
+        DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
+        INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, identifier) VALUES (?,?)"
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"// (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)" +
 
         GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created' AS created,modified,manifest->>'deleted' AS deleted FROM $versionsTableName WHERE id = ? ORDER BY modified"
-        GET_DOCUMENT_BY_ALTERNATE_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
+        GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
         LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT manifest->>'collection' as collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND manifest->>'collection' = ?"
+        LOAD_IDENTIFIERS = "SELECT identifier from $idTableName WHERE id = ?"
+
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
-        STATUS_OF_DOCUMENT = "SELECT id, created, modified, deleted FROM $mainTableName WHERE id = ? OR manifest->'identifiers' @> ?"
+        //STATUS_OF_DOCUMENT = "SELECT id, created, modified, deleted FROM $mainTableName WHERE id = ? OR manifest->'identifiers' @> ?"
+        STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.identifier = ?"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -144,8 +158,7 @@ class PostgreSQLComponent implements Storage {
                 connection = getConnection()
             }
             PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
-            statusStmt.setString(1, uri.path.substring(1))
-            statusStmt.setObject(2, mapper.writeValueAsString([uri.toString()]), java.sql.Types.OTHER)
+            statusStmt.setString(1, identifier)
             def rs = statusStmt.executeQuery()
             if (rs.next()) {
                 statusMap['id'] = rs.getString("id")
@@ -204,6 +217,7 @@ class PostgreSQLComponent implements Storage {
                 insert.executeUpdate()
                 saveVersion(doc, connection, now)
             }
+            saveIdentifiers(doc, connection)
             connection.commit()
             def status = status(doc.getURI(), connection)
             doc.setCreated(status['created'])
@@ -213,7 +227,14 @@ class PostgreSQLComponent implements Storage {
         } catch (PSQLException psqle) {
             log.debug("SQL failed: ${psqle.message}")
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
-                throw new StorageCreateFailedException(doc.id)
+                Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
+                Matcher m = messageDetailPattern.matcher(psqle.message)
+                String duplicateId = doc.id
+                if (m.matches()) {
+                    log.debug("Problem is that ${m.group(1)} already contains value ${m.group(2)}")
+                    duplicateId = m.group(2)
+                }
+                throw new StorageCreateFailedException(duplicateId)
             } else {
                 throw psqle
             }
@@ -226,6 +247,24 @@ class PostgreSQLComponent implements Storage {
             log.debug("[store] Closed connection.")
         }
         return null
+    }
+
+    private void saveIdentifiers(Document doc, Connection connection) {
+        PreparedStatement removeIdentifiers = connection.prepareStatement(DELETE_IDENTIFIERS)
+        removeIdentifiers.setString(1, doc.id)
+        int numRemoved = removeIdentifiers.executeUpdate()
+        log.debug("Removed $numRemoved identifiers for id ${doc.id}")
+        PreparedStatement altIdInsert = connection.prepareStatement(INSERT_IDENTIFIERS)
+        for (altId in doc.getIdentifiers()) {
+            altIdInsert.setString(1, doc.id)
+            altIdInsert.setString(2, altId)
+            altIdInsert.addBatch()
+        }
+        try {
+            altIdInsert.executeBatch()
+        } catch (BatchUpdateException bue) {
+            throw bue.getNextException()
+        }
     }
 
     private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc) {
@@ -312,6 +351,7 @@ class PostgreSQLComponent implements Storage {
                     batch = rigInsertStatement(batch, doc)
                 }
                 batch.addBatch()
+                saveIdentifiers(doc, connection)
             }
             batch.executeBatch()
             ver_batch.executeBatch()
@@ -491,6 +531,7 @@ class PostgreSQLComponent implements Storage {
 
     // TODO: Must find something other than sameAs to identify alternate identifiers for document
     void findIdentifiers(Document doc) {
+        log.debug("Finding identifiers in ${doc.data}")
         doc.addIdentifier(doc.getURI().toString())
         URI docId = JsonLd.findRecordURI(doc.data)
         if (docId) {
@@ -507,11 +548,11 @@ class PostgreSQLComponent implements Storage {
             }
         } else {
             for (entry in doc.data.get(Document.GRAPH_KEY)) {
-                URI entryURI = new URI(entry[JsonLd.ID_KEY])
+                URI entryURI = Document.BASE_URI.resolve(entry[JsonLd.ID_KEY])
                 if (entryURI == doc.getURI()) {
                     for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
-                        if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
-                            doc.addIdentifier(sameAs.get(JsonLd.ID_KEY))
+                        if (sameAs.key == JsonLd.ID_KEY) {
+                            doc.addIdentifier(sameAs.value)
                         }
                     }
                 }
@@ -571,9 +612,9 @@ class PostgreSQLComponent implements Storage {
                     return new Location().withURI(uri).withResponseCode(301)
                 }
             }
-            // TODO: Make real sameAs query here
+
             log.debug("Check sameAs identifiers.")
-            doc = loadByAlternateIdentifier(identifier)
+            doc = loadBySameAsIdentifier(identifier)
             if (doc) {
                 if (loadDoc) {
                     return new Location(doc).withResponseCode(303)
@@ -630,15 +671,7 @@ class PostgreSQLComponent implements Storage {
             log.trace("Executed query.")
             if (rs.next()) {
                 log.trace("next")
-                def manifest = mapper.readValue(rs.getString("manifest"), Map)
-                doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
-                doc.setModified(rs.getTimestamp("modified").getTime())
-                try {
-                    doc.setCreated(rs.getTimestamp("created").getTime())
-                    doc.deleted = rs.getBoolean("deleted")
-                } catch (SQLException sqle) {
-                    log.trace("Resultset didn't have created or deleted. Probably a version request.")
-                }
+                doc = assembleDocument(rs)
                 log.trace("Created document with id ${doc.id}")
             } else if (log.isTraceEnabled()) {
                 log.trace("No results returned for get($id)")
@@ -650,9 +683,10 @@ class PostgreSQLComponent implements Storage {
         return doc
     }
 
-    Document loadByAlternateIdentifier(String identifier) {
-        //String sql = GET_DOCUMENT_BY_ALTERNATE_ID.replace("?", '"' + identifier + '"')
-        return loadFromSql(GET_DOCUMENT_BY_ALTERNATE_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]])
+
+
+    Document loadBySameAsIdentifier(String identifier) {
+        return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]])
     }
 
     List<Document> loadAllVersions(String identifier) {
@@ -682,11 +716,40 @@ class PostgreSQLComponent implements Storage {
     }
 
     private Document assembleDocument(ResultSet rs) {
+        /*
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map), mapper.readValue(rs.getString("manifest"), Map))
         doc.setCreated(rs.getTimestamp("created")?.getTime())
         doc.setModified(rs.getTimestamp("modified").getTime())
         doc.setDeleted(rs.getBoolean("deleted") ?: false)
+        */
+
+        def manifest = mapper.readValue(rs.getString("manifest"), Map)
+        manifest.remove(Document.ALTERNATE_ID_KEY)
+        Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
+        doc.setModified(rs.getTimestamp("modified").getTime())
+        try {
+            doc.setCreated(rs.getTimestamp("created")?.getTime())
+            doc.deleted = rs.getBoolean("deleted")
+        } catch (SQLException sqle) {
+            log.trace("Resultset didn't have created or deleted. Probably a version request.")
+        }
+
+        for (altId in loadIdentifiers(doc.id)) {
+            doc.addIdentifier(altId)
+        }
         return doc
+
+    }
+
+    private List<String> loadIdentifiers(String id) {
+        List<String> identifiers = []
+        PreparedStatement loadIds = getConnection().prepareStatement(LOAD_IDENTIFIERS)
+        loadIds.setString(1,id)
+        ResultSet rs = loadIds.executeQuery()
+        while (rs.next()) {
+            identifiers << rs.getString("identifier")
+        }
+        return identifiers
     }
 
     private Iterable<Document> loadAllDocuments(String collection, boolean withLinks, Date since = null, Date until = null) {
@@ -768,9 +831,12 @@ class PostgreSQLComponent implements Storage {
         } else {
             Connection connection = getConnection()
             PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
+            PreparedStatement delidstmt = connection.prepareStatement(DELETE_IDENTIFIERS)
             try {
                 delstmt.setString(1, identifier)
                 delstmt.executeUpdate()
+                delidstmt.setString(1, identifier)
+                delidstmt.executeUpdate()
                 return true
             } finally {
                 connection.close()
