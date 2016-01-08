@@ -19,7 +19,7 @@ class Document {
     static final String NON_JSON_CONTENT_KEY = "content"
     static final String ALTERNATE_ID_KEY = "identifiers"
 
-    static final URI BASE_URI = new URI(PropertyLoader.loadProperties("component").get("baseUri", "https://libris.kb.se/"))
+    static final URI BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
 
     @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()

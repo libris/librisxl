@@ -202,7 +202,6 @@ class ScheduledJob implements Runnable {
 
     void disable() {
         active = false
-        println("Setting ws: stopped")
         loadWhelkState().put("status", "STOPPED")
         storage.saveSettings(collection, whelkState)
     }
