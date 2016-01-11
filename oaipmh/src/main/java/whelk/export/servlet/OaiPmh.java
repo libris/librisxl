@@ -54,7 +54,9 @@ public class OaiPmh extends HttpServlet {
             HashMap<String, Object> datamap = new ObjectMapper().readValue(data, HashMap.class);
             HashMap<String, Object> manifestmap = new ObjectMapper().readValue(manifest, HashMap.class);
             Document jsonLDdoc = new Document(datamap, manifestmap);
-            System.out.println("DB item: " + jsonLDdoc.getId());
+            //System.out.println("DB item: " + jsonLDdoc.getId());
+            res.getOutputStream().write(jsonLDdoc.getId().getBytes());
+            res.getOutputStream().write("\n".getBytes());
                 /*JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
                 Document marcXMLDoc = converter.convert(jsonLDdoc);
                 System.out.println(marcXMLDoc.getData());
@@ -78,6 +80,8 @@ public class OaiPmh extends HttpServlet {
     private void sendResponse(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
         String verb = req.getParameter("verb");
+        if (verb == null)
+            res.sendError(400, "Correct OAI-PMH verb required.");
 
         try
         {

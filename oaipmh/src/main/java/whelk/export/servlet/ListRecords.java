@@ -5,9 +5,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.sql.*;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 public class ListRecords {
@@ -24,7 +21,7 @@ public class ListRecords {
             response.sendError(400, "badArgument");
 
         if (from == null)
-            from = "1970-01-01";
+            from = "0000-01-01";
 
         ZonedDateTime fromDateTime = OaiPmh.parseISO8601(from);
         ZonedDateTime untilDateTime = OaiPmh.parseISO8601(until);
@@ -32,11 +29,25 @@ public class ListRecords {
         try (Connection dbconn = DataBase.getConnection())
         {
             String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-            
+
+            // Construct the query
             String selectSQL = "SELECT data, manifest FROM " + tableName +
-                    " WHERE created > ? LIMIT 5";
+                    " WHERE created > ? ";
+            if (untilDateTime != null)
+                selectSQL += " AND created < ? ";
+            if (set != null)
+                selectSQL += " AND manifest->>'dataset' = ? ";
+
+            selectSQL += " LIMIT 10 "; // TEMP
             PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
-            preparedStatement.setTimestamp(1, new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L));
+
+            // Assign parameters
+            int parameterIndex = 1;
+            preparedStatement.setTimestamp(parameterIndex++, new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L));
+            if (untilDateTime != null)
+                preparedStatement.setTimestamp(parameterIndex++, new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L));
+            if (set != null)
+                preparedStatement.setString(parameterIndex++, set);
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
