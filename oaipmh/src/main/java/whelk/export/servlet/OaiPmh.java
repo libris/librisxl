@@ -3,6 +3,7 @@ package whelk.export.servlet;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
+import whelk.util.PropertyLoader;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -10,54 +11,75 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 public class OaiPmh extends HttpServlet {
 
-    public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    public static Properties configuration;
+
+    public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
+    {
         sendResponse(req, res);
     }
 
-    public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException
+    {
         sendResponse(req, res);
     }
 
     private void sendResponse(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
-        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder xmlBuilder = null;
-        try {
-            xmlBuilder = builderFactory.newDocumentBuilder();
-        } catch (ParserConfigurationException e)
-        {
-            res.sendError(500, e.getMessage());
-            return;
-        }
-
         String verb = req.getParameter("verb");
 
-        switch (verb)
+        try
         {
-            case "GetRecord":
-                break;
-            case "Identify":
-                break;
-            case "ListIdentifiers":
-                break;
-            case "ListMetadataFormats":
-                break;
-            case "ListRecords":
-                ListRecords.createResponse(req, xmlBuilder);
-                break;
-            case "ListSets":
-                break;
-            default:
-                res.sendError(400, "Correct OAI-PMH verb required.");
+            switch (verb) {
+                case "GetRecord":
+                    break;
+                case "Identify":
+                    break;
+                case "ListIdentifiers":
+                    break;
+                case "ListMetadataFormats":
+                    break;
+                case "ListRecords":
+                    ListRecords.streamResponse(req, res);
+                    break;
+                case "ListSets":
+                    break;
+                default:
+                    res.sendError(400, "Correct OAI-PMH verb required.");
+            }
         }
+        catch (XMLStreamException e)
+        {
+            e.printStackTrace();
+            res.sendError(500);
+            // TODO: LOG!
+        }
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+            res.sendError(500);
+            // TODO: LOG!
+        }
+    }
+
+    public void init()
+    {
+        configuration = PropertyLoader.loadProperties("secret");
+        DataBase.init();
+    }
+
+    public void destroy()
+    {
+        DataBase.destroy();
     }
 
     /*
