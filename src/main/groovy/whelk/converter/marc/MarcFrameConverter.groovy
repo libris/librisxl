@@ -29,7 +29,7 @@ class MarcFrameConverter implements FormatConverter {
 
     protected MarcConversion conversion
 
-    MarcFrameConverter(uriSpacePath=null) {
+    MarcFrameConverter() {
         def config = readConfig("$cfgBase/marcframe.json") {
             mapper.readValue(it, Map)
         }
@@ -105,30 +105,32 @@ class MarcFrameConverter implements FormatConverter {
     }
 
     public static void main(String[] args) {
-        def fpath = args[0]
-        def cmd = null
-        def uriSpace = null
-        if (args.length > 2) {
+        List fpaths
+        def cmd = "convert"
+        if (args.length > 1) {
             cmd = args[0]
-            uriSpace = args[1]
-            fpath = args[2]
-        } else if (args.length > 1) {
-            cmd = args[0]
-            fpath = args[1]
+            fpaths = args[1..-1]
+        } else  {
+            fpaths = args[0..-1]
         }
-        def converter = uriSpace? new MarcFrameConverter(uriSpace) : new MarcFrameConverter()
-        def source = converter.mapper.readValue(new File(fpath), Map)
-        def result = null
-        if (cmd == "revert") {
-            if (source.descriptions) {
-                def entryId = source.descriptions.entry['@id']
-                source = JsonLd.frame(entryId, source)
+        def converter = new MarcFrameConverter()
+
+        for (fpath in fpaths) {
+            def source = converter.mapper.readValue(new File(fpath), Map)
+            def result = null
+            if (cmd == "revert") {
+                if (source.descriptions) {
+                    def entryId = source.descriptions.entry['@id']
+                    source = JsonLd.frame(entryId, source)
+                }
+                result = converter.runRevert(source)
+            } else {
+                result = converter.runConvert(source, fpath)
             }
-            result = converter.runRevert(source)
-        } else {
-            result = converter.runConvert(source, fpath)
+            if (fpaths.size() > 1)
+                println "SOURCE: ${fpath}"
+            println converter.mapper.writeValueAsString(result)
         }
-        converter.mapper.writeValue(System.out, result)
     }
 
 }
