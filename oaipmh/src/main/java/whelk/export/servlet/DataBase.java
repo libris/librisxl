@@ -49,6 +49,7 @@ public class DataBase {
         dataSource.setJdbcUrl( jdbcUrlPrefix + urlPart );
         dataSource.setUsername(user);
         dataSource.setPassword(password);
+        dataSource.setAutoCommit(false);
     }
 
     public static void destroy()

@@ -1,54 +1,46 @@
 package whelk.export.servlet;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import whelk.Document;
-import whelk.converter.marc.JsonLD2MarcXMLConverter;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
+import java.sql.*;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
 public class ListRecords {
-    public static void streamResponse(HttpServletRequest req, HttpServletResponse res)
+    public static void handleListRecordsRequest(HttpServletRequest req, HttpServletResponse response)
             throws IOException, XMLStreamException, SQLException
     {
-        XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+        String from = req.getParameter("from"); // optional
+        String until = req.getParameter("until"); // optional
+        String set = req.getParameter("set"); // optional
+        String resumptionToken = req.getParameter("resumptionToken"); // exclusive, not supported/used
+        String metadataPrefix = req.getParameter("metadataPrefix"); // required
+
+        if (resumptionToken != null || metadataPrefix == null)
+            response.sendError(400, "badArgument");
+
+        if (from == null)
+            from = "1970-01-01";
+
+        ZonedDateTime fromDateTime = OaiPmh.parseISO8601(from);
+        ZonedDateTime untilDateTime = OaiPmh.parseISO8601(until);
 
         try (Connection dbconn = DataBase.getConnection())
         {
-            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(res.getOutputStream());
-
             String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-            String selectSQL = "SELECT data, manifest FROM " + tableName + " LIMIT 5";
+            
+            String selectSQL = "SELECT data, manifest FROM " + tableName +
+                    " WHERE created > ? LIMIT 5";
             PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
-            //preparedStatement.setString(1, OaiPmh.configuration.getProperty("sqlMaintable"));
-            ResultSet rs = preparedStatement.executeQuery();
+            preparedStatement.setTimestamp(1, new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L));
 
-            while (rs.next())
-            {
-                String data = rs.getString("data");
-                String manifest = rs.getString("manifest");
-                HashMap<String, Object> datamap = new ObjectMapper().readValue(data, HashMap.class);
-                HashMap<String, Object> manifestmap = new ObjectMapper().readValue(manifest, HashMap.class);
-                Document jsonLDdoc = new Document(datamap, manifestmap);
-                System.out.println("DB item: " + jsonLDdoc.getId());
-                /*JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
-                Document marcXMLDoc = converter.convert(jsonLDdoc);
-                System.out.println(marcXMLDoc.getData());
-                PrintWriter out = res.getWriter();
-                out.print(datat);
-                out.flush();*/
-            }
+            ResultSet resultSet = preparedStatement.executeQuery();
 
-            writer.close();
+            OaiPmh.streamResponse(resultSet, response);
         }
     }
 }
