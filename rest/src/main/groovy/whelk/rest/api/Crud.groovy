@@ -235,8 +235,13 @@ class Crud extends HttpServlet {
     }
 
     void sendRedirect(HttpServletRequest request, HttpServletResponse response, Location location) {
-        def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
-        response.setHeader("Location", locationRef + location.uri.toString())
+        if (location.getUri().getScheme() == null) {
+            def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
+            response.setHeader("Location", locationRef + location.uri.toString())
+        } else {
+            response.setHeader("Location", location.uri.toString())
+        }
+
         sendResponse(response, new byte[0], null, location.responseCode)
     }
 

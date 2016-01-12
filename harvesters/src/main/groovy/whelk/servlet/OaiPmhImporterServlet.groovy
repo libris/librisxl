@@ -69,9 +69,6 @@ class OaiPmhImporterServlet extends HttpServlet {
             table.append("</tr>")
             List categories = catSet.toList()
 
-            log.info("state: $state")
-            log.info("Categories: $catSet")
-
             int i = 0
             for (cat in categories) {
                 table.append("<tr><td align=\"right\"><b>$cat</b></td>")
