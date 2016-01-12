@@ -18,7 +18,10 @@ public class ListRecords {
         String metadataPrefix = req.getParameter("metadataPrefix"); // required
 
         if (resumptionToken != null || metadataPrefix == null)
-            response.sendError(400, "badArgument");
+        {
+            OaiPmh.sendOaiPmhError("badArgument", "", response);
+            return;
+        }
 
         if (from == null)
             from = "0000-01-01";

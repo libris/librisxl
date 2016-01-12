@@ -47,6 +47,8 @@ public class OaiPmh extends HttpServlet {
         XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
         XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(res.getOutputStream());
 
+        writeOaiPmhHeader(writer);
+
         while (resultSet.next())
         {
             String data = resultSet.getString("data");
@@ -54,9 +56,11 @@ public class OaiPmh extends HttpServlet {
             HashMap<String, Object> datamap = new ObjectMapper().readValue(data, HashMap.class);
             HashMap<String, Object> manifestmap = new ObjectMapper().readValue(manifest, HashMap.class);
             Document jsonLDdoc = new Document(datamap, manifestmap);
-            //System.out.println("DB item: " + jsonLDdoc.getId());
-            res.getOutputStream().write(jsonLDdoc.getId().getBytes());
-            res.getOutputStream().write("\n".getBytes());
+
+
+            System.out.println("DB item: " + jsonLDdoc.getId());
+            //res.getOutputStream().write(jsonLDdoc.getId().getBytes());
+            //res.getOutputStream().write("\n".getBytes());
                 /*JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
                 Document marcXMLDoc = converter.convert(jsonLDdoc);
                 System.out.println(marcXMLDoc.getData());
@@ -65,7 +69,23 @@ public class OaiPmh extends HttpServlet {
                 out.flush();*/
         }
 
-        writer.close();
+        writeOaiPmhClose(writer);
+    }
+
+    public static void sendOaiPmhError(String errorCode, String extraMessage, HttpServletResponse res)
+            throws IOException, XMLStreamException
+    {
+        XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+        XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(res.getOutputStream());
+
+        writeOaiPmhHeader(writer);
+
+        writer.writeStartElement("error");
+        writer.writeAttribute("code", errorCode);
+        writer.writeCharacters(extraMessage);
+        writer.writeEndElement();
+
+        writeOaiPmhClose(writer);
     }
 
     public static ZonedDateTime parseISO8601(String dateTimeString)
@@ -75,6 +95,24 @@ public class OaiPmh extends HttpServlet {
         if (dateTimeString.length() == 10) // Date only
             dateTimeString += "T00:00:00Z";
         return ZonedDateTime.parse(dateTimeString);
+    }
+
+    private static void writeOaiPmhHeader(XMLStreamWriter writer)
+            throws IOException, XMLStreamException
+    {
+        writer.writeStartDocument("UTF-8", "1.0");
+        writer.writeStartElement("OAI-PMH");
+        writer.writeDefaultNamespace("http://www.openarchives.org/OAI/2.0/");
+        writer.writeNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        writer.writeAttribute("http://www.w3.org/2001/XMLSchema-instance", "schemaLocation", "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
+    }
+
+    private static void writeOaiPmhClose(XMLStreamWriter writer)
+            throws IOException, XMLStreamException
+    {
+        writer.writeEndElement();
+        writer.writeEndDocument();
+        writer.close();
     }
 
     private void sendResponse(HttpServletRequest req, HttpServletResponse res) throws IOException
