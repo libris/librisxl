@@ -264,7 +264,7 @@ class Crud extends HttpServlet {
                 log.debug("Saving document (${doc.identifier})")
                 doc = whelk.store(doc, (request.getMethod() == "PUT"))
 
-                sendDocumentSavedResponse(response, doc.getURI(), doc.modified.getTime() as String)
+                sendDocumentSavedResponse(response, doc.getURI().toString(), doc.modified.getTime() as String)
             }
         } catch (StorageCreateFailedException scfe) {
             log.warn("Already have document with id ${scfe.duplicateId}")
@@ -307,6 +307,7 @@ class Crud extends HttpServlet {
             }
             if (Document.isJsonLd(cType)) {
                 identifier = JsonLd.findIdentifier(dataMap)
+                log.debug("Found identifier: $identifier")
             }
         }
         if (request.method == "PUT") {

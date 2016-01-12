@@ -576,7 +576,7 @@ class PostgreSQLComponent implements Storage {
         // Remove created and modified from manifest in preparation for checksum calculation
         Date created = doc.manifest.remove(Document.CREATED_KEY)
         Date modified = doc.manifest.remove(Document.MODIFIED_KEY)
-        doc.manifest.remove(Document.CHECKUM_KEY)
+        doc.manifest.remove(Document.CHECKSUM_KEY)
         byte[] manifestbytes= mapper.writeValueAsBytes(doc.manifest)
         byte[] checksumbytes = new byte[databytes.length + manifestbytes.length];
         System.arraycopy(databytes, 0, checksumbytes, 0, databytes.length);
@@ -586,7 +586,7 @@ class PostgreSQLComponent implements Storage {
         BigInteger bigInt = new BigInteger(1,digest)
         String hashtext = bigInt.toString(16)
         log.trace("calculated checksum: $hashtext")
-        doc.manifest[Document.CHECKUM_KEY] = hashtext
+        doc.manifest[Document.CHECKSUM_KEY] = hashtext
         // Reinsert created and modified
         doc.setCreated(created)
         doc.setModified(modified)

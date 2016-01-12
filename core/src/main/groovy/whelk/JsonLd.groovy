@@ -146,6 +146,7 @@ public class JsonLd {
         }
         if (foundIdentifier) {
             if (foundIdentifier.startsWith("/") || foundIdentifier.startsWith(Document.BASE_URI.toString())) {
+                // Assumes only identifier in uri path
                 return Document.BASE_URI.resolve(foundIdentifier).getPath().substring(1)
             }
             return foundIdentifier
