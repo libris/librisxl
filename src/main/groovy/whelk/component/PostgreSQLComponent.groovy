@@ -167,6 +167,7 @@ class PostgreSQLComponent implements Storage {
             def rs = statusStmt.executeQuery()
             if (rs.next()) {
                 statusMap['id'] = rs.getString("id")
+                statusMap['uri'] = Document.BASE_URI.resolve(rs.getString("id"))
                 statusMap['exists'] = true
                 statusMap['created'] = new Date(rs.getTimestamp("created").getTime())
                 statusMap['modified'] = new Date(rs.getTimestamp("modified").getTime())
@@ -616,7 +617,7 @@ class PostgreSQLComponent implements Storage {
                 if (loadDoc) {
                     return new Location(load(docStatus.id)).withResponseCode(301)
                 } else {
-                    return new Location().withURI(uri).withResponseCode(301)
+                    return new Location().withURI(docStatus.uri).withResponseCode(301)
                 }
             }
 
