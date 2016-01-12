@@ -85,6 +85,7 @@ There are two property files in the core module that needs configuring.
   The file is preconfigured with sensible defaults and you probably won't need to change them. IF, however you want to use something different. Make a copy of the file and use the -Dxl.component.properties setting to indicate your own custom file.
 * secret.properties
   * Contains passwords and and such. Make a copy of the secret.properties.in file and enter proper settings.
+  * When running locally, use http://localhost:8180/whelk as baseUri. Document identifiers will be resolved on this, which will make redirects and such work properly.
 
 #### importers module
 
@@ -140,7 +141,7 @@ Install script requirements
 
 Get/create/update datasets:
 
-    $ python datasets.py
+    $ python datasets.py -l
 
 Go back to the importers module.
 
@@ -154,7 +155,7 @@ If you want to clear out any existing definitions (for reload or refresh)
 
 Load the resulting resources into the running whelk:
 
-    $ gradle -Dargs="defs ../definitions/build/definitions.jsonld.lines" doRun
+    $ gradle -Dargs="defs ../../definitions/build/definitions.jsonld.lines" doRun
 
 
 ### Import/update local storage from test data

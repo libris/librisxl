@@ -126,18 +126,18 @@ class OaiPmhImporterServlet extends HttpServlet {
     }
 
     void doPost(HttpServletRequest request, HttpServletResponse response) {
-        log.info("Received post request. Got this: ${request.getParameterMap()}")
+        log.debug("Received post request. Got this: ${request.getParameterMap()}")
         for (reqs in request.getParameterNames()) {
             if (reqs == "action_all") {
                 for (job in jobs) {
                     job.value.disable()
                 }
             } else if (reqs.startsWith("reset_")) {
-                log.info("Loading job for ${reqs.substring(6)}")
-                log.info("Got these jobs: $jobs")
+                log.debug("Loading job for ${reqs.substring(6)}")
+                log.debug("Got these jobs: $jobs")
                 def job = jobs.get(reqs.substring(6))
                 Date startDate = Date.parse("yyyy-MM-dd'T'HH:mm", request.getParameter("datevalue"))
-                log.info("Resetting harvester for ${job.collection} to $startDate")
+                log.debug("Resetting harvester for ${job.collection} to $startDate")
                 job.setStartDate(startDate)
                 //job.enable()
             } else if (reqs.startsWith("action_")) {
@@ -228,9 +228,9 @@ class ScheduledJob implements Runnable {
 
     Map loadWhelkState() {
         if (!whelkState) {
-            log.info("Loading current state from storage ...")
+            log.debug("Loading current state from storage ...")
             whelkState = storage.loadSettings(collection)
-            log.info("Loaded state for $collection : $whelkState")
+            log.debug("Loaded state for $collection : $whelkState")
         }
         return whelkState
     }
@@ -267,7 +267,7 @@ class ScheduledJob implements Runnable {
                 log.trace("Import completed, result: $result")
 
                 if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
-                    log.info("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
+                    log.debug("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
                     whelkState.put("lastImportNrImported", result.numberOfDocuments)
                     whelkState.put("lastImportNrDeleted", result.numberOfDeleted)
                     whelkState.put("lastImportNrSkipped", result.numberOfDocumentsSkipped)

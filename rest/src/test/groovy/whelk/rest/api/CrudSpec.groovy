@@ -48,7 +48,7 @@ class CrudSpec extends Specification {
             }
         }
         storage = GroovyMock(Storage.class)
-        whelk = new Whelk(storage)
+        whelk = new Whelk("version", storage)
         crud = new Crud()
         crud.whelk = whelk
     }

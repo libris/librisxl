@@ -145,14 +145,14 @@ class MarcConversion {
     Map marcTypeMap = [:]
     Map tokenMaps
 
-    URI baseUri
+    URI baseUri = Document.BASE_URI
     String recordUriTemplate
     String thingUriTemplate
 
     MarcConversion(Map config, Map tokenMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.tokenMaps = tokenMaps
-        this.baseUri = new URI(config.baseUri ?: '/')
+        //this.baseUri = new URI(config.baseUri ?: '/')
         if (config.uriTemplates) {
             recordUriTemplate = config.uriTemplates.record
             thingUriTemplate = config.uriTemplates.thing
