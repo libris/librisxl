@@ -49,7 +49,7 @@ public class OaiPmh extends HttpServlet {
         XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
         XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
 
-        writeOaiPmhHeader(writer, request);
+        writeOaiPmhHeader(writer, request, true);
 
         while (resultSet.next())
         {
@@ -80,7 +80,13 @@ public class OaiPmh extends HttpServlet {
         XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
         XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
 
-        writeOaiPmhHeader(writer, request);
+        // The OAI-PMH specification requires that parameters be echoed in response, unless the response has an error
+        // code of badVerb or badArgument, in which case the parameters must be omitted.
+        boolean includeParameters = true;
+        if (errorCode == "badVerb" || errorCode == "badArgument")
+            includeParameters = false;
+
+        writeOaiPmhHeader(writer, request, includeParameters);
 
         writer.writeStartElement("error");
         writer.writeAttribute("code", errorCode);
@@ -99,7 +105,7 @@ public class OaiPmh extends HttpServlet {
         return ZonedDateTime.parse(dateTimeString);
     }
 
-    private static void writeOaiPmhHeader(XMLStreamWriter writer, HttpServletRequest request)
+    private static void writeOaiPmhHeader(XMLStreamWriter writer, HttpServletRequest request, boolean includeParameters)
             throws IOException, XMLStreamException
     {
         // Static header
@@ -117,12 +123,15 @@ public class OaiPmh extends HttpServlet {
 
         // Mandatory request element
         writer.writeStartElement("request");
-        Enumeration<String> parameterNames = request.getParameterNames();
-        while ( parameterNames.hasMoreElements() )
+        if (includeParameters)
         {
-            String parameterName = parameterNames.nextElement();
-            String parameterValue = request.getParameter(parameterName);
-            writer.writeAttribute(parameterName, parameterValue);
+            Enumeration<String> parameterNames = request.getParameterNames();
+            while (parameterNames.hasMoreElements())
+            {
+                String parameterName = parameterNames.nextElement();
+                String parameterValue = request.getParameter(parameterName);
+                writer.writeAttribute(parameterName, parameterValue);
+            }
         }
         writer.writeCharacters( request.getRequestURL().toString() );
         writer.writeEndElement();
@@ -140,7 +149,7 @@ public class OaiPmh extends HttpServlet {
     {
         String verb = req.getParameter("verb");
         if (verb == null)
-            res.sendError(400, "Correct OAI-PMH verb required.");
+            verb = "";
 
         try
         {
@@ -159,7 +168,8 @@ public class OaiPmh extends HttpServlet {
                 case "ListSets":
                     break;
                 default:
-                    res.sendError(400, "Correct OAI-PMH verb required.");
+                    OaiPmh.sendOaiPmhError("badVerb", "OAI-PMH verb must be one of [GetRecord, Identify, " +
+                            "ListIdentifiers, ListMetadataFormats, ListRecords, ListSets]", req, res);
             }
         }
         catch (XMLStreamException e)
