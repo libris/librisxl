@@ -2,6 +2,7 @@ package whelk.export.servlet;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
+import whelk.converter.JsonLD2DublinCoreConverter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,7 +22,9 @@ public class ResponseCommon
     public static void streamResponse(ResultSet resultSet, HttpServletRequest request, HttpServletResponse response)
             throws IOException, XMLStreamException, SQLException
     {
+        response.setContentType("text/xml");
         XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+        xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
         XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
 
         writeOaiPmhHeader(writer, request, true);
@@ -34,6 +37,9 @@ public class ResponseCommon
             HashMap<String, Object> manifestmap = new ObjectMapper().readValue(manifest, HashMap.class);
             Document jsonLDdoc = new Document(datamap, manifestmap);
 
+            JsonLD2DublinCoreConverter converter = new JsonLD2DublinCoreConverter();
+            String converted = (String) converter.convert(jsonLDdoc).getData().get("content");
+            writer.writeCharacters(converted);
 
             System.out.println("DB item: " + jsonLDdoc.getId());
             //res.getOutputStream().write(jsonLDdoc.getId().getBytes());
@@ -52,6 +58,7 @@ public class ResponseCommon
     public static void sendOaiPmhError(String errorCode, String extraMessage, HttpServletRequest request, HttpServletResponse response)
             throws IOException, XMLStreamException
     {
+        response.setContentType("text/xml");
         XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
         XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
 
