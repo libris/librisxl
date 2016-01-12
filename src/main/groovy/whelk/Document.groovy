@@ -15,7 +15,7 @@ class Document {
     static final String DELETED_KEY = "deleted";
     static final String COLLECTION_KEY = "collection";
     static final String CONTENT_TYPE_KEY = "contentType";
-    static final String CHECKUM_KEY = "checksum";
+    static final String CHECKSUM_KEY = "checksum";
     static final String NON_JSON_CONTENT_KEY = "content"
     static final String ALTERNATE_ID_KEY = "identifiers"
 
@@ -140,7 +140,7 @@ class Document {
 
     @JsonIgnore
     String getChecksum() {
-        manifest[CHECKUM_KEY]
+        manifest[CHECKSUM_KEY]
     }
 
     Map getManifest() { manifest }
