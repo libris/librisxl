@@ -158,7 +158,7 @@ class PostgreSQLComponent implements Storage {
                 connection = getConnection()
             }
             PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
-            statusStmt.setString(1, identifier)
+            statusStmt.setString(1, uri.toString())
             def rs = statusStmt.executeQuery()
             if (rs.next()) {
                 statusMap['id'] = rs.getString("id")
@@ -334,6 +334,7 @@ class PostgreSQLComponent implements Storage {
         }
         log.trace("Bulk storing ${docs.size()} documents.")
         Connection connection = getConnection()
+        connection.setAutoCommit(false)
         PreparedStatement batch = connection.prepareStatement((upsert ? UPSERT_DOCUMENT : INSERT_DOCUMENT))
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
@@ -355,10 +356,12 @@ class PostgreSQLComponent implements Storage {
             }
             batch.executeBatch()
             ver_batch.executeBatch()
+            connection.commit()
             log.debug("Stored ${docs.size()} documents in collection ${docs.first().collection} (versioning: ${versioning})")
             return true
         } catch (Exception e) {
-            log.error("Failed to save batch: ${e.message}", e)
+            log.error("Failed to save batch: ${e.message}. Rolling back.", e)
+            connection.rollback()
         } finally {
             connection.close()
             log.trace("[bulkStore] Closed connection.")
@@ -529,7 +532,6 @@ class PostgreSQLComponent implements Storage {
         return [jsonbPath.toString(), value]
     }
 
-    // TODO: Must find something other than sameAs to identify alternate identifiers for document
     void findIdentifiers(Document doc) {
         log.debug("Finding identifiers in ${doc.data}")
         doc.addIdentifier(doc.getURI().toString())
@@ -541,7 +543,7 @@ class PostgreSQLComponent implements Storage {
         if (doc.data.containsKey(JsonLd.DESCRIPTIONS_KEY)){
             def entry = doc.data.get(JsonLd.DESCRIPTIONS_KEY).get("entry")
             for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
-                if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
+                if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY) && sameAs.get(JsonLd.ID_KEY) ==~ /http[s]{0,1}/) {
                     doc.addIdentifier(sameAs.get(JsonLd.ID_KEY))
                     log.debug("Added ${sameAs.get(JsonLd.ID_KEY)} to ${doc.getURI()}")
                 }
@@ -551,7 +553,7 @@ class PostgreSQLComponent implements Storage {
                 URI entryURI = Document.BASE_URI.resolve(entry[JsonLd.ID_KEY])
                 if (entryURI == doc.getURI()) {
                     for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
-                        if (sameAs.key == JsonLd.ID_KEY) {
+                        if (sameAs.key == JsonLd.ID_KEY && sameAs.value ==~ /http[s]{0,1}/) {
                             doc.addIdentifier(sameAs.value)
                         }
                     }
