@@ -49,7 +49,6 @@ class PostgreSQLComponent implements Storage {
     static final int DEFAULT_PAGE_SIZE=50
 
     // Query idiomatic data
-
     static final Map<StorageType, String> SQL_PREFIXES = [
             (StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS): "data->'descriptions'",
             (StorageType.MARC21_JSON): "data->'fields'"
@@ -101,21 +100,27 @@ class PostgreSQLComponent implements Storage {
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, identifier) VALUES (?,?)"
 
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"// (SELECT 1 FROM $versionsTableName WHERE id = ? AND checksum = ?)" +
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? " +
+                "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
+                "ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"
 
         GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
-        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created' AS created,modified,manifest->>'deleted' AS deleted FROM $versionsTableName WHERE id = ? ORDER BY modified"
-        GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
+        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created' AS created,modified,manifest->>'deleted' AS deleted " +
+                "FROM $versionsTableName WHERE id = ? ORDER BY modified"
+        GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName " +
+                "WHERE data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
         LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT manifest->>'collection' as collection FROM $mainTableName"
-        LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND manifest->>'collection' = ?"
+        LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName " +
+                "WHERE modified >= ? AND modified <= ? AND manifest->>'collection' = ?"
         LOAD_IDENTIFIERS = "SELECT identifier from $idTableName WHERE id = ?"
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         //STATUS_OF_DOCUMENT = "SELECT id, created, modified, deleted FROM $mainTableName WHERE id = ? OR manifest->'identifiers' @> ?"
-        STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.identifier = ?"
+        STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
+                "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.identifier = ?"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -543,7 +548,7 @@ class PostgreSQLComponent implements Storage {
         if (doc.data.containsKey(JsonLd.DESCRIPTIONS_KEY)){
             def entry = doc.data.get(JsonLd.DESCRIPTIONS_KEY).get("entry")
             for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
-                if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY) && sameAs.get(JsonLd.ID_KEY) ==~ /http[s]{0,1}/) {
+                if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
                     doc.addIdentifier(sameAs.get(JsonLd.ID_KEY))
                     log.debug("Added ${sameAs.get(JsonLd.ID_KEY)} to ${doc.getURI()}")
                 }
@@ -553,7 +558,7 @@ class PostgreSQLComponent implements Storage {
                 URI entryURI = Document.BASE_URI.resolve(entry[JsonLd.ID_KEY])
                 if (entryURI == doc.getURI()) {
                     for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
-                        if (sameAs.key == JsonLd.ID_KEY && sameAs.value ==~ /http[s]{0,1}/) {
+                        if (sameAs.key == JsonLd.ID_KEY) {
                             doc.addIdentifier(sameAs.value)
                         }
                     }
