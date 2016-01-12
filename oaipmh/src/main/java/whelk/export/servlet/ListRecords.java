@@ -8,18 +8,18 @@ import java.sql.*;
 import java.time.ZonedDateTime;
 
 public class ListRecords {
-    public static void handleListRecordsRequest(HttpServletRequest req, HttpServletResponse response)
+    public static void handleListRecordsRequest(HttpServletRequest request, HttpServletResponse response)
             throws IOException, XMLStreamException, SQLException
     {
-        String from = req.getParameter("from"); // optional
-        String until = req.getParameter("until"); // optional
-        String set = req.getParameter("set"); // optional
-        String resumptionToken = req.getParameter("resumptionToken"); // exclusive, not supported/used
-        String metadataPrefix = req.getParameter("metadataPrefix"); // required
+        String from = request.getParameter("from"); // optional
+        String until = request.getParameter("until"); // optional
+        String set = request.getParameter("set"); // optional
+        String resumptionToken = request.getParameter("resumptionToken"); // exclusive, not supported/used
+        String metadataPrefix = request.getParameter("metadataPrefix"); // required
 
         if (resumptionToken != null || metadataPrefix == null)
         {
-            OaiPmh.sendOaiPmhError("badArgument", "", response);
+            OaiPmh.sendOaiPmhError("badArgument", "", request, response);
             return;
         }
 
@@ -54,7 +54,7 @@ public class ListRecords {
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            OaiPmh.streamResponse(resultSet, response);
+            OaiPmh.streamResponse(resultSet, request, response);
         }
     }
 }

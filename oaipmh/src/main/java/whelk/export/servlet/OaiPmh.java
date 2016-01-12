@@ -12,7 +12,9 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -41,13 +43,13 @@ public class OaiPmh extends HttpServlet {
         DataBase.destroy();
     }
 
-    public static void streamResponse(ResultSet resultSet, HttpServletResponse res)
+    public static void streamResponse(ResultSet resultSet, HttpServletRequest request, HttpServletResponse response)
             throws IOException, XMLStreamException, SQLException
     {
         XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
-        XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(res.getOutputStream());
+        XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
 
-        writeOaiPmhHeader(writer);
+        writeOaiPmhHeader(writer, request);
 
         while (resultSet.next())
         {
@@ -72,13 +74,13 @@ public class OaiPmh extends HttpServlet {
         writeOaiPmhClose(writer);
     }
 
-    public static void sendOaiPmhError(String errorCode, String extraMessage, HttpServletResponse res)
+    public static void sendOaiPmhError(String errorCode, String extraMessage, HttpServletRequest request, HttpServletResponse response)
             throws IOException, XMLStreamException
     {
         XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
-        XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(res.getOutputStream());
+        XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
 
-        writeOaiPmhHeader(writer);
+        writeOaiPmhHeader(writer, request);
 
         writer.writeStartElement("error");
         writer.writeAttribute("code", errorCode);
@@ -97,14 +99,33 @@ public class OaiPmh extends HttpServlet {
         return ZonedDateTime.parse(dateTimeString);
     }
 
-    private static void writeOaiPmhHeader(XMLStreamWriter writer)
+    private static void writeOaiPmhHeader(XMLStreamWriter writer, HttpServletRequest request)
             throws IOException, XMLStreamException
     {
+        // Static header
         writer.writeStartDocument("UTF-8", "1.0");
         writer.writeStartElement("OAI-PMH");
         writer.writeDefaultNamespace("http://www.openarchives.org/OAI/2.0/");
         writer.writeNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance");
-        writer.writeAttribute("http://www.w3.org/2001/XMLSchema-instance", "schemaLocation", "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
+        writer.writeAttribute("http://www.w3.org/2001/XMLSchema-instance", "schemaLocation",
+                "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
+
+        // Mandatory time element
+        writer.writeStartElement("responseDate");
+        writer.writeCharacters( ZonedDateTime.now(ZoneOffset.UTC).toString() );
+        writer.writeEndElement();
+
+        // Mandatory request element
+        writer.writeStartElement("request");
+        Enumeration<String> parameterNames = request.getParameterNames();
+        while ( parameterNames.hasMoreElements() )
+        {
+            String parameterName = parameterNames.nextElement();
+            String parameterValue = request.getParameter(parameterName);
+            writer.writeAttribute(parameterName, parameterValue);
+        }
+        writer.writeCharacters( request.getRequestURL().toString() );
+        writer.writeEndElement();
     }
 
     private static void writeOaiPmhClose(XMLStreamWriter writer)
