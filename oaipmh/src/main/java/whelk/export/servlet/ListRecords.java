@@ -19,15 +19,15 @@ public class ListRecords {
 
         if (resumptionToken != null || metadataPrefix == null)
         {
-            OaiPmh.sendOaiPmhError("badArgument", "", request, response);
+            ResponseCommon.sendOaiPmhError("badArgument", "", request, response);
             return;
         }
 
         if (from == null)
             from = "0000-01-01";
 
-        ZonedDateTime fromDateTime = OaiPmh.parseISO8601(from);
-        ZonedDateTime untilDateTime = OaiPmh.parseISO8601(until);
+        ZonedDateTime fromDateTime = ResponseCommon.parseISO8601(from);
+        ZonedDateTime untilDateTime = ResponseCommon.parseISO8601(until);
 
         try (Connection dbconn = DataBase.getConnection())
         {
@@ -54,7 +54,7 @@ public class ListRecords {
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            OaiPmh.streamResponse(resultSet, request, response);
+            ResponseCommon.streamResponse(resultSet, request, response);
         }
     }
 }
