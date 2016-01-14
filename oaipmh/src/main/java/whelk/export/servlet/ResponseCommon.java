@@ -116,17 +116,13 @@ public class ResponseCommon
         writer.close();
     }
 
-    public static void writeConvertedDocument(XMLStreamWriter writer, String format, String data, String manifest)
+    public static void writeConvertedDocument(XMLStreamWriter writer, String format, Document jsonLDdoc)
             throws IOException, XMLStreamException
     {
-        HashMap datamap = new ObjectMapper().readValue(data, HashMap.class);
-        HashMap manifestmap = new ObjectMapper().readValue(manifest, HashMap.class);
-        Document jsonLDdoc = new Document(datamap, manifestmap);
-
         switch (format)
         {
             case FORMAT_JSONLD: {
-                writer.writeCData(data);
+                writer.writeCData(jsonLDdoc.getDataAsString());
                 break;
             }
             case FORMAT_DUBLINCORE: {

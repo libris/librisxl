@@ -62,6 +62,15 @@ public class SetSpec
         return m_subSet;
     }
 
+    public String toString()
+    {
+        if (!isValid())
+            return "[invalid setspec]";
+        if (m_subSet != null)
+            return m_rootSet + ":" + m_subSet;
+        return m_rootSet;
+    }
+
     private static boolean isValidRootSet(String set)
     {
         for (String rootSet : rootSets)

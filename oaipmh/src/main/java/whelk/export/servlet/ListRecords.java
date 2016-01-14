@@ -1,5 +1,8 @@
 package whelk.export.servlet;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import whelk.Document;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.stream.XMLOutputFactory;
@@ -7,7 +10,10 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.HashMap;
 
 public class ListRecords
 {
@@ -85,7 +91,7 @@ public class ListRecords
             String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
             // Construct the query
-            String selectSQL = "SELECT data, manifest FROM " + tableName +
+            String selectSQL = "SELECT data, manifest, created FROM " + tableName +
                     " WHERE created > ? ";
             if (untilDateTime != null)
                 selectSQL += " AND created < ? ";
@@ -120,13 +126,39 @@ public class ListRecords
             ResponseCommon.writeOaiPmhHeader(writer, request, true);
             writer.writeStartElement("records");
 
+            ObjectMapper mapper = new ObjectMapper();
             while (resultSet.next())
             {
                 String data = resultSet.getString("data");
                 String manifest = resultSet.getString("manifest");
+                HashMap datamap = mapper.readValue(data, HashMap.class);
+                HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
+                Document jsonLDdoc = new Document(datamap, manifestmap);
 
                 writer.writeStartElement("record");
-                ResponseCommon.writeConvertedDocument(writer, requestedFormat, data, manifest);
+
+                writer.writeStartElement("header");
+
+                writer.writeStartElement("identifier");
+                writer.writeCharacters(jsonLDdoc.getURI().toString());
+                writer.writeEndElement(); // identifier
+
+                writer.writeStartElement("datestamp");
+                ZonedDateTime created = ZonedDateTime.ofInstant(resultSet.getTimestamp("created").toInstant(), ZoneOffset.UTC);
+                writer.writeCharacters(created.toString());
+                writer.writeEndElement(); // datestamp
+
+                writer.writeStartElement("setSpec");
+                String dataset = (String) manifestmap.get("dataset");
+                writer.writeCharacters( dataset );
+                writer.writeEndElement(); // setSpec
+
+                writer.writeEndElement(); // header
+
+                writer.writeStartElement("metadata");
+                ResponseCommon.writeConvertedDocument(writer, requestedFormat, jsonLDdoc);
+                writer.writeEndElement(); // metadata
+
                 writer.writeEndElement(); // record
             }
 
