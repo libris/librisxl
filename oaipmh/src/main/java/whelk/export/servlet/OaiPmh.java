@@ -1,21 +1,13 @@
 package whelk.export.servlet;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import whelk.Document;
 import whelk.util.PropertyLoader;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Properties;
 
 public class OaiPmh extends HttpServlet {
@@ -24,12 +16,12 @@ public class OaiPmh extends HttpServlet {
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
-        sendResponse(req, res);
+        handleRequest(req, res);
     }
 
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
-        sendResponse(req, res);
+        handleRequest(req, res);
     }
 
     public void init()
@@ -43,7 +35,7 @@ public class OaiPmh extends HttpServlet {
         DataBase.destroy();
     }
 
-    private void sendResponse(HttpServletRequest req, HttpServletResponse res) throws IOException
+    private void handleRequest(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
         String verb = req.getParameter("verb");
         if (verb == null)

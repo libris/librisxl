@@ -33,17 +33,14 @@ public class ResponseCommon
         {
             String data = resultSet.getString("data");
             String manifest = resultSet.getString("manifest");
-            HashMap<String, Object> datamap = new ObjectMapper().readValue(data, HashMap.class);
-            HashMap<String, Object> manifestmap = new ObjectMapper().readValue(manifest, HashMap.class);
+            HashMap datamap = new ObjectMapper().readValue(data, HashMap.class);
+            HashMap manifestmap = new ObjectMapper().readValue(manifest, HashMap.class);
             Document jsonLDdoc = new Document(datamap, manifestmap);
 
             JsonLD2DublinCoreConverter converter = new JsonLD2DublinCoreConverter();
             String converted = (String) converter.convert(jsonLDdoc).getData().get("content");
             writer.writeCharacters(converted);
 
-            System.out.println("DB item: " + jsonLDdoc.getId());
-            //res.getOutputStream().write(jsonLDdoc.getId().getBytes());
-            //res.getOutputStream().write("\n".getBytes());
                 /*JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
                 Document marcXMLDoc = converter.convert(jsonLDdoc);
                 System.out.println(marcXMLDoc.getData());
@@ -78,15 +75,6 @@ public class ResponseCommon
         writeOaiPmhClose(writer);
     }
 
-    public static ZonedDateTime parseISO8601(String dateTimeString)
-    {
-        if (dateTimeString == null)
-            return null;
-        if (dateTimeString.length() == 10) // Date only
-            dateTimeString += "T00:00:00Z";
-        return ZonedDateTime.parse(dateTimeString);
-    }
-
     private static void writeOaiPmhHeader(XMLStreamWriter writer, HttpServletRequest request, boolean includeParameters)
             throws IOException, XMLStreamException
     {
@@ -107,10 +95,10 @@ public class ResponseCommon
         writer.writeStartElement("request");
         if (includeParameters)
         {
-            Enumeration<String> parameterNames = request.getParameterNames();
+            Enumeration parameterNames = request.getParameterNames();
             while (parameterNames.hasMoreElements())
             {
-                String parameterName = parameterNames.nextElement();
+                String parameterName = (String) parameterNames.nextElement();
                 String parameterValue = request.getParameter(parameterName);
                 writer.writeAttribute(parameterName, parameterValue);
             }
