@@ -26,7 +26,7 @@ public class ListRecords
     /**
      * Verifies the integrity of a OAI-PMH request with the verb 'ListRecords', sends a proper response.
      */
-    public static void handleListRecordsRequest(HttpServletRequest request, HttpServletResponse response, boolean onlyHeaders)
+    public static void handleListRecordsRequest(HttpServletRequest request, HttpServletResponse response, boolean onlyIdentifiers)
             throws IOException, XMLStreamException, SQLException
     {
         // Parse and verify the parameters allowed for this request
@@ -79,12 +79,12 @@ public class ListRecords
         ZonedDateTime fromDateTime = Helpers.parseISO8601(from);
         ZonedDateTime untilDateTime = Helpers.parseISO8601(until);
 
-        respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix, onlyHeaders);
+        respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix, onlyIdentifiers);
     }
 
     private static void respond(HttpServletRequest request, HttpServletResponse response,
                          ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec,
-                                String requestedFormat, boolean onlyHeaders)
+                                String requestedFormat, boolean onlyIdentifiers)
             throws IOException, XMLStreamException, SQLException
     {
         try (Connection dbconn = DataBase.getConnection())
@@ -125,6 +125,12 @@ public class ListRecords
             XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
 
             ResponseCommon.writeOaiPmhHeader(writer, request, true);
+
+            if (onlyIdentifiers)
+                writer.writeStartElement("ListIdentifiers");
+            else
+                writer.writeStartElement("ListRecords");
+
             writer.writeStartElement("records");
 
             ObjectMapper mapper = new ObjectMapper();
@@ -156,7 +162,7 @@ public class ListRecords
 
                 writer.writeEndElement(); // header
 
-                if (!onlyHeaders)
+                if (!onlyIdentifiers)
                 {
                     writer.writeStartElement("metadata");
                     ResponseCommon.writeConvertedDocument(writer, requestedFormat, jsonLDdoc);
@@ -167,6 +173,7 @@ public class ListRecords
             }
 
             writer.writeEndElement(); // records
+            writer.writeEndElement(); // ListIdentifiers/ListRecords
             ResponseCommon.writeOaiPmhClose(writer);
         }
     }
