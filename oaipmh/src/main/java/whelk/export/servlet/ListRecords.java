@@ -26,7 +26,7 @@ public class ListRecords
     /**
      * Verifies the integrity of a OAI-PMH request with the verb 'ListRecords', sends a proper response.
      */
-    public static void handleListRecordsRequest(HttpServletRequest request, HttpServletResponse response)
+    public static void handleListRecordsRequest(HttpServletRequest request, HttpServletResponse response, boolean onlyHeaders)
             throws IOException, XMLStreamException, SQLException
     {
         // Parse and verify the parameters allowed for this request
@@ -72,18 +72,19 @@ public class ListRecords
             return;
         }
 
-        // "No start date" is replaced with _very_ early start date.
+        // "No start date" is replaced with a _very_ early start date.
         if (from == null)
             from = "0000-01-01";
 
         ZonedDateTime fromDateTime = Helpers.parseISO8601(from);
         ZonedDateTime untilDateTime = Helpers.parseISO8601(until);
 
-        respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix);
+        respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix, onlyHeaders);
     }
 
     private static void respond(HttpServletRequest request, HttpServletResponse response,
-                         ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec, String requestedFormat)
+                         ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec,
+                                String requestedFormat, boolean onlyHeaders)
             throws IOException, XMLStreamException, SQLException
     {
         try (Connection dbconn = DataBase.getConnection())
@@ -111,7 +112,7 @@ public class ListRecords
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            // An inelegant (but the recommended) way of checking if the ResultSet is empty.
+            // An inelegant (but recommended) way of checking if the ResultSet is empty.
             // Avoids the need for "backing-up" which would prevent streaming of the ResultSet from the db.
             if (!resultSet.isBeforeFirst())
             {
@@ -155,9 +156,12 @@ public class ListRecords
 
                 writer.writeEndElement(); // header
 
-                writer.writeStartElement("metadata");
-                ResponseCommon.writeConvertedDocument(writer, requestedFormat, jsonLDdoc);
-                writer.writeEndElement(); // metadata
+                if (!onlyHeaders)
+                {
+                    writer.writeStartElement("metadata");
+                    ResponseCommon.writeConvertedDocument(writer, requestedFormat, jsonLDdoc);
+                    writer.writeEndElement(); // metadata
+                }
 
                 writer.writeEndElement(); // record
             }
