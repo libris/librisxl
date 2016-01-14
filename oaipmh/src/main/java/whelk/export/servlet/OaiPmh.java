@@ -71,11 +71,11 @@ public class OaiPmh extends HttpServlet
                             "ListIdentifiers, ListMetadataFormats, ListRecords, ListSets].", req, res);
             }
         }
-        catch (XMLStreamException e)
+        catch (IOException | XMLStreamException e)
         {
-            e.printStackTrace();
-            res.sendError(500);
-            // TODO: LOG!
+            // These exceptions are to be expected in every case where a client/harvester closes or loses connection
+            // while a response is being sent.
+            // TODO: LOG BROKEN CLIENT PIPE!
         }
         catch (SQLException e)
         {

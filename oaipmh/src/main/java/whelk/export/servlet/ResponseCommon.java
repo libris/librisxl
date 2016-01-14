@@ -25,6 +25,14 @@ public class ResponseCommon
     public static void streamResponse(ResultSet resultSet, HttpServletRequest request, HttpServletResponse response)
             throws IOException, XMLStreamException, SQLException
     {
+        // An inelegant (but the recommended) way of checking if the ResultSet is empty.
+        // Avoids the need for "backing-up" which would prevent streaming of the ResultSet from the db.
+        if (!resultSet.isBeforeFirst())
+        {
+            sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
+            return;
+        }
+
         response.setContentType("text/xml");
         XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
         xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
