@@ -15,6 +15,9 @@ public class ListRecords
     private final static String RESUMPTION_PARAM = "resumptionToken";
     private final static String FORMAT_PARAM = "metadataPrefix";
 
+    /**
+     * Verifies the integrity of a OAI-PMH request with the verb 'ListRecords', sends a proper response.
+     */
     public static void handleListRecordsRequest(HttpServletRequest request, HttpServletResponse response)
             throws IOException, XMLStreamException, SQLException
     {
@@ -29,27 +32,30 @@ public class ListRecords
                 FROM_PARAM, UNTIL_PARAM, SET_PARAM, RESUMPTION_PARAM, FORMAT_PARAM);
         if (unknownParameters != null)
         {
-            ResponseCommon.sendOaiPmhError("badArgument", "Request contained unknown parameter(s): " +
-                    unknownParameters, request, response);
+            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
+                    "Request contained unknown parameter(s): " + unknownParameters, request, response);
             return;
         }
 
         if (resumptionToken != null)
         {
-            ResponseCommon.sendOaiPmhError("badResumptionToken", "No such resumption token was issued", request, response);
+            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN,
+                    "No such resumption token was issued", request, response);
             return;
         }
 
         if (metadataPrefix == null)
         {
-            ResponseCommon.sendOaiPmhError("badArgument", "metadataPrefix argument required.", request, response);
+            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
+                    "metadataPrefix argument required.", request, response);
             return;
         }
 
         SetSpec setSpec = new SetSpec(set);
         if (!setSpec.isValid())
         {
-            ResponseCommon.sendOaiPmhError("badArgument", "Not supported set spec: " + set, request, response);
+            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
+                    "Not a supported set spec: " + set, request, response);
             return;
         }
 

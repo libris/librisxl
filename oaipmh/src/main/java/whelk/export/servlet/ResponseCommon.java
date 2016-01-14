@@ -19,6 +19,9 @@ import java.util.HashMap;
 
 public class ResponseCommon
 {
+    /**
+     * Stream the supplied resultSet back to the requesting harvester in proper OAI-PMH format.
+     */
     public static void streamResponse(ResultSet resultSet, HttpServletRequest request, HttpServletResponse response)
             throws IOException, XMLStreamException, SQLException
     {
@@ -52,6 +55,9 @@ public class ResponseCommon
         writeOaiPmhClose(writer);
     }
 
+    /**
+     * Send a properly formatted OAI-PMH error response to the requesting harvester.
+     */
     public static void sendOaiPmhError(String errorCode, String extraMessage, HttpServletRequest request, HttpServletResponse response)
             throws IOException, XMLStreamException
     {
@@ -62,7 +68,7 @@ public class ResponseCommon
         // The OAI-PMH specification requires that parameters be echoed in response, unless the response has an error
         // code of badVerb or badArgument, in which case the parameters must be omitted.
         boolean includeParameters = true;
-        if (errorCode.equals("badVerb") || errorCode.equals("badArgument"))
+        if (errorCode.equals(OaiPmh.OAIPMH_ERROR_BAD_VERB) || errorCode.equals(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT))
             includeParameters = false;
 
         writeOaiPmhHeader(writer, request, includeParameters);

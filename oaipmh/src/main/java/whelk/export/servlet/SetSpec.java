@@ -1,5 +1,10 @@
 package whelk.export.servlet;
 
+/**
+ * A SetSpec represents a valid selection of OAI-PMH sets (see OAI-PMH 2.0 specification).
+ * For example a harvester may wish to only obtain 'auth' posts or, only holding posts for
+ * a specific library by specifying a hold:librarySigel set.
+ */
 public class SetSpec
 {
     // root sets

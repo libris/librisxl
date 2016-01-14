@@ -10,7 +10,16 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.Properties;
 
-public class OaiPmh extends HttpServlet {
+public class OaiPmh extends HttpServlet
+{
+    public final static String OAIPMH_ERROR_BAD_VERB = "badVerb";
+    public final static String OAIPMH_ERROR_BAD_RESUMPTION_TOKEN = "badResumptionToken";
+    public final static String OAIPMH_ERROR_BAD_ARGUMENT = "badArgument";
+    public final static String OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT = "cannotDisseminateFormat";
+    public final static String OAIPMH_ERROR_ID_DOES_NOT_EXIST = "idDoesNotExist";
+    public final static String OAIPMH_ERROR_NO_RECORDS_MATCH = "noRecordsMatch";
+    public final static String OAIPMH_ERROR_NO_METADATA_FORMATS= "noMetadataFormats";
+    public final static String OAIPMH_ERROR_NO_SET_HIERARCHY = "noSetHierarchy";
 
     public static Properties configuration;
 
@@ -58,7 +67,7 @@ public class OaiPmh extends HttpServlet {
                 case "ListSets":
                     break;
                 default:
-                    ResponseCommon.sendOaiPmhError("badVerb", "OAI-PMH verb must be one of [GetRecord, Identify, " +
+                    ResponseCommon.sendOaiPmhError(OAIPMH_ERROR_BAD_VERB, "OAI-PMH verb must be one of [GetRecord, Identify, " +
                             "ListIdentifiers, ListMetadataFormats, ListRecords, ListSets].", req, res);
             }
         }
