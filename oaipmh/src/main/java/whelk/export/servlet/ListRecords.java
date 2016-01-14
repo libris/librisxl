@@ -2,7 +2,9 @@ package whelk.export.servlet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
 import java.time.ZonedDateTime;
@@ -28,15 +30,11 @@ public class ListRecords
         String resumptionToken = request.getParameter(RESUMPTION_PARAM); // exclusive, not supported/used
         String metadataPrefix = request.getParameter(FORMAT_PARAM); // required
 
-        String unknownParameters = Helpers.getUnknownParameters(request,
-                FROM_PARAM, UNTIL_PARAM, SET_PARAM, RESUMPTION_PARAM, FORMAT_PARAM);
-        if (unknownParameters != null)
-        {
-            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
-                    "Request contained unknown parameter(s): " + unknownParameters, request, response);
+        if (ResponseCommon.errorOnExtraParameters(request, response,
+                FROM_PARAM, UNTIL_PARAM, SET_PARAM, RESUMPTION_PARAM, FORMAT_PARAM))
             return;
-        }
 
+        // We do not use resumption tokens.
         if (resumptionToken != null)
         {
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN,
@@ -51,11 +49,20 @@ public class ListRecords
             return;
         }
 
+        // Was the set selection valid?
         SetSpec setSpec = new SetSpec(set);
         if (!setSpec.isValid())
         {
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
                     "Not a supported set spec: " + set, request, response);
+            return;
+        }
+
+        // Was the data ordered in a format we know?
+        if (!ResponseCommon.supportedFormats.contains(metadataPrefix))
+        {
+            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + metadataPrefix,
+                    request, response);
             return;
         }
 
@@ -66,11 +73,11 @@ public class ListRecords
         ZonedDateTime fromDateTime = Helpers.parseISO8601(from);
         ZonedDateTime untilDateTime = Helpers.parseISO8601(until);
 
-        respond(request, response, fromDateTime, untilDateTime, setSpec);
+        respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix);
     }
 
     private static void respond(HttpServletRequest request, HttpServletResponse response,
-                         ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec)
+                         ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec, String requestedFormat)
             throws IOException, XMLStreamException, SQLException
     {
         try (Connection dbconn = DataBase.getConnection())
@@ -98,7 +105,33 @@ public class ListRecords
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            ResponseCommon.streamListResponse(resultSet, request, response, "records", "record");
+            // An inelegant (but the recommended) way of checking if the ResultSet is empty.
+            // Avoids the need for "backing-up" which would prevent streaming of the ResultSet from the db.
+            if (!resultSet.isBeforeFirst())
+            {
+                ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
+                return;
+            }
+
+            XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+            xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
+            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
+
+            ResponseCommon.writeOaiPmhHeader(writer, request, true);
+            writer.writeStartElement("records");
+
+            while (resultSet.next())
+            {
+                String data = resultSet.getString("data");
+                String manifest = resultSet.getString("manifest");
+
+                writer.writeStartElement("record");
+                ResponseCommon.writeConvertedDocument(writer, requestedFormat, data, manifest);
+                writer.writeEndElement(); // record
+            }
+
+            writer.writeEndElement(); // records
+            ResponseCommon.writeOaiPmhClose(writer);
         }
     }
 }

@@ -51,6 +51,8 @@ public class OaiPmh extends HttpServlet
         if (verb == null)
             verb = "";
 
+        res.setContentType("text/xml");
+
         try
         {
             switch (verb) {

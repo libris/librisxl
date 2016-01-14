@@ -22,67 +22,16 @@ import java.util.Set;
 
 public class ResponseCommon
 {
+    public final static Set<String> supportedFormats;
     final static String FORMAT_DUBLINCORE = "oai_dc";
     final static String FORMAT_MARCXML = "marcxml";
     final static String FORMAT_JSONLD = "jsonld";
-    final static Set<String> supportedFormats;
     static
     {
         supportedFormats = new HashSet<String>();
         supportedFormats.add(FORMAT_DUBLINCORE);
         supportedFormats.add(FORMAT_MARCXML);
         supportedFormats.add(FORMAT_JSONLD);
-    }
-
-    /**
-     * Stream the supplied resultSet back to the requesting harvester in proper OAI-PMH format.
-     * Checking that the request is correctly formed in every way is assumed to have been done _before_
-     * this method is called.
-     *
-     * @param setTypeName The name of the type of list, for example "records" for the ListRecords request.
-     * @param itemTypeName The name of the type of items in the list, for example "record" for the ListRecords request.
-     */
-    public static void streamListResponse(ResultSet resultSet, HttpServletRequest request, HttpServletResponse response,
-                                          String setTypeName, String itemTypeName)
-            throws IOException, XMLStreamException, SQLException
-    {
-        // An inelegant (but the recommended) way of checking if the ResultSet is empty.
-        // Avoids the need for "backing-up" which would prevent streaming of the ResultSet from the db.
-        if (!resultSet.isBeforeFirst())
-        {
-            sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
-            return;
-        }
-
-        // Was the data ordered in a format we know?
-        String requestedFormat = request.getParameter("metadataPrefix");
-        if (!supportedFormats.contains(requestedFormat))
-        {
-            sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + requestedFormat,
-                    request, response);
-            return;
-        }
-
-        response.setContentType("text/xml");
-        XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
-        xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
-        XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
-
-        writeOaiPmhHeader(writer, request, true);
-        writer.writeStartElement(setTypeName);
-
-        while (resultSet.next())
-        {
-            String data = resultSet.getString("data");
-            String manifest = resultSet.getString("manifest");
-
-            writer.writeStartElement(itemTypeName);
-            writeConvertedDocument(writer, requestedFormat, data, manifest);
-            writer.writeEndElement(); // itemTypeName
-        }
-
-        writer.writeEndElement(); // setTypeName
-        writeOaiPmhClose(writer);
     }
 
     /**
@@ -111,7 +60,23 @@ public class ResponseCommon
         writeOaiPmhClose(writer);
     }
 
-    private static void writeOaiPmhHeader(XMLStreamWriter writer, HttpServletRequest request, boolean includeParameters)
+    /**
+     * Send an OAI-PMH error (and return true) if there are any more parameters than the expected ones in the request
+     */
+    public static boolean errorOnExtraParameters(HttpServletRequest request, HttpServletResponse response, String... expectedParameters)
+            throws IOException, XMLStreamException
+    {
+        String unknownParameters = Helpers.getUnknownParameters(request, expectedParameters);
+        if (unknownParameters != null)
+        {
+            sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
+                    "Request contained unknown parameter(s): " + unknownParameters, request, response);
+            return true;
+        }
+        return false;
+    }
+
+    public static void writeOaiPmhHeader(XMLStreamWriter writer, HttpServletRequest request, boolean includeParameters)
             throws IOException, XMLStreamException
     {
         // Static header
@@ -143,7 +108,7 @@ public class ResponseCommon
         writer.writeEndElement();
     }
 
-    private static void writeOaiPmhClose(XMLStreamWriter writer)
+    public static void writeOaiPmhClose(XMLStreamWriter writer)
             throws IOException, XMLStreamException
     {
         writer.writeEndElement();
@@ -151,7 +116,7 @@ public class ResponseCommon
         writer.close();
     }
 
-    private static void writeConvertedDocument(XMLStreamWriter writer, String format, String data, String manifest)
+    public static void writeConvertedDocument(XMLStreamWriter writer, String format, String data, String manifest)
             throws IOException, XMLStreamException
     {
         HashMap datamap = new ObjectMapper().readValue(data, HashMap.class);
