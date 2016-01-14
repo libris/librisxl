@@ -98,7 +98,7 @@ public class ListRecords
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            ResponseCommon.streamResponse(resultSet, request, response);
+            ResponseCommon.streamListResponse(resultSet, request, response, "records", "record");
         }
     }
 }

@@ -38,8 +38,12 @@ public class ResponseCommon
      * Stream the supplied resultSet back to the requesting harvester in proper OAI-PMH format.
      * Checking that the request is correctly formed in every way is assumed to have been done _before_
      * this method is called.
+     *
+     * @param setTypeName The name of the type of list, for example "records" for the ListRecords request.
+     * @param itemTypeName The name of the type of items in the list, for example "record" for the ListRecords request.
      */
-    public static void streamResponse(ResultSet resultSet, HttpServletRequest request, HttpServletResponse response)
+    public static void streamListResponse(ResultSet resultSet, HttpServletRequest request, HttpServletResponse response,
+                                          String setTypeName, String itemTypeName)
             throws IOException, XMLStreamException, SQLException
     {
         // An inelegant (but the recommended) way of checking if the ResultSet is empty.
@@ -65,15 +69,19 @@ public class ResponseCommon
         XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
 
         writeOaiPmhHeader(writer, request, true);
+        writer.writeStartElement(setTypeName);
 
         while (resultSet.next())
         {
             String data = resultSet.getString("data");
             String manifest = resultSet.getString("manifest");
 
+            writer.writeStartElement(itemTypeName);
             writeConvertedDocument(writer, requestedFormat, data, manifest);
+            writer.writeEndElement(); // itemTypeName
         }
 
+        writer.writeEndElement(); // setTypeName
         writeOaiPmhClose(writer);
     }
 
