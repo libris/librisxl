@@ -28,7 +28,7 @@ class JsonLD2DublinCoreConverter implements FormatConverter
                 "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
 
         writer.writeStartElement("http://purl.org/dc/elements/1.1/", "identifier");
-        writer.writeCharacters(doc.getId());
+        writer.writeCharacters(doc.getURI().toString());
         writer.writeEndElement();
 
         writer.writeEndElement();
