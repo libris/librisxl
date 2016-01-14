@@ -12,13 +12,14 @@ import java.util.Properties;
 
 public class OaiPmh extends HttpServlet
 {
+    // OAI-PMH Error/Condition codes
     public final static String OAIPMH_ERROR_BAD_VERB = "badVerb";
     public final static String OAIPMH_ERROR_BAD_RESUMPTION_TOKEN = "badResumptionToken";
     public final static String OAIPMH_ERROR_BAD_ARGUMENT = "badArgument";
     public final static String OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT = "cannotDisseminateFormat";
     public final static String OAIPMH_ERROR_ID_DOES_NOT_EXIST = "idDoesNotExist";
     public final static String OAIPMH_ERROR_NO_RECORDS_MATCH = "noRecordsMatch";
-    public final static String OAIPMH_ERROR_NO_METADATA_FORMATS= "noMetadataFormats";
+    public final static String OAIPMH_ERROR_NO_METADATA_FORMATS = "noMetadataFormats";
     public final static String OAIPMH_ERROR_NO_SET_HIERARCHY = "noSetHierarchy";
 
     public static Properties configuration;

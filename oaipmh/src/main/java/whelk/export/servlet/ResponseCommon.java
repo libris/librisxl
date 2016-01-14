@@ -3,6 +3,7 @@ package whelk.export.servlet;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
 import whelk.converter.JsonLD2DublinCoreConverter;
+import whelk.converter.marc.JsonLD2MarcXMLConverter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,11 +17,27 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ResponseCommon
 {
+    final static String FORMAT_DUBLINCORE = "oai_dc";
+    final static String FORMAT_MARCXML = "marcxml";
+    final static String FORMAT_JSONLD = "jsonld";
+    final static Set<String> supportedFormats;
+    static
+    {
+        supportedFormats = new HashSet<String>();
+        supportedFormats.add(FORMAT_DUBLINCORE);
+        supportedFormats.add(FORMAT_MARCXML);
+        supportedFormats.add(FORMAT_JSONLD);
+    }
+
     /**
      * Stream the supplied resultSet back to the requesting harvester in proper OAI-PMH format.
+     * Checking that the request is correctly formed in every way is assumed to have been done _before_
+     * this method is called.
      */
     public static void streamResponse(ResultSet resultSet, HttpServletRequest request, HttpServletResponse response)
             throws IOException, XMLStreamException, SQLException
@@ -30,6 +47,15 @@ public class ResponseCommon
         if (!resultSet.isBeforeFirst())
         {
             sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
+            return;
+        }
+
+        // Was the data ordered in a format we know?
+        String requestedFormat = request.getParameter("metadataPrefix");
+        if (!supportedFormats.contains(requestedFormat))
+        {
+            sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + requestedFormat,
+                    request, response);
             return;
         }
 
@@ -44,20 +70,8 @@ public class ResponseCommon
         {
             String data = resultSet.getString("data");
             String manifest = resultSet.getString("manifest");
-            HashMap datamap = new ObjectMapper().readValue(data, HashMap.class);
-            HashMap manifestmap = new ObjectMapper().readValue(manifest, HashMap.class);
-            Document jsonLDdoc = new Document(datamap, manifestmap);
 
-            JsonLD2DublinCoreConverter converter = new JsonLD2DublinCoreConverter();
-            String converted = (String) converter.convert(jsonLDdoc).getData().get("content");
-            writer.writeCharacters(converted);
-
-                /*JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
-                Document marcXMLDoc = converter.convert(jsonLDdoc);
-                System.out.println(marcXMLDoc.getData());
-                PrintWriter out = res.getWriter();
-                out.print(datat);
-                out.flush();*/
+            writeConvertedDocument(writer, requestedFormat, data, manifest);
         }
 
         writeOaiPmhClose(writer);
@@ -127,5 +141,35 @@ public class ResponseCommon
         writer.writeEndElement();
         writer.writeEndDocument();
         writer.close();
+    }
+
+    private static void writeConvertedDocument(XMLStreamWriter writer, String format, String data, String manifest)
+            throws IOException, XMLStreamException
+    {
+        HashMap datamap = new ObjectMapper().readValue(data, HashMap.class);
+        HashMap manifestmap = new ObjectMapper().readValue(manifest, HashMap.class);
+        Document jsonLDdoc = new Document(datamap, manifestmap);
+
+        switch (format)
+        {
+            case FORMAT_JSONLD: {
+                writer.writeCData(data);
+                break;
+            }
+            case FORMAT_DUBLINCORE: {
+                JsonLD2DublinCoreConverter converter = new JsonLD2DublinCoreConverter();
+                String converted = (String) converter.convert(jsonLDdoc).getData().get("content");
+                writer.writeCharacters(converted);
+                break;
+            }
+            case FORMAT_MARCXML: {
+                JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
+                String converted = (String) converter.convert(jsonLDdoc).getData().get("content");
+                writer.writeCharacters(converted);
+                break;
+            }
+            default:
+                // TODO: LOG! Getting here means errors in code. Not handling supported format.
+        }
     }
 }
