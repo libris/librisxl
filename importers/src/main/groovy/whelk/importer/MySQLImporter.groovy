@@ -269,6 +269,8 @@ class MySQLImporter extends Importer {
                         this.whelk.bulkStore(docList)
                     }
                 }
+            } catch (Exception e) {
+                log.error("Problems with converting or storing data: ${e.message}", e)
             } finally {
                 tickets.release()
             }
@@ -311,4 +313,3 @@ class MySQLImporter extends Importer {
         return inString
     }
 }
-

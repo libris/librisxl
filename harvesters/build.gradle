@@ -79,7 +79,7 @@ dependencies {
     compile project(':../core')
     compile project(':../converters')
 
-    def groovyVersion="2.3.10"
+    def groovyVersion=GroovySystem.getVersion()
     def jettyVersion="8.1.16.v20140903"
 
     // Common tools
@@ -142,7 +142,7 @@ war {
     }
     from "$buildDir/classes/main"
 
-     def manifestClasspath = configurations.compile.collect { "/WEB-INF/lib/${it.getName()}" }.join(',') 
+     def manifestClasspath = configurations.compile.collect { "/WEB-INF/lib/${it.getName()}" }.join(',')
 
     manifest {
         attributes 'Implementation-Title': 'Standalone Whelk',
