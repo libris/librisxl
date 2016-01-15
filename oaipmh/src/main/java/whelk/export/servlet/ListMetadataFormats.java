@@ -15,7 +15,7 @@ public class ListMetadataFormats
     /**
      * Verifies the integrity of a OAI-PMH request with the verb 'ListMetadataFormats' and sends a proper response.
      */
-    public static void handleListRecordsRequest(HttpServletRequest request, HttpServletResponse response)
+    public static void handleListMetadataFormatsRequest(HttpServletRequest request, HttpServletResponse response)
             throws IOException, XMLStreamException, SQLException
     {
         // Parse and verify the parameters allowed for this request
@@ -42,7 +42,7 @@ public class ListMetadataFormats
 
                 // If there was no such document
                 if (!resultSet.isBeforeFirst()) {
-                    ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
+                    ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
                     return;
                 }
             }

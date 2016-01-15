@@ -84,6 +84,7 @@ public class OaiPmh extends HttpServlet
         {
             switch (verb) {
                 case "GetRecord":
+                    GetRecord.handleGetRecordRequest(req, res);
                     break;
                 case "Identify":
                     Identify.handleIdentifyRequest(req, res);
@@ -93,7 +94,7 @@ public class OaiPmh extends HttpServlet
                     ListRecords.handleListRecordsRequest(req, res, true);
                     break;
                 case "ListMetadataFormats":
-                    ListMetadataFormats.handleListRecordsRequest(req, res);
+                    ListMetadataFormats.handleListMetadataFormatsRequest(req, res);
                     break;
                 case "ListRecords":
                     ListRecords.handleListRecordsRequest(req, res, false);
