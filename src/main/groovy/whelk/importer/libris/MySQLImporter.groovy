@@ -8,6 +8,7 @@ import java.util.concurrent.*
 import java.text.*
 
 import whelk.*
+import whelk.converter.*
 import whelk.importer.*
 import whelk.plugin.*
 import whelk.result.*
@@ -281,6 +282,8 @@ class MySQLImporter extends BasicPlugin implements Importer {
                 convertedDocs.each { ds, docList ->
                     this.whelk.bulkAdd(docList, ds, docList.first().contentType, false)
                 }
+            } catch (Exception e) {
+                log.error("Problems with converting or storing data: ${e.message}", e)
             } finally {
                 tickets.release()
             }
@@ -327,4 +330,3 @@ class MySQLImporter extends BasicPlugin implements Importer {
         return inString
     }
 }
-
