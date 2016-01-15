@@ -121,7 +121,6 @@ class PostgreSQLComponent implements Storage {
         LOAD_IDENTIFIERS = "SELECT identifier from $idTableName WHERE id = ?"
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
-        //STATUS_OF_DOCUMENT = "SELECT id, created, modified, deleted FROM $mainTableName WHERE id = ? OR manifest->'identifiers' @> ?"
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
                 "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.identifier = ?"
 
@@ -560,11 +559,15 @@ class PostgreSQLComponent implements Storage {
             }
         } else {
             for (entry in doc.data.get(Document.GRAPH_KEY)) {
-                URI entryURI = Document.BASE_URI.resolve(entry[JsonLd.ID_KEY])
-                if (entryURI == doc.getURI()) {
-                    for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
-                        if (sameAs.key == JsonLd.ID_KEY) {
-                            doc.addIdentifier(sameAs.value)
+                log.trace("Walking graph. Current entry: $entry")
+                if (entry.containsKey(JsonLd.ID_KEY)) {
+                    URI entryURI = Document.BASE_URI.resolve(entry[JsonLd.ID_KEY])
+                    if (entryURI == doc.getURI()) {
+                        for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
+                            if (sameAs.key == JsonLd.ID_KEY) {
+                                doc.addIdentifier(sameAs.value)
+                                log.debug("Added ${sameAs.value} to ${doc.getURI()}")
+                            }
                         }
                     }
                 }
@@ -698,8 +701,9 @@ class PostgreSQLComponent implements Storage {
 
 
     Document loadBySameAsIdentifier(String identifier) {
+        log.info("Using loadBySameAsIdentifier")
         //return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]]) // This one is for descriptionsbased data
-        return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]])
+        return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]]])
     }
 
     List<Document> loadAllVersions(String identifier) {
