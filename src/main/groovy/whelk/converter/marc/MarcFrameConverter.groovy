@@ -19,7 +19,7 @@ import whelk.JsonLd
 import whelk.converter.FormatConverter
 import whelk.converter.MarcJSONConverter
 
-import com.damnhandy.uri.template.UriTemplate
+import static com.damnhandy.uri.template.UriTemplate.fromTemplate
 
 @Log
 class MarcFrameConverter implements FormatConverter {
@@ -29,7 +29,7 @@ class MarcFrameConverter implements FormatConverter {
 
     protected MarcConversion conversion
 
-    MarcFrameConverter(uriSpacePath=null) {
+    MarcFrameConverter() {
         def config = readConfig("$cfgBase/marcframe.json") {
             mapper.readValue(it, Map)
         }
@@ -105,30 +105,32 @@ class MarcFrameConverter implements FormatConverter {
     }
 
     public static void main(String[] args) {
-        def fpath = args[0]
-        def cmd = null
-        def uriSpace = null
-        if (args.length > 2) {
+        List fpaths
+        def cmd = "convert"
+        if (args.length > 1) {
             cmd = args[0]
-            uriSpace = args[1]
-            fpath = args[2]
-        } else if (args.length > 1) {
-            cmd = args[0]
-            fpath = args[1]
+            fpaths = args[1..-1]
+        } else  {
+            fpaths = args[0..-1]
         }
-        def converter = uriSpace? new MarcFrameConverter(uriSpace) : new MarcFrameConverter()
-        def source = converter.mapper.readValue(new File(fpath), Map)
-        def result = null
-        if (cmd == "revert") {
-            if (source.descriptions) {
-                def entryId = source.descriptions.entry['@id']
-                source = JsonLd.frame(entryId, source)
+        def converter = new MarcFrameConverter()
+
+        for (fpath in fpaths) {
+            def source = converter.mapper.readValue(new File(fpath), Map)
+            def result = null
+            if (cmd == "revert") {
+                if (source.descriptions) {
+                    def entryId = source.descriptions.entry['@id']
+                    source = JsonLd.frame(entryId, source)
+                }
+                result = converter.runRevert(source)
+            } else {
+                result = converter.runConvert(source, fpath)
             }
-            result = converter.runRevert(source)
-        } else {
-            result = converter.runConvert(source, fpath)
+            if (fpaths.size() > 1)
+                println "SOURCE: ${fpath}"
+            println converter.mapper.writeValueAsString(result)
         }
-        converter.mapper.writeValue(System.out, result)
     }
 
 }
@@ -145,14 +147,14 @@ class MarcConversion {
     Map marcTypeMap = [:]
     Map tokenMaps
 
-    URI baseUri
+    URI baseUri = Document.BASE_URI
     String recordUriTemplate
     String thingUriTemplate
 
     MarcConversion(Map config, Map tokenMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.tokenMaps = tokenMaps
-        this.baseUri = new URI(config.baseUri ?: '/')
+        //this.baseUri = new URI(config.baseUri ?: '/')
         if (config.uriTemplates) {
             recordUriTemplate = config.uriTemplates.record
             thingUriTemplate = config.uriTemplates.thing
@@ -305,7 +307,7 @@ class MarcConversion {
 
     void manageIds(String marcCat, Map record, Map thing) {
         def givenRecId = record['@id']
-        def builtRecId = resolve(UriTemplate.fromTemplate(
+        def builtRecId = resolve(fromTemplate(
                 recordUriTemplate).set('marcType', marcCat).set(record).expand())
 
         if (givenRecId == null) {
@@ -315,7 +317,7 @@ class MarcConversion {
         }
 
         def givenThingId = thing['@id']
-        def builtThingId = resolve(UriTemplate.fromTemplate(
+        def builtThingId = resolve(fromTemplate(
                 thingUriTemplate).set('marcType', marcCat).set(record).expand())
 
         if (givenThingId == null) {
@@ -359,17 +361,17 @@ class MarcConversion {
         }
 
         return [
-            'descriptions': [entry: record, items: [thing], quoted: quotedEntities]
-            //'@graph': [record, thing] + quotedEntities
+            //'descriptions': [entry: record, items: [thing], quoted: quotedEntities]
+            '@graph': [record, thing] + quotedEntities
         ]
     }
 
     // TODO: define uriTemplate in marcframe or entityshapes...
-    UriTemplate someUriTemplate = UriTemplate.fromTemplate(
-            '/some{?data*}') // {?type,q}
+    String someUriTemplate = '/some{?data*}' // {?type,q}
     String someUriValuesVar = 'q'
     String someUriDataVar = 'data'
-    Set someUriVars = new HashSet(someUriTemplate.getVariables() as List)
+    Set someUriVars = new HashSet(
+            fromTemplate(someUriTemplate).getVariables() as List)
 
     String makeSomeId(Map ent) {
         def data = [:]
@@ -382,7 +384,7 @@ class MarcConversion {
         if (someUriDataVar in someUriVars) {
             data[someUriDataVar] = data.clone()
         }
-        return someUriTemplate.expand(data)
+        return fromTemplate(someUriTemplate).expand(data)
     }
 
     void collectUriData(Map obj, Map acc, String path='') {
@@ -1214,7 +1216,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     MarcSubFieldHandler ind1
     MarcSubFieldHandler ind2
     List<String> dependsOn
-    UriTemplate uriTemplate
+    String uriTemplate
     Map uriTemplateDefaults
     Map computeLinks
     List splitLinkRules
@@ -1222,7 +1224,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     List matchRules = []
     Map pendingResources
 
-    static GENERIC_REL_URI_TEMPLATE = UriTemplate.fromTemplate("generic:{_}")
+    static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
 
     MarcFieldHandler(ruleSet, tag, fieldDfn) {
         super(ruleSet, tag, fieldDfn)
@@ -1233,7 +1235,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         dependsOn = fieldDfn.dependsOn
 
         if (fieldDfn.uriTemplate) {
-            uriTemplate = UriTemplate.fromTemplate(fieldDfn.uriTemplate)
+            uriTemplate = fieldDfn.uriTemplate
             uriTemplateDefaults = fieldDfn.uriTemplateDefaults
         }
 
@@ -1364,7 +1366,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             // TODO: need to run before linking resource above to work properly
             // for multiply linked entities. Or, perhaps better, run a final "mapIds" pass
             // in the main loop..
-            def computedUri = uriTemplate.expand(uriTemplateParams)
+            def computedUri = fromTemplate(uriTemplate).expand(uriTemplateParams)
             def altUriRel = "sameAs"
             if (definesDomainEntityType != null) {
                 addValue(entity, altUriRel, ['@id': computedUri], true)
@@ -1425,7 +1427,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     else if (linkDfn instanceof String)
                         linkDfn
                     else
-                        GENERIC_REL_URI_TEMPLATE.expand(["_": it])
+                        fromTemplate(GENERIC_REL_URI_TEMPLATE).expand(["_": it])
                 }
                 if (useLinks.size() > 0) {
                     handled << use
@@ -1672,7 +1674,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String property
     boolean repeatProperty
     String resourceType
-    UriTemplate subUriTemplate
+    String subUriTemplate
     Pattern splitValuePattern
     List<String> splitValueProperties
     String rejoin
@@ -1710,7 +1712,7 @@ class MarcSubFieldHandler extends ConversionPart {
         }
         resourceType = subDfn.resourceType
         if (subDfn.uriTemplate) {
-            subUriTemplate = UriTemplate.fromTemplate(subDfn.uriTemplate)
+            subUriTemplate = subDfn.uriTemplate
         }
         if (subDfn.splitValuePattern) {
             // TODO: support repeatable?
@@ -1754,7 +1756,7 @@ class MarcSubFieldHandler extends ConversionPart {
             def entId = null
             if (subUriTemplate) {
                 try {
-                    entId = subUriTemplate.expand(["_": subVal])
+                    entId = fromTemplate(subUriTemplate).expand(["_": subVal])
                 } catch (IllegalArgumentException e) {
                     // TODO: improve?
                     // bad characters in what should have been a proper URI path ({+_} expansion)
