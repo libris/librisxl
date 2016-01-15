@@ -65,6 +65,7 @@ public class OaiPmh extends HttpServlet
                     ListRecords.handleListRecordsRequest(req, res, true);
                     break;
                 case "ListMetadataFormats":
+                    ListMetadataFormats.handleListRecordsRequest(req, res);
                     break;
                 case "ListRecords":
                     ListRecords.handleListRecordsRequest(req, res, false);

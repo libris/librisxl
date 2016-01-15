@@ -1,5 +1,7 @@
 package whelk.export.servlet;
 
+import whelk.Document;
+
 import javax.servlet.http.HttpServletRequest;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
@@ -37,5 +39,13 @@ public class Helpers
         if (dateTimeString.length() == 10) // Date only
             dateTimeString += "T00:00:00Z";
         return ZonedDateTime.parse(dateTimeString);
+    }
+
+    public static String getShorthandDocumentId(String completeId)
+    {
+        String idPrefix = Document.getBASE_URI().toString();
+        if (!completeId.startsWith(idPrefix))
+            return null;
+        return completeId.substring(idPrefix.length());
     }
 }

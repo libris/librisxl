@@ -120,6 +120,7 @@ public class ListRecords
                 return;
             }
 
+            // Build the xml response feed
             XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
             xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
             XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
