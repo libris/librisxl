@@ -23,7 +23,7 @@ public class ListMetadataFormats
 
         if (ResponseCommon.errorOnExtraParameters(request, response, IDENTIFIER_PARAM))
             return;
-        
+
         // Looking for the requested document is essentially redundant, since we offer all supported metadata formats
         // for all documents, but we will check for it anyway, since the OAI-PMH specification requires an error if the
         // document does not exist.
@@ -56,15 +56,27 @@ public class ListMetadataFormats
         ResponseCommon.writeOaiPmhHeader(writer, request, true);
         writer.writeStartElement("ListMetadataFormats");
 
-        for ( String metadataPrefix : ResponseCommon.supportedFormats )
+        for ( String metadataPrefix : OaiPmh.supportedFormats.keySet() )
         {
             writer.writeStartElement("metadataFormat");
             writer.writeStartElement("metadataPrefix");
             writer.writeCharacters(metadataPrefix);
             writer.writeEndElement(); // metadataPrefix
 
-            //  schema ?
-            //  metadataNamespace ?
+            OaiPmh.FormatDescription formatDescription = OaiPmh.supportedFormats.get(metadataPrefix);
+            if (formatDescription.xmlSchema != null)
+            {
+                writer.writeStartElement("schema");
+                writer.writeCharacters(formatDescription.xmlSchema);
+                writer.writeEndElement(); // schema
+            }
+
+            if (formatDescription.xmlNamespace != null)
+            {
+                writer.writeStartElement("metadataNamespace");
+                writer.writeCharacters(formatDescription.xmlNamespace);
+                writer.writeEndElement(); // metadataNamespace
+            }
 
             writer.writeEndElement(); // metadataFormat
         }

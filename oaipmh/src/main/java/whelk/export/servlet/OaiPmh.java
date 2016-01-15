@@ -1,5 +1,8 @@
 package whelk.export.servlet;
 
+import whelk.converter.FormatConverter;
+import whelk.converter.JsonLD2DublinCoreConverter;
+import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.util.PropertyLoader;
 
 import javax.servlet.http.HttpServlet;
@@ -8,7 +11,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.sql.*;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 public class OaiPmh extends HttpServlet
 {
@@ -21,6 +27,29 @@ public class OaiPmh extends HttpServlet
     public final static String OAIPMH_ERROR_NO_RECORDS_MATCH = "noRecordsMatch";
     public final static String OAIPMH_ERROR_NO_METADATA_FORMATS = "noMetadataFormats";
     public final static String OAIPMH_ERROR_NO_SET_HIERARCHY = "noSetHierarchy";
+
+    // Supported OAI-PMH metadata formats
+    public static class FormatDescription
+    {
+        public FormatDescription(FormatConverter converter, boolean isXmlFormat, String xmlSchema, String xmlNamespace) {
+            this.converter = converter;
+            this.isXmlFormat = isXmlFormat;
+            this.xmlSchema = xmlSchema;
+            this.xmlNamespace = xmlNamespace;
+        }
+        public final FormatConverter converter;
+        public final boolean isXmlFormat;
+        public final String xmlSchema;
+        public final String xmlNamespace;
+    }
+    public final static HashMap<String, FormatDescription> supportedFormats;
+    static
+    {
+        supportedFormats = new HashMap<String, FormatDescription>();
+        supportedFormats.put("oai_dc", new FormatDescription(new JsonLD2DublinCoreConverter(), true, "http://www.openarchives.org/OAI/2.0/oai_dc.xsd", "http://www.openarchives.org/OAI/2.0"));
+        supportedFormats.put("marcxml", new FormatDescription(new JsonLD2MarcXMLConverter(), true, "http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd", "http://www.loc.gov/MARC21/slim"));
+        supportedFormats.put("jsonld", new FormatDescription(null, false, null, null));
+    }
 
     public static Properties configuration;
 

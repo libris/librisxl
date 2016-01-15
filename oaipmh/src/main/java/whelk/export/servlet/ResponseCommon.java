@@ -1,6 +1,5 @@
 package whelk.export.servlet;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
 import whelk.converter.JsonLD2DublinCoreConverter;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
@@ -11,29 +10,12 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 
 public class ResponseCommon
 {
-    public final static Set<String> supportedFormats;
-    final static String FORMAT_DUBLINCORE = "oai_dc";
-    final static String FORMAT_MARCXML = "marcxml";
-    final static String FORMAT_JSONLD = "jsonld";
-    static
-    {
-        supportedFormats = new HashSet<String>();
-        supportedFormats.add(FORMAT_DUBLINCORE);
-        supportedFormats.add(FORMAT_MARCXML);
-        supportedFormats.add(FORMAT_JSONLD);
-    }
-
     /**
      * Send a properly formatted OAI-PMH error response to the requesting harvester.
      */
@@ -116,29 +98,25 @@ public class ResponseCommon
         writer.close();
     }
 
-    public static void writeConvertedDocument(XMLStreamWriter writer, String format, Document jsonLDdoc)
+    public static void writeConvertedDocument(XMLStreamWriter writer, String formatPrefix, Document jsonLDdoc)
             throws IOException, XMLStreamException
     {
-        switch (format)
+        OaiPmh.FormatDescription formatDescription = OaiPmh.supportedFormats.get(formatPrefix);
+
+        // Convert if the format has a converter (otherwise assume jsonld)
+        String convertedText = null;
+        if (formatDescription.converter != null)
         {
-            case FORMAT_JSONLD: {
-                writer.writeCData(jsonLDdoc.getDataAsString());
-                break;
-            }
-            case FORMAT_DUBLINCORE: {
-                JsonLD2DublinCoreConverter converter = new JsonLD2DublinCoreConverter();
-                String converted = (String) converter.convert(jsonLDdoc).getData().get("content");
-                writer.writeCharacters(converted);
-                break;
-            }
-            case FORMAT_MARCXML: {
-                JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
-                String converted = (String) converter.convert(jsonLDdoc).getData().get("content");
-                writer.writeCharacters(converted);
-                break;
-            }
-            default:
-                // TODO: LOG! Getting here means errors in code. Not handling supported format.
+            Document convertedDoucment = formatDescription.converter.convert(jsonLDdoc);
+            convertedText = (String) convertedDoucment.getData().get("content");
         }
+        else
+            convertedText = jsonLDdoc.getDataAsString();
+
+        // If the format is not XML, it needs to be embedded as CDATA, to not interfere with the response XML format.
+        if (formatDescription.isXmlFormat)
+            writer.writeCharacters(convertedText);
+        else
+            writer.writeCData(convertedText);
     }
 }
