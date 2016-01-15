@@ -43,7 +43,7 @@ class ImporterMain {
     void goMysql(String collection) {
         def importer = pico.getComponent(MySQLImporter.class)
         //importer.storageOnly = true
-        importer.doImport(collection)
+        importer.run(collection)
         //println("Starting LinkFinder for collection $collection")
         //goLinkFind(collection)
         //println("Starting reindexing for collection $collection")
@@ -57,7 +57,8 @@ class ImporterMain {
 
     void goDefs(String fname) {
         def defsimport = pico.getComponent(DefinitionsImporter.class)
-        defsimport.go(fname)
+        defsimport.definitionsFilename = fname
+        defsimport.run("definitions")
     }
 
     void goLinkFind(String collection) {

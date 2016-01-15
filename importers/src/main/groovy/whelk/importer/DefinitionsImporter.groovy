@@ -3,23 +3,22 @@ package whelk.importer
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.IdGenerator
-import whelk.JsonLd
 import whelk.Whelk
-import whelk.util.LegacyIntegrationTools
 
 /**
  * Created by markus on 2015-12-10.
  */
-class DefinitionsImporter {
+class DefinitionsImporter extends Importer {
 
-    Whelk whelk
     static final ObjectMapper mapper = new ObjectMapper()
 
+    String definitionsFilename
+
     DefinitionsImporter(Whelk w) {
-        this.whelk = w
+        whelk = w
     }
 
-    void go(String definitionsFilename) {
+    void doImport(String collection) {
         long startTime = System.currentTimeMillis()
         File defFile = new File(definitionsFilename)
         List documentList = []
@@ -27,7 +26,7 @@ class DefinitionsImporter {
         defFile.eachLine {
             def data = mapper.readValue(it.getBytes("UTF-8"), Map)
             def newId = IdGenerator.generate()
-            Document doc = new Document(newId, data).withContentType("application/ld+json").inCollection("definitions")
+            Document doc = new Document(newId, data).withContentType("application/ld+json").inCollection(collection)
             documentList.add(doc)
             counter++
         }

@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit
 class OaiPmhImporterServlet extends HttpServlet {
 
     PicoContainer pico
-    int scheduleDelaySeconds = 10
+    int scheduleDelaySeconds = 5
     int scheduleIntervalSeconds = 30
     Properties props = new Properties()
     private Map<String,ScheduledJob> jobs = [:]
