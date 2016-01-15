@@ -86,6 +86,7 @@ public class OaiPmh extends HttpServlet
                 case "GetRecord":
                     break;
                 case "Identify":
+                    Identify.handleIdentifyRequest(req, res);
                     break;
                 case "ListIdentifiers":
                     // ListIdentifiers is identical to ListRecords, except that metadata bodies are omitted
