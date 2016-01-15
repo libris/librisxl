@@ -50,6 +50,7 @@ class PostgreSQLComponent implements Storage {
 
     // Query idiomatic data
     static final Map<StorageType, String> SQL_PREFIXES = [
+            (StorageType.JSONLD): "data->'@graph'",
             (StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS): "data->'descriptions'",
             (StorageType.MARC21_JSON): "data->'fields'"
     ]
@@ -108,8 +109,10 @@ class PostgreSQLComponent implements Storage {
         GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created' AS created,modified,manifest->>'deleted' AS deleted " +
                 "FROM $versionsTableName WHERE id = ? ORDER BY modified"
+        //GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName " +
+        //        "WHERE data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
         GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName " +
-                "WHERE data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
+                "WHERE data->'@graph' @> ?"
         LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT manifest->>'collection' as collection FROM $mainTableName"
@@ -500,6 +503,7 @@ class PostgreSQLComponent implements Storage {
 
     }
 
+    // TODO: Adapt to real flat JSON
     protected translateToSql(String key, String value, StorageType storageType) {
         def keyElements = key.split("\\.")
         StringBuilder jsonbPath = new StringBuilder(SQL_PREFIXES.get(storageType, ""))
@@ -694,6 +698,7 @@ class PostgreSQLComponent implements Storage {
 
 
     Document loadBySameAsIdentifier(String identifier) {
+        //return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]]) // This one is for descriptionsbased data
         return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]])
     }
 

@@ -143,7 +143,7 @@ class MarcConversion {
     List<MarcFramePostProcStep> sharedPostProcSteps
     Map<String, MarcRuleSet> marcRuleSets = [:]
     boolean doPostProcessing = true
-    boolean flatQuotedForm = true
+    boolean flatQuotedForm = false
     Map marcTypeMap = [:]
     Map tokenMaps
 
