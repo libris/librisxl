@@ -6,22 +6,6 @@ apply plugin: 'application'
 apply plugin: 'java'
 
 
-loadConfiguration()
-
-def loadConfiguration() {
-    ext {
-        try {
-           environment = env
-        } catch (MissingPropertyException mpe) {
-            environment = "dev"
-        }
-    }
-    def encoding = hasProperty('file.encoding') ? file.encoding : 'UTF-8'
-    System.setProperty 'file.encoding', encoding
-    System.setProperty 'whelk.environment', environment
-}
-
-
 def versionprops = new Properties()
 try {
     file("src/main/resources/version.properties").withInputStream { stream ->
@@ -152,7 +136,7 @@ task(groovy, dependsOn: "classes", type: JavaExec) {
 }
 
 task jettyRun(type: JettyRun, overwrite: true) {
-    jettyRun.contextPath = 'whelk'
+    jettyRun.contextPath = '/'
     jettyRun.httpPort = 8180
     jettyRun.description = "Starts a jetty instance. (USAGE: To use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:etc/whelk.json'))"
 

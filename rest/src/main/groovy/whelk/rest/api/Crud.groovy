@@ -235,8 +235,13 @@ class Crud extends HttpServlet {
     }
 
     void sendRedirect(HttpServletRequest request, HttpServletResponse response, Location location) {
-        def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
-        response.setHeader("Location", locationRef + location.uri.toString())
+        if (location.getUri().getScheme() == null) {
+            def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
+            response.setHeader("Location", locationRef + location.uri.toString())
+        } else {
+            response.setHeader("Location", location.uri.toString())
+        }
+
         sendResponse(response, new byte[0], null, location.responseCode)
     }
 
@@ -252,10 +257,10 @@ class Crud extends HttpServlet {
 
     void doPostOrPut(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Executing ${request.getMethod()}-request")
-        String dataset = getDatasetBasedOnPath(request.pathInfo)
+        String collection = request.getParameter("collection") //getDatasetBasedOnPath(request.pathInfo)
         byte[] data = request.getInputStream().getBytes()
         try {
-            Document doc = createDocumentIfOkToSave(data, dataset, request, response)
+            Document doc = createDocumentIfOkToSave(data, collection, request, response)
             if (doc) {
                 if (doc.contentType == "application/ld+json") {
                     log.debug("Flattening ${doc.id}")
@@ -264,7 +269,7 @@ class Crud extends HttpServlet {
                 log.debug("Saving document (${doc.identifier})")
                 doc = whelk.store(doc, (request.getMethod() == "PUT"))
 
-                sendDocumentSavedResponse(response, getResponseUrl(request, doc.identifier), doc.modified.getTime() as String)
+                sendDocumentSavedResponse(response, doc.getURI().toString(), doc.modified.getTime() as String)
             }
         } catch (StorageCreateFailedException scfe) {
             log.warn("Already have document with id ${scfe.duplicateId}")
@@ -278,8 +283,8 @@ class Crud extends HttpServlet {
         }
     }
 
-    Document createDocumentIfOkToSave(byte[] data, String dataset, HttpServletRequest request, HttpServletResponse response) {
-        log.debug("dataset is $dataset")
+    Document createDocumentIfOkToSave(byte[] data, String collection, HttpServletRequest request, HttpServletResponse response) {
+        log.debug("collection is $collection")
         if (data.length == 0) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No data received")
             return null
@@ -307,6 +312,7 @@ class Crud extends HttpServlet {
             }
             if (Document.isJsonLd(cType)) {
                 identifier = JsonLd.findIdentifier(dataMap)
+                log.debug("Found identifier: $identifier")
             }
         }
         if (request.method == "PUT") {
@@ -349,9 +355,9 @@ class Crud extends HttpServlet {
 
         Document doc = new Document(identifier, dataMap, existingDoc?.manifest)
 
-        log.debug("dataset is now $dataset")
+        log.debug("collection is now $collection")
 
-        doc = doc.inCollection(dataset)
+        doc = doc.inCollection(collection)
                 .withContentType(ContentType.parse(request.getContentType()).getMimeType())
                 .withIdentifier(identifier)
                 .withDeleted(false)
@@ -369,28 +375,6 @@ class Crud extends HttpServlet {
         log.debug("All checks passed")
 
         return doc
-    }
-
-    // TODO: fix this for new URI:s
-    String getResponseUrl(HttpServletRequest request, String identifier) {
-        StringBuffer locationRef = request.getRequestURL()
-        while (locationRef[-1] == '/') {
-            locationRef.deleteCharAt(locationRef.length() - 1)
-        }
-
-        /*
-        if (dataset && locationRef.toString().endsWith(dataset)) {
-            int endPos = locationRef.length()
-            int startPos = endPos - dataset.length() - 1
-            locationRef.delete(startPos, endPos)
-        }
-        */
-        if (!locationRef.toString().endsWith(identifier)) {
-            locationRef.append("/")
-            locationRef.append(identifier)
-        }
-
-        return locationRef.toString()
     }
 
     void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag) {
@@ -413,6 +397,7 @@ class Crud extends HttpServlet {
         return false
     }
 
+    @Deprecated
     static String getDatasetBasedOnPath(path) {
         String ds = ""
         def elements = path.split("/")

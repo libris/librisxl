@@ -85,6 +85,7 @@ There are two property files in the core module that needs configuring.
   The file is preconfigured with sensible defaults and you probably won't need to change them. IF, however you want to use something different. Make a copy of the file and use the -Dxl.component.properties setting to indicate your own custom file.
 * secret.properties
   * Contains passwords and and such. Make a copy of the secret.properties.in file and enter proper settings.
+  * When running locally, use http://localhost:8180/ as baseUri. Document identifiers will be resolved on this, which will make redirects and such work properly.
 
 #### importers module
 
@@ -140,7 +141,7 @@ Install script requirements
 
 Get/create/update datasets:
 
-    $ python datasets.py
+    $ python datasets.py -l
 
 Go back to the importers module.
 
@@ -154,7 +155,7 @@ If you want to clear out any existing definitions (for reload or refresh)
 
 Load the resulting resources into the running whelk:
 
-    $ gradle -Dargs="defs ../definitions/build/definitions.jsonld.lines" doRun
+    $ gradle -Dargs="defs ../../definitions/build/definitions.jsonld.lines" doRun
 
 
 ### Import/update local storage from test data
@@ -192,7 +193,7 @@ There is also a script, `librisxl-tools/scripts/update_mock_storage.sh`, for upl
         $ cd scripts
         $ get-and-put-record.sh \<bib|auth|hold\> \<id\>
 
-3. To see JsonLD record, go to \<http://localhost:8180/whelk/bib/7149593\>
+3. To see JsonLD record, go to \<http://localhost:8180/bib/7149593\>
 
 ### Run standalone data conversion on a single document
 
@@ -315,7 +316,7 @@ Say that the server has melted into a tiny puddle of silicon and plastic. After 
 
 ## APIs and URLs
 whelk, DOCUMENT API:
-http://\<host\>:\<PORT\>/whelk/bib/7149593
+http://\<host\>:\<PORT\>/bib/7149593
 
 ELASTIC SEARCH, INDEX SEARCH API:
 Find 'tove' in libris index, index-typedoc 'person':
@@ -325,16 +326,16 @@ ELASTIC SEARCH, ANALYZE INDEXED VALUES FOR A SPECIFIC FIELD:
 curl -XGET http://\<host\>:9200/libris/auth/\_search -d '{ "facets" : { "my_terms" : { "terms" : { "size" : 50, "field" : "about.controlledLabel.raw" } } } }'
 
 whelk, SEARCH API:
-http://\<host\>:\<PORT\>/whelk/\<indextype\>/?\<field\>=\<value\>
+http://\<host\>:\<PORT\>/\<indextype\>/?\<field\>=\<value\>
 
 INDEX TYPES:
 bib, auth, person, def, sys
 
 EXPAND AUTOCOMPLETE:
-http://\<host\>:\<PORT\>/whelk/\_expand?name=Jansson,%20Tove,%201914-2001.
+http://\<host\>:\<PORT\>/\_expand?name=Jansson,%20Tove,%201914-2001.
 
 REMOTESEARCH
-http://\<host\>:\<PORT\>/whelk/\_remotesearch?q=astrid
+http://\<host\>:\<PORT\>/\_remotesearch?q=astrid
 
 HOLDINGCOUNT
-http://\<host\>:\<PORT\>/whelk/\_libcount?id=/resource/bib/7149593
+http://\<host\>:\<PORT\>/\_libcount?id=/resource/bib/7149593

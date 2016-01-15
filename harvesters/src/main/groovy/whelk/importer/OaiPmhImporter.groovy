@@ -215,7 +215,6 @@ class OaiPmhImporter {
                     log.trace("Marc record instantiated from XML.")
                     def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
                     if (!aList.contains("SUPPRESSRECORD")) {
-                        log.trace("Record ${record.getControlfields('001').get(0).getData()} is suppressed.")
                         document = createDocumentMap(record, recordDate, it.header, ds)
                     }
                     if (document) {
@@ -244,12 +243,12 @@ class OaiPmhImporter {
                 }
                 String legacyIdentifier = "/" + new URI(it.header.identifier.text()).getPath().split("/")[2 .. -1].join("/")
                 String deleteIdentifier = LegacyIntegrationTools.generateId(legacyIdentifier)
-                    try {
-                        log.info("Deleting recod $legacyIdentifier ($deleteIdentifier)")
-                        whelk.remove(deleteIdentifier)
-                    } catch (Exception e2) {
-                        log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
-                    }
+                try {
+                    log.info("Deleting record $legacyIdentifier ($deleteIdentifier)")
+                    whelk.remove(deleteIdentifier)
+                } catch (Exception e2) {
+                    log.error("Whelk remove of $deleteIdentifier triggered exception.", e2)
+                }
                 nrDeleted++
             } else {
                 log.error("Failed to handle record: " + createString(it))

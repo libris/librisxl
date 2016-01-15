@@ -14,13 +14,13 @@ import java.util.concurrent.*
 import java.text.*
 
 import whelk.*
+
 import se.kb.libris.util.marc.*
 import se.kb.libris.util.marc.io.*
 
 @Log
-class MySQLImporter {
+class MySQLImporter extends Importer {
 
-    Whelk whelk
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
 
@@ -39,8 +39,6 @@ class MySQLImporter {
 
     int recordCount
     long startTime
-
-    List<String> eligibleDatasets = null
 
     List<Document> documentList = []
     ConcurrentHashMap buildingMetaRecord = new ConcurrentHashMap()
@@ -62,11 +60,6 @@ class MySQLImporter {
     }
 
     void doImport(String collection, int nrOfDocs = -1, boolean silent = false, boolean picky = true) {
-        log.info("Preparing import. Noting version ${whelk.version} in system settings.")
-        def settings = whelk.storage.loadSettings("system")
-        settings.put("version", whelk.version)
-        whelk.storage.saveSettings("system", settings)
-
         recordCount = 0
         startTime = System.currentTimeMillis()
         cancelled = false
@@ -201,7 +194,7 @@ class MySQLImporter {
             log.debug("------------------------------")
             */
             //log.debug("       completed jobs: ${tickets.availablePermits()}")
-            log.debug("Documents stored. Continuing to load rows")
+            log.debug("Documents stored. Continuing to run rows")
             this.documentList = []
         }
         if (record) {
@@ -277,6 +270,8 @@ class MySQLImporter {
                         this.whelk.bulkStore(docList)
                     }
                 }
+            } catch (Exception e) {
+                log.error("Problems with converting or storing data: ${e.message}", e)
             } finally {
                 tickets.release()
             }
@@ -319,4 +314,3 @@ class MySQLImporter {
         return inString
     }
 }
-
