@@ -91,7 +91,7 @@ public class ListRecords
             String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
             // Construct the query
-            String selectSQL = "SELECT data, manifest, created FROM " + tableName +
+            String selectSQL = "SELECT data, manifest, created, deleted FROM " + tableName +
                     " WHERE created > ? ";
             if (untilDateTime != null)
                 selectSQL += " AND created < ? ";
@@ -138,6 +138,7 @@ public class ListRecords
             {
                 String data = resultSet.getString("data");
                 String manifest = resultSet.getString("manifest");
+                boolean deleted = resultSet.getBoolean("deleted");
                 HashMap datamap = mapper.readValue(data, HashMap.class);
                 HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
                 Document jsonLDdoc = new Document(datamap, manifestmap);
@@ -145,6 +146,9 @@ public class ListRecords
                 writer.writeStartElement("record");
 
                 writer.writeStartElement("header");
+
+                if (deleted)
+                    writer.writeAttribute("status", "deleted");
 
                 writer.writeStartElement("identifier");
                 writer.writeCharacters(jsonLDdoc.getURI().toString());
@@ -162,7 +166,7 @@ public class ListRecords
 
                 writer.writeEndElement(); // header
 
-                if (!onlyIdentifiers)
+                if (!onlyIdentifiers && !deleted)
                 {
                     writer.writeStartElement("metadata");
                     ResponseCommon.writeConvertedDocument(writer, requestedFormat, jsonLDdoc);
