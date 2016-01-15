@@ -90,7 +90,7 @@ public class OaiPmh extends HttpServlet
                     Identify.handleIdentifyRequest(req, res);
                     break;
                 case "ListIdentifiers":
-                    // ListIdentifiers is identical to ListRecords, except that metadata bodies are omitted
+                    // ListIdentifiers is (just about) identical to ListRecords, except that metadata bodies are omitted
                     ListRecords.handleListRecordsRequest(req, res, true);
                     break;
                 case "ListMetadataFormats":
@@ -100,6 +100,7 @@ public class OaiPmh extends HttpServlet
                     ListRecords.handleListRecordsRequest(req, res, false);
                     break;
                 case "ListSets":
+                    ListSets.handleListSetsRequest(req, res);
                     break;
                 default:
                     ResponseCommon.sendOaiPmhError(OAIPMH_ERROR_BAD_VERB, "OAI-PMH verb must be one of [GetRecord, Identify, " +
