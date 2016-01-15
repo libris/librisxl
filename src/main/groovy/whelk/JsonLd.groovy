@@ -9,7 +9,9 @@ public class JsonLd {
     static final String DESCRIPTIONS_KEY = "descriptions"
     static final URI SLASH_URI = new URI("/")
 
-    // TODO: This flatten-method does not create description-based flat json (i.e. with entry, items and quoted)
+    /**
+     * This flatten-method does not create description-based flat json (i.e. with entry, items and quoted)
+     */
     static Map flatten(Map framedJsonLd) {
         if (isFlat(framedJsonLd) || !framedJsonLd.containsKey(ID_KEY)) {
             return framedJsonLd
