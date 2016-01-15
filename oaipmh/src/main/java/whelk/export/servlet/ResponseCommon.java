@@ -1,8 +1,6 @@
 package whelk.export.servlet;
 
 import whelk.Document;
-import whelk.converter.JsonLD2DublinCoreConverter;
-import whelk.converter.marc.JsonLD2MarcXMLConverter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

@@ -12,9 +12,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.sql.*;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Properties;
-import java.util.Set;
 
 public class OaiPmh extends HttpServlet
 {
