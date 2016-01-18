@@ -81,6 +81,8 @@ public class OaiPmh extends HttpServlet
         if (verb == null)
             verb = "";
 
+        logger.info("Received request with verb: {} from {}:{}.", verb, req.getRemoteAddr(), req.getRemotePort());
+
         res.setContentType("text/xml");
 
         try
