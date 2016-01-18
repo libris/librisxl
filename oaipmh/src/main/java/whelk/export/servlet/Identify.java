@@ -71,6 +71,6 @@ public class Identify
         writer.writeEndElement(); // granularity
 
         writer.writeEndElement(); // Identify
-        ResponseCommon.writeOaiPmhClose(writer);
+        ResponseCommon.writeOaiPmhClose(writer, request);
     }
 }

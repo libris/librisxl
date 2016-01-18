@@ -96,9 +96,8 @@ public class ListRecords
             if (untilDateTime != null)
                 selectSQL += " AND created < ? ";
             if (setSpec.getRootSet() != null)
-                selectSQL += " AND manifest->>'dataset' = ? ";
+                selectSQL += " AND manifest->>'collection' = ? ";
 
-            selectSQL += " LIMIT 10 "; // TEMP
             PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
 
             // Assign parameters
@@ -178,7 +177,7 @@ public class ListRecords
 
             writer.writeEndElement(); // records
             writer.writeEndElement(); // ListIdentifiers/ListRecords
-            ResponseCommon.writeOaiPmhClose(writer);
+            ResponseCommon.writeOaiPmhClose(writer, request);
         }
     }
 }

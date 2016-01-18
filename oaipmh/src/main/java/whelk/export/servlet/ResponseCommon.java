@@ -1,5 +1,7 @@
 package whelk.export.servlet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import whelk.Document;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,6 +16,8 @@ import java.util.Enumeration;
 
 public class ResponseCommon
 {
+    private static final Logger logger = LoggerFactory.getLogger(ResponseCommon.class);
+
     /**
      * Send a properly formatted OAI-PMH error response to the requesting harvester.
      */
@@ -37,7 +41,7 @@ public class ResponseCommon
         writer.writeCharacters(extraMessage);
         writer.writeEndElement();
 
-        writeOaiPmhClose(writer);
+        writeOaiPmhClose(writer, request);
     }
 
     /**
@@ -88,12 +92,13 @@ public class ResponseCommon
         writer.writeEndElement();
     }
 
-    public static void writeOaiPmhClose(XMLStreamWriter writer)
+    public static void writeOaiPmhClose(XMLStreamWriter writer, HttpServletRequest req)
             throws IOException, XMLStreamException
     {
         writer.writeEndElement();
         writer.writeEndDocument();
         writer.close();
+        logger.info("Response sent successfully to {}:{}.", req.getRemoteAddr(), req.getRemotePort());
     }
 
     public static void writeConvertedDocument(XMLStreamWriter writer, String formatPrefix, Document jsonLDdoc)

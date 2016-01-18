@@ -81,6 +81,6 @@ public class ListMetadataFormats
             writer.writeEndElement(); // metadataFormat
         }
         writer.writeEndElement(); // ListMetadataFormats
-        ResponseCommon.writeOaiPmhClose(writer);
+        ResponseCommon.writeOaiPmhClose(writer, request);
     }
 }

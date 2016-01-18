@@ -69,6 +69,6 @@ public class ListSets
         writer.writeEndElement(); // set
 
         writer.writeEndElement(); // ListSets
-        ResponseCommon.writeOaiPmhClose(writer);
+        ResponseCommon.writeOaiPmhClose(writer, request);
     }
 }

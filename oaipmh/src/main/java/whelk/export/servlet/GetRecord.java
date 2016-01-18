@@ -109,7 +109,7 @@ public class GetRecord
 
             writer.writeEndElement(); // record
             writer.writeEndElement(); // GetRecord
-            ResponseCommon.writeOaiPmhClose(writer);
+            ResponseCommon.writeOaiPmhClose(writer, request);
         }
     }
 }
