@@ -40,6 +40,10 @@ class DocumentSpec extends Specification {
     static identifiers = ["https://id.kb.se/marc/characterCoding",
                           "https://libris.kb.se/fnrblrghr1234567"]
 
+    static quoted = ["https://id.kb.se/marc/AuthorityCharacterCodingType",
+                     "https://id.kb.se/marc/CharacterCodingType",
+                     "https://id.kb.se/marc/HoldingCharacterCodingType"]
+
     static getDocVariants() {
         return [
             toDoc(uri, [descriptions: descriptions]),
@@ -54,6 +58,13 @@ class DocumentSpec extends Specification {
     def "should find identifiers"() {
         expect:
         doc.getIdentifiers().sort() == identifiers
+        where:
+        doc << docVariants
+    }
+
+    def "should find quoted"() {
+        expect:
+        doc.getQuoted()*.get(Document.GRAPH_KEY)*.get(JsonLd.ID_KEY) == quoted
         where:
         doc << docVariants
     }

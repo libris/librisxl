@@ -182,7 +182,18 @@ class Document {
 
     @JsonIgnore
     List getQuoted() {
-        return getData().get("descriptions")?.get("quoted")
+        if (data.containsKey(JsonLd.DESCRIPTIONS_KEY)){
+            return getData().get(JsonLd.DESCRIPTIONS_KEY).get("quoted")
+        } else {
+            def quoted = []
+            for (item in data.get(GRAPH_KEY)) {
+                if (item.containsKey(GRAPH_KEY)) {
+                    quoted << item
+                }
+            }
+            return quoted
+        }
+        return Collections.emptyList()
     }
 
     @JsonIgnore
