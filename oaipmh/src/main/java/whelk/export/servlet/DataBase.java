@@ -1,6 +1,8 @@
 package whelk.export.servlet;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -8,6 +10,7 @@ import java.sql.SQLException;
 public class DataBase {
 
     private static HikariDataSource dataSource;
+    private static final Logger logger = LoggerFactory.getLogger(DataBase.class);
 
     /**
      * Initialize the db connection pool.
@@ -27,7 +30,7 @@ public class DataBase {
 
         if (!rawJdbcUrl.startsWith(jdbcUrlPrefix))
         {
-            // Incorrect jdbc string. TODO: LOG!
+            logger.error("Incorrect JDBC connection string. Check secret.properties.");
             return;
         }
 
@@ -40,7 +43,7 @@ public class DataBase {
         final String[] userAndPassArray = userAndPass.split(":");
         if (userAndPassArray.length != 2)
         {
-            // Expected username and password in jdbc url. TODO: LOG!
+            logger.error("Expected username and password as part of the JDBC string. Check secret.properties.");
             return;
         }
         final String user = userAndPassArray[0];

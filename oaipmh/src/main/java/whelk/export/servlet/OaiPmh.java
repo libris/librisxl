@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OaiPmh extends HttpServlet
 {
@@ -50,6 +52,7 @@ public class OaiPmh extends HttpServlet
     }
 
     public static Properties configuration;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
@@ -111,13 +114,12 @@ public class OaiPmh extends HttpServlet
         {
             // These exceptions are to be expected in every case where a client/harvester closes or loses connection
             // while a response is being sent.
-            // TODO: LOG BROKEN CLIENT PIPE!
+            logger.debug("Broken client pipe, response feed interrupted.", e);
         }
         catch (SQLException e)
         {
-            e.printStackTrace();
             res.sendError(500);
-            // TODO: LOG!
+            logger.error("Database error.", e);
         }
     }
 }
