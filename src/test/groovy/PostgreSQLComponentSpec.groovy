@@ -98,56 +98,6 @@ class PostgreSQLComponentSpec extends Specification {
         r == null
     }
 
-    def "should NOT find @id in rangeIncludes"() {
-        given:
-        def doc = new Document("https://id.kb.se/marc/characterCoding",[
-                "descriptions": [
-                        "entry": [
-                                "@id": "https://id.kb.se/marc/characterCoding",
-                                "@type": "ObjectProperty",
-                                "https://id.kb.se/marc/prefLabel": [
-                                        "@language": "sv",
-                                        "@value": "Teckenuppsättning"
-                                ],
-                                "inDataset": "https://id.kb.se/dataset",
-                                "rangeIncludes": [
-                                        [
-                                                "@id": "https://id.kb.se/marc/AuthorityCharacterCodingType"
-                                        ],
-                                        [
-                                                "@id": "https://id.kb.se/marc/CharacterCodingType"
-                                        ],
-                                        [
-                                                "@id": "https://id.kb.se/marc/HoldingCharacterCodingType"
-                                        ]
-                                ],
-                                "wasDerivedFrom": "/dataset/enums"
-                        ],
-                        "quoted": [
-                                [
-                                        "@graph": [
-                                                "@id": "https://id.kb.se/marc/AuthorityCharacterCodingType"
-                                        ]
-                                ],
-                                [
-                                        "@graph": [
-                                                "@id": "https://id.kb.se/marc/CharacterCodingType"
-                                        ]
-                                ],
-                                [
-                                        "@graph": [
-                                                "@id": "https://id.kb.se/marc/HoldingCharacterCodingType"
-                                        ]
-                                ]
-                        ]
-                ]
-        ]).withContentType("application/ld+json")
-        when:
-        storage.findIdentifiers(doc)
-        then:
-        doc.getIdentifiers() == ["https://id.kb.se/marc/characterCoding"]
-    }
-
     def "should generate correct jsonb query according to storage type"() {
         expect:
         storage.translateToSql(key, value, storageType) == [sqlKey, sqlValue]
