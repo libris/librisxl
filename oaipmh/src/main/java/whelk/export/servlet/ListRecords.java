@@ -98,6 +98,12 @@ public class ListRecords
             if (setSpec.getRootSet() != null)
                 selectSQL += " AND manifest->>'collection' = ? ";
 
+            // Obviously query concatenation is dangerous business and should never be done, unfortunately JSONB fields
+            // much like table names cannot be parameterized, and so there is little choice.
+            if (setSpec.getSubset() != null)
+                selectSQL += " AND data @> '{\"@graph\":[{\"heldBy\": {\"@type\": \"Organization\", \"notation\": \"" +
+                        Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
+
             PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
 
             // Assign parameters

@@ -48,4 +48,28 @@ public class Helpers
             return null;
         return completeId.substring(idPrefix.length());
     }
+
+    /**
+     * Obviously parametrized prepared statements are best. But Postgres JSONB fields can't be parameterized using
+     * normal means, so this hack becomes an unfortunate necessity.
+     */
+    private final static HashSet<Character> s_allowedChars;
+    static
+    {
+        char[] allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖabcdefghijklmnopqrstuvwxyzåäö0123456789".toCharArray();
+        s_allowedChars = new HashSet<Character>();
+        for (char c : allowedChars)
+            s_allowedChars.add(c);
+    }
+    public static String scrubSQL(String unsafeSql)
+    {
+        StringBuilder scrubbed = new StringBuilder("");
+        for (int i = 0; i < unsafeSql.length(); ++i)
+        {
+            char c = unsafeSql.charAt(i);
+            if ( s_allowedChars.contains( c ) )
+                scrubbed.append( c );
+        }
+        return  scrubbed.toString();
+    }
 }
