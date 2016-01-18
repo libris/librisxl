@@ -30,8 +30,6 @@ class PostgreSQLComponent implements Storage {
 
     public final static mapper = new ObjectMapper()
 
-    private final static JSONLD_ALT_ID_KEY = "sameAs"
-
     boolean versioning = true
 
     // SQL statements
@@ -209,7 +207,7 @@ class PostgreSQLComponent implements Storage {
         Connection connection = getConnection()
         connection.setAutoCommit(false)
         try {
-            findIdentifiers(doc)
+            doc.findIdentifiers()
             calculateChecksum(doc)
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement((upsert ? UPSERT_DOCUMENT : INSERT_DOCUMENT))
@@ -348,7 +346,7 @@ class PostgreSQLComponent implements Storage {
         try {
             docs.each { doc ->
                 Date now = new Date()
-                findIdentifiers(doc)
+                doc.findIdentifiers()
                 calculateChecksum(doc)
                 if (versioning) {
                     ver_batch = rigVersionStatement(ver_batch, doc, now)
@@ -541,41 +539,7 @@ class PostgreSQLComponent implements Storage {
         return [jsonbPath.toString(), value]
     }
 
-    void findIdentifiers(Document doc) {
-        log.debug("Finding identifiers in ${doc.data}")
-        doc.addIdentifier(doc.getURI().toString())
-        URI docId = JsonLd.findRecordURI(doc.data)
-        if (docId) {
-            log.debug("Found @id ${docId} in data for ${doc.id}")
-            doc.addIdentifier(docId.toString())
-        }
-        if (doc.data.containsKey(JsonLd.DESCRIPTIONS_KEY)){
-            def entry = doc.data.get(JsonLd.DESCRIPTIONS_KEY).get("entry")
-            for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
-                if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
-                    doc.addIdentifier(sameAs.get(JsonLd.ID_KEY))
-                    log.debug("Added ${sameAs.get(JsonLd.ID_KEY)} to ${doc.getURI()}")
-                }
-            }
-        } else {
-            for (entry in doc.data.get(Document.GRAPH_KEY)) {
-                log.trace("Walking graph. Current entry: $entry")
-                if (entry.containsKey(JsonLd.ID_KEY)) {
-                    URI entryURI = Document.BASE_URI.resolve(entry[JsonLd.ID_KEY])
-                    if (entryURI == doc.getURI()) {
-                        for (sameAs in entry.get(JSONLD_ALT_ID_KEY)) {
-                            if (sameAs.key == JsonLd.ID_KEY) {
-                                doc.addIdentifier(sameAs.value)
-                                log.debug("Added ${sameAs.value} to ${doc.getURI()}")
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    String calculateChecksum(Document doc) {
+        String calculateChecksum(Document doc) {
         log.trace("Calculating checksum with manifest: ${doc.manifest}")
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()

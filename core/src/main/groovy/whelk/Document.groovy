@@ -18,6 +18,8 @@ class Document {
     static final String CHECKSUM_KEY = "checksum";
     static final String NON_JSON_CONTENT_KEY = "content"
     static final String ALTERNATE_ID_KEY = "identifiers"
+    static final String JSONLD_ALT_ID_KEY = "sameAs"
+
 
     static final URI BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
 
@@ -131,12 +133,45 @@ class Document {
 
     @JsonIgnore
     List<String> getIdentifiers() {
-        List<String> ids = []
-        if (manifest.containsKey(ALTERNATE_ID_KEY)) {
-            ids = manifest.get(ALTERNATE_ID_KEY) as List
+        if (!manifest.containsKey(ALTERNATE_ID_KEY)) {
+            findIdentifiers()
         }
-        return ids
+        return manifest.get(ALTERNATE_ID_KEY) as List ?: Collections.emptyList()
     }
+
+    void findIdentifiers() {
+        log.debug("Finding identifiers in ${data}")
+        addIdentifier(getURI().toString())
+        URI docId = JsonLd.findRecordURI(data)
+        if (docId) {
+            log.debug("Found @id ${docId} in data for ${id}")
+            addIdentifier(docId.toString())
+        }
+        if (data.containsKey(JsonLd.DESCRIPTIONS_KEY)){
+            def entry = data.get(JsonLd.DESCRIPTIONS_KEY).get("entry")
+            addAliases(entry)
+        } else {
+            for (entry in data.get(GRAPH_KEY)) {
+                log.trace("Walking graph. Current entry: $entry")
+                if (entry.containsKey(JsonLd.ID_KEY)) {
+                    URI entryURI = BASE_URI.resolve(entry[JsonLd.ID_KEY])
+                    if (entryURI == getURI()) {
+                        addAliases(entry)
+                    }
+                }
+            }
+        }
+    }
+
+    void addAliases(Map entry) {
+        for (sameAs in asList(entry.get(JSONLD_ALT_ID_KEY))) {
+            if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
+                addIdentifier(sameAs.get(JsonLd.ID_KEY))
+                log.debug("Added ${sameAs.get(JsonLd.ID_KEY)} to ${getURI()}")
+            }
+        }
+    }
+
 
     @JsonIgnore
     String getChecksum() {
@@ -229,6 +264,10 @@ class Document {
 
     boolean isJsonLd() {
         return isJsonLd(getContentType())
+    }
+
+    private asList(obj) {
+        return obj instanceof List? obj : [sameAsList]
     }
 
 
