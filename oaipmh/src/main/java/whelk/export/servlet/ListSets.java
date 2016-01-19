@@ -6,7 +6,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class ListSets
 {
@@ -67,6 +67,31 @@ public class ListSets
         writer.writeCharacters("Holding records");
         writer.writeEndElement(); // setName
         writer.writeEndElement(); // set
+
+        // Dynamic sigel-sets
+        try (Connection dbconn = DataBase.getConnection())
+        {
+            String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+
+            // Construct the query
+            String selectSQL = "SELECT DISTINCT data#>'{@graph,1,heldBy,notation}' AS sigel FROM " + tableName +
+                    " WHERE data @> '{\"@graph\":[{\"heldBy\": {}}]}' ";
+            PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next())
+            {
+                String sigel = resultSet.getString("sigel");
+                writer.writeStartElement("set");
+                writer.writeStartElement("setSpec");
+                writer.writeCharacters("hold:"+sigel.replace("\"", ""));
+                writer.writeEndElement(); // setSpec
+                writer.writeStartElement("setName");
+                writer.writeCharacters("Holding records for sigel: " + sigel);
+                writer.writeEndElement(); // setName
+                writer.writeEndElement(); // set
+            }
+        }
 
         writer.writeEndElement(); // ListSets
         ResponseCommon.writeOaiPmhClose(writer, request);

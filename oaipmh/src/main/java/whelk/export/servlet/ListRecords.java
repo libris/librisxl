@@ -178,7 +178,7 @@ public class ListRecords
                 {
                     writer.writeStartElement("setSpec");
                     // Output sigel without quotation marks (").
-                    writer.writeCharacters(dataset + ":" + sigel.replace('"', ' '));
+                    writer.writeCharacters(dataset + ":" + sigel.replace("\"", ""));
                     writer.writeEndElement(); // setSpec
                 }
 
