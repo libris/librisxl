@@ -169,10 +169,13 @@ public class ListRecords
                 writer.writeCharacters(created.toString());
                 writer.writeEndElement(); // datestamp
 
-                writer.writeStartElement("setSpec");
                 String dataset = (String) manifestmap.get("collection");
-                writer.writeCharacters( dataset );
-                writer.writeEndElement(); // setSpec
+                if (dataset != null)
+                {
+                    writer.writeStartElement("setSpec");
+                    writer.writeCharacters(dataset);
+                    writer.writeEndElement(); // setSpec
+                }
 
                 if (sigel != null)
                 {
