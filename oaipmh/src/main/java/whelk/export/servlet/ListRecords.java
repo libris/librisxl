@@ -24,6 +24,8 @@ public class ListRecords
 
     /**
      * Verifies the integrity of a OAI-PMH request with the verb 'ListRecords', sends a proper response.
+     * @param onlyIdentifiers When this is set to true, the response will be formatted as a ListIdentifiers response.
+     *                        When it is false, the response will be formatted as a ListRecords response.
      */
     public static void handleListRecordsRequest(HttpServletRequest request, HttpServletResponse response, boolean onlyIdentifiers)
             throws IOException, XMLStreamException, SQLException
@@ -91,7 +93,9 @@ public class ListRecords
             String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
             // Construct the query
-            String selectSQL = "SELECT data, manifest, created, deleted FROM " + tableName +
+            String selectSQL = "SELECT data, manifest, created, deleted, " +
+                    " data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
+                    tableName +
                     " WHERE created > ? ";
             if (untilDateTime != null)
                 selectSQL += " AND created < ? ";
@@ -144,6 +148,7 @@ public class ListRecords
                 String data = resultSet.getString("data");
                 String manifest = resultSet.getString("manifest");
                 boolean deleted = resultSet.getBoolean("deleted");
+                String sigel = resultSet.getString("sigel");
                 HashMap datamap = mapper.readValue(data, HashMap.class);
                 HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
                 Document jsonLDdoc = new Document(datamap, manifestmap);
@@ -165,9 +170,17 @@ public class ListRecords
                 writer.writeEndElement(); // datestamp
 
                 writer.writeStartElement("setSpec");
-                String dataset = (String) manifestmap.get("dataset");
+                String dataset = (String) manifestmap.get("collection");
                 writer.writeCharacters( dataset );
                 writer.writeEndElement(); // setSpec
+
+                if (sigel != null)
+                {
+                    writer.writeStartElement("setSpec");
+                    // Output sigel without quotation marks (").
+                    writer.writeCharacters(dataset + ":" + sigel.replace('"', ' '));
+                    writer.writeEndElement(); // setSpec
+                }
 
                 writer.writeEndElement(); // header
 
