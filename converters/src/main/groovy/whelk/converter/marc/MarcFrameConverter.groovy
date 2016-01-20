@@ -370,8 +370,7 @@ class MarcConversion {
     String someUriTemplate = '/some{?data*}' // {?type,q}
     String someUriValuesVar = 'q'
     String someUriDataVar = 'data'
-    Set someUriVars = new HashSet(
-            fromTemplate(someUriTemplate).getVariables() as List)
+    Set someUriVars = fromTemplate(someUriTemplate).getVariables() as Set
 
     String makeSomeId(Map ent) {
         def data = [:]
@@ -1217,6 +1216,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     MarcSubFieldHandler ind2
     List<String> dependsOn
     String uriTemplate
+    Set uriTemplateKeys
     Map uriTemplateDefaults
     Map computeLinks
     List splitLinkRules
@@ -1236,6 +1236,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         if (fieldDfn.uriTemplate) {
             uriTemplate = fieldDfn.uriTemplate
+            uriTemplateKeys = fromTemplate(uriTemplate).variables as Set
             uriTemplateDefaults = fieldDfn.uriTemplateDefaults
         }
 
@@ -1356,26 +1357,32 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (uriTemplate) {
-            uriTemplateDefaults.each { k, v ->
+            uriTemplateKeys.each { k ->
                 if (!uriTemplateParams.containsKey(k)) {
-                    v = getByPath(aboutEntity, k) ?: v
-                    uriTemplateParams[k] = v
+                    def v = getByPath(aboutEntity, k)
+                    if (!v && uriTemplateDefaults) {
+                        v = uriTemplateDefaults[k]
+                    }
+                    if (v) {
+                        uriTemplateParams[k] = v
+                    }
                 }
             }
-
             // TODO: need to run before linking resource above to work properly
             // for multiply linked entities. Or, perhaps better, run a final "mapIds" pass
             // in the main loop..
-            def computedUri = fromTemplate(uriTemplate).expand(uriTemplateParams)
-            def altUriRel = "sameAs"
-            if (definesDomainEntityType != null) {
-                addValue(entity, altUriRel, ['@id': computedUri], true)
-            } else {
-                if (entity['@id']) {
-                    // TODO: ok as precaution?
-                    addValue(entity, altUriRel, ['@id': entity['@id']], true)
+            if (uriTemplateParams.keySet().containsAll(uriTemplateKeys)) {
+                def computedUri = fromTemplate(uriTemplate).expand(uriTemplateParams)
+                def altUriRel = "sameAs"
+                if (definesDomainEntityType != null) {
+                    addValue(entity, altUriRel, ['@id': computedUri], true)
+                } else {
+                    if (entity['@id']) {
+                        // TODO: ok as precaution?
+                        addValue(entity, altUriRel, ['@id': entity['@id']], true)
+                    }
+                    entity['@id'] = computedUri
                 }
-                entity['@id'] = computedUri
             }
         }
 
@@ -1883,17 +1890,16 @@ class MarcSubFieldHandler extends ConversionPart {
             } else if (link) {
                 def obj = entity['@id']
                 if (obj && subUriTemplate) {
-                    def tpltStr = subUriTemplate.template
                     // NOTE: requires variable slot to be at end of template
                     // TODO: unify with extractToken
-                    def exprIdx = tpltStr.indexOf('{_}')
+                    def exprIdx = subUriTemplate.indexOf('{_}')
                     if (exprIdx > -1) {
-                        assert tpltStr.size() == exprIdx + 3
+                        assert subUriTemplate.size() == exprIdx + 3
                         obj = URLDecoder.decode(obj.substring(exprIdx))
                     } else {
-                        exprIdx = tpltStr.indexOf('{+_}')
+                        exprIdx = subUriTemplate.indexOf('{+_}')
                         if (exprIdx > -1) {
-                            assert tpltStr.size() == exprIdx + 4
+                            assert subUriTemplate.size() == exprIdx + 4
                             obj = obj.substring(exprIdx)
                         }
                     }
