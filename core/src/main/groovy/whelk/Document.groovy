@@ -278,7 +278,7 @@ class Document {
     }
 
     private asList(obj) {
-        return obj instanceof List? obj : [sameAsList]
+        return obj instanceof List? obj : [obj]
     }
 
 
