@@ -133,8 +133,7 @@
 
   "patterns": {
     "termid": {
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}{/inCollection.notation}/{prefLabel}",
-      "uriTemplateDefaults": {"inScheme.notation": "_"}
+      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{prefLabel}"
     },
     "termbase": {
       "inherit": "patterns:termid",
@@ -142,7 +141,7 @@
       "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
       "match-code": {
         "v x y z": {
-          "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}{/inCollection.notation}{/termParts.prefLabel*}",
+          "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}{/termParts.prefLabel*}",
           "resourceType": "ComplexTerm",
           "$a": {"addLink": "termParts",
                  "resourceType": "TopicalTerm",
@@ -3883,17 +3882,35 @@
       "inherit": "patterns:termbase",
       "aboutEntity": "?record",
       "resourceType": "TopicalTerm",
-      "uriTemplateDefaults": {"inScheme.notation": "sao"},
       "dependsOn": ["040", "042"],
       "$0": null,
       "_spec": [
         {
           "name": "",
-          "source": {"150": {"subfields": [{"a": "Barnpsykologi"}]}},
+          "source": [
+            {"150": {"subfields": [{"a": "Barnpsykologi"}]}}
+          ],
+          "result": {
+            "@type": "TopicalTerm",
+            "@id": "http://libris.kb.se/auth/140482",
+            "prefLabel": "Barnpsykologi"
+          }
+        },
+        {
+          "name": "",
+          "source": [
+            {"040": {"subfields": [{"f":"sao"}]}},
+            {"150": {"subfields": [{"a": "Barnpsykologi"}]}}
+          ],
           "result": {
             "@type": "TopicalTerm",
             "@id": "http://libris.kb.se/auth/140482",
             "prefLabel": "Barnpsykologi",
+            "inScheme":  {
+              "@type": "ConceptScheme",
+              "@id": "https://id.kb.se/term/sao",
+              "notation": "sao"
+            },
             "sameAs":  [{"@id": "https://id.kb.se/term/sao/Barnpsykologi"}]
           }
         }
@@ -4019,16 +4036,32 @@
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
       "_spec": [
         {
-          "source": {"550": {"subfields": [{"a": "Other"}]}},
+          "source": [
+            {"040": {"subfields": [{"f":"sao"}]}},
+            {"550": {"subfields": [{"a": "Other"}]}}
+          ],
           "result": {
+            "inScheme": {
+              "@id": "https://id.kb.se/term/sao",
+              "@type": "ConceptScheme",
+              "notation": "sao"
+            },
             "related": [
               {"@type": "TopicalTerm", "@id": "https://id.kb.se/term/sao/Other", "prefLabel":  "Other"}
             ]
           }
         },
         {
-          "source": {"550": {"subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}]}},
+          "source": [
+            {"040": {"subfields": [{"f":"sao"}]}},
+            {"550": {"subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}]}}
+          ],
           "result": {
+            "inScheme": {
+              "@id": "https://id.kb.se/term/sao",
+              "@type": "ConceptScheme",
+              "notation": "sao"
+            },
             "broader": [
               {"@type": "TopicalTerm",
                 "@id": "https://id.kb.se/term/sao/Commedia%20dell%60arte",
@@ -4093,7 +4126,6 @@
         "TopicalTerm": {"addLink": "closeMatch"},
         "WorkTerm": {"addLink": "subject"}
       },
-      "i1": null,
       "$0": {"addProperty": "notation"},
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html"
     },
