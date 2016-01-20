@@ -724,11 +724,16 @@ class PostgreSQLComponent implements Storage {
 
     private List<String> loadIdentifiers(String id) {
         List<String> identifiers = []
-        PreparedStatement loadIds = getConnection().prepareStatement(LOAD_IDENTIFIERS)
-        loadIds.setString(1,id)
-        ResultSet rs = loadIds.executeQuery()
-        while (rs.next()) {
-            identifiers << rs.getString("identifier")
+        Connection connection = getConnection();
+        PreparedStatement loadIds = connection.prepareStatement(LOAD_IDENTIFIERS)
+        try {
+            loadIds.setString(1, id)
+            ResultSet rs = loadIds.executeQuery()
+            while (rs.next()) {
+                identifiers << rs.getString("identifier")
+            }
+        } finally {
+            connection.close()
         }
         return identifiers
     }
