@@ -3081,6 +3081,11 @@
           "$a": {"property": "name", "required": true}
         }
       },
+      "match-i2": {
+        "0": {
+          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
+        }
+      },
       "i2": {
         "about": "_:concept",
         "link": "inScheme",
@@ -3170,6 +3175,11 @@
         "1": "primary",
         "2": "secondary"
       },
+      "match-i2": {
+        "0": {
+          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
+        }
+      },
       "i2": {
         "link": "inScheme",
         "resourceType": "ConceptScheme",
@@ -3199,7 +3209,7 @@
             "subject": [
               {
                 "@type": "ComplexTerm",
-                "@id": "https://id.kb.se/term/lcsh/Information/Information%20Age",
+                "@id": "http://id.loc.gov/authorities/label/Information--Information%20Age",
                 "termParts": [
                   {
                     "@type": "TopicalTerm",
