@@ -73,10 +73,6 @@ public class ListRecords
             return;
         }
 
-        // "No start date" is replaced with a _very_ early start date.
-        if (from == null)
-            from = "0000-01-01";
-
         ZonedDateTime fromDateTime = Helpers.parseISO8601(from);
         ZonedDateTime untilDateTime = Helpers.parseISO8601(until);
 
@@ -138,8 +134,9 @@ public class ListRecords
         // Construct the query
         String selectSQL = "SELECT data, manifest, modified, deleted, " +
                 " data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
-                tableName +
-                " WHERE modified > ? ";
+                tableName + " WHERE TRUE ";
+        if (fromDateTime != null)
+            selectSQL += " AND modified > ? ";
         if (untilDateTime != null)
             selectSQL += " AND modified < ? ";
         if (setSpec.getRootSet() != null)
@@ -155,6 +152,7 @@ public class ListRecords
 
         // Assign parameters
         int parameterIndex = 1;
+        if (fromDateTime != null)
         preparedStatement.setTimestamp(parameterIndex++, new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L));
         if (untilDateTime != null)
             preparedStatement.setTimestamp(parameterIndex++, new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L));
