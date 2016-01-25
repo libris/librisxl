@@ -55,11 +55,9 @@ public class ListRecordTrees
             // Build the xml response feed
             XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
             xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
-            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
-            ResponseCommon.writeOaiPmhHeader(writer, request, true);
+            XMLStreamWriter writer = null;
 
-            writer.writeStartElement("ListRecordTrees");
-            writer.writeStartElement("records");
+            boolean xmlIntroWritten = false;
 
             while (resultSet.next())
             {
@@ -78,12 +76,21 @@ public class ListRecordTrees
                     addNodeAndSubnodesToTree(id, visitedIDs, secondConn, nodeDatas, modificationTimes);
                 }
 
-                //System.out.println("Id: " + id + " has modification window: " + modificationTimes.earliestModification + " -> " + modificationTimes.latestModification);
-                
                 if (fromDateTime != null && fromDateTime.compareTo(modificationTimes.latestModification) > 0)
                     continue;
                 if (untilDateTime != null && untilDateTime.compareTo(modificationTimes.earliestModification) < 0)
                     continue;
+
+                // Do not begin writing to the response until at least one record has passed all checks. We might still need to
+                // send a "noRecordsMatch".
+                if (!xmlIntroWritten)
+                {
+                    xmlIntroWritten = true;
+                    writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
+                    ResponseCommon.writeOaiPmhHeader(writer, request, true);
+                    writer.writeStartElement("ListRecordTrees");
+                    writer.writeStartElement("records");
+                }
 
                 Document mergedDocument = mergeDocument(id, nodeDatas);
 
@@ -94,9 +101,16 @@ public class ListRecordTrees
                 writer.writeEndElement(); // record
             }
 
-            writer.writeEndElement(); // records
-            writer.writeEndElement(); // ListRecordTrees
-            ResponseCommon.writeOaiPmhClose(writer, request);
+            if (xmlIntroWritten)
+            {
+                writer.writeEndElement(); // records
+                writer.writeEndElement(); // ListRecordTrees
+                ResponseCommon.writeOaiPmhClose(writer, request);
+            }
+            else
+            {
+                ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
+            }
         }
     }
 
