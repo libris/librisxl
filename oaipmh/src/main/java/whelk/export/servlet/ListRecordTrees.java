@@ -1,10 +1,13 @@
 package whelk.export.servlet;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import whelk.Document;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
 import java.time.ZonedDateTime;
@@ -44,9 +47,10 @@ public class ListRecordTrees
         }
 
         // Record trees must have a 'hold' root node. Meaning, the root set of the request must be hold.
-        if (!setSpec.getRootSet().equals(SetSpec.SET_HOLD)) {
+        if (setSpec.getRootSet() == null || !setSpec.getRootSet().equals(SetSpec.SET_HOLD)) {
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
-                    "ListRecordTrees requires that the 'hold' (with optional subsets) be specified", request, response);
+                    "ListRecordTrees builds trees using holding records as root nodes. Therefore it requires that the " +
+                            "'hold' set (with optional subsets) be specified", request, response);
             return;
         }
 
@@ -88,26 +92,44 @@ public class ListRecordTrees
             PreparedStatement preparedStatement = firstConn.prepareStatement(selectSQL);
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            List<String> nodeDatas = new LinkedList<String>();
-            HashSet<String> visitedIDs = new HashSet<String>();
+            // Build the xml response feed
+            XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+            xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
+            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
+            ResponseCommon.writeOaiPmhHeader(writer, request, true);
+
+            writer.writeStartElement("ListRecordTrees");
+            writer.writeStartElement("records");
+
             while (resultSet.next())
             {
-                //Map data = mapper.readValue(resultSet.getString("data"), HashMap.class);
-                //Map manifest = mapper.readValue(resultSet.getString("manifest"), HashMap.class);
-                //Document doc = new Document(data, manifest);
+                List<String> nodeDatas = new LinkedList<String>();
+                HashSet<String> visitedIDs = new HashSet<String>();
                 String id = resultSet.getString("id");
 
                 System.out.println("* Building new tree, root: " + id);
 
                 // Use a second db connection for the embedding process
                 try (Connection secondConn = DataBase.getConnection()) {
-                    addNodeToTree(id, visitedIDs, secondConn, nodeDatas);
+                    addNodeAndSubnodesToTree(id, visitedIDs, secondConn, nodeDatas);
                 }
+
+                Document mergedDocument = mergeDocument(id, nodeDatas);
+
+                writer.writeStartElement("record");
+                writer.writeStartElement("metadata");
+                ResponseCommon.writeConvertedDocument(writer, requestedFormat, mergedDocument);
+                writer.writeEndElement(); // metadata
+                writer.writeEndElement(); // record
             }
+
+            writer.writeEndElement(); // records
+            writer.writeEndElement(); // ListRecordTrees
+            ResponseCommon.writeOaiPmhClose(writer, request);
         }
     }
 
-    private static void addNodeToTree(String id, Set<String> visitedIDs, Connection connection, List<String> nodeDatas)
+    private static void addNodeAndSubnodesToTree(String id, Set<String> visitedIDs, Connection connection, List<String> nodeDatas)
             throws SQLException, IOException
     {
         if (visitedIDs.contains(id))
@@ -170,17 +192,6 @@ public class ListRecordTrees
             return;
 
         String potentialID = (String) value;
-
-        // KB IDs can take many shapes. Examples:
-        // /some?type=Organization&notation=KVIN // ignore, fixed by linkfinder ?
-        // https://libris.kb.se/nszp6vst12dg8t5 // lookup
-        // https://libris.kb.se/resource/bib/1234 // transform!
-        // https://libris.kb.se/bib/1234 // ignore, fixed by linkfinder ?
-        // https://id.kb.se/term/kao/Jansson%2C%20Tove // lookup
-
-        //if ( !potentialID.startsWith("https://libris.kb.se/") && !potentialID.startsWith("https://id.kb.se/") )
-            //return;
-
         if ( !potentialID.startsWith("http") )
             return;
 
@@ -195,15 +206,30 @@ public class ListRecordTrees
         if (resultSet.next())
         {
             String id = resultSet.getString("id");
-            System.out.println("  Passing real id: " + id);
-            addNodeToTree( id, visitedIDs, connection, nodeDatas );
+            addNodeAndSubnodesToTree( id, visitedIDs, connection, nodeDatas );
+        }
+    }
+
+    private static Document mergeDocument(String id, List<String> nodeDatas)
+            throws IOException
+    {
+        ObjectMapper mapper = new ObjectMapper();
+
+        // One element in the list is guaranteed.
+        String rootData = nodeDatas.get(0);
+        Map rootMap = mapper.readValue(rootData, HashMap.class);
+        List mergedGraph = (List) rootMap.get("@graph");
+
+        for (int i = 1; i < nodeDatas.size(); ++i)
+        {
+            String nodeData = nodeDatas.get(i);
+            Map nodeRootMap = mapper.readValue(nodeData, HashMap.class);
+            List nodeGraph = (List) nodeRootMap.get("@graph");
+            mergedGraph.addAll(nodeGraph);
         }
 
+        rootMap.replace("@graph", mergedGraph);
 
-        /*
-        if (visitedIDs.contains(potentialID))
-            return;*/
-
-
+        return new Document(id, rootMap);
     }
 }
