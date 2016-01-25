@@ -20,7 +20,7 @@ public class ListRecordTrees
     // This class is used as a crutch to simulate "pass by reference"-mechanics. The point of this is that (a pointer to)
     // an instance of ModificationTimes is passed around in the tree building process, being _updated_ (which a ZonedDateTime
     // cannot be) with each documents created-timestamp.
-    private static class ModificationTimes
+    public static class ModificationTimes
     {
         public ZonedDateTime earliestModification;
         public ZonedDateTime latestModification;
@@ -95,13 +95,6 @@ public class ListRecordTrees
 
                 Document mergedDocument = mergeDocument(id, nodeDatas);
 
-                /*
-                writer.writeStartElement("record");
-                writer.writeStartElement("metadata");
-                ResponseCommon.writeConvertedDocument(writer, requestedFormat, mergedDocument);
-                writer.writeEndElement(); // metadata
-                writer.writeEndElement(); // record
-                */
                 emitRecord(resultSet, mergedDocument, modificationTimes, writer, requestedFormat, onlyIdentifiers);
             }
 
@@ -118,63 +111,7 @@ public class ListRecordTrees
         }
     }
 
-    private static void emitRecord(ResultSet resultSet, Document mergedDocument, ModificationTimes modificationTimes,
-                                   XMLStreamWriter writer, String requestedFormat, boolean onlyIdentifiers)
-            throws SQLException, XMLStreamException, IOException
-    {
-        // The ResultSet refers only to the root document. mergedDocument represents the entire tree.
-
-        ObjectMapper mapper = new ObjectMapper();
-        String manifest = resultSet.getString("manifest");
-        boolean deleted = resultSet.getBoolean("deleted");
-        String sigel = resultSet.getString("sigel");
-        HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
-
-        writer.writeStartElement("record");
-
-        writer.writeStartElement("header");
-
-        if (deleted)
-            writer.writeAttribute("status", "deleted");
-
-        writer.writeStartElement("identifier");
-        writer.writeCharacters(mergedDocument.getURI().toString());
-        writer.writeEndElement(); // identifier
-
-        writer.writeStartElement("datestamp");
-        //ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
-        writer.writeCharacters(modificationTimes.latestModification.toString());
-        writer.writeEndElement(); // datestamp
-
-        String dataset = (String) manifestmap.get("collection");
-        if (dataset != null)
-        {
-            writer.writeStartElement("setSpec");
-            writer.writeCharacters(dataset);
-            writer.writeEndElement(); // setSpec
-        }
-
-        if (sigel != null)
-        {
-            writer.writeStartElement("setSpec");
-            // Output sigel without quotation marks (").
-            writer.writeCharacters(dataset + ":" + sigel.replace("\"", ""));
-            writer.writeEndElement(); // setSpec
-        }
-
-        writer.writeEndElement(); // header
-
-        if (!onlyIdentifiers && !deleted)
-        {
-            writer.writeStartElement("metadata");
-            ResponseCommon.writeConvertedDocument(writer, requestedFormat, mergedDocument);
-            writer.writeEndElement(); // metadata
-        }
-
-        writer.writeEndElement(); // record
-    }
-
-    private static void addNodeAndSubnodesToTree(String id, Set<String> visitedIDs, Connection connection,
+    public static void addNodeAndSubnodesToTree(String id, Set<String> visitedIDs, Connection connection,
                                                  List<String> nodeDatas, ModificationTimes modificationTimes)
             throws SQLException, IOException
     {
@@ -202,6 +139,29 @@ public class ListRecordTrees
 
         Map map = mapper.readValue(jsonBlob, HashMap.class);
         parseMap(map, visitedIDs, connection, nodeDatas, modificationTimes);
+    }
+
+    public static Document mergeDocument(String id, List<String> nodeDatas)
+            throws IOException
+    {
+        ObjectMapper mapper = new ObjectMapper();
+
+        // One element in the list is guaranteed.
+        String rootData = nodeDatas.get(0);
+        Map rootMap = mapper.readValue(rootData, HashMap.class);
+        List mergedGraph = (List) rootMap.get("@graph");
+
+        for (int i = 1; i < nodeDatas.size(); ++i)
+        {
+            String nodeData = nodeDatas.get(i);
+            Map nodeRootMap = mapper.readValue(nodeData, HashMap.class);
+            List nodeGraph = (List) nodeRootMap.get("@graph");
+            mergedGraph.addAll(nodeGraph);
+        }
+
+        rootMap.replace("@graph", mergedGraph);
+
+        return new Document(id, rootMap);
     }
 
     private static void parseMap(Map map, Set<String> visitedIDs, Connection connection,
@@ -261,26 +221,59 @@ public class ListRecordTrees
         }
     }
 
-    private static Document mergeDocument(String id, List<String> nodeDatas)
-            throws IOException
+    private static void emitRecord(ResultSet resultSet, Document mergedDocument, ModificationTimes modificationTimes,
+                                   XMLStreamWriter writer, String requestedFormat, boolean onlyIdentifiers)
+            throws SQLException, XMLStreamException, IOException
     {
+        // The ResultSet refers only to the root document. mergedDocument represents the entire tree.
+
         ObjectMapper mapper = new ObjectMapper();
+        String manifest = resultSet.getString("manifest");
+        boolean deleted = resultSet.getBoolean("deleted");
+        String sigel = resultSet.getString("sigel");
+        HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
 
-        // One element in the list is guaranteed.
-        String rootData = nodeDatas.get(0);
-        Map rootMap = mapper.readValue(rootData, HashMap.class);
-        List mergedGraph = (List) rootMap.get("@graph");
+        writer.writeStartElement("record");
 
-        for (int i = 1; i < nodeDatas.size(); ++i)
+        writer.writeStartElement("header");
+
+        if (deleted)
+            writer.writeAttribute("status", "deleted");
+
+        writer.writeStartElement("identifier");
+        writer.writeCharacters(mergedDocument.getURI().toString());
+        writer.writeEndElement(); // identifier
+
+        writer.writeStartElement("datestamp");
+        //ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+        writer.writeCharacters(modificationTimes.latestModification.toString());
+        writer.writeEndElement(); // datestamp
+
+        String dataset = (String) manifestmap.get("collection");
+        if (dataset != null)
         {
-            String nodeData = nodeDatas.get(i);
-            Map nodeRootMap = mapper.readValue(nodeData, HashMap.class);
-            List nodeGraph = (List) nodeRootMap.get("@graph");
-            mergedGraph.addAll(nodeGraph);
+            writer.writeStartElement("setSpec");
+            writer.writeCharacters(dataset);
+            writer.writeEndElement(); // setSpec
         }
 
-        rootMap.replace("@graph", mergedGraph);
+        if (sigel != null)
+        {
+            writer.writeStartElement("setSpec");
+            // Output sigel without quotation marks (").
+            writer.writeCharacters(dataset + ":" + sigel.replace("\"", ""));
+            writer.writeEndElement(); // setSpec
+        }
 
-        return new Document(id, rootMap);
+        writer.writeEndElement(); // header
+
+        if (!onlyIdentifiers && !deleted)
+        {
+            writer.writeStartElement("metadata");
+            ResponseCommon.writeConvertedDocument(writer, requestedFormat, mergedDocument);
+            writer.writeEndElement(); // metadata
+        }
+
+        writer.writeEndElement(); // record
     }
 }
