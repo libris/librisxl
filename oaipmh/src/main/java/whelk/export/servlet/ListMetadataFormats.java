@@ -24,24 +24,32 @@ public class ListMetadataFormats
         if (ResponseCommon.errorOnExtraParameters(request, response, IDENTIFIER_PARAM))
             return;
 
-        // Looking for the requested document is essentially redundant, since we offer all supported metadata formats
-        // for all documents, but we will check for it anyway, since the OAI-PMH specification requires an error if the
-        // document does not exist.
         if (identifier != null) {
+
+            String id = Helpers.getShorthandDocumentId(identifier);
+            if (id == null) {
+                ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
+                return;
+            }
+
             try (Connection dbconn = DataBase.getConnection()) {
                 String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
                 String selectSQL = "SELECT deleted FROM " + tableName + " WHERE id = ? ";
                 PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
-                String id = Helpers.getShorthandDocumentId(identifier);
-                if (id == null) {
-                    ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
-                    return;
-                }
                 preparedStatement.setString(1, id);
                 ResultSet resultSet = preparedStatement.executeQuery();
 
                 // If there was no such document
-                if (!resultSet.isBeforeFirst()) {
+                if (resultSet.next())
+                {
+                    boolean recordDeleted = resultSet.getBoolean("deleted");
+                    if (recordDeleted)
+                    {
+                        ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
+                        return;
+                    }
+                }
+                else {
                     ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
                     return;
                 }
@@ -58,29 +66,37 @@ public class ListMetadataFormats
 
         for ( String metadataPrefix : OaiPmh.supportedFormats.keySet() )
         {
-            writer.writeStartElement("metadataFormat");
-            writer.writeStartElement("metadataPrefix");
-            writer.writeCharacters(metadataPrefix);
-            writer.writeEndElement(); // metadataPrefix
-
-            OaiPmh.FormatDescription formatDescription = OaiPmh.supportedFormats.get(metadataPrefix);
-            if (formatDescription.xmlSchema != null)
-            {
-                writer.writeStartElement("schema");
-                writer.writeCharacters(formatDescription.xmlSchema);
-                writer.writeEndElement(); // schema
-            }
-
-            if (formatDescription.xmlNamespace != null)
-            {
-                writer.writeStartElement("metadataNamespace");
-                writer.writeCharacters(formatDescription.xmlNamespace);
-                writer.writeEndElement(); // metadataNamespace
-            }
-
-            writer.writeEndElement(); // metadataFormat
+            emitMetadataFormat(metadataPrefix, writer);
+            emitMetadataFormat(metadataPrefix + OaiPmh.FORMATEXPANDED_POSTFIX, writer);
         }
         writer.writeEndElement(); // ListMetadataFormats
         ResponseCommon.writeOaiPmhClose(writer, request);
+    }
+
+    private static void emitMetadataFormat(String metadataPrefix, XMLStreamWriter writer)
+            throws XMLStreamException
+    {
+        writer.writeStartElement("metadataFormat");
+        writer.writeStartElement("metadataPrefix");
+        writer.writeCharacters(metadataPrefix);
+        writer.writeEndElement(); // metadataPrefix
+
+        OaiPmh.FormatDescription formatDescription = OaiPmh.supportedFormats.get(
+                metadataPrefix.replace(OaiPmh.FORMATEXPANDED_POSTFIX, ""));
+        if (formatDescription.xmlSchema != null)
+        {
+            writer.writeStartElement("schema");
+            writer.writeCharacters(formatDescription.xmlSchema);
+            writer.writeEndElement(); // schema
+        }
+
+        if (formatDescription.xmlNamespace != null)
+        {
+            writer.writeStartElement("metadataNamespace");
+            writer.writeCharacters(formatDescription.xmlNamespace);
+            writer.writeEndElement(); // metadataNamespace
+        }
+
+        writer.writeEndElement(); // metadataFormat
     }
 }

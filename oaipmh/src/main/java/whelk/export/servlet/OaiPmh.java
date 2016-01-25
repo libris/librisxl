@@ -50,6 +50,7 @@ public class OaiPmh extends HttpServlet
         supportedFormats.put("marcxml", new FormatDescription(new JsonLD2MarcXMLConverter(), true, "http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd", "http://www.loc.gov/MARC21/slim"));
         supportedFormats.put("jsonld", new FormatDescription(null, false, null, null));
     }
+    public final static String FORMATEXPANDED_POSTFIX = ":expanded";
 
     public static Properties configuration;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
