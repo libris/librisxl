@@ -166,8 +166,15 @@ class Document {
     void addAliases(Map entry) {
         for (sameAs in asList(entry.get(JSONLD_ALT_ID_KEY))) {
             if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
-                addIdentifier(sameAs.get(JsonLd.ID_KEY))
-                log.debug("Added ${sameAs.get(JsonLd.ID_KEY)} to ${getURI()}")
+                String identifier = sameAs.get(JsonLd.ID_KEY)
+                int pipeZ = identifier.indexOf(" |z")
+                if (pipeZ > 0) {
+                    identifier = identifier.substring(0,pipeZ)
+                }
+                identifier = identifier.trim().replaceAll(/\n|\r/, "")
+                identifier = identifier.trim().replaceAll(/\s/, "%20")
+                addIdentifier(identifier)
+                log.debug("Added ${identifier} to ${getURI()}")
             }
         }
     }

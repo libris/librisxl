@@ -269,6 +269,7 @@ class PostgreSQLComponent implements Storage {
         try {
             altIdInsert.executeBatch()
         } catch (BatchUpdateException bue) {
+            log.error("Failed saving identifiers for ${doc.id}")
             throw bue.getNextException()
         }
     }
