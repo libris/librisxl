@@ -8,9 +8,9 @@ package whelk.export.servlet;
 public class SetSpec
 {
     // root sets
-    private static final String SET_AUTH = "auth";
-    private static final String SET_BIB = "bib";
-    private static final String SET_HOLD = "hold";
+    public static final String SET_AUTH = "auth";
+    public static final String SET_BIB = "bib";
+    public static final String SET_HOLD = "hold";
 
     private static final String[] rootSets = {SET_AUTH, SET_BIB, SET_HOLD}; // add flattened/complete/rich hold with everything attached?
 

@@ -13,6 +13,9 @@ import java.sql.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 
 public class GetRecord
 {
@@ -26,7 +29,7 @@ public class GetRecord
             throws IOException, XMLStreamException, SQLException
     {
         // Parse and verify the parameters allowed for this request
-        String identifier = request.getParameter(IDENTIFIER_PARAM); // required
+        String identifierUri = request.getParameter(IDENTIFIER_PARAM); // required
         String metadataPrefix = request.getParameter(FORMAT_PARAM); // required
 
         if (ResponseCommon.errorOnExtraParameters(request, response, IDENTIFIER_PARAM, FORMAT_PARAM))
@@ -39,21 +42,23 @@ public class GetRecord
             return;
         }
 
-        if (identifier == null)
+        if (identifierUri == null)
         {
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
                     "identifier argument required.", request, response);
             return;
         }
 
+        String id = Helpers.getShorthandDocumentId(identifierUri);
+
         try (Connection dbconn = DataBase.getConnection()) {
             String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
             // Construct the query
-            String selectSQL = "SELECT data, manifest, created, deleted FROM " + tableName +
-                    " WHERE id > ? ";
+            String selectSQL = "SELECT data, manifest, modified, deleted, data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
+                    tableName + " WHERE id = ? ";
             PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
-            preparedStatement.setString(1, identifier);
+            preparedStatement.setString(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
 
             if (!resultSet.next())
@@ -66,9 +71,29 @@ public class GetRecord
             String data = resultSet.getString("data");
             String manifest = resultSet.getString("manifest");
             boolean deleted = resultSet.getBoolean("deleted");
+            ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
             HashMap datamap = mapper.readValue(data, HashMap.class);
             HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
             Document jsonLDdoc = new Document(datamap, manifestmap);
+
+            // Expanded format requested, we need to build trees.
+            if (metadataPrefix.endsWith(OaiPmh.FORMATEXPANDED_POSTFIX))
+            {
+                List<String> nodeDatas = new LinkedList<String>();
+                HashSet<String> visitedIDs = new HashSet<String>();
+                ListRecordTrees.ModificationTimes modificationTimes = new ListRecordTrees.ModificationTimes();
+                modificationTimes.earliestModification = modified;
+                modificationTimes.latestModification = modified;
+
+                try (Connection secondConn = DataBase.getConnection()) {
+                    ListRecordTrees.addNodeAndSubnodesToTree(id, visitedIDs, secondConn, nodeDatas, modificationTimes);
+                }
+
+                // Value of modificationTimes.latestModification will have changed during tree building.
+                modified = modificationTimes.latestModification;
+
+                jsonLDdoc = ListRecordTrees.mergeDocument(id, nodeDatas);
+            }
 
             // Build the xml response feed
             XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
@@ -85,16 +110,15 @@ public class GetRecord
                 writer.writeAttribute("status", "deleted");
 
             writer.writeStartElement("identifier");
-            writer.writeCharacters(jsonLDdoc.getURI().toString());
+            writer.writeCharacters(identifierUri);
             writer.writeEndElement(); // identifier
 
             writer.writeStartElement("datestamp");
-            ZonedDateTime created = ZonedDateTime.ofInstant(resultSet.getTimestamp("created").toInstant(), ZoneOffset.UTC);
-            writer.writeCharacters(created.toString());
+            writer.writeCharacters(modified.toString());
             writer.writeEndElement(); // datestamp
 
             writer.writeStartElement("setSpec");
-            String dataset = (String) manifestmap.get("dataset");
+            String dataset = (String) manifestmap.get("collection");
             writer.writeCharacters( dataset );
             writer.writeEndElement(); // setSpec
 

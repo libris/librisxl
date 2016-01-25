@@ -66,140 +66,156 @@ public class ListRecords
         }
 
         // Was the data ordered in a format we know?
-        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix))
+        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix.replace(OaiPmh.FORMATEXPANDED_POSTFIX, "")))
         {
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + metadataPrefix,
                     request, response);
             return;
         }
 
-        // "No start date" is replaced with a _very_ early start date.
-        if (from == null)
-            from = "0000-01-01";
-
         ZonedDateTime fromDateTime = Helpers.parseISO8601(from);
         ZonedDateTime untilDateTime = Helpers.parseISO8601(until);
 
-        respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix, onlyIdentifiers);
+        if (metadataPrefix.endsWith(OaiPmh.FORMATEXPANDED_POSTFIX))
+        {
+            // Expand each record with its dependency tree
+            ListRecordTrees.respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix, onlyIdentifiers);
+        }
+        else {
+            // Normal record retrieval
+            try (Connection dbconn = DataBase.getConnection()) {
+                ResultSet resultSet = getMatchingDocuments(dbconn, fromDateTime, untilDateTime, setSpec);
+                respond(request, response, metadataPrefix, onlyIdentifiers, resultSet);
+            }
+        }
     }
 
     private static void respond(HttpServletRequest request, HttpServletResponse response,
-                         ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec,
-                                String requestedFormat, boolean onlyIdentifiers)
+                                String requestedFormat, boolean onlyIdentifiers, ResultSet resultSet)
             throws IOException, XMLStreamException, SQLException
     {
-        try (Connection dbconn = DataBase.getConnection())
+        // An inelegant (but recommended) way of checking if the ResultSet is empty.
+        // Avoids the need for "backing-up" which would prevent streaming of the ResultSet from the db.
+        if (!resultSet.isBeforeFirst())
         {
-            String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-
-            // Construct the query
-            String selectSQL = "SELECT data, manifest, created, deleted, " +
-                    " data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
-                    tableName +
-                    " WHERE created > ? ";
-            if (untilDateTime != null)
-                selectSQL += " AND created < ? ";
-            if (setSpec.getRootSet() != null)
-                selectSQL += " AND manifest->>'collection' = ? ";
-
-            // Obviously query concatenation is dangerous business and should never be done, unfortunately JSONB fields
-            // much like table names cannot be parameterized, and so there is little choice.
-            if (setSpec.getSubset() != null)
-                selectSQL += " AND data @> '{\"@graph\":[{\"heldBy\": {\"@type\": \"Organization\", \"notation\": \"" +
-                        Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
-
-            PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
-
-            // Assign parameters
-            int parameterIndex = 1;
-            preparedStatement.setTimestamp(parameterIndex++, new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L));
-            if (untilDateTime != null)
-                preparedStatement.setTimestamp(parameterIndex++, new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L));
-            if (setSpec.getRootSet() != null)
-                preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            // An inelegant (but recommended) way of checking if the ResultSet is empty.
-            // Avoids the need for "backing-up" which would prevent streaming of the ResultSet from the db.
-            if (!resultSet.isBeforeFirst())
-            {
-                ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
-                return;
-            }
-
-            // Build the xml response feed
-            XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
-            xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
-            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
-
-            ResponseCommon.writeOaiPmhHeader(writer, request, true);
-
-            if (onlyIdentifiers)
-                writer.writeStartElement("ListIdentifiers");
-            else
-                writer.writeStartElement("ListRecords");
-
-            writer.writeStartElement("records");
-
-            ObjectMapper mapper = new ObjectMapper();
-            while (resultSet.next())
-            {
-                String data = resultSet.getString("data");
-                String manifest = resultSet.getString("manifest");
-                boolean deleted = resultSet.getBoolean("deleted");
-                String sigel = resultSet.getString("sigel");
-                HashMap datamap = mapper.readValue(data, HashMap.class);
-                HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
-                Document jsonLDdoc = new Document(datamap, manifestmap);
-
-                writer.writeStartElement("record");
-
-                writer.writeStartElement("header");
-
-                if (deleted)
-                    writer.writeAttribute("status", "deleted");
-
-                writer.writeStartElement("identifier");
-                writer.writeCharacters(jsonLDdoc.getURI().toString());
-                writer.writeEndElement(); // identifier
-
-                writer.writeStartElement("datestamp");
-                ZonedDateTime created = ZonedDateTime.ofInstant(resultSet.getTimestamp("created").toInstant(), ZoneOffset.UTC);
-                writer.writeCharacters(created.toString());
-                writer.writeEndElement(); // datestamp
-
-                String dataset = (String) manifestmap.get("collection");
-                if (dataset != null)
-                {
-                    writer.writeStartElement("setSpec");
-                    writer.writeCharacters(dataset);
-                    writer.writeEndElement(); // setSpec
-                }
-
-                if (sigel != null)
-                {
-                    writer.writeStartElement("setSpec");
-                    // Output sigel without quotation marks (").
-                    writer.writeCharacters(dataset + ":" + sigel.replace("\"", ""));
-                    writer.writeEndElement(); // setSpec
-                }
-
-                writer.writeEndElement(); // header
-
-                if (!onlyIdentifiers && !deleted)
-                {
-                    writer.writeStartElement("metadata");
-                    ResponseCommon.writeConvertedDocument(writer, requestedFormat, jsonLDdoc);
-                    writer.writeEndElement(); // metadata
-                }
-
-                writer.writeEndElement(); // record
-            }
-
-            writer.writeEndElement(); // records
-            writer.writeEndElement(); // ListIdentifiers/ListRecords
-            ResponseCommon.writeOaiPmhClose(writer, request);
+            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
+            return;
         }
+
+        // Build the xml response feed
+        XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+        xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
+        XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
+
+        ResponseCommon.writeOaiPmhHeader(writer, request, true);
+
+        if (onlyIdentifiers)
+            writer.writeStartElement("ListIdentifiers");
+        else
+            writer.writeStartElement("ListRecords");
+
+        writer.writeStartElement("records");
+
+        while (resultSet.next())
+        {
+            emitRecord(resultSet, writer, requestedFormat, onlyIdentifiers);
+        }
+
+        writer.writeEndElement(); // records
+        writer.writeEndElement(); // ListIdentifiers/ListRecords
+        ResponseCommon.writeOaiPmhClose(writer, request);
+    }
+
+    private static ResultSet getMatchingDocuments(Connection dbconn, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec)
+            throws SQLException
+    {
+        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+
+        // Construct the query
+        String selectSQL = "SELECT data, manifest, modified, deleted, " +
+                " data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
+                tableName + " WHERE TRUE ";
+        if (fromDateTime != null)
+            selectSQL += " AND modified > ? ";
+        if (untilDateTime != null)
+            selectSQL += " AND modified < ? ";
+        if (setSpec.getRootSet() != null)
+            selectSQL += " AND manifest->>'collection' = ? ";
+
+        // Obviously query concatenation is dangerous business and should never be done, unfortunately JSONB fields
+        // much like table names cannot be parameterized, and so there is little choice.
+        if (setSpec.getSubset() != null)
+            selectSQL += " AND data @> '{\"@graph\":[{\"heldBy\": {\"@type\": \"Organization\", \"notation\": \"" +
+                    Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
+
+        PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
+
+        // Assign parameters
+        int parameterIndex = 1;
+        if (fromDateTime != null)
+        preparedStatement.setTimestamp(parameterIndex++, new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L));
+        if (untilDateTime != null)
+            preparedStatement.setTimestamp(parameterIndex++, new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L));
+        if (setSpec.getRootSet() != null)
+            preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
+
+        return preparedStatement.executeQuery();
+    }
+
+    private static void emitRecord(ResultSet resultSet, XMLStreamWriter writer, String requestedFormat, boolean onlyIdentifiers)
+            throws SQLException, XMLStreamException, IOException
+    {
+        ObjectMapper mapper = new ObjectMapper();
+
+        String data = resultSet.getString("data");
+        String manifest = resultSet.getString("manifest");
+        boolean deleted = resultSet.getBoolean("deleted");
+        String sigel = resultSet.getString("sigel");
+        HashMap datamap = mapper.readValue(data, HashMap.class);
+        HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
+        Document jsonLDdoc = new Document(datamap, manifestmap);
+
+        writer.writeStartElement("record");
+
+        writer.writeStartElement("header");
+
+        if (deleted)
+            writer.writeAttribute("status", "deleted");
+
+        writer.writeStartElement("identifier");
+        writer.writeCharacters(jsonLDdoc.getURI().toString());
+        writer.writeEndElement(); // identifier
+
+        writer.writeStartElement("datestamp");
+        ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+        writer.writeCharacters(modified.toString());
+        writer.writeEndElement(); // datestamp
+
+        String dataset = (String) manifestmap.get("collection");
+        if (dataset != null)
+        {
+            writer.writeStartElement("setSpec");
+            writer.writeCharacters(dataset);
+            writer.writeEndElement(); // setSpec
+        }
+
+        if (sigel != null)
+        {
+            writer.writeStartElement("setSpec");
+            // Output sigel without quotation marks (").
+            writer.writeCharacters(dataset + ":" + sigel.replace("\"", ""));
+            writer.writeEndElement(); // setSpec
+        }
+
+        writer.writeEndElement(); // header
+
+        if (!onlyIdentifiers && !deleted)
+        {
+            writer.writeStartElement("metadata");
+            ResponseCommon.writeConvertedDocument(writer, requestedFormat, jsonLDdoc);
+            writer.writeEndElement(); // metadata
+        }
+
+        writer.writeEndElement(); // record
     }
 }
