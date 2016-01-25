@@ -67,7 +67,6 @@ public class ListMetadataFormats
         for ( String metadataPrefix : OaiPmh.supportedFormats.keySet() )
         {
             emitMetadataFormat(metadataPrefix, writer);
-            emitMetadataFormat(metadataPrefix + OaiPmh.FORMATEXPANDED_POSTFIX, writer);
         }
         writer.writeEndElement(); // ListMetadataFormats
         ResponseCommon.writeOaiPmhClose(writer, request);
@@ -81,8 +80,7 @@ public class ListMetadataFormats
         writer.writeCharacters(metadataPrefix);
         writer.writeEndElement(); // metadataPrefix
 
-        OaiPmh.FormatDescription formatDescription = OaiPmh.supportedFormats.get(
-                metadataPrefix.replace(OaiPmh.FORMATEXPANDED_POSTFIX, ""));
+        OaiPmh.FormatDescription formatDescription = OaiPmh.supportedFormats.get(metadataPrefix);
         if (formatDescription.xmlSchema != null)
         {
             writer.writeStartElement("schema");

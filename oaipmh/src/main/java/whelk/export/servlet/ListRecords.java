@@ -66,7 +66,7 @@ public class ListRecords
         }
 
         // Was the data ordered in a format we know?
-        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix))
+        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix.replace(OaiPmh.FORMATEXPANDED_POSTFIX, "")))
         {
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + metadataPrefix,
                     request, response);
@@ -80,9 +80,17 @@ public class ListRecords
         ZonedDateTime fromDateTime = Helpers.parseISO8601(from);
         ZonedDateTime untilDateTime = Helpers.parseISO8601(until);
 
-        try (Connection dbconn = DataBase.getConnection()) {
-            ResultSet resultSet = getMatchingDocuments(dbconn, fromDateTime, untilDateTime, setSpec);
-            respond(request, response, metadataPrefix, onlyIdentifiers, resultSet);
+        if (metadataPrefix.endsWith(OaiPmh.FORMATEXPANDED_POSTFIX))
+        {
+            // Expand each record with its dependency tree
+            ListRecordTrees.respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix);
+        }
+        else {
+            // Normal record retrieval
+            try (Connection dbconn = DataBase.getConnection()) {
+                ResultSet resultSet = getMatchingDocuments(dbconn, fromDateTime, untilDateTime, setSpec);
+                respond(request, response, metadataPrefix, onlyIdentifiers, resultSet);
+            }
         }
     }
 

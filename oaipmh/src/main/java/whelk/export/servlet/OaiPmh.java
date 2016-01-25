@@ -43,14 +43,22 @@ public class OaiPmh extends HttpServlet
         public final String xmlNamespace;
     }
     public final static HashMap<String, FormatDescription> supportedFormats;
+    public final static String FORMATEXPANDED_POSTFIX = ":expanded";
     static
     {
         supportedFormats = new HashMap<String, FormatDescription>();
         supportedFormats.put("oai_dc", new FormatDescription(new JsonLD2DublinCoreConverter(), true, "http://www.openarchives.org/OAI/2.0/oai_dc.xsd", "http://www.openarchives.org/OAI/2.0"));
         supportedFormats.put("marcxml", new FormatDescription(new JsonLD2MarcXMLConverter(), true, "http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd", "http://www.loc.gov/MARC21/slim"));
         supportedFormats.put("jsonld", new FormatDescription(null, false, null, null));
+
+        // For each format add another format with the :expanded postfix and the same parameters
+        HashMap<String, FormatDescription> expandedFormats = new HashMap<String, FormatDescription>();
+        for (String formatKey : supportedFormats.keySet())
+        {
+            expandedFormats.put(formatKey+FORMATEXPANDED_POSTFIX, supportedFormats.get(formatKey));
+        }
+        supportedFormats.putAll(expandedFormats);
     }
-    public final static String FORMATEXPANDED_POSTFIX = ":expanded";
 
     public static Properties configuration;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -110,9 +118,9 @@ public class OaiPmh extends HttpServlet
                     break;
 
                 // ListRecordTrees is NOT part of OAI-PMH, but is provided as a convenience
-                case "ListRecordTrees":
+                /*case "ListRecordTrees":
                     ListRecordTrees.handleListRecordTreesRequest(req, res);
-                    break;
+                    break;*/
 
                 default:
                     ResponseCommon.sendOaiPmhError(OAIPMH_ERROR_BAD_VERB, "OAI-PMH verb must be one of [GetRecord, Identify, " +

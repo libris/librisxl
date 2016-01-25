@@ -20,7 +20,7 @@ public class ListRecordTrees
     private final static String SET_PARAM = "set";
     private final static String FORMAT_PARAM = "metadataPrefix";
 
-    public static void handleListRecordTreesRequest(HttpServletRequest request, HttpServletResponse response)
+    /*public static void handleListRecordTreesRequest(HttpServletRequest request, HttpServletResponse response)
             throws IOException, XMLStreamException, SQLException {
         // Parse and verify the parameters allowed for this request
         String from = request.getParameter(FROM_PARAM); // optional
@@ -69,9 +69,9 @@ public class ListRecordTrees
         ZonedDateTime untilDateTime = Helpers.parseISO8601(until);
 
         respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix);
-    }
+    }*/
 
-    private static void respond(HttpServletRequest request, HttpServletResponse response,
+    public static void respond(HttpServletRequest request, HttpServletResponse response,
                                 ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec,
                                 String requestedFormat)
             throws IOException, XMLStreamException, SQLException
