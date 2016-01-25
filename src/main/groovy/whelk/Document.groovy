@@ -154,7 +154,12 @@ class Document {
             for (entry in data.get(GRAPH_KEY)) {
                 log.trace("Walking graph. Current entry: $entry")
                 if (entry.containsKey(JsonLd.ID_KEY)) {
-                    URI entryURI = BASE_URI.resolve(entry[JsonLd.ID_KEY])
+                    URI entryURI = null
+                    try {
+                        entryURI = BASE_URI.resolve(entry[JsonLd.ID_KEY])
+                    } catch (IllegalArgumentException iae) {
+                        log.warn("Failed to resolve \"${entry[JsonLd.ID_KEY]}\" as URI.")
+                    }
                     if (entryURI == getURI()) {
                         addAliases(entry)
                     }
@@ -172,7 +177,7 @@ class Document {
                     identifier = identifier.substring(0,pipeZ)
                 }
                 identifier = identifier.trim().replaceAll(/\n|\r/, "")
-                identifier = identifier.trim().replaceAll(/\s/, "%20")
+                identifier = identifier.replaceAll(/\s/, "%20")
                 addIdentifier(identifier)
                 log.debug("Added ${identifier} to ${getURI()}")
             }
