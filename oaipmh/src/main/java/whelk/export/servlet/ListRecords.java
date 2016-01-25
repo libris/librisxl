@@ -136,12 +136,12 @@ public class ListRecords
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT data, manifest, created, deleted, " +
+        String selectSQL = "SELECT data, manifest, modified, deleted, " +
                 " data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
                 tableName +
-                " WHERE created > ? ";
+                " WHERE modified > ? ";
         if (untilDateTime != null)
-            selectSQL += " AND created < ? ";
+            selectSQL += " AND modified < ? ";
         if (setSpec.getRootSet() != null)
             selectSQL += " AND manifest->>'collection' = ? ";
 
@@ -189,8 +189,8 @@ public class ListRecords
         writer.writeEndElement(); // identifier
 
         writer.writeStartElement("datestamp");
-        ZonedDateTime created = ZonedDateTime.ofInstant(resultSet.getTimestamp("created").toInstant(), ZoneOffset.UTC);
-        writer.writeCharacters(created.toString());
+        ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+        writer.writeCharacters(modified.toString());
         writer.writeEndElement(); // datestamp
 
         String dataset = (String) manifestmap.get("collection");

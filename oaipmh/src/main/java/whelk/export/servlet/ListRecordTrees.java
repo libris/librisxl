@@ -10,11 +10,22 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
 
 public class ListRecordTrees
 {
+
+    // This class is used as a crutch to simulate "pass by reference"-mechanics. The point of this is that (a pointer to)
+    // an instance of ModificationTimes is passed around in the tree building process, being _updated_ (which a ZonedDateTime
+    // cannot be) with each documents created-timestamp.
+    private static class ModificationTimes
+    {
+        public ZonedDateTime earliestModification;
+        public ZonedDateTime latestModification;
+    }
+
     public static void respond(HttpServletRequest request, HttpServletResponse response,
                                 ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec,
                                 String requestedFormat)
@@ -26,7 +37,7 @@ public class ListRecordTrees
         try (Connection firstConn = DataBase.getConnection()) {
 
             // Construct the query
-            String selectSQL = "SELECT id FROM " + tableName + " WHERE TRUE ";
+            String selectSQL = "SELECT id, modified FROM " + tableName + " WHERE TRUE ";
             if (setSpec.getRootSet() != null)
                 selectSQL += " AND manifest->>'collection' = ?";
             if (setSpec.getSubset() != null)
@@ -54,12 +65,25 @@ public class ListRecordTrees
             {
                 List<String> nodeDatas = new LinkedList<String>();
                 HashSet<String> visitedIDs = new HashSet<String>();
+
                 String id = resultSet.getString("id");
+
+                ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+                ModificationTimes modificationTimes = new ModificationTimes();
+                modificationTimes.earliestModification = modified;
+                modificationTimes.latestModification = modified;
 
                 // Use a second db connection for the embedding process
                 try (Connection secondConn = DataBase.getConnection()) {
-                    addNodeAndSubnodesToTree(id, visitedIDs, secondConn, nodeDatas);
+                    addNodeAndSubnodesToTree(id, visitedIDs, secondConn, nodeDatas, modificationTimes);
                 }
+
+                //System.out.println("Id: " + id + " has modification window: " + modificationTimes.earliestModification + " -> " + modificationTimes.latestModification);
+                
+                if (fromDateTime != null && fromDateTime.compareTo(modificationTimes.latestModification) > 0)
+                    continue;
+                if (untilDateTime != null && untilDateTime.compareTo(modificationTimes.earliestModification) < 0)
+                    continue;
 
                 Document mergedDocument = mergeDocument(id, nodeDatas);
 
@@ -76,14 +100,15 @@ public class ListRecordTrees
         }
     }
 
-    private static void addNodeAndSubnodesToTree(String id, Set<String> visitedIDs, Connection connection, List<String> nodeDatas)
+    private static void addNodeAndSubnodesToTree(String id, Set<String> visitedIDs, Connection connection,
+                                                 List<String> nodeDatas, ModificationTimes modificationTimes)
             throws SQLException, IOException
     {
         if (visitedIDs.contains(id))
             return;
 
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-        String selectSQL = "SELECT id, data FROM " + tableName + " WHERE id = ?";
+        String selectSQL = "SELECT id, data, modified FROM " + tableName + " WHERE id = ?";
         PreparedStatement preparedStatement = connection.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);
         ResultSet resultSet = preparedStatement.executeQuery();
@@ -94,12 +119,19 @@ public class ListRecordTrees
         String jsonBlob = resultSet.getString("data");
         nodeDatas.add(jsonBlob);
         visitedIDs.add(id);
+        ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+
+        if (modified.compareTo(modificationTimes.earliestModification) < 0)
+            modificationTimes.earliestModification = modified;
+        if (modified.compareTo(modificationTimes.latestModification) > 0)
+            modificationTimes.latestModification = modified;
 
         Map map = mapper.readValue(jsonBlob, HashMap.class);
-        parseMap(map, visitedIDs, connection, nodeDatas);
+        parseMap(map, visitedIDs, connection, nodeDatas, modificationTimes);
     }
 
-    private static void parseMap(Map map, Set<String> visitedIDs, Connection connection, List<String> nodeDatas)
+    private static void parseMap(Map map, Set<String> visitedIDs, Connection connection,
+                                 List<String> nodeDatas, ModificationTimes modificationTimes)
             throws SQLException, IOException
     {
         for (Object key : map.keySet())
@@ -107,27 +139,29 @@ public class ListRecordTrees
             Object value = map.get(key);
 
             if (value instanceof Map)
-                parseMap( (Map) value, visitedIDs, connection, nodeDatas );
+                parseMap( (Map) value, visitedIDs, connection, nodeDatas, modificationTimes );
             else if (value instanceof List)
-                parseList( (List) value, visitedIDs, connection, nodeDatas );
+                parseList( (List) value, visitedIDs, connection, nodeDatas, modificationTimes );
             else
-                parsePotentialId( key, value, visitedIDs, connection, nodeDatas );
+                parsePotentialId( key, value, visitedIDs, connection, nodeDatas, modificationTimes );
         }
     }
 
-    private static void parseList(List list, Set<String> visitedIDs, Connection connection, List<String> nodeDatas)
+    private static void parseList(List list, Set<String> visitedIDs, Connection connection,
+                                  List<String> nodeDatas, ModificationTimes modificationTimes)
             throws SQLException, IOException
     {
         for (Object item : list)
         {
             if (item instanceof Map)
-                parseMap( (Map) item, visitedIDs, connection, nodeDatas );
+                parseMap( (Map) item, visitedIDs, connection, nodeDatas, modificationTimes );
             else if (item instanceof List)
-                parseList( (List) item, visitedIDs, connection, nodeDatas );
+                parseList( (List) item, visitedIDs, connection, nodeDatas, modificationTimes );
         }
     }
 
-    private static void parsePotentialId(Object key, Object value, Set<String> visitedIDs, Connection connection, List<String> nodeDatas)
+    private static void parsePotentialId(Object key, Object value, Set<String> visitedIDs, Connection connection,
+                                         List<String> nodeDatas, ModificationTimes modificationTimes)
             throws SQLException, IOException
     {
         if ( !(key instanceof String) || !(value instanceof String))
@@ -149,7 +183,7 @@ public class ListRecordTrees
         if (resultSet.next())
         {
             String id = resultSet.getString("id");
-            addNodeAndSubnodesToTree( id, visitedIDs, connection, nodeDatas );
+            addNodeAndSubnodesToTree( id, visitedIDs, connection, nodeDatas, modificationTimes );
         }
     }
 
