@@ -79,7 +79,7 @@ public class ListRecords
         if (metadataPrefix.endsWith(OaiPmh.FORMATEXPANDED_POSTFIX))
         {
             // Expand each record with its dependency tree
-            ListRecordTrees.respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix);
+            ListRecordTrees.respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix, onlyIdentifiers);
         }
         else {
             // Normal record retrieval

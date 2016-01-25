@@ -28,7 +28,7 @@ public class ListRecordTrees
 
     public static void respond(HttpServletRequest request, HttpServletResponse response,
                                 ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec,
-                                String requestedFormat)
+                                String requestedFormat, boolean onlyIdentifiers)
             throws IOException, XMLStreamException, SQLException
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
@@ -37,7 +37,8 @@ public class ListRecordTrees
         try (Connection firstConn = DataBase.getConnection()) {
 
             // Construct the query
-            String selectSQL = "SELECT id, modified FROM " + tableName + " WHERE TRUE ";
+            String selectSQL = "SELECT id, manifest, deleted, modified, data#>'{@graph,1,heldBy,notation}' AS sigel FROM "
+                    + tableName + " WHERE TRUE ";
             if (setSpec.getRootSet() != null)
                 selectSQL += " AND manifest->>'collection' = ?";
             if (setSpec.getSubset() != null)
@@ -94,11 +95,14 @@ public class ListRecordTrees
 
                 Document mergedDocument = mergeDocument(id, nodeDatas);
 
+                /*
                 writer.writeStartElement("record");
                 writer.writeStartElement("metadata");
                 ResponseCommon.writeConvertedDocument(writer, requestedFormat, mergedDocument);
                 writer.writeEndElement(); // metadata
                 writer.writeEndElement(); // record
+                */
+                emitRecord(resultSet, mergedDocument, modificationTimes, writer, requestedFormat, onlyIdentifiers);
             }
 
             if (xmlIntroWritten)
@@ -112,6 +116,62 @@ public class ListRecordTrees
                 ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
             }
         }
+    }
+
+    private static void emitRecord(ResultSet resultSet, Document mergedDocument, ModificationTimes modificationTimes,
+                                   XMLStreamWriter writer, String requestedFormat, boolean onlyIdentifiers)
+            throws SQLException, XMLStreamException, IOException
+    {
+        // The ResultSet refers only to the root document. mergedDocument represents the entire tree.
+
+        ObjectMapper mapper = new ObjectMapper();
+        String manifest = resultSet.getString("manifest");
+        boolean deleted = resultSet.getBoolean("deleted");
+        String sigel = resultSet.getString("sigel");
+        HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
+
+        writer.writeStartElement("record");
+
+        writer.writeStartElement("header");
+
+        if (deleted)
+            writer.writeAttribute("status", "deleted");
+
+        writer.writeStartElement("identifier");
+        writer.writeCharacters(mergedDocument.getURI().toString());
+        writer.writeEndElement(); // identifier
+
+        writer.writeStartElement("datestamp");
+        //ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+        writer.writeCharacters(modificationTimes.latestModification.toString());
+        writer.writeEndElement(); // datestamp
+
+        String dataset = (String) manifestmap.get("collection");
+        if (dataset != null)
+        {
+            writer.writeStartElement("setSpec");
+            writer.writeCharacters(dataset);
+            writer.writeEndElement(); // setSpec
+        }
+
+        if (sigel != null)
+        {
+            writer.writeStartElement("setSpec");
+            // Output sigel without quotation marks (").
+            writer.writeCharacters(dataset + ":" + sigel.replace("\"", ""));
+            writer.writeEndElement(); // setSpec
+        }
+
+        writer.writeEndElement(); // header
+
+        if (!onlyIdentifiers && !deleted)
+        {
+            writer.writeStartElement("metadata");
+            ResponseCommon.writeConvertedDocument(writer, requestedFormat, mergedDocument);
+            writer.writeEndElement(); // metadata
+        }
+
+        writer.writeEndElement(); // record
     }
 
     private static void addNodeAndSubnodesToTree(String id, Set<String> visitedIDs, Connection connection,
