@@ -116,12 +116,6 @@ public class OaiPmh extends HttpServlet
                 case "ListSets":
                     ListSets.handleListSetsRequest(req, res);
                     break;
-
-                // ListRecordTrees is NOT part of OAI-PMH, but is provided as a convenience
-                /*case "ListRecordTrees":
-                    ListRecordTrees.handleListRecordTreesRequest(req, res);
-                    break;*/
-
                 default:
                     ResponseCommon.sendOaiPmhError(OAIPMH_ERROR_BAD_VERB, "OAI-PMH verb must be one of [GetRecord, Identify, " +
                             "ListIdentifiers, ListMetadataFormats, ListRecords, ListSets] You may also use the non " +

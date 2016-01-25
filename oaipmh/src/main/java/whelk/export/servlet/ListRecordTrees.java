@@ -15,81 +15,30 @@ import java.util.*;
 
 public class ListRecordTrees
 {
-    private final static String FROM_PARAM = "from";
-    private final static String UNTIL_PARAM = "until";
-    private final static String SET_PARAM = "set";
-    private final static String FORMAT_PARAM = "metadataPrefix";
-
-    /*public static void handleListRecordTreesRequest(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, XMLStreamException, SQLException {
-        // Parse and verify the parameters allowed for this request
-        String from = request.getParameter(FROM_PARAM); // optional
-        String until = request.getParameter(UNTIL_PARAM); // optional
-        String set = request.getParameter(SET_PARAM); // optional
-        String metadataPrefix = request.getParameter(FORMAT_PARAM); // required
-
-        if (ResponseCommon.errorOnExtraParameters(request, response,
-                FROM_PARAM, UNTIL_PARAM, SET_PARAM, FORMAT_PARAM))
-            return;
-
-        if (metadataPrefix == null) {
-            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
-                    "metadataPrefix argument required.", request, response);
-            return;
-        }
-
-        // Was the set selection valid?
-        SetSpec setSpec = new SetSpec(set);
-        if (!setSpec.isValid()) {
-            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
-                    "Not a supported set spec: " + set, request, response);
-            return;
-        }
-
-        // Record trees must have a 'hold' root node. Meaning, the root set of the request must be hold.
-        if (setSpec.getRootSet() == null || !setSpec.getRootSet().equals(SetSpec.SET_HOLD)) {
-            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
-                    "ListRecordTrees builds trees using holding records as root nodes. Therefore it requires that the " +
-                            "'hold' set (with optional subsets) be specified", request, response);
-            return;
-        }
-
-        // Was the data ordered in a format we know?
-        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix)) {
-            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + metadataPrefix,
-                    request, response);
-            return;
-        }
-
-        // "No start date" is replaced with a _very_ early start date.
-        if (from == null)
-            from = "0000-01-01";
-
-        ZonedDateTime fromDateTime = Helpers.parseISO8601(from);
-        ZonedDateTime untilDateTime = Helpers.parseISO8601(until);
-
-        respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix);
-    }*/
-
     public static void respond(HttpServletRequest request, HttpServletResponse response,
                                 ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec,
                                 String requestedFormat)
             throws IOException, XMLStreamException, SQLException
     {
-
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // First connection, used for iterating over the requested root (holding) nodes. ID only
         try (Connection firstConn = DataBase.getConnection()) {
 
             // Construct the query
-            String selectSQL = "SELECT id FROM " + tableName +
-                    " WHERE manifest->>'collection' = 'hold'";
+            String selectSQL = "SELECT id FROM " + tableName + " WHERE TRUE ";
+            if (setSpec.getRootSet() != null)
+                selectSQL += " AND manifest->>'collection' = ?";
             if (setSpec.getSubset() != null)
                 selectSQL += " AND data @> '{\"@graph\":[{\"heldBy\": {\"@type\": \"Organization\", \"notation\": \"" +
                         Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
-            //selectSQL += " LIMIT 1 ";
+
             PreparedStatement preparedStatement = firstConn.prepareStatement(selectSQL);
+
+            // Assign parameters
+            if (setSpec.getRootSet() != null)
+                preparedStatement.setString(1, setSpec.getRootSet());
+
             ResultSet resultSet = preparedStatement.executeQuery();
 
             // Build the xml response feed
@@ -106,8 +55,6 @@ public class ListRecordTrees
                 List<String> nodeDatas = new LinkedList<String>();
                 HashSet<String> visitedIDs = new HashSet<String>();
                 String id = resultSet.getString("id");
-
-                System.out.println("* Building new tree, root: " + id);
 
                 // Use a second db connection for the embedding process
                 try (Connection secondConn = DataBase.getConnection()) {
@@ -147,8 +94,6 @@ public class ListRecordTrees
         String jsonBlob = resultSet.getString("data");
         nodeDatas.add(jsonBlob);
         visitedIDs.add(id);
-
-        System.out.println("Added node: " + id + " to tree.");
 
         Map map = mapper.readValue(jsonBlob, HashMap.class);
         parseMap(map, visitedIDs, connection, nodeDatas);
@@ -196,8 +141,6 @@ public class ListRecordTrees
             return;
 
         potentialID = potentialID.replace("resource/", "");
-
-        System.out.println("  potential id: " + potentialID);
 
         String sql = "SELECT id FROM lddb__identifiers WHERE identifier = ?";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
