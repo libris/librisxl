@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS lddb (
 CREATE TABLE IF NOT EXISTS lddb__identifiers (
     pk serial,
     id text not null,
-    identifier text not null unique
+    identifier text not null -- unique
 );
 
 CREATE TABLE IF NOT EXISTS lddb__versions (
