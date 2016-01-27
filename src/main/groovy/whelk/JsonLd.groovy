@@ -176,6 +176,9 @@ public class JsonLd {
         Map idMap = [:]
         if (flatJsonLd.containsKey(GRAPH_KEY)) {
             for (item in flatJsonLd.get(GRAPH_KEY)) {
+                if (item.containsKey(GRAPH_KEY)) {
+                    item = item.get(GRAPH_KEY)
+                }
                 if (item.containsKey(ID_KEY)) {
                     idMap.put(item.get(ID_KEY), item)
                 }

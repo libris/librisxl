@@ -14,6 +14,15 @@ class JsonLdSpec extends Specification {
     static List<String> describedflatfiles = IOUtils.readLines(JsonLdSpec.class.getClassLoader().getResourceAsStream("describedflatfiles/"), Charsets.UTF_8);
     static List<String> framefiles = IOUtils.readLines(JsonLdSpec.class.getClassLoader().getResourceAsStream("framefiles/"), Charsets.UTF_8);
 
+    def "should get id map"() {
+        expect:
+        JsonLd.getIdMap(['@graph': items]).keySet() == ids as Set
+        where:
+        ids                     | items
+        ['/some', '/other']     | [['@id': '/some'], ['@id': '/other']]
+        ['/some', '/other']     | [['@id': '/some'], ['@graph': ['@id': '/other']]]
+    }
+
     def "should frame described flat jsonld"() {
         expect:
         JsonLd.frame(ids, flatJson).equals(framedJson)
