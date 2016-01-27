@@ -392,10 +392,10 @@ class MarcConversion {
             def vs = v instanceof List? v : [v]
             vs.each {
                 def keypath = path + key
-                if (it instanceof String) {
-                    acc[keypath] = it
-                } else {
+                if (it instanceof Map) {
                     collectUriData(it, acc, keypath + '.')
+                } else {
+                    acc[keypath] = it
                 }
             }
         }
