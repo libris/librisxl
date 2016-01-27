@@ -287,6 +287,18 @@ class MarcFrameConverterSpec extends Specification {
         thing == ['@id': '/thing', 'sameAs': [link('resource/auth/123')]]
     }
 
+    def "should make some id"() {
+        given:
+        def conv = converter.conversion
+        expect:
+        conv.makeSomeId(ent) == '/some?' + params
+        where:
+        params                      | ent
+        'type=Thing&name=someone'   | ['@type': 'Thing', name: 'someone']
+        'type=Thing&name=other'     | ['@type': 'Thing', name: ['some', 'other']]
+        'type=Thing&real=true'      | ['@type': 'Thing', real: true]
+    }
+
     void assertJsonEquals(result, expected) {
         def resultJson = json(result)
         def expectedJson = json(expected)
