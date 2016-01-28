@@ -139,9 +139,11 @@
       "inherit": "patterns:termid",
       "$a": {"property": "prefLabel"},
       "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
+      "constructProperties": {
+        "prefLabel": {"property": "termParts.prefLabel", "join": "--"}
+      },
       "match-code": {
         "v x y z": {
-          "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}{/termParts.prefLabel*}",
           "resourceType": "ComplexTerm",
           "$a": {"addLink": "termParts",
                  "resourceType": "TopicalTerm",
@@ -3210,6 +3212,7 @@
               {
                 "@type": "ComplexTerm",
                 "@id": "http://id.loc.gov/authorities/label/Information--Information%20Age",
+                "prefLabel": "Information--Information Age",
                 "termParts": [
                   {
                     "@type": "TopicalTerm",
@@ -3923,6 +3926,34 @@
             },
             "sameAs":  [{"@id": "https://id.kb.se/term/sao/Barnpsykologi"}]
           }
+        },
+        {
+          "name": "",
+          "source": [
+            {"040": {"subfields": [{"f":"sao"}]}},
+            {"150": {"subfields": [{"a": "Barn"}, {"x": "psykologi"}]}}
+          ],
+          "result": {
+            "@type": "ComplexTerm",
+            "@id": "http://libris.kb.se/auth/140482",
+            "prefLabel": "Barn--psykologi",
+            "inScheme":  {
+              "@type": "ConceptScheme",
+              "@id": "https://id.kb.se/term/sao",
+              "notation": "sao"
+            },
+            "termParts": [
+              {
+                "@type": "TopicalTerm",
+                "prefLabel": "Barn"
+              },
+              {
+                "@type": "SubdivisionTerm",
+                "prefLabel": "psykologi"
+              }
+            ],
+            "sameAs":  [{"@id": "https://id.kb.se/term/sao/Barn--psykologi"}]
+          }
         }
       ]
     },
@@ -3935,7 +3966,8 @@
       "inherit": "patterns:termbase",
       "aboutEntity": "?record",
       "resourceType": "GenreTerm",
-      "TODO:just-assert-inScheme=saogf?:uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
+      "TODO:just-assert-inScheme=saogf?:uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
+      "TODO:if-inScheme=barn?:uriTemplate": "https://id.kb.se/term/barn/gf/{prefLabel}"
     },
     "162" : {
       "inherit": "patterns:termbase",
@@ -4044,6 +4076,7 @@
       "aboutType": null,
       "resourceType": "TopicalTerm",
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
+      "$0": {"property": "controlNumber"},
       "_spec": [
         {
           "source": [

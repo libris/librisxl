@@ -1215,6 +1215,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     MarcSubFieldHandler ind1
     MarcSubFieldHandler ind2
     List<String> dependsOn
+    Map constructProperties
     String uriTemplate
     Set uriTemplateKeys
     Map uriTemplateDefaults
@@ -1233,6 +1234,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         pendingResources = fieldDfn.pendingResources
 
         dependsOn = fieldDfn.dependsOn
+
+        constructProperties = fieldDfn.constructProperties
 
         if (fieldDfn.uriTemplate) {
             uriTemplate = fieldDfn.uriTemplate
@@ -1352,6 +1355,19 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
                 if (!ok && !handled.contains(code)) {
                     unhandled << code
+                }
+            }
+        }
+
+        if (constructProperties) {
+            constructProperties.each { key, dfn ->
+                if (true) { //!key in entity) {
+                    def parts = getAllByPath(entity, dfn.property)
+                    if (parts) {
+                        def constructed = parts.join(dfn.join)
+                        entity[key] = constructed
+                        uriTemplateParams[key] = constructed
+                    }
                 }
             }
         }
@@ -1478,15 +1494,26 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     String getByPath(entity, path) {
+        return getAllByPath(entity, path)[0]
+    }
+
+    List getAllByPath(entity, path) {
+        // TODO: nextEntity = entities.pop(0)
+        def results = []
         path.split(/\./).each {
             if (entity) {
-                entity = entity[it]
-                if (entity instanceof List) {
-                    entity = entity[0]
+                def sub = entity[it]
+                sub = (sub instanceof List)? sub : [sub]
+                sub.each {
+                    if (it instanceof String) {
+                        results << it
+                    } else {
+                        entity = sub
+                    }
                 }
             }
         }
-        return (entity instanceof String)? entity : null
+        return results
     }
 
     Map getLocalEntity(Map state, Map owner, String id, Map localEntites) {
