@@ -14,18 +14,22 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
 
+
 public class ListRecordTrees
 {
-
-    // This class is used as a crutch to simulate "pass by reference"-mechanics. The point of this is that (a pointer to)
-    // an instance of ModificationTimes is passed around in the tree building process, being _updated_ (which a ZonedDateTime
-    // cannot be) with each documents created-timestamp.
+    // The ModificationTimes class is used as a crutch to simulate "pass by reference"-mechanics. The point of this is that (a pointer to)
+    // an instance of ModificationTimes is passed around in the tree building process, being _updated_ (which a ZonedDateTime cannot be)
+    // with each documents created-timestamp.
     public static class ModificationTimes
     {
         public ZonedDateTime earliestModification;
         public ZonedDateTime latestModification;
     }
 
+    /**
+     * Sends a response to a ListRecords (or ListIdentifiers) request, with a metadataPrefix tagged with :expanded
+     * (meaning a tree must be built for each record, containing all other nodes linked to by that record)
+     */
     public static void respond(HttpServletRequest request, HttpServletResponse response,
                                 ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec,
                                 String requestedFormat, boolean onlyIdentifiers)
@@ -33,7 +37,7 @@ public class ListRecordTrees
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
-        // First connection, used for iterating over the requested root (holding) nodes. ID only
+        // First connection, used for iterating over the requested root nodes. ID only.
         try (Connection firstConn = DataBase.getConnection()) {
 
             // Construct the query
@@ -89,8 +93,7 @@ public class ListRecordTrees
                     xmlIntroWritten = true;
                     writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
                     ResponseCommon.writeOaiPmhHeader(writer, request, true);
-                    writer.writeStartElement("ListRecordTrees");
-                    writer.writeStartElement("records");
+                    writer.writeStartElement("ListRecords");
                 }
 
                 Document mergedDocument = mergeDocument(id, nodeDatas);
@@ -100,8 +103,7 @@ public class ListRecordTrees
 
             if (xmlIntroWritten)
             {
-                writer.writeEndElement(); // records
-                writer.writeEndElement(); // ListRecordTrees
+                writer.writeEndElement(); // ListRecords
                 ResponseCommon.writeOaiPmhClose(writer, request);
             }
             else
@@ -111,6 +113,10 @@ public class ListRecordTrees
         }
     }
 
+    /**
+     * Called recursively to gather the nodes that will make up a tree. The 'data' portion of every concerned record
+     * will be added to the nodeDatas list.
+     */
     public static void addNodeAndSubnodesToTree(String id, Set<String> visitedIDs, Connection connection,
                                                  List<String> nodeDatas, ModificationTimes modificationTimes)
             throws SQLException, IOException

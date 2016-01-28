@@ -114,14 +114,11 @@ public class ListRecords
         else
             writer.writeStartElement("ListRecords");
 
-        writer.writeStartElement("records");
-
         while (resultSet.next())
         {
             emitRecord(resultSet, writer, requestedFormat, onlyIdentifiers);
         }
 
-        writer.writeEndElement(); // records
         writer.writeEndElement(); // ListIdentifiers/ListRecords
         ResponseCommon.writeOaiPmhClose(writer, request);
     }
@@ -175,7 +172,8 @@ public class ListRecords
         HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
         Document jsonLDdoc = new Document(datamap, manifestmap);
 
-        writer.writeStartElement("record");
+        if (!onlyIdentifiers)
+            writer.writeStartElement("record");
 
         writer.writeStartElement("header");
 
@@ -216,6 +214,7 @@ public class ListRecords
             writer.writeEndElement(); // metadata
         }
 
-        writer.writeEndElement(); // record
+        if (!onlyIdentifiers)
+            writer.writeEndElement(); // record
     }
 }

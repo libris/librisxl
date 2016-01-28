@@ -30,4 +30,7 @@ dependencies {
     // Logging
     compile 'org.slf4j:slf4j-api:1.7.6'
     compile 'org.slf4j:log4j-over-slf4j:1.7.6'
+
+    // Testing
+    testCompile 'junit:junit:4.12'
 }

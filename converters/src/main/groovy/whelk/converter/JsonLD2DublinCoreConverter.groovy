@@ -25,7 +25,7 @@ class JsonLD2DublinCoreConverter implements FormatConverter
         writer.writeNamespace("dc", "http://purl.org/dc/elements/1.1/");
         writer.writeNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance");
         writer.writeAttribute("http://www.w3.org/2001/XMLSchema-instance", "schemaLocation",
-                "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
+                "http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd");
 
         writer.writeStartElement("http://purl.org/dc/elements/1.1/", "identifier");
         writer.writeCharacters(doc.getURI().toString());
