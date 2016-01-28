@@ -78,8 +78,7 @@ task generateVersion(type:Exec) {
     standardOutput = new ByteArrayOutputStream()
     doLast {
         String output = standardOutput.toString().trim()
-        File versionFile = new File("../core/src/main/resources/version.properties")
-        versionFile.write("version: ${output}\n")
+        new File("../core/src/main/resources/version.properties").write("version: ${output}\n")
         println("Updated version.properties to \"${output}\"")
     }
 }
