@@ -34,8 +34,8 @@ class MySQLImporter extends Importer {
 
     int startAt = 0
 
-    int addBatchSize = 1000
-    int poolSize = 10
+    int addBatchSize = 2000
+    int poolSize = 100
 
     int recordCount
     long startTime
@@ -123,10 +123,12 @@ class MySQLImporter extends Importer {
                     }
                 } else if (collection == "bib") {
                     int auth_id = resultSet.getInt("auth_id")
+                    String oaipmhSetSpec = null
                     if (auth_id > 0) {
                         log.trace("Found auth_id $auth_id for $recordId Adding to oaipmhSetSpecs")
-                        buildDocument(recordId, record, collection, "authority:"+auth_id)
+                        oaipmhSetSpec = "authority:"+auth_id
                     }
+                    buildDocument(recordId, record, collection, oaipmhSetSpec)
                 } else if (collection == "hold") {
                     int bib_id = resultSet.getInt("bib_id")
                     String sigel = resultSet.getString("shortname")
