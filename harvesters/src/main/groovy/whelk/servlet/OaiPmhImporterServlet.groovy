@@ -145,7 +145,7 @@ class OaiPmhImporterServlet extends HttpServlet {
     }
 
     void init() {
-        if (loadDataVersion() == props.version) {
+        if (props.getProperty("version").startsWith(loadDataVersion())) {
             log.info("Initializing OAIPMH harvester. System version: ${pico.getComponent(Whelk.class).version}")
             ScheduledExecutorService ses = Executors.newScheduledThreadPool(3)
             List collections = props.scheduledDatasets.split(",")
