@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -46,8 +47,17 @@ public class DataBase {
             logger.error("Expected username and password as part of the JDBC string. Check secret.properties.");
             return;
         }
-        final String user = userAndPassArray[0];
-        final String password = userAndPassArray[1];
+
+        String user;
+        String password;
+        try {
+            user = java.net.URLDecoder.decode(userAndPassArray[0], "UTF-8");
+            password = java.net.URLDecoder.decode(userAndPassArray[1], "UTF-8");
+        } catch (UnsupportedEncodingException e)
+        {
+            logger.error("Could not URL decode username/password: " + e);
+            return;
+        }
 
         dataSource.setJdbcUrl( jdbcUrlPrefix + urlPart );
         dataSource.setUsername(user);
