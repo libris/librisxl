@@ -99,7 +99,7 @@ public class ApiTest
     public void testExpandedFormAddsData() throws Exception
     {
         String records = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=jsonld&set=hold:S");
-        String expandedRecords = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=jsonld:expanded&set=hold:S");
+        String expandedRecords = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=jsonld_expanded&set=hold:S");
 
         final String inExpandedOnly[] = {
                 "Sveriges ledande magasin om kultur och samhälle",
@@ -129,7 +129,9 @@ public class ApiTest
         final String oaiPmhCalls[] = {
                 // Normal calls
                 "/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc&set=hold:S",
+                "/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc_expanded&set=hold:S",
                 "/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld&set=hold:KVIN",
+                "/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld_expanded&set=hold:KVIN",
                 "/oaipmh/?verb=Identify",
                 "/oaipmh/?verb=ListSets",
                 "/oaipmh/?verb=ListaMetadataFormats",
@@ -192,5 +194,12 @@ public class ApiTest
             String response = TestCommon.httpGet(call);
             Assert.assertTrue( response.contains("badArgument") );
         }
+    }
+
+    @Test
+    public void testListRecordsNoRecordsMatch() throws Exception
+    {
+        String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc&until=1970-01-01");
+        Assert.assertTrue( response.contains("noRecordsMatch") );
     }
 }

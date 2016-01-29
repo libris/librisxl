@@ -43,7 +43,7 @@ public class OaiPmh extends HttpServlet
         public final String xmlNamespace;
     }
     public final static HashMap<String, FormatDescription> supportedFormats;
-    public final static String FORMATEXPANDED_POSTFIX = ":expanded";
+    public final static String FORMATEXPANDED_POSTFIX = "_expanded";
     static
     {
         supportedFormats = new HashMap<String, FormatDescription>();
