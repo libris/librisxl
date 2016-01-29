@@ -147,6 +147,7 @@ public class ListRecordTrees
         parseMap(map, visitedIDs, connection, nodeDatas, modificationTimes);
     }
 
+    @SuppressWarnings("unchecked")
     public static Document mergeDocument(String id, List<String> nodeDatas)
             throws IOException
     {

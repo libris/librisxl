@@ -83,6 +83,19 @@ public class ApiTest
     }
 
     @Test
+    public void testAppearanceOfSets() throws Exception
+    {
+        String response = TestCommon.httpGet("/oaipmh/?verb=ListSets");
+
+        Assert.assertTrue(response.contains("auth"));
+        Assert.assertTrue(response.contains("bib"));
+        Assert.assertTrue(response.contains("hold"));
+        Assert.assertTrue(response.contains("hold:S"));
+        Assert.assertTrue(response.contains("hold:KVIN"));
+        Assert.assertTrue(response.contains("hold:Gbg"));
+    }
+
+    @Test
     public void testExpandedFormAddsData() throws Exception
     {
         String records = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=jsonld&set=hold:S");
@@ -114,6 +127,7 @@ public class ApiTest
         Validator validator = schema.newValidator();
 
         final String oaiPmhCalls[] = {
+                // Normal calls
                 "/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc&set=hold:S",
                 "/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld&set=hold:KVIN",
                 "/oaipmh/?verb=Identify",
@@ -121,12 +135,62 @@ public class ApiTest
                 "/oaipmh/?verb=ListaMetadataFormats",
                 // The GetRecord case is commented out, because identifiers are scrambled on re-reading the testdata.
                 //"/oaipmh/?verb=GetRecord&metadataPrefix=oai_dc&identifier=https://libris.kb.se/7cjmx02d3hj2p81"
+
+                // Error calls
+                "/oaipmh/?verb=ListRecords",
+                "/oaipmh/?verb=ListRecords&resumptionToken=1234",
+                "/oaipmh/?verb=GetRecord&metadataPrefix=oai_dc&identifier=no_such_id",
+                "/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld&set=NO_SUCH_SET",
+                "/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld&until=1970-01-01",
+                "/oaipmh/?verb=ListRecords&no_such_parameter=value",
         };
 
         for (String call : oaiPmhCalls)
         {
             String response = TestCommon.httpGet(call);
             validator.validate(new StreamSource(new StringReader(response)));
+        }
+    }
+
+    @Test
+    public void testNotAllowingUnknownParameters() throws Exception
+    {
+        final String oaiPmhCalls[] = {
+                "/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc&BAD_ARG=SOMETHING",
+                "/oaipmh/?verb=ListIdentifiers&metadataPrefix=oai_dc&BAD_ARG=SOMETHING",
+                "/oaipmh/?verb=Identify&BAD_ARG=SOMETHING",
+                "/oaipmh/?verb=ListSets&BAD_ARG=SOMETHING",
+                "/oaipmh/?verb=ListMetadataFormats&BAD_ARG=SOMETHING",
+                "/oaipmh/?verb=GetRecord&BAD_ARG=SOMETHING",
+        };
+
+        for (String call : oaiPmhCalls)
+        {
+            String response = TestCommon.httpGet(call);
+            Assert.assertTrue( response.contains("badArgument") );
+        }
+    }
+
+    @Test
+    public void testListRecordsBadResumptionToken() throws Exception
+    {
+        String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc&resumptionToken=1234");
+        Assert.assertTrue( response.contains("badResumptionToken") );
+    }
+
+    @Test
+    public void testMetadataPrefixRequired() throws Exception
+    {
+        // Calls missing required &metaDataPrefix=..
+        final String oaiPmhCalls[] = {
+                "/oaipmh/?verb=ListRecords",
+                "/oaipmh/?verb=GetRecord&identifier=dosent_matter"
+        };
+
+        for (String call : oaiPmhCalls)
+        {
+            String response = TestCommon.httpGet(call);
+            Assert.assertTrue( response.contains("badArgument") );
         }
     }
 }
