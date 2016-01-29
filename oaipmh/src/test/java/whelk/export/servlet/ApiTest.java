@@ -197,9 +197,18 @@ public class ApiTest
     }
 
     @Test
-    public void testListRecordsNoRecordsMatch() throws Exception
+    public void testNoRecordsMatchOnEmptyLists() throws Exception
     {
-        String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc&until=1970-01-01");
-        Assert.assertTrue( response.contains("noRecordsMatch") );
+        final String oaiPmhCalls[] = {
+                "/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc&until=1970-01-01",
+                "/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc_expanded&until=1970-01-01",
+                "/oaipmh/?verb=ListIdentifiers&metadataPrefix=oai_dc&until=1970-01-01",
+        };
+
+        for (String call : oaiPmhCalls)
+        {
+            String response = TestCommon.httpGet(call);
+            Assert.assertTrue( response.contains("noRecordsMatch") );
+        }
     }
 }
