@@ -77,6 +77,7 @@ public class ListSets
             String selectSQL = "SELECT DISTINCT data#>'{@graph,1,heldBy,notation}' AS sigel FROM " + tableName +
                     " WHERE data @> '{\"@graph\":[{\"heldBy\": {}}]}' ";
             PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
+            preparedStatement.setFetchSize(512);
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next())

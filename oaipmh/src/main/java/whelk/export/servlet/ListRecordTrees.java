@@ -50,6 +50,7 @@ public class ListRecordTrees
                         Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
 
             PreparedStatement preparedStatement = firstConn.prepareStatement(selectSQL);
+            preparedStatement.setFetchSize(512);
 
             // Assign parameters
             if (setSpec.getRootSet() != null)

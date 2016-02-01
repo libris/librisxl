@@ -146,6 +146,7 @@ public class ListRecords
                     Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
 
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
+        preparedStatement.setFetchSize(512);
 
         // Assign parameters
         int parameterIndex = 1;
