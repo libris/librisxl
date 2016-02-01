@@ -9,6 +9,7 @@ CREATE INDEX idx_lddb_collection ON lddb ((manifest->>'collection'));
 CREATE INDEX idx_lddb_alt_ids ON lddb USING GIN ((manifest->'identifiers') jsonb_path_ops);
 
 CREATE INDEX idx_lddb__identifiers_id ON lddb__identifiers (id);
+CREATE INDEX idx_lddb__identifiers_identifier ON lddb__identifiers (identifier);
 
 CREATE INDEX idx_lddb__versions_id ON lddb__versions (id);
 CREATE INDEX idx_lddb__versions_modified ON lddb__versions (modified);
