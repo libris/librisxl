@@ -126,19 +126,25 @@ public class ListRecordTrees
     {
         if (visitedIDs.contains(id))
             return;
+        visitedIDs.add(id);
 
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-        String selectSQL = "SELECT id, data, modified FROM " + tableName + " WHERE id = ?";
+        String selectSQL = "SELECT id, data, modified, manifest->>'collection' as collection FROM " + tableName + " WHERE id = ?";
         PreparedStatement preparedStatement = connection.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);
         ResultSet resultSet = preparedStatement.executeQuery();
         if (!resultSet.next())
             return;
 
+        // Only allow one level of recursive auth posts into the tree, or we'll end up adding half the database
+        // into each tree.
+        String collection = resultSet.getString("collection");
+        if (collection.equals("auth"))
+            return;
+
         ObjectMapper mapper = new ObjectMapper();
         String jsonBlob = resultSet.getString("data");
         nodeDatas.add(jsonBlob);
-        visitedIDs.add(id);
         ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
 
         if (modified.compareTo(modificationTimes.earliestModification) < 0)
