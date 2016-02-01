@@ -51,7 +51,7 @@ public class Identify
         writer.writeStartElement("earliestDatestamp");
         try (Connection dbconn = DataBase.getConnection()) {
             String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-            String selectSQL = "SELECT MIN(created) as earliest FROM " + tableName;
+            String selectSQL = "SELECT MIN(modified) as earliest FROM " + tableName;
             PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {

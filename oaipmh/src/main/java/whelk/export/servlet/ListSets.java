@@ -74,8 +74,8 @@ public class ListSets
             String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
             // Construct the query
-            String selectSQL = "SELECT DISTINCT data#>'{@graph,1,heldBy,notation}' AS sigel FROM " + tableName +
-                    " WHERE data @> '{\"@graph\":[{\"heldBy\": {}}]}' ";
+            String selectSQL = "SELECT DISTINCT data#>>'{@graph,1,heldBy,notation}' AS sigel FROM " + tableName +
+                    " WHERE manifest->>'collection' = 'hold' ";
             PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
             preparedStatement.setFetchSize(512);
             ResultSet resultSet = preparedStatement.executeQuery();
