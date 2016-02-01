@@ -92,6 +92,8 @@ public class ListSets
                 writer.writeEndElement(); // setName
                 writer.writeEndElement(); // set
             }
+            resultSet.close();
+            preparedStatement.close();
         }
 
         writer.writeEndElement(); // ListSets

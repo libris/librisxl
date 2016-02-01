@@ -94,6 +94,8 @@ public class GetRecord
 
                 jsonLDdoc = ListRecordTrees.mergeDocument(id, nodeDatas);
             }
+            resultSet.close();
+            preparedStatement.close();
 
             // Build the xml response feed
             XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();

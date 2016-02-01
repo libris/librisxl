@@ -101,6 +101,8 @@ public class ListRecordTrees
 
                 emitRecord(resultSet, mergedDocument, modificationTimes, writer, requestedFormat, onlyIdentifiers);
             }
+            resultSet.close();
+            preparedStatement.close();
 
             if (xmlIntroWritten)
             {
@@ -145,6 +147,8 @@ public class ListRecordTrees
             modificationTimes.latestModification = modified;
 
         Map map = mapper.readValue(jsonBlob, HashMap.class);
+        resultSet.close();
+        preparedStatement.close();
         parseMap(map, visitedIDs, connection, nodeDatas, modificationTimes);
     }
 
@@ -222,11 +226,16 @@ public class ListRecordTrees
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setString(1, potentialID);
         ResultSet resultSet = preparedStatement.executeQuery();
+        LinkedList<String> linkedIDs = new LinkedList<String>();
         if (resultSet.next())
         {
             String id = resultSet.getString("id");
-            addNodeAndSubnodesToTree( id, visitedIDs, connection, nodeDatas, modificationTimes );
+            linkedIDs.add(id);
         }
+        resultSet.close();
+        preparedStatement.close();
+        for (String id : linkedIDs)
+            addNodeAndSubnodesToTree( id, visitedIDs, connection, nodeDatas, modificationTimes );
     }
 
     private static void emitRecord(ResultSet resultSet, Document mergedDocument, ModificationTimes modificationTimes,

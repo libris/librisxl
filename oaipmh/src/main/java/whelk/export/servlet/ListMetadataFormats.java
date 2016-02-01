@@ -53,6 +53,8 @@ public class ListMetadataFormats
                     ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
                     return;
                 }
+                resultSet.close();
+                preparedStatement.close();
             }
         }
 

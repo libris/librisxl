@@ -84,8 +84,11 @@ public class ListRecords
         else {
             // Normal record retrieval
             try (Connection dbconn = DataBase.getConnection()) {
-                ResultSet resultSet = getMatchingDocuments(dbconn, fromDateTime, untilDateTime, setSpec);
+                PreparedStatement preparedStatement = getMatchingDocuments(dbconn, fromDateTime, untilDateTime, setSpec);
+                ResultSet resultSet = preparedStatement.executeQuery();
                 respond(request, response, metadataPrefix, onlyIdentifiers, resultSet);
+                resultSet.close();
+                preparedStatement.close();
             }
         }
     }
@@ -123,7 +126,7 @@ public class ListRecords
         ResponseCommon.writeOaiPmhClose(writer, request);
     }
 
-    private static ResultSet getMatchingDocuments(Connection dbconn, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec)
+    private static PreparedStatement getMatchingDocuments(Connection dbconn, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec)
             throws SQLException
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
@@ -157,7 +160,7 @@ public class ListRecords
         if (setSpec.getRootSet() != null)
             preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
 
-        return preparedStatement.executeQuery();
+        return preparedStatement;
     }
 
     private static void emitRecord(ResultSet resultSet, XMLStreamWriter writer, String requestedFormat, boolean onlyIdentifiers)

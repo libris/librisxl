@@ -59,6 +59,8 @@ public class Identify
                 writer.writeCharacters(earliest.toString());
             } else
                 writer.writeCharacters(ZonedDateTime.now(ZoneOffset.UTC).toString());
+            resultSet.close();
+            preparedStatement.close();
         }
         writer.writeEndElement(); // earliestDatestamp
 
