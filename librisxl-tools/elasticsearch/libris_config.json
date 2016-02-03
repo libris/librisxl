@@ -69,7 +69,8 @@
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "string",
+                                    "boost": 50
                                 }
                             },
                             "type": "multi_field"
@@ -84,7 +85,8 @@
                             "fields": {
                                 "label": {
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "string",
+                                    "boost": 50
                                 },
                                 "raw": {
                                     "index": "not_analyzed",
@@ -126,7 +128,8 @@
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "string",
+                                    "boost": 50
                                 }
                             },
                             "type": "multi_field"
@@ -145,7 +148,8 @@
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "string",
+                                    "boost": 50
                                 }
                             },
                             "type": "multi_field"
@@ -164,7 +168,8 @@
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "string",
+                                    "boost": 50
                                 }
                             },
                             "type": "multi_field"
@@ -215,7 +220,8 @@
                         },
                         "controlledLabel": {
                             "index_analyzer": "completer",
-                            "type": "string"
+                            "type": "string",
+                            "boost": 5
                         },
                         "familyName": {
                             "index_analyzer": "completer",
@@ -231,15 +237,18 @@
                         },
                         "label": {
                             "index_analyzer": "completer",
-                            "type": "string"
+                            "type": "string",
+                            "boost": 2
                         },
                         "name": {
                             "index_analyzer": "completer",
-                            "type": "string"
+                            "type": "string",
+                            "boost": 10
                         },
                         "prefLabel": {
                             "index_analyzer": "completer",
-                            "type": "string"
+                            "type": "string",
+                            "boost": 10
                         },
                         "sameAs": {
                             "properties": {
