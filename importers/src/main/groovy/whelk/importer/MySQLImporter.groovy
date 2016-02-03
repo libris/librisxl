@@ -27,12 +27,10 @@ class MySQLImporter extends Importer {
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
 
     boolean cancelled = false
-    boolean storageOnly = false
+    boolean storageOnly = true
 
     ExecutorService queue
     Semaphore tickets
-
-    int startAt = 0
 
     int addBatchSize = 2000
     int poolSize = 100
@@ -59,8 +57,8 @@ class MySQLImporter extends Importer {
         connectionUrl = mysqlConnectionUrl
     }
 
-    void doImport(String collection, int nrOfDocs = -1, boolean silent = false, boolean picky = true) {
-        recordCount = 0
+    void doImport(String collection, int nrOfDocs = -1, int startRecordCount = 0, int startAt = 0) {
+        recordCount = startRecordCount
         startTime = System.currentTimeMillis()
         cancelled = false
         Connection conn = null
@@ -69,9 +67,9 @@ class MySQLImporter extends Importer {
 
 
         tickets = new Semaphore(poolSize)
-        //queue = Executors.newSingleThreadExecutor()
-        //queue = Executors.newWorkStealingPool()
         queue = Executors.newFixedThreadPool(poolSize)
+
+        int recordId = startAt
 
         try {
 
@@ -84,7 +82,6 @@ class MySQLImporter extends Importer {
             if (collection == "auth") {
                 log.info("Creating auth load statement.")
                 statement = conn.prepareStatement("SELECT auth_id, data FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
-                //statement = conn.prepareStatement("SELECT auth_id, data FROM auth_record WHERE auth_id = ? AND deleted = 0 ORDER BY auth_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
             }
             if (collection == "bib") {
                 log.info("Creating bib load statement.")
@@ -100,35 +97,26 @@ class MySQLImporter extends Importer {
             }
             statement.setFetchSize(Integer.MIN_VALUE)
 
-            int recordId = startAt
             log.info("Starting loading at ID $recordId")
 
             MarcRecord record = null
 
             statement.setInt(1, recordId)
-            //statement.setInt(1, 146775)
             resultSet = statement.executeQuery()
 
             log.debug("Query executed. Starting processing ...")
-            while(resultSet.next()) {
+            while (resultSet.next()) {
                 recordId = resultSet.getInt(1)
                 record = Iso2709Deserializer.deserialize(normalizeString(new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
 
-                //buildDocument(recordId, record, collection, null)
+                buildDocument(recordId, record, collection, null)
 
-                if (collection == "auth") {
+                if (collection == "bib") {
                     int auth_id = resultSet.getInt("auth_id")
-                    if (auth_id > 0) {
-                        buildDocument(recordId, record, collection, null)
-                    }
-                } else if (collection == "bib") {
-                    int auth_id = resultSet.getInt("auth_id")
-                    String oaipmhSetSpec = null
                     if (auth_id > 0) {
                         log.trace("Found auth_id $auth_id for $recordId Adding to oaipmhSetSpecs")
-                        oaipmhSetSpec = "authority:"+auth_id
+                        buildDocument(recordId, record, collection, "authority:" + auth_id)
                     }
-                    buildDocument(recordId, record, collection, oaipmhSetSpec)
                 } else if (collection == "hold") {
                     int bib_id = resultSet.getInt("bib_id")
                     String sigel = resultSet.getString("shortname")
@@ -156,6 +144,10 @@ class MySQLImporter extends Importer {
             queue.shutdown()
             queue.awaitTermination(7, TimeUnit.DAYS)
 
+        } catch (SQLRecoverableException sre) {
+            log.error("Failure at $recordId (${sre.message}). Trying to reset and restart ...")
+            close(conn, statement, resultSet)
+            doImport(collection, nrOfDocs, recordCount, recordId-1)
         } catch(SQLException se) {
             log.error("SQL Exception", se)
         } catch(Exception e) {
@@ -164,7 +156,6 @@ class MySQLImporter extends Importer {
             log.info("Record count: ${recordCount}. Elapsed time: " + (System.currentTimeMillis() - startTime) + " milliseconds for sql results.")
             close(conn, statement, resultSet)
         }
-
 
         log.info("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
         //return new ImportResult(numberOfDocuments: recordCount, lastRecordDatestamp: null) // TODO: Add correct last document datestamp
@@ -183,19 +174,8 @@ class MySQLImporter extends Importer {
             tickets.acquire()
             log.debug("Doclist has reached batch size. Sending it to bulkAdd (open the trapdoor)")
 
-            //def casr = new ConvertAndStoreRunner(whelk, marcFrameConverter, enhancer, documentList, tickets)
-            //casr.run()
             queue.execute(new ConvertAndStoreRunner(whelk, marcFrameConverter, documentList, tickets))
-            /*
-            log.debug("     Current poolsize: ${queue.poolSize}")
-            log.debug("------------------------------")
-            log.debug("queuedSubmissionCount: ${queue.queuedSubmissionCount}")
-            log.debug("      queuedTaskCount: ${queue.queuedTaskCount}")
-            log.debug("   runningThreadCount: ${queue.runningThreadCount}")
-            log.debug("    activeThreadCount: ${queue.activeThreadCount}")
-            log.debug("------------------------------")
-            */
-            //log.debug("       completed jobs: ${tickets.availablePermits()}")
+
             log.debug("Documents stored. Continuing to run rows")
             this.documentList = []
         }
@@ -267,7 +247,7 @@ class MySQLImporter extends Importer {
                 }
                 convertedDocs.each { ds, docList ->
                     if (storageOnly) {
-                        this.whelk.storage.bulkStore(docList, false)
+                        this.whelk.storage.bulkStore(docList, true)
                     } else {
                         this.whelk.bulkStore(docList)
                     }
