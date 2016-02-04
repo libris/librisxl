@@ -1,8 +1,9 @@
-package whelk.importer
+package whelk.harvester
 
-class ImportResult {
+class HarvestResult {
     int numberOfDocuments
     int numberOfDeleted
     int numberOfDocumentsSkipped
+    String resumptionToken
     Date lastRecordDatestamp
 }

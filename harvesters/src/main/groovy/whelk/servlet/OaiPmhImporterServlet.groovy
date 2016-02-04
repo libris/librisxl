@@ -7,7 +7,8 @@ import org.picocontainer.PicoContainer
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
-import whelk.importer.OaiPmhImporter
+import whelk.harvester.LibrisOaiPmhHarvester
+import whelk.harvester.OaiPmhHarvester
 import whelk.util.PropertyLoader
 
 import javax.servlet.http.HttpServlet
@@ -41,7 +42,7 @@ class OaiPmhImporterServlet extends HttpServlet {
 
         pico = Whelk.getPreparedComponentsContainer(props)
 
-        pico.as(Characteristics.USE_NAMES).addComponent(OaiPmhImporter.class)
+        pico.as(Characteristics.USE_NAMES).addComponent(LibrisOaiPmhHarvester.class)
         pico.addComponent(new MarcFrameConverter())
 
         pico.start()
@@ -151,7 +152,7 @@ class OaiPmhImporterServlet extends HttpServlet {
             List collections = props.scheduledDatasets.split(",")
             for (collection in collections) {
                 log.info("Setting up schedule for $collection")
-                def job = new ScheduledJob(pico.getComponent(OaiPmhImporter.class), collection, pico.getComponent(PostgreSQLComponent.class))
+                def job = new ScheduledJob(pico.getComponent(OaiPmhHarvester.class), collection, pico.getComponent(PostgreSQLComponent.class))
                 jobs[collection] = job
                 try {
                     ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
@@ -177,13 +178,13 @@ class ScheduledJob implements Runnable {
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
 
     String collection
-    OaiPmhImporter importer
+    OaiPmhHarvester importer
     PostgreSQLComponent storage
     Map whelkState = null
     boolean active = true
     final static long WEEK_MILLIS = 604800000
 
-    ScheduledJob(OaiPmhImporter imp, String ds, PostgreSQLComponent pg) {
+    ScheduledJob(OaiPmhHarvester imp, String ds, PostgreSQLComponent pg) {
         this.importer = imp
         this.collection = ds
         this.storage = pg

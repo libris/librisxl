@@ -1,11 +1,10 @@
-package whelk.importer
+package whelk.harvester
 
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.converter.JsonLDLinkCompleterFilter
-import whelk.URIMinter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.WhelkAddException
 import whelk.util.LegacyIntegrationTools
@@ -20,7 +19,7 @@ import se.kb.libris.util.marc.io.*
 import whelk.converter.MarcJSONConverter
 
 @Log
-class OaiPmhImporter {
+class LibrisOaiPmhHarvester extends OaiPmhHarvester {
 
     static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
 
@@ -48,7 +47,7 @@ class OaiPmhImporter {
 
     boolean cancelled = false
 
-    OaiPmhImporter(Whelk w, MarcFrameConverter mfc, JsonLDLinkCompleterFilter jlcf, String oaipmhServiceUrl, String oaipmhUsername, String oaipmhPassword) {
+    LibrisOaiPmhHarvester(Whelk w, MarcFrameConverter mfc, JsonLDLinkCompleterFilter jlcf, String oaipmhServiceUrl, String oaipmhUsername, String oaipmhPassword) {
         whelk = w
         serviceUrl = oaipmhServiceUrl
         marcFrameConverter = mfc
@@ -56,7 +55,8 @@ class OaiPmhImporter {
         password = oaipmhPassword
         enhancer = jlcf
     }
-    OaiPmhImporter(Whelk w, MarcFrameConverter mfc, String oaipmhServiceUrl, String oaipmhUsername, String oaipmhPassword) {
+
+    LibrisOaiPmhHarvester(Whelk w, MarcFrameConverter mfc, String oaipmhServiceUrl, String oaipmhUsername, String oaipmhPassword) {
         whelk = w
         serviceUrl = oaipmhServiceUrl
         marcFrameConverter = mfc
@@ -64,14 +64,14 @@ class OaiPmhImporter {
         password = oaipmhPassword
     }
 
-    OaiPmhImporter(){}
+    LibrisOaiPmhHarvester(){}
 
-    ImportResult doImport(String collection, int nrOfDocs) {
+    HarvestResult doImport(String collection, int nrOfDocs) {
         return doImport(collection, null, nrOfDocs)
     }
 
     @groovy.transform.Synchronized
-    ImportResult doImport(String collection, String startResumptionToken = null, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
+    HarvestResult doImport(String collection, String startResumptionToken = null, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
         getAuthentication()
         this.cancelled = false
         this.collection = collection
@@ -120,6 +120,7 @@ class OaiPmhImporter {
             log.trace("Harvesting $url")
             try {
                 harvestResult = harvest(url, harvestResult?.lastRecordDatestamp ?: from ?: new Date(0))
+                //harvestResult = harvest(url, new HarvestResult())
             } catch (XmlParsingFailedException xpfe) {
                 log.warn("[$collection / $recordCount] Harvesting failed. Retrying ...")
             } catch (Exception e) {
@@ -139,7 +140,7 @@ class OaiPmhImporter {
         queue.awaitTermination(7, TimeUnit.DAYS)
         log.debug("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
 
-        return new ImportResult(numberOfDocuments: recordCount, numberOfDeleted: nrDeleted, numberOfDocumentsSkipped: skippedRecordCount, lastRecordDatestamp: lastRecordDatestamp)
+        return new HarvestResult(numberOfDocuments: recordCount, numberOfDeleted: nrDeleted, numberOfDocumentsSkipped: skippedRecordCount, lastRecordDatestamp: lastRecordDatestamp)
     }
 
     String washXmlOfBadCharacters(String xmlString) {
@@ -430,14 +431,6 @@ class OaiPmhImporter {
         }
     }
 
-    String normalizeString(String inString) {
-        if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
-            log.trace("Normalizing ...")
-            return Normalizer.normalize(inString, Normalizer.Form.NFC)
-        }
-        return inString
-    }
-
     String createString(GPathResult root) {
         return new StreamingMarkupBuilder().bind{
             out << root
@@ -447,27 +440,4 @@ class OaiPmhImporter {
     void cancel() {
         this.cancelled = true
     }
-
-    static class HarvestResult {
-        String resumptionToken
-        Date lastRecordDatestamp
-    }
-
-}
-
-
-class XmlParsingFailedException extends Exception {
-    XmlParsingFailedException() {
-        super("Parse failed. Most likely, the received document was empty. Or null.")
-    }
-    XmlParsingFailedException(String msg) {
-        super(msg)
-    }
-    XmlParsingFailedException(Throwable t) {
-        super("Parse failed. Most likely, the received document was empty. Or null.", t)
-    }
-    XmlParsingFailedException(String msg, Throwable t) {
-        super(msg, t)
-    }
-
 }
