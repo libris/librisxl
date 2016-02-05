@@ -149,8 +149,9 @@ Go back to the importers module.
 
 If you want to clear out any existing definitions (for reload or refresh)
 
-    $ echo "DELETE FROM lddb WHERE manifest->>'collection' = 'definitions';" | psql [-U yourdatabaseuser] yourdatabaseschema
-    $ echo "DELETE FROM lddb__versions WHERE manifest->>'collection' = 'definitions';" | psql [-U yourdatabaseuser] yourdatabaseschema
+    $ psql [-U yourdatabaseuser] yourdatabaseschema -c "DELETE FROM lddb__identifiers WHERE id IN (SELECT id FROM lddb WHERE manifest->>'collection' = 'definitions');"
+    $ psql [-U yourdatabaseuser] yourdatabaseschema -c "DELETE FROM lddb WHERE manifest->>'collection' = 'definitions';"
+    $ psql [-U yourdatabaseuser] yourdatabaseschema -c "DELETE FROM lddb__versions WHERE manifest->>'collection' = 'definitions';"
     $ curl -XDELETE http://localhost:9200/yourindexname/definitions/_query -d '{"query":{"match_all": {}}}'
 
 Load the resulting resources into the running whelk:
