@@ -67,7 +67,7 @@ public class ListRecordTrees
 
             while (resultSet.next())
             {
-                List<String> nodeDatas = new LinkedList<String>();
+                Vector<String> nodeDatas = new Vector<String>();
                 HashSet<String> visitedIDs = new HashSet<String>();
 
                 String id = resultSet.getString("id");
