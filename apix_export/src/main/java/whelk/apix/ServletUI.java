@@ -1,4 +1,4 @@
-package whelk.apix.servlet;
+package whelk.apix;
 
 import whelk.util.PropertyLoader;
 

@@ -1,6 +1,5 @@
-package whelk.apix.servlet;
+package whelk.apix;
 
-import java.io.PrintStream;
 import java.time.ZonedDateTime;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;

@@ -1,4 +1,4 @@
-package whelk.apix.servlet;
+package whelk.apix;
 
 public interface UI
 {

@@ -32,7 +32,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-mainClassName = 'whelk.apix.servlet.ConsoleUI'
+mainClassName = 'ConsoleUI'
 
 jar {
     manifest {
