@@ -9,7 +9,7 @@
 
     <servlet>
         <servlet-name>APIXExporterServlet</servlet-name>
-        <servlet-class>whelk.apix.servlet.ApixExportUI</servlet-class>
+        <servlet-class>whelk.apix.servlet.ServletUI</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 

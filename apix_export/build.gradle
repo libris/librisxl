@@ -1,6 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'jetty'
 apply plugin: 'war'
+apply plugin: 'application'
 apply plugin: 'maven'
 
 sourceCompatibility = 1.8
@@ -13,6 +14,8 @@ repositories {
 }
 
 dependencies {
+    compile project(':../core')
+
     def jettyVersion="9.3.6.v20151106"
 
     // Jetty
@@ -27,4 +30,17 @@ dependencies {
 
     // Testing
     testCompile 'junit:junit:4.12'
+}
+
+mainClassName = 'whelk.apix.servlet.ConsoleUI'
+
+jar {
+    manifest {
+        attributes 'Implementation-Title':'APIX exporter',
+                'Implementation-Version': '1.0',
+                'Main-class': mainClassName
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
