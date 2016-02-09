@@ -22,11 +22,13 @@ class LibrisOaiPmhHarvester extends OaiPmhHarvester {
 
     @Override
     boolean okToSave(OaiPmhRecord oaiPmhRecord) {
-        MarcRecord marcRecord = MarcXmlRecordReader.fromXml(oaiPmhRecord.record)
-        def aList = marcRecord.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
-        if (aList.contains(SUPPRESSED_RECORD)) {
-            log.debug("Record ${oaiPmhRecord.identifier} is suppressed.")
-            return false
+        if (oaiPmhRecord.record) {
+            MarcRecord marcRecord = MarcXmlRecordReader.fromXml(oaiPmhRecord.record)
+            def aList = marcRecord.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
+            if (aList.contains(SUPPRESSED_RECORD)) {
+                log.debug("Record ${oaiPmhRecord.identifier} is suppressed.")
+                return false
+            }
         }
         return true
     }

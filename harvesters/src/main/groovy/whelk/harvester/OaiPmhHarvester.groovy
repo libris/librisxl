@@ -182,6 +182,7 @@ class OaiPmhHarvester {
         hdata.lastRecordDatestamp = (record.datestamp.after(hdata.lastRecordDatestamp) ? record.datestamp : hdata.lastRecordDatestamp)
 
         if (!okToSave(record)) {
+            hdata.numberOfDocumentsSkipped++
             return docs
         }
 
