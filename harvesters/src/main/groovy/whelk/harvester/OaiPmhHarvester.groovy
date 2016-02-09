@@ -181,6 +181,10 @@ class OaiPmhHarvester {
         // Update lastRecordDatestamp
         hdata.lastRecordDatestamp = (record.datestamp.after(hdata.lastRecordDatestamp) ? record.datestamp : hdata.lastRecordDatestamp)
 
+        if (!okToSave(record)) {
+            return docs
+        }
+
         log.trace("Found record with id ${record.identifier} and data: ${record.record}")
         if (record.deleted) {
             String systemId = whelk.storage.locate(record.identifier)?.id
@@ -203,6 +207,15 @@ class OaiPmhHarvester {
             }
         }
         return docs
+    }
+
+    /**
+     * This is the method to override when checking if a document should be processed for saving and/or deletion
+     * @param oaiPmhRecord
+     * @return true if ok
+     */
+    boolean okToSave(OaiPmhRecord oaiPmhRecord) {
+        true
     }
 
     Document createDocument(OaiPmhRecord oaiPmhRecord) {

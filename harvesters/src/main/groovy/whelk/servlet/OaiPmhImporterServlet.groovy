@@ -6,6 +6,7 @@ import org.picocontainer.Characteristics
 import org.picocontainer.PicoContainer
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
+import whelk.component.Storage
 import whelk.converter.marc.MarcFrameConverter
 import whelk.harvester.LibrisOaiPmhHarvester
 import whelk.harvester.OaiPmhHarvester
@@ -31,6 +32,10 @@ class OaiPmhImporterServlet extends HttpServlet {
     Properties props = new Properties()
     private Map<String,ScheduledJob> jobs = [:]
 
+    static String SETTINGS_PFX = "harvester:"
+
+    ScheduledExecutorService ses
+
     static final ObjectMapper mapper = new ObjectMapper()
 
 
@@ -41,6 +46,7 @@ class OaiPmhImporterServlet extends HttpServlet {
 
         pico = Whelk.getPreparedComponentsContainer(props)
 
+        pico.as(Characteristics.USE_NAMES).addComponent(OaiPmhHarvester.class)
         pico.as(Characteristics.USE_NAMES).addComponent(LibrisOaiPmhHarvester.class)
         pico.addComponent(new MarcFrameConverter())
 
@@ -54,7 +60,8 @@ class OaiPmhImporterServlet extends HttpServlet {
         def storage = pico.getComponent(PostgreSQLComponent)
         String html, json
         if (jobs) {
-            List collections = props.scheduledDatasets.split(",")
+            //List collections = props.scheduledDatasets.split(",")
+            List collections = storage.loadSettings("oaipmh").keySet() as List
             def state = [:]
             StringBuilder table = new StringBuilder("<table cellspacing=\"10\"><tr><th>&nbsp;</th>")
             table.append("<form method=\"post\">")
@@ -62,7 +69,7 @@ class OaiPmhImporterServlet extends HttpServlet {
             Set catSet = new TreeSet<String>()
 
             for (collection in collections) {
-                state[collection] = storage.loadSettings(collection)
+                state[collection] = storage.loadSettings(SETTINGS_PFX+collection)
                 catSet.addAll(state[collection].keySet())
                 table.append("<th>$collection</th>")
             }
@@ -79,8 +86,8 @@ class OaiPmhImporterServlet extends HttpServlet {
             }
             table.append("<tr><td><input type=\"submit\" name=\"action_all\" value=\"stop all\"></td>")
             for (collection in collections) {
-                table.append("<td><input type=\"submit\" name=\"action_${collection}\" value=\"${jobs[collection].active ? "stop" : "start"}\">")
-                if (!jobs[collection].active) {
+                table.append("<td><input type=\"submit\" name=\"action_${collection}\" value=\"${jobs[collection]?.active ? "stop" : "start"}\">")
+                if (jobs[collection] && !jobs[collection].active) {
                     String lastImportDate = jobs[collection].getLastImportValue().format("yyyy-MM-dd'T'HH:mm")
                     table.append("&nbsp;<input type=\"submit\" name=\"reset_${collection}\" value=\"reload $collection from\"/>&nbsp;<input type=\"datetime-local\" name=\"datevalue\" value=\"${lastImportDate}\"/>")
                 }
@@ -89,12 +96,30 @@ class OaiPmhImporterServlet extends HttpServlet {
             table.append("</tr>")
 
             table.append("</form></table>")
+            StringBuilder availableHarvesters = new StringBuilder("<select name=\"harvesterClass\">")
+            for (h in pico.getComponents(OaiPmhHarvester.class)) {
+                availableHarvesters.append("<option value=\"${h.getClass().getName()}\">${h.getClass().getName()}</option>")
+            }
+            availableHarvesters.append("</select>")
+            String newService = """
+                <p><b>Add OAI-PMH service</b></p>
+                <p>
+                <form method="post">
+                <input type="text" name="serviceLabel" value="Label"/>
+                ${availableHarvesters.toString()}
+                <input type="text" name="serviceUrl" value="serviceUrl"/>
+                <input type="text" name="username" value="username"/>
+                <input type="text" name="password" value="password"/>
+                <input type="submit" name="setupService" value="create"/>
+                </p>
+            """
 
             html = """
                 <html><head><title>OAIPMH Harvester control panel</title></head>
                 <body>
                 System version: ${props.version}<br><br>
                 ${table.toString()}
+                ${newService}
                 </form>
                 """
             json = mapper.writeValueAsString(state)
@@ -124,39 +149,75 @@ class OaiPmhImporterServlet extends HttpServlet {
 
     void doPost(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Received post request. Got this: ${request.getParameterMap()}")
-        for (reqs in request.getParameterNames()) {
-            if (reqs == "action_all") {
-                for (job in jobs) {
-                    job.value.disable()
+        if (request.getParameter("setupService") == "create") {
+            Storage storage = pico.getComponent(PostgreSQLComponent.class)
+            Map oaipmhSettings = storage.loadSettings("oaipmh")
+            Map service = [
+                    "harvesterClass": request.getParameter("harvesterClass"),
+                    "serviceUrl": request.getParameter("serviceUrl"),
+                    "username": request.getParameter("username"),
+                    "password": request.getParameter("password")
+            ]
+            oaipmhSettings.put(request.getParameter("serviceLabel"), service)
+            storage.saveSettings("oaipmh", oaipmhSettings)
+            ses.shutdown()
+            ses.awaitTermination(1, TimeUnit.MINUTES)
+            init()
+        } else {
+            for (reqs in request.getParameterNames()) {
+                if (reqs == "action_all") {
+                    for (job in jobs) {
+                        job.value.disable()
+                    }
+                } else if (reqs.startsWith("reset_")) {
+                    log.debug("Loading job for ${reqs.substring(6)}")
+                    log.debug("Got these jobs: $jobs")
+                    def job = jobs.get(reqs.substring(6))
+                    Date startDate = Date.parse("yyyy-MM-dd'T'HH:mm", request.getParameter("datevalue"))
+                    log.debug("Resetting harvester for ${job.collection} to $startDate")
+                    job.setStartDate(startDate)
+                    //job.enable()
+                } else if (reqs.startsWith("action_")) {
+                    jobs.get(reqs.substring(7)).toggleActive()
                 }
-            } else if (reqs.startsWith("reset_")) {
-                log.debug("Loading job for ${reqs.substring(6)}")
-                log.debug("Got these jobs: $jobs")
-                def job = jobs.get(reqs.substring(6))
-                Date startDate = Date.parse("yyyy-MM-dd'T'HH:mm", request.getParameter("datevalue"))
-                log.debug("Resetting harvester for ${job.collection} to $startDate")
-                job.setStartDate(startDate)
-                //job.enable()
-            } else if (reqs.startsWith("action_")) {
-                jobs.get(reqs.substring(7)).toggleActive()
             }
         }
         response.sendRedirect(request.getRequestURL().toString())
     }
 
+    Map loadOaiPmhSettings() {
+        Map settings = pico.getComponent(PostgreSQLComponent.class).loadSettings("oaipmh")
+
+    }
+
     void init() {
         if (props.getProperty("version").startsWith(loadDataVersion())) {
             log.info("Initializing OAIPMH harvester. System version: ${pico.getComponent(Whelk.class).version}")
-            ScheduledExecutorService ses = Executors.newScheduledThreadPool(3)
-            List collections = props.scheduledDatasets.split(",")
+            Storage storage = pico.getComponent(PostgreSQLComponent.class)
+
+            //List collections = props.scheduledDatasets.split(",")
+            Map oaipmhSettings = storage.loadSettings("oaipmh")
+
+            List collections = oaipmhSettings.keySet() as List
+
+            ses = Executors.newScheduledThreadPool(collections.size())
             for (collection in collections) {
                 log.info("Setting up schedule for $collection")
-                def job = new ScheduledJob(pico.getComponent(OaiPmhHarvester.class), collection, pico.getComponent(PostgreSQLComponent.class))
-                jobs[collection] = job
                 try {
+                    def job = new ScheduledJob(pico.getComponent(Class.forName(oaipmhSettings[collection].harvesterClass)),
+                            "${SETTINGS_PFX}${collection}",
+                            oaipmhSettings[collection].serviceUrl,
+                            oaipmhSettings[collection].username,
+                            oaipmhSettings[collection].password,
+                            storage)
+                    //def oldjob = new ScheduledJob(pico.getComponent(OaiPmhHarvester.class), collection, storage)
+                    jobs[collection] = job
+
                     ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
                 } catch (RejectedExecutionException ree) {
                     log.error("execution failed", ree)
+                } catch (Exception e) {
+                    log.error("Failed to set up job for $collection", e)
                 }
             }
             log.info("scheduler started")
@@ -176,17 +237,20 @@ class ScheduledJob implements Runnable {
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
 
-    String collection
+    String collection, serviceUrl, username, password
     OaiPmhHarvester harvester
     PostgreSQLComponent storage
     Map whelkState = null
     boolean active = true
     final static long WEEK_MILLIS = 604800000
 
-    ScheduledJob(OaiPmhHarvester imp, String ds, PostgreSQLComponent pg) {
+    ScheduledJob(OaiPmhHarvester imp, String coll, String url, String uname, String pword, PostgreSQLComponent pg) {
         this.harvester = imp
-        this.collection = ds
+        this.collection = coll
         this.storage = pg
+        this.serviceUrl = url
+        this.username = uname
+        this.password = pword
         assert storage
         assert collection
     }
