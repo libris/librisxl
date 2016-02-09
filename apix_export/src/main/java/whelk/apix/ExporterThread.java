@@ -52,12 +52,11 @@ public class ExporterThread extends Thread
             {
                 ++i;
                 ui.outputText("Pseudo call: " + apixProperties.getProperty("apixUrl") + " " + i);
-
-                try {
-                    sleep(100);
-                }catch (InterruptedException e) {}
-
             }
+
+            try {
+                sleep(100);
+            }catch (InterruptedException e) {}
         }
 
         ui.outputText("Exit!");

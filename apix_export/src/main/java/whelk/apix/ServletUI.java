@@ -18,6 +18,7 @@ public class ServletUI extends HttpServlet implements UI
     ExporterThread m_exporterThread = null;
     String[] m_pseudoConsole = new String[PSEUDO_CONSOLE_LINES];
     int m_pseudoConsoleNext = 0;
+    Properties m_apixProperties = null;
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException
     {
@@ -28,10 +29,18 @@ public class ServletUI extends HttpServlet implements UI
             return;
         }
 
+        res.setContentType("text/plain");
+
         switch (path)
         {
             case "/console":
                 res.getOutputStream().print( getPseudoConsole() );
+                break;
+            case "/endpoint":
+                res.getOutputStream().print( m_apixProperties.getProperty("apixUrl") );
+                break;
+            case "/startpoint":
+                res.getOutputStream().print( m_apixProperties.getProperty("oaipmhUrl") );
                 break;
             default:
                 res.sendError(404);
@@ -40,9 +49,9 @@ public class ServletUI extends HttpServlet implements UI
 
     public void init()
     {
-        Properties apixProperties = PropertyLoader.loadProperties("apix");
+        m_apixProperties = PropertyLoader.loadProperties("apix");
 
-        m_exporterThread = new ExporterThread(apixProperties, null, null, this);
+        m_exporterThread = new ExporterThread(m_apixProperties, null, null, this);
         m_exporterThread.start();
     }
 
@@ -82,7 +91,8 @@ public class ServletUI extends HttpServlet implements UI
                 break;
 
             output.append(m_pseudoConsole[next]);
-            output.append("<br/>");
+            //output.append("<br/>");
+            output.append("\n");
         }
 
         return  output.toString();

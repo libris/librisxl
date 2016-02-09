@@ -1,20 +1,27 @@
 function loaded()
 {
     setInterval(reload_console, 1000);
+    reload_string("apixurl", "app/endpoint");
+    reload_string("oaipmhurl", "app/startpoint");
 }
 
-function reload_console()
+function reload_string(elementid, url)
 {
     var httpRequest = new XMLHttpRequest();
     httpRequest.onreadystatechange = function()
     {
         if (httpRequest.readyState === XMLHttpRequest.DONE && httpRequest.status === 200)
         {
-            document.getElementById("console").innerHTML = httpRequest.responseText;
+            document.getElementById(elementid).innerHTML = httpRequest.responseText;
         }
     };
-    httpRequest.open("GET", "app/console", true);
+    httpRequest.open("GET", url, true);
     httpRequest.send(null);
+}
+
+function reload_console()
+{
+    reload_string("console", "app/console");
 }
 
 window.onload = loaded;

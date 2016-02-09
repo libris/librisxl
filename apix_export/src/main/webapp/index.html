@@ -1,14 +1,33 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="stylesheet" type="text/css" href="kb-style.css">
         <script src="script.js" type="text/javascript"></script>
         <meta charset="UTF-8"/>
         <title>APIX export</title>
     </head>
     <body>
-        <p>Apix endpoint: <span id="apixurl"></span></p>
-        <div id="console">
+        <div class="container">
+            <table class="table">
+                <tr>
+                    <td>OAIPMH source URL: </td>
+                    <td><b id="oaipmhurl"></b></td>
+                </tr>
+                <tr>
+                    <td>APIX delivery target URL: </td>
+                    <td><b id="apixurl"></b></td>
+                </tr>
+            </table>
+            <p class="container">
+                <label for="from">Export posts with a modified timestamp >=<br/>example: 1970-01-01:00:00:00<br/>(leave empty for "beginning of time")</label>
+                <input type="text" id="from"><br/>
+                <button class="btn btn-default" type="button" onclick="loaded()">Start</button>
+                <button class="btn btn-default" type="button" onclick="loaded()">Stop</button>
+            </p>
+            <p>
+            <textarea readonly id="console" rows="16" cols="120" title="Console">
+            </textarea>
+            </p>
         </div>
-    <button type="button" onclick="loaded()">Test</button>
     </body>
 </html>
