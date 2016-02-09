@@ -9,7 +9,6 @@ import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.WhelkAddException
 import whelk.util.LegacyIntegrationTools
 
-import java.text.*
 import java.util.concurrent.*
 
 import whelk.*
@@ -21,10 +20,10 @@ import whelk.converter.MarcJSONConverter
 @Log
 class LibrisOaiPmhHarvester extends OaiPmhHarvester {
 
+    static String SUPPRESSED_RECORD = "SUPPRESSRECORD"
+
+    /*
     static SERVICE_BASE_URL = "http://data.libris.kb.se/{dataset}/oaipmh"
-
-    static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
-
     String collection
     String serviceUrl
     int recordCount = 0
@@ -38,12 +37,7 @@ class LibrisOaiPmhHarvester extends OaiPmhHarvester {
 
     ExecutorService queue
     Semaphore tickets
-    Whelk whelk
-    MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
-    static final ObjectMapper mapper = new ObjectMapper()
-
-    String username, password
 
     boolean cancelled = false
 
@@ -54,25 +48,42 @@ class LibrisOaiPmhHarvester extends OaiPmhHarvester {
         username = oaipmhUsername
         password = oaipmhPassword
         enhancer = jlcf
-    }
+    }*/
 
-    LibrisOaiPmhHarvester(Whelk w, MarcFrameConverter mfc, String oaipmhServiceUrl, String oaipmhUsername, String oaipmhPassword) {
+    LibrisOaiPmhHarvester(Whelk w, MarcFrameConverter mfc) {
+        super(w, mfc)
         whelk = w
-        serviceUrl = oaipmhServiceUrl
         marcFrameConverter = mfc
+/*
+        serviceUrl = oaipmhServiceUrl
         username = oaipmhUsername
         password = oaipmhPassword
+        */
     }
 
     LibrisOaiPmhHarvester(){}
 
-    HarvestResult doImport(String collection, int nrOfDocs) {
-        return doImport(collection, null, nrOfDocs)
+    /**
+     * Overridden for Libris records, to filter out SUPPRESSED RECORDS
+     * @param oaiPmhRecord an OaiPmhRecord
+     * @return a Document
+     */
+    Document createDocument(OaiPmhRecord oaiPmhRecord) {
+        Document doc = super.createDocument(oaiPmhRecord)
+        MarcRecord marcRecord = MarcXmlRecordReader.fromXml(oaiPmhRecord.record)
+        log.trace("Marc record instantiated from XML.")
+        def aList = marcRecord.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
+        if (aList.contains(SUPPRESSED_RECORD)) {
+            log.debug("Record ${oaiPmhRecord.identifier} is suppressed.")
+            return null
+        }
+        return doc
     }
 
+    /*
     @groovy.transform.Synchronized
     HarvestResult doImport(String collection, String startResumptionToken = null, int nrOfDocs = -1, boolean silent = false, boolean picky = true, Date from = null) {
-        getAuthentication()
+        authenticate()
         this.cancelled = false
         this.collection = collection
         this.recordCount = 0
@@ -119,8 +130,8 @@ class LibrisOaiPmhHarvester extends OaiPmhHarvester {
             }
             log.trace("Harvesting $url")
             try {
-                harvestResult = harvest(url, harvestResult?.lastRecordDatestamp ?: from ?: new Date(0))
-                //harvestResult = harvest(url, new HarvestResult())
+                //harvestResult = harvest(url, harvestResult?.lastRecordDatestamp ?: from ?: new Date(0))
+                harvestResult = harvest(url, new HarvestResult(), [])
             } catch (XmlParsingFailedException xpfe) {
                 log.warn("[$collection / $recordCount] Harvesting failed. Retrying ...")
             } catch (Exception e) {
@@ -140,7 +151,7 @@ class LibrisOaiPmhHarvester extends OaiPmhHarvester {
         queue.awaitTermination(7, TimeUnit.DAYS)
         log.debug("Import has completed in " + (System.currentTimeMillis() - startTime) + " milliseconds.")
 
-        return new HarvestResult(numberOfDocuments: recordCount, numberOfDeleted: nrDeleted, numberOfDocumentsSkipped: skippedRecordCount, lastRecordDatestamp: lastRecordDatestamp)
+        return new HarvestResult(numberOfDocuments: recordCount, numberOfDocumentsDeleted: nrDeleted, numberOfDocumentsSkipped: skippedRecordCount, lastRecordDatestamp: lastRecordDatestamp)
     }
 
     String washXmlOfBadCharacters(String xmlString) {
@@ -332,13 +343,6 @@ class LibrisOaiPmhHarvester extends OaiPmhHarvester {
         return documentMap
     }
 
-    Date getMarcRecordModificationTime(MarcRecord record) {
-        String datetime = record.getControlfields("005")?.get(0).getData()
-        if (datetime) {
-            return Date.parse("yyyyMMddHHmmss.S",datetime)
-        }
-        return null
-    }
 
     void addDocuments(final List documents) {
         if (tickets.availablePermits() < 10) {
@@ -414,23 +418,6 @@ class LibrisOaiPmhHarvester extends OaiPmhHarvester {
         } as Runnable)
     }
 
-    private void getAuthentication() {
-        if (username && password) {
-            log.debug("Setting username (${username}) and password (${password})")
-        } else {
-            log.debug("Not setting username/password")
-        }
-        try {
-            Authenticator.setDefault(new Authenticator() {
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(username, password.toCharArray())
-                    }
-                });
-        } catch (Exception ex) {
-            log.error("Exception getting authentication credentials: $ex")
-        }
-    }
-
     String createString(GPathResult root) {
         return new StreamingMarkupBuilder().bind{
             out << root
@@ -440,4 +427,5 @@ class LibrisOaiPmhHarvester extends OaiPmhHarvester {
     void cancel() {
         this.cancelled = true
     }
+    */
 }

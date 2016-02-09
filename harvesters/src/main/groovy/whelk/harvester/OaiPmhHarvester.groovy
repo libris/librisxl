@@ -1,6 +1,14 @@
 package whelk.harvester
 
 import groovy.util.logging.Slf4j as Log
+import org.codehaus.jackson.map.ObjectMapper
+import se.kb.libris.util.marc.MarcRecord
+import se.kb.libris.util.marc.io.MarcXmlRecordReader
+import whelk.Document
+import whelk.Whelk
+import whelk.converter.marc.MarcFrameConverter
+import whelk.util.LegacyIntegrationTools
+import whelk.converter.MarcJSONConverter
 
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamReader
@@ -16,33 +24,105 @@ import java.text.Normalizer
 class OaiPmhHarvester {
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
+    Whelk whelk
+    MarcFrameConverter marcFrameConverter
 
-    HarvestResult start(URL serviceURL, Format sourceFormat = Format.MARC, boolean acceptUpdates = true, boolean acceptDeletes = true) {
+    static final ObjectMapper mapper = new ObjectMapper()
 
+    static final Map<Integer, String> MARCTYPE_COLLECTION = [
+            (MarcRecord.AUTHORITY) : "auth",
+            (MarcRecord.BIBLIOGRAPHIC) : "bib",
+            (MarcRecord.HOLDINGS) : "hold"
+    ]
+
+
+    OaiPmhHarvester() {}
+
+    OaiPmhHarvester(Whelk w, MarcFrameConverter mfc) {
+        whelk = w
+        marcFrameConverter = mfc
     }
 
-    HarvestResult harvest(URL url, HarvestResult hdata) {
+    HarvestResult harvest(String serviceUrl, String verb, String metadataPrefix, Date from = null, Date until = null) {
+        harvest(serviceUrl, null, null, verb, metadataPrefix, from, until)
+    }
+
+    HarvestResult harvest(String serviceURL, String username, String password, String verb, String metadataPrefix, Date from = null, Date until = null) {
+        authenticate(username, password)
+        HarvestResult harvestResult = new HarvestResult(from, until)
+        boolean harvesting = true
+
+        URL url = constructRequestUrl(serviceURL, verb, metadataPrefix, null, from, until)
+        println("From is $from")
+
         try {
-            XMLStreamReader streamReader = XMLInputFactory.newInstance().createXMLStreamReader(url.openStream())
-            while (streamReader.hasNext()) {
-                if (streamReader.isStartElement() && streamReader.localName == "record") {
-                    OaiPmhRecord record = readRecord(streamReader)
-                    println("Found record with id ${record.identifier} and data: ${record.record}")
-                }
-                if (streamReader.hasNext()) {
-                    streamReader.next()
+            while (harvesting) {
+                harvestResult = readUrl(url, harvestResult)
+                if (harvestResult.resumptionToken) {
+                    url = constructRequestUrl(serviceURL, verb, metadataPrefix, harvestResult.resumptionToken)
+                    // reset resumption token
+                    harvestResult.resumptionToken = null
+                } else {
+                    harvesting = false
                 }
             }
-
+        } catch (RecordFromThePastException rftpe) {
+            log.error("Record ${rftpe.badRecord.identifier} has datestamp (${rftpe.badRecord.datestamp}) before requested (${from})")
+        } catch (RecordFromTheFutureException rftfe) {
+            log.error("Record ${rftfe.badRecord.identifier} has datestamp (${rftfe.badRecord.datestamp}) after requested (${until})")
+        } catch (BrokenRecordException bre) {
+            log.error(bre.message)
         } catch (IOException ioe) {
             log.error("Failed to read from URL $url")
-            // Add proper error handling
+            // TODO: Add proper error handling
         }
-        return new HarvestResult(lastRecordDatestamp: new Date())
+        return harvestResult
+    }
+
+    URL constructRequestUrl(String baseUrl, String verb, String metadataPrefix, String resumptionToken, Date from = null, Date until = null) {
+        StringBuilder queryString = new StringBuilder("?verb=" + URLEncoder.encode(verb, "UTF-8"))
+        if (resumptionToken) {
+            queryString.append("&resumptionToken=" + URLEncoder.encode(resumptionToken, "UTF-8"))
+        } else {
+            queryString.append("&metadataPrefix=" + URLEncoder.encode(metadataPrefix, "UTF-8"))
+            if (from) {
+                queryString.append("&from=" + from.format(DATE_FORMAT, TimeZone.getTimeZone('UTC')))
+            }
+            if (until) {
+                queryString.append("&until=" + until.format(DATE_FORMAT, TimeZone.getTimeZone('UTC')))
+            }
+        }
+
+        URL url = new URL(baseUrl + queryString.toString())
+
+        return url
+    }
+
+    HarvestResult readUrl(URL url, HarvestResult hdata) {
+        log.debug("Starting harvest. Last record datestamp: ${hdata.lastRecordDatestamp}")
+        List<Document> documentList = new ArrayList<Document>()
+        XMLStreamReader streamReader = XMLInputFactory.newInstance().createXMLStreamReader(url.openStream())
+        while (streamReader.hasNext()) {
+            if (streamReader.isStartElement() && streamReader.localName == "record") {
+                OaiPmhRecord record = readRecord(streamReader)
+                documentList = addRecord(record, hdata, documentList)
+            }
+            if (streamReader.hasNext()) {
+                streamReader.next()
+            }
+            if (streamReader.isStartElement() && streamReader.localName == "resumptionToken") {
+                hdata.resumptionToken = streamReader.elementText
+            }
+        }
+        // Store remaining documents
+        whelk.bulkStore(documentList)
+        log.debug("Done reading stream. Documents still in documentList: ${documentList.size()}")
+        log.debug("Imported ${hdata.numberOfDocuments}. Last timestamp: ${hdata.lastRecordDatestamp}. Number deleted: ${hdata.numberOfDocumentsDeleted}")
+        return hdata
     }
 
     OaiPmhRecord readRecord(XMLStreamReader reader) {
-        log.info("New record")
+        log.trace("New record")
 
         OaiPmhRecord oair = new OaiPmhRecord()
 
@@ -56,7 +136,7 @@ class OaiPmhHarvester {
                         oair.identifier = reader.elementText
                         break
                     case "datestamp":
-                        oair.datestamp = Date.parse(DATE_FORMAT, reader.elementText)
+                        oair.setDatestamp(reader.elementText)
                         break
                     case "setSpec":
                         oair.setSpecs << reader.elementText
@@ -68,19 +148,132 @@ class OaiPmhHarvester {
             }
             reader.next()
         }
-        reader.next()
 
         // Advance to metadata
         reader.nextTag()
 
         if (reader.localName == "metadata") {
-            reader.next()
-            Writer outWriter = new StringWriter()
-            TransformerFactory.newInstance().newTransformer().transform(new StAXSource(reader), new StreamResult(outWriter))
-            oair.record = normalizeString(outWriter.toString())
+            reader.nextTag() // Advance to record
+            oair.setFormat(reader.namespaceURI)
+            try {
+                Writer outWriter = new StringWriter()
+                TransformerFactory.newInstance().newTransformer().transform(new StAXSource(reader), new StreamResult(outWriter))
+                oair.record = normalizeString(outWriter.toString())
+            } catch (IllegalStateException ise) {
+                throw new BrokenRecordException(oair.identifier)
+            }
         }
         return oair
     }
+
+    List<Document> addRecord(OaiPmhRecord record, HarvestResult hdata, List<Document> docs) {
+
+        // Sanity check dates
+        log.debug("Record date: ${record.datestamp}. Last record date: ${hdata.lastRecordDatestamp}")
+        if (hdata.fromDate && record.datestamp.before(hdata.fromDate)) {
+            println("hdata fromdate: ${hdata.fromDate} record datestamp: ${record.datestamp}")
+            throw new RecordFromThePastException(record)
+        }
+        if (record.datestamp.after(hdata.untilDate ?: new Date())) {
+            throw new RecordFromTheFutureException(record)
+        }
+
+        // Update lastRecordDatestamp
+        hdata.lastRecordDatestamp = (record.datestamp.after(hdata.lastRecordDatestamp) ? record.datestamp : hdata.lastRecordDatestamp)
+
+        log.trace("Found record with id ${record.identifier} and data: ${record.record}")
+        if (record.deleted) {
+            String systemId = whelk.storage.locate(record.identifier)?.id
+            if (systemId) {
+                log.debug("Delete request for ${record.identifier}. Located in system as ${systemId}.")
+                whelk.remove(systemId)
+                hdata.numberOfDocumentsDeleted++
+            }
+        } else {
+            Document doc = createDocument(record)
+            if (doc) {
+                docs << doc
+                hdata.numberOfDocuments++
+            } else {
+                hdata.numberOfDocumentsSkipped++
+            }
+            if (docs.size() % 1000 == 0) {
+                whelk.bulkStore(docs)
+                docs = []
+            }
+        }
+        return docs
+    }
+
+    Document createDocument(OaiPmhRecord oaiPmhRecord) {
+        Document doc
+        if (oaiPmhRecord.format == Format.MARC) {
+            MarcRecord marcRecord = MarcXmlRecordReader.fromXml(oaiPmhRecord.record)
+            String collection = MARCTYPE_COLLECTION[marcRecord.type]
+
+            String recordId = "/" + collection + "/" + marcRecord.getControlfields("001").get(0).getData()
+
+            def manifest = [(Document.ID_KEY): LegacyIntegrationTools.generateId(recordId),
+                            (Document.COLLECTION_KEY): collection,
+                            (Document.CONTENT_TYPE_KEY): "application/x-marc-json"]
+
+            log.trace("Start check for 887")
+            try {
+                String originalIdentifier = null
+                long originalModified = 0
+
+                for (field in marcRecord.getDatafields("887")) {
+                    if (!field.getSubfields("2").isEmpty() && field.getSubfields("2").first().data == "librisxl") {
+                        try {
+                            def xlData = mapper.readValue(field.getSubfields("a").first().data, Map)
+                            originalIdentifier = xlData.get("@id")
+                            originalModified = xlData.get("modified") as long
+                        } catch (Exception e) {
+                            log.error("Failed to parse 887 as json for ${recordId}")
+                        }
+                    }
+                }
+                if (originalIdentifier) {
+                    log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating manifest.")
+                    manifest.put(Document.ID_KEY, originalIdentifier)
+                    long marcRecordModified = getMarcRecordModificationTime(marcRecord)?.getTime()
+                    log.info("record timestamp: $marcRecordModified")
+                    log.info("    xl timestamp: $originalModified")
+                    long diff = (marcRecordModified - originalModified) / 1000
+                    log.info("update time difference: $diff secs.")
+                    if (diff < 30) {
+                        log.info("Record probably not edited in Voyager. Skipping ...")
+                        return null
+                    }
+                }
+            } catch (NoSuchElementException nsee) {
+                log.trace("Record doesn't have a 887 field.")
+            }
+            log.trace("887 check complete.")
+
+            def extraData = [:]
+
+            for (spec in oaiPmhRecord.setSpecs) {
+                extraData.get("oaipmhSetSpecs", []).add(spec.toString())
+            }
+            if (extraData) {
+                manifest['extraData'] = extraData
+            }
+
+            doc = new Document(
+                    MarcJSONConverter.toJSONMap(marcRecord),
+                    manifest
+                ).addIdentifier(Document.BASE_URI.resolve(recordId).toString())
+
+            doc = marcFrameConverter.convert(doc)
+            doc.data["controlNumber"] = marcRecord.getControlfields("001").get(0).getData()
+        } else {
+            // TODO: Make JSONLD document from RDF/XML
+        }
+        log.debug("Created document with ID ${doc.id}")
+        return doc
+    }
+
 
     private boolean endElement(String elementName, XMLStreamReader reader) {
         if (reader.isEndElement()) {
@@ -97,10 +290,101 @@ class OaiPmhHarvester {
         return inString
     }
 
+    Date getMarcRecordModificationTime(MarcRecord record) {
+        String datetime = record.getControlfields("005")?.get(0).getData()
+        if (datetime) {
+            return Date.parse("yyyyMMddHHmmss.S",datetime)
+        }
+        return null
+    }
+
+    protected void authenticate(String username, String password) {
+        if (username && password) {
+            log.debug("Setting username (${username}) and password (${password})")
+        } else {
+            log.debug("Not setting username/password")
+        }
+        try {
+            Authenticator.setDefault(new Authenticator() {
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(username, password.toCharArray())
+                }
+            });
+        } catch (Exception ex) {
+            log.error("Exception getting authentication credentials: $ex")
+        }
+    }
+
+
+
+    class OaiPmhRecord {
+        String record
+        String identifier
+        Date datestamp
+
+        Format format = Format.MARC
+
+        List<String> setSpecs = new ArrayList<String>()
+        boolean deleted = false
+
+        void setDatestamp(String dateString) {
+            datestamp = Date.parse(DATE_FORMAT, dateString)
+            println("Setting datestamp: $datestamp from datestring $dateString")
+        }
+
+        void setFormat(String xmlNameSpace) {
+            switch (xmlNameSpace) {
+                case "http://www.loc.gov/MARC21/slim":
+                    format = Format.MARC
+                    break
+                case "http://www.w3.org/1999/02/22-rdf-syntax-ns#":
+                    format = Format.RDF
+                    break
+            }
+        }
+    }
+
+    class XmlParsingFailedException extends RuntimeException {
+        XmlParsingFailedException(String message) {
+            super(message)
+        }
+    }
+
+    class BrokenRecordException extends XmlParsingFailedException {
+        String brokenId
+        BrokenRecordException(String identifier) {
+            super("Record ${identifier} has broken metadata")
+            brokenId = identifier
+        }
+    }
+
+    class DateInconsistencyException extends RuntimeException {
+        OaiPmhRecord badRecord
+
+        DateInconsistencyException(String message) {
+            super(message)
+        }
+    }
+
+    class RecordFromThePastException extends DateInconsistencyException {
+
+        RecordFromThePastException(OaiPmhRecord record) {
+            super("Record ${record.identifier} has datestamp ${record.datestamp}, occuring before requested date range.")
+            badRecord = record
+        }
+    }
+
+    class RecordFromTheFutureException extends DateInconsistencyException {
+
+        RecordFromTheFutureException(OaiPmhRecord record) {
+            super("Record ${record.identifier} has datestamp from the future (${record.datestamp})")
+            badRecord = record
+        }
+    }
+
     enum Format {
         MARC,
         RDF
     }
-
 }
 

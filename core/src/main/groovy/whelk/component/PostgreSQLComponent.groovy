@@ -337,7 +337,7 @@ class PostgreSQLComponent implements Storage {
     @Override
     boolean bulkStore(final List<Document> docs, boolean upsert) {
         if (!docs || docs.isEmpty()) {
-            return
+            return true
         }
         log.trace("Bulk storing ${docs.size()} documents.")
         Connection connection = getConnection()
@@ -589,7 +589,7 @@ class PostgreSQLComponent implements Storage {
                 if (loadDoc) {
                     return new Location(load(docStatus.id)).withResponseCode(301)
                 } else {
-                    return new Location().withURI(docStatus.uri).withResponseCode(301)
+                    return new Location().withId(docStatus.id).withURI(docStatus.uri).withResponseCode(301)
                 }
             }
 
@@ -599,7 +599,7 @@ class PostgreSQLComponent implements Storage {
                 if (loadDoc) {
                     return new Location(doc).withResponseCode(303)
                 } else {
-                    return new Location().withURI(doc.getURI()).withResponseCode(303)
+                    return new Location().withId(doc.id).withURI(doc.getURI()).withResponseCode(303)
                 }
             }
         }

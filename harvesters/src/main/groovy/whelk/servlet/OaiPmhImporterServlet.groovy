@@ -37,7 +37,6 @@ class OaiPmhImporterServlet extends HttpServlet {
     public OaiPmhImporterServlet() {
         log.info("Starting oaipmhimporter.")
 
-
         props = PropertyLoader.loadProperties("secret", "oaipmh")
 
         pico = Whelk.getPreparedComponentsContainer(props)
@@ -178,14 +177,14 @@ class ScheduledJob implements Runnable {
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
 
     String collection
-    OaiPmhHarvester importer
+    OaiPmhHarvester harvester
     PostgreSQLComponent storage
     Map whelkState = null
     boolean active = true
     final static long WEEK_MILLIS = 604800000
 
     ScheduledJob(OaiPmhHarvester imp, String ds, PostgreSQLComponent pg) {
-        this.importer = imp
+        this.harvester = imp
         this.collection = ds
         this.storage = pg
         assert storage
@@ -257,17 +256,18 @@ class ScheduledJob implements Runnable {
                     log.warn("Since is slipping ... Is now ${nextSince}. Resetting to now()")
                     nextSince = new Date()
                 }
-                log.debug("Executing OAIPMH import for $collection since $nextSince from ${importer.serviceUrl}")
+                log.debug("Executing OAIPMH import for $collection since $nextSince from ${harvester.serviceUrl}")
                 whelkState.put("status", "RUNNING")
 
                 storage.saveSettings(collection, whelkState)
-                def result = importer.doImport(collection, null, -1, true, true, nextSince)
+                //def result = harvester.doImport(collection, null, -1, true, true, nextSince)
+                def result = harvester.harvest(serviceUrl, username, password, "ListRecords", "marcxml", nextSince)
                 log.trace("Import completed, result: $result")
 
-                if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
-                    log.debug("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
+                if (result.numberOfDocuments > 0 || result.numberOfDocumentsDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
+                    log.debug("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDocumentsDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
                     whelkState.put("lastImportNrImported", result.numberOfDocuments)
-                    whelkState.put("lastImportNrDeleted", result.numberOfDeleted)
+                    whelkState.put("lastImportNrDeleted", result.numberOfDocumentsDeleted)
                     whelkState.put("lastImportNrSkipped", result.numberOfDocumentsSkipped)
                     whelkState.put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
 

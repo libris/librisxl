@@ -33,7 +33,7 @@ class MySQLImporter extends Importer {
     Semaphore tickets
 
     int addBatchSize = 2000
-    int poolSize = 100
+    int poolSize = 40
 
     int recordCount
     long startTime

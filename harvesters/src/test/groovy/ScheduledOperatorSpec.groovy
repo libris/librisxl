@@ -22,7 +22,7 @@ class ScheduledOperatorSpec extends Specification {
         importer.doImport(_, _, _, _, _, _) >>> imports.collect {
             new HarvestResult(
                 numberOfDocuments: it? 1 : 0,
-                numberOfDeleted: 0,
+                numberOfDocumentsDeleted: 0,
                 lastRecordDatestamp:
                     it? Date.parse(ScheduledJob.DATE_FORMAT, it) : null)
         }
