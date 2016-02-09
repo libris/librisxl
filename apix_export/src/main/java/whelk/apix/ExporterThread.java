@@ -48,10 +48,15 @@ public class ExporterThread extends Thread
         while( !stopAtOpportunity.get() )
         {
             //System.out.println("wtf, " + i);
-            if ( i < 3 )
+            if ( i < 2000 )
             {
                 ++i;
                 ui.outputText("Pseudo call: " + apixProperties.getProperty("apixUrl") + " " + i);
+
+                try {
+                    sleep(100);
+                }catch (InterruptedException e) {}
+
             }
         }
 

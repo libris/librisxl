@@ -2,10 +2,13 @@ package whelk.apix;
 
 import whelk.util.PropertyLoader;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Properties;
 
 public class ServletUI extends HttpServlet implements UI
@@ -16,9 +19,23 @@ public class ServletUI extends HttpServlet implements UI
     String[] m_pseudoConsole = new String[PSEUDO_CONSOLE_LINES];
     int m_pseudoConsoleNext = 0;
 
-    public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
+    public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException
     {
-        res.getOutputStream().print( getPseudoConsole() );
+        String path = req.getPathInfo();
+        if (path == null)
+        {
+            res.sendError(404);
+            return;
+        }
+
+        switch (path)
+        {
+            case "/console":
+                res.getOutputStream().print( getPseudoConsole() );
+                break;
+            default:
+                res.sendError(404);
+        }
     }
 
     public void init()
@@ -41,7 +58,8 @@ public class ServletUI extends HttpServlet implements UI
 
     public void outputText(String text)
     {
-        m_pseudoConsole[m_pseudoConsoleNext++] = text;
+        ZonedDateTime utc = ZonedDateTime.now(ZoneOffset.UTC);
+        m_pseudoConsole[m_pseudoConsoleNext++] = utc.toString() + ":&nbsp;&nbsp;" + text;
         if (m_pseudoConsoleNext > PSEUDO_CONSOLE_LINES-1)
             m_pseudoConsoleNext = 0;
     }
@@ -64,7 +82,7 @@ public class ServletUI extends HttpServlet implements UI
                 break;
 
             output.append(m_pseudoConsole[next]);
-            output.append("\n");
+            output.append("<br/>");
         }
 
         return  output.toString();
