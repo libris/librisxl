@@ -12,6 +12,7 @@ import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
 import whelk.util.Tools
 
+import java.sql.SQLRecoverableException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -41,13 +42,23 @@ class ImporterMain {
     }
 
     void goMysql(String collection) {
-        def importer = pico.getComponent(MySQLImporter.class)
-        //importer.storageOnly = true
-        importer.run(collection)
-        //println("Starting LinkFinder for collection $collection")
-        //goLinkFind(collection)
-        //println("Starting reindexing for collection $collection")
-        //goReindex(collection)
+
+        boolean importComplete = false;
+        int startAtId = 0;
+
+        while (!importComplete)
+        {
+            importComplete = true;
+            def importer = pico.getComponent(MySQLImporter.class)
+            importer.m_startAtId = startAtId;
+            try {
+                importer.run(collection)
+            }catch (SQLRecoverableException sre) {
+                startAtId = importer.m_failedAtId;
+                importComplete = false;
+            }
+        }
+
     }
 
     void goReindex(String collection) {
