@@ -43,22 +43,22 @@ class OaiPmhHarvester {
         marcFrameConverter = mfc
     }
 
-    HarvestResult harvest(String serviceUrl, String verb, String metadataPrefix, Date from = null, Date until = null) {
+    synchronized HarvestResult harvest(String serviceUrl, String verb, String metadataPrefix, Date from = null, Date until = null) {
         harvest(serviceUrl, null, null, verb, metadataPrefix, from, until)
     }
 
-    HarvestResult harvest(String serviceURL, String username, String password, String verb, String metadataPrefix, Date from = null, Date until = null) {
-        authenticate(username, password)
+    synchronized HarvestResult harvest(String serviceURL, String username, String password, String verb, String metadataPrefix, Date from = null, Date until = null) {
         HarvestResult harvestResult = new HarvestResult(from, until)
+        authenticate(username, password)
         boolean harvesting = true
 
-        URL url = constructRequestUrl(serviceURL, verb, metadataPrefix, null, from, until)
-        println("From is $from")
+        URL url = constructRequestUrl(serviceURL, verb, metadataPrefix, null, harvestResult.fromDate, harvestResult.untilDate)
 
         try {
             while (harvesting) {
                 harvestResult = readUrl(url, harvestResult)
                 if (harvestResult.resumptionToken) {
+                    log.debug("Found resumption token ${harvestResult.resumptionToken}")
                     url = constructRequestUrl(serviceURL, verb, metadataPrefix, harvestResult.resumptionToken)
                     // reset resumption token
                     harvestResult.resumptionToken = null
@@ -67,14 +67,16 @@ class OaiPmhHarvester {
                 }
             }
         } catch (RecordFromThePastException rftpe) {
-            log.error("Record ${rftpe.badRecord.identifier} has datestamp (${rftpe.badRecord.datestamp}) before requested (${from})")
+            log.warn("Record ${rftpe.badRecord.identifier} has datestamp (${rftpe.badRecord.datestamp}) before requested (${harvestResult.fromDate}). URL used to retrieve results: ${url.toString()}")
         } catch (RecordFromTheFutureException rftfe) {
-            log.error("Record ${rftfe.badRecord.identifier} has datestamp (${rftfe.badRecord.datestamp}) after requested (${until})")
+            log.warn("Record ${rftfe.badRecord.identifier} has datestamp (${rftfe.badRecord.datestamp}) after requested (${harvestResult.untilDate}).")
         } catch (BrokenRecordException bre) {
             log.error(bre.message)
         } catch (IOException ioe) {
             log.error("Failed to read from URL $url")
             // TODO: Add proper error handling
+        } catch (Exception e) {
+            log.error("Some other error: ${e.message}", e)
         }
         return harvestResult
     }
@@ -85,7 +87,7 @@ class OaiPmhHarvester {
             queryString.append("&resumptionToken=" + URLEncoder.encode(resumptionToken, "UTF-8"))
         } else {
             queryString.append("&metadataPrefix=" + URLEncoder.encode(metadataPrefix, "UTF-8"))
-            if (from) {
+            if (from && from.getTime() > 0) {
                 queryString.append("&from=" + from.format(DATE_FORMAT, TimeZone.getTimeZone('UTC')))
             }
             if (until) {
@@ -94,6 +96,7 @@ class OaiPmhHarvester {
         }
 
         URL url = new URL(baseUrl + queryString.toString())
+        log.debug("Constructed URL: ${url.toString()}")
 
         return url
     }
@@ -101,17 +104,31 @@ class OaiPmhHarvester {
     HarvestResult readUrl(URL url, HarvestResult hdata) {
         log.debug("Starting harvest. Last record datestamp: ${hdata.lastRecordDatestamp}")
         List<Document> documentList = new ArrayList<Document>()
-        XMLStreamReader streamReader = XMLInputFactory.newInstance().createXMLStreamReader(url.openStream())
-        while (streamReader.hasNext()) {
-            if (streamReader.isStartElement() && streamReader.localName == "record") {
-                OaiPmhRecord record = readRecord(streamReader)
-                documentList = addRecord(record, hdata, documentList)
+        InputStream xmlInputStream
+        XMLStreamReader streamReader
+        try {
+            xmlInputStream = url.openStream()
+            streamReader = XMLInputFactory.newInstance().createXMLStreamReader(xmlInputStream)
+            while (streamReader.hasNext()) {
+                if (streamReader.isStartElement() && streamReader.localName == "record") {
+                    OaiPmhRecord record = readRecord(streamReader)
+                    documentList = addRecord(record, hdata, documentList)
+                }
+                if (streamReader.hasNext()) {
+                    streamReader.next()
+                }
+                if (streamReader.isStartElement() && streamReader.localName == "resumptionToken") {
+                    hdata.resumptionToken = streamReader.elementText
+                }
             }
-            if (streamReader.hasNext()) {
-                streamReader.next()
-            }
-            if (streamReader.isStartElement() && streamReader.localName == "resumptionToken") {
-                hdata.resumptionToken = streamReader.elementText
+        } finally {
+            log.trace("Closing streams")
+            try {
+                streamReader.close()
+                xmlInputStream.close()
+                log.trace("Streams successfully closed.")
+            } catch (NullPointerException npe) {
+                log.trace("Got npe on closing.")
             }
         }
         // Store remaining documents
@@ -169,12 +186,12 @@ class OaiPmhHarvester {
     List<Document> addRecord(OaiPmhRecord record, HarvestResult hdata, List<Document> docs) {
 
         // Sanity check dates
-        log.debug("Record date: ${record.datestamp}. Last record date: ${hdata.lastRecordDatestamp}")
+        log.trace("Record date: ${record.datestamp}. Last record date: ${hdata.lastRecordDatestamp}")
         if (hdata.fromDate && record.datestamp.before(hdata.fromDate)) {
-            println("hdata fromdate: ${hdata.fromDate} record datestamp: ${record.datestamp}")
+            log.error("I think ${record.savedDateString} is from the past.")
             throw new RecordFromThePastException(record)
         }
-        if (record.datestamp.after(hdata.untilDate ?: new Date())) {
+        if (hdata.untilDate && record.datestamp.after(hdata.untilDate)) {
             throw new RecordFromTheFutureException(record)
         }
 
@@ -221,6 +238,9 @@ class OaiPmhHarvester {
 
     Document createDocument(OaiPmhRecord oaiPmhRecord) {
         Document doc
+        if (oaiPmhRecord.record == null) {
+            return null
+        }
         if (oaiPmhRecord.format == Format.MARC) {
             MarcRecord marcRecord = MarcXmlRecordReader.fromXml(oaiPmhRecord.record)
             String collection = MARCTYPE_COLLECTION[marcRecord.type]
@@ -248,15 +268,15 @@ class OaiPmhHarvester {
                     }
                 }
                 if (originalIdentifier) {
-                    log.info("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating manifest.")
+                    log.debug("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating manifest.")
                     manifest.put(Document.ID_KEY, originalIdentifier)
                     long marcRecordModified = getMarcRecordModificationTime(marcRecord)?.getTime()
-                    log.info("record timestamp: $marcRecordModified")
-                    log.info("    xl timestamp: $originalModified")
+                    log.debug("record timestamp: $marcRecordModified")
+                    log.debug("    xl timestamp: $originalModified")
                     long diff = (marcRecordModified - originalModified) / 1000
-                    log.info("update time difference: $diff secs.")
+                    log.debug("update time difference: $diff secs.")
                     if (diff < 30) {
-                        log.info("Record probably not edited in Voyager. Skipping ...")
+                        log.debug("Record probably not edited in Voyager. Skipping ...")
                         return null
                     }
                 }
@@ -284,7 +304,7 @@ class OaiPmhHarvester {
         } else {
             // TODO: Make JSONLD document from RDF/XML
         }
-        log.debug("Created document with ID ${doc.id}")
+        log.trace("Created document with ID ${doc.id}")
         return doc
     }
 
@@ -314,9 +334,9 @@ class OaiPmhHarvester {
 
     protected void authenticate(String username, String password) {
         if (username && password) {
-            log.debug("Setting username (${username}) and password (${password})")
+            log.trace("Setting username (${username}) and password (${password})")
         } else {
-            log.debug("Not setting username/password")
+            log.trace("Not setting username/password")
         }
         try {
             Authenticator.setDefault(new Authenticator() {
@@ -334,16 +354,21 @@ class OaiPmhHarvester {
     class OaiPmhRecord {
         String record
         String identifier
-        Date datestamp
+        private Date datestamp
+        String savedDateString = null
 
         Format format = Format.MARC
 
         List<String> setSpecs = new ArrayList<String>()
         boolean deleted = false
 
+        public Date getDatestamp() {
+            return new Date(datestamp.getTime())
+        }
+
         void setDatestamp(String dateString) {
+            savedDateString = dateString
             datestamp = Date.parse(DATE_FORMAT, dateString)
-            println("Setting datestamp: $datestamp from datestring $dateString")
         }
 
         void setFormat(String xmlNameSpace) {

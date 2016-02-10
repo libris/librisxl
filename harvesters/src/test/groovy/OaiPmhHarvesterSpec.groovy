@@ -73,6 +73,8 @@ class OaiPmhHarvesterSpec extends Specification {
         result.numberOfDocuments == 2
         result.numberOfDocumentsDeleted == 0
         result.lastRecordDatestamp == date("2002-02-02T00:00:00Z")
+        new URL(whelk.documents.get(0).manifest.get(Document.ALTERNATE_ID_KEY).first()).getPath() == "/auth/1"
+        new URL(whelk.documents.get(1).manifest.get(Document.ALTERNATE_ID_KEY).first()).getPath() == "/auth/2"
     }
 
     def "should follow resumptionToken even from empty page"() {

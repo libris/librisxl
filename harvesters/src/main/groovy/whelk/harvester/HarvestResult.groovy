@@ -8,12 +8,12 @@ class HarvestResult {
     Date fromDate
     Date untilDate
     // Result values
-    int numberOfDocuments
-    int numberOfDocumentsDeleted
-    int numberOfDocumentsSkipped
+    int numberOfDocuments = 0
+    int numberOfDocumentsDeleted = 0
+    int numberOfDocumentsSkipped = 0
     // in-flight data
-    String resumptionToken
-    Date lastRecordDatestamp
+    String resumptionToken = null
+    private Date lastRecordDatestamp
 
     HarvestResult() {
         setFromDate(null)
@@ -24,7 +24,17 @@ class HarvestResult {
     }
     HarvestResult(Date from, Date until) {
         setFromDate(from)
-        untilDate = until
+        if (until != null) {
+            untilDate = new Date(until.getTime())
+        }
+    }
+
+    Date getLastRecordDatestamp() {
+        return new Date(lastRecordDatestamp.getTime())
+    }
+
+    void setLastRecordDatestamp(Date lrds) {
+        this.lastRecordDatestamp = new Date(lrds.getTime())
     }
 
     /**
