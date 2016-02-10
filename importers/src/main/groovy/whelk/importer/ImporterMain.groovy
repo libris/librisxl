@@ -50,11 +50,11 @@ class ImporterMain {
         {
             importComplete = true;
             def importer = pico.getComponent(MySQLImporter.class)
-            ((MySQLImporter) importer).m_startAtId = startAtId
+            importer.m_startAtId = startAtId;
             try {
                 importer.run(collection)
             }catch (SQLRecoverableException sre) {
-                startAtId = ((MySQLImporter) importer).m_failedAtId;
+                startAtId = importer.m_failedAtId;
                 importComplete = false;
             }
         }
