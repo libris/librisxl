@@ -230,9 +230,11 @@ class ScheduledJob implements Runnable {
 
     void toggleActive() {
         active = !active
+        if (active) {
+            loadWhelkState().remove("lastError")
+            loadWhelkState().remove("lastErrorDate")
+        }
         loadWhelkState().put("status", (active ? "IDLE" : "STOPPED"))
-        loadWhelkState().remove("lastError")
-        loadWhelkState().remove("lastErrorDate")
         storage.saveSettings(collection, whelkState)
     }
 
