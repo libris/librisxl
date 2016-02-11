@@ -131,7 +131,7 @@ class ElasticSearch implements Index {
                             }
                         }
                         bulk.add(new IndexRequest(getIndexName(), (doc.collection ?: defaultType), toElasticId(doc.id)).source(doc.data))
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         log.error("Failed to create indexrequest for document ${doc.id}. Reason: ${e.message}")
                     }
                 } else {
