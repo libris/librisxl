@@ -124,6 +124,10 @@ class PostgresLoadfileWriter
             addOaipmhSetSpecs(documentMap, m_resultSet);
         }
 
+        // Don't forget about the last document being constructed. Must be written as well.
+        if (!new HashMap().equals(documentMap))
+            appendToLoadFile(documentMap)
+
         cleanup();
     }
 
