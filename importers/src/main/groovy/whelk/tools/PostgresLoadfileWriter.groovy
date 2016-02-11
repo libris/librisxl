@@ -32,7 +32,8 @@ class PostgresLoadfileWriter
     private final PreparedStatement m_statement;
     private final ResultSet m_resultSet;
     private final MarcFrameConverter m_marcFrameConverter;
-    private final BufferedWriter m_writer;
+    private final BufferedWriter m_mainTableWriter;
+    private final BufferedWriter m_identifiersWriter;
 
     public PostgresLoadfileWriter(String exportFileName, String collection)
     {
@@ -62,7 +63,8 @@ class PostgresLoadfileWriter
         m_exportFileName = exportFileName;
         m_collection = collection;
         m_marcFrameConverter = new MarcFrameConverter();
-        m_writer = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
+        m_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
+        m_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName+"_identifiers"), Charset.forName("UTF-8"));
     }
 
     public void writePostgresLoadFile()
@@ -147,10 +149,6 @@ class PostgresLoadfileWriter
 
     private void appendToLoadFile(HashMap documentMap)
     {
-        //doc.findIdentifiers() // expensive?
-        //saveIdentifiers(doc, connection) // expensive?
-        // handle lddb__identifiers!
-
         Document doc = new Document(MarcJSONConverter.toJSONMap(documentMap.record), documentMap.manifest)
 
         /* columns:
@@ -165,28 +163,53 @@ class PostgresLoadfileWriter
         final char delimiter = '\t';
         final String nullString = "\\N";
 
-        m_writer.write(doc.getId());
-        m_writer.write(delimiter);
-        m_writer.write(doc.getDataAsString());
-        m_writer.write(delimiter);
-        m_writer.write(doc.getManifestAsJson());
-        m_writer.write(delimiter);
+        // Write to main table file
+
+        m_mainTableWriter.write(doc.getId());
+        m_mainTableWriter.write(delimiter);
+        m_mainTableWriter.write(doc.getDataAsString());
+        m_mainTableWriter.write(delimiter);
+        m_mainTableWriter.write(doc.getManifestAsJson());
+        m_mainTableWriter.write(delimiter);
         String quoted = doc.getQuotedAsString();
         if (quoted)
-            m_writer.write(quoted);
+            m_mainTableWriter.write(quoted);
         else
-            m_writer.write(nullString);
-        m_writer.write(delimiter);
+            m_mainTableWriter.write(nullString);
+        m_mainTableWriter.write(delimiter);
 
         // remaining values have defaults.
 
-        m_writer.newLine();
+        m_mainTableWriter.newLine();
+
+        // Write to identifiers table file
+
+        doc.findIdentifiers()
+        List<String> identifiers = doc.getIdentifiers();
+
+        /* columns:
+        id text not null,
+        identifier text not null -- unique
+        */
+
+        for (String identifier : identifiers)
+        {
+            m_identifiersWriter.write(doc.getId());
+            m_identifiersWriter.write(delimiter);
+            m_identifiersWriter.write(identifier);
+            m_identifiersWriter.write(delimiter);
+
+            m_identifiersWriter.newLine();
+        }
     }
 
     private void cleanup()
     {
-        m_writer.write("\\."); // Write end of data marker
-        m_writer.close();
+        m_identifiersWriter.write("\\."); // Write end of data marker
+        m_identifiersWriter.close();
+
+        m_mainTableWriter.write("\\."); // Write end of data marker
+        m_mainTableWriter.close();
 
         m_resultSet.close();
         m_statement.close();
