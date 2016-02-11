@@ -99,6 +99,8 @@ task(doRun, dependsOn: "classes", type: JavaExec) {
         'xl.secret.properties': System.getProperty("xl.secret.properties"),
         'xl.mysql.properties': System.getProperty("xl.mysql.properties")
     ] )
+    minHeapSize = "1g"
+    maxHeapSize = "4g"
     args(System.getProperty("args", "").split() as String[])
 }
 
