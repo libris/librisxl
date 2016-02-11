@@ -70,13 +70,15 @@ class OaiPmhHarvester {
             log.warn("Record ${rftpe.badRecord.identifier} has datestamp (${rftpe.badRecord.datestamp}) before requested (${harvestResult.fromDate}). URL used to retrieve results: ${url.toString()}")
         } catch (RecordFromTheFutureException rftfe) {
             log.warn("Record ${rftfe.badRecord.identifier} has datestamp (${rftfe.badRecord.datestamp}) after requested (${harvestResult.untilDate}).")
-        } catch (BrokenRecordException bre) {
-            log.error(bre.message)
         } catch (IOException ioe) {
             log.error("Failed to read from URL $url")
-            // TODO: Add proper error handling
+            throw ioe
+        } catch (BrokenRecordException bre) {
+            log.error(bre.message)
+            throw bre
         } catch (Exception e) {
             log.error("Some other error: ${e.message}", e)
+            throw e
         }
         return harvestResult
     }

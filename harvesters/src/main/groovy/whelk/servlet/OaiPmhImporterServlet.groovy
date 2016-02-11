@@ -9,8 +9,10 @@ import whelk.component.PostgreSQLComponent
 import whelk.component.Storage
 import whelk.converter.marc.MarcFrameConverter
 import whelk.harvester.CullingOaiPmhHarvester
+import whelk.harvester.HarvestResult
 import whelk.harvester.LibrisOaiPmhHarvester
 import whelk.harvester.OaiPmhHarvester
+import whelk.harvester.OaiPmhHarvester.BrokenRecordException
 import whelk.util.PropertyLoader
 
 import javax.servlet.http.HttpServlet
@@ -222,11 +224,15 @@ class ScheduledJob implements Runnable {
         this.password = pword
         assert storage
         assert collection
+        loadWhelkState().remove("lastError")
+        loadWhelkState().remove("lastErrorDate")
     }
 
     void toggleActive() {
         active = !active
         loadWhelkState().put("status", (active ? "IDLE" : "STOPPED"))
+        loadWhelkState().remove("lastError")
+        loadWhelkState().remove("lastErrorDate")
         storage.saveSettings(collection, whelkState)
     }
 
@@ -284,7 +290,6 @@ class ScheduledJob implements Runnable {
                     currentSince = nextSince
                     log.info("Importer has no state for last import from $collection. Setting last week (${nextSince})")
                 }
-                //nextSince = new Date(0) //sneeking past next date
                 if (nextSince.after(new Date())) {
                     log.warn("Since is slipping ... Is now ${nextSince}. Resetting to one second ago.")
                     nextSince = new Date(new Date().getTime() - 1000)
@@ -294,10 +299,9 @@ class ScheduledJob implements Runnable {
 
                 storage.saveSettings(collection, whelkState)
                 //def result = harvester.doImport(collection, null, -1, true, true, nextSince)
-                def result = harvester.harvest(serviceUrl, username, password, "ListRecords", "marcxml", nextSince)
+                HarvestResult result = harvester.harvest(serviceUrl, username, password, "ListRecords", "marcxml", nextSince)
                 log.trace("Import completed, result: $result")
-
-                if (result.numberOfDocuments > 0 || result.numberOfDocumentsDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
+                if (result && (result.numberOfDocuments > 0 || result.numberOfDocumentsDeleted > 0 || result.numberOfDocumentsSkipped > 0)) {
                     log.debug("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDocumentsDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
                     whelkState.put("lastImportNrImported", result.numberOfDocuments)
                     whelkState.put("lastImportNrDeleted", result.numberOfDocumentsDeleted)
@@ -311,6 +315,13 @@ class ScheduledJob implements Runnable {
                 whelkState.put("status", "IDLE")
                 whelkState.put("lastRunNrImported", result.numberOfDocuments)
                 whelkState.put("lastRun", new Date().format(DATE_FORMAT))
+            } catch (BrokenRecordException bre) {
+                whelkState.get("badRecords", []).add(bre.brokenId)
+                whelkState.put("status", "ERROR")
+            } catch (IOException ioe) {
+                whelkState.put("lastError", new String("Failed to connect to ${serviceUrl.toString()}. Reason: ${ioe.message} (${ioe.getClass().getName()})"))
+                whelkState.put("lastErrorDate", new Date().toString())
+                whelkState.put("status", "ERROR")
             } catch (Exception e) {
                 log.error("Something failed: ${e.message}", e)
             } finally {
