@@ -9,7 +9,6 @@ import whelk.importer.MySQLImporter
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 import groovy.util.logging.Slf4j as Log
-import whelk.util.Tools
 
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -186,7 +185,9 @@ class PostgresLoadfileWriter
 
     private void cleanup()
     {
+        m_writer.write("\\."); // Write end of data marker
         m_writer.close();
+
         m_resultSet.close();
         m_statement.close();
         m_connection.close();
