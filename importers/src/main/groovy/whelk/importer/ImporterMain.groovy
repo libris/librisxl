@@ -9,6 +9,7 @@ import whelk.converter.marc.MarcFrameConverter
 import groovy.util.logging.Slf4j as Log
 import whelk.filter.LinkFinder
 import whelk.reindexer.ElasticReindexer
+import whelk.tools.PostgresLoadfileWriter
 import whelk.util.PropertyLoader
 import whelk.util.Tools
 
@@ -59,6 +60,11 @@ class ImporterMain {
             }
         }
 
+    }
+
+    void goMysqlDump(String toFileName, String collection) {
+        PostgresLoadfileWriter writer = new PostgresLoadfileWriter(toFileName, collection);
+        writer.writePostgresLoadFile()
     }
 
     void goReindex(String collection) {
@@ -119,6 +125,9 @@ class ImporterMain {
         } else if (args[0] == "defs") {
             def main = new ImporterMain("secret")
             main.goDefs(args[1])
+        } else if (args[0] == "vcopydump") {
+            def main = new ImporterMain("mysql")
+            main.goMysqlDump(args[1], args[2])
         } else if (args[0] == "reindex") {
             def main = new ImporterMain("secret")
             String collection = null

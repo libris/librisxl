@@ -299,7 +299,7 @@ class MySQLImporter extends Importer {
         }
     }
 
-    String normalizeString(String inString) {
+    public static String normalizeString(String inString) {
         if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
             log.trace("Normalizing ...")
             return Normalizer.normalize(inString, Normalizer.Form.NFC)
