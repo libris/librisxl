@@ -17,28 +17,12 @@
     <logger name="org.elasticsearch">
       <level value="warn"/>
    </logger>
-  <logger name="org.apache.camel">
-      <level value="info"/>
-  </logger>
-  <logger name="org.apache.jena.fuseki">
-      <level value="warn"/>
-  </logger>
-  <logger name="org.apache.camel.component.http4">
-      <level value="warn"/>
-  </logger>
-  <logger name="org.apache.camel.component.elasticsearch">
-      <level value="warn"/>
-  </logger>
-  <logger name="org.apache.activemq.camel.component">
-      <level value="info"/>
-  </logger>
-  <logger name="org.apache.activemq">
-      <level value="warn"/>
-  </logger>
- <logger name="whelk.component.PostgreSQLComponent" level="info"/>
- <logger name="whelk.component.ElasticSearch" level="info"/>
-    <logger name="whelk.servlet.OaiPmhImporterServlet" level="info"/>
- <logger name="whelk.importer.OaiPmhImporter" level="info"/>
+
+  <logger name="whelk.servlet.ScheduledJob" level="info"/>
+  <logger name="whelk.component.PostgreSQLComponent" level="info"/>
+  <logger name="whelk.component.ElasticSearch" level="info"/>
+  <logger name="whelk.servlet.OaiPmhImporterServlet" level="info"/>
+  <logger name="whelk.harvester.LibrisOaiPmhHarvester" level="debug"/>
 
   <root level="info">
     <appender-ref ref="STDOUT" />

@@ -117,31 +117,33 @@ class ElasticSearch implements Index {
 
     @Override
     public void bulkIndex(List<Document> docs) {
-        BulkRequest bulk = new BulkRequest()
-        for (doc in docs) {
-            if (doc.isJson()) {
-                try {
-                    if (doc.isJsonLd()) {
-                        log.debug("Framing ${doc.id}")
-                        doc.data = JsonLd.frame(doc.id, doc.data)
-                        log.trace("Framed data: ${doc.data}")
-                        if (expander) {
-                            doc = expander.filter(doc)
+        if (docs) {
+            BulkRequest bulk = new BulkRequest()
+            for (doc in docs) {
+                if (doc.isJson()) {
+                    try {
+                        if (doc.isJsonLd()) {
+                            log.debug("Framing ${doc.id}")
+                            doc.data = JsonLd.frame(doc.id, doc.data)
+                            log.trace("Framed data: ${doc.data}")
+                            if (expander) {
+                                doc = expander.filter(doc)
+                            }
                         }
+                        bulk.add(new IndexRequest(getIndexName(), (doc.collection ?: defaultType), toElasticId(doc.id)).source(doc.data))
+                    } catch (Throwable e) {
+                        log.error("Failed to create indexrequest for document ${doc.id}. Reason: ${e.message}")
                     }
-                    bulk.add(new IndexRequest(getIndexName(), (doc.collection ?: defaultType), toElasticId(doc.id)).source(doc.data))
-                } catch (Exception e) {
-                    log.error("Failed to create indexrequest for document ${doc.id}. Reason: ${e.message}")
+                } else {
+                    log.warn("Document ${doc.id} is not JSON (${doc.contentType}). Will not index.")
                 }
-            } else {
-                log.warn("Document ${doc.id} is not JSON (${doc.contentType}). Will not index.")
             }
-        }
-        BulkResponse response = performExecute(bulk)
-        if (response.hasFailures()) {
-            response.iterator().each {
-                if (it.failed) {
-                    log.error("Indexing of ${it.id} failed: ${it.failureMessage}")
+            BulkResponse response = performExecute(bulk)
+            if (response.hasFailures()) {
+                response.iterator().each {
+                    if (it.failed) {
+                        log.error("Indexing of ${it.id} failed: ${it.failureMessage}")
+                    }
                 }
             }
         }

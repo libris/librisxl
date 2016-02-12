@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j as Log
 @Log
 class Location {
 
+    String id
     Document document
     URI uri
 
@@ -14,10 +15,16 @@ class Location {
 
     Location(Document doc) {
         this.document = doc
+        this.id = doc.id
     }
 
     Location withResponseCode(int code) {
         responseCode = code
+        return this
+    }
+
+    Location withId(String id) {
+        this.id = id
         return this
     }
 

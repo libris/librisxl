@@ -1,10 +1,10 @@
 package whelk.plugin
 
 import whelk.Whelk
-import whelk.importer.ImportResult
+import whelk.harvester.HarvestResult
+import whelk.harvester.OaiPmhHarvester
 
 import spock.lang.Specification
-import whelk.importer.OaiPmhImporter
 import whelk.servlet.ScheduledJob
 
 
@@ -17,12 +17,12 @@ class ScheduledOperatorSpec extends Specification {
 
         and:
         def imports = ["2001-01-01T00:00:00Z", null, "2002-02-02T00:00:00Z"]
-        def importer = GroovyMock(OaiPmhImporter)
+        def importer = GroovyMock(OaiPmhHarvester)
         importer.serviceUrl >> "http://example.org/service"
         importer.doImport(_, _, _, _, _, _) >>> imports.collect {
-            new ImportResult(
+            new HarvestResult(
                 numberOfDocuments: it? 1 : 0,
-                numberOfDeleted: 0,
+                numberOfDocumentsDeleted: 0,
                 lastRecordDatestamp:
                     it? Date.parse(ScheduledJob.DATE_FORMAT, it) : null)
         }

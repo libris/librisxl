@@ -1,12 +1,18 @@
-package whelk.importer
+package whelk.harvester
 
+import whelk.Document
+import whelk.Location
 import whelk.Whelk
 
 import spock.lang.Specification
 import groovy.util.logging.Slf4j as Log
+import whelk.component.PostgreSQLComponent
+import whelk.component.Storage
+import whelk.component.StorageType
+import whelk.converter.marc.MarcFrameConverter
 
 @Log
-class OaiPmhImporterSpec extends Specification {
+class OaiPmhHarvesterSpec extends Specification {
 
     static BASE = "http://example.org/service"
 
@@ -16,28 +22,39 @@ class OaiPmhImporterSpec extends Specification {
         URL.metaClass.getText = {
             currentPageSet[delegate.toString()]
         }
+        URL.metaClass.openStream = {
+            new ByteArrayInputStream( currentPageSet[delegate.toString()].getBytes("UTF-8") )
+        }
     }
 
     static date(dateStr) {
-        Date.parse(OaiPmhImporter.DATE_FORMAT, dateStr)
+        Date.parse(OaiPmhHarvester.DATE_FORMAT, dateStr)
     }
 
     def importer
     def whelk
 
     def setup() {
+        Storage storage = GroovyMock(Storage.class)
         whelk = new Whelk() {
             @Override
             void bulkStore(List document) {
-                documents = document
+                documents += document
             }
             @Override
             void remove(String id) {
             }
+            Storage getStorage() {
+                return new PostgreSQLComponent() {
+                    Location locate(String id) {
+                        return new Location().withId(id)
+                    }
+                }
+            }
 
-            def documents
+            def documents = []
         }
-        importer = new OaiPmhImporter(whelk, null, BASE, null, null) {
+        importer = new LibrisOaiPmhHarvester(whelk, new MarcFrameConverter()) {
             def documents = []
             void addDocuments(final List documents) {
                 this.documents += documents
@@ -50,19 +67,21 @@ class OaiPmhImporterSpec extends Specification {
         given:
         currentPageSet = okPageSet
         when:
-        def result = importer.doImport("collection")
+        def result = importer.harvest(BASE, "ListRecords", "marcxml")
         then:
-        importer.documents.size() == 2
+        whelk.documents.size() == 2
         result.numberOfDocuments == 2
-        result.numberOfDeleted == 0
+        result.numberOfDocumentsDeleted == 0
         result.lastRecordDatestamp == date("2002-02-02T00:00:00Z")
+        new URL(whelk.documents.get(0).manifest.get(Document.ALTERNATE_ID_KEY).first()).getPath() == "/auth/1"
+        new URL(whelk.documents.get(1).manifest.get(Document.ALTERNATE_ID_KEY).first()).getPath() == "/auth/2"
     }
 
     def "should follow resumptionToken even from empty page"() {
         given:
         currentPageSet = emptyFirstPagePageSet
         when:
-        def result = importer.doImport("collection")
+        def result = importer.harvest(BASE, "ListRecords", "marcxml")
         then:
         result.numberOfDocuments == 1
         result.lastRecordDatestamp == date("2002-02-02T00:00:00Z")
@@ -72,7 +91,7 @@ class OaiPmhImporterSpec extends Specification {
         given:
         currentPageSet = brokenPageSet
         when:
-        def result = importer.doImport("collection")
+        def result = importer.harvest(BASE, "ListRecords", "marcxml")
         then:
         result.lastRecordDatestamp == date("2002-02-02T00:00:00Z")
     }
@@ -81,22 +100,21 @@ class OaiPmhImporterSpec extends Specification {
         given:
         currentPageSet = selfOriginPageSet
         when:
-        def result = importer.doImport("collection")
+        def result = importer.harvest(BASE, "ListRecords", "marcxml")
         then:
         result.numberOfDocuments == 0
         result.numberOfDocumentsSkipped == 1
         result.lastRecordDatestamp == date("2007-01-01T00:00:00Z")
     }
 
-    def "should put suppressed records in specified collection"() {
+    def "should disregard suppressed records"() {
         given:
         currentPageSet = suppressedPageSet
         when:
-        def result = importer.doImport("collection")
+        def result = importer.harvest(BASE, "ListRecords", "marcxml")
         then:
-        result.numberOfDocuments == 1
-        result.numberOfDocumentsSkipped == 0
-        whelk.documents.first().collection.startsWith(OaiPmhImporter.EPLIKT_DATASET_PREFIX)
+        result.numberOfDocuments == 0
+        result.numberOfDocumentsSkipped == 1
         result.lastRecordDatestamp == date("2015-05-28T12:43:00Z")
     }
 
@@ -104,10 +122,10 @@ class OaiPmhImporterSpec extends Specification {
         given:
         currentPageSet = badDateOrderPageSet
         when: "one is correct"
-        def result = importer.doImport("collection", null, -1, false, true, date("2015-05-29T00:00:00Z"))
+        def result = importer.harvest(BASE, "ListRecords", "marcxml", date("2015-05-29T00:00:00Z"))
         then:
         result.numberOfDocuments == 1
-        result.numberOfDeleted == 0
+        result.numberOfDocumentsDeleted == 0
         result.lastRecordDatestamp == date("2015-05-29T08:00:00Z")
     }
 
@@ -116,11 +134,21 @@ class OaiPmhImporterSpec extends Specification {
         badDateOrderPageSet[(BASE+'?verb=ListRecords&metadataPrefix=marcxml&from=2015-05-29T09:00:00Z')] = badDateOrderPageSet[(BASE+'?verb=ListRecords&metadataPrefix=marcxml&from=2015-05-29T00:00:00Z')]
         currentPageSet = badDateOrderPageSet
         when: "none is correct"
-        def result = importer.doImport("collection", null, -1, false, true, date("2015-05-29T09:00:00Z"))
+        def result = importer.harvest(BASE, "ListRecords", "marcxml", date("2015-05-29T09:00:00Z"))
         then:
         result.numberOfDocuments == 0
-        result.numberOfDeleted == 0
+        result.numberOfDocumentsDeleted == 0
         result.lastRecordDatestamp == date("2015-05-29T09:00:00Z")
+    }
+
+    def "should handle delete records"() {
+        given:
+        currentPageSet = deleteRecord
+        when:
+        def result = importer.harvest(BASE, "ListRecords", "marcxml")
+        then:
+        result.numberOfDocuments == 1
+        result.numberOfDocumentsDeleted == 1
     }
 
     static oaiPmhPage(body) {
@@ -152,6 +180,35 @@ class OaiPmhImporterSpec extends Specification {
             <resumptionToken>page-2</resumptionToken>
         """),
         (BASE+'?verb=ListRecords&resumptionToken=page-2'): oaiPmhPage("""
+            <record>
+                <header>
+                    <identifier>http://example.org/item/2</identifier>
+                    <datestamp>2002-02-02T00:00:00Z</datestamp>
+                    <setSpec>license:CC0</setSpec>
+                </header>
+                <metadata>
+                    <record xmlns="http://www.loc.gov/MARC21/slim" type="Authority">
+                    <leader>00986cz  a2200217n  4500</leader>
+                    <controlfield tag="001">2</controlfield>
+                    </record>
+                </metadata>
+            </record>
+        """)
+    ]
+
+    static deleteRecord = [
+            (BASE+'?verb=ListRecords&metadataPrefix=marcxml'): oaiPmhPage("""
+            <record>
+                <header>
+                    <identifier>http://example.org/item/1</identifier>
+                    <datestamp>2001-01-01T00:00:00Z</datestamp>
+                    <setSpec>license:CC0</setSpec>
+                    <status>deleted</status>
+                </header>
+            </record>
+            <resumptionToken>page-2</resumptionToken>
+        """),
+            (BASE+'?verb=ListRecords&resumptionToken=page-2'): oaiPmhPage("""
             <record>
                 <header>
                     <identifier>http://example.org/item/2</identifier>

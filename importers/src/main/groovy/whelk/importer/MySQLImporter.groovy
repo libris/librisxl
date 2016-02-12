@@ -21,6 +21,10 @@ import se.kb.libris.util.marc.io.*
 @Log
 class MySQLImporter extends Importer {
 
+    // Restart information, used ONLY if the import needs to be restarted/resumed after a SQLRecoverableException
+    public m_startAtId = 0 // To be set from outside, to indicate a record id from which to start importing
+    public m_failedAtId = 0 // To be read from outside, the next id in line for importing at time of failure
+
     MarcFrameConverter marcFrameConverter
     JsonLDLinkCompleterFilter enhancer
 
@@ -33,7 +37,7 @@ class MySQLImporter extends Importer {
     Semaphore tickets
 
     int addBatchSize = 2000
-    int poolSize = 100
+    int poolSize = 40
 
     int recordCount
     long startTime
@@ -57,7 +61,7 @@ class MySQLImporter extends Importer {
         connectionUrl = mysqlConnectionUrl
     }
 
-    void doImport(String collection, int nrOfDocs = -1, int startRecordCount = 0, int startAt = 0) {
+    void doImport(String collection, int nrOfDocs = -1, int startRecordCount = 0) {
         recordCount = startRecordCount
         startTime = System.currentTimeMillis()
         cancelled = false
@@ -69,7 +73,7 @@ class MySQLImporter extends Importer {
         tickets = new Semaphore(poolSize)
         queue = Executors.newFixedThreadPool(poolSize)
 
-        int recordId = startAt
+        int recordId = m_startAtId
 
         try {
 
@@ -147,13 +151,20 @@ class MySQLImporter extends Importer {
         } catch (SQLRecoverableException sre) {
             log.error("Failure at $recordId (${sre.message}). Trying to reset and restart ...")
             close(conn, statement, resultSet)
-            doImport(collection, nrOfDocs, recordCount, recordId-1)
+
+            // Remember where to resume
+            if (documentList.size() > 0)
+                m_failedAtId = documentList[0];
+            else
+                m_failedAtId = recordId;
+            throw sre;
+
         } catch(SQLException se) {
             log.error("SQL Exception", se)
         } catch(Exception e) {
             log.error("Exception", e)
         } finally {
-            log.info("Record count: ${recordCount}. Elapsed time: " + (System.currentTimeMillis() - startTime) + " milliseconds for sql results.")
+            log.info("Record count (since last resume): ${recordCount}. Elapsed time: " + (System.currentTimeMillis() - startTime) + " milliseconds for sql results.")
             close(conn, statement, resultSet)
         }
 
@@ -288,7 +299,7 @@ class MySQLImporter extends Importer {
         }
     }
 
-    String normalizeString(String inString) {
+    public static String normalizeString(String inString) {
         if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
             log.trace("Normalizing ...")
             return Normalizer.normalize(inString, Normalizer.Form.NFC)

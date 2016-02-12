@@ -6,8 +6,13 @@ import org.picocontainer.Characteristics
 import org.picocontainer.PicoContainer
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
+import whelk.component.Storage
 import whelk.converter.marc.MarcFrameConverter
-import whelk.importer.OaiPmhImporter
+import whelk.harvester.CullingOaiPmhHarvester
+import whelk.harvester.HarvestResult
+import whelk.harvester.LibrisOaiPmhHarvester
+import whelk.harvester.OaiPmhHarvester
+import whelk.harvester.OaiPmhHarvester.BrokenRecordException
 import whelk.util.PropertyLoader
 
 import javax.servlet.http.HttpServlet
@@ -26,9 +31,12 @@ class OaiPmhImporterServlet extends HttpServlet {
 
     PicoContainer pico
     int scheduleDelaySeconds = 5
-    int scheduleIntervalSeconds = 30
     Properties props = new Properties()
     private Map<String,ScheduledJob> jobs = [:]
+
+    static String SETTINGS_PFX = "harvester:"
+    static String DEFAULT_HARVESTER = "whelk.harvester.OaiPmhHarvester"
+    static int DEFAULT_INTERVAL = 3600
 
     static final ObjectMapper mapper = new ObjectMapper()
 
@@ -36,12 +44,13 @@ class OaiPmhImporterServlet extends HttpServlet {
     public OaiPmhImporterServlet() {
         log.info("Starting oaipmhimporter.")
 
-
         props = PropertyLoader.loadProperties("secret", "oaipmh")
 
         pico = Whelk.getPreparedComponentsContainer(props)
 
-        pico.as(Characteristics.USE_NAMES).addComponent(OaiPmhImporter.class)
+        pico.addComponent(OaiPmhHarvester.class)
+        pico.addComponent(CullingOaiPmhHarvester.class)
+        pico.addComponent(LibrisOaiPmhHarvester.class)
         pico.addComponent(new MarcFrameConverter())
 
         pico.start()
@@ -54,17 +63,24 @@ class OaiPmhImporterServlet extends HttpServlet {
         def storage = pico.getComponent(PostgreSQLComponent)
         String html, json
         if (jobs) {
-            List collections = props.scheduledDatasets.split(",")
+            List services = props.scheduledServices.split(",")
             def state = [:]
             StringBuilder table = new StringBuilder("<table cellspacing=\"10\"><tr><th>&nbsp;</th>")
             table.append("<form method=\"post\">")
 
             Set catSet = new TreeSet<String>()
 
-            for (collection in collections) {
-                state[collection] = storage.loadSettings(collection)
-                catSet.addAll(state[collection].keySet())
-                table.append("<th>$collection</th>")
+            for (service in services) {
+                state[service] = storage.loadSettings(SETTINGS_PFX+service)
+                state[service]["harvesterClass"] = props.getProperty(service + ".harvesterClass", DEFAULT_HARVESTER)
+                state[service]["serviceUrl"] = props.getProperty(service + ".serviceUrl")
+                state[service]["interval"] = props.getProperty(service + ".interval", "" + DEFAULT_INTERVAL)
+                catSet.add("harvesterClass")
+                catSet.add("serviceUrl")
+                catSet.add("interval")
+                catSet.addAll(state[service].keySet())
+                table.append("<th>$service</th>")
+
             }
             table.append("</tr>")
             List categories = catSet.toList()
@@ -72,15 +88,15 @@ class OaiPmhImporterServlet extends HttpServlet {
             int i = 0
             for (cat in categories) {
                 table.append("<tr><td align=\"right\"><b>$cat</b></td>")
-                for (collection in collections) {
+                for (collection in services) {
                     table.append("<td>${state.get(collection).get(cat) != null ? state.get(collection).get(cat) : "&nbsp;"}</td>")
                 }
                 table.append("</tr>")
             }
             table.append("<tr><td><input type=\"submit\" name=\"action_all\" value=\"stop all\"></td>")
-            for (collection in collections) {
-                table.append("<td><input type=\"submit\" name=\"action_${collection}\" value=\"${jobs[collection].active ? "stop" : "start"}\">")
-                if (!jobs[collection].active) {
+            for (collection in services) {
+                table.append("<td><input type=\"submit\" name=\"action_${collection}\" value=\"${jobs[collection]?.active ? "stop" : "start"}\">")
+                if (jobs[collection] && !jobs[collection].active) {
                     String lastImportDate = jobs[collection].getLastImportValue().format("yyyy-MM-dd'T'HH:mm")
                     table.append("&nbsp;<input type=\"submit\" name=\"reset_${collection}\" value=\"reload $collection from\"/>&nbsp;<input type=\"datetime-local\" name=\"datevalue\" value=\"${lastImportDate}\"/>")
                 }
@@ -144,15 +160,31 @@ class OaiPmhImporterServlet extends HttpServlet {
         response.sendRedirect(request.getRequestURL().toString())
     }
 
+    Map loadOaiPmhSettings() {
+        Map settings = pico.getComponent(PostgreSQLComponent.class).loadSettings("oaipmh")
+
+    }
+
     void init() {
         if (props.getProperty("version").startsWith(loadDataVersion())) {
             log.info("Initializing OAIPMH harvester. System version: ${pico.getComponent(Whelk.class).version}")
-            ScheduledExecutorService ses = Executors.newScheduledThreadPool(3)
-            List collections = props.scheduledDatasets.split(",")
-            for (collection in collections) {
-                log.info("Setting up schedule for $collection")
-                def job = new ScheduledJob(pico.getComponent(OaiPmhImporter.class), collection, pico.getComponent(PostgreSQLComponent.class))
-                jobs[collection] = job
+            Storage storage = pico.getComponent(PostgreSQLComponent.class)
+            List services = props.scheduledServices.split(",")
+
+            ScheduledExecutorService ses = Executors.newScheduledThreadPool(services.size())
+
+            for (service in services) {
+
+                log.info("Setting up schedule for $service")
+                int scheduleIntervalSeconds = props.getProperty(service + ".interval", "" + DEFAULT_INTERVAL) as int
+                String harvesterClass = props.getProperty(service + ".harvesterClass", DEFAULT_HARVESTER)
+                String serviceUrl = props.getProperty(service + ".serviceUrl")
+                String username = props.getProperty(service + ".username")
+                String password = props.getProperty(service + ".password")
+                def job = new ScheduledJob(pico.getComponent(Class.forName(harvesterClass)), "${SETTINGS_PFX}${service}",
+                        serviceUrl, username, password, storage)
+                jobs[service] = job
+
                 try {
                     ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
                 } catch (RejectedExecutionException ree) {
@@ -176,23 +208,32 @@ class ScheduledJob implements Runnable {
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
 
-    String collection
-    OaiPmhImporter importer
+    String collection, serviceUrl, username, password
+    OaiPmhHarvester harvester
     PostgreSQLComponent storage
     Map whelkState = null
     boolean active = true
     final static long WEEK_MILLIS = 604800000
 
-    ScheduledJob(OaiPmhImporter imp, String ds, PostgreSQLComponent pg) {
-        this.importer = imp
-        this.collection = ds
+    ScheduledJob(OaiPmhHarvester imp, String coll, String url, String uname, String pword, PostgreSQLComponent pg) {
+        this.harvester = imp
+        this.collection = coll
         this.storage = pg
+        this.serviceUrl = url
+        this.username = uname
+        this.password = pword
         assert storage
         assert collection
+        loadWhelkState().remove("lastError")
+        loadWhelkState().remove("lastErrorDate")
     }
 
     void toggleActive() {
         active = !active
+        if (active) {
+            loadWhelkState().remove("lastError")
+            loadWhelkState().remove("lastErrorDate")
+        }
         loadWhelkState().put("status", (active ? "IDLE" : "STOPPED"))
         storage.saveSettings(collection, whelkState)
     }
@@ -251,22 +292,21 @@ class ScheduledJob implements Runnable {
                     currentSince = nextSince
                     log.info("Importer has no state for last import from $collection. Setting last week (${nextSince})")
                 }
-                //nextSince = new Date(0) //sneeking past next date
                 if (nextSince.after(new Date())) {
-                    log.warn("Since is slipping ... Is now ${nextSince}. Resetting to now()")
-                    nextSince = new Date()
+                    log.warn("Since is slipping ... Is now ${nextSince}. Resetting to one second ago.")
+                    nextSince = new Date(new Date().getTime() - 1000)
                 }
-                log.debug("Executing OAIPMH import for $collection since $nextSince from ${importer.serviceUrl}")
+                log.debug("Executing OAIPMH import for $collection since $nextSince from ${serviceUrl}")
                 whelkState.put("status", "RUNNING")
 
                 storage.saveSettings(collection, whelkState)
-                def result = importer.doImport(collection, null, -1, true, true, nextSince)
+                //def result = harvester.doImport(collection, null, -1, true, true, nextSince)
+                HarvestResult result = harvester.harvest(serviceUrl, username, password, "ListRecords", "marcxml", nextSince)
                 log.trace("Import completed, result: $result")
-
-                if (result.numberOfDocuments > 0 || result.numberOfDeleted > 0 || result.numberOfDocumentsSkipped > 0) {
-                    log.debug("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
+                if (result && (result.numberOfDocuments > 0 || result.numberOfDocumentsDeleted > 0 || result.numberOfDocumentsSkipped > 0)) {
+                    log.debug("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDocumentsDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
                     whelkState.put("lastImportNrImported", result.numberOfDocuments)
-                    whelkState.put("lastImportNrDeleted", result.numberOfDeleted)
+                    whelkState.put("lastImportNrDeleted", result.numberOfDocumentsDeleted)
                     whelkState.put("lastImportNrSkipped", result.numberOfDocumentsSkipped)
                     whelkState.put("lastImport", result.lastRecordDatestamp.format(DATE_FORMAT))
 
@@ -277,6 +317,13 @@ class ScheduledJob implements Runnable {
                 whelkState.put("status", "IDLE")
                 whelkState.put("lastRunNrImported", result.numberOfDocuments)
                 whelkState.put("lastRun", new Date().format(DATE_FORMAT))
+            } catch (BrokenRecordException bre) {
+                whelkState.get("badRecords", []).add(bre.brokenId)
+                whelkState.put("status", "ERROR")
+            } catch (IOException ioe) {
+                whelkState.put("lastError", new String("Failed to connect to ${serviceUrl.toString()}. Reason: ${ioe.message} (${ioe.getClass().getName()})"))
+                whelkState.put("lastErrorDate", new Date().toString())
+                whelkState.put("status", "ERROR")
             } catch (Exception e) {
                 log.error("Something failed: ${e.message}", e)
             } finally {
