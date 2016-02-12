@@ -171,16 +171,15 @@ class PostgresLoadfileWriter
 
         m_mainTableWriter.write(doc.getId());
         m_mainTableWriter.write(delimiter);
-        m_mainTableWriter.write(doc.getDataAsString());
+        m_mainTableWriter.write( doc.getDataAsString().replace("\\", "\\\\") );
         m_mainTableWriter.write(delimiter);
-        m_mainTableWriter.write(doc.getManifestAsJson());
+        m_mainTableWriter.write( doc.getManifestAsJson().replace("\\", "\\\\") );
         m_mainTableWriter.write(delimiter);
         String quoted = doc.getQuotedAsString();
         if (quoted)
             m_mainTableWriter.write(quoted);
         else
             m_mainTableWriter.write(nullString);
-        m_mainTableWriter.write(delimiter);
 
         // remaining values have defaults.
 
@@ -201,7 +200,6 @@ class PostgresLoadfileWriter
             m_identifiersWriter.write(doc.getId());
             m_identifiersWriter.write(delimiter);
             m_identifiersWriter.write(identifier);
-            m_identifiersWriter.write(delimiter);
 
             m_identifiersWriter.newLine();
         }
@@ -209,10 +207,7 @@ class PostgresLoadfileWriter
 
     private void cleanup()
     {
-        m_identifiersWriter.write("\\."); // Write end of data marker
         m_identifiersWriter.close();
-
-        m_mainTableWriter.write("\\."); // Write end of data marker
         m_mainTableWriter.close();
 
         m_resultSet.close();
