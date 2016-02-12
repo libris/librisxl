@@ -129,6 +129,9 @@ class PostgresLoadfileWriter
             appendToLoadFile(documentMap)
 
         cleanup();
+
+        long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
+        System.out.println("Done. Saved " + savedDocumentsCount + " documents in " + elapsedSeconds + " seconds.");
     }
 
     private void addOaipmhSetSpecs(HashMap documentMap, ResultSet resultSet)
@@ -167,17 +170,19 @@ class PostgresLoadfileWriter
         final char delimiter = '\t';
         final String nullString = "\\N";
 
+        final delimiterString = new String(delimiter);
+
         // Write to main table file
 
         m_mainTableWriter.write(doc.getId());
         m_mainTableWriter.write(delimiter);
-        m_mainTableWriter.write( doc.getDataAsString().replace("\\", "\\\\") );
+        m_mainTableWriter.write( doc.getDataAsString().replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
         m_mainTableWriter.write(delimiter);
-        m_mainTableWriter.write( doc.getManifestAsJson().replace("\\", "\\\\") );
+        m_mainTableWriter.write( doc.getManifestAsJson().replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
         m_mainTableWriter.write(delimiter);
         String quoted = doc.getQuotedAsString();
         if (quoted)
-            m_mainTableWriter.write(quoted);
+            m_mainTableWriter.write(quoted.replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString));
         else
             m_mainTableWriter.write(nullString);
 
