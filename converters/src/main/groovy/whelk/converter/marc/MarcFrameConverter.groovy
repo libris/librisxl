@@ -1,7 +1,11 @@
 package whelk.converter.marc
 
+import groovy.transform.CompileStatic
+import static groovy.transform.TypeCheckingMode.SKIP
+
 import groovy.util.logging.Slf4j as Log
 
+import java.time.temporal.Temporal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -9,6 +13,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 import org.codehaus.jackson.map.ObjectMapper
@@ -582,7 +587,7 @@ class MarcRuleSet {
     }
 
     void processFields(state, fieldHandlers, fields) {
-        fields.each { field ->
+        for (field in fields) {
             try {
                 def result = null
                 field.each { tag, value ->
@@ -607,6 +612,7 @@ class MarcRuleSet {
 }
 
 
+@CompileStatic
 class ConversionPart {
 
     MarcRuleSet ruleSet
@@ -615,11 +621,11 @@ class ConversionPart {
     Map reverseTokenMap
     boolean embedded = false
 
-    void setTokenMap(fieldHandler, dfn) {
+    void setTokenMap(BaseMarcFieldHandler fieldHandler, Map dfn) {
         def tokenMap = dfn.tokenMap
         if (tokenMap) {
             reverseTokenMap = [:]
-            this.tokenMap = (tokenMap instanceof String)?
+            this.tokenMap = (Map) (tokenMap instanceof String)?
                 fieldHandler.tokenMaps[tokenMap] : tokenMap
             this.tokenMap.each { k, v ->
                 if (v != null) {
@@ -634,7 +640,7 @@ class ConversionPart {
             return data
         }
         if (ruleSet.thingLink in data) {
-            return data[ruleSet.thingLink]
+            return (Map) data[ruleSet.thingLink]
         }
         return data
     }
@@ -651,26 +657,30 @@ class ConversionPart {
         }
     }
 
-    Map newEntity(state, type, id=null) {
+    Map newEntity(Map state, String type, String id=null) {
         def ent = [:]
         if (type) ent["@type"] = type
         if (id) ent["@id"] = id
         if (!embedded) {
-            state.quotedEntities << ent
+            ((List) state.quotedEntities) << ent
         }
         return ent
     }
 
-    static void addValue(obj, key, value, repeatable) {
+    static void addValue(Map obj, String key, value, boolean repeatable) {
         def current = obj[key]
+        if (current && !(current instanceof List)) {
+            // TODO: if this happens, data is odd or repeatable should be true
+            current = [current]
+        }
         if (current || repeatable) {
-            def l = current ?: []
+            List l = (List) current ?: []
 
-            def vId = value instanceof Map? value["@id"] : null
+            String vId = value instanceof Map? value["@id"] : null
             if (vId) {
                 def existing = l.find { it instanceof Map && it["@id"] == vId }
                 if (existing) {
-                    value.putAll(existing)
+                    ((Map) value).putAll((Map) existing)
                     l[l.indexOf(existing)] = value
                     return
                 }
@@ -686,6 +696,7 @@ class ConversionPart {
 
 }
 
+@CompileStatic
 abstract class BaseMarcFieldHandler extends ConversionPart {
 
     String tag
@@ -698,7 +709,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     static final ConvertResult OK = new ConvertResult(true)
     static final ConvertResult FAIL = new ConvertResult(false)
 
-    BaseMarcFieldHandler(ruleSet, tag, fieldDfn) {
+    BaseMarcFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn) {
         this.ruleSet = ruleSet
         this.tag = tag
         this.tokenMaps = ruleSet.conversion.tokenMaps
@@ -720,12 +731,13 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         embedded = fieldDfn.embedded == true
     }
 
-    abstract ConvertResult convert(state, value)
+    abstract ConvertResult convert(Map state, value)
 
     abstract def revert(Map data, Map result)
 
 }
 
+@CompileStatic
 class ConvertResult {
     boolean ok
     Set unhandled = Collections.emptySet()
@@ -738,22 +750,23 @@ class ConvertResult {
     }
 }
 
+@CompileStatic
 class MarcFixedFieldHandler {
 
     String tag
     static final String FIXED_UNDEF = "|"
     static final String FIXED_NONE = " "
     static final String FIXED_FAUX_NONE = "_"
-    def columns = []
+    List<Column> columns = []
     int fieldSize = 0
 
-    MarcFixedFieldHandler(ruleSet, tag, fieldDfn) {
+    MarcFixedFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn) {
         this.tag = tag
-        fieldDfn.each { key, obj ->
+        fieldDfn?.each { key, obj ->
             def m = (key =~ /^\[(\d+):(\d+)\]$/)
             if (m && obj) {
-                def start = m[0][1].toInteger()
-                def end = m[0][2].toInteger()
+                int start = m.group(1).toInteger()
+                int end = m.group(2).toInteger()
                 columns << new Column(ruleSet, obj, start, end,
                     obj['fixedDefault'],
                     obj['matchAsDefault'])
@@ -765,9 +778,9 @@ class MarcFixedFieldHandler {
         columns.sort { it.start }
     }
 
-    ConvertResult convert(state, value) {
+    ConvertResult convert(Map state, value) {
         def success = true
-        def failedFixedFields = state.marcRemains.failedFixedFields
+        def failedFixedFields = ((Map) state.marcRemains).failedFixedFields
         for (col in columns) {
             if (!col.convert(state, value).ok) {
                 success = false
@@ -785,6 +798,7 @@ class MarcFixedFieldHandler {
         return new ConvertResult(success)
     }
 
+    @CompileStatic(SKIP)
     def revert(Map data, Map result, boolean keepEmpty=false) {
         def value = new StringBuilder(FIXED_NONE * fieldSize)
         def actualValue = false
@@ -794,6 +808,7 @@ class MarcFixedFieldHandler {
             if (obj instanceof List) {
                 obj = obj.find { it }
             }
+            obj = (String) obj
             if (obj) {
                 assert col.width - obj.size() > -1
                 assert value.size() > col.start
@@ -809,18 +824,21 @@ class MarcFixedFieldHandler {
     }
 
     class Column extends MarcSimpleFieldHandler {
+
         int start
         int end
         String fixedDefault
         Pattern matchAsDefault
-        Column(ruleSet, fieldDfn, start, end, fixedDefault, matchAsDefault=null) {
+
+        Column(ruleSet, fieldDfn, int start, int end,
+                fixedDefault, matchAsDefault=null) {
             super(ruleSet, null, fieldDfn)
             assert start > -1 && end >= start
             this.start = start
             this.end = end
             this.fixedDefault = fixedDefault
             if (matchAsDefault) {
-                this.matchAsDefault = Pattern.compile(matchAsDefault)
+                this.matchAsDefault = Pattern.compile((String) matchAsDefault)
             }
             if (!fixedDefault && tokenMap &&
                 !tokenMap.containsKey(FIXED_FAUX_NONE) &&
@@ -828,15 +846,21 @@ class MarcFixedFieldHandler {
                 this.fixedDefault = FIXED_UNDEF
             }
         }
+
         int getWidth() { return end - start }
-        String getToken(value) {
+
+
+        String getToken(value) { return getToken((String) value) }
+
+        String getToken(String value) {
             if (value.size() < start)
                 return ""
             if (value.size() < end)
                 return value.substring(start)
             return value.substring(start, end)
         }
-        ConvertResult convert(state, value) {
+
+        ConvertResult convert(Map state, value) {
             def token = getToken(value)
             if (token == "")
                 return OK
@@ -849,18 +873,21 @@ class MarcFixedFieldHandler {
                 return OK
             return super.convert(state, token)
         }
+
         def revert(Map data) {
             def v = super.revert(data, null)
             if ((v == null || v == [null]) && fixedDefault)
                 return fixedDefault
             return v
         }
+
         boolean isActualValue(String value) {
             return value != fixedDefault &&
                 (matchAsDefault == null ||
                  !matchAsDefault.matcher(value).matches())
                 value != FIXED_NONE && value != FIXED_UNDEF
         }
+
     }
 
 }
@@ -938,7 +965,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         }
     }
 
-    ConvertResult convert(state, value) {
+    ConvertResult convert(Map state, value) {
         def token = getToken(state.sourceMap.leader, value)
         def converter = handlerMap[token]
         if (converter == null)
@@ -1004,6 +1031,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
 
 }
 
+@CompileStatic
 class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 
     static final DateTimeFormatter DT_FORMAT =
@@ -1025,6 +1053,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     // TODO: working, but not so useful until capable of merging entities..
     //MarcSimpleFieldHandler linkedHandler
 
+    @CompileStatic(SKIP)
     MarcSimpleFieldHandler(ruleSet, tag, fieldDfn) {
         super(ruleSet, tag, fieldDfn)
         super.setTokenMap(this, fieldDfn)
@@ -1068,56 +1097,56 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         //}
     }
 
-    ConvertResult convert(state, value) {
+    ConvertResult convert(Map state, value) {
         if (ignored || !(property || link))
             return
 
+        def strValue = (String) value
+
         if (tokenMap) {
-            def mapped = tokenMap[value] ?: tokenMap[value.toLowerCase()]
+            def mapped = tokenMap[strValue] ?: tokenMap[strValue.toLowerCase()]
             if (mapped == null) {
-                return new ConvertResult(tokenMap.containsKey(value))
+                return new ConvertResult(tokenMap.containsKey(strValue))
             } else if (mapped == false) {
                 return OK
             } else {
                 value = mapped
+                strValue = (String) value
             }
         }
 
         if (dateTimeFormat) {
             def givenValue = value
             try {
-                def dateTime = null
+                Temporal dateTime = null
                 if (defaultTime) {
                     if (missingCentury) {
-                        value = (value[0..2] > "70"? "19" : "20") + value
+                        strValue = (strValue[0..2] > "70"? "19" : "20") + strValue
                     }
                     dateTime = ZonedDateTime.of(LocalDate.parse(
-                                value, dateTimeFormat),
+                                strValue, dateTimeFormat),
                             defaultTime, timeZone)
                 } else if (timeZone) {
-                    dateTime = LocalDateTime.parse(value, dateTimeFormat).atZone(timeZone)
+                    dateTime = LocalDateTime.parse(strValue, dateTimeFormat).atZone(timeZone)
                 } else {
-                    dateTime = ZonedDateTime.parse(value, dateTimeFormat)
+                    dateTime = ZonedDateTime.parse(strValue, dateTimeFormat)
                 }
-                value = dateTime.format(DT_FORMAT)
+                value = DT_FORMAT.format(dateTime)
             } catch (DateTimeParseException e) {
                 value = givenValue
             }
         } else if (parseZeroPaddedNumber && value) {
-            if (value) {
-                try {
-                    value = Integer.parseInt(value.trim())
-                } catch (NumberFormatException e) {
-                    ; // pass
-                }
+            try {
+                value = Integer.parseInt(strValue.trim())
+            } catch (NumberFormatException e) {
+                ; // pass
             }
         }
 
-        def ent = state.entityMap[aboutEntityName]
+        def ent = (Map) state.entityMap[aboutEntityName]
         if (definesDomainEntityType) {
             ent['@type'] = definesDomainEntityType
         }
-
 
         if (ent == null)
             return FAIL
@@ -1127,8 +1156,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             ent = newEnt
         }
         if (uriTemplate) {
-            if (!matchUriToken || matchUriToken.matcher(value).matches()) {
-                ent['@id'] = uriTemplate.replace(URI_SLOT, value.trim())
+            if (!matchUriToken || matchUriToken.matcher(strValue).matches()) {
+                ent['@id'] = uriTemplate.replace(URI_SLOT, strValue.trim())
             } else {
                 ent['@value'] = value
             }
@@ -1141,6 +1170,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         return OK
     }
 
+    @CompileStatic(SKIP)
     def revert(Map data, Map result) {
         def entity = getEntity(data)
         if (link)
@@ -1191,7 +1221,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
     }
 
-    static String extractToken(tplt, value) {
+    static String extractToken(String tplt, String value) {
         if (!value)
             return null
         def i = tplt.indexOf(URI_SLOT)
@@ -1210,23 +1240,25 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 }
 
 @Log
+@CompileStatic
 class MarcFieldHandler extends BaseMarcFieldHandler {
 
     MarcSubFieldHandler ind1
     MarcSubFieldHandler ind2
     List<String> dependsOn
-    Map constructProperties
+    Map<String, Map> constructProperties
     String uriTemplate
-    Set uriTemplateKeys
+    Set<String> uriTemplateKeys
     Map uriTemplateDefaults
     Map computeLinks
-    List splitLinkRules
+    List<Map> splitLinkRules
     Map<String, MarcSubFieldHandler> subfields = [:]
-    List matchRules = []
-    Map pendingResources
+    List<MatchRule> matchRules = []
+    Map<String, Map> pendingResources
 
     static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
 
+    @CompileStatic(SKIP)
     MarcFieldHandler(ruleSet, tag, fieldDfn) {
         super(ruleSet, tag, fieldDfn)
         ind1 = fieldDfn.i1? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1) : null
@@ -1279,7 +1311,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
             if (m) {
-                addSubfield(m[0][1], obj)
+                addSubfield(m.group(1), obj)
             }
         }
         if (splitLinkRules) {
@@ -1287,17 +1319,22 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
     }
 
-    void addSubfield(code, dfn) {
+    void addSubfield(String code, Map dfn) {
         subfields[code] = dfn? new MarcSubFieldHandler(this, code, dfn) : null
     }
 
-    ConvertResult convert(state, value) {
-
+    ConvertResult convert(Map state, value) {
         if (!(value instanceof Map)) {
             throw new MalformedFieldValueException()
         }
+        return convert(state, (Map) value)
+    }
 
-        def aboutEntity = state.entityMap[aboutEntityName]
+    ConvertResult convert(Map state, Map value) {
+
+        Map<String, Map> entityMap = (Map) state.entityMap
+
+        Map aboutEntity = entityMap[aboutEntityName]
         if (aboutEntity == null)
             return FAIL
 
@@ -1313,13 +1350,14 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        def entity = aboutEntity
+        Map entity = aboutEntity
 
         def handled = new HashSet()
 
         def linkage = computeLinkage(state, entity, value, handled)
+        def codeLinkSplits = (Map) linkage.codeLinkSplits
         if (linkage.newEntity) {
-            entity = linkage.newEntity
+            entity = (Map) linkage.newEntity
         }
 
         def uriTemplateParams = [:]
@@ -1331,26 +1369,27 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         [ind1: ind1, ind2: ind2].each { indKey, handler ->
             if (!handler)
                 return
-            def ok = handler.convertSubValue(state,
-                    value[indKey], entity, uriTemplateParams, localEntites)
+            def ok = handler.convertSubValue(state, value[indKey], entity,
+                    uriTemplateParams, localEntites)
             if (!ok && handler.marcDefault == null) {
                 unhandled << indKey
             }
         }
 
-        value.subfields.each {
+        value.subfields.each { Map it ->
             it.each { code, subVal ->
-                def subDfn = subfields[code]
-                def ok = false
+                def subDfn = (MarcSubFieldHandler) subfields[code]
+                boolean ok = false
                 if (subDfn) {
-                    def ent = (subDfn.aboutEntityName)?
-                        state.entityMap[subDfn.aboutEntityName] :
-                        (linkage.codeLinkSplits[code] ?: entity)
+                    def ent = (Map) (subDfn.aboutEntityName)?
+                        entityMap[subDfn.aboutEntityName] :
+                        (codeLinkSplits[code] ?: entity)
                     if ((subDfn.requiresI1 && subDfn.requiresI1 != value.ind1) ||
                         (subDfn.requiresI2 && subDfn.requiresI2 != value.ind2)) {
                         ok = true // rule does not apply here
                     } else {
-                        ok = subDfn.convertSubValue(state, subVal, ent, uriTemplateParams, localEntites)
+                        ok = subDfn.convertSubValue(state, subVal, ent,
+                                uriTemplateParams, localEntites)
                     }
                 }
                 if (!ok && !handled.contains(code)) {
@@ -1362,9 +1401,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (constructProperties) {
             constructProperties.each { key, dfn ->
                 if (true) { //!key in entity) {
-                    def parts = getAllByPath(entity, dfn.property)
+                    def parts = getAllByPath(entity, (String) dfn.property)
                     if (parts) {
-                        def constructed = parts.join(dfn.join)
+                        def constructed = parts.join((String) dfn.join)
                         entity[key] = constructed
                         uriTemplateParams[key] = constructed
                     }
@@ -1373,7 +1412,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (uriTemplate) {
-            uriTemplateKeys.each { k ->
+            uriTemplateKeys.each { String k ->
                 if (!uriTemplateParams.containsKey(k)) {
                     def v = getByPath(aboutEntity, k)
                     if (!v && uriTemplateDefaults) {
@@ -1402,16 +1441,19 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        linkage.splitResults.each {
-            if (it.entity.find { k, v -> k != "@type" }) {
-                addValue(aboutEntity, it.rule.link, it.entity, it.rule.repeatable)
+        linkage.splitResults.each { Map it ->
+            if (((Map) it.entity).find { k, v -> k != "@type" }) {
+                def rule = (Map) it.rule
+                addValue(aboutEntity, (String) rule.link,
+                        (Map) it.entity, (boolean) rule.repeatable)
             }
         }
 
         return new ConvertResult(unhandled)
     }
 
-    def computeLinkage(state, entity, value, handled) {
+    @CompileStatic(SKIP)
+    Map computeLinkage(Map state, Map entity, Map value, Set handled) {
         def codeLinkSplits = [:]
         // TODO: clear unused codeLinkSplits afterwards..
         def splitResults = []
@@ -1436,10 +1478,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def useLinks = Collections.emptyList()
             if (computeLinks) {
                 def use = computeLinks.use
-                def resourceMap = (computeLinks.mapping instanceof Map)?
+                Map resourceMap = (Map) (computeLinks.mapping instanceof Map)?
                         computeLinks.mapping : tokenMaps[computeLinks.mapping]
-                def linkTokens = value.subfields.findAll {
-                    use in it.keySet() }.collect { it.iterator().next().value }
+                def linkTokens = value.subfields.findAll { Map it ->
+                    use in it.keySet() }.collect { ((Map.Entry) it.iterator().next()).value }
                 useLinks = linkTokens.collect {
                     def linkDfn = resourceMap[it]
                     if (linkDfn == null) {
@@ -1493,11 +1535,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         ]
     }
 
-    String getByPath(entity, path) {
+    String getByPath(Map entity, String path) {
         return getAllByPath(entity, path)[0]
     }
 
-    List getAllByPath(entity, path) {
+    @CompileStatic(SKIP)
+    List getAllByPath(entity, String path) {
         // TODO: nextEntity = entities.pop(0)
         def results = []
         path.split(/\./).each {
@@ -1517,16 +1560,17 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     Map getLocalEntity(Map state, Map owner, String id, Map localEntites) {
-        def entity = localEntites[id]
+        def entity = (Map) localEntites[id]
         if (entity == null) {
             def pending = pendingResources[id]
-            entity = localEntites[id] = newEntity(state, pending.resourceType)
-            def link = pending.link ?: pending.addLink
+            entity = localEntites[id] = newEntity(state, (String) pending.resourceType)
+            def link = (String) pending.link ?: pending.addLink
             addValue(owner, link, entity, pending.containsKey('addLink'))
         }
         return entity
     }
 
+    @CompileStatic(SKIP)
     def revert(Map data, Map result, MatchCandidate matchCandidate=null) {
 
         def matchedResults = []
@@ -1641,6 +1685,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         return results + matchedResults
     }
 
+    @CompileStatic(SKIP)
     def revertOne(Map data, Map currentEntity, Set onlyCodes=null, Map aboutMap=null,
             MatchCandidate matchCandidate=null) {
 
@@ -1696,6 +1741,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 }
 
+@CompileStatic
 class MarcSubFieldHandler extends ConversionPart {
 
     MarcFieldHandler fieldHandler
@@ -1722,6 +1768,7 @@ class MarcSubFieldHandler extends ConversionPart {
     // TODO: itemPos is not used right now. Only supports first/rest.
     String itemPos
 
+    @CompileStatic(SKIP)
     MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
         this.ruleSet = fieldHandler.ruleSet
         this.fieldHandler = fieldHandler
@@ -1763,12 +1810,13 @@ class MarcSubFieldHandler extends ConversionPart {
         itemPos = subDfn.itemPos
     }
 
-    boolean convertSubValue(state, subVal, ent, uriTemplateParams, localEntites) {
+    boolean convertSubValue(Map state, def subVal, Map ent,
+            Map uriTemplateParams, Map localEntites) {
         def ok = false
-        def uriTemplateKeyBase = ""
+        String uriTemplateKeyBase = ""
 
         if (subVal)
-            subVal = clearChars(subVal)
+            subVal = clearChars((String) subVal)
         else
             return true // no value, treat as not present
 
@@ -1787,7 +1835,7 @@ class MarcSubFieldHandler extends ConversionPart {
         }
 
         if (link) {
-            def entId = null
+            String entId = null
             if (subUriTemplate) {
                 try {
                     entId = fromTemplate(subUriTemplate).expand(["_": subVal])
@@ -1805,14 +1853,15 @@ class MarcSubFieldHandler extends ConversionPart {
 
         def didSplit = false
         if (splitValuePattern) {
-            def m = splitValuePattern.matcher(subVal)
+            def m = splitValuePattern.matcher((String) subVal)
             if (m) {
                 splitValueProperties.eachWithIndex { prop, i ->
-                    def v = m[0][i + 1]
+                    def v = m.group(i + 1)
                     if (v) {
                         ent[prop] = v
                     }
-                    fieldHandler.addValue(uriTemplateParams, uriTemplateKeyBase + prop, v, true)
+                    fieldHandler.addValue(uriTemplateParams,
+                            uriTemplateKeyBase + prop, v, true)
                 }
                 didSplit = true
                 ok = true
@@ -1830,7 +1879,7 @@ class MarcSubFieldHandler extends ConversionPart {
         return ok
     }
 
-    String clearChars(subVal) {
+    String clearChars(String subVal) {
         def val = subVal.trim()
         if (val.size() > 2) {
             if (interpunctionChars) {
@@ -1860,6 +1909,7 @@ class MarcSubFieldHandler extends ConversionPart {
         return val
     }
 
+    @CompileStatic(SKIP)
     def revert(Map data, Map currentEntity) {
         currentEntity = aboutEntityName? getEntity(data) : currentEntity
         if (currentEntity == null)
@@ -1958,16 +2008,16 @@ abstract class MatchRule {
 
     Map ruleMap = [:]
 
-    MatchRule(handler, fieldDfn, ruleKey, rules) {
-        rules.each { key, matchDfn ->
-            def comboDfn = fieldDfn.clone()
+    MatchRule(MarcFieldHandler handler, Map fieldDfn, String ruleKey, rules) {
+        rules.each { String key, Map matchDfn ->
+            def comboDfn = (Map) fieldDfn.clone()
             // create nested combinations, but prevent recursive nesting
             if (comboDfn.nestedMatch) {
                 matchRuleKeys.each {
                     comboDfn.remove(it)
                 }
             } else {
-                def newRule = comboDfn[ruleKey].clone()
+                def newRule = (Map) comboDfn[ruleKey].clone()
                 newRule.remove(key)
                 comboDfn[ruleKey] = newRule
                 comboDfn.nestedMatch = true
@@ -1978,9 +2028,10 @@ abstract class MatchRule {
         }
     }
 
-    MarcFieldHandler getHandler(entity, value) {
+    @CompileStatic
+    MarcFieldHandler getHandler(Map entity, value) {
         for (String key : getKeys(entity, value)) {
-            def handler = ruleMap[key]
+            def handler = (MarcFieldHandler) ruleMap[key]
             if (handler) {
                 return handler
             }
@@ -2000,6 +2051,7 @@ abstract class MatchRule {
 
 }
 
+@CompileStatic
 class MatchCandidate {
     String ind1
     String ind2
