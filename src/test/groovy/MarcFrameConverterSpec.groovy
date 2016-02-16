@@ -291,12 +291,34 @@ class MarcFrameConverterSpec extends Specification {
         given:
         def conv = converter.conversion
         expect:
-        conv.makeSomeId(ent) == '/some?' + params
+        conv.makeSomeId(entity) == '/some?' + params
         where:
-        params                      | ent
+        params                      | entity
         'type=Thing&name=someone'   | ['@type': 'Thing', name: 'someone']
         'type=Thing&name=other'     | ['@type': 'Thing', name: ['some', 'other']]
         'type=Thing&real=true'      | ['@type': 'Thing', real: true]
+    }
+
+    def "should get as list"() {
+        expect:
+        Util.asList('1') == ['1']
+        Util.asList(['1']) == ['1']
+        Util.asList('') == ['']
+        Util.asList(null) == []
+    }
+
+    def "should get by path"() {
+        expect:
+        Util.getAllByPath(entity, path) == values
+        where:
+        entity                          | path              | values
+        [key: '1']                      | 'key'             | ['1']
+        [key: ['1', '2']]               | 'key'             | ['1', '2']
+        [item: [[key: '1']]]            | 'item.key'        | ['1']
+        [item: [[key: '1'],
+                [key: '2']]]            | 'item.key'        | ['1', '2']
+        [part: [[item: [[key: '1']]],
+                [item: [key: '2']]]]    | 'part.item.key'   | ['1', '2']
     }
 
     void assertJsonEquals(result, expected) {

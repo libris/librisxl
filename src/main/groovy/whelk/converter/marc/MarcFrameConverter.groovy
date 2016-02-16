@@ -538,12 +538,12 @@ class MarcRuleSet {
     }
 
     boolean matchesData(Map data) {
-        if(hasIntersection(asList(data['@type']), aboutTypeMap['?record']))
+        if(hasIntersection(Util.asList(data['@type']), aboutTypeMap['?record']))
             return true
         def thing = data[thingLink]
         if (!thing)
             return false
-        return hasIntersection(asList(thing['@type']), aboutTypeMap['?thing'])
+        return hasIntersection(Util.asList(thing['@type']), aboutTypeMap['?thing'])
     }
 
     boolean hasIntersection(Collection candidates, Collection matches) {
@@ -551,10 +551,6 @@ class MarcRuleSet {
             if (value in matches)
                 return true
         }
-    }
-
-    List asList(v) {
-        return (v instanceof List)? v : [v]
     }
 
     void convert(Map marcSource, Map state) {
@@ -1199,8 +1195,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             }
             return revertObject(v)
         } else {
-            def entities = entity instanceof List? entity : [entity]
-            return entities.collect {
+            return (entity instanceof List? entity : [entity]).collect {
                 def id = it instanceof Map? it['@id'] : it
                 if (uriTemplate) {
                     def token = extractToken(uriTemplate, id)
@@ -1209,7 +1204,6 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                     }
                 }
             }
-            return null
         }
     }
 
@@ -1401,7 +1395,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (constructProperties) {
             constructProperties.each { key, dfn ->
                 if (true) { //!key in entity) {
-                    def parts = getAllByPath(entity, (String) dfn.property)
+                    def parts = Util.getAllByPath(entity, (String) dfn.property)
                     if (parts) {
                         def constructed = parts.join((String) dfn.join)
                         entity[key] = constructed
@@ -1414,7 +1408,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (uriTemplate) {
             uriTemplateKeys.each { String k ->
                 if (!uriTemplateParams.containsKey(k)) {
-                    def v = getByPath(aboutEntity, k)
+                    def v = Util.getByPath(aboutEntity, k)
                     if (!v && uriTemplateDefaults) {
                         v = uriTemplateDefaults[k]
                     }
@@ -1533,30 +1527,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             splitResults: splitResults,
             newEntity: newEnt
         ]
-    }
-
-    String getByPath(Map entity, String path) {
-        return getAllByPath(entity, path)[0]
-    }
-
-    @CompileStatic(SKIP)
-    List getAllByPath(entity, String path) {
-        // TODO: nextEntity = entities.pop(0)
-        def results = []
-        path.split(/\./).each {
-            if (entity) {
-                def sub = entity[it]
-                sub = (sub instanceof List)? sub : [sub]
-                sub.each {
-                    if (it instanceof String) {
-                        results << it
-                    } else {
-                        entity = sub
-                    }
-                }
-            }
-        }
-        return results
     }
 
     Map getLocalEntity(Map state, Map owner, String id, Map localEntites) {
@@ -2169,6 +2139,36 @@ class CodePatternMatchRule extends MatchRule {
                     pattern: patternDfn.pattern)
         }
     }
+}
+
+@CompileStatic
+class Util {
+
+    static List asList(o) {
+        return (o instanceof List)? (List) o : o != null? [o] : []
+    }
+
+    static String getByPath(Map entity, String path) {
+        return getAllByPath(entity, path)[0]
+    }
+
+    static List getAllByPath(entity, String path) {
+        def results = []
+        collectByChain(entity, path.split(/\./) as List, results)
+        return results
+    }
+
+    static void collectByChain(entity, List<String> chain, List results) {
+        asList(entity).each {
+            def value = it[chain[0]]
+            if (chain.size() > 1) {
+                collectByChain(value, chain.subList(1, chain.size()), results)
+            } else {
+                results.addAll(asList(value))
+            }
+        }
+    }
+
 }
 
 class MalformedFieldValueException extends RuntimeException {}
