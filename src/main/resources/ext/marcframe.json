@@ -3064,8 +3064,18 @@
       "addLink": "subject", "resourceType": "Person"
     },
     "610": {
-      "inherit": "110",
-      "i1": {"marcDefault": "1"},
+      "addLink": "subject",
+      "resourceType": "OrganizationTerm",
+      "i1": {"marcDefault": "2"},
+      "i2": {"marcDefault": "4"},
+      "i2": {
+        "link": "inScheme",
+        "resourceType": "ConceptScheme",
+        "uriTemplate": "https://id.kb.se/term/{+_}",
+        "property": "notation",
+        "tokenMap": "thesaurus",
+        "definedElsewhereToken": "7"
+      },
       "match-i1": {
         "0": {
           "$a": {
@@ -3087,33 +3097,15 @@
           "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
         }
       },
-      "i2": {
-        "about": "_:concept",
-        "link": "inScheme",
-        "resourceType": "ConceptScheme",
-        "uriTemplate": "https://id.kb.se/term/{+_}",
-        "property": "notation",
-        "tokenMap": "thesaurus",
-        "definedElsewhereToken": "7"
-      },
       "match-code": {
-        "b": {
-          "$a": {"link": "isPartOf", "resourceType": "Organization", "property": "name"},
-          "$b": {"property": "name"}
-        },
         "x": {
-          "$x": {"property": "name"},
-          "$a": {"link": "isPartOf", "resourceType": "Organization", "property": "name"}
+          "$a": {"addLink": "termComponentList", "resourceType": "Organization", "property": "name"},
+          "$x": {"addLink": "termComponentList", "resourceType": "SubdivisionTerm", "property": "prefLabel"}
         }
       },
-      "addLink": "subject",
-      "resourceType": "Organization",
-      "pendingResources": {
-        "_:concept": {"link": "focusOf", "resourceType": "Concept"}
-      },
+      "$a": {"property": "name", "required": true},
       "$2": {
         "requires-i2": "7",
-        "about": "_:concept",
         "link": "inScheme",
         "uriTemplate": "https://id.kb.se/term/{+_}",
         "resourceType": "ConceptScheme",
@@ -3131,16 +3123,15 @@
           "result": {"about": {
             "subject": [
               {
-                "@type": "Organization",
-                "isPartOf": {"@type": "Organization", "name": "Kungl. biblioteket"},
-                "name": "samlingar",
-                "focusOf": {
-                  "@type": "Concept",
-                  "inScheme": {
-                    "@id": "https://id.kb.se/term/sao",
-                    "@type": "ConceptScheme",
-                    "notation": "sao"
-                  }
+                "@type": "OrganizationTerm",
+                "termComponentList": [
+                  {"@type": "Organization", "name": "Kungl. biblioteket"},
+                  {"@type": "SubdivisionTerm", "prefLabel": "samlingar"}
+                ],
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/sao",
+                  "@type": "ConceptScheme",
+                  "notation": "sao"
                 }
               }
             ]
