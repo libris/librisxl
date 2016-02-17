@@ -144,7 +144,6 @@
       },
       "match-code": {
         "v x y z": {
-          "resourceType": "ComplexTerm",
           "$a": {"addLink": "termParts",
                  "resourceType": "TopicalTerm",
                  "property": "prefLabel", "required": true},
@@ -3210,7 +3209,7 @@
           "result": {"about": {
             "subject": [
               {
-                "@type": "ComplexTerm",
+                "@type": "TopicalTerm",
                 "@id": "http://id.loc.gov/authorities/label/Information--Information%20Age",
                 "prefLabel": "Information--Information Age",
                 "termParts": [
@@ -3934,7 +3933,7 @@
             {"150": {"subfields": [{"a": "Barn"}, {"x": "psykologi"}]}}
           ],
           "result": {
-            "@type": "ComplexTerm",
+            "@type": "TopicalTerm",
             "@id": "http://libris.kb.se/auth/140482",
             "prefLabel": "Barn--psykologi",
             "inScheme":  {
@@ -4047,14 +4046,14 @@
       "match-code": {
         "x": {
           "addLink": "replaces",
-          "resourceType": "ComplexTerm",
+          "resourceType": "TopicalTerm",
           "uriTemplate": "https://id.kb.se/term/sao/{termParts.prefLabel*}",
-          "$a": {"addLink": "termParts", "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"},
-          "$x": {"addLink": "termParts", "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"}
+          "$a": {"addLink": "termParts",  "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"},
+          "$x": {"addLink": "termParts",  "property": "prefLabel"}
         }
       },
       "TODO": "whatIs w||e"
-      },
+    },
     "455" : {"inherit": "450"},
     "500": {
       "inherit": "bib:100",
@@ -4166,7 +4165,6 @@
       "computeLinks": null,
       "addLink": "closeMatch",
       "match-domain": {
-        "TopicalTerm": {"addLink": "closeMatch"},
         "WorkTerm": {"addLink": "subject"}
       },
       "$0": {"addProperty": "notation"},
