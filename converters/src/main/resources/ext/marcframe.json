@@ -140,24 +140,24 @@
       "$a": {"property": "prefLabel"},
       "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
       "constructProperties": {
-        "prefLabel": {"property": "termParts.prefLabel", "join": "--"}
+        "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
       },
       "match-code": {
         "v x y z": {
-          "$a": {"addLink": "termParts",
+          "$a": {"addLink": "termComponentList",
                  "resourceType": "TopicalTerm",
                  "property": "prefLabel", "required": true},
-          "$v": {"addLink": "termParts",
+          "$v": {"addLink": "termComponentList",
                "TODO": "use /term/saogf/{_}, but only if $2=sao",
                  "resourceType": "GenreTerm",
                  "property": "prefLabel"},
-          "$x": {"addLink": "termParts",
+          "$x": {"addLink": "termComponentList",
                  "resourceType": "SubdivisionTerm",
                  "property": "prefLabel"},
-          "$y": {"addLink": "termParts",
+          "$y": {"addLink": "termComponentList",
                  "resourceType": "ChronologicalTerm",
                  "property": "prefLabel"},
-          "$z": {"addLink": "termParts",
+          "$z": {"addLink": "termComponentList",
                  "TODO": "use /place/{_}, but only if $2=sao",
                  "resourceType": "GeographicalTerm",
                  "property": "prefLabel"}
@@ -3212,7 +3212,7 @@
                 "@type": "TopicalTerm",
                 "@id": "http://id.loc.gov/authorities/label/Information--Information%20Age",
                 "prefLabel": "Information--Information Age",
-                "termParts": [
+                "termComponentList": [
                   {
                     "@type": "TopicalTerm",
                     "prefLabel": "Information"
@@ -3941,7 +3941,7 @@
               "@id": "https://id.kb.se/term/sao",
               "notation": "sao"
             },
-            "termParts": [
+            "termComponentList": [
               {
                 "@type": "TopicalTerm",
                 "prefLabel": "Barn"
@@ -4047,9 +4047,9 @@
         "x": {
           "addLink": "replaces",
           "resourceType": "TopicalTerm",
-          "uriTemplate": "https://id.kb.se/term/sao/{termParts.prefLabel*}",
-          "$a": {"addLink": "termParts",  "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"},
-          "$x": {"addLink": "termParts",  "property": "prefLabel"}
+          "uriTemplate": "https://id.kb.se/term/sao/{termComponentList.prefLabel*}",
+          "$a": {"addLink": "termComponentList",  "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"},
+          "$x": {"addLink": "termComponentList",  "property": "prefLabel"}
         }
       },
       "TODO": "whatIs w||e"
