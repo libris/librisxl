@@ -147,6 +147,8 @@ class MarcFrameConverterSpec extends Specification {
             if (value instanceof Map) value.putAll(obj)
             else jsonld[prop] = obj
         }
+        expect:
+        converter.conversion.getRuleSetFromJsonLd(jsonld).name == marcType
         when:
         def result = converter.conversion.revert(jsonld)
         def expected = deepcopy(marcSkeletons[marcType])
