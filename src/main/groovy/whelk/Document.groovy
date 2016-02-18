@@ -19,6 +19,7 @@ class Document {
     static final String NON_JSON_CONTENT_KEY = "content"
     static final String ALTERNATE_ID_KEY = "identifiers"
     static final String JSONLD_ALT_ID_KEY = "sameAs"
+    static final String CHANGED_IN_KEY = "changedIn" // The last system to affect a change in the document (xl by default, vcopy on imported posts)
 
 
     static final URI BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
@@ -251,6 +252,10 @@ class Document {
         }
         if (entrydata?.containsKey(DELETED_KEY)) {
             deleted = entrydata[DELETED_KEY]
+        }
+        if ( ! entrydata?.containsKey(CHANGED_IN_KEY) )
+        {
+            this.manifest.put(CHANGED_IN_KEY, "xl");
         }
         if (entrydata != null) {
             this.manifest.putAll(entrydata)
