@@ -37,10 +37,13 @@ public class ServletUI extends HttpServlet implements UI
                 res.getOutputStream().print( getPseudoConsole() );
                 break;
             case "/endpoint":
-                res.getOutputStream().print( m_properties.getProperty("apixUrl") );
+                res.getOutputStream().print( m_properties.getProperty("apixHost") );
                 break;
             case "/startpoint":
-                res.getOutputStream().print( m_properties.getProperty("sqlUrl") );
+                String jdbcUrl = m_properties.getProperty("sqlUrl");
+                if (jdbcUrl.contains("@"))
+                    jdbcUrl = jdbcUrl.substring( jdbcUrl.indexOf("@")+1 );
+                res.getOutputStream().print( jdbcUrl );
                 break;
             default:
                 res.sendError(404);

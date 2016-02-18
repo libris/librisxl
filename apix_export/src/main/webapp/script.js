@@ -2,7 +2,7 @@ function loaded()
 {
     setInterval(reload_console, 1000);
     reload_string("apixurl", "app/endpoint");
-    reload_string("oaipmhurl", "app/startpoint");
+    reload_string("xlurl", "app/startpoint");
 }
 
 function reload_string(elementid, url)
