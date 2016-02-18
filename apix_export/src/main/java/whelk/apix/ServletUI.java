@@ -18,7 +18,7 @@ public class ServletUI extends HttpServlet implements UI
     ExporterThread m_exporterThread = null;
     String[] m_pseudoConsole = new String[PSEUDO_CONSOLE_LINES];
     int m_pseudoConsoleNext = 0;
-    Properties m_apixProperties = null;
+    Properties m_properties = null;
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException
     {
@@ -37,10 +37,10 @@ public class ServletUI extends HttpServlet implements UI
                 res.getOutputStream().print( getPseudoConsole() );
                 break;
             case "/endpoint":
-                res.getOutputStream().print( m_apixProperties.getProperty("apixUrl") );
+                res.getOutputStream().print( m_properties.getProperty("apixUrl") );
                 break;
             case "/startpoint":
-                res.getOutputStream().print( m_apixProperties.getProperty("oaipmhUrl") );
+                res.getOutputStream().print( m_properties.getProperty("sqlUrl") );
                 break;
             default:
                 res.sendError(404);
@@ -49,9 +49,9 @@ public class ServletUI extends HttpServlet implements UI
 
     public void init()
     {
-        m_apixProperties = PropertyLoader.loadProperties("apix");
+        m_properties = PropertyLoader.loadProperties("secret");
 
-        m_exporterThread = new ExporterThread(m_apixProperties, null, null, this);
+        m_exporterThread = new ExporterThread(m_properties, null, null, this);
         m_exporterThread.start();
     }
 

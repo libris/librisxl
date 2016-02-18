@@ -1,5 +1,7 @@
 package whelk.apix;
 
+import whelk.util.PropertyLoader;
+
 import java.time.ZonedDateTime;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,21 +22,17 @@ public class ExporterThread extends Thread
      * The "until" parameter. The exporter will export everything with a (modified) timestamp < this value.
      */
     private final ZonedDateTime exportOlderThan;
-
-    /**
-     * General APIX endpoint parameters (URL etc)
-     */
-    private final Properties apixProperties;
+    private final Properties properties;
 
     /**
      * UI callback interface
      */
     UI ui;
 
-    public ExporterThread(Properties apixProperties, ZonedDateTime exportNewerThan,
+    public ExporterThread(Properties properties, ZonedDateTime exportNewerThan,
                           ZonedDateTime exportOlderThan, UI ui)
     {
-        this.apixProperties = apixProperties;
+        this.properties = properties;
         this.exportNewerThan = exportNewerThan;
         this.exportOlderThan = exportOlderThan;
         this.ui = ui;
@@ -51,7 +49,7 @@ public class ExporterThread extends Thread
             if ( i < 2000 )
             {
                 ++i;
-                ui.outputText("Pseudo call: " + apixProperties.getProperty("apixUrl") + " " + i);
+                ui.outputText("Pseudo call: " + properties.getProperty("apixUrl") + " " + i);
             }
 
             try {

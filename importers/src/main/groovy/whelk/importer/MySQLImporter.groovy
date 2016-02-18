@@ -250,6 +250,7 @@ class MySQLImporter extends Importer {
                         convertedDocs.put(it.manifest.collection, [])
                     }
                     it.manifest['contentType'] = "application/x-marc-json"
+                    it.manifest[Document.CHANGED_IN_KEY] = "vcopy"
                     Document doc = new Document(MarcJSONConverter.toJSONMap(it.record), it.manifest)
                     if (converter) {
                         doc = converter.convert(doc)
