@@ -110,8 +110,8 @@ public class ResponseCommon
         String convertedText = null;
         if (formatDescription.converter != null)
         {
-            Document convertedDoucment = formatDescription.converter.convert(jsonLDdoc);
-            convertedText = (String) convertedDoucment.getData().get("content");
+            Document convertedDocument = formatDescription.converter.convert(jsonLDdoc);
+            convertedText = (String) convertedDocument.getData().get("content");
         }
         else
             convertedText = jsonLDdoc.getDataAsString();
