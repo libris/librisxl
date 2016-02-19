@@ -538,7 +538,7 @@ class MarcRuleSet {
     }
 
     boolean matchesData(Map data) {
-        if(hasIntersection(Util.asList(data['@type']), aboutTypeMap['?record']))
+        if (hasIntersection(Util.asList(data['@type']), aboutTypeMap['?record']))
             return true
         def thing = data[thingLink]
         if (!thing)
@@ -719,11 +719,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         } else {
             link = fieldDfn.link
         }
-        if (!link && !definesDomainEntityType && !fieldDfn.computeLinks) {
-            definesDomainEntityType = fieldDfn.resourceType
-        } else {
-            resourceType = fieldDfn.resourceType
-        }
+        resourceType = fieldDfn.resourceType
         embedded = fieldDfn.embedded == true
     }
 
