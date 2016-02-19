@@ -94,7 +94,6 @@ public class ServletUI extends HttpServlet implements UI
                 break;
 
             output.append(m_pseudoConsole[next]);
-            //output.append("<br/>");
             output.append("\n");
         }
 
