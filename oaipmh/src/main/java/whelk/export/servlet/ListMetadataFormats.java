@@ -32,13 +32,10 @@ public class ListMetadataFormats
                 return;
             }
 
-            try (Connection dbconn = DataBase.getConnection()) {
-                String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-                String selectSQL = "SELECT deleted FROM " + tableName + " WHERE id = ? ";
-                PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
-                preparedStatement.setString(1, id);
-                ResultSet resultSet = preparedStatement.executeQuery();
-
+            try (Connection dbconn = DataBase.getConnection();
+                 PreparedStatement preparedStatement = prepareStatement(dbconn, id);
+                 ResultSet resultSet = preparedStatement.executeQuery())
+            {
                 // If there was no such document
                 if (resultSet.next())
                 {
@@ -53,8 +50,6 @@ public class ListMetadataFormats
                     ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
                     return;
                 }
-                resultSet.close();
-                preparedStatement.close();
             }
         }
 
@@ -98,5 +93,16 @@ public class ListMetadataFormats
         }
 
         writer.writeEndElement(); // metadataFormat
+    }
+
+    private static PreparedStatement prepareStatement(Connection dbconn, String id)
+            throws SQLException
+    {
+        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+        String selectSQL = "SELECT deleted FROM " + tableName + " WHERE id = ? ";
+        PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
+        preparedStatement.setString(1, id);
+
+        return preparedStatement;
     }
 }
