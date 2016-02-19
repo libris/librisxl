@@ -140,25 +140,24 @@
       "$a": {"property": "prefLabel"},
       "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
       "constructProperties": {
-        "prefLabel": {"property": "termParts.prefLabel", "join": "--"}
+        "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
       },
       "match-code": {
         "v x y z": {
-          "resourceType": "ComplexTerm",
-          "$a": {"addLink": "termParts",
+          "$a": {"addLink": "termComponentList",
                  "resourceType": "TopicalTerm",
                  "property": "prefLabel", "required": true},
-          "$v": {"addLink": "termParts",
+          "$v": {"addLink": "termComponentList",
                "TODO": "use /term/saogf/{_}, but only if $2=sao",
                  "resourceType": "GenreTerm",
                  "property": "prefLabel"},
-          "$x": {"addLink": "termParts",
+          "$x": {"addLink": "termComponentList",
                  "resourceType": "SubdivisionTerm",
                  "property": "prefLabel"},
-          "$y": {"addLink": "termParts",
+          "$y": {"addLink": "termComponentList",
                  "resourceType": "ChronologicalTerm",
                  "property": "prefLabel"},
-          "$z": {"addLink": "termParts",
+          "$z": {"addLink": "termComponentList",
                  "TODO": "use /place/{_}, but only if $2=sao",
                  "resourceType": "GeographicalTerm",
                  "property": "prefLabel"}
@@ -2508,7 +2507,7 @@
       "i1": {"property": "searchElement", "tokenMap": {"0": false}, "marcDefault": "1"},
       "i2": {"marcDefault": "0"},
       "aboutEntity": "?thing",
-      "link": "instanceTitle",
+      "link": "qualifiedTitle",
       "embedded": true,
       "resourceType": "Title",
       "$a": {
@@ -2538,7 +2537,7 @@
               {"a": "Anteckningar från en ö"}
           ]}},
           "result": {"about": {
-            "instanceTitle": {"@type": "Title",
+            "qualifiedTitle": {"@type": "Title",
               "titleValue":  "Anteckningar från en ö"
             }
           }}
@@ -2550,7 +2549,7 @@
               {"c": "Tove Jansson, Tuulikki Pietilä"}
           ]}},
           "result": {"about": {
-            "instanceTitle": {"@type": "Title",
+            "qualifiedTitle": {"@type": "Title",
               "titleValue":  "Anteckningar från en ö",
               "searchElement": false
             },
@@ -3210,10 +3209,10 @@
           "result": {"about": {
             "subject": [
               {
-                "@type": "ComplexTerm",
+                "@type": "TopicalTerm",
                 "@id": "http://id.loc.gov/authorities/label/Information--Information%20Age",
                 "prefLabel": "Information--Information Age",
-                "termParts": [
+                "termComponentList": [
                   {
                     "@type": "TopicalTerm",
                     "prefLabel": "Information"
@@ -3934,7 +3933,7 @@
             {"150": {"subfields": [{"a": "Barn"}, {"x": "psykologi"}]}}
           ],
           "result": {
-            "@type": "ComplexTerm",
+            "@type": "TopicalTerm",
             "@id": "http://libris.kb.se/auth/140482",
             "prefLabel": "Barn--psykologi",
             "inScheme":  {
@@ -3942,7 +3941,7 @@
               "@id": "https://id.kb.se/term/sao",
               "notation": "sao"
             },
-            "termParts": [
+            "termComponentList": [
               {
                 "@type": "TopicalTerm",
                 "prefLabel": "Barn"
@@ -4047,14 +4046,14 @@
       "match-code": {
         "x": {
           "addLink": "replaces",
-          "resourceType": "ComplexTerm",
-          "uriTemplate": "https://id.kb.se/term/sao/{termParts.prefLabel*}",
-          "$a": {"addLink": "termParts", "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"},
-          "$x": {"addLink": "termParts", "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"}
+          "resourceType": "TopicalTerm",
+          "uriTemplate": "https://id.kb.se/term/sao/{termComponentList.prefLabel*}",
+          "$a": {"addLink": "termComponentList",  "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"},
+          "$x": {"addLink": "termComponentList",  "property": "prefLabel"}
         }
       },
       "TODO": "whatIs w||e"
-      },
+    },
     "455" : {"inherit": "450"},
     "500": {
       "inherit": "bib:100",
@@ -4166,7 +4165,6 @@
       "computeLinks": null,
       "addLink": "closeMatch",
       "match-domain": {
-        "TopicalTerm": {"addLink": "closeMatch"},
         "WorkTerm": {"addLink": "subject"}
       },
       "$0": {"addProperty": "notation"},
