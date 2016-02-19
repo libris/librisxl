@@ -51,16 +51,10 @@ public class GetRecord
 
         String id = Helpers.getShorthandDocumentId(identifierUri);
 
-        try (Connection dbconn = DataBase.getConnection()) {
-            String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-
-            // Construct the query
-            String selectSQL = "SELECT data, manifest, modified, deleted, data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
-                    tableName + " WHERE id = ? ";
-            PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
-            preparedStatement.setString(1, id);
-            ResultSet resultSet = preparedStatement.executeQuery();
-
+        try (Connection dbconn = DataBase.getConnection();
+             PreparedStatement preparedStatement = prepareStatement(dbconn, id);
+             ResultSet resultSet = preparedStatement.executeQuery())
+        {
             if (!resultSet.next())
             {
                 ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
@@ -94,8 +88,6 @@ public class GetRecord
 
                 jsonLDdoc = ListRecordTrees.mergeDocument(id, nodeDatas);
             }
-            resultSet.close();
-            preparedStatement.close();
 
             // Build the xml response feed
             XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
@@ -137,5 +129,19 @@ public class GetRecord
             writer.writeEndElement(); // GetRecord
             ResponseCommon.writeOaiPmhClose(writer, request);
         }
+    }
+
+    private static PreparedStatement prepareStatement(Connection dbconn, String id)
+            throws SQLException
+    {
+        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+
+        // Construct the query
+        String selectSQL = "SELECT data, manifest, modified, deleted, data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
+                tableName + " WHERE id = ? ";
+        PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
+        preparedStatement.setString(1, id);
+
+        return preparedStatement;
     }
 }

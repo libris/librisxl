@@ -49,18 +49,15 @@ public class Identify
         writer.writeEndElement(); // adminEmail
 
         writer.writeStartElement("earliestDatestamp");
-        try (Connection dbconn = DataBase.getConnection()) {
-            String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-            String selectSQL = "SELECT MIN(modified) as earliest FROM " + tableName;
-            PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
-            ResultSet resultSet = preparedStatement.executeQuery();
+        try (Connection dbconn = DataBase.getConnection();
+             PreparedStatement preparedStatement = prepareStatement(dbconn);
+             ResultSet resultSet = preparedStatement.executeQuery())
+        {
             if (resultSet.next()) {
                 ZonedDateTime earliest = ZonedDateTime.ofInstant(resultSet.getTimestamp("earliest").toInstant(), ZoneOffset.UTC);
                 writer.writeCharacters(earliest.toString());
             } else
                 writer.writeCharacters(ZonedDateTime.now(ZoneOffset.UTC).toString());
-            resultSet.close();
-            preparedStatement.close();
         }
         writer.writeEndElement(); // earliestDatestamp
 
@@ -74,5 +71,17 @@ public class Identify
 
         writer.writeEndElement(); // Identify
         ResponseCommon.writeOaiPmhClose(writer, request);
+    }
+
+    private static PreparedStatement prepareStatement(Connection dbconn)
+            throws SQLException
+    {
+        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+
+        // Construct the query
+        String selectSQL = "SELECT MIN(modified) as earliest FROM " + tableName;
+        PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
+
+        return preparedStatement;
     }
 }

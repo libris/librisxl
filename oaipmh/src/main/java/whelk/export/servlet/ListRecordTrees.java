@@ -136,15 +136,15 @@ public class ListRecordTrees
         if (!resultSet.next())
             return;
 
+        String jsonBlob = resultSet.getString("data");
+        nodeDatas.add(jsonBlob);
+
         // Only allow one level of recursive auth posts into the tree, or we'll end up adding half the database
         // into each tree.
         String collection = resultSet.getString("collection");
         if (collection.equals("auth"))
             return;
 
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonBlob = resultSet.getString("data");
-        nodeDatas.add(jsonBlob);
         ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
 
         if (modified.compareTo(modificationTimes.earliestModification) < 0)
@@ -152,6 +152,7 @@ public class ListRecordTrees
         if (modified.compareTo(modificationTimes.latestModification) > 0)
             modificationTimes.latestModification = modified;
 
+        ObjectMapper mapper = new ObjectMapper();
         Map map = mapper.readValue(jsonBlob, HashMap.class);
         resultSet.close();
         preparedStatement.close();
