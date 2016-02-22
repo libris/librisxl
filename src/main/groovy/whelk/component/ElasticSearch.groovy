@@ -8,16 +8,20 @@ import org.elasticsearch.action.ActionRequest
 import org.elasticsearch.action.ActionResponse
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.bulk.BulkResponse
+import org.elasticsearch.action.delete.DeleteRequest
+import org.elasticsearch.action.deletebyquery.DeleteByQueryAction
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest
+import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder
+import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse
 import org.elasticsearch.action.index.IndexRequest
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.action.search.SearchType
 import org.elasticsearch.client.Client
-import org.elasticsearch.client.transport.*
-import org.elasticsearch.common.transport.*
-import org.elasticsearch.common.settings.ImmutableSettings
-import org.elasticsearch.common.settings.*
-import org.elasticsearch.action.delete.*
+import org.elasticsearch.client.transport.NoNodeAvailableException
+import org.elasticsearch.client.transport.TransportClient
+import org.elasticsearch.common.settings.Settings
+import org.elasticsearch.common.transport.InetSocketTransportAddress
+import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin
 import whelk.Document
 import whelk.JsonLd
 import whelk.exception.*
@@ -59,14 +63,14 @@ class ElasticSearch implements Index {
     void connectClient() {
         if (elastichost) {
             log.info("Connecting to $elasticcluster using hosts $elastichost")
-            def sb = ImmutableSettings.settingsBuilder()
-                .put("client.transport.ping_timeout", 30000)
-                .put("client.transport.sniff", true)
+            def sb = Settings.settingsBuilder()
+
             if (elasticcluster) {
                 sb = sb.put("cluster.name", elasticcluster)
             }
             Settings elasticSettings = sb.build();
-            client = new TransportClient(elasticSettings)
+
+            client = TransportClient.builder().settings(elasticSettings).addPlugin(DeleteByQueryPlugin.class).build()
             try {
                 elastichost.split(",").each {
                     def host, port
@@ -76,7 +80,7 @@ class ElasticSearch implements Index {
                         host = it
                         port = 9300
                     }
-                    client = ((TransportClient)client).addTransportAddress(new InetSocketTransportAddress(host, port as int))
+                    client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), port as int))
                 }
             } catch (ArrayIndexOutOfBoundsException aioobe) {
                 throw new WhelkRuntimeException("Unable to initialize elasticsearch client. Host configuration might be missing port?")
@@ -170,8 +174,12 @@ class ElasticSearch implements Index {
     @Override
     public void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
-        DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(defaultIndex).source(["query":["term":["_id":toElasticId(identifier)]]])
-        client.deleteByQuery(deleteByQueryRequest)
+        DeleteByQueryResponse rsp = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE)
+                .setIndices(defaultIndex)
+                .setTypes("mydocytype")
+                .setSource(["query":["term":["_id":toElasticId(identifier)]]])
+                .execute()
+                .actionGet();
     }
 
     @Override
