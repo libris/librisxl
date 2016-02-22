@@ -1,6 +1,7 @@
 package whelk.apix;
 
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 import whelk.util.PropertyLoader;
 
@@ -11,11 +12,27 @@ public class ConsoleUI implements UI
 {
     ZonedDateTime parseFrom(String[] args)
     {
+        for (int i = 1; i < args.length; ++i)
+        {
+            if ("-from".equals(args[i]) && i+1 < args.length)
+            {
+                return ZonedDateTime.parse(args[i], DateTimeFormatter.ISO_INSTANT);
+            }
+        }
+
         return null;
     }
 
     ZonedDateTime parseUntil(String[] args)
     {
+        for (int i = 1; i < args.length; ++i)
+        {
+            if ("-until".equals(args[i]) && i+1 < args.length)
+            {
+                return ZonedDateTime.parse(args[i], DateTimeFormatter.ISO_INSTANT);
+            }
+        }
+
         return null;
     }
 

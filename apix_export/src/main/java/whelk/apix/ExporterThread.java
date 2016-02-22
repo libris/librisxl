@@ -112,6 +112,15 @@ public class ExporterThread extends Thread
         HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
         Document document = new Document(datamap, manifestmap);
 
+        String lastModifingSystem = (String) manifestmap.get("changedIn");
+
+        // Do not export if the latest changeset originated within vcopy/voyager
+        if (lastModifingSystem == "vcopy")
+            return;
+
+        /*if (deleted)
+            DO APIX DELETE*/
+
         JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
         Document convertedDoucment = converter.convert(document);
         String convertedText = (String) convertedDoucment.getData().get("content");
