@@ -75,7 +75,8 @@ public class ExporterThread extends Thread
                     break;
                 }
             }
-            m_ui.outputText("Export batch complete, " + exportedDocumentsCount + " documents.");
+            if (!stopAtOpportunity.get())
+                m_ui.outputText("Export batch complete, " + exportedDocumentsCount + " documents.");
         }
         catch (Exception e)
         {
