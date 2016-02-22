@@ -43,12 +43,12 @@ class OaiPmhHarvester {
         marcFrameConverter = mfc
     }
 
-    synchronized HarvestResult harvest(String serviceUrl, String verb, String metadataPrefix, Date from = null, Date until = null) {
-        harvest(serviceUrl, null, null, verb, metadataPrefix, from, until)
+    synchronized HarvestResult harvest(String serviceUrl, String sourceSystem, String verb, String metadataPrefix, Date from = null, Date until = null) {
+        harvest(serviceUrl, null, null, sourceSystem, verb, metadataPrefix, from, until)
     }
 
-    synchronized HarvestResult harvest(String serviceURL, String username, String password, String verb, String metadataPrefix, Date from = null, Date until = null) {
-        HarvestResult harvestResult = new HarvestResult(from, until)
+    synchronized HarvestResult harvest(String serviceURL, String username, String password, String sourceSystem, String verb, String metadataPrefix, Date from = null, Date until = null) {
+        HarvestResult harvestResult = new HarvestResult(from, until, sourceSystem)
         authenticate(username, password)
         boolean harvesting = true
 
@@ -185,7 +185,7 @@ class OaiPmhHarvester {
         return oair
     }
 
-    List<Document> addRecord(OaiPmhRecord record, HarvestResult hdata, List<Document> docs) {
+    final List<Document> addRecord(OaiPmhRecord record, HarvestResult hdata, List<Document> docs) {
 
         // Sanity check dates
         log.trace("Record date: ${record.datestamp}. Last record date: ${hdata.lastRecordDatestamp}")
@@ -216,6 +216,7 @@ class OaiPmhHarvester {
         } else {
             Document doc = createDocument(record)
             if (doc) {
+                doc.manifest.put("changedIn", hdata.sourceSystem)
                 docs << doc
                 hdata.numberOfDocuments++
             } else {

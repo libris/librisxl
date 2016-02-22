@@ -3,6 +3,7 @@ package whelk.rest.api
 import groovy.util.logging.Slf4j as Log
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
+import org.codehaus.jackson.map.ObjectMapper
 import whelk.converter.marc.MarcFrameConverter
 import whelk.rest.ServiceServlet
 
@@ -19,7 +20,7 @@ import java.util.regex.Pattern
 
 @Log
 class RemoteSearchAPI extends HttpServlet {
-    final static mapper = new ElasticJsonMapper()
+    final static mapper = new ObjectMapper()
 
     String description = "Query API for remote search"
 

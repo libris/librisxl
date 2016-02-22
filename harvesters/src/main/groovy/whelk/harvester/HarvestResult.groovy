@@ -14,15 +14,18 @@ class HarvestResult {
     // in-flight data
     String resumptionToken = null
     private Date lastRecordDatestamp
+    String sourceSystem = null
 
     HarvestResult() {
         setFromDate(null)
     }
 
-    HarvestResult(Date from) {
+    HarvestResult(Date from, String srcSys) {
+        this.sourceSystem = srcSys
         setFromDate(from)
     }
-    HarvestResult(Date from, Date until) {
+    HarvestResult(Date from, Date until, String srcSys) {
+        this.sourceSystem = srcSys
         setFromDate(from)
         if (until != null) {
             untilDate = new Date(until.getTime())

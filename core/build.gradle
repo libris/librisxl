@@ -54,7 +54,8 @@ dependencies {
     compile 'org.slf4j:log4j-over-slf4j:1.7.6'
     compile 'org.apache.commons:commons-dbcp2:2.0.1'
     // Integration
-    compile "org.elasticsearch:elasticsearch:1.4.4"
+    compile "org.elasticsearch:elasticsearch:2.2.0"
+    compile "org.elasticsearch.plugin:delete-by-query:2.2.0"
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile 'com.vividsolutions:jts:1.13'
     compile 'org.postgresql:postgresql:9.4-1200-jdbc41'

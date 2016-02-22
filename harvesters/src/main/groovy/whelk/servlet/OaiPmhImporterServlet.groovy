@@ -37,6 +37,7 @@ class OaiPmhImporterServlet extends HttpServlet {
     static String SETTINGS_PFX = "harvester:"
     static String DEFAULT_HARVESTER = "whelk.harvester.OaiPmhHarvester"
     static int DEFAULT_INTERVAL = 3600
+    static String DEFAULT_SYSTEM = "XL"
 
     static final ObjectMapper mapper = new ObjectMapper()
 
@@ -181,8 +182,9 @@ class OaiPmhImporterServlet extends HttpServlet {
                 String serviceUrl = props.getProperty(service + ".serviceUrl")
                 String username = props.getProperty(service + ".username")
                 String password = props.getProperty(service + ".password")
+                String sourceSystem = props.getProperty(service + ".sourceSystem", DEFAULT_SYSTEM)
                 def job = new ScheduledJob(pico.getComponent(Class.forName(harvesterClass)), "${SETTINGS_PFX}${service}",
-                        serviceUrl, username, password, storage)
+                        serviceUrl, username, password, sourceSystem, storage)
                 jobs[service] = job
 
                 try {
@@ -208,20 +210,21 @@ class ScheduledJob implements Runnable {
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
 
-    String collection, serviceUrl, username, password
+    String collection, serviceUrl, username, password, sourceSystem
     OaiPmhHarvester harvester
     PostgreSQLComponent storage
     Map whelkState = null
     boolean active = true
     final static long WEEK_MILLIS = 604800000
 
-    ScheduledJob(OaiPmhHarvester imp, String coll, String url, String uname, String pword, PostgreSQLComponent pg) {
+    ScheduledJob(OaiPmhHarvester imp, String coll, String url, String uname, String pword, String sSystem, PostgreSQLComponent pg) {
         this.harvester = imp
         this.collection = coll
         this.storage = pg
         this.serviceUrl = url
         this.username = uname
         this.password = pword
+        this.sourceSystem = sSystem
         assert storage
         assert collection
         loadWhelkState().remove("lastError")
@@ -301,7 +304,7 @@ class ScheduledJob implements Runnable {
 
                 storage.saveSettings(collection, whelkState)
                 //def result = harvester.doImport(collection, null, -1, true, true, nextSince)
-                HarvestResult result = harvester.harvest(serviceUrl, username, password, "ListRecords", "marcxml", nextSince)
+                HarvestResult result = harvester.harvest(serviceUrl, username, password, sourceSystem, "ListRecords", "marcxml", nextSince)
                 log.trace("Import completed, result: $result")
                 if (result && (result.numberOfDocuments > 0 || result.numberOfDocumentsDeleted > 0 || result.numberOfDocumentsSkipped > 0)) {
                     log.debug("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDocumentsDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
