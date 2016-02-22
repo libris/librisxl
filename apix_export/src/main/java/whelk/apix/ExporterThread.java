@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -43,7 +44,14 @@ public class ExporterThread extends Thread
 
     public void run()
     {
-        m_ui.outputText("Beginning export batch.");
+        String from = "[beginning of time]";
+        String until = "[end of time]";
+        if (m_exportNewerThan != null)
+            from = m_exportNewerThan.format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
+        if (m_exportOlderThan != null)
+            until = m_exportOlderThan.format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
+
+        m_ui.outputText("Beginning export batch\n\tfrom: " + from + "\n\tuntil: " + until + ".");
         int exportedDocumentsCount = 0;
 
         try ( Connection connection = m_postgreSQLComponent.getConnection();

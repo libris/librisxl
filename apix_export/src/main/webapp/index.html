@@ -21,7 +21,9 @@
             <p class="container">
                 <label for="from">Export posts with a modified timestamp >=<br/>(leave empty for "beginning of time")</label>
                 <input type="text" id="from" value="2000-01-01T00:00:00+01:00[Europe/Stockholm]"><br/>
-                <button class="btn btn-default" type="button" onclick="post('app/start', getElementById('from').value)">Start</button>
+                <label for="until">Export posts with a modified timestamp <<br/>(leave empty for "end of time")</label>
+                <input type="text" id="until"><br/>
+                <button class="btn btn-default" type="button" onclick="post('app/start', getElementById('from').value.concat('\n').concat(getElementById('until').value))">Start</button>
                 <button class="btn btn-default" type="button" onclick="post('app/stop', null)">Stop</button>
             </p>
             <p>

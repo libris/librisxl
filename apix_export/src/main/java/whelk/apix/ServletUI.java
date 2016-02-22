@@ -68,16 +68,15 @@ public class ServletUI extends HttpServlet implements UI
             case "/start":
             {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(req.getInputStream()));
-                //System.out.println(reader.readLine());
-
                 if (m_exporterThread == null || m_exporterThread.getState() == Thread.State.TERMINATED)
                 {
                     ZonedDateTime from = parseDateTime(reader.readLine());
+                    ZonedDateTime until = parseDateTime(reader.readLine());
                     if (from != null)
                         System.out.println("Parsed: " + from.toString());
                     else
                         System.out.println("Parsed: null");
-                    m_exporterThread = new ExporterThread(m_properties, from, null, this);
+                    m_exporterThread = new ExporterThread(m_properties, from, until, this);
                     m_exporterThread.start();
                 }
                 else
@@ -140,8 +139,9 @@ public class ServletUI extends HttpServlet implements UI
             if (m_pseudoConsole[next] == null)
                 break;
 
-            output.append(m_pseudoConsole[next]);
-            output.append("\n");
+            //output.append(m_pseudoConsole[next]);
+            //output.append("\n");
+            output.insert(0, m_pseudoConsole[next] + "\n");
         }
 
         return  output.toString();
@@ -149,7 +149,7 @@ public class ServletUI extends HttpServlet implements UI
 
     private ZonedDateTime parseDateTime(String stringTime)
     {
-        if (stringTime.equals("null"))
+        if (stringTime == null || stringTime.equals("null"))
             return null;
 
         try
