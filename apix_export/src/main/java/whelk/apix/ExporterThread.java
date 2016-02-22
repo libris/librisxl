@@ -52,6 +52,23 @@ public class ExporterThread extends Thread
             until = m_exportOlderThan.format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
 
         m_ui.outputText("Beginning export batch\n\tfrom: " + from + "\n\tuntil: " + until + ".");
+
+        do
+        {
+            int exportedDocumentsCount = exportBatch();
+            m_ui.outputText("Exported " + exportedDocumentsCount + " documents.");
+            try
+            {
+                sleep(500);
+            } catch (InterruptedException e) { /* ignore */ }
+        }
+        while (m_exportOlderThan != null);
+
+        m_ui.outputText("Export batch ended. Will do nothing more without user input.");
+    }
+
+    private int exportBatch()
+    {
         int exportedDocumentsCount = 0;
 
         try ( Connection connection = m_postgreSQLComponent.getConnection();
@@ -60,31 +77,16 @@ public class ExporterThread extends Thread
         {
             while( resultSet.next() )
             {
-                String id = resultSet.getString("id");
-                String data = resultSet.getString("data");
-                String manifest = resultSet.getString("manifest");
-                ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
-                boolean deleted = resultSet.getBoolean("deleted");
-
-                HashMap datamap = mapper.readValue(data, HashMap.class);
-                HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
-                Document document = new Document(datamap, manifestmap);
-
-                JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
-                Document convertedDoucment = converter.convert(document);
-                String convertedText = (String) convertedDoucment.getData().get("content");
+                exportDocument(resultSet);
                 ++exportedDocumentsCount;
-
-                //m_ui.outputText("Temp, export document: " + id);
 
                 if (stopAtOpportunity.get())
                 {
+                    String id = resultSet.getString("id");
                     m_ui.outputText("Export batch cancelled! Last exported document: " + id);
                     break;
                 }
             }
-            if (!stopAtOpportunity.get())
-                m_ui.outputText("Export batch complete, " + exportedDocumentsCount + " documents.");
         }
         catch (Exception e)
         {
@@ -94,6 +96,25 @@ public class ExporterThread extends Thread
             m_ui.outputText("Export batch stopped with exception: " + e + " Callstack:\n " + callStack);
         }
 
+        return exportedDocumentsCount;
+    }
+
+    private void exportDocument(ResultSet resultSet)
+            throws SQLException, IOException
+    {
+        String id = resultSet.getString("id");
+        String data = resultSet.getString("data");
+        String manifest = resultSet.getString("manifest");
+        ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+        boolean deleted = resultSet.getBoolean("deleted");
+
+        HashMap datamap = mapper.readValue(data, HashMap.class);
+        HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
+        Document document = new Document(datamap, manifestmap);
+
+        JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
+        Document convertedDoucment = converter.convert(document);
+        String convertedText = (String) convertedDoucment.getData().get("content");
     }
 
     private PreparedStatement prepareStatement(Connection connection)
