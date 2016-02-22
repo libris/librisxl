@@ -83,12 +83,11 @@ public class ListRecords
         }
         else {
             // Normal record retrieval
-            try (Connection dbconn = DataBase.getConnection()) {
-                PreparedStatement preparedStatement = getMatchingDocuments(dbconn, fromDateTime, untilDateTime, setSpec);
-                ResultSet resultSet = preparedStatement.executeQuery();
+            try (Connection dbconn = DataBase.getConnection();
+                 PreparedStatement preparedStatement = getMatchingDocuments(dbconn, fromDateTime, untilDateTime, setSpec);
+                 ResultSet resultSet = preparedStatement.executeQuery())
+            {
                 respond(request, response, metadataPrefix, onlyIdentifiers, resultSet);
-                resultSet.close();
-                preparedStatement.close();
             }
         }
     }

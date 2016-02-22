@@ -69,17 +69,10 @@ public class ListSets
         writer.writeEndElement(); // set
 
         // Dynamic sigel-sets
-        try (Connection dbconn = DataBase.getConnection())
+        try (Connection dbconn = DataBase.getConnection();
+             PreparedStatement preparedStatement = prepareStatement(dbconn);
+             ResultSet resultSet = preparedStatement.executeQuery())
         {
-            String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-
-            // Construct the query
-            String selectSQL = "SELECT DISTINCT data#>>'{@graph,1,heldBy,notation}' AS sigel FROM " + tableName +
-                    " WHERE manifest->>'collection' = 'hold' ";
-            PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
-            preparedStatement.setFetchSize(512);
-            ResultSet resultSet = preparedStatement.executeQuery();
-
             while (resultSet.next())
             {
                 String sigel = resultSet.getString("sigel");
@@ -92,11 +85,23 @@ public class ListSets
                 writer.writeEndElement(); // setName
                 writer.writeEndElement(); // set
             }
-            resultSet.close();
-            preparedStatement.close();
         }
 
         writer.writeEndElement(); // ListSets
         ResponseCommon.writeOaiPmhClose(writer, request);
+    }
+
+    private static PreparedStatement prepareStatement(Connection dbconn)
+            throws SQLException
+    {
+        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+
+        // Construct the query
+        String selectSQL = "SELECT DISTINCT data#>>'{@graph,1,heldBy,notation}' AS sigel FROM " + tableName +
+                " WHERE manifest->>'collection' = 'hold' ";
+        PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
+        preparedStatement.setFetchSize(512);
+
+        return preparedStatement;
     }
 }

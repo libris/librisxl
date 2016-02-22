@@ -27,8 +27,9 @@ public class ListRecordTrees
     }
 
     /**
-     * Sends a response to a ListRecords (or ListIdentifiers) request, with a metadataPrefix tagged with :expanded
-     * (meaning a tree must be built for each record, containing all other nodes linked to by that record)
+     * Sends a response to a ListRecords (or ListIdentifiers) request, with a metadataPrefix tagged with _expanded.
+     * A tree is built for each record, containing all other nodes linked to by that record. The exception is auth
+     * records, which are only included in one level (else we would build trees of half of libris for every post).
      */
     public static void respond(HttpServletRequest request, HttpServletResponse response,
                                 ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec,
@@ -38,26 +39,10 @@ public class ListRecordTrees
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // First connection, used for iterating over the requested root nodes. ID only.
-        try (Connection firstConn = DataBase.getConnection()) {
-
-            // Construct the query
-            String selectSQL = "SELECT id, manifest, deleted, modified, data#>'{@graph,1,heldBy,notation}' AS sigel FROM "
-                    + tableName + " WHERE TRUE ";
-            if (setSpec.getRootSet() != null)
-                selectSQL += " AND manifest->>'collection' = ?";
-            if (setSpec.getSubset() != null)
-                selectSQL += " AND data @> '{\"@graph\":[{\"heldBy\": {\"@type\": \"Organization\", \"notation\": \"" +
-                        Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
-
-            PreparedStatement preparedStatement = firstConn.prepareStatement(selectSQL);
-            preparedStatement.setFetchSize(512);
-
-            // Assign parameters
-            if (setSpec.getRootSet() != null)
-                preparedStatement.setString(1, setSpec.getRootSet());
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-
+        try (Connection dbconn = DataBase.getConnection();
+             PreparedStatement preparedStatement = prepareRootStatement(dbconn, setSpec);
+             ResultSet resultSet = preparedStatement.executeQuery())
+        {
             // Build the xml response feed
             XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
             xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
@@ -77,10 +62,7 @@ public class ListRecordTrees
                 modificationTimes.earliestModification = modified;
                 modificationTimes.latestModification = modified;
 
-                // Use a second db connection for the embedding process
-                try (Connection secondConn = DataBase.getConnection()) {
-                    addNodeAndSubnodesToTree(id, visitedIDs, secondConn, nodeDatas, modificationTimes);
-                }
+                addNodeAndSubnodesToTree(id, visitedIDs, nodeDatas, modificationTimes);
 
                 if (fromDateTime != null && fromDateTime.compareTo(modificationTimes.latestModification) > 0)
                     continue;
@@ -101,8 +83,6 @@ public class ListRecordTrees
 
                 emitRecord(resultSet, mergedDocument, modificationTimes, writer, requestedFormat, onlyIdentifiers);
             }
-            resultSet.close();
-            preparedStatement.close();
 
             if (xmlIntroWritten)
             {
@@ -120,42 +100,45 @@ public class ListRecordTrees
      * Called recursively to gather the nodes that will make up a tree. The 'data' portion of every concerned record
      * will be added to the nodeDatas list.
      */
-    public static void addNodeAndSubnodesToTree(String id, Set<String> visitedIDs, Connection connection,
-                                                 List<String> nodeDatas, ModificationTimes modificationTimes)
+    public static void addNodeAndSubnodesToTree(String id, Set<String> visitedIDs, List<String> nodeDatas,
+                                                ModificationTimes modificationTimes)
             throws SQLException, IOException
     {
         if (visitedIDs.contains(id))
             return;
         visitedIDs.add(id);
 
-        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-        String selectSQL = "SELECT id, data, modified, manifest->>'collection' as collection FROM " + tableName + " WHERE id = ?";
-        PreparedStatement preparedStatement = connection.prepareStatement(selectSQL);
-        preparedStatement.setString(1, id);
-        ResultSet resultSet = preparedStatement.executeQuery();
-        if (!resultSet.next())
-            return;
+        Map map = null;
 
-        // Only allow one level of recursive auth posts into the tree, or we'll end up adding half the database
-        // into each tree.
-        String collection = resultSet.getString("collection");
-        if (collection.equals("auth"))
-            return;
+        try (Connection dbconn = DataBase.getConnection();
+             PreparedStatement preparedStatement = prepareNodeStatement(dbconn, id);
+             ResultSet resultSet = preparedStatement.executeQuery())
+        {
+            if (!resultSet.next())
+                return;
 
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonBlob = resultSet.getString("data");
-        nodeDatas.add(jsonBlob);
-        ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+            String jsonBlob = resultSet.getString("data");
+            nodeDatas.add(jsonBlob);
 
-        if (modified.compareTo(modificationTimes.earliestModification) < 0)
-            modificationTimes.earliestModification = modified;
-        if (modified.compareTo(modificationTimes.latestModification) > 0)
-            modificationTimes.latestModification = modified;
+            // Only allow one level of recursive auth posts into the tree, or we'll end up adding half the database
+            // into each tree.
+            String collection = resultSet.getString("collection");
+            if (collection.equals("auth"))
+                return;
 
-        Map map = mapper.readValue(jsonBlob, HashMap.class);
-        resultSet.close();
-        preparedStatement.close();
-        parseMap(map, visitedIDs, connection, nodeDatas, modificationTimes);
+            ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+
+            if (modified.compareTo(modificationTimes.earliestModification) < 0)
+                modificationTimes.earliestModification = modified;
+            if (modified.compareTo(modificationTimes.latestModification) > 0)
+                modificationTimes.latestModification = modified;
+
+            ObjectMapper mapper = new ObjectMapper();
+            map = mapper.readValue(jsonBlob, HashMap.class);
+        }
+
+        if (map != null)
+            parseMap(map, visitedIDs, nodeDatas, modificationTimes);
     }
 
     @SuppressWarnings("unchecked")
@@ -182,8 +165,56 @@ public class ListRecordTrees
         return new Document(id, rootMap);
     }
 
-    private static void parseMap(Map map, Set<String> visitedIDs, Connection connection,
-                                 List<String> nodeDatas, ModificationTimes modificationTimes)
+    private static PreparedStatement prepareRootStatement(Connection dbconn, SetSpec setSpec)
+            throws SQLException
+    {
+        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+
+        // Construct the query
+        String selectSQL = "SELECT id, manifest, deleted, modified, data#>'{@graph,1,heldBy,notation}' AS sigel FROM "
+                + tableName + " WHERE TRUE ";
+        if (setSpec.getRootSet() != null)
+            selectSQL += " AND manifest->>'collection' = ?";
+        if (setSpec.getSubset() != null)
+            selectSQL += " AND data @> '{\"@graph\":[{\"heldBy\": {\"@type\": \"Organization\", \"notation\": \"" +
+                    Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
+
+        PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
+
+        // Assign parameters
+        if (setSpec.getRootSet() != null)
+            preparedStatement.setString(1, setSpec.getRootSet());
+
+        preparedStatement.setFetchSize(512);
+
+        return preparedStatement;
+    }
+
+    private static PreparedStatement prepareNodeStatement(Connection dbconn, String id)
+            throws SQLException
+    {
+        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+        String selectSQL = "SELECT id, data, modified, manifest->>'collection' as collection FROM " + tableName + " WHERE id = ?";
+        PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
+        preparedStatement.setString(1, id);
+
+        return preparedStatement;
+    }
+
+    private static PreparedStatement prepareIdentifiersStatement(Connection dbconn, String id)
+            throws SQLException
+    {
+        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+
+        String sql = "SELECT id FROM lddb__identifiers WHERE identifier = ?";
+        PreparedStatement preparedStatement = dbconn.prepareStatement(sql);
+        preparedStatement.setString(1, id);
+
+        return preparedStatement;
+    }
+
+    private static void parseMap(Map map, Set<String> visitedIDs, List<String> nodeDatas,
+                                 ModificationTimes modificationTimes)
             throws SQLException, IOException
     {
         for (Object key : map.keySet())
@@ -191,29 +222,27 @@ public class ListRecordTrees
             Object value = map.get(key);
 
             if (value instanceof Map)
-                parseMap( (Map) value, visitedIDs, connection, nodeDatas, modificationTimes );
+                parseMap( (Map) value, visitedIDs, nodeDatas, modificationTimes );
             else if (value instanceof List)
-                parseList( (List) value, visitedIDs, connection, nodeDatas, modificationTimes );
+                parseList( (List) value, visitedIDs, nodeDatas, modificationTimes );
             else
-                parsePotentialId( key, value, visitedIDs, connection, nodeDatas, modificationTimes );
+                parsePotentialId( key, value, visitedIDs, nodeDatas, modificationTimes );
         }
     }
 
-    private static void parseList(List list, Set<String> visitedIDs, Connection connection,
-                                  List<String> nodeDatas, ModificationTimes modificationTimes)
+    private static void parseList(List list, Set<String> visitedIDs, List<String> nodeDatas, ModificationTimes modificationTimes)
             throws SQLException, IOException
     {
         for (Object item : list)
         {
             if (item instanceof Map)
-                parseMap( (Map) item, visitedIDs, connection, nodeDatas, modificationTimes );
+                parseMap( (Map) item, visitedIDs, nodeDatas, modificationTimes );
             else if (item instanceof List)
-                parseList( (List) item, visitedIDs, connection, nodeDatas, modificationTimes );
+                parseList( (List) item, visitedIDs, nodeDatas, modificationTimes );
         }
     }
 
-    private static void parsePotentialId(Object key, Object value, Set<String> visitedIDs, Connection connection,
-                                         List<String> nodeDatas, ModificationTimes modificationTimes)
+    private static void parsePotentialId(Object key, Object value, Set<String> visitedIDs, List<String> nodeDatas, ModificationTimes modificationTimes)
             throws SQLException, IOException
     {
         if ( !(key instanceof String) || !(value instanceof String))
@@ -228,20 +257,21 @@ public class ListRecordTrees
 
         potentialID = potentialID.replace("resource/", "");
 
-        String sql = "SELECT id FROM lddb__identifiers WHERE identifier = ?";
-        PreparedStatement preparedStatement = connection.prepareStatement(sql);
-        preparedStatement.setString(1, potentialID);
-        ResultSet resultSet = preparedStatement.executeQuery();
         LinkedList<String> linkedIDs = new LinkedList<String>();
-        if (resultSet.next())
+
+        try (Connection dbconn = DataBase.getConnection();
+             PreparedStatement preparedStatement = prepareIdentifiersStatement(dbconn, potentialID);
+             ResultSet resultSet = preparedStatement.executeQuery())
         {
-            String id = resultSet.getString("id");
-            linkedIDs.add(id);
+            if (resultSet.next())
+            {
+                String id = resultSet.getString("id");
+                linkedIDs.add(id);
+            }
         }
-        resultSet.close();
-        preparedStatement.close();
+
         for (String id : linkedIDs)
-            addNodeAndSubnodesToTree( id, visitedIDs, connection, nodeDatas, modificationTimes );
+            addNodeAndSubnodesToTree( id, visitedIDs, nodeDatas, modificationTimes );
     }
 
     private static void emitRecord(ResultSet resultSet, Document mergedDocument, ModificationTimes modificationTimes,

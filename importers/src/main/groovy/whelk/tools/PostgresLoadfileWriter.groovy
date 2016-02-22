@@ -125,7 +125,7 @@ class PostgresLoadfileWriter
         }
 
         // Don't forget about the last document being constructed. Must be written as well.
-        if (!new HashMap().equals(documentMap))
+        if ( ! (new HashMap().equals(documentMap)) )
             appendToLoadFile(documentMap)
 
         cleanup();
@@ -156,6 +156,7 @@ class PostgresLoadfileWriter
 
     private void appendToLoadFile(HashMap documentMap)
     {
+        documentMap.manifest[Document.CHANGED_IN_KEY] = "vcopy"
         Document doc = new Document(MarcJSONConverter.toJSONMap(documentMap.record), documentMap.manifest)
 
         /* columns:

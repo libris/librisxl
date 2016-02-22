@@ -40,6 +40,8 @@ class ElasticSearch implements Index {
     String defaultType = "record"
     String defaultIndex = null
 
+    boolean haltOnFailure = false
+
     JsonLdLinkExpander expander
 
     private static final ObjectMapper mapper = new ObjectMapper()
@@ -137,6 +139,9 @@ class ElasticSearch implements Index {
                         bulk.add(new IndexRequest(getIndexName(), (doc.collection ?: defaultType), toElasticId(doc.id)).source(doc.data))
                     } catch (Throwable e) {
                         log.error("Failed to create indexrequest for document ${doc.id}. Reason: ${e.message}")
+                        if (haltOnFailure) {
+                            throw e
+                        }
                     }
                 } else {
                     log.warn("Document ${doc.id} is not JSON (${doc.contentType}). Will not index.")
