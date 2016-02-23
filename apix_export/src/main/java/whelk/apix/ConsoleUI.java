@@ -1,5 +1,6 @@
 package whelk.apix;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Properties;
@@ -12,11 +13,11 @@ public class ConsoleUI implements UI
 {
     ZonedDateTime parseFrom(String[] args)
     {
-        for (int i = 1; i < args.length; ++i)
+        for (int i = 0; i < args.length; ++i)
         {
             if ("-from".equals(args[i]) && i+1 < args.length)
             {
-                return ZonedDateTime.parse(args[i], DateTimeFormatter.ISO_INSTANT);
+                return ZonedDateTime.parse(args[i+1], DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("UTC")));
             }
         }
 
@@ -25,11 +26,11 @@ public class ConsoleUI implements UI
 
     ZonedDateTime parseUntil(String[] args)
     {
-        for (int i = 1; i < args.length; ++i)
+        for (int i = 0; i < args.length; ++i)
         {
             if ("-until".equals(args[i]) && i+1 < args.length)
             {
-                return ZonedDateTime.parse(args[i], DateTimeFormatter.ISO_INSTANT);
+                return ZonedDateTime.parse(args[i+1], DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("UTC")));
             }
         }
 
@@ -38,7 +39,7 @@ public class ConsoleUI implements UI
 
     public ConsoleUI(String[] args)
     {
-        Properties apixProperties = PropertyLoader.loadProperties("apix");
+        Properties apixProperties = PropertyLoader.loadProperties("secret");
 
         final ExporterThread exporterThread = new ExporterThread(
                 apixProperties,

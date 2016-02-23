@@ -16,13 +16,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ExporterThread extends Thread
 {
-    /**
-     * This atomic boolean may be toggled from outside, causing the thread to stop exporting and return
-     */
+    // This atomic boolean may be toggled from outside, causing the thread to stop exporting and return
     public AtomicBoolean stopAtOpportunity = new AtomicBoolean(false);
 
     // The "from" parameter. The exporter will export everything with a (modified) timestamp >= this value.
-    private final ZonedDateTime m_exportNewerThan;
+    // When running in continuous mode (no end date), this value will be updated with every batch (to the latest)
+    // timestamp in that batch.
+    private ZonedDateTime m_exportNewerThan;
 
     // The "until" parameter. The exporter will export everything with a (modified) timestamp < this value.
     private final ZonedDateTime m_exportOlderThan;
@@ -59,10 +59,10 @@ public class ExporterThread extends Thread
             m_ui.outputText("Exported " + exportedDocumentsCount + " documents.");
             try
             {
-                sleep(500);
+                sleep(2000);
             } catch (InterruptedException e) { /* ignore */ }
         }
-        while (m_exportOlderThan != null);
+        while (m_exportOlderThan == null && !stopAtOpportunity.get());
 
         m_ui.outputText("Export batch ended. Will do nothing more without user input.");
     }
@@ -80,6 +80,10 @@ public class ExporterThread extends Thread
                 exportDocument(resultSet);
                 ++exportedDocumentsCount;
 
+                ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+                if (modified.compareTo(m_exportNewerThan) > 0)
+                    m_exportNewerThan = modified;
+
                 if (stopAtOpportunity.get())
                 {
                     String id = resultSet.getString("id");
@@ -93,7 +97,7 @@ public class ExporterThread extends Thread
             StringBuilder callStack = new StringBuilder("");
             for (StackTraceElement frame : e.getStackTrace())
                 callStack.append(frame.toString() + "\n");
-            m_ui.outputText("Export batch stopped with exception: " + e + " Callstack:\n " + callStack);
+            m_ui.outputText("Export batch stopped with exception: " + e + " Callstack:\n" + callStack);
         }
 
         return exportedDocumentsCount;
@@ -135,6 +139,7 @@ public class ExporterThread extends Thread
             sql += "AND modified >= ? ";
         if (m_exportOlderThan != null)
             sql += "AND modified < ? ";
+        sql += "ORDER BY modified ";
 
         int parameterIndex = 1;
         PreparedStatement statement = connection.prepareStatement(sql);
