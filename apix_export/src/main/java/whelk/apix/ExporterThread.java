@@ -11,6 +11,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -116,25 +117,28 @@ public class ExporterThread extends Thread
         HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
         Document document = new Document(datamap, manifestmap);
 
-        String lastModifingSystem = (String) manifestmap.get("changedIn");
+        String collection = document.getCollection();
 
-        // Do not export if the latest changeset originated within vcopy/voyager
-        if (lastModifingSystem == "vcopy")
-            return;
+        String apixPostUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/new";
+        String voyagerId = getVoyagerId(document);
+        if (voyagerId != null)
+            apixPostUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat" + voyagerId;
 
-        /*if (deleted)
-            DO APIX DELETE*/
+        System.out.println("Time to write to: " + apixPostUrl);
 
         JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
         Document convertedDoucment = converter.convert(document);
         String convertedText = (String) convertedDoucment.getData().get("content");
+
+        /*if (deleted)
+            DO APIX DELETE*/
     }
 
     private PreparedStatement prepareStatement(Connection connection)
             throws SQLException
     {
         String sql = "SELECT id, manifest, data, modified, deleted FROM " + m_properties.getProperty("sqlMaintable") +
-                " WHERE TRUE ";
+                " WHERE manifest->>'changedIn' <> 'vcopy' ";
         if (m_exportNewerThan != null)
             sql += "AND modified >= ? ";
         if (m_exportOlderThan != null)
@@ -150,5 +154,25 @@ public class ExporterThread extends Thread
         statement.setFetchSize(64);
 
         return statement;
+    }
+
+    private String getVoyagerId(Document document)
+    {
+        final String idPrefix = "https://libris.kb.se/";
+
+        List<String> ids = document.getIdentifiers();
+        for (String id: ids)
+        {
+            if (id.startsWith(idPrefix))
+            {
+                String potentialId = id.substring(idPrefix.length()-1);
+                if (potentialId.startsWith("/auth/") ||
+                        potentialId.startsWith("/bib/") ||
+                        potentialId.startsWith("/hold/"))
+                return potentialId;
+            }
+        }
+
+        return null;
     }
 }
