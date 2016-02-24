@@ -79,9 +79,7 @@ public class GetRecord
                 modificationTimes.earliestModification = modified;
                 modificationTimes.latestModification = modified;
 
-                try (Connection secondConn = DataBase.getConnection()) {
-                    ListRecordTrees.addNodeAndSubnodesToTree(id, visitedIDs, secondConn, nodeDatas, modificationTimes);
-                }
+                ListRecordTrees.addNodeAndSubnodesToTree(id, visitedIDs, nodeDatas, modificationTimes);
 
                 // Value of modificationTimes.latestModification will have changed during tree building.
                 modified = modificationTimes.latestModification;

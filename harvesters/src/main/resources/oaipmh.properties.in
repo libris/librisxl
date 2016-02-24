@@ -8,4 +8,5 @@ service.serviceUrl   = URL
 service.username     = USERNAME
 service.password     = PASSWORD
 service.interval     = NUMBER OF SECONDS BETWEEN HARVESTS
+service.sourceSystem = SOURCE_SYSTEM_DEFAULTS_TO_XL
 scheduledServices    = one,or,more,service

@@ -30,6 +30,8 @@ The project layout is as follows:
 
 1. Install gradle from \<http://gradle.org/\> (or use a package manager, e.g.: brew install gradle). Check gradle -version and make sure that Groovy version matches groovyVersion in build.gradle.
 2. Install elasticsearch from \<http://elasticsearch.org/\> (or use a package manager, e.g.: brew install elasticsearch).
+    2.1. For elasticsearch version 2.2 and greater, you must also install the delete-by-query plugin.
+        $ bin/plugin install delete-by-query
 3. Install postgresql. At least version 9.4 (brew install postgresql)
 
 Optionally, see details about using a Graph Store at the end of this document.
