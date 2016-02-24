@@ -303,6 +303,7 @@ class StandardWhelk implements Whelk {
         }
         if (!doc && location && location.responseCode > 300 && location.responseCode < 400) {
             id = location.uri.toString()
+            log.debug("Id from location: $id")
         }
         if (!dataset) {
             dataset = plugins.find { it instanceof ShapeComputer }?.calculateTypeFromIdentifier(id)

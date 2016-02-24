@@ -151,9 +151,14 @@ class PostgreSQLStorage extends AbstractSQLStorage {
 
     @Override
     boolean store(Document doc, boolean withVersioning = versioning) {
+        return store(doc, withVersioning, false)
+    }
+
+
+    boolean store(Document doc, boolean withVersioning, boolean forceSave) {
         log.debug("Document ${doc.identifier} checksum before save: ${doc.checksum}")
         if (versioning && withVersioning) {
-            if (!saveVersion(doc)) {
+            if (!saveVersion(doc) && forceSave == false) {
                 return true // Same document already in storage.
             }
         }
@@ -520,9 +525,11 @@ class PostgreSQLStorage extends AbstractSQLStorage {
     @Override
     void remove(String identifier, String dataset) {
         if (versioning) {
-            log.debug("Creating tombstone record with id ${identifier}")
-            store(createTombstone(identifier, dataset))
+            def entry = load(identifier)?.getEntry() ?: [:]
+            log.debug("Creating tombstone record with id ${identifier} and entry: $entry")
+            store(createTombstone(identifier, dataset, entry), versioning, true)
         } else {
+            log.debug("Removing $identifier permanently")
             Connection connection = connectionPool.getConnection()
             PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
             try {
