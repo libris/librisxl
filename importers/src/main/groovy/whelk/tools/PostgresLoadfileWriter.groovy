@@ -158,6 +158,7 @@ class PostgresLoadfileWriter
     {
         documentMap.manifest[Document.CHANGED_IN_KEY] = "vcopy"
         Document doc = new Document(MarcJSONConverter.toJSONMap(documentMap.record), documentMap.manifest)
+        doc = m_marcFrameConverter.convert(doc)
 
         /* columns:
         id text not null unique primary key,
