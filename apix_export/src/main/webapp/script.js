@@ -19,6 +19,13 @@ function reload_string(elementid, url)
     httpRequest.send(null);
 }
 
+function post(url, data)
+{
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.open("POST", url, true);
+    httpRequest.send(data);
+}
+
 function reload_console()
 {
     reload_string("console", "app/console");

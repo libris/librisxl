@@ -5,23 +5,31 @@ import whelk.Document;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
+import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ExporterThread extends Thread
 {
-    /**
-     * This atomic boolean may be toggled from outside, causing the thread to stop exporting and return
-     */
+    // This atomic boolean may be toggled from outside, causing the thread to stop exporting and return
     public AtomicBoolean stopAtOpportunity = new AtomicBoolean(false);
 
     // The "from" parameter. The exporter will export everything with a (modified) timestamp >= this value.
-    private final ZonedDateTime m_exportNewerThan;
+    // When running in continuous mode (no end date), this value will be updated with every batch (to the latest)
+    // timestamp in that batch.
+    private ZonedDateTime m_exportNewerThan;
 
     // The "until" parameter. The exporter will export everything with a (modified) timestamp < this value.
     private final ZonedDateTime m_exportOlderThan;
@@ -43,7 +51,31 @@ public class ExporterThread extends Thread
 
     public void run()
     {
-        m_ui.outputText("Beginning export batch.");
+        String from = "[beginning of time]";
+        String until = "[end of time]";
+        if (m_exportNewerThan != null)
+            from = m_exportNewerThan.format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
+        if (m_exportOlderThan != null)
+            until = m_exportOlderThan.format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
+
+        m_ui.outputText("Beginning export batch\n\tfrom: " + from + "\n\tuntil: " + until + ".");
+
+        do
+        {
+            int exportedDocumentsCount = exportBatch();
+            m_ui.outputText("Exported " + exportedDocumentsCount + " documents.");
+            try
+            {
+                sleep(2000);
+            } catch (InterruptedException e) { /* ignore */ }
+        }
+        while (m_exportOlderThan == null && !stopAtOpportunity.get());
+
+        m_ui.outputText("Export batch ended. Will do nothing more without user input.");
+    }
+
+    private int exportBatch()
+    {
         int exportedDocumentsCount = 0;
 
         try ( Connection connection = m_postgreSQLComponent.getConnection();
@@ -52,50 +84,74 @@ public class ExporterThread extends Thread
         {
             while( resultSet.next() )
             {
-                String id = resultSet.getString("id");
-                String data = resultSet.getString("data");
-                String manifest = resultSet.getString("manifest");
-                ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
-                boolean deleted = resultSet.getBoolean("deleted");
-
-                HashMap datamap = mapper.readValue(data, HashMap.class);
-                HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
-                Document document = new Document(datamap, manifestmap);
-
-                JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
-                Document convertedDoucment = converter.convert(document);
-                String convertedText = (String) convertedDoucment.getData().get("content");
+                exportDocument(resultSet);
                 ++exportedDocumentsCount;
 
-                //m_ui.outputText("Temp, export document: " + id);
+                ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+                if (modified.compareTo(m_exportNewerThan) > 0)
+                    m_exportNewerThan = modified;
 
                 if (stopAtOpportunity.get())
                 {
+                    String id = resultSet.getString("id");
                     m_ui.outputText("Export batch cancelled! Last exported document: " + id);
                     break;
                 }
             }
-            m_ui.outputText("Export batch complete, " + exportedDocumentsCount + " documents.");
         }
         catch (Exception e)
         {
             StringBuilder callStack = new StringBuilder("");
             for (StackTraceElement frame : e.getStackTrace())
                 callStack.append(frame.toString() + "\n");
-            m_ui.outputText("Export batch stopped with exception: " + e + " Callstack:\n " + callStack);
+            m_ui.outputText("Export batch stopped with exception: " + e + " Callstack:\n" + callStack);
         }
 
+        return exportedDocumentsCount;
+    }
+
+    private void exportDocument(ResultSet resultSet)
+            throws SQLException, IOException
+    {
+        String id = resultSet.getString("id");
+        String data = resultSet.getString("data");
+        String manifest = resultSet.getString("manifest");
+        ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+        boolean deleted = resultSet.getBoolean("deleted");
+
+        HashMap datamap = mapper.readValue(data, HashMap.class);
+        HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
+        Document document = new Document(datamap, manifestmap);
+
+        String collection = document.getCollection();
+
+        String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/new";
+        String voyagerId = getVoyagerId(document);
+        if (voyagerId != null)
+            apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat" + voyagerId;
+
+        System.out.println("Time to write to: " + apixDocumentUrl);
+
+
+
+        JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
+        Document convertedDoucment = converter.convert(document);
+        String convertedText = (String) convertedDoucment.getData().get("content");
+
+        /*if (deleted)
+            DO APIX DELETE*/
     }
 
     private PreparedStatement prepareStatement(Connection connection)
             throws SQLException
     {
         String sql = "SELECT id, manifest, data, modified, deleted FROM " + m_properties.getProperty("sqlMaintable") +
-                " WHERE TRUE ";
+                " WHERE manifest->>'changedIn' <> 'vcopy' ";
         if (m_exportNewerThan != null)
             sql += "AND modified >= ? ";
         if (m_exportOlderThan != null)
             sql += "AND modified < ? ";
+        sql += "ORDER BY modified ";
 
         int parameterIndex = 1;
         PreparedStatement statement = connection.prepareStatement(sql);
@@ -106,5 +162,64 @@ public class ExporterThread extends Thread
         statement.setFetchSize(64);
 
         return statement;
+    }
+
+    private String getVoyagerId(Document document)
+    {
+        final String idPrefix = "https://libris.kb.se/";
+
+        List<String> ids = document.getIdentifiers();
+        for (String id: ids)
+        {
+            if (id.startsWith(idPrefix))
+            {
+                String potentialId = id.substring(idPrefix.length()-1);
+                if (potentialId.startsWith("/auth/") ||
+                        potentialId.startsWith("/bib/") ||
+                        potentialId.startsWith("/hold/"))
+                return potentialId;
+            }
+        }
+
+        return null;
+    }
+
+    private String apixRequest(String stringUrl, String httpVerb)
+            throws Exception
+    {
+        URL url = new URL(stringUrl);
+
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        //connection.setDoOutput(true);
+        connection.setRequestMethod(httpVerb);
+        connection.setRequestProperty("Content-Type", "application/xml");
+
+        String responseString = null;
+        try (InputStream inputStream = connection.getInputStream())
+        {
+            responseString = new Scanner( inputStream, "UTF-8").useDelimiter("\\A").next();
+        }
+
+        int responseCode = connection.getResponseCode();
+
+        switch (responseCode)
+        {
+            case 200:
+            case 201:
+                // fine
+                break;
+            case 303:
+                String redirectedTo = connection.getHeaderField("Location");
+                // extract new id from redirection location
+                break;
+            default:
+            {
+                if (responseString == null)
+                    responseString = "";
+                throw new Exception("APIX responded with http " + responseCode + ": " + responseString);
+            }
+        }
+
+        return responseString;
     }
 }
