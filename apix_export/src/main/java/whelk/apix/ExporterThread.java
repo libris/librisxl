@@ -5,7 +5,12 @@ import whelk.Document;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -13,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ExporterThread extends Thread
@@ -119,12 +125,14 @@ public class ExporterThread extends Thread
 
         String collection = document.getCollection();
 
-        String apixPostUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/new";
+        String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/new";
         String voyagerId = getVoyagerId(document);
         if (voyagerId != null)
-            apixPostUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat" + voyagerId;
+            apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat" + voyagerId;
 
-        System.out.println("Time to write to: " + apixPostUrl);
+        System.out.println("Time to write to: " + apixDocumentUrl);
+
+
 
         JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
         Document convertedDoucment = converter.convert(document);
@@ -174,5 +182,44 @@ public class ExporterThread extends Thread
         }
 
         return null;
+    }
+
+    private String apixRequest(String stringUrl, String httpVerb)
+            throws Exception
+    {
+        URL url = new URL(stringUrl);
+
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        //connection.setDoOutput(true);
+        connection.setRequestMethod(httpVerb);
+        connection.setRequestProperty("Content-Type", "application/xml");
+
+        String responseString = null;
+        try (InputStream inputStream = connection.getInputStream())
+        {
+            responseString = new Scanner( inputStream, "UTF-8").useDelimiter("\\A").next();
+        }
+
+        int responseCode = connection.getResponseCode();
+
+        switch (responseCode)
+        {
+            case 200:
+            case 201:
+                // fine
+                break;
+            case 303:
+                String redirectedTo = connection.getHeaderField("Location");
+                // extract new id from redirection location
+                break;
+            default:
+            {
+                if (responseString == null)
+                    responseString = "";
+                throw new Exception("APIX responded with http " + responseCode + ": " + responseString);
+            }
+        }
+
+        return responseString;
     }
 }
