@@ -621,8 +621,8 @@ class ConversionPart {
         def tokenMap = dfn.tokenMap
         if (tokenMap) {
             reverseTokenMap = [:]
-            this.tokenMap = (Map) (tokenMap instanceof String)?
-                fieldHandler.tokenMaps[tokenMap] : tokenMap
+            this.tokenMap = (Map) ((tokenMap instanceof String)?
+                fieldHandler.tokenMaps[tokenMap] : tokenMap)
             this.tokenMap.each { k, v ->
                 if (v != null) {
                     reverseTokenMap[v] = k
@@ -1371,9 +1371,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 def subDfn = (MarcSubFieldHandler) subfields[code]
                 boolean ok = false
                 if (subDfn) {
-                    def ent = (Map) (subDfn.aboutEntityName)?
+                    def ent = (Map) ((subDfn.aboutEntityName)?
                         entityMap[subDfn.aboutEntityName] :
-                        (codeLinkSplits[code] ?: entity)
+                        (codeLinkSplits[code] ?: entity))
                     if ((subDfn.requiresI1 && subDfn.requiresI1 != value.ind1) ||
                         (subDfn.requiresI2 && subDfn.requiresI2 != value.ind2)) {
                         ok = true // rule does not apply here
@@ -1530,7 +1530,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (entity == null) {
             def pending = pendingResources[id]
             entity = localEntites[id] = newEntity(state, (String) pending.resourceType)
-            def link = (String) pending.link ?: pending.addLink
+            def link = (String) (pending.link ?: pending.addLink)
             addValue(owner, link, entity, pending.containsKey('addLink'))
         }
         return entity
