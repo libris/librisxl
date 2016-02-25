@@ -25,6 +25,7 @@ import java.sql.ResultSet
 class PostgresLoadfileWriter
 {
     private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
+    private static final int THREAD_COUNT = 8;
 
     private final String m_exportFileName;
     private final String m_collection;
@@ -34,6 +35,7 @@ class PostgresLoadfileWriter
     private final MarcFrameConverter m_marcFrameConverter;
     private final BufferedWriter m_mainTableWriter;
     private final BufferedWriter m_identifiersWriter;
+    private final Thread[] m_threadPool;
 
     public PostgresLoadfileWriter(String exportFileName, String collection)
     {
@@ -65,6 +67,7 @@ class PostgresLoadfileWriter
         m_marcFrameConverter = new MarcFrameConverter();
         m_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
         m_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName+"_identifiers"), Charset.forName("UTF-8"));
+        m_threadPool = new Thread[THREAD_COUNT];
     }
 
     public void writePostgresLoadFile()
@@ -156,10 +159,37 @@ class PostgresLoadfileWriter
 
     private void appendToLoadFile(HashMap documentMap)
     {
-        documentMap.manifest[Document.CHANGED_IN_KEY] = "vcopy"
-        Document doc = new Document(MarcJSONConverter.toJSONMap(documentMap.record), documentMap.manifest)
-        doc = m_marcFrameConverter.convert(doc)
+        // Find a suitable thread from the pool to do the conversion
 
+        int i = 0;
+        while(true)
+        {
+            i++;
+            if (i == THREAD_COUNT)
+                i = 0;
+
+            if (m_threadPool[i] == null || m_threadPool[i].state == Thread.State.TERMINATED)
+            {
+                m_threadPool[i] = new Thread(new Runnable()
+                {
+                    void run()
+                    {
+                        documentMap.manifest[Document.CHANGED_IN_KEY] = "vcopy";
+                        Document doc = new Document(MarcJSONConverter.toJSONMap(documentMap.record), documentMap.manifest);
+                        doc = m_marcFrameConverter.convert(doc);
+                        writeDocumentToLoadFile(doc);
+                    }
+                });
+                m_threadPool[i].start();
+                return;
+            }
+
+            Thread.yield()
+        }
+    }
+
+    private synchronized void writeDocumentToLoadFile(Document doc)
+    {
         /* columns:
         id text not null unique primary key,
         data jsonb not null,
