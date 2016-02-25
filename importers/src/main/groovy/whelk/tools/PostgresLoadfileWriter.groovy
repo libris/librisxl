@@ -131,7 +131,10 @@ class PostgresLoadfileWriter
 
         // Don't forget about the last document being constructed. Must be written as well.
         if ( ! (new HashMap().equals(documentMap)) )
+        {
             appendToOutputQueue(documentMap, true)
+            ++savedDocumentsCount;
+        }
 
         cleanup();
 
