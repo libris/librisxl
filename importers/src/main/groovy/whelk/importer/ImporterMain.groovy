@@ -64,7 +64,7 @@ class ImporterMain {
 
     void goMysqlDump(String toFileName, String collection) {
         PostgresLoadfileWriter writer = new PostgresLoadfileWriter(toFileName, collection);
-        writer.writePostgresLoadFile()
+        writer.generatePostgresLoadFile()
     }
 
     void goReindex(String collection) {

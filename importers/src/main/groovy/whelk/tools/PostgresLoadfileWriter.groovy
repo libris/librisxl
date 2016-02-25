@@ -26,6 +26,7 @@ class PostgresLoadfileWriter
 {
     private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
     private static final int THREAD_COUNT = 8;
+    private static final int CONVERSIONS_PER_THREAD = 200;
 
     private final String m_exportFileName;
     private final String m_collection;
@@ -36,7 +37,7 @@ class PostgresLoadfileWriter
     private final BufferedWriter m_mainTableWriter;
     private final BufferedWriter m_identifiersWriter;
     private final Thread[] m_threadPool;
-    private Vector<HashMap> m_workingSet = new Vector<HashMap>();
+    private Vector<HashMap> m_workingSet = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
 
     public PostgresLoadfileWriter(String exportFileName, String collection)
     {
@@ -71,7 +72,7 @@ class PostgresLoadfileWriter
         m_threadPool = new Thread[THREAD_COUNT];
     }
 
-    public void writePostgresLoadFile()
+    public void generatePostgresLoadFile()
     {
         long startTime = System.currentTimeMillis();
         int savedDocumentsCount = 0;
@@ -104,7 +105,7 @@ class PostgresLoadfileWriter
                     // New ID, store current document and begin constructing a new one
                     if (documentMap)
                     {
-                        appendToLoadFile(documentMap, false)
+                        appendToOutputQueue(documentMap, false)
 
                         if (++savedDocumentsCount % 1000 == 0)
                         {
@@ -130,7 +131,7 @@ class PostgresLoadfileWriter
 
         // Don't forget about the last document being constructed. Must be written as well.
         if ( ! (new HashMap().equals(documentMap)) )
-            appendToLoadFile(documentMap, true)
+            appendToOutputQueue(documentMap, true)
 
         cleanup();
 
@@ -158,14 +159,14 @@ class PostgresLoadfileWriter
         }
     }
 
-    private void appendToLoadFile(HashMap documentMap, boolean flush)
+    private void appendToOutputQueue(HashMap documentMap, boolean flush)
     {
         m_workingSet.add(documentMap);
-        if (m_workingSet.size() < 200 && !flush)
+        if (m_workingSet.size() < CONVERSIONS_PER_THREAD && !flush)
             return;
 
         Vector<HashMap> threadWorkLoad = m_workingSet;
-        m_workingSet = new Vector<HashMap>(200);
+        m_workingSet = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
 
         // Find a suitable thread from the pool to do the conversion
 
@@ -255,6 +256,12 @@ class PostgresLoadfileWriter
 
     private void cleanup()
     {
+        for (int i = 0; i < THREAD_COUNT; ++i)
+        {
+            if (m_threadPool[i] != null)
+                m_threadPool[i].join();
+        }
+
         m_identifiersWriter.close();
         m_mainTableWriter.close();
 
