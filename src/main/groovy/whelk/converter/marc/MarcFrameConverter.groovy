@@ -1468,8 +1468,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def useLinks = Collections.emptyList()
             if (computeLinks) {
                 def use = computeLinks.use
-                Map resourceMap = (Map) (computeLinks.mapping instanceof Map)?
-                        computeLinks.mapping : tokenMaps[computeLinks.mapping]
+                Map resourceMap = (Map) ((computeLinks.mapping instanceof Map)?
+                        computeLinks.mapping : tokenMaps[computeLinks.mapping])
                 def linkTokens = value.subfields.findAll { Map it ->
                     use in it.keySet() }.collect { ((Map.Entry) it.iterator().next()).value }
                 useLinks = linkTokens.collect {
