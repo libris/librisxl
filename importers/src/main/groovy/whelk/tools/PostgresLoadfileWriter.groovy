@@ -36,6 +36,7 @@ class PostgresLoadfileWriter
     private final BufferedWriter m_mainTableWriter;
     private final BufferedWriter m_identifiersWriter;
     private final Thread[] m_threadPool;
+    private Vector<HashMap> m_workingSet = new Vector<HashMap>();
 
     public PostgresLoadfileWriter(String exportFileName, String collection)
     {
@@ -103,7 +104,7 @@ class PostgresLoadfileWriter
                     // New ID, store current document and begin constructing a new one
                     if (documentMap)
                     {
-                        appendToLoadFile(documentMap)
+                        appendToLoadFile(documentMap, false)
 
                         if (++savedDocumentsCount % 1000 == 0)
                         {
@@ -129,7 +130,7 @@ class PostgresLoadfileWriter
 
         // Don't forget about the last document being constructed. Must be written as well.
         if ( ! (new HashMap().equals(documentMap)) )
-            appendToLoadFile(documentMap)
+            appendToLoadFile(documentMap, true)
 
         cleanup();
 
@@ -157,8 +158,15 @@ class PostgresLoadfileWriter
         }
     }
 
-    private void appendToLoadFile(HashMap documentMap)
+    private void appendToLoadFile(HashMap documentMap, boolean flush)
     {
+        m_workingSet.add(documentMap);
+        if (m_workingSet.size() < 200 && !flush)
+            return;
+
+        Vector<HashMap> threadWorkLoad = m_workingSet;
+        m_workingSet = new Vector<HashMap>(200);
+
         // Find a suitable thread from the pool to do the conversion
 
         int i = 0;
@@ -174,10 +182,13 @@ class PostgresLoadfileWriter
                 {
                     void run()
                     {
-                        documentMap.manifest[Document.CHANGED_IN_KEY] = "vcopy";
-                        Document doc = new Document(MarcJSONConverter.toJSONMap(documentMap.record), documentMap.manifest);
-                        doc = m_marcFrameConverter.convert(doc);
-                        writeDocumentToLoadFile(doc);
+                        for (HashMap dm : threadWorkLoad)
+                        {
+                            dm.manifest[Document.CHANGED_IN_KEY] = "vcopy";
+                            Document doc = new Document(MarcJSONConverter.toJSONMap(dm.record), dm.manifest);
+                            doc = m_marcFrameConverter.convert(doc);
+                            writeDocumentToLoadFile(doc);
+                        }
                     }
                 });
                 m_threadPool[i].start();
