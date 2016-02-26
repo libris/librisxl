@@ -28,6 +28,10 @@ class PostgresLoadfileWriter
     private static final int THREAD_COUNT = 8;
     private static final int CONVERSIONS_PER_THREAD = 200;
 
+    // USED FOR DEV ONLY, MUST _NEVER_ BE SET TO TRUE ONCE XL GOES INTO PRODUCTION. WITH THIS SETTING THE IMPORT WILL
+    // _SKIP_ DOCUMENTS THAT FAIL CONVERSION, RESULTING IN POTENTIAL DATA LOSS IF USED WHEN IMPORTING TO A PRODUCTION XL
+    private static final boolean FAULT_TOLERANT_MODE = true;
+
     private final String m_exportFileName;
     private final String m_collection;
     private final Connection m_connection
@@ -38,9 +42,29 @@ class PostgresLoadfileWriter
     private final BufferedWriter m_identifiersWriter;
     private final Thread[] m_threadPool;
     private Vector<HashMap> m_workingSet = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
+    private Vector<String> m_failedIds = new Vector<String>();
+
+    // Abort on unhandled exceptions, including those on worker threads.
+    static
+    {
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()
+        {
+            @Override
+            void uncaughtException(Thread thread, Throwable throwable)
+            {
+                System.out.println("PANIC ABORT, unhandled exception:\n");
+                throwable.printStackTrace();
+                System.exit(-1);
+            }
+        });
+    }
 
     public PostgresLoadfileWriter(String exportFileName, String collection)
     {
+        if (FAULT_TOLERANT_MODE)
+            System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
+                "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
+
         Class.forName(JDBC_DRIVER);
 
         Properties props = PropertyLoader.loadProperties("mysql");
@@ -90,8 +114,6 @@ class PostgresLoadfileWriter
             if (record)
             {
                 def field001List = record.getControlfields("001");
-                if (field001List.size() == 0)
-                    continue; // skip document if no 001 control field
 
                 def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
                 if ("SUPPRESSRECORD" in aList)
@@ -139,7 +161,16 @@ class PostgresLoadfileWriter
         cleanup();
 
         long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
-        System.out.println("Done. Saved " + savedDocumentsCount + " documents in " + elapsedSeconds + " seconds.");
+        System.out.println("Done. Processed " + savedDocumentsCount + " documents in " + elapsedSeconds + " seconds.");
+        if (!m_failedIds.isEmpty())
+        {
+            System.out.println("Out of the " + savedDocumentsCount + " documents, " + m_failedIds.size() +
+                    " failed conversion and WERE NOT INCLUDED IN THE GENERATED FILE:");
+            for ( String id : m_failedIds )
+            {
+                System.out.println(id);
+            }
+        }
     }
 
     private void addOaipmhSetSpecs(HashMap documentMap, ResultSet resultSet)
@@ -189,9 +220,26 @@ class PostgresLoadfileWriter
                         for (HashMap dm : threadWorkLoad)
                         {
                             dm.manifest[Document.CHANGED_IN_KEY] = "vcopy";
-                            Document doc = new Document(MarcJSONConverter.toJSONMap(dm.record), dm.manifest);
-                            doc = m_marcFrameConverter.convert(doc);
-                            writeDocumentToLoadFile(doc);
+                            Document doc = null;
+                            if (FAULT_TOLERANT_MODE)
+                            {
+                                try
+                                {
+                                    doc = new Document(MarcJSONConverter.toJSONMap(dm.record), dm.manifest);
+                                    doc = m_marcFrameConverter.convert(doc);
+                                    writeDocumentToLoadFile(doc);
+                                } catch (Exception e)
+                                {
+                                    String voyagerId = dm.manifest.get(Document.ALTERNATE_ID_KEY)[0];
+                                    m_failedIds.add(voyagerId);
+                                }
+                            }
+                            else
+                            {
+                                doc = new Document(MarcJSONConverter.toJSONMap(dm.record), dm.manifest);
+                                doc = m_marcFrameConverter.convert(doc);
+                                writeDocumentToLoadFile(doc);
+                            }
                         }
                     }
                 });
@@ -219,6 +267,11 @@ class PostgresLoadfileWriter
 
         final delimiterString = new String(delimiter);
 
+        String quoted = doc.getQuotedAsString();
+
+        doc.findIdentifiers()
+        List<String> identifiers = doc.getIdentifiers();
+
         // Write to main table file
 
         m_mainTableWriter.write(doc.getId());
@@ -227,7 +280,6 @@ class PostgresLoadfileWriter
         m_mainTableWriter.write(delimiter);
         m_mainTableWriter.write( doc.getManifestAsJson().replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
         m_mainTableWriter.write(delimiter);
-        String quoted = doc.getQuotedAsString();
         if (quoted)
             m_mainTableWriter.write(quoted.replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString));
         else
@@ -238,9 +290,6 @@ class PostgresLoadfileWriter
         m_mainTableWriter.newLine();
 
         // Write to identifiers table file
-
-        doc.findIdentifiers()
-        List<String> identifiers = doc.getIdentifiers();
 
         /* columns:
         id text not null,
