@@ -36,6 +36,7 @@ class ImporterMain {
         pico.addComponent(ElasticReindexer.class)
         pico.addComponent(DefinitionsImporter.class)
         pico.addComponent(LinkFinder.class)
+        pico.addComponent(MockImporter.class)
 
         pico.start()
 
@@ -114,6 +115,12 @@ class ImporterMain {
         println("Linkfinding completed. Elapsed time: ${System.currentTimeMillis()-startTime}")
     }
 
+
+    void goSetVersion() {
+        def importer = pico.getComponent(MockImporter.class);
+        importer.run(null);
+    }
+
     static void main(String... args) {
         if (args.length == 0) {
             println("Usage: <progam> [action] [collection]")
@@ -138,6 +145,9 @@ class ImporterMain {
         } else if (args[0] == "linkfind") {
             def main = new ImporterMain("secret")
             main.goLinkFind(args[1])
+        } else if (args[0] == "setversion") {
+            def main = new ImporterMain("secret")
+            main.goSetVersion()
         } else {
             println("Unknown action ${args[0]}")
             System.exit(1)
