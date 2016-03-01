@@ -52,6 +52,8 @@ dependencies {
     compile 'ch.qos.logback:logback-classic:1.1.2'
     compile 'org.slf4j:slf4j-api:1.7.6'
     compile 'org.slf4j:log4j-over-slf4j:1.7.6'
+    compile 'org.apache.jena:apache-jena-libs:3.0.0'
+
     // Integration
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile 'com.vividsolutions:jts:1.13'
