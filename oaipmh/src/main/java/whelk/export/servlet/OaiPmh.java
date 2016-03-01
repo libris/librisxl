@@ -2,6 +2,7 @@ package whelk.export.servlet;
 
 import whelk.converter.FormatConverter;
 import whelk.converter.JsonLD2DublinCoreConverter;
+import whelk.converter.JsonLD2RdfXml;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.util.PropertyLoader;
 
@@ -49,6 +50,7 @@ public class OaiPmh extends HttpServlet
         supportedFormats = new HashMap<String, FormatDescription>();
         supportedFormats.put("oai_dc", new FormatDescription(new JsonLD2DublinCoreConverter(), true, "http://www.openarchives.org/OAI/2.0/oai_dc.xsd", "http://www.openarchives.org/OAI/2.0"));
         supportedFormats.put("marcxml", new FormatDescription(new JsonLD2MarcXMLConverter(), true, "http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd", "http://www.loc.gov/MARC21/slim"));
+        supportedFormats.put("rdfxml", new FormatDescription(new JsonLD2RdfXml(), true, null, null));
         supportedFormats.put("jsonld", new FormatDescription(null, false, null, null));
 
         // For each format add another format with the :expanded postfix and the same parameters
