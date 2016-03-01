@@ -264,7 +264,7 @@ class DocumentAPI extends BasicAPI {
                 }
 
                 log.debug("Saving document (${doc.identifier})")
-                def identifier = whelk.add(doc)
+                def identifier = whelk.add(doc, false, identifierSupplied)
 
                 def locationRef = request.getRequestURL()
 

@@ -149,12 +149,11 @@ class PostgreSQLStorage extends AbstractSQLStorage {
         return statusMap
     }
 
-    @Override
     boolean store(Document doc, boolean withVersioning = versioning) {
         return store(doc, withVersioning, false)
     }
 
-
+    @Override
     boolean store(Document doc, boolean withVersioning, boolean forceSave) {
         log.debug("Document ${doc.identifier} checksum before save: ${doc.checksum}")
         if (versioning && withVersioning) {

@@ -75,7 +75,7 @@ class StandardWhelk implements Whelk {
      * Whelk methods
      *******************************/
     @groovy.transform.CompileStatic
-    String add(Document doc, boolean minorUpdate = false) {
+    String add(Document doc, boolean minorUpdate = false, boolean update = false, boolean forceSave = false) {
         log.debug("Add single document ${doc.identifier}")
         if (!doc.data || doc.data.length < 1) {
             throw new DocumentException(DocumentException.EMPTY_DOCUMENT, "Tried to store empty document.")
@@ -84,10 +84,11 @@ class StandardWhelk implements Whelk {
         if (availableStorages.isEmpty()) {
             throw new WhelkAddException("No storages available for content-type ${doc.contentType}")
         }
+
         doc = prepareDocument(doc)
         boolean saved = false
         for (storage in availableStorages) {
-            saved = (storage.store(doc) || saved)
+            saved = (storage.store(doc, storage.versioning, forceSave) || saved)
             log.debug("Storage ${storage.id} result from save: $saved")
         }
         if (saved) {
@@ -96,7 +97,7 @@ class StandardWhelk implements Whelk {
                 getIndex().index(doc.identifier, doc.dataset, ((JsonDocument)doc).getDataAsMap())
             }
             if (!minorUpdate) {
-                notifyCamel(doc, ADD_OPERATION, [:])
+                notifyCamel(doc, ADD_OPERATION, ["update":update])
             } else if (log.isDebugEnabled()) {
                 log.debug("Saved document silently, without notifying camel.")
             }
@@ -318,7 +319,7 @@ class StandardWhelk implements Whelk {
         } else if (log.isDebugEnabled()) {
             log.debug("Sending DELETE operation to camel for identifier: ${id} with dataset ${dataset}")
         }
-        def extraInfo = [:]
+        def extraInfo = ["update":"true"]
         if (doc && !doc.deleted && doc instanceof JsonDocument) {
             // Temporary necessity to handle removal of librisxl-born documents from voyager
             extraInfo["controlNumber"] = doc.dataAsMap.get("controlNumber")

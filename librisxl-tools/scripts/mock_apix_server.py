@@ -2,6 +2,7 @@ import SimpleHTTPServer
 import SocketServer
 
 import sys
+import re
 
 import cgi
 
@@ -13,7 +14,7 @@ elif len(sys.argv) > 1:
     PORT = int(sys.argv[1])
     I = ""
 else:
-    PORT = 8100
+    PORT = 8001
     I = ""
 
 
@@ -44,9 +45,10 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             put_data = self.rfile.read(content_length)
             print put_data
 
-            if self.path == "/apix/0.1/cat/test/bib/new":
+            if self.path.endswith("/newhold"):
                 print "Creating a new record."
                 self.send_response(201)
+                self.send_header('Location', 'http://%(interface)s:%(port)s%(path)s' % dict(interface=I or "127.0.0.1", port=PORT, path='/hold/012345'))
             else:
                 print "Updating record %s" % self.path
                 self.send_response(303)

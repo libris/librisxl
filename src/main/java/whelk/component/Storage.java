@@ -13,7 +13,7 @@ public interface Storage extends Component {
      * @return true if the operation was successful.
      * @throws IdentifierException if the Document doesn't have an identifier.
      */
-    public boolean store(Document d, boolean withVersioning);
+    public boolean store(Document d, boolean withVersioning, boolean forceSave);
     /**
      * Stores an object in this Storage with default versioning settings.
      * @param d the Document

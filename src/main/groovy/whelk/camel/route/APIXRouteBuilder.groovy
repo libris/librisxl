@@ -46,20 +46,24 @@ class APIXRouteBuilder extends WhelkRouteBuilderPlugin {
                 .otherwise()
                     .end()
 
-        from(retriesQueue).delay(60000).routingSlip(header("next"))
+        from(retriesQueue).delay(60000).to(messageQueue) // routingSlip(header("next"))
 
 
         from(messageQueue)
-            .filter("groovy", "['${Whelk.ADD_OPERATION}', '${Whelk.REMOVE_OPERATION}'].contains(request.getHeader('whelk:operation'))")
+            .filter("groovy", "['${Whelk.ADD_OPERATION}', '${Whelk.REMOVE_OPERATION}'].contains(request.getHeader('whelk:operation'))") // Only process ADD and REMOVE operations
             .filter("groovy", "['auth','bib','hold'].contains(request.getHeader('document:dataset'))") // Only save auth hold and bib
             .process(apixProcessor)
-            .to(apixUri)
-            .process(apixResponseProcessor)
             .choice()
                 .when(header("retry"))
                     .to(retriesQueue)
                 .otherwise()
-                    .end()
+                    .to(apixUri)
+                    .process(apixResponseProcessor)
+                    .choice()
+                        .when(header("retry"))
+                            .to(retriesQueue)
+                        .otherwise()
+                            .end()
 
     }
 
@@ -91,7 +95,7 @@ class APIXHttpResponseFailedBean {
             log.info("Failed to deliver to ${e.uri} with status ${e.statusCode}. Sending message to retry queue.")
             message.setHeader("handled", false)
             message.setHeader("retry", true)
-            message.setHeader("next", message.getHeader("JMSDestination").toString().replace("queue://", "activemq:"))
+            //message.setHeader("next", message.getHeader("JMSDestination").toString().replace("queue://", "activemq:"))
         } else {
             log.error("Unrecoverable error received: ${e.statusCode}", e)
             message.headers.each { key, value ->

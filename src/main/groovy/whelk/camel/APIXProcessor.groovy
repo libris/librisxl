@@ -1,7 +1,7 @@
 package whelk.camel
 
+import groovy.transform.Synchronized
 import groovy.util.logging.Slf4j as Log
-
 import whelk.*
 import whelk.plugin.*
 import whelk.exception.*
@@ -19,6 +19,8 @@ class APIXProcessor extends BasicPlugin implements Processor {
     List<FormatConverter> converters = []
     List<Filter> filters = []
 
+    static final int MAX_RETRY_COUNT = 60
+
     APIXProcessor(String prefix) {
         StringBuilder pathBuilder = new StringBuilder(prefix)
         while (pathBuilder[-1] == '/') {
@@ -27,82 +29,104 @@ class APIXProcessor extends BasicPlugin implements Processor {
         this.apixPathPrefix = pathBuilder.toString()
     }
 
+    static Set queuedIds = new HashSet<String>()
+
     void bootstrap() {
         converters = plugins.findAll { it instanceof FormatConverter }
         filters = plugins.findAll { it instanceof Filter }
     }
 
+    @Synchronized
+    static isIdQueued(String id) {
+        return queuedIds.contains(id)
+    }
+
+    @Synchronized
+    static addIdToQueue(String id) {
+        println("Adding $id to queue")
+        queuedIds.add(id)
+    }
+
+    @Synchronized
+    static removeIdFromQueue(String id) {
+        println("Removing $id from queue")
+        queuedIds.remove(id)
+    }
+
+
     @Override
     public void process(Exchange exchange) throws Exception {
-        println "APIX start processing."
+        log.debug("APIX start processing.")
         Message message = exchange.getIn()
+
+        // Remove retry-header to prevent looping
+        message.removeHeader("retry")
 
         String operation = message.getHeader("whelk:operation")
 
-        log.debug("processing ${message.getHeader('document:identifier')} for APIX")
-        log.debug("Received operation: " + operation)
-        log.debug("dataset: ${message.getHeader('document:dataset')}")
-        boolean messagePrepared = false
-
-        if (message.getHeader("CamelHttpPath")) {
-            log.debug("Message is already prepped ... Forego all treatment.")
-            message.setHeader(Exchange.HTTP_PATH, message.getHeader("CamelHttpPath"))
-            messagePrepared = true
-        }
+        log.trace("processing ${message.getHeader('document:identifier')} for APIX")
+        log.trace("Received operation: " + operation)
+        log.trace("dataset: ${message.getHeader('document:dataset')}")
+        log.trace("update: ${message.getHeader('whelk:update')}")
 
         message.setHeader(Exchange.CONTENT_TYPE, "application/xml")
-        if (operation == Whelk.REMOVE_OPERATION) {
-            message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
-            if (!messagePrepared) {
-                def doc = createDocument(message)
-                log.debug("Recreated document in preparation for deletion. (${doc?.identifier})")
-                String voyagerUri
-                if (doc instanceof JsonDocument) {
-                    voyagerUri = getVoyagerUri(doc)
-                    log.debug("got voyageruri $voyagerUri from doc")
-                } else {
-                    voyagerUri = getVoyagerUri(message.getHeader("document:identifier"), message.getHeader("document:dataset"))
-                    log.debug("got voyageruri $voyagerUri from headers")
-                }
-                message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
-                if (doc) {
-                    prepareMessage(doc, message)
-                }
-            }
-        } else {
-            if (!messagePrepared) {
-                def doc = createDocument(message)
-                String voyagerUri = getVoyagerUri(doc)
-                if (!voyagerUri) {
-                    if (message.getHeader("document:dataset") == "hold") {
-                        voyagerUri = getUriForNewHolding(doc)
-                    } else {
-                        voyagerUri =  "/" + message.getHeader("document:dataset") +"/new"
-                    }
-                }
-                doc = runConverters(doc)
-                prepareMessage(doc, message)
 
-                log.debug("PUT to APIX at ${apixPathPrefix + voyagerUri}")
-                message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
+        String identifier = message.getHeader('document:identifier')
+        log.debug("Loading fresh document from storage for id ${identifier}")
+
+        Document doc = whelk.get(identifier)
+        String voyagerUri = getVoyagerUri(doc)
+        int retryCount = message.getHeader("retryCount", -1) + 1
+
+        if ((message.getHeader('whelk:update')?.toString() == "true" || isIdQueued(identifier)) &&
+                voyagerUri == null &&
+                (retryCount < MAX_RETRY_COUNT)) {
+
+            log.debug("Sending message $identifier to retry queue.")
+            message.setHeader("retry", true)
+            message.setHeader("retryCount", retryCount)
+
+        } else {
+            // If we get here, any remaining retry-count should be reset. Failures after this point should trigger a new retry-loop.
+            message.removeHeader("retryCount")
+            if (!voyagerUri) {
+                log.debug("Setting paths to create new document.")
+                if (message.getHeader("document:dataset") == "hold") {
+                    voyagerUri = getUriForNewHolding(doc)
+                } else {
+                    voyagerUri = "/" + message.getHeader("document:dataset") + "/new"
+                }
             }
-            message.setHeader(Exchange.HTTP_METHOD, HttpMethods.PUT)
+            if (doc.isDeleted()) {
+                log.debug("Document is deleted")
+                message.setHeader(Exchange.HTTP_METHOD, HttpMethods.DELETE)
+            } else {
+                doc = runConverters(doc)
+                log.trace("Setting method PUT to APIX")
+
+                message.setHeader(Exchange.HTTP_METHOD, HttpMethods.PUT)
+                addIdToQueue(identifier)
+            }
+            prepareMessage(doc, message)
+            log.trace("Setting path: ${apixPathPrefix + voyagerUri}")
+            message.setHeader(Exchange.HTTP_PATH, apixPathPrefix + voyagerUri)
         }
-        log.debug("Sending message to ${message.getHeader(Exchange.HTTP_PATH)}")
+
+        log.trace("Sending message to ${message.getHeader(Exchange.HTTP_PATH)}")
 
         exchange.setOut(message)
     }
 
     String getUriForNewHolding(Document doc) {
-        log.debug("Constructing proper URI for creating new holding.")
+        log.trace("Constructing proper URI for creating new holding.")
         def holdingFor = doc.dataAsMap.about.holdingFor.get("@id")
-        log.debug("Document is holding for $holdingFor, loading that document ...")
+        log.trace("Document is holding for $holdingFor, loading that document ...")
         def location = whelk.locate(holdingFor)
-        log.debug("Found location: $location")
+        log.trace("Found location: $location")
         def bibDoc = location?.document
-        log.debug("It contained a doc: $bibDoc")
+        log.trace("It contained a doc: $bibDoc")
         if (!bibDoc && location) {
-            log.debug(" ... or rather not. Loading redirect: ${location.uri}")
+            log.trace(" ... or rather not. Loading redirect: ${location.uri}")
             bibDoc = whelk.get(location.uri.toString())
         }
         String apixNewHold = null
@@ -114,27 +138,27 @@ class APIXProcessor extends BasicPlugin implements Processor {
         } catch (Exception e) {
             throw new IdentifierException("Could not figure out voyager-id for document ${doc.identifier}")
         }
-        log.debug("Constructed URI $apixNewHold for creating holding.")
+        log.trace("Constructed URI $apixNewHold for creating holding.")
         return apixNewHold
     }
 
     String getVoyagerUri(String xlIdentifier, String dataset) {
-        log.debug("trying to build voyager uri from $xlIdentifier and $dataset")
+        log.trace("trying to build voyager uri from $xlIdentifier and $dataset")
         if (xlIdentifier ==~ /\/(auth|bib|hold)\/\d+/) {
-            log.debug("Identified apix uri: ${xlIdentifier}")
+            log.trace("Identified apix uri: ${xlIdentifier}")
             return xlIdentifier
         }
-        log.debug("Could not assertain a voyager URI for $xlIdentifier")
+        log.trace("Could not assertain a voyager URI for $xlIdentifier")
         return null
     }
 
     String getVoyagerUri(Document doc) {
         String vUri = getVoyagerUri(doc.identifier, doc.dataset)
-        log.debug("proposed voy id from identifier: $vUri")
-        log.debug("Looking in ${doc.identifiers}")
+        log.trace("proposed voy id from identifier: $vUri")
+        log.trace("Looking in ${doc.identifiers}")
         for (altId in doc.identifiers) {
             if (altId ==~ /\/(auth|bib|hold)\/\d+/) {
-                log.debug("Identified apix uri from alternates: ${altId}")
+                log.trace("Identified apix uri from alternates: ${altId}")
                 return altId
             }
         }
@@ -146,9 +170,9 @@ class APIXProcessor extends BasicPlugin implements Processor {
         Document doc
         if (body instanceof String) {
             doc = whelk.get(docMessage.getBody())
-            log.debug("Loaded document ${doc?.identifier}")
+            log.trace("Loaded document ${doc?.identifier}")
         } else {
-            log.debug("Setting document data with type ${body.getClass().getName()}")
+            log.trace("Setting document data with type ${body.getClass().getName()}")
             def metaentry = mapper.readValue(docMessage.getHeader("document:metaentry") as String, Map)
             doc = whelk.createDocument(metaentry.entry.contentType).withData(body).withMeta(metaentry.meta).withEntry(metaentry.entry)
         }
@@ -156,14 +180,14 @@ class APIXProcessor extends BasicPlugin implements Processor {
     }
 
     Document runConverters(Document doc) {
-        log.debug("converters: $converters filters: $filters")
+        log.trace("converters: $converters filters: $filters")
         if (doc && (converters || filters)) {
             for (converter in converters) {
-                log.debug("Running converter ${converter.id}.")
+                log.trace("Running converter ${converter.id}.")
                 doc = converter.convert(doc)
             }
             for (filter in filters) {
-                log.debug("Running filter ${filter.id}.")
+                log.trace("Running filter ${filter.id}.")
                 doc = filter.filter(doc)
             }
         }
@@ -171,7 +195,7 @@ class APIXProcessor extends BasicPlugin implements Processor {
     }
 
     void prepareMessage(Document doc, Message docMessage) {
-        log.debug("Resetting document ${doc.identifier} in message.")
+        log.trace("Resetting document ${doc.identifier} in message.")
         docMessage.setBody(doc.data)
         docMessage.setHeader("document:metaentry", doc.metadataAsJson)
     }
@@ -188,7 +212,7 @@ class APIXResponseProcessor extends BasicPlugin implements Processor {
                 log.trace("APIX response message header: $key = $value")
             }
         }
-        log.info("APIX reponse code: ${message.getHeader('CamelHttpResponseCode')} for ${message.getHeader('CamelHttpMethod')} ${message.getHeader('CamelHttpPath')}")
+        log.debug("APIX reponse code: ${message.getHeader('CamelHttpResponseCode')} for ${message.getHeader('CamelHttpMethod')} ${message.getHeader('CamelHttpPath')}")
         if (message.getHeader("CamelHttpMethod") == HttpMethods.PUT && message.getHeader("CamelHttpResponseCode") == 200) {
             String xmlBody = message.getBody(String.class)
             def xmlresponse = new XmlSlurper(false,false).parseText(xmlBody)
@@ -206,29 +230,34 @@ class APIXResponseProcessor extends BasicPlugin implements Processor {
                 whelk.add(failedDocument, true)
                 if (xmlresponse.@error_message.toString().endsWith(" error = 203") && xmlresponse.@error_code.toString() == "2") {
                     message.setHeader("retry", true)
-                    log.info("Setting retry with next: ${message.getHeader('JMSDetination')}")
-                    message.setHeader("next", message.getHeader("JMSDestination").toString().replace("queue://", "activemq:"))
+                    //log.info("Setting retry with next: ${message.getHeader('JMSDestination')}")
+                    //message.setHeader("next", message.getHeader("JMSDestination").toString().replace("queue://", "activemq:"))
                 } else {
                     log.info("Error ${xmlresponse.@error_code} (${xmlresponse.@error_message}) is not deemed retryable.")
+                    APIXProcessor.removeIdFromQueue(doc.identifier)
                 }
             } else {
                 log.info("Received XML response from APIX: $xmlBody")
+                APIXProcessor.removeIdFromQueue(doc.identifier)
             }
         } else if (message.getHeader("CamelHttpMethod") == HttpMethods.PUT && (message.getHeader("CamelHttpResponseCode") == 201 || message.getHeader("CamelHttpResponseCode") == 303)) {
             log.debug("Document created in APIX. Try to harvest the identifier ...")
+            Document doc = whelk.get(message.getHeader("document:identifier"))
             try {
                 String recordNumber = message.getHeader("Location").split("/")[-1]
                 String dataset = message.getHeader("Location").split("/")[-2]
-                Document doc = whelk.get(message.getHeader("document:identifier"))
-                log.info("Document type: ${doc.getClass().getName()}")
+                log.trace("Document type: ${doc.getClass().getName()}")
+                log.debug("Harvested identifier: ${dataset}/${recordNumber}")
                 def docDataMap = doc.getDataAsMap()
                 docDataMap['controlNumber'] = recordNumber
                 doc.withData(docDataMap)
                 doc.addIdentifier("/"+dataset+"/"+recordNumber)
-                whelk.add(doc, true)
+                whelk.add(doc, true, true, true)
                 log.debug("Added identifier /${dataset}/${recordNumber} to document ${doc.identifier}")
             } catch (Exception e) {
                 log.error("Tried to get controlNumber from APIX response and failed: ${e.message}", e)
+            } finally {
+                APIXProcessor.removeIdFromQueue(doc.identifier)
             }
         }
     }

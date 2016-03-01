@@ -54,8 +54,7 @@ class ElasticSearchStorage extends ElasticSearch implements Storage {
     }
 
 
-    @Override
-    boolean store(Document doc, boolean withVersioning = versioning) {
+    boolean store(Document doc, boolean withVersioning = versioning, boolean forceSave = false) {
         if (readOnly) {
             log.debug("Storage is read only. Not saving.")
             return true
