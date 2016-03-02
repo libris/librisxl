@@ -14,12 +14,6 @@
     </encoder>
   </appender>
 
-  <logger name="whelk.camel.APIXProcessor">
-      <level value="debug"/>
-  </logger>
-  <logger name="whelk.camel.APIXResponseProcessor">
-      <level value="debug"/>
-  </logger>
   <logger name="whelk.api.BasicAPI">
       <level value="warn"/>
   </logger>
