@@ -110,8 +110,17 @@ public class ResponseCommon
         String convertedText = null;
         if (formatDescription.converter != null)
         {
-            Document convertedDocument = formatDescription.converter.convert(jsonLDdoc);
-            convertedText = (String) convertedDocument.getData().get("content");
+            try
+            {
+                Document convertedDocument = formatDescription.converter.convert(jsonLDdoc);
+                convertedText = (String) convertedDocument.getData().get("content");
+            }
+            catch (Exception e) // Depending on the converter, a variety of exceptions may been thrown here.
+            {
+                writer.writeCharacters("Error: Document conversion failed.");
+                logger.error("Conversion failed for document: " + jsonLDdoc.getId(), e);
+                return;
+            }
         }
         else
             convertedText = jsonLDdoc.getDataAsString();
