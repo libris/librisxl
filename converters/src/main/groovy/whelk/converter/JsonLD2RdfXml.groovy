@@ -3,6 +3,7 @@ package whelk.converter
 import org.apache.commons.io.IOUtils
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
+import org.apache.jena.rdf.model.RDFWriter
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
@@ -24,21 +25,17 @@ class JsonLD2RdfXml implements FormatConverter {
         readContextFromDb();
 
         Map originalData = doc.getData();
-
-        // Temporary, remove if link linding links gets rid of (urlencoded?) brackets "[]"
-        purgeLinkfinderLinks(originalData);
-
         Map framed = JsonLd.frame(doc.getId(), originalData);
         framed.putAll(m_context);
-
         String framedString = mapper.writeValueAsString(framed);
 
         InputStream input = IOUtils.toInputStream(framedString);
         Model model = ModelFactory.createDefaultModel();
-
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         model = model.read(input, Document.BASE_URI.toString(), "JSONLD");
-        model.write(baos, "RDF/XML");
+        RDFWriter writer = model.getWriter("RDF/XML")
+        writer.setProperty("allowBadURIs","true")
+        writer.write(model, baos, Document.BASE_URI.toString())
 
         HashMap<String, String> data = new HashMap<String, String>();
         data.put( Document.NON_JSON_CONTENT_KEY, baos.toString("UTF-8") );
@@ -55,37 +52,7 @@ class JsonLD2RdfXml implements FormatConverter {
     {
         return "application/rdf+xml";
     }
-
-    private void purgeLinkfinderLinks(Map data)
-    {
-        for (Object key : data.keySet())
-        {
-            Object value = data.get(key);
-
-            if (value instanceof Map)
-                purgeLinkfinderLinks( (Map) value );
-            else if (value instanceof List)
-                purgeLinkfinderLinks( (List) value );
-            else if (key instanceof String && key.equals("@id"))
-            {
-                String newValue = ((String)value).replace("%5B", "_");
-                newValue = newValue.replace("%5D", "_");
-                data.put(key, newValue);
-            }
-        }
-    }
-
-    private void purgeLinkfinderLinks(List data)
-    {
-        for (Object item : data)
-        {
-            if (item instanceof Map)
-                purgeLinkfinderLinks( (Map) item );
-            else if (item instanceof List)
-                purgeLinkfinderLinks( (List) item );
-        }
-    }
-
+    
     private synchronized readContextFromDb()
     {
         if (m_context == null)
