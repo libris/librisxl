@@ -24,18 +24,21 @@ class JsonLD2RdfXml implements FormatConverter {
         readContextFromDb();
 
         Map originalData = doc.getData();
+
+        // Temporary, remove if link linding links gets rid of (urlencoded?) brackets "[]"
+        purgeLinkfinderLinks(originalData);
+
         Map framed = JsonLd.frame(doc.getId(), originalData);
         framed.putAll(m_context);
+
+        String framedString = mapper.writeValueAsString(framed);
+
+        InputStream input = IOUtils.toInputStream(framedString);
         Model model = ModelFactory.createDefaultModel();
-        InputStream input = IOUtils.toInputStream(mapper.writeValueAsString(framed));
 
-        //System.out.println("Will now try conversion of: \n\n" + mapper.writeValueAsString(framed) + "\n\n");
-
-        model = model.read(input, "https://libris.kb.se/", "JSONLD");
-        //System.out.println("Read model contains " + model.size() + " statements.");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        model = model.read(input, Document.BASE_URI.toString(), "JSONLD");
         model.write(baos, "RDF/XML");
-        //model.write(baos, "TURTLE");
 
         HashMap<String, String> data = new HashMap<String, String>();
         data.put( Document.NON_JSON_CONTENT_KEY, baos.toString("UTF-8") );
@@ -51,6 +54,36 @@ class JsonLD2RdfXml implements FormatConverter {
     public String getResultContentType()
     {
         return "application/rdf+xml";
+    }
+
+    private void purgeLinkfinderLinks(Map data)
+    {
+        for (Object key : data.keySet())
+        {
+            Object value = data.get(key);
+
+            if (value instanceof Map)
+                purgeLinkfinderLinks( (Map) value );
+            else if (value instanceof List)
+                purgeLinkfinderLinks( (List) value );
+            else if (key instanceof String && key.equals("@id"))
+            {
+                String newValue = ((String)value).replace("%5B", "_");
+                newValue = newValue.replace("%5D", "_");
+                data.put(key, newValue);
+            }
+        }
+    }
+
+    private void purgeLinkfinderLinks(List data)
+    {
+        for (Object item : data)
+        {
+            if (item instanceof Map)
+                purgeLinkfinderLinks( (Map) item );
+            else if (item instanceof List)
+                purgeLinkfinderLinks( (List) item );
+        }
     }
 
     private synchronized readContextFromDb()
