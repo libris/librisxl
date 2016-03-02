@@ -25,7 +25,7 @@ import java.sql.ResultSet
 class PostgresLoadfileWriter
 {
     private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
-    private static final int THREAD_COUNT = 8;
+    private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CONVERSIONS_PER_THREAD = 200;
 
     // USED FOR DEV ONLY, MUST _NEVER_ BE SET TO TRUE ONCE XL GOES INTO PRODUCTION. WITH THIS SETTING THE IMPORT WILL
