@@ -172,7 +172,7 @@ public class ListRecordTrees
 
         // Construct the query
         String selectSQL = "SELECT id, manifest, deleted, modified, data#>'{@graph,1,heldBy,notation}' AS sigel FROM "
-                + tableName + " WHERE TRUE ";
+                + tableName + " WHERE manifest->>'collection' <> 'definitions' ";
         if (setSpec.getRootSet() != null)
             selectSQL += " AND manifest->>'collection' = ?";
         if (setSpec.getSubset() != null)
