@@ -52,7 +52,7 @@ class JsonLD2RdfXml implements FormatConverter {
     {
         return "application/rdf+xml";
     }
-    
+
     private synchronized readContextFromDb()
     {
         if (m_context == null)
