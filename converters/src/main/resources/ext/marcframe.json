@@ -2617,6 +2617,7 @@
       "aboutEntity": "?thing",
       "addLink": "provision",
       "embedded": true,
+      "ignoreOnRevertInFavourOf": "264",
       "splitLink": [
         {"codes": ["3", "a", "b", "c"], "addLink": "publication"},
         {"codes": ["e", "f", "g"], "addLink": "manufacture"}
@@ -2636,7 +2637,7 @@
           "source": {
             "260": {"ind1": " ", "ind2": " ", "subfields": [
               {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}, {"e": "Finland"}
-              ]}
+            ]}
           },
           "normalized": [
             {"264": {"ind1": " ", "ind2": "1", "subfields": [
