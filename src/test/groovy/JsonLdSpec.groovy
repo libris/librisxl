@@ -4,6 +4,7 @@ import com.google.common.base.Charsets
 import org.apache.commons.io.IOUtils
 import spock.lang.Specification
 import org.codehaus.jackson.map.*
+import whelk.Document
 import whelk.JsonLd
 
 
@@ -72,20 +73,22 @@ class JsonLdSpec extends Specification {
         URI uri2 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "http://id.kb.se/foo/bar", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
         URI uri3 = JsonLd.findRecordURI(["data":"foo","sameAs":"/some/other"])
         then:
-        uri1.toString() == "https://libris.kb.se/qowiudhqw"
+        uri1.toString() == Document.BASE_URI.toString() + "qowiudhqw"
         uri2.toString() == "http://id.kb.se/foo/bar"
         uri3 == null
     }
 
     def "should find database id from @id in document"() {
         when:
-        String s1 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "/qowiudhqw", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
-        String s2 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "http://id.kb.se/foo/bar", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
-        String s3 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "https://libris.kb.se/qowiudhqw", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
+        String s1 = JsonLd.findIdentifier(["descriptions": ["entry": ["@id": "/qowiudhqw", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
+        String s2 = JsonLd.findIdentifier(["descriptions": ["entry": ["@id": "http://id.kb.se/foo/bar", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
+        String s3 = JsonLd.findIdentifier(["descriptions": ["entry": ["@id": "https://libris.kb.se/qowiudhqw", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
+        String s4 = JsonLd.findIdentifier(["descriptions": ["entry": ["@id": Document.BASE_URI.toString() + "qowiudhqw", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
         then:
         s1 == "qowiudhqw"
         s2 == "http://id.kb.se/foo/bar"
-        s3 == "qowiudhqw"
+        s3 == "https://libris.kb.se/qowiudhqw"
+        s4 == "qowiudhqw"
     }
 
     static String loadJsonLdFile(String fileName) {
