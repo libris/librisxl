@@ -3733,7 +3733,8 @@
       "[15:16]": {
         "aboutEntity": "?record",
         "property": "marc:headingSubject",
-        "tokenMap": "HeadingType"
+        "fixedDefault": "a",
+        "tokenMap": {"a": true, "b": false}
       },
       "repeatable": false
     },
