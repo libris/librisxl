@@ -1245,6 +1245,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map<String, MarcSubFieldHandler> subfields = [:]
     List<MatchRule> matchRules = []
     Map<String, Map> pendingResources
+    String ignoreOnRevertInFavourOf
 
     static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
 
@@ -1264,6 +1265,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             uriTemplateKeys = fromTemplate(uriTemplate).variables as Set
             uriTemplateDefaults = fieldDfn.uriTemplateDefaults
         }
+        ignoreOnRevertInFavourOf = fieldDfn.ignoreOnRevertInFavourOf
 
         computeLinks = (fieldDfn.computeLinks)? new HashMap(fieldDfn.computeLinks) : [:]
         if (computeLinks) {
@@ -1538,6 +1540,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     @CompileStatic(SKIP)
     def revert(Map data, Map result, MatchCandidate matchCandidate=null) {
+
+        if (ignoreOnRevertInFavourOf) {
+            return null
+        }
 
         def matchedResults = []
 
