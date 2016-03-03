@@ -303,7 +303,6 @@ class OaiPmhHarvester {
                 ).addIdentifier(Document.BASE_URI.resolve(recordId).toString())
 
             doc = marcFrameConverter.convert(doc)
-            doc.data["controlNumber"] = marcRecord.getControlfields("001").get(0).getData()
         } else {
             // TODO: Make JSONLD document from RDF/XML
         }

@@ -267,9 +267,11 @@ class Crud extends HttpServlet {
                     doc.data = JsonLd.flatten(doc.data)
                 }
                 log.debug("Saving document (${doc.identifier})")
+                boolean newDocument = (doc.created == null)
+                log.info("Document accepted: created is: ${doc.created}")
                 doc = whelk.store(doc, (request.getMethod() == "PUT"))
 
-                sendDocumentSavedResponse(response, doc.getURI().toString(), doc.modified.getTime() as String)
+                sendDocumentSavedResponse(response, doc.getURI().toString(), doc.modified.getTime() as String, newDocument)
             }
         } catch (StorageCreateFailedException scfe) {
             log.warn("Already have document with id ${scfe.duplicateId}")
@@ -377,11 +379,15 @@ class Crud extends HttpServlet {
         return doc
     }
 
-    void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag) {
+    void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag, boolean newDocument) {
         log.debug("Setting header Location: $locationRef")
         response.setHeader("Location", locationRef)
         response.setHeader("ETag", etag as String)
-        response.setStatus(HttpServletResponse.SC_CREATED)
+        if (newDocument) {
+            response.setStatus(HttpServletResponse.SC_CREATED)
+        } else {
+            response.setStatus(HttpServletResponse.SC_NO_CONTENT)
+        }
     }
 
 

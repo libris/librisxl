@@ -9,12 +9,14 @@ import org.codehaus.jackson.type.TypeReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import whelk.util.PropertyLoader;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 
@@ -51,7 +53,7 @@ public class AuthenticationFilter implements Filter {
                 }
                 json = verifyToken(token.replace("Bearer ", ""));
                 if (json == null || json.isEmpty()) {
-                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "The access token expired");
+                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Access token has expired");
                     return;
                 }
 
@@ -154,13 +156,13 @@ public class AuthenticationFilter implements Filter {
 
     private String getVerifyUrl() {
         if (url == null) {
-            Map secrets = null;
+            Properties secrets = null;
             try {
-                secrets = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream("secrets.json"), new TypeReference<Map<String, Object>>() {});
-            } catch (IOException ioe) {
-                throw new RuntimeException("Failed to load api properties.", ioe);
+                secrets = PropertyLoader.loadProperties("secret");
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to load api properties.", e);
             }
-            url = (String)secrets.get("oauth2verifyurl");
+            url = (String)secrets.getProperty("oauth2verifyurl");
         }
         return url;
     }
