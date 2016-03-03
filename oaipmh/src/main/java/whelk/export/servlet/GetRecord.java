@@ -136,7 +136,7 @@ public class GetRecord
 
         // Construct the query
         String selectSQL = "SELECT data, manifest, modified, deleted, data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
-                tableName + " WHERE id = ? ";
+                tableName + " WHERE id = ? AND manifest->>'collection' <> 'definitions' ";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);
 

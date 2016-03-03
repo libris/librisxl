@@ -99,7 +99,7 @@ public class ListMetadataFormats
             throws SQLException
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-        String selectSQL = "SELECT deleted FROM " + tableName + " WHERE id = ? ";
+        String selectSQL = "SELECT deleted FROM " + tableName + " WHERE id = ? AND manifest->>'collection' <> 'definitions'";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);
 

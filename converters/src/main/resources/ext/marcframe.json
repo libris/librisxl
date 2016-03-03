@@ -4197,12 +4197,14 @@
 
     "856": {
       "inherit": "bib",
+      "addLink": "relation",
+      "resourceType": "Document",
       "TODO:i1": {},
-      "TODO:match-i2": {
-        "0": {"addLink": "sameAs"},
+      "match-i2": {
+        "0": {"addLink": "sameAs", "resourceType": "Thing"},
         "1": {"addLink": "isPrimaryTopicOf", "resourceType": "Electronic"},
         "2": {"addLink": "relation", "resourceType": "Document"},
-        "8": {"addLink": "seeAlso", "resourceType": "Document"}
+        "8": {"addLink": "relation", "resourceType": "Document"}
       }
     }
   },
