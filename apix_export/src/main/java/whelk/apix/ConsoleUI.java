@@ -24,19 +24,6 @@ public class ConsoleUI implements UI
         return null;
     }
 
-    ZonedDateTime parseUntil(String[] args)
-    {
-        for (int i = 0; i < args.length; ++i)
-        {
-            if ("-until".equals(args[i]) && i+1 < args.length)
-            {
-                return ZonedDateTime.parse(args[i+1], DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("UTC")));
-            }
-        }
-
-        return null;
-    }
-
     public ConsoleUI(String[] args)
     {
         Properties apixProperties = PropertyLoader.loadProperties("secret");
@@ -44,7 +31,6 @@ public class ConsoleUI implements UI
         final ExporterThread exporterThread = new ExporterThread(
                 apixProperties,
                 parseFrom(args),
-                parseUntil(args),
                 this);
 
         Runtime.getRuntime().addShutdownHook(new Thread() {

@@ -31,20 +31,15 @@ public class ExporterThread extends Thread
     // timestamp in that batch.
     private ZonedDateTime m_exportNewerThan;
 
-    // The "until" parameter. The exporter will export everything with a (modified) timestamp < this value.
-    private final ZonedDateTime m_exportOlderThan;
-
     private final Properties m_properties;
     private final UI m_ui;
     private final PostgreSQLComponent m_postgreSQLComponent;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public ExporterThread(Properties properties, ZonedDateTime exportNewerThan,
-                          ZonedDateTime exportOlderThan, UI ui)
+    public ExporterThread(Properties properties, ZonedDateTime exportNewerThan, UI ui)
     {
         this.m_properties = properties;
         this.m_exportNewerThan = exportNewerThan;
-        this.m_exportOlderThan = exportOlderThan;
         this.m_ui = ui;
         this.m_postgreSQLComponent = new PostgreSQLComponent(properties.getProperty("sqlUrl"), properties.getProperty("sqlMaintable"));
     }
@@ -52,29 +47,26 @@ public class ExporterThread extends Thread
     public void run()
     {
         String from = "[beginning of time]";
-        String until = "[end of time]";
         if (m_exportNewerThan != null)
             from = m_exportNewerThan.format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
-        if (m_exportOlderThan != null)
-            until = m_exportOlderThan.format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
 
-        m_ui.outputText("Beginning export batch\n\tfrom: " + from + "\n\tuntil: " + until + ".");
+        m_ui.outputText("Beginning export batch from: " + from + ".");
 
         do
         {
-            int exportedDocumentsCount = exportBatch();
-            m_ui.outputText("Exported " + exportedDocumentsCount + " documents.");
+            exportBatch();
+            //m_ui.outputText("Exported " + exportedDocumentsCount + " documents.");
             try
             {
                 sleep(2000);
             } catch (InterruptedException e) { /* ignore */ }
         }
-        while (m_exportOlderThan == null && !stopAtOpportunity.get());
+        while (!stopAtOpportunity.get());
 
         m_ui.outputText("Export batch ended. Will do nothing more without user input.");
     }
 
-    private int exportBatch()
+    private void exportBatch()
     {
         int exportedDocumentsCount = 0;
 
@@ -82,22 +74,22 @@ public class ExporterThread extends Thread
               PreparedStatement statement = prepareStatement(connection);
               ResultSet resultSet = statement.executeQuery() )
         {
+            ZonedDateTime modified = null;
             while( resultSet.next() )
             {
+                // Each resultset will hold all rows with a specific 'modified' time. Usually there will only be one,
+                // row in the resultset but even if there are more than one, they are all guaranteed to have the same
+                // 'modified' time.
+                modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+
                 exportDocument(resultSet);
                 ++exportedDocumentsCount;
-
-                ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
-                if (modified.compareTo(m_exportNewerThan) > 0)
-                    m_exportNewerThan = modified;
-
-                if (stopAtOpportunity.get())
-                {
-                    String id = resultSet.getString("id");
-                    m_ui.outputText("Export batch cancelled! Last exported document: " + id);
-                    break;
-                }
             }
+
+            // We now know that all rows with this specific 'modified' timestamp have been exported ok. The next batch
+            // will use the next following 'modified' timestamp
+            m_exportNewerThan = modified;
+            m_ui.outputText("Completed export of " + exportedDocumentsCount + " document(s) with modified = " + m_exportNewerThan);
         }
         catch (Exception e)
         {
@@ -106,8 +98,6 @@ public class ExporterThread extends Thread
                 callStack.append(frame.toString() + "\n");
             m_ui.outputText("Export batch stopped with exception: " + e + " Callstack:\n" + callStack);
         }
-
-        return exportedDocumentsCount;
     }
 
     private void exportDocument(ResultSet resultSet)
@@ -146,20 +136,15 @@ public class ExporterThread extends Thread
             throws SQLException
     {
         String sql = "SELECT id, manifest, data, modified, deleted FROM " + m_properties.getProperty("sqlMaintable") +
-                " WHERE manifest->>'changedIn' <> 'vcopy' ";
-        if (m_exportNewerThan != null)
-            sql += "AND modified >= ? ";
-        if (m_exportOlderThan != null)
-            sql += "AND modified < ? ";
-        sql += "ORDER BY modified ";
+                " WHERE manifest->>'changedIn' <> 'vcopy' AND modified = (SELECT MIN(modified) FROM lddb WHERE modified > ?)";
 
-        int parameterIndex = 1;
         PreparedStatement statement = connection.prepareStatement(sql);
-        if (m_exportNewerThan != null)
-            statement.setTimestamp(parameterIndex++, new Timestamp(m_exportNewerThan.toInstant().getEpochSecond() * 1000L));
-        if (m_exportOlderThan != null)
-            statement.setTimestamp(parameterIndex++, new Timestamp(m_exportOlderThan.toInstant().getEpochSecond() * 1000L));
-        statement.setFetchSize(64);
+
+        // Postgres uses microsecond precision, we need match or exceed this to not risk SQL timetamps slipping between
+        // truncated java timestamps
+        Timestamp timestamp = new Timestamp(m_exportNewerThan.toInstant().toEpochMilli());
+        timestamp.setNanos(m_exportNewerThan.toInstant().getNano());
+        statement.setTimestamp(1, timestamp);
 
         return statement;
     }
@@ -194,10 +179,11 @@ public class ExporterThread extends Thread
         connection.setRequestMethod(httpVerb);
         connection.setRequestProperty("Content-Type", "application/xml");
 
+
         String responseString = null;
         try (InputStream inputStream = connection.getInputStream())
         {
-            responseString = new Scanner( inputStream, "UTF-8").useDelimiter("\\A").next();
+            responseString = new Scanner( inputStream, "UTF-8" ).useDelimiter("\\A").next();
         }
 
         int responseCode = connection.getResponseCode();
@@ -205,6 +191,12 @@ public class ExporterThread extends Thread
         switch (responseCode)
         {
             case 200:
+                // error in disguise?
+                /*
+                From apix code:
+                catch ..
+                Response.ok("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<apix version=\"0.1\" status=\"ERROR\" error_code=\"" + e.getCode() + "\" error_message=\"" + e.getMessage() + "\" xmlns=\"http://api.libris.kb.se/apix/\"/>\n").build();
+                 */
             case 201:
                 // fine
                 break;

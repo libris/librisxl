@@ -71,12 +71,7 @@ public class ServletUI extends HttpServlet implements UI
                 if (m_exporterThread == null || m_exporterThread.getState() == Thread.State.TERMINATED)
                 {
                     ZonedDateTime from = parseDateTime(reader.readLine());
-                    ZonedDateTime until = parseDateTime(reader.readLine());
-                    if (from != null)
-                        System.out.println("Parsed: " + from.toString());
-                    else
-                        System.out.println("Parsed: null");
-                    m_exporterThread = new ExporterThread(m_properties, from, until, this);
+                    m_exporterThread = new ExporterThread(m_properties, from, this);
                     m_exporterThread.start();
                 }
                 else
