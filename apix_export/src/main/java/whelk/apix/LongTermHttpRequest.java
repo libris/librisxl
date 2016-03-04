@@ -93,7 +93,6 @@ public class LongTermHttpRequest
         header.append( "\r\n" );
 
         m_outputStream.write(header.toString().getBytes(Charset.forName("UTF-8")));
-        System.out.println(header.toString());
 
         if (dataBytes != null)
             m_outputStream.write(dataBytes);

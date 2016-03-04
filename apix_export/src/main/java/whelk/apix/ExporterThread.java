@@ -82,14 +82,23 @@ public class ExporterThread extends Thread
                 // 'modified' time.
                 modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
 
-                exportDocument(resultSet);
+                try
+                {
+                    exportDocument(resultSet);
+                } catch (Exception e)
+                {
+                    // TODO: Call for human intervention? Log? Cannot silently ignore a failure to replicate data to Voyager
+                }
                 ++exportedDocumentsCount;
             }
 
             // We now know that all rows with this specific 'modified' timestamp have been exported ok. The next batch
             // will use the next following 'modified' timestamp
-            m_exportNewerThan = modified;
-            m_ui.outputText("Completed export of " + exportedDocumentsCount + " document(s) with modified = " + m_exportNewerThan);
+            if (exportedDocumentsCount > 0)
+            {
+                m_exportNewerThan = modified;
+                m_ui.outputText("Completed export of " + exportedDocumentsCount + " document(s) with modified = " + m_exportNewerThan);
+            }
         }
         catch (Exception e)
         {
@@ -120,16 +129,17 @@ public class ExporterThread extends Thread
         if (voyagerId != null)
             apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat" + voyagerId;
 
-        System.out.println("Time to write to: " + apixDocumentUrl);
-
-
-
-        JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
-        Document convertedDoucment = converter.convert(document);
-        String convertedText = (String) convertedDoucment.getData().get("content");
-
-        /*if (deleted)
-            DO APIX DELETE*/
+        if (deleted && voyagerId != null)
+        {
+            apixRequest(apixDocumentUrl, "DELETE", null);
+        }
+        else
+        {
+            JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
+            Document convertedDoucment = converter.convert(document);
+            String convertedText = (String) convertedDoucment.getData().get("content");
+            apixRequest(apixDocumentUrl, "PUT", convertedText);
+        }
     }
 
     private PreparedStatement prepareStatement(Connection connection)
@@ -151,7 +161,7 @@ public class ExporterThread extends Thread
 
     private String getVoyagerId(Document document)
     {
-        final String idPrefix = "https://libris.kb.se/";
+        final String idPrefix = Document.getBASE_URI().toString(); // https://libris.kb.se/
 
         List<String> ids = document.getIdentifiers();
         for (String id: ids)
@@ -169,49 +179,38 @@ public class ExporterThread extends Thread
         return null;
     }
 
-    private String apixRequest(String stringUrl, String httpVerb)
-            throws Exception
+    private String apixRequest(String url, String httpVerb, String data)
+            throws IOException
     {
-        URL url = new URL(stringUrl);
-
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        //connection.setDoOutput(true);
-        connection.setRequestMethod(httpVerb);
-        connection.setRequestProperty("Content-Type", "application/xml");
-
-
-        String responseString = null;
-        try (InputStream inputStream = connection.getInputStream())
-        {
-            responseString = new Scanner( inputStream, "UTF-8" ).useDelimiter("\\A").next();
-        }
-
-        int responseCode = connection.getResponseCode();
+        LongTermHttpRequest request = new LongTermHttpRequest(url, httpVerb, "application/xml", data);
+        int responseCode = request.getResponseCode();
+        String responseData = request.getResponseData();
 
         switch (responseCode)
         {
             case 200:
-                // error in disguise?
-                /*
+                /* error in disguise?
                 From apix code:
                 catch ..
                 Response.ok("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<apix version=\"0.1\" status=\"ERROR\" error_code=\"" + e.getCode() + "\" error_message=\"" + e.getMessage() + "\" xmlns=\"http://api.libris.kb.se/apix/\"/>\n").build();
                  */
+                if (!httpVerb.equals("GET"))
+                    throw new IOException("APIX error: " + responseData);
             case 201:
-                // fine
+                // fine, on update
                 break;
             case 303:
-                String redirectedTo = connection.getHeaderField("Location");
-                // extract new id from redirection location
+                String redirectedTo = request.getResponseHeaders().get("Location");
+                // extract new id from redirection location, and return
                 break;
             default:
             {
-                if (responseString == null)
-                    responseString = "";
-                throw new Exception("APIX responded with http " + responseCode + ": " + responseString);
+                if (responseData == null)
+                    responseData = "";
+                throw new IOException("APIX responded with http " + responseCode + ": " + responseData);
             }
         }
 
-        return responseString;
+        return null;
     }
 }
