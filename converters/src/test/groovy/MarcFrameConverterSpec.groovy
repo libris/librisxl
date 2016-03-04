@@ -202,7 +202,7 @@ class MarcFrameConverterSpec extends Specification {
         given:
         def jsonld = [
             controlNumber: "0000000",
-            about: [
+            (converter.conversion.marcRuleSets['bib'].thingLink): [
                 "@type": ["Text", "Monograph"]
             ],
             _marcUncompleted: [
