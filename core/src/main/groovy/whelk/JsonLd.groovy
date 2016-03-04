@@ -8,6 +8,9 @@ public class JsonLd {
 
     static final String GRAPH_KEY = "@graph"
     static final String ID_KEY = "@id"
+    static final String THING_KEY = "mainEntity"
+    static final String RECORD_KEY = "meta"
+
     static final String DESCRIPTIONS_KEY = "descriptions"
     static final URI SLASH_URI = new URI("/")
 
@@ -39,7 +42,6 @@ public class JsonLd {
             }
         }
     }
-
 
     private static storeFlattened(current, result) {
         if (current instanceof Map) {
@@ -77,7 +79,15 @@ public class JsonLd {
             return flatJsonLd
         }
         def idMap = getIdMap(flatJsonLd)
+
         def mainItemMap = idMap.get(mainId)
+        def entity = mainItemMap[THING_KEY]
+        if (entity) {
+            entity[RECORD_KEY] = [(ID_KEY): mainId]
+            mainId = entity[ID_KEY]
+            mainItemMap = entity
+        }
+
         if (!mainItemMap) {
             log.debug("No main item map found for $mainId, trying to find an identifier")
             // Try to find an identifier to frame around
