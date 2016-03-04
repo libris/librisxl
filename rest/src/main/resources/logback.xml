@@ -21,6 +21,7 @@
   <logger name="whelk.rest.api.Crud" level="debug"/>
   <logger name="whelk.component.PostgreSQLComponent" level="debug"/>
   <logger name="whelk.component.ElasticSearch" level="debug"/>
+  <logger name="whelk.JsonLd" level="trace"/>
 
   <root level="info">
       <appender-ref ref="FILE-WHELK" />

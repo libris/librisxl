@@ -1,5 +1,7 @@
 package whelk
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import whelk.exception.FramingException
 
 public class JsonLd {
@@ -8,6 +10,8 @@ public class JsonLd {
     static final String ID_KEY = "@id"
     static final String DESCRIPTIONS_KEY = "descriptions"
     static final URI SLASH_URI = new URI("/")
+
+    private static Logger log = LoggerFactory.getLogger(JsonLd.class)
 
     /**
      * This flatten-method does not create description-based flat json (i.e. with entry, items and quoted)
@@ -75,8 +79,10 @@ public class JsonLd {
         def idMap = getIdMap(flatJsonLd)
         def mainItemMap = idMap.get(mainId)
         if (!mainItemMap) {
+            log.debug("No main item map found for $mainId, trying to find an identifier")
             // Try to find an identifier to frame around
             String foundIdentifier = findIdentifier(flatJsonLd)
+            log.debug("Result of findIdentifier: $foundIdentifier")
             if (foundIdentifier) {
                 mainItemMap = idMap.get(SLASH_URI.resolve(foundIdentifier).toString())
             }
@@ -136,6 +142,7 @@ public class JsonLd {
             return null
         }
         if (isFlat(jsonLd)) {
+            log.trace("Received json is flat")
             if (jsonLd.containsKey(GRAPH_KEY)) {
                 foundIdentifier = jsonLd.get(GRAPH_KEY).first().get(ID_KEY)
             }
@@ -159,7 +166,8 @@ public class JsonLd {
 
 
     static boolean isFlat(Map jsonLd) {
-        if (jsonLd.size() == 1 && (jsonLd.containsKey(GRAPH_KEY) || jsonLd.containsKey(DESCRIPTIONS_KEY))) {
+        if ((jsonLd.containsKey(GRAPH_KEY) && jsonLd.get(GRAPH_KEY) instanceof List || jsonLd.containsKey(DESCRIPTIONS_KEY))) {
+        //if (jsonLd.size() == 1 && (jsonLd.containsKey(GRAPH_KEY) || jsonLd.containsKey(DESCRIPTIONS_KEY))) {
             return true
         }
         return false

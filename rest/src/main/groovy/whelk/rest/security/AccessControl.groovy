@@ -8,7 +8,7 @@ import whelk.JsonLd
 class AccessControl {
 
     boolean checkDocument(Document newdoc, Document olddoc, Map userPrivileges) {
-        if (newdoc?.dataset == "hold") {
+        if (newdoc?.collection == "hold") {
             def sigel = JsonLd.frame(newdoc.id, newdoc.data).about.heldBy.notation
             log.debug("User tries to change a holding for sigel ${sigel}.")
 
@@ -32,10 +32,11 @@ class AccessControl {
                     }
                 }
             }
-        } else {
+        } /*else {
             log.info("Datasets 'bib' and 'auth' are not editable right now.")
             return false
-        }
+
+        }*/
 
         if (newdoc) {
             newdoc.manifest.lastChangeBy = userPrivileges.username
