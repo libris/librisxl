@@ -5,12 +5,7 @@ import whelk.Document;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.sql.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -18,11 +13,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
-import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ExporterThread extends Thread
 {
+    private static final String VOYAGER_DATABASE = "test"; // "libris" !
+
     // This atomic boolean may be toggled from outside, causing the thread to stop exporting and return
     public AtomicBoolean stopAtOpportunity = new AtomicBoolean(false);
 
@@ -124,10 +122,10 @@ public class ExporterThread extends Thread
 
         String collection = document.getCollection();
 
-        String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/new";
+        String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + VOYAGER_DATABASE + "/new";
         String voyagerId = getVoyagerId(document);
         if (voyagerId != null)
-            apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat" + voyagerId;
+            apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + VOYAGER_DATABASE + voyagerId;
 
         if (deleted && voyagerId != null)
         {
@@ -179,6 +177,9 @@ public class ExporterThread extends Thread
         return null;
     }
 
+    /**
+     * Returns the assigned voyager control number, or null on failure (or throws).
+     */
     private String apixRequest(String url, String httpVerb, String data)
             throws IOException
     {
@@ -189,20 +190,18 @@ public class ExporterThread extends Thread
         switch (responseCode)
         {
             case 200:
-                /* error in disguise?
-                From apix code:
-                catch ..
-                Response.ok("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<apix version=\"0.1\" status=\"ERROR\" error_code=\"" + e.getCode() + "\" error_message=\"" + e.getMessage() + "\" xmlns=\"http://api.libris.kb.se/apix/\"/>\n").build();
-                 */
-                if (!httpVerb.equals("GET"))
+            {
+                // error in disguise? 200 is only legitimately returned on GET or DELETE. POST/PUT only returns 200 on error.
+                if (!httpVerb.equals("GET") && !httpVerb.equals("DELETE"))
                     throw new IOException("APIX error: " + responseData);
-            case 201:
-                // fine, on update
                 break;
-            case 303:
-                String redirectedTo = request.getResponseHeaders().get("Location");
-                // extract new id from redirection location, and return
-                break;
+            }
+            case 201: // fine, happens on new
+            case 303: // fine, happens on save/update
+            {
+                String location = request.getResponseHeaders().get("Location");
+                return parseControlNumberFromAPIXLocation(location);
+            }
             default:
             {
                 if (responseData == null)
@@ -210,7 +209,17 @@ public class ExporterThread extends Thread
                 throw new IOException("APIX responded with http " + responseCode + ": " + responseData);
             }
         }
+        return null;
+    }
 
+    private String parseControlNumberFromAPIXLocation(String urlLocation)
+    {
+        Pattern pattern = Pattern.compile("0.1/cat/" + VOYAGER_DATABASE + "/(auth|bib|hold)/(\\d+)");
+        Matcher matcher = pattern.matcher(urlLocation);
+        if (matcher.find())
+        {
+            return matcher.group(2);
+        }
         return null;
     }
 }
