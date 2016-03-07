@@ -42,6 +42,9 @@ public class ServletUI extends HttpServlet implements UI
             case "/endpoint":
                 res.getOutputStream().print( m_properties.getProperty("apixHost") );
                 break;
+            case "/endpointdb":
+                res.getOutputStream().print( m_properties.getProperty("apixDatabase") );
+                break;
             case "/startpoint":
                 String jdbcUrl = m_properties.getProperty("sqlUrl");
                 if (jdbcUrl.contains("@"))

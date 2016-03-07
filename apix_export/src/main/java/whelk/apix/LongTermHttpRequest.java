@@ -25,11 +25,6 @@ import java.util.Map;
  */
 public class LongTermHttpRequest
 {
-    private final Socket m_socket;
-    private final InputStream m_inputStream;
-    private final OutputStream m_outputStream;
-
-    // Response data
     private int m_responseCode;
     private String m_responseData;
     private HashMap<String, String> m_responseHeaders;
@@ -44,16 +39,13 @@ public class LongTermHttpRequest
         if (port == -1)
             port = 80;
 
-        m_socket = new Socket(properUrl.getHost(), port);
-        m_socket.setKeepAlive(true); // Essentially the point of all this
+        try ( Socket socket = new Socket(properUrl.getHost(), port) )
+        {
+            socket.setKeepAlive(true); // Essentially the point of all this
 
-        m_inputStream = m_socket.getInputStream();
-        m_outputStream = m_socket.getOutputStream();
-
-        writeRequest(properUrl.getHost(), properUrl.getPath(), verb, contentType, data);
-        readResponse();
-
-        m_socket.close();
+            writeRequest( socket.getOutputStream(), properUrl.getHost(), properUrl.getPath(), verb, contentType, data );
+            readResponse( socket.getInputStream() );
+        }
     }
 
     public int getResponseCode()
@@ -71,7 +63,7 @@ public class LongTermHttpRequest
         return Collections.unmodifiableMap(m_responseHeaders);
     }
 
-    private void writeRequest(String host, String path, String verb, String contentType, String data)
+    private void writeRequest(OutputStream outputStream, String host, String path, String verb, String contentType, String data)
             throws IOException
     {
         if (path.equals(""))
@@ -92,15 +84,15 @@ public class LongTermHttpRequest
         }
         header.append( "\r\n" );
 
-        m_outputStream.write(header.toString().getBytes(Charset.forName("UTF-8")));
+        outputStream.write(header.toString().getBytes(Charset.forName("UTF-8")));
 
         if (dataBytes != null)
-            m_outputStream.write(dataBytes);
+            outputStream.write(dataBytes);
 
-        m_outputStream.flush();
+        outputStream.flush();
     }
 
-    private void readResponse()
+    private void readResponse(InputStream inputStream)
             throws IOException
     {
         ByteArrayOutputStream completeResponse = new ByteArrayOutputStream();
@@ -110,7 +102,7 @@ public class LongTermHttpRequest
         do
         {
             completeResponse.write(buf, 0, bytesRead);
-            bytesRead = m_inputStream.read(buf);
+            bytesRead = inputStream.read(buf);
         } while (bytesRead != -1);
 
         // Response completely retrieved.

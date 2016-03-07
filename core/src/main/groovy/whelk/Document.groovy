@@ -98,6 +98,10 @@ class Document {
         }
     }
 
+    void setControlNumber(String controlNumber) {
+        this.data["@graph"][0]["controlNumber"] = controlNumber
+    }
+
     def deepCopy(orig) {
         def bos = new ByteArrayOutputStream()
         def oos = new ObjectOutputStream(bos)

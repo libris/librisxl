@@ -17,11 +17,16 @@
                     <td>APIX delivery target URL: </td>
                     <td><b id="apixurl"></b></td>
                 </tr>
+                <tr>
+                    <td>APIX database setting: </td>
+                    <td><b id="apixdb"></b></td>
+                </tr>
+                <tr>
+                    <td><label for="from">Export posts with a modified timestamp ><br/>(leave empty for "beginning of time")</label></td>
+                    <td><input type="text" id="from" value="2000-01-01T00:00:00+01:00[Europe/Stockholm]"><br/></td>
+                </tr>
             </table>
             <p class="container">
-                <label for="from">Export posts with a modified timestamp ><br/>(leave empty for "beginning of time")</label>
-                <input type="text" id="from" value="2000-01-01T00:00:00+01:00[Europe/Stockholm]"><br/>
-                <input type="text" id="until"><br/>
                 <button class="btn btn-default" type="button" onclick="post('app/start', getElementById('from').value)">Start</button>
                 <button class="btn btn-default" type="button" onclick="post('app/stop', null)">Stop</button>
             </p>

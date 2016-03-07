@@ -35,6 +35,7 @@ dependencies {
     // LIBRISXL modules
     compile project(':../core')
     compile project(':../converters')
+    compile project(':../harvesters')
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
