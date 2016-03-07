@@ -205,7 +205,7 @@ public class ExporterThread extends Thread
     }
 
     /**
-     * Returns the assigned voyager control number, or throws an error.
+     * Returns the assigned voyager control number on successful PUT. null on successful DELETE. Otherwise throws an error.
      */
     private String apixRequest(String url, String httpVerb, String data)
             throws IOException
@@ -218,7 +218,10 @@ public class ExporterThread extends Thread
         {
             case 200:
             {
-                // error in disguise! 200 is only legitimately returned on GET or DELETE. POST/PUT only returns 200 on error.
+                // error in disguise? 200 is only legitimately returned on GET or DELETE. POST/PUT only returns 200 on error.
+                if (httpVerb.equals("DELETE"))
+                    return null;
+                
                 if (responseData == null)
                     responseData = "";
                 throw new IOException("APIX error: " + responseData);
