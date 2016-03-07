@@ -19,8 +19,6 @@ import java.util.regex.Pattern;
 
 public class ExporterThread extends Thread
 {
-    private static final String VOYAGER_DATABASE = "test"; // "libris" !
-
     // This atomic boolean may be toggled from outside, causing the thread to stop exporting and return
     public AtomicBoolean stopAtOpportunity = new AtomicBoolean(false);
 
@@ -127,6 +125,7 @@ public class ExporterThread extends Thread
 
         String collection = document.getCollection();
         String voyagerId = getVoyagerId(document);
+        String voyagerDatabase = m_properties.getProperty("apixDatabase");
 
         ApixOp operation;
         if (deleted)
@@ -140,13 +139,13 @@ public class ExporterThread extends Thread
         {
             case APIX_DELETE:
             {
-                String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + VOYAGER_DATABASE + "/" + voyagerId;
+                String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + voyagerId;
                 apixRequest(apixDocumentUrl, "DELETE", null);
                 break;
             }
             case APIX_UPDATE:
             {
-                String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + VOYAGER_DATABASE + "/" + voyagerId;
+                String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + voyagerId;
                 Document convertedDoucment = m_converter.convert(document);
                 String convertedText = (String) convertedDoucment.getData().get("content");
                 apixRequest(apixDocumentUrl, "PUT", convertedText);
@@ -154,7 +153,7 @@ public class ExporterThread extends Thread
             }
             case APIX_NEW:
             {
-                String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + VOYAGER_DATABASE + "/" + collection + "/new";
+                String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + "/" + collection + "/new";
                 Document convertedDoucment = m_converter.convert(document);
                 String convertedText = (String) convertedDoucment.getData().get("content");
                 String controlNumber = apixRequest(apixDocumentUrl, "PUT", convertedText);
@@ -242,7 +241,8 @@ public class ExporterThread extends Thread
     private String parseControlNumberFromAPIXLocation(String urlLocation)
             throws IOException
     {
-        Pattern pattern = Pattern.compile("0.1/cat/" + VOYAGER_DATABASE + "/(auth|bib|hold)/(\\d+)");
+        String voyagerDatabase = m_properties.getProperty("apixDatabase");
+        Pattern pattern = Pattern.compile("0.1/cat/" + voyagerDatabase + "/(auth|bib|hold)/(\\d+)");
         Matcher matcher = pattern.matcher(urlLocation);
         if (matcher.find())
         {
