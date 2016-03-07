@@ -43,7 +43,7 @@ OAI_NS = "http://www.openarchives.org/OAI/2.0/"
 
 def make_root():
     root = etree.Element('OAI-PMH', **{'nsmap': {None: OAI_NS}} if lxml else {'xmlns': OAI_NS})
-    etree.SubElement(root, 'responseDate').text = "1970-01-01T00:00:00Z"
+    etree.SubElement(root, 'responseDate').text = "9999-01-01T00:00:00Z"
     etree.SubElement(root, 'request',
             verb="ListRecords",
             resumptionToken="null|2001-12-11T23:00:00Z|107000|null|null|marcxml",

@@ -9,6 +9,7 @@ import whelk.converter.marc.MarcFrameConverter
 import groovy.util.logging.Slf4j as Log
 import whelk.filter.LinkFinder
 import whelk.reindexer.ElasticReindexer
+import whelk.harvester.OaiPmhHarvester
 import whelk.tools.PostgresLoadfileWriter
 import whelk.util.PropertyLoader
 import whelk.util.Tools
@@ -35,6 +36,7 @@ class ImporterMain {
         pico.addComponent(DefinitionsImporter)
         pico.addComponent(LinkFinder)
         pico.addComponent(MockImporter)
+        pico.addComponent(OaiPmhHarvester)
         pico.start()
 
         log.info("Started ...")
@@ -65,6 +67,12 @@ class ImporterMain {
         def defsimport = pico.getComponent(DefinitionsImporter)
         defsimport.definitionsFilename = fname
         defsimport.run("definitions")
+    }
+
+    void harvestCmd(String serviceUrl, username=null, password=null, sourceSystem=null) {
+        def harvester = pico.getComponent(OaiPmhHarvester)
+        harvester.harvest(serviceUrl, , username, password, systemId,
+                "ListRecords", "marcxml")
     }
 
     void reindexCmd(String collection=null) {
