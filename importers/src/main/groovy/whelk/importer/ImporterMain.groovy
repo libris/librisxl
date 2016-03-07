@@ -24,74 +24,63 @@ class ImporterMain {
     PicoContainer pico
 
     ImporterMain(String... propNames) {
-
         log.info("Setting up import program.")
 
         Properties props = PropertyLoader.loadProperties(propNames)
 
         pico = Whelk.getPreparedComponentsContainer(props)
-
         pico.addComponent(new MarcFrameConverter())
-        pico.as(Characteristics.USE_NAMES).addComponent(MySQLImporter.class)
-        pico.addComponent(ElasticReindexer.class)
-        pico.addComponent(DefinitionsImporter.class)
-        pico.addComponent(LinkFinder.class)
-        pico.addComponent(MockImporter.class)
-
+        pico.as(Characteristics.USE_NAMES).addComponent(MySQLImporter)
+        pico.addComponent(ElasticReindexer)
+        pico.addComponent(DefinitionsImporter)
+        pico.addComponent(LinkFinder)
+        pico.addComponent(MockImporter)
         pico.start()
 
         log.info("Started ...")
     }
 
-    void goMysql(String collection) {
-
-        boolean importComplete = false;
-        int startAtId = 0;
-
-        while (!importComplete)
-        {
-            importComplete = true;
-            def importer = pico.getComponent(MySQLImporter.class)
-            importer.m_startAtId = startAtId;
+    void vcopyCmd(String collection) {
+        int startAtId = 0
+        boolean importComplete = false
+        while (!importComplete) {
+            importComplete = true
+            def importer = pico.getComponent(MySQLImporter)
+            importer.m_startAtId = startAtId
             try {
                 importer.run(collection)
-            }catch (SQLRecoverableException sre) {
-                startAtId = importer.m_failedAtId;
-                importComplete = false;
+            } catch (SQLRecoverableException sre) {
+                startAtId = importer.m_failedAtId
+                importComplete = false
             }
         }
-
     }
 
-    void goMysqlDump(String toFileName, String collection) {
-        PostgresLoadfileWriter writer = new PostgresLoadfileWriter(toFileName, collection);
+    void vcopydumpCmd(String toFileName, String collection) {
+        PostgresLoadfileWriter writer = new PostgresLoadfileWriter(toFileName, collection)
         writer.generatePostgresLoadFile()
     }
 
-    void goReindex(String collection) {
-        def reindex = pico.getComponent(ElasticReindexer.class)
-        reindex.reindex(collection)
-    }
-
-    void goDefs(String fname) {
-        def defsimport = pico.getComponent(DefinitionsImporter.class)
+    void defsCmd(String fname) {
+        def defsimport = pico.getComponent(DefinitionsImporter)
         defsimport.definitionsFilename = fname
         defsimport.run("definitions")
     }
 
-    void goLinkFind(String collection) {
-        ExecutorService queue = Executors.newFixedThreadPool(10)
+    void reindexCmd(String collection=null) {
+        def reindex = pico.getComponent(ElasticReindexer)
+        reindex.reindex(collection)
+    }
 
-        def whelk = pico.getComponent(Whelk.class)
-        def lf = pico.getComponent(LinkFinder.class)
+    void linkfindCmd(String collection) {
+        def whelk = pico.getComponent(Whelk)
+        whelk.storage.versioning = false
+        def lf = pico.getComponent(LinkFinder)
+
+        ExecutorService queue = Executors.newFixedThreadPool(10)
         long startTime = System.currentTimeMillis()
-        /* some integration tests
-        println("Result1: " + lf.queryForLink("type=OrganizationTerm&controlNumber=63612"))
-        println("Result2: " + lf.queryForLink("type=Organization&name=St. Louis"))
-        */
         def doclist = []
         int counter = 0
-        whelk.storage.versioning = false
         for (doc in whelk.storage.loadAll(collection)) {
             doc = lf.findLinks(doc)
             doclist << doc
@@ -115,10 +104,9 @@ class ImporterMain {
         println("Linkfinding completed. Elapsed time: ${System.currentTimeMillis()-startTime}")
     }
 
-
-    void goSetVersion() {
-        def importer = pico.getComponent(MockImporter.class);
-        importer.run(null);
+    void setversionCmd() {
+        def importer = pico.getComponent(MockImporter)
+        importer.run(null)
     }
 
     static void main(String... args) {
@@ -126,32 +114,14 @@ class ImporterMain {
             println("Usage: <progam> [action] [collection]")
             System.exit(1)
         }
-        if (args[0] == "vcopy") {
-            def main = new ImporterMain("secret", "mysql")
-            main.goMysql(args[1])
-        } else if (args[0] == "defs") {
-            def main = new ImporterMain("secret")
-            main.goDefs(args[1])
-        } else if (args[0] == "vcopydump") {
-            def main = new ImporterMain("mysql")
-            main.goMysqlDump(args[1], args[2])
-        } else if (args[0] == "reindex") {
-            def main = new ImporterMain("secret")
-            String collection = null
-            if (args.length == 2) {
-                collection = args[1]
-            }
-            main.goReindex(collection)
-        } else if (args[0] == "linkfind") {
-            def main = new ImporterMain("secret")
-            main.goLinkFind(args[1])
-        } else if (args[0] == "setversion") {
-            def main = new ImporterMain("secret")
-            main.goSetVersion()
-        } else {
+        def cmd = args[0] + 'Cmd'
+        if (!ImporterMain.methods*.name.any { it == cmd}) {
             println("Unknown action ${args[0]}")
             System.exit(1)
         }
+        def main = new ImporterMain("secret", "mysql")
+        def arglist = args.length > 1? args[1..-1] : []
+        main."${cmd}"(*arglist)
     }
 
 }
