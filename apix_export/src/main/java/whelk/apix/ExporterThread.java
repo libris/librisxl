@@ -118,13 +118,14 @@ public class ExporterThread extends Thread
     private void exportDocument(ResultSet resultSet)
             throws SQLException, IOException
     {
+        String id = resultSet.getString("id");
         String data = resultSet.getString("data");
         String manifest = resultSet.getString("manifest");
         boolean deleted = resultSet.getBoolean("deleted");
 
         HashMap datamap = m_mapper.readValue(data, HashMap.class);
         HashMap manifestmap = m_mapper.readValue(manifest, HashMap.class);
-        Document document = new Document(datamap, manifestmap);
+        Document document = new Document(id, datamap, manifestmap);
 
         String collection = document.getCollection();
         String voyagerId = getVoyagerId(document);
