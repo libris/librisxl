@@ -80,11 +80,14 @@ public class JsonLd {
         }
         def idMap = getIdMap(flatJsonLd)
 
-        def mainItemMap = idMap.get(mainId)
-        def entity = mainItemMap[THING_KEY]
-        if (entity) {
+        def mainItemMap = idMap[mainId]
+        def entityRef = mainItemMap[THING_KEY]
+        if (entityRef) {
+            def entityId = entityRef[ID_KEY]
+            def entity = idMap[entityId]
             entity[RECORD_KEY] = [(ID_KEY): mainId]
-            mainId = entity[ID_KEY]
+            mainId = entityId
+            idMap[mainId] = entityRef
             mainItemMap = entity
         }
 
