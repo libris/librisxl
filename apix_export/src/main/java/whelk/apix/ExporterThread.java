@@ -2,6 +2,7 @@ package whelk.apix;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
+import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 
@@ -28,6 +29,7 @@ public class ExporterThread extends Thread
     private final Properties m_properties;
     private final UI m_ui;
     private final PostgreSQLComponent m_postgreSQLComponent;
+    private final ElasticSearch m_elasticSearchComponent;
     private final ObjectMapper m_mapper = new ObjectMapper();
     private final JsonLD2MarcXMLConverter m_converter = new JsonLD2MarcXMLConverter();
 
@@ -44,6 +46,7 @@ public class ExporterThread extends Thread
         this.m_exportNewerThan = exportNewerThan;
         this.m_ui = ui;
         this.m_postgreSQLComponent = new PostgreSQLComponent(properties.getProperty("sqlUrl"), properties.getProperty("sqlMaintable"));
+        this.m_elasticSearchComponent = new ElasticSearch(properties.getProperty("elasticHost"), properties.getProperty("elasticCluster"), properties.getProperty("elasticIndex"));
     }
 
     public void run()
@@ -158,6 +161,8 @@ public class ExporterThread extends Thread
                 String convertedText = (String) convertedDoucment.getData().get("content");
                 String controlNumber = apixRequest(apixDocumentUrl, "PUT", convertedText);
                 document.setControlNumber(controlNumber);
+                m_postgreSQLComponent.store(document, true);
+                m_elasticSearchComponent.index(document);
                 break;
             }
         }
@@ -221,7 +226,7 @@ public class ExporterThread extends Thread
                 // error in disguise? 200 is only legitimately returned on GET or DELETE. POST/PUT only returns 200 on error.
                 if (httpVerb.equals("DELETE"))
                     return null;
-                
+
                 if (responseData == null)
                     responseData = "";
                 throw new IOException("APIX error: " + responseData);
