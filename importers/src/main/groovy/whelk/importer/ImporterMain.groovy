@@ -71,7 +71,7 @@ class ImporterMain {
 
     void harvestCmd(String serviceUrl, username=null, password=null, sourceSystem=null) {
         def harvester = pico.getComponent(OaiPmhHarvester)
-        harvester.harvest(serviceUrl, , username, password, systemId,
+        harvester.harvest(serviceUrl, , username, password, sourceSystem,
                 "ListRecords", "marcxml")
     }
 
