@@ -43,11 +43,8 @@ public class LongTermHttpRequest
         {
             socket.setKeepAlive(true); // Essentially the point of all this
 
-            InputStream inputStream = socket.getInputStream();
-            OutputStream outputStream = socket.getOutputStream();
-
-            writeRequest(outputStream, properUrl.getHost(), properUrl.getPath(), verb, contentType, data);
-            readResponse(inputStream);
+            writeRequest( socket.getOutputStream(), properUrl.getHost(), properUrl.getPath(), verb, contentType, data );
+            readResponse( socket.getInputStream() );
         }
     }
 
