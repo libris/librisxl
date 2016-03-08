@@ -13,6 +13,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -93,6 +94,7 @@ public class ExporterThread extends Thread
                     exportDocument(resultSet);
                 } catch (Exception e)
                 {
+                    e.printStackTrace();
                     // TODO: Call for human intervention? Log? Cannot silently ignore a failure to replicate data to Voyager
                 }
                 ++exportedDocumentsCount;
@@ -158,9 +160,24 @@ public class ExporterThread extends Thread
             case APIX_NEW:
             {
                 String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + "/" + collection + "/new";
+                if (collection.equals("hold"))
+                {
+                    List graphList = (List) datamap.get("@graph");
+                    Map item = (Map) graphList.get(1);
+                    Map holdingFor = (Map) item.get("holdingFor");
+                    String bibId = (String) holdingFor.get("@id");
+                    int charIndex = bibId.indexOf("/bib/");
+                    String shortBibId = bibId.substring(charIndex + 5);
+
+                    System.out.println("Short bib id:" + shortBibId);
+
+                    // Find holdingFor and do /bib/bibcontrollnr/newhold instead
+                }
+
                 Document convertedDoucment = m_converter.convert(document);
                 String convertedText = (String) convertedDoucment.getData().get("content");
                 String controlNumber = apixRequest(apixDocumentUrl, "PUT", convertedText);
+                document.addIdentifier("http://libris.kb.se/" + collection + "/" + controlNumber);
                 document.setControlNumber(controlNumber);
                 m_postgreSQLComponent.store(document, true);
                 m_elasticSearchComponent.index(document);
@@ -174,7 +191,7 @@ public class ExporterThread extends Thread
     {
         // Select the 'next' timestamp after m_exportNewerThan, and then select all documents with that timestamp (as 'modified')
         String sql = "SELECT id, manifest, data, modified, deleted FROM " + m_properties.getProperty("sqlMaintable") +
-                " WHERE manifest->>'changedIn' <> 'vcopy' AND modified = (SELECT MIN(modified) FROM lddb WHERE modified > ?)";
+                " WHERE manifest->>'changedIn' <> 'vcopy' AND modified = (SELECT MIN(modified) FROM lddb WHERE modified > ? AND manifest->>'changedIn' <> 'vcopy')";
 
         PreparedStatement statement = connection.prepareStatement(sql);
 
@@ -257,6 +274,6 @@ public class ExporterThread extends Thread
         {
             return matcher.group(2);
         }
-        throw new IOException("Could not parse control number from APIX location header.");
+        throw new IOException("Could not parse control number from APIX location header: " + urlLocation);
     }
 }
