@@ -80,29 +80,29 @@ public class JsonLd {
         }
         def idMap = getIdMap(flatJsonLd)
 
-        def mainItemMap = idMap[mainId]
-        def entityRef = mainItemMap[THING_KEY]
-        if (entityRef) {
-            def entityId = entityRef[ID_KEY]
-            def entity = idMap[entityId]
-            entity[RECORD_KEY] = [(ID_KEY): mainId]
-            mainId = entityId
-            idMap[mainId] = entityRef
-            mainItemMap = entity
+        def mainItem = idMap[mainId]
+        def thingRef = mainItem[THING_KEY]
+        if (thingRef) {
+            def thingId = thingRef[ID_KEY]
+            def thing = idMap[thingId]
+            thing[RECORD_KEY] = [(ID_KEY): mainId]
+            mainId = thingId
+            idMap[mainId] = thingRef
+            mainItem = thing
         }
 
-        if (!mainItemMap) {
+        if (!mainItem) {
             log.debug("No main item map found for $mainId, trying to find an identifier")
             // Try to find an identifier to frame around
             String foundIdentifier = findIdentifier(flatJsonLd)
             log.debug("Result of findIdentifier: $foundIdentifier")
             if (foundIdentifier) {
-                mainItemMap = idMap.get(SLASH_URI.resolve(foundIdentifier).toString())
+                mainItem = idMap.get(SLASH_URI.resolve(foundIdentifier).toString())
             }
         }
         Map framedMap
         try {
-            framedMap = embed(mainId, mainItemMap, idMap, new HashSet<String>())
+            framedMap = embed(mainId, mainItem, idMap, new HashSet<String>())
             if (!framedMap) {
                 throw new FramingException("Failed to frame JSONLD ($flatJsonLd)")
             }
@@ -113,12 +113,12 @@ public class JsonLd {
         return framedMap
     }
 
-    private static Map embed(String mainId, Map mainItemMap, Map idMap, Set embedChain) {
+    private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain) {
         embedChain.add(mainId)
-        mainItemMap.each { key, value ->
-            mainItemMap.put(key, toEmbedded(value, idMap, embedChain))
+        mainItem.each { key, value ->
+            mainItem.put(key, toEmbedded(value, idMap, embedChain))
         }
-        return mainItemMap
+        return mainItem
     }
 
     private static Object toEmbedded(Object o, Map idMap, Set embedChain) {
