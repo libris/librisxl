@@ -81,17 +81,17 @@ public class JsonLd {
         def idMap = getIdMap(flatJsonLd)
 
         def mainItem = idMap[mainId]
-        def thingRef = mainItem[THING_KEY]
-        if (thingRef) {
-            def thingId = thingRef[ID_KEY]
-            def thing = idMap[thingId]
-            thing[RECORD_KEY] = [(ID_KEY): mainId]
-            mainId = thingId
-            idMap[mainId] = thingRef
-            mainItem = thing
-        }
-
-        if (!mainItem) {
+        if (mainItem) {
+            def thingRef = mainItem[THING_KEY]
+            if (thingRef) {
+                def thingId = thingRef[ID_KEY]
+                def thing = idMap[thingId]
+                thing[RECORD_KEY] = [(ID_KEY): mainId]
+                mainId = thingId
+                idMap[mainId] = thingRef
+                mainItem = thing
+            }
+        } else {
             log.debug("No main item map found for $mainId, trying to find an identifier")
             // Try to find an identifier to frame around
             String foundIdentifier = findIdentifier(flatJsonLd)
