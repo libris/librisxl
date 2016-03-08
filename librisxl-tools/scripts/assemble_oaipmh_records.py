@@ -16,6 +16,8 @@ import os
 def assemble_records(records):
     partitions = {}
 
+    # assumes that auths appear before bibs with auth links in record list
+    fetched_auths = set()
     linked_auths = set()
 
     for record_id in records:
@@ -28,12 +30,28 @@ def assemble_records(records):
                     etree.SubElement(root, 'ListRecords'))
         root, reclist = partitions[rectype]
 
+        if rectype == 'auth':
+            fetched_auths.add(recnum)
+
         record = get_record(rectype, recnum)
         if record is None:
             print("found nothing for", record_id, file=stderr)
             continue
 
+        for spec in record.findall('{0}header/{0}setSpec'.format('{%s}' % OAI_NS)):
+            if spec.text.startswith('authority:'):
+                authnum = spec.text.split(':')[1]
+                if authnum not in fetched_auths:
+                    linked_auths.add(authnum)
+
         reclist.append(record)
+
+    for authnum in linked_auths:
+        record = get_record('auth', authnum)
+        if record is None:
+            print("found no auth data for", authnum, file=stderr)
+            continue
+        partitions['auth'][1].append(record)
 
     for name, (root, reclist) in partitions.items():
         if outdir:
