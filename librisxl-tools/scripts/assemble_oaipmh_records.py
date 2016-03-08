@@ -1,3 +1,4 @@
+from __future__ import unicode_literals, print_function
 import os
 import csv
 import requests
@@ -11,33 +12,45 @@ except ImportError:
 from sys import argv, stdout, stderr
 import os
 
-baseurl = 'http://data.libris.kb.se/{rectype}/oaipmh/?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/{record}'
 
-args = argv[1:]
+def assemble_records(records):
+    partitions = {}
 
-passwd_data = args.pop(0)
-if os.path.isfile(passwd_data):
-    import json
-    with open(passwd_data) as fp:
-        secrets = json.load(fp)
-    name, passwd = secrets['oaipmhUsername'], secrets['oaipmhPassword']
-elif ':' in passwd_data:
-    name, passwd = passwd_data.split(':')
-else:
-    name, passwd = "", ""
+    linked_auths = set()
 
-if args[0].endswith('.tsv'):
-    records = []
-    with open(args[0], 'rb') as fp:
-        reader = csv.reader(fp, dialect='excel-tab')
-        for row in reader:
-            if row:
-                records.append(row[0])
-    if args[1]:
-        outdir = args[1]
-else:
-    outdir = None
-    records = args
+    for record_id in records:
+        rectype, recnum = record_id.split('/', 1)
+
+        if not rectype in partitions:
+            root = make_root()
+            partitions[rectype] = (
+                    root,
+                    etree.SubElement(root, 'ListRecords'))
+        root, reclist = partitions[rectype]
+
+        record = get_record(rectype, recnum)
+        if record is None:
+            print("found nothing for", record_id, file=stderr)
+            continue
+
+        reclist.append(record)
+
+    for name, (root, reclist) in partitions.items():
+        if outdir:
+            fpath = os.path.join(outdir, name, "oaipmh")
+            fdir = os.path.dirname(fpath)
+            if not os.path.isdir(fdir):
+                os.makedirs(fdir)
+            fp = open(fpath, 'w')
+        else:
+            fp = stdout
+        kwargs = {'pretty_print': True} if lxml else {}
+        fp.write(etree.tostring(root, encoding='UTF-8', **kwargs))
+        if outdir:
+            fp.close()
+        else:
+            print()
+
 
 OAI_NS = "http://www.openarchives.org/OAI/2.0/"
 
@@ -51,36 +64,41 @@ def make_root():
         ).text = "http://data.libris.kb.se/auth/oaipmh"
     return root
 
-partitions = {}
-for record in records:
-    rectype, recid = record.split('/')
-    if not rectype in partitions:
-        root = make_root()
-        partitions[rectype] = (
-                root,
-                etree.SubElement(root, 'ListRecords'))
-    root, reclist = partitions[rectype]
-    url = baseurl.format(**vars())
+
+FETCH_URL = 'http://data.libris.kb.se/{rectype}/oaipmh/?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/{rectype}/{recnum}'
+
+def get_record(rectype, recnum):
+    url = FETCH_URL.format(**vars())
     res = requests.get(url, auth=(name, passwd), stream=True)
     record_root = etree.parse(res.raw)
-    record_data = record_root.find('/*/*')
-    if record_data is None:
-        print >>stderr, "found nothing for", record
-        continue
-    reclist.append(record_data)
+    return record_root.find('/*/*')
 
-for name, (root, reclist) in partitions.items():
-    if outdir:
-        fpath = os.path.join(outdir, name, "oaipmh")
-        fdir = os.path.dirname(fpath)
-        if not os.path.isdir(fdir):
-            os.makedirs(fdir)
-        fp = open(fpath, 'w')
+
+if __name__ == '__main__':
+    args = argv[1:]
+
+    passwd_data = args.pop(0)
+    if os.path.isfile(passwd_data):
+        import json
+        with open(passwd_data) as fp:
+            secrets = json.load(fp)
+        name, passwd = secrets['oaipmhUsername'], secrets['oaipmhPassword']
+    elif ':' in passwd_data:
+        name, passwd = passwd_data.split(':')
     else:
-        fp = stdout
-    kwargs = {'pretty_print': True} if lxml else {}
-    fp.write(etree.tostring(root, encoding='UTF-8', **kwargs))
-    if outdir:
-        fp.close()
+        name, passwd = "", ""
+
+    if args[0].endswith('.tsv'):
+        records = []
+        with open(args[0], 'rb') as fp:
+            reader = csv.reader(fp, dialect='excel-tab')
+            for row in reader:
+                if row:
+                    records.append(row[0])
+        if args[1]:
+            outdir = args[1]
     else:
-        print
+        outdir = None
+        records = args
+
+    assemble_records(records)
