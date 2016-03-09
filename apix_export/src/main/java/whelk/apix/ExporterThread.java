@@ -160,6 +160,10 @@ public class ExporterThread extends Thread
             case APIX_NEW:
             {
                 String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + "/" + collection + "/new";
+
+                // Special treatment for new holdings.
+                // Instead of /apix/0.1/cat/libris/hold/new it is: /apix/0.1/cat/libris/bib/1234/newhold,
+                // so change apixDocumentUrl here:
                 if (collection.equals("hold"))
                 {
                     List graphList = (List) datamap.get("@graph");
@@ -168,10 +172,7 @@ public class ExporterThread extends Thread
                     String bibId = (String) holdingFor.get("@id");
                     int charIndex = bibId.indexOf("/bib/");
                     String shortBibId = bibId.substring(charIndex + 5);
-
-                    System.out.println("Short bib id:" + shortBibId);
-
-                    // Find holdingFor and do /bib/bibcontrollnr/newhold instead
+                    apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + "/bib/" + shortBibId + "/newhold";
                 }
 
                 Document convertedDoucment = m_converter.convert(document);
