@@ -101,6 +101,12 @@ There are two property files in the core module that needs configuring.
 
 For all modules: ask for directions if you don't know the proper settings.
 
+### (Re-)Create a tiny local dev whelk (NEW)
+
+Run:
+
+    $ ./librisxl-tools/scripts/setup-dev-whelk.sh whelk_dev
+
 ### Importing data (NEW)
 
 First, create these config files from corresponding ".in"-files in the same

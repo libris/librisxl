@@ -109,18 +109,18 @@ public class LongTermHttpRequest
         String responseText = completeResponse.toString("UTF-8");
         int introEnd = responseText.indexOf("\r\n");
         if (introEnd == -1)
-            throw new IOException("Malformed HTTP response.");
+            throw new IOException("Malformed HTTP response, no intro line ending: " + responseText);
         String introLine = responseText.substring(0, introEnd);
 
         // The intro line should look something like: HTTP/1.1 200 OK
-        if (!introLine.startsWith("HTTP/1.1 "))
-            throw new IOException("Malformed HTTP response.");
+        if (!introLine.startsWith("HTTP/1."))
+            throw new IOException("Malformed HTTP response, no 'HTTP/1.X': " + responseText);
         // Next tree chars should be the response code.
         m_responseCode = Integer.parseInt( introLine.substring(9, 12) );
 
         int headerEnd = responseText.indexOf("\r\n\r\n");
         if (headerEnd == -1)
-            throw new IOException("Malformed HTTP response.");
+            throw new IOException("Malformed HTTP response, no correct header ending: " + responseText);
 
         String headerString = responseText.substring(introEnd, headerEnd).trim();
         m_responseData = responseText.substring(headerEnd+3);
@@ -129,10 +129,12 @@ public class LongTermHttpRequest
         m_responseHeaders = new HashMap<String, String>();
         for (String headerLine : headerLines)
         {
-            String[] headerParts = headerLine.split(":");
-            if (headerParts.length < 2)
-                throw new IOException("Malformed HTTP response.");
-            m_responseHeaders.put(headerParts[0].trim(), headerParts[1].trim());
+            int delimiterIndex = headerLine.indexOf(':');
+            if (delimiterIndex == -1)
+                throw new IOException("Malformed HTTP response, bad header line: " + headerLine);
+            m_responseHeaders.put(
+                    headerLine.substring(0, delimiterIndex).trim(),
+                    headerLine.substring(delimiterIndex+1, headerLine.length()).trim());
         }
     }
 }
