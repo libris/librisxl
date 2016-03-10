@@ -22,15 +22,21 @@ class MySQLToMarcJSONDumper {
         def counter = 0
         def startTime = System.currentTimeMillis()
 
-        loader.run { doc, specs ->
-            dumpWriter.writeLine(mapper.writeValueAsString(doc))
-            if (++counter % 1000 == 0) {
-                def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
-                if (elapsedSecs > 0) {
-                    def docsPerSec = counter / elapsedSecs
-                    println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
+        try {
+            loader.run { doc, specs ->
+
+                dumpWriter.writeLine(mapper.writeValueAsString(doc))
+
+                if (++counter % 1000 == 0) {
+                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
+                    if (elapsedSecs > 0) {
+                        def docsPerSec = counter / elapsedSecs
+                        println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
+                    }
                 }
             }
+        } finally {
+            dumpWriter.close()
         }
 
         def endSecs = (System.currentTimeMillis() - startTime) / 1000
