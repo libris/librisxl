@@ -1865,23 +1865,22 @@
 
     "020": {
       "aboutEntity": "?thing",
-      "addLink": "identifier",
+      "addLink": "identifiedBy",
       "embedded": true,
       "match-domain": {
         "EBook": {"addLink": "commonEndeavor"}
       },
-      "resourceType": "Identifier",
+      "resourceType": "ISBN",
       "$a": {
-        "property": "identifierValue",
+        "property": "value",
         "splitValuePattern": "([^ ()]*)(?:\\s*\\(([^)]+)\\))?",
-        "splitValueProperties": ["identifierValue", "identifierNote"],
+        "splitValueProperties": ["value", "note"],
         "defaults": {
-          "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"},
           "identifierStatus": null
         }
       },
       "$c": {"aboutEntity": "?thing", "property": "termsOfAvailability"},
-      "$q": {"property": "identifierNote", "TODO": "addProperty"},
+      "$q": {"property": "note", "TODO": "addProperty"},
       "$z": {
         "addProperty": "hiddenValue"
       },
@@ -1896,11 +1895,9 @@
               {"a": "91-0-056322-6"}, {"c": "310:00"}, {"q": "inb."} ]}
           },
           "result": {"mainEntity": {
-            "identifier": [
-              {"@type": "Identifier",
-                "identifierValue": "91-0-056322-6",
-                "identifierNote": "inb.",
-                "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"}}],
+            "identifiedBy": [
+              {"@type": "ISBN", "value": "91-0-056322-6", "note": "inb."}
+            ],
             "termsOfAvailability": "310:00"
           }}
         },
@@ -1923,13 +1920,12 @@
             }
           },
           "result": {"mainEntity": {
-            "identifier": [
+            "identifiedBy": [
               {
-                "@type": "Identifier",
+                "@type": "ISBN",
                 "hiddenValue": ["9780230274396 (print)"],
-                "identifierNote": "e-book",
-                "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"},
-                "identifierValue": "9781137368331"
+                "note": "e-book",
+                "value": "9781137368331"
               }
             ]
           }}
@@ -1940,9 +1936,9 @@
               {"z":"9780240811444 (pbk. : alk. paper)"} ]}
           },
           "result": {"mainEntity": {
-            "identifier": [
+            "identifiedBy": [
               {
-                "@type": "Identifier",
+                "@type": "ISBN",
                 "hiddenValue": ["9780240811444 (pbk. : alk. paper)"]
               }
             ]
@@ -1958,11 +1954,10 @@
               {"q": "US"} ]}
           },
           "result": {"mainEntity": {
-            "identifier": [
+            "identifiedBy": [
               {
-                "@type": "Identifier",
-                "identifierNote": "US",
-                "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"}
+                "@type": "ISBN",
+                "note": "US"
               }
             ]
           }}
@@ -1972,22 +1967,20 @@
 
     "022": {
       "aboutEntity": "?thing",
-      "addLink": "identifier",
+      "addLink": "identifiedBy",
       "embedded": true,
-      "resourceType": "Identifier",
+      "resourceType": "ISSN",
       "TODO:i1": {},
       "$a": {
-        "property": "identifierValue",
-        "defaults": {"identifierScheme": {"@id": "https://id.kb.se/vocab/ISSN"}}
+        "property": "value"
       },
       "$m": {"TODO:addProperty": "canceledIssnL"},
       "$l": {"TODO:property": "issnL"},
-      "$2": {"TODO:link": "identifierScheme"},
+      "$2": {"TODO:link": "typeNote"},
       "$y": {"TODO": "inherit:$z + specific: incorrectIssn"},
       "$z": {
-        "property": "identifierValue",
+        "property": "value",
         "defaults": {
-          "identifierScheme": {"@id": "https://id.kb.se/vocab/ISSN"},
           "identifierStatus": "canceledInvalid"
         }
       }
@@ -1995,11 +1988,10 @@
 
     "024": {
       "aboutEntity": "?thing",
-      "addLink": "identifier",
+      "addLink": "identifiedBy",
       "embedded": true,
-      "resourceType": "Identifier",
       "i1": {
-        "link": "identifierScheme",
+        "property": "@type",
         "tokenMap": {
           "0": "ISRC",
           "1": "UPC",
@@ -2007,19 +1999,17 @@
           "3": "EAN",
           "4": "SICI"
         },
-        "definedElsewhereToken": "7",
-        "uriTemplate": "https://id.kb.se/vocab/{_}",
-        "property": "notation",
-        "matchUriToken": "^\\S+$"
+        "definedElsewhereToken": "7"
+      },
+      "match-i1": {
+        "7": {"resourceType": "Identifier"}
       },
       "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
-      "$a": {"property": "identifierValue"},
-      "$q": {"property": "identifierNote"},
+      "$a": {"property": "value"},
+      "$q": {"property": "note"},
       "$2": {
         "requires-i1": "7",
-        "link": "identifierScheme",
-        "property": "notation",
-        "matchUriToken": "^\\S+$",
+        "property": "typeNote",
         "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
       },
       "_spec": [
@@ -2030,11 +2020,10 @@
           },
           "result": {
             "mainEntity": {
-              "identifier": [
+              "identifiedBy": [
                 {
-                  "@type": "Identifier",
-                  "identifierValue":  "1234567890",
-                  "identifierScheme": {"@id": "https://id.kb.se/vocab/EAN", "notation": "EAN"}
+                  "@type": "EAN",
+                  "value":  "1234567890"
                 }
               ]
             }
@@ -2047,11 +2036,11 @@
           },
           "result": {
             "mainEntity": {
-              "identifier": [
+              "identifiedBy": [
                 {
                   "@type": "Identifier",
-                  "identifierValue":  "1234567890",
-                  "identifierScheme": {"notation": "xyz"}
+                  "value":  "1234567890",
+                  "typeNote": "xyz"
                 }
               ]
             }
@@ -2459,7 +2448,7 @@
       "resourceType": "Title",
       "TOOO:i1": {},
       "TOOO:i2": {},
-      "$a": {"property": "titleValue"},
+      "$a": {"property": "mainTitle"},
       "$b": {"property": "titleQualifier"},
       "$2": {"property": "titleSource"}
     },
@@ -2511,7 +2500,7 @@
       "embedded": true,
       "resourceType": "Title",
       "$a": {
-        "property": "titleValue",
+        "property": "mainTitle",
         "interpunctionChars": ":/",
         "TODO:interpunctionRules": {
           " :": {"$b": {"property": "subtitle"}},
@@ -2538,7 +2527,7 @@
           ]}},
           "result": {"mainEntity": {
             "qualifiedTitle": {"@type": "Title",
-              "titleValue":  "Anteckningar från en ö"
+              "mainTitle":  "Anteckningar från en ö"
             }
           }}
         },
@@ -2550,7 +2539,7 @@
           ]}},
           "result": {"mainEntity": {
             "qualifiedTitle": {"@type": "Title",
-              "titleValue":  "Anteckningar från en ö",
+              "mainTitle":  "Anteckningar från en ö",
               "searchElement": false
             },
             "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
@@ -3345,11 +3334,7 @@
       "$m": {"property": "mediaNote"},
       "$n": {"addProperty": "note"},
       "$o": {
-        "addLink": "identifier",
-        "embedded": true,
-        "resourceType": "Identifier",
-        "addProperty": "identifierValue",
-        "defaults": {"identifierScheme": null}
+        "addProperty": "identifier"
       },
       "$r": {"addProperty": "reportNumber", "TODO:targetMatch": "088"},
       "$s": {"property": "uniformTitle", "TODO:targetMatch": "240"},
@@ -3361,20 +3346,12 @@
       },
       "$x": {
         "TODO:targetMatch": "022",
-        "link": "identifier",
-        "embedded": true,
-        "resourceType": "Identifier",
-        "property": "identifierValue",
-        "defaults": {"identifierScheme": {"@id": "https://id.kb.se/vocab/ISSN"}}
+        "property": "issn"
       },
       "$y": {"property": "coden", "TODO:targetMatch": "030"},
       "$z": {
         "TODO:targetMatch": "020",
-        "addLink": "identifier",
-        "embedded": true,
-        "resourceType": "Identifier",
-        "property": "identifierValue",
-        "defaults": {"identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"}}
+        "addProperty": "isbn"
       },
       "$9": {"addProperty": "partNumber"},
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
@@ -3389,13 +3366,7 @@
               {
                 "@type": "CreativeWork",
                 "uniformTitle": "Main Thing",
-                "identifier": [
-                  {
-                    "@type": "Identifier",
-                    "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"},
-                    "identifierValue": "00-0-000000-0"
-                  }
-                ]
+                "isbn": ["00-0-000000-0"]
               }
             ]
           }}
