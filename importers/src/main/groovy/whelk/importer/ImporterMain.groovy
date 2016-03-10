@@ -81,6 +81,7 @@ class ImporterMain {
     }
 
     void linkfindCmd(String collection) {
+        log.info("Starting linkfinder for collection ${collection ?: 'all'}")
         def whelk = pico.getComponent(Whelk)
         whelk.storage.versioning = false
         def lf = pico.getComponent(LinkFinder)
