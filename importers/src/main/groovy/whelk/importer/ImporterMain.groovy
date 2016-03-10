@@ -127,7 +127,12 @@ class ImporterMain {
             println("Unknown action ${args[0]}")
             System.exit(1)
         }
-        def main = new ImporterMain("secret", "mysql")
+        def main
+        if (cmd.startsWith("vcopy")) {
+            main = new ImporterMain("secret", "mysql")
+        } else {
+            main = new ImporterMain("secret")
+        }
         def arglist = args.length > 1? args[1..-1] : []
         main."${cmd}"(*arglist)
     }
