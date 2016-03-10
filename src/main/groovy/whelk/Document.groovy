@@ -89,6 +89,22 @@ class Document {
         this.data = deepCopy(d)
     }
 
+    void setThing(Map thing) {
+        if (id == null) {
+            throw new UnsupportedOperationException("Cannot set thing without @id")
+        }
+        Map framed = (data ? deepCopy(this.data) : [:])
+        if (isFlat()) {
+            framed = JsonLd.frame(id, data)
+        }
+        framed.put("@id", id)
+        if (!thing.containsKey("@id")) {
+            thing.put("@id", id + "#it")
+        }
+        framed.put("about", thing)
+        data = JsonLd.flatten(framed)
+    }
+
     void setDeleted(boolean d) {
         deleted = d
         if (deleted) {
@@ -102,12 +118,12 @@ class Document {
         this.data["@graph"][0]["controlNumber"] = controlNumber
     }
 
-    def deepCopy(orig) {
-        def bos = new ByteArrayOutputStream()
-        def oos = new ObjectOutputStream(bos)
+    static Object deepCopy(Object orig) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream()
+        ObjectOutputStream oos = new ObjectOutputStream(bos)
         oos.writeObject(orig); oos.flush()
-        def bin = new ByteArrayInputStream(bos.toByteArray())
-        def ois = new ObjectInputStream(bin)
+        ByteArrayInputStream bin = new ByteArrayInputStream(bos.toByteArray())
+        ObjectInputStream ois = new ObjectInputStream(bin)
         return ois.readObject()
     }
 
@@ -288,6 +304,13 @@ class Document {
 
     boolean isJson() {
         return isJson(getContentType())
+    }
+
+    boolean isFlat() {
+        if (isJsonLd()) {
+            return JsonLd.isFlat(this.data)
+        }
+        return false
     }
 
     static boolean isJsonLd(String ct) {

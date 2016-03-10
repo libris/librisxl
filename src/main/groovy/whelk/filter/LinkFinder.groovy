@@ -26,8 +26,9 @@ class LinkFinder {
 
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql
-        ENTITY_QUERY = "SELECT data->'descriptions'->'items'->0->>'@id' AS uri FROM ${postgres.mainTableName} WHERE " +
-                "data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
+        ENTITY_QUERY = "SELECT data->'@graph'->1->>'@id' AS uri FROM ${postgres.mainTableName} WHERE " +
+                "data->'@graph' @> ?"
+                //"data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
     }
 
     int numCalls = 0
@@ -92,10 +93,10 @@ class LinkFinder {
             PreparedStatement stmt = connection.prepareStatement(ENTITY_QUERY)
 
             log.debug(" SQL : " + ENTITY_QUERY)
-            log.debug("JSON 1: " + mapper.writeValueAsString([queryMap]))
-            log.debug("JSON 2: " + mapper.writeValueAsString(queryMap))
+            log.debug("JSON: " + mapper.writeValueAsString([queryMap]))
+            //log.debug("JSON 2: " + mapper.writeValueAsString(queryMap))
             stmt.setObject(1, mapper.writeValueAsString([queryMap]), java.sql.Types.OTHER)
-            stmt.setObject(2, mapper.writeValueAsString(queryMap), java.sql.Types.OTHER)
+            //stmt.setObject(2, mapper.writeValueAsString(queryMap), java.sql.Types.OTHER)
             ResultSet rs = stmt.executeQuery()
             if (rs.next()) {
                 uri = rs.getString("uri")
