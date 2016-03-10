@@ -8,8 +8,12 @@ def mapper = converter.mapper
 
 new File(destDump).withPrintWriter('UTF-8') { out ->
     def i = 0
+    long startTime = System.currentTimeMillis()
+    def tsv = sourceDump.endsWith('.tsv')
     new File(sourceDump).eachLine('UTF-8') {
-        def source = mapper.readValue(it, Map)
+        def tab1 = it.indexOf('\t')
+        def data = tsv? it.substring(tab1, it.indexOf('\t', tab1 + 1)) : it
+        def source = mapper.readValue(data, Map)
         def result = null
         try {
             result = converter.runConvert(source, source['_extra'])
@@ -18,7 +22,13 @@ new File(destDump).withPrintWriter('UTF-8') { out ->
             println it
             throw e
         }
-        out.println(mapper.writeValueAsString(result))
-        println "Processed ${i++} lines"
+        def outdata = mapper.writeValueAsString(result)
+        out.println(outdata)
+
+
+        long elapsed = (System.currentTimeMillis() - startTime) / 1000
+        if (i++ && i % 100 == 0) {
+            println "Processed ${i} docs (${i / (elapsed ?: 1)} docs / s)"
+        }
     }
 }
