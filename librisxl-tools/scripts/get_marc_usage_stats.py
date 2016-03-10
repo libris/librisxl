@@ -9,13 +9,13 @@ stats_dest = args.pop(0)
 marctype = args.pop(0) if args else 'bib'
 
 
-def parse_record(line):
-    tab1 = line.index('\t')
+def parse_record(line, lineno=-1):
+    tab1 = line.find('\t')
     try:
-        data = line[tab1:line.index('\t', tab1 + 1)].replace('\\\\', '\\')
+        data = line[tab1:line.index('\t', tab1 + 1)] if tab1 > 0 else line
         return json.loads(data)
     except:
-        print("Error in:", data)
+        print("Error in:", data, "at line:", lineno)
         raise
 
 
@@ -80,7 +80,7 @@ for i, line in enumerate(sys.stdin):
         if i % 10**6 == 0:
             dump_stats()
 
-    record = parse_record(line)
+    record = parse_record(line, i + 1)
 
     stats['total'] += 1
 
