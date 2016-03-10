@@ -10,6 +10,7 @@ import groovy.util.logging.Slf4j as Log
 import whelk.filter.LinkFinder
 import whelk.reindexer.ElasticReindexer
 import whelk.harvester.OaiPmhHarvester
+import whelk.tools.MySQLToMarcJSONDumper
 import whelk.tools.PostgresLoadfileWriter
 import whelk.util.PropertyLoader
 import whelk.util.Tools
@@ -23,11 +24,12 @@ import java.util.concurrent.TimeUnit
 class ImporterMain {
 
     PicoContainer pico
+    Properties props
 
     ImporterMain(String... propNames) {
         log.info("Setting up import program.")
 
-        Properties props = PropertyLoader.loadProperties(propNames)
+        props = PropertyLoader.loadProperties(propNames)
 
         pico = Whelk.getPreparedComponentsContainer(props)
         pico.addComponent(new MarcFrameConverter())
@@ -63,6 +65,11 @@ class ImporterMain {
         writer.generatePostgresLoadFile()
     }
 
+    void vcopyjsondumpCmd(String collection, String toFileName) {
+        def connUrl = props.getProperty("mysqlConnectionUrl")
+        MySQLToMarcJSONDumper.dump(connUrl, collection, toFileName)
+    }
+
     void defsCmd(String fname) {
         def defsimport = pico.getComponent(DefinitionsImporter)
         defsimport.definitionsFilename = fname
@@ -81,6 +88,7 @@ class ImporterMain {
     }
 
     void linkfindCmd(String collection) {
+        log.info("Starting linkfinder for collection ${collection ?: 'all'}")
         def whelk = pico.getComponent(Whelk)
         whelk.storage.versioning = false
         def lf = pico.getComponent(LinkFinder)
@@ -127,7 +135,12 @@ class ImporterMain {
             println("Unknown action ${args[0]}")
             System.exit(1)
         }
-        def main = new ImporterMain("secret", "mysql")
+        def main
+        if (cmd.startsWith("vcopy")) {
+            main = new ImporterMain("secret", "mysql")
+        } else {
+            main = new ImporterMain("secret")
+        }
         def arglist = args.length > 1? args[1..-1] : []
         main."${cmd}"(*arglist)
     }
