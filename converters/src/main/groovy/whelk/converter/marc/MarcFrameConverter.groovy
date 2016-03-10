@@ -511,7 +511,7 @@ class MarcRuleSet {
                 assert handler.property || handler.uriTemplate, "Incomplete: $tag: $dfn"
             }
             fieldHandlers[tag] = handler
-            if (dfn.aboutType) {
+            if (dfn.aboutType && dfn.aboutType != 'Record') {
                 aboutTypeMap[dfn.aboutEntity ?: '?thing'] << dfn.aboutType
             }
         }
