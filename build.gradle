@@ -4,8 +4,7 @@ apply plugin: 'maven'
 
 archivesBaseName = "xlcore"
 
-group = 'se.kb.libris'
-version = '1.0'
+group = 'com.github.libris'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
