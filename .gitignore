@@ -8,10 +8,6 @@ whelkoperator.lck
 .idea
 build
 *.iml
-gradle/wrapper/gradle-wrapper.jar
-gradle/wrapper/gradle-wrapper.properties
-gradlew
-gradlew.bat
 target/camel-elasticsearch-test.log
 src/main/resources/version.properties
 src/main/resources/secrets.json
