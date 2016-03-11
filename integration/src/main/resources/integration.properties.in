@@ -1,7 +1,0 @@
-activemq_broker_url         = tcp://localhost:61616
-activemq_apix_queue         = apix.queue
-activemq_apix_retries_queue = apix.retries
-apixUrl                     = http://localhost:8100
-apixPath                    = /apix/0.1/cat/libris/
-postgresql_url              = jdbc:postgresql://localhost/whelk
-postgresql_maintable        = lddb

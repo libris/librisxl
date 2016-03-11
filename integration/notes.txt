@@ -1,22 +1,0 @@
-ElasticIndexRouteBuilder
-
-whelk.camel.ElasticRouteProcessor
-	"MQ_INDEX": "activemq:{whelkname}.index?concurrentConsumers=5",
-
-"elasticBatchSize": 2000,
- "batchTimeout": 5000,
- "messageQueue": "activemq:libris.index?concurrentConsumers=5"
-
-
-APIXRouteBuilder
-
-whelk.camel.APIXProcessor
-	API_PATH: ”/apix/0.1/cat/test/”
-	whelk.converter.libris.JsonLD2MarcXMLConverter
-
-whelk.camel.APIXResponseProcessor
-
-"ACTIVEMQ_BROKER_URL": "tcp://hp04.libris.kb.se:61616?wireFormat.maxInactivityDuration=3600000", (pooledconnectionfactory, 10, 200)
-"apixMessageQueue": "activemq:libris.apix", 
-"retriesQueue": "activemq:libris.apix.retries",
- "apixUri": "https://libris.kb.se"

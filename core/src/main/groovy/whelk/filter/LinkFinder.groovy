@@ -28,7 +28,6 @@ class LinkFinder {
         postgres = pgsql
         ENTITY_QUERY = "SELECT data->'@graph'->1->>'@id' AS uri FROM ${postgres.mainTableName} WHERE " +
                 "data->'@graph' @> ?"
-                //"data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
     }
 
     int numCalls = 0
