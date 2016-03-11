@@ -1,1 +1,1 @@
-include '../core', '../converters', '../harvesters'
+include '../harvesters'
