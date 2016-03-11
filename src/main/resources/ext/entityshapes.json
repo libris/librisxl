@@ -1,0 +1,51 @@
+{
+
+  "CreativeWork": {
+    "instanceTitle": {},
+    "title": {"titleValue": ""},
+    "attributedTo": {},
+    "publicationYear": "",
+    "identifier": {}
+  },
+
+  "Identifier": {
+    "@type": "Identifier",
+    "identifierScheme": {},
+    "identifierValue": ""
+  },
+  "Title": {
+    "@type": "Title",
+    "titleValue": "",
+    "subtitle": "",
+    "titleDate": "",
+    "partNumber": "",
+    "partTitle": ""
+  },
+
+  "ObjectProperty": {"notation": ""},
+  "Language": {"notation": "", "prefLabel": ""},
+  "Nationality": {"notation": "", "prefLabel": ""},
+
+  "Concept": {"prefLabel": "", "notation": ""},
+  "ConceptScheme": {"notation": ""},
+  "ConceptualWork": {"uniformTitle": "", "attributedTo": {}},
+
+  "Country": {"name": ""},
+  "Event": {"label": ""},
+  "Family": {"name": ""},
+  "Meeting": {"name": ""},
+  "Organization": {"name": ""},
+  "Person": {
+    "name": "",
+    "familyName": "",
+    "givenName": "",
+    "birthYear": "",
+    "deathYear": "",
+    "notation": "",
+    "personTitle": ""
+  },
+  "Place": {"label": ""},
+  "PlanetaryObject": {"name": ""},
+  "Jurisdiction": {"name": ""}
+
+}
