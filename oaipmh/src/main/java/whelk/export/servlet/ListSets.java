@@ -76,14 +76,17 @@ public class ListSets
             while (resultSet.next())
             {
                 String sigel = resultSet.getString("sigel");
-                writer.writeStartElement("set");
-                writer.writeStartElement("setSpec");
-                writer.writeCharacters("hold:"+sigel.replace("\"", ""));
-                writer.writeEndElement(); // setSpec
-                writer.writeStartElement("setName");
-                writer.writeCharacters("Holding records for sigel: " + sigel);
-                writer.writeEndElement(); // setName
-                writer.writeEndElement(); // set
+                if (sigel != null)
+                {
+                    writer.writeStartElement("set");
+                    writer.writeStartElement("setSpec");
+                    writer.writeCharacters("hold:"+sigel.replace("\"", ""));
+                    writer.writeEndElement(); // setSpec
+                    writer.writeStartElement("setName");
+                    writer.writeCharacters("Holding records for sigel: " + sigel);
+                    writer.writeEndElement(); // setName
+                    writer.writeEndElement(); // set
+                }
             }
         }
 
