@@ -10,6 +10,7 @@ import groovy.util.logging.Slf4j as Log
 import whelk.filter.LinkFinder
 import whelk.reindexer.ElasticReindexer
 import whelk.harvester.OaiPmhHarvester
+import whelk.tools.MySQLToMarcJSONDumper
 import whelk.tools.PostgresLoadfileWriter
 import whelk.util.PropertyLoader
 import whelk.util.Tools
@@ -23,11 +24,12 @@ import java.util.concurrent.TimeUnit
 class ImporterMain {
 
     PicoContainer pico
+    Properties props
 
     ImporterMain(String... propNames) {
         log.info("Setting up import program.")
 
-        Properties props = PropertyLoader.loadProperties(propNames)
+        props = PropertyLoader.loadProperties(propNames)
 
         pico = Whelk.getPreparedComponentsContainer(props)
         pico.addComponent(new MarcFrameConverter())
@@ -61,6 +63,11 @@ class ImporterMain {
     void vcopydumpCmd(String toFileName, String collection) {
         PostgresLoadfileWriter writer = new PostgresLoadfileWriter(toFileName, collection)
         writer.generatePostgresLoadFile()
+    }
+
+    void vcopyjsondumpCmd(String collection, String toFileName) {
+        def connUrl = props.getProperty("mysqlConnectionUrl")
+        MySQLToMarcJSONDumper.dump(connUrl, collection, toFileName)
     }
 
     void defsCmd(String fname) {
