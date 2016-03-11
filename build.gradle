@@ -83,7 +83,7 @@ task generateVersion(type:Exec) {
     }
 }
 
-processResources.dependsOn("generateVersion")
+//processResources.dependsOn("generateVersion")
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
