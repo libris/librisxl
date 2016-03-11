@@ -125,10 +125,3 @@ task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
     main = 'whelk.plugin.JsonLdToTurtle'
     args(System.getProperty('args', "").split() as String[])
 }
-
-task(groovy, dependsOn: "classes", type: JavaExec) {
-    description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
-    classpath = sourceSets.test.runtimeClasspath
-    main = "groovy.ui.GroovyMain"
-    args(System.getProperty("args", "").split() as String[])
-}
