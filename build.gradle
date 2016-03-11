@@ -28,14 +28,14 @@ test.testLogging {
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
+    maven { url "http://jitpack.io/" }
 }
 
 dependencies {
     def groovyVersion=GroovySystem.getVersion()
-    def activeMQVersion="5.11.1"
 
-    // Java EE
-    compile "javax.jms:jms-api:1.1-rev-1"
+    // KB tools
+    compile 'com.github.libris:jmarctools:master-SNAPSHOT'
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
@@ -53,6 +53,8 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.6'
     compile 'org.slf4j:log4j-over-slf4j:1.7.6'
     compile 'org.apache.commons:commons-dbcp2:2.0.1'
+    compile 'org.apache.jena:apache-jena-libs:3.0.1'
+
     // Integration
     compile "org.elasticsearch:elasticsearch:2.2.0"
     compile "org.elasticsearch.plugin:delete-by-query:2.2.0"
@@ -60,8 +62,6 @@ dependencies {
     compile 'com.vividsolutions:jts:1.13'
     compile 'org.postgresql:postgresql:9.4-1200-jdbc41'
     compile 'org.picocontainer:picocontainer:2.15'
-    compile "org.apache.activemq:activemq-broker:${activeMQVersion}"
-
 
     // profiling and test
     testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"
@@ -79,7 +79,14 @@ task generateVersion(type:Exec) {
     standardOutput = new ByteArrayOutputStream()
     doLast {
         String output = standardOutput.toString().trim()
-        new File("../core/src/main/resources/version.properties").write("version: ${output}\n")
+        //String scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent
+        String currentDir = new File(".").absolutePath
+        println "ScriptDir $currentDir"
+        String versionPath = "core/src/main/resources/version.properties"
+        if (currentDir != "librisxl") {
+            versionPath = "../" + versionPath
+        }
+        new File(versionPath).write("version: ${output}\n")
         println("Updated version.properties to \"${output}\"")
     }
 }
@@ -97,4 +104,31 @@ task(console, dependsOn: 'classes', type: JavaExec) {
   description "Launch a Groovy Console"
   classpath = sourceSets.main.runtimeClasspath
   main = 'groovy.ui.Console'
+}
+
+task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
+    description "Convert an ISO2709 file to JSON (USAGE: -Dargs='<infile>')"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'whelk.converter.MarcJSONConverter'
+    args(System.getProperty('args', "").split() as String[])
+}
+task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
+    description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'whelk.converter.marc.MarcFrameConverter'
+    args(System.getProperty('args', "").split() as String[])
+}
+
+task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
+    description "Convert a JSON-LD file to Turtle (USAGE: -Dargs='<context> <source>')"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'whelk.plugin.JsonLdToTurtle'
+    args(System.getProperty('args', "").split() as String[])
+}
+
+task(groovy, dependsOn: "classes", type: JavaExec) {
+    description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
+    classpath = sourceSets.test.runtimeClasspath
+    main = "groovy.ui.GroovyMain"
+    args(System.getProperty("args", "").split() as String[])
 }
