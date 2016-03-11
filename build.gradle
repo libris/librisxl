@@ -78,14 +78,7 @@ task generateVersion(type:Exec) {
     standardOutput = new ByteArrayOutputStream()
     doLast {
         String output = standardOutput.toString().trim()
-        //String scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent
-        String currentDir = new File(".").absolutePath
-        println "ScriptDir $currentDir"
-        String versionPath = "core/src/main/resources/version.properties"
-        if (currentDir != "librisxl") {
-            versionPath = "../" + versionPath
-        }
-        new File(versionPath).write("version: ${output}\n")
+        new File("src/main/resources/version.properties").write("version: ${output}\n")
         println("Updated version.properties to \"${output}\"")
     }
 }
