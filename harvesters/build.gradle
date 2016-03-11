@@ -56,7 +56,8 @@ test.testLogging {
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
-    flatDir name: 'localDir', dirs: '../dep/lib'
+    maven { url "http://jitpack.io/" }
+
 }
 
 configurations {
@@ -76,11 +77,11 @@ buildscript {
 }
 
 dependencies {
-    compile project(':../core')
-    compile project(':../converters')
 
     def groovyVersion=GroovySystem.getVersion()
     def jettyVersion="8.1.16.v20140903"
+
+    compile 'com.github.libris:whelk-core:master-SNAPSHOT'
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"

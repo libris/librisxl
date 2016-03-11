@@ -10,14 +10,15 @@ targetCompatibility = 1.8
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
-    flatDir name: 'localDir', dirs: '../dep/lib'
+    maven { url "http://jitpack.io/" }
 }
 
 dependencies {
-    compile project(':../core')
-    compile project(':../converters')
 
     def jettyVersion="9.3.6.v20151106"
+
+    // XL dependencies
+    compile 'com.github.libris:whelk-core:master-SNAPSHOT'
 
     // Jetty
     compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
