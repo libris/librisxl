@@ -511,7 +511,7 @@ class MarcRuleSet {
                 assert handler.property || handler.uriTemplate, "Incomplete: $tag: $dfn"
             }
             fieldHandlers[tag] = handler
-            if (dfn.aboutType) {
+            if (dfn.aboutType && dfn.aboutType != 'Record') {
                 aboutTypeMap[dfn.aboutEntity ?: '?thing'] << dfn.aboutType
             }
         }
@@ -1348,7 +1348,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def linkage = computeLinkage(state, entity, value, handled)
         def codeLinkSplits = (Map) linkage.codeLinkSplits
-        if (linkage.newEntity) {
+        if (linkage.newEntity != null) {
             entity = (Map) linkage.newEntity
         }
 
@@ -1466,7 +1466,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
         def newEnt = null
-        if ((!splitResults || spliceEntity) && resourceType) {
+        if ((!splitResults && link) || ((!splitResults || spliceEntity) && resourceType)) {
             def useLinks = Collections.emptyList()
             if (computeLinks) {
                 def use = computeLinks.use

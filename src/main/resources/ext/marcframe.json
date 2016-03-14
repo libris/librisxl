@@ -168,7 +168,7 @@
 
   "bib": {
 
-    "thingLink": "about",
+    "thingLink": "mainEntity",
 
     "postProcessing": [
       {
@@ -345,7 +345,7 @@
             "marc:status": {"@id": "marc:CorrectedOrRevised"},
             "marc:catForm": {"@id": "marc:Aacr2"},
             "controlNumber": "0000000",
-            "about": {"@type": ["Text", "Monograph"], "@id": "http://libris.kb.se/resource/bib/0000000"}
+            "mainEntity": {"@type": ["Text", "Monograph"], "@id": "http://libris.kb.se/resource/bib/0000000"}
           }
         }
       ]
@@ -1349,7 +1349,7 @@
           "source": {"007":"aj |a|||"},
           "normalized": {"007":"aj |a|||               "},
           "result": {
-            "about": {
+            "mainEntity": {
               "hasFormat": [
                 {
                   "@type": ["Map"],
@@ -1836,7 +1836,7 @@
           ],
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
-            "about": {
+            "mainEntity": {
               "language": [{"@id": "https://id.kb.se/language/swe"}],
               "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
               "marc:publishedYear":  "1977",
@@ -1865,23 +1865,22 @@
 
     "020": {
       "aboutEntity": "?thing",
-      "addLink": "identifier",
+      "addLink": "identifiedBy",
       "embedded": true,
       "match-domain": {
         "EBook": {"addLink": "commonEndeavor"}
       },
-      "resourceType": "Identifier",
+      "resourceType": "ISBN",
       "$a": {
-        "property": "identifierValue",
+        "property": "value",
         "splitValuePattern": "([^ ()]*)(?:\\s*\\(([^)]+)\\))?",
-        "splitValueProperties": ["identifierValue", "identifierNote"],
+        "splitValueProperties": ["value", "note"],
         "defaults": {
-          "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"},
           "identifierStatus": null
         }
       },
       "$c": {"aboutEntity": "?thing", "property": "termsOfAvailability"},
-      "$q": {"property": "identifierNote", "TODO": "addProperty"},
+      "$q": {"property": "note", "TODO": "addProperty"},
       "$z": {
         "addProperty": "hiddenValue"
       },
@@ -1895,12 +1894,10 @@
             "020": {"ind1": " ", "ind2": " ", "subfields": [
               {"a": "91-0-056322-6"}, {"c": "310:00"}, {"q": "inb."} ]}
           },
-          "result": {"about": {
-            "identifier": [
-              {"@type": "Identifier",
-                "identifierValue": "91-0-056322-6",
-                "identifierNote": "inb.",
-                "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"}}],
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {"@type": "ISBN", "value": "91-0-056322-6", "note": "inb."}
+            ],
             "termsOfAvailability": "310:00"
           }}
         },
@@ -1922,14 +1919,13 @@
               ]
             }
           },
-          "result": {"about": {
-            "identifier": [
+          "result": {"mainEntity": {
+            "identifiedBy": [
               {
-                "@type": "Identifier",
+                "@type": "ISBN",
                 "hiddenValue": ["9780230274396 (print)"],
-                "identifierNote": "e-book",
-                "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"},
-                "identifierValue": "9781137368331"
+                "note": "e-book",
+                "value": "9781137368331"
               }
             ]
           }}
@@ -1939,10 +1935,10 @@
             "020": {"ind1":" ", "ind2":" ", "subfields":[
               {"z":"9780240811444 (pbk. : alk. paper)"} ]}
           },
-          "result": {"about": {
-            "identifier": [
+          "result": {"mainEntity": {
+            "identifiedBy": [
               {
-                "@type": "Identifier",
+                "@type": "ISBN",
                 "hiddenValue": ["9780240811444 (pbk. : alk. paper)"]
               }
             ]
@@ -1957,12 +1953,11 @@
             "020": {"ind1": " ", "ind2": " ", "subfields": [
               {"q": "US"} ]}
           },
-          "result": {"about": {
-            "identifier": [
+          "result": {"mainEntity": {
+            "identifiedBy": [
               {
-                "@type": "Identifier",
-                "identifierNote": "US",
-                "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"}
+                "@type": "ISBN",
+                "note": "US"
               }
             ]
           }}
@@ -1972,22 +1967,20 @@
 
     "022": {
       "aboutEntity": "?thing",
-      "addLink": "identifier",
+      "addLink": "identifiedBy",
       "embedded": true,
-      "resourceType": "Identifier",
+      "resourceType": "ISSN",
       "TODO:i1": {},
       "$a": {
-        "property": "identifierValue",
-        "defaults": {"identifierScheme": {"@id": "https://id.kb.se/vocab/ISSN"}}
+        "property": "value"
       },
       "$m": {"TODO:addProperty": "canceledIssnL"},
       "$l": {"TODO:property": "issnL"},
-      "$2": {"TODO:link": "identifierScheme"},
+      "$2": {"TODO:link": "typeNote"},
       "$y": {"TODO": "inherit:$z + specific: incorrectIssn"},
       "$z": {
-        "property": "identifierValue",
+        "property": "value",
         "defaults": {
-          "identifierScheme": {"@id": "https://id.kb.se/vocab/ISSN"},
           "identifierStatus": "canceledInvalid"
         }
       }
@@ -1995,11 +1988,10 @@
 
     "024": {
       "aboutEntity": "?thing",
-      "addLink": "identifier",
+      "addLink": "identifiedBy",
       "embedded": true,
-      "resourceType": "Identifier",
       "i1": {
-        "link": "identifierScheme",
+        "property": "@type",
         "tokenMap": {
           "0": "ISRC",
           "1": "UPC",
@@ -2007,19 +1999,17 @@
           "3": "EAN",
           "4": "SICI"
         },
-        "definedElsewhereToken": "7",
-        "uriTemplate": "https://id.kb.se/vocab/{_}",
-        "property": "notation",
-        "matchUriToken": "^\\S+$"
+        "definedElsewhereToken": "7"
+      },
+      "match-i1": {
+        "7": {"resourceType": "Identifier"}
       },
       "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
-      "$a": {"property": "identifierValue"},
-      "$q": {"property": "identifierNote"},
+      "$a": {"property": "value"},
+      "$q": {"property": "note"},
       "$2": {
         "requires-i1": "7",
-        "link": "identifierScheme",
-        "property": "notation",
-        "matchUriToken": "^\\S+$",
+        "property": "typeNote",
         "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
       },
       "_spec": [
@@ -2029,12 +2019,11 @@
             "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "1234567890"}]}
           },
           "result": {
-            "about": {
-              "identifier": [
+            "mainEntity": {
+              "identifiedBy": [
                 {
-                  "@type": "Identifier",
-                  "identifierValue":  "1234567890",
-                  "identifierScheme": {"@id": "https://id.kb.se/vocab/EAN", "notation": "EAN"}
+                  "@type": "EAN",
+                  "value":  "1234567890"
                 }
               ]
             }
@@ -2046,12 +2035,12 @@
             "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "xyz"}]}
           },
           "result": {
-            "about": {
-              "identifier": [
+            "mainEntity": {
+              "identifiedBy": [
                 {
                   "@type": "Identifier",
-                  "identifierValue":  "1234567890",
-                  "identifierScheme": {"notation": "xyz"}
+                  "value":  "1234567890",
+                  "typeNote": "xyz"
                 }
               ]
             }
@@ -2084,7 +2073,7 @@
         {
           "name": "use indicator as property switch",
           "source": {"028": {"ind1": "0", "ind2": " ", "subfields": [{"a": "1"}]}},
-          "result": {"about": {
+          "result": {"mainEntity": {
             "audioIssueNumber": "1"
           }}
         }
@@ -2122,7 +2111,7 @@
       "$z": {"link": "extraterrestrialBody", "resourceType": "PlanetaryObject", "property": "name"},
       "_spec": [
         {
-          "result": {"about": {
+          "result": {"mainEntity": {
           }}
         }
       ]
@@ -2155,7 +2144,7 @@
           ],
           "result": {
             "systemNumber": ["123"],
-            "about": {
+            "mainEntity": {
               "sameAs":  [{"@id": "http://dbpedia.org/resource/August_Strindberg"}]
             }
           }
@@ -2280,7 +2269,7 @@
             "080": {"ind1": " ", "ind2": " ", "subfields": [{"a": "030"}]}
           },
           "result": {
-            "about": {
+            "mainEntity": {
               "classification": [
                 {
                   "@type": "Concept",
@@ -2321,7 +2310,7 @@
       "_spec": [
         {
           "name": "TODO",
-          "result": {"about": {
+          "result": {"mainEntity": {
           }}
         }
       ]
@@ -2345,7 +2334,7 @@
       "_spec": [
         {
           "name": "TODO",
-          "result": {"about": {
+          "result": {"mainEntity": {
           }}
         }
       ]
@@ -2397,7 +2386,7 @@
               {"a": "Jansson, Tove"},
               {"d": "1914-2001"}
           ]}},
-          "result": {"about": {
+          "result": {"mainEntity": {
             "attributedTo": {"@type": "Person",
               "familyName":  "Jansson",
               "givenName":  "Tove",
@@ -2459,7 +2448,7 @@
       "resourceType": "Title",
       "TOOO:i1": {},
       "TOOO:i2": {},
-      "$a": {"property": "titleValue"},
+      "$a": {"property": "mainTitle"},
       "$b": {"property": "titleQualifier"},
       "$2": {"property": "titleSource"}
     },
@@ -2511,7 +2500,7 @@
       "embedded": true,
       "resourceType": "Title",
       "$a": {
-        "property": "titleValue",
+        "property": "mainTitle",
         "interpunctionChars": ":/",
         "TODO:interpunctionRules": {
           " :": {"$b": {"property": "subtitle"}},
@@ -2536,9 +2525,9 @@
             "245": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Anteckningar från en ö"}
           ]}},
-          "result": {"about": {
+          "result": {"mainEntity": {
             "qualifiedTitle": {"@type": "Title",
-              "titleValue":  "Anteckningar från en ö"
+              "mainTitle":  "Anteckningar från en ö"
             }
           }}
         },
@@ -2548,9 +2537,9 @@
               {"a": "Anteckningar från en ö"},
               {"c": "Tove Jansson, Tuulikki Pietilä"}
           ]}},
-          "result": {"about": {
+          "result": {"mainEntity": {
             "qualifiedTitle": {"@type": "Title",
-              "titleValue":  "Anteckningar från en ö",
+              "mainTitle":  "Anteckningar från en ö",
               "searchElement": false
             },
             "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
@@ -2647,7 +2636,7 @@
               {"a": "Finland"}
             ]}}
           ],
-          "result": {"about": {
+          "result": {"mainEntity": {
             "publication": [
               {"@type": "ProviderEvent",
                 "place": {"@type": "Place", "label":  "Stockholm"},
@@ -2663,7 +2652,7 @@
           "source": {
             "260": {"subfields": [{"a": "London ;"}, {"a": "New York :"}, {"b": "Routledge Falmer ;"}, {"a": "[London] :"}, {"b": "Open University,"}, {"c": "2002"}]}
           },
-          "TODO:result": {"about": {
+          "TODO:result": {"mainEntity": {
             "publication": [
               {"@type": "ProviderEvent",
                 "place": [{"@type": "Place", "label":  "London"},
@@ -2730,7 +2719,7 @@
               {"a": "Finland"}
             ]}}
           ],
-          "result": {"about": {
+          "result": {"mainEntity": {
             "publication": [
               {"@type": "ProviderEvent",
                 "place": {"@type": "Place", "label":  "Stockholm"},
@@ -2821,7 +2810,7 @@
             "338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"b": "nc"}, {"2": "rdacarrier"}]}
           },
           "result": {
-            "about": {
+            "mainEntity": {
               "hasFormat": [{
                 "@type": "Product",
                 "carrierType": {"@type": "CarrierType", "notation": "nc", "label": "volume", "termGroup": "rdacarrier"}
@@ -2988,7 +2977,7 @@
                 {"a": "Digitalt faksimil och elektronisk text"},
                 {"c": "Litteraturbanken"},
                 {"d": "2010"} ]}},
-          "result": {"about": {
+          "result": {"mainEntity": {
             "reproduction": [
               {
                 "@type": "CreativeWork",
@@ -3121,7 +3110,7 @@
               "subfields": [{"a": "Kungl. biblioteket"}, {"x": "samlingar"}, {"2": "sao"}]
             }
           },
-          "result": {"about": {
+          "result": {"mainEntity": {
             "subject": [
               {
                 "@type": "OrganizationTerm",
@@ -3198,7 +3187,7 @@
             {"a": "Information"},
             {"y": "Information Age"}
           ]}},
-          "result": {"about": {
+          "result": {"mainEntity": {
             "subject": [
               {
                 "@type": "TopicalTerm",
@@ -3285,7 +3274,7 @@
               {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}
             ]}
           },
-          "result": {"about": {
+          "result": {"mainEntity": {
             "influencedBy": [
               {"@type": "Person",
                 "familyName":  "Pietilä",
@@ -3345,11 +3334,7 @@
       "$m": {"property": "mediaNote"},
       "$n": {"addProperty": "note"},
       "$o": {
-        "addLink": "identifier",
-        "embedded": true,
-        "resourceType": "Identifier",
-        "addProperty": "identifierValue",
-        "defaults": {"identifierScheme": null}
+        "addProperty": "identifier"
       },
       "$r": {"addProperty": "reportNumber", "TODO:targetMatch": "088"},
       "$s": {"property": "uniformTitle", "TODO:targetMatch": "240"},
@@ -3361,20 +3346,12 @@
       },
       "$x": {
         "TODO:targetMatch": "022",
-        "link": "identifier",
-        "embedded": true,
-        "resourceType": "Identifier",
-        "property": "identifierValue",
-        "defaults": {"identifierScheme": {"@id": "https://id.kb.se/vocab/ISSN"}}
+        "property": "issn"
       },
       "$y": {"property": "coden", "TODO:targetMatch": "030"},
       "$z": {
         "TODO:targetMatch": "020",
-        "addLink": "identifier",
-        "embedded": true,
-        "resourceType": "Identifier",
-        "property": "identifierValue",
-        "defaults": {"identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"}}
+        "addProperty": "isbn"
       },
       "$9": {"addProperty": "partNumber"},
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
@@ -3384,18 +3361,12 @@
             {"s": "Main Thing"},
             {"z": "00-0-000000-0"}
           ]}},
-          "result": {"about": {
+          "result": {"mainEntity": {
             "isPartOf": [
               {
                 "@type": "CreativeWork",
                 "uniformTitle": "Main Thing",
-                "identifier": [
-                  {
-                    "@type": "Identifier",
-                    "identifierScheme": {"@id": "https://id.kb.se/vocab/ISBN"},
-                    "identifierValue": "00-0-000000-0"
-                  }
-                ]
+                "isbn": ["00-0-000000-0"]
               }
             ]
           }}
@@ -3511,13 +3482,13 @@
       "_spec": [
         {
           "source": {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/review"}]}},
-          "result": {"about": {
+          "result": {"mainEntity": {
             "isPrimaryTopicOf": [{"@type": "Document", "@id": "http://example.org/review"}]
           }}
         },
         {
           "source": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
-          "result": {"about": {
+          "result": {"mainEntity": {
             "associatedMedia": [{"@type": "MediaObject", "@id": "http://example.com/doc.pdf"}]
           }}
         },
@@ -3526,7 +3497,7 @@
             {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
             {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/page"}]}}
           ],
-          "result": {"about": {
+          "result": {"mainEntity": {
             "associatedMedia": [{"@type": "MediaObject", "@id": "http://example.com/doc.pdf"}],
             "isPrimaryTopicOf": [{"@type": "Document", "@id": "http://example.org/page"}]
           }}
@@ -4213,7 +4184,7 @@
 
   "hold": {
 
-    "thingLink": "about",
+    "thingLink": "mainEntity",
 
     "postProcessing": [
       {
@@ -4237,7 +4208,7 @@
         "_spec": [
           {
             "source": {
-              "about": {
+              "mainEntity": {
                 "holdingFor": {
                   "@type": ["Monograph"]
                 }
@@ -4245,7 +4216,7 @@
             },
             "result": {
               "holdingType": {"@id": "marc:SinglePartItemHolding"},
-              "about": {
+              "mainEntity": {
                 "holdingFor": {
                   "@type": ["Monograph"]
                 }
@@ -4315,7 +4286,7 @@
             "marc:encLevel": {"@id": "marc:HoldingsLevel1"},
             "marc:status": {"@id": "marc:New"},
             "marc:holdingType": {"@id": "marc:SinglePartItemHolding"},
-            "about": {
+            "mainEntity": {
               "@type": "HeldMaterial",
               "@id": "http://libris.kb.se/resource/hold/0000000",
               "holdingFor": {"@id": "http://libris.kb.se/resource/bib/7149593"}
@@ -4335,7 +4306,7 @@
     "004": {
       "aboutType": "HeldMaterial",
       "link": "holdingFor", "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
-      "TODO:recordDescription(@reverse:about)": {"property": "controlNumber"}
+      "TODO:meta": {"property": "controlNumber"}
     },
 
     "005": {"inherit": "bib"},
@@ -4428,7 +4399,7 @@
           "source": {"008": "900101||    |   ||||||swe|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
-            "about": {
+            "mainEntity": {
               "language": [{"@id": "https://id.kb.se/language/swe"}]
             }
           }
@@ -4445,7 +4416,7 @@
           "source": {"008": "900101||    |   |001||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
-            "about": {
+            "mainEntity": {
               "marc:numberOfItems": 1
             }
           }
@@ -4456,7 +4427,7 @@
           "normalized": {"008": "900101||    |   ||||||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
-            "about": {
+            "mainEntity": {
               "marc:numberOfItems": "NaN"
             }
           }
@@ -4467,7 +4438,7 @@
           "normalized": {"008": "121102||    |   |001b|und|000000"},
           "result": {
             "created": "2012-11-02T00:00:00.0+01:00",
-            "about": {
+            "mainEntity": {
               "marc:numberOfItems": 1,
               "marc:lendingPolicy": {"@id": "marc:WillNotLend"}
             }
@@ -4529,7 +4500,7 @@
         "addLink": "heldBy",
         "resourceType": "Organization",
         "property": "notation",
-        "TODO": "move to about-resource and auto-repeat here",
+        "TODO": "move to mainEntity and auto-repeat here",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
       },
       "$c": {"addProperty": "shelfLocation"},
@@ -4571,7 +4542,7 @@
             "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
           }},
           "result": {
-            "about": {
+            "mainEntity": {
               "@type": "HeldMaterial",
               "offers": [
                 {
