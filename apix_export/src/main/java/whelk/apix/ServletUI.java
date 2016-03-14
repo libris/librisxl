@@ -56,7 +56,7 @@ public class ServletUI extends HttpServlet implements UI
         }
     }
 
-    public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException
+    public synchronized void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException
     {
         String path = req.getPathInfo();
         if (path == null)
@@ -101,13 +101,16 @@ public class ServletUI extends HttpServlet implements UI
         m_properties = PropertyLoader.loadProperties("secret");
     }
 
-    public void destroy()
+    public synchronized void destroy()
     {
-        m_exporterThread.stopAtOpportunity.set(true);
-        try {
-            m_exporterThread.join();
-        } catch (InterruptedException e) {
-            // ignore
+        if (m_exporterThread != null)
+        {
+            m_exporterThread.stopAtOpportunity.set(true);
+            try {
+                m_exporterThread.join();
+            } catch (InterruptedException e) {
+                // ignore
+            }
         }
     }
 
