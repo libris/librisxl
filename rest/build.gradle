@@ -14,7 +14,7 @@ try {
 } catch (Exception e) {}
 
 // Version is set on deploy, but to maintain semblance of control, update default value appropriately when releasing.
-version = versionprops.get("releaseTag", "0.8.14.x")
+version = versionprops.get("releaseTag", "0.9.x")
 
 archivesBaseName = "whelk"
 
@@ -38,8 +38,7 @@ test.testLogging {
 
 repositories {
     mavenCentral()
-    maven { url "http://repository.codehaus.org/" }
-    maven { url "http://jitpack.io/" }
+    maven { url "https://jitpack.io/" }
 }
 
 configurations {
@@ -48,12 +47,11 @@ configurations {
 
 dependencies {
 
-
     def groovyVersion=GroovySystem.getVersion()
     def jettyVersion="8.1.16.v20140903"
 
     // KB libs
-    compile 'com.github.libris:isbntools:master-SNAPSHOT'
+    compile 'com.github.libris:isbntools:e70a5fbedb'
     compile 'com.github.libris:whelk-core:master-SNAPSHOT'
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
