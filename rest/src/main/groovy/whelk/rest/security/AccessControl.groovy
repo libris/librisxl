@@ -14,7 +14,6 @@ class AccessControl {
 
             def privs = userPrivileges.authorization.find { it.sigel == sigel }
             log.trace("User has these privs for ${sigel}: $privs")
-            //if (!privs?.reg && !privs?.kat) {
             if (!privs?.xlreg) {
                 log.debug("User does not have sufficient privileges.")
                 return false
@@ -32,11 +31,11 @@ class AccessControl {
                     }
                 }
             }
-        } /*else {
+        } else {
             log.info("Datasets 'bib' and 'auth' are not editable right now.")
             return false
 
-        }*/
+        }
 
         if (newdoc) {
             newdoc.manifest.lastChangeBy = userPrivileges.username
