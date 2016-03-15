@@ -34,7 +34,9 @@ dependencies {
 
     // LIBRISXL modules
     compile project(':../harvesters')
-    compile 'com.github.libris:whelk-core:master-SNAPSHOT'
+    compile('../../whelk-core' in project.subprojects*.name?
+            project(':../../whelk-core') :
+            'com.github.libris:whelk-core:master-SNAPSHOT')
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
