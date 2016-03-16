@@ -87,37 +87,88 @@ class ImporterMain {
         reindex.reindex(collection)
     }
 
+    void benchmarkCmd(String collection) {
+        log.info("Starting benchmark for collection ${collection ?: 'all'}")
+        def whelk = pico.getComponent(Whelk)
+
+        long startTime = System.currentTimeMillis()
+        long lastTime = startTime
+        int counter = 0
+        for (doc in whelk.storage.loadAll(collection)) {
+            if (++counter % 1000 == 0) {
+                long currTime = System.currentTimeMillis()
+                int secs = (currTime - lastTime) / 1000
+                log.info("Now read 1000 (total ${counter++}) documents in ${(currTime - lastTime)} milliseconds. Velocity: ${(1000 /((currTime - lastTime)/1000))} docs/sec.")
+                lastTime = currTime
+            }
+        }
+        log.info("Done!")
+    }
+
+    void sendToQueue(Whelk whelk, List doclist, LinkFinder lf, ExecutorService queue, Map counters) {
+        Document[] workList = new Document[doclist.size()]
+        System.arraycopy(doclist.toArray(), 0, workList, 0, doclist.size())
+        queue.execute({
+            List storeList = []
+            for (Document wdoc in Arrays.asList(workList)) {
+                Document fdoc = lf.findLinks(wdoc)
+                if (fdoc) {
+                    counters["changed"]++
+                    storeList << fdoc
+                }
+                counters["found"]++
+                if (!log.isDebugEnabled()) {
+                    Tools.printSpinner("Finding links. ${counters["read"]} documents read. ${counters["found"]} processed. ${counters["changed"]} changed.", counters["found"])
+                } else {
+                    log.debug("Finding links. ${counters["read"]} documents read. ${counters["found"]} processed. ${counters["changed"]} changed.")
+                }
+            }
+            log.info("Saving ${storeList.size()} documents ...")
+            whelk.storage.bulkStore(storeList, true)
+        } as Runnable)
+        doclist = []
+    }
+
     void linkfindCmd(String collection) {
         log.info("Starting linkfinder for collection ${collection ?: 'all'}")
         def whelk = pico.getComponent(Whelk)
         whelk.storage.versioning = false
         def lf = pico.getComponent(LinkFinder)
 
-        ExecutorService queue = Executors.newFixedThreadPool(10)
+        ExecutorService queue = Executors.newCachedThreadPool()
+
         long startTime = System.currentTimeMillis()
         def doclist = []
-        int counter = 0
+        Map counters = [
+                "read": 0,
+                "found": 0,
+                "changed": 0
+        ]
+
         for (doc in whelk.storage.loadAll(collection)) {
-            doc = lf.findLinks(doc)
+            counters["read"]++
             doclist << doc
-            if (++counter % 1000 == 0) {
-                Document[] saveList = new Document[doclist.size()]
-                System.arraycopy(doclist.toArray(), 0, saveList, 0, doclist.size())
-                queue.execute({
-                    whelk.storage.bulkStore(Arrays.asList(saveList), true)
-                } as Runnable)
+            if (doclist.size() % 2000 == 0) {
+                log.info("Sending off a batch for processing ...")
+                sendToQueue(whelk, doclist, lf, queue, counters)
                 doclist = []
             }
-            Tools.printSpinner("Finding links. $counter documents analyzed ...", counter)
+            if (!log.isDebugEnabled()) {
+                Tools.printSpinner("Finding links. ${counters["read"]} documents read. ${counters["found"]} processed. ${counters["changed"]} changed.", counters["read"])
+            } else {
+                log.debug("Finding links. ${counters["read"]} documents read. ${counters["found"]} processed. ${counters["changed"]} changed.")
+            }
         }
+
+
         if (doclist.size() > 0) {
-            queue.execute({
-                whelk.storage.bulkStore(doclist,true)
-            } as Runnable)
+            sendToQueue(whelk, doclist, lf, queue, counters)
         }
+
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
         println("Linkfinding completed. Elapsed time: ${System.currentTimeMillis()-startTime}")
+
     }
 
     void setversionCmd() {
