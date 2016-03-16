@@ -9,6 +9,7 @@ import whelk.component.PostgreSQLComponent
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Created by markus on 2015-12-15.
@@ -21,8 +22,7 @@ class LinkFinder {
     static String ENTITY_QUERY
     static final ObjectMapper mapper = new ObjectMapper()
 
-    Map<String,String> CACHED_LINKS = [:]
-    //List<String> NOCHECK_LIST = []
+    static Map<String,String> CACHED_LINKS = new ConcurrentHashMap<String,String>()
 
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql
@@ -35,21 +35,26 @@ class LinkFinder {
     Document findLinks(Document doc) {
         long startTime = System.currentTimeMillis()
         numCalls = 0
+        boolean foundLinks = false
         if (doc && doc.isJsonLd()) {
             for (item in doc.data.get("@graph")) {
-                locateSomeEntity(item)
+                foundLinks = locateSomeEntity(item, false) || foundLinks
             }
         }
         log.trace("Cache size: ${CACHED_LINKS.size()}. Document ${doc.id} checked ${numCalls} links. Time elapsed: ${System.currentTimeMillis()-startTime}")
-        return doc
+        if (foundLinks) {
+            return doc
+        }
+        return null
     }
 
-    void locateSomeEntity(Map node) {
+    boolean locateSomeEntity(Map node, boolean found) {
         for (item in node) {
             if (item.key == "@id" && item.value ==~ /\/some\?.+/) {
                 log.trace("Checking ${item.value}")
                 String foundLink = queryForLink(item.value.substring(6))
                 if (foundLink) {
+                    found = true
                     log.debug("Found link from string: $foundLink")
                     item.value = foundLink
                 }
@@ -57,6 +62,7 @@ class LinkFinder {
             if (item.value instanceof Map && item.value.get("@id") ==~ /\/some\?.+/) {
                 String foundLink = queryForLink(item.value.get("@id").substring(6))
                 if (foundLink) {
+                    found = true
                     log.debug("Found link: $foundLink")
                     item.value.put("@id", foundLink)
                 }
@@ -64,11 +70,12 @@ class LinkFinder {
             if (item.value instanceof List) {
                 for (listitem in item.value) {
                     if (listitem instanceof Map) {
-                        locateSomeEntity(listitem)
+                        found = locateSomeEntity(listitem, found) || found
                     }
                 }
             }
         }
+        return found
     }
 
     String queryForLink(String queryString) {
