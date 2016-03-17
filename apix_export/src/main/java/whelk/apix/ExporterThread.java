@@ -19,6 +19,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * A thing to wary about is the situation where a record is saved to APIX (and thus Voyager),
+ * but is deleted from Voyager before it can be synced to VCOPY. That will lead to a "dead" record in XL.
+ */
 public class ExporterThread extends Thread
 {
     // This atomic boolean may be toggled from outside, causing the thread to stop exporting and return
