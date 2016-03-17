@@ -196,7 +196,8 @@ public class ExporterThread extends Thread
     {
         // Select the 'next' timestamp after m_exportNewerThan, and then select all documents with that timestamp (as 'modified')
         String sql = "SELECT id, manifest, data, modified, deleted FROM " + m_properties.getProperty("sqlMaintable") +
-                " WHERE manifest->>'changedIn' <> 'vcopy' AND modified = (SELECT MIN(modified) FROM lddb WHERE modified > ? AND manifest->>'changedIn' <> 'vcopy')";
+                " WHERE manifest->>'changedIn' <> 'vcopy' AND modified = (SELECT MIN(modified) FROM " +
+                m_properties.getProperty("sqlMaintable") + " WHERE modified > ? AND manifest->>'changedIn' <> 'vcopy')";
 
         PreparedStatement statement = connection.prepareStatement(sql);
 
