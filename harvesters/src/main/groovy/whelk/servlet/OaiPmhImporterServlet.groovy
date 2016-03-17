@@ -181,7 +181,7 @@ class OaiPmhImporterServlet extends HttpServlet {
                 String harvesterClass = props.getProperty(service + ".harvesterClass", DEFAULT_HARVESTER)
                 String serviceUrl = props.getProperty(service + ".serviceUrl")
                 String username = props.getProperty(service + ".username")
-                String password = props.getProperty(service + ".password")
+                String password = props.getProperty(service + ".oaipmhPassword")
                 String sourceSystem = props.getProperty(service + ".sourceSystem", DEFAULT_SYSTEM)
                 def job = new ScheduledJob(pico.getComponent(Class.forName(harvesterClass)), "${SETTINGS_PFX}${service}",
                         serviceUrl, username, password, sourceSystem, storage)
