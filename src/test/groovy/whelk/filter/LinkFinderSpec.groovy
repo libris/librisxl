@@ -31,42 +31,71 @@ class LinkFinderSpec extends Specification {
         linkFinder = new LinkFinder(storage)
     }
 
-    def DOCUMENT_DATA = [
-            "descriptions": [
-                    "entry": [
+    def DOCUMENT_DATA1 = [
+        "@graph": [
+            [
+                "@id":"/foobar",
+                "createdBy": ["@id":"/some?type=Something"],
+                "name":"Not important"
+            ],
+            [
+                "@id":"/foobar#it",
+                "attributedTo":["@id":"/some?type=Person"]
+            ],
+            [
+                "data":"crap",
+                "someEvent":[
+                    [
+                        "eventName":"groggo",
+                        "@id": "/some?type=Event&eventName=groggo"
+                    ]
+                ]
+            ]
+        ]
+    ]
+
+    def DOCUMENT_DATA2 = [
+            "@graph": [
+                    [
                             "@id":"/foobar",
-                            "createdBy": ["@id":"/some?type=Something"],
+                            "createdBy": ["@id":"/barfoo"],
                             "name":"Not important"
                     ],
-                    "items":[
-                            [
-                                    "@id":"/foobar#it",
-                                    "attributedTo":["@id":"/some?type=Person"]
-                            ],
-                            [
-                                    "data":"crap",
-                                    "someEvent":[
-                                            [
-                                                    "eventName":"groggo",
-                                                    "@id": "/some?type=Event&eventName=groggo"
-                                            ]
+                    [
+                            "@id":"/foobar#it",
+                            "attributedTo":["@id":"/barfoo2"]
+                    ],
+                    [
+                            "data":"crap",
+                            "someEvent":[
+                                    [
+                                            "eventName":"groggo",
+                                            "@id": "/the/groggo/event"
                                     ]
                             ]
-
                     ]
             ]
     ]
 
+
     def "should replace all /some?-identifiers"() {
         given:
-        Document unfilteredDocument = new Document("foobar", DOCUMENT_DATA).withContentType("application/ld+json")
+        Document unfilteredDocument = new Document("foobar", DOCUMENT_DATA1).withContentType("application/ld+json")
         Document filteredDocument = linkFinder.findLinks(unfilteredDocument)
         expect:
-        filteredDocument.data.descriptions.entry.createdBy["@id"] == "replacedValue"
-        filteredDocument.data.descriptions.items[0].attributedTo["@id"] == "replacedValue"
-        filteredDocument.data.descriptions.items[1].someEvent[0]["@id"] == "replacedValue"
-        filteredDocument.data.descriptions.items[1].someEvent[0]["eventName"] == "groggo"
+        filteredDocument != null
+        filteredDocument.data["@graph"][0].createdBy["@id"] == "replacedValue"
+        filteredDocument.data["@graph"][1].attributedTo["@id"] == "replacedValue"
+        filteredDocument.data["@graph"][2].someEvent[0]["@id"] == "replacedValue"
+        filteredDocument.data["@graph"][2].someEvent[0]["eventName"] == "groggo"
+    }
 
+    def "should return null for unchanged document"() {
+        given:
+        Document unfilteredDocument = new Document("foobar", DOCUMENT_DATA2).withContentType("application/ld+json")
+        Document filteredDocument = linkFinder.findLinks(unfilteredDocument)
+        expect:
+        filteredDocument == null
     }
 
 }
