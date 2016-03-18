@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +31,11 @@ public class LongTermHttpRequest
     private String m_responseData;
     private HashMap<String, String> m_responseHeaders;
 
-    public LongTermHttpRequest(String url, String verb, String contentType, String data)
+    /**
+     * contentType, data, basicAuthName and basicAuthPass may all be passed as null where they are not relevant.
+     */
+    public LongTermHttpRequest(String url, String verb, String contentType, String data,
+                               String basicAuthName, String basicAuthPass)
             throws IOException
     {
         URL properUrl = new URL(url);
@@ -44,7 +49,8 @@ public class LongTermHttpRequest
         {
             socket.setKeepAlive(true); // Essentially the point of all this
 
-            writeRequest( socket.getOutputStream(), properUrl.getHost(), properUrl.getPath(), verb, contentType, data );
+            writeRequest( socket.getOutputStream(), properUrl.getHost(), properUrl.getPath(), verb, contentType,
+                    data, basicAuthName, basicAuthPass );
             readResponse( socket.getInputStream() );
         }
     }
@@ -76,7 +82,8 @@ public class LongTermHttpRequest
             return new Socket(host, port);
     }
 
-    private void writeRequest(OutputStream outputStream, String host, String path, String verb, String contentType, String data)
+    private void writeRequest(OutputStream outputStream, String host, String path, String verb, String contentType,
+                              String data, String basicAuthName, String basicAuthPass)
             throws IOException
     {
         if (path.equals(""))
@@ -87,6 +94,14 @@ public class LongTermHttpRequest
         header.append( "Host: " + host + "\r\n" );
         header.append( "Accept-Charset: utf-8\r\n" );
         header.append( "Connection: close\r\n" );
+
+        if (basicAuthName != null && basicAuthPass != null)
+        {
+            Base64.Encoder encoder = Base64.getMimeEncoder(0, new byte[]{});
+            String basicString = basicAuthName + ":" + basicAuthPass;
+            String basicBase64 = new String(encoder.encode( basicString.getBytes("UTF-8")), Charset.forName("UTF-8"));
+            header.append( "Authorization: Basic " + basicBase64 + "\r\n");
+        }
 
         byte[] dataBytes = null;
         if (data != null)
