@@ -10,6 +10,7 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * The purpose of this class is to provide a low level http connection that uses a TCP socket with sockopt SO_KEEPALIVE.
@@ -39,7 +40,7 @@ public class LongTermHttpRequest
         if (port == -1)
             port = 80;
 
-        try ( Socket socket = new Socket(properUrl.getHost(), port) )
+        try ( Socket socket = createSocket(properUrl.getProtocol(), properUrl.getHost(), port) )
         {
             socket.setKeepAlive(true); // Essentially the point of all this
 
@@ -61,6 +62,18 @@ public class LongTermHttpRequest
     public Map<String, String> getResponseHeaders()
     {
         return Collections.unmodifiableMap(m_responseHeaders);
+    }
+
+    private Socket createSocket(String protocol, String host, int port)
+            throws IOException
+    {
+        if (protocol.equals("https"))
+        {
+            SSLSocketFactory ssf = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            return ssf.createSocket(host, port);
+        }
+        else
+            return new Socket(host, port);
     }
 
     private void writeRequest(OutputStream outputStream, String host, String path, String verb, String contentType, String data)
