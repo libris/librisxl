@@ -194,10 +194,12 @@ public class ExporterThread extends Thread
     private PreparedStatement prepareStatement(Connection connection)
             throws SQLException
     {
-        // Select the 'next' timestamp after m_exportNewerThan, and then select all documents with that timestamp (as 'modified')
+        // Select the 'next' timestamp after m_exportNewerThan, and then select all documents with that timestamp (as 'modified'),
+        // exlude everything in manifest->>'collection' = 'definitions' and manifest->'changedIn' = 'vcopy'.
         String sql = "SELECT id, manifest, data, modified, deleted FROM " + m_properties.getProperty("sqlMaintable") +
-                " WHERE manifest->>'changedIn' <> 'vcopy' AND modified = (SELECT MIN(modified) FROM " +
-                m_properties.getProperty("sqlMaintable") + " WHERE modified > ? AND manifest->>'changedIn' <> 'vcopy')";
+                " WHERE manifest->>'collection' <> 'definitions' AND (manifest->>'changedIn' <> 'vcopy' or (manifest->>'changedIn')::text is null) AND modified = " +
+                "(SELECT MIN(modified) FROM " + m_properties.getProperty("sqlMaintable") + " WHERE modified > ? AND manifest->>'collection' <> 'definitions'" +
+                " AND (manifest->>'changedIn' <> 'vcopy' or (manifest->>'changedIn')::text is null))";
 
         PreparedStatement statement = connection.prepareStatement(sql);
 
