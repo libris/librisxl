@@ -115,7 +115,15 @@ class Document {
     }
 
     void setControlNumber(String controlNumber) {
-        this.data["@graph"][0]["controlNumber"] = controlNumber
+        List graph = data.get("@graph")
+        if (graph == null)
+            data.put("@graph", [])
+
+        Map first = data["@graph"][0]
+        if (first == null)
+            ((List)data["@graph"]).add(["controlNumber":controlNumber])
+        else
+            data["@graph"][0]["controlNumber"] = controlNumber
     }
 
     static Object deepCopy(Object orig) {
