@@ -20,7 +20,7 @@ class Document {
     static final String ALTERNATE_ID_KEY = "identifiers"
     static final String JSONLD_ALT_ID_KEY = "sameAs"
     static final String CHANGED_IN_KEY = "changedIn" // The last system to affect a change in the document (xl by default, vcopy on imported posts)
-    static final String CONTROL_NUMBER_KEY = "changedIn"
+    static final String CONTROL_NUMBER_KEY = "controlNumber"
 
 
     static final URI BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
