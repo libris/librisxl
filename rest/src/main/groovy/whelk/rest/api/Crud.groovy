@@ -300,6 +300,17 @@ class Crud extends HttpServlet {
         Map dataMap
         if (Document.isJson(cType)) {
             dataMap = mapper.readValue(data, Map)
+            // Check if supplied data has "about"-form
+            dataMap = JsonLd.frame(null, dataMap)
+            if (!dataMap.containsKey("about")) {
+                Map aboutMap = Document.deepCopy(dataMap)
+                String suppliedId = aboutMap.get("@id")
+                dataMap = ["about": aboutMap]
+                if (suppliedId) {
+                    dataMap["@id"] = suppliedId
+                    dataMap["about"]["@id"] = dataMap["@id"] + "#it"
+                }
+            }
         } else {
             dataMap = [(Document.NON_JSON_CONTENT_KEY): new String(data)]
         }
