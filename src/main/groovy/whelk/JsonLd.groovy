@@ -74,10 +74,13 @@ public class JsonLd {
 
 
     public static Map frame(String mainId, Map flatJsonLd) {
-        mainId = Document.BASE_URI.resolve(mainId)
         if (isFramed(flatJsonLd)) {
             return flatJsonLd
         }
+        if (mainId) {
+            mainId = Document.BASE_URI.resolve(mainId)
+        }
+
         def idMap = getIdMap(flatJsonLd)
 
         def mainItem = idMap[mainId]
@@ -159,9 +162,6 @@ public class JsonLd {
             if (jsonLd.containsKey(GRAPH_KEY)) {
                 foundIdentifier = jsonLd.get(GRAPH_KEY).first().get(ID_KEY)
             }
-            if (jsonLd.containsKey(DESCRIPTIONS_KEY)) {
-                foundIdentifier = jsonLd.get(DESCRIPTIONS_KEY).get("entry").get(ID_KEY)
-            }
         }
         if (isFramed(jsonLd)) {
             foundIdentifier = jsonLd.get(ID_KEY)
@@ -187,7 +187,7 @@ public class JsonLd {
     }
 
     static boolean isFramed(Map jsonLd) {
-        if (jsonLd.size() > 1 && !jsonLd.containsKey(GRAPH_KEY) && !jsonLd.containsKey(DESCRIPTIONS_KEY)) {
+        if (jsonLd && !jsonLd.containsKey(GRAPH_KEY) && !jsonLd.containsKey(DESCRIPTIONS_KEY)) {
             return true
         }
         return false

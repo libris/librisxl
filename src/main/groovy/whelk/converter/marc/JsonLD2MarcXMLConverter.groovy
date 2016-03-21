@@ -20,9 +20,12 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
     }
 
     @Override
-    Document convert(final Document doc) {
+    Document convert(final Document _doc) {
 
-        assert (doc instanceof  Document)
+        assert (_doc instanceof  Document)
+
+        // Perform a deep copy, so that the original document remains unchanged.
+        Document doc = new Document(_doc.getId(), _doc.getData(), _doc.getManifest())
 
         doc.withData(JsonLd.frame(doc.id, doc.data))
 
