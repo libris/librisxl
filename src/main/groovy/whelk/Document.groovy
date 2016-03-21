@@ -20,6 +20,7 @@ class Document {
     static final String ALTERNATE_ID_KEY = "identifiers"
     static final String JSONLD_ALT_ID_KEY = "sameAs"
     static final String CHANGED_IN_KEY = "changedIn" // The last system to affect a change in the document (xl by default, vcopy on imported posts)
+    static final String CONTROL_NUMBER_KEY = "changedIn"
 
 
     static final URI BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
@@ -115,15 +116,15 @@ class Document {
     }
 
     void setControlNumber(String controlNumber) {
-        List graph = data.get("@graph")
+        List graph = data.get(GRAPH_KEY)
         if (graph == null)
-            data.put("@graph", [])
+            data.put(GRAPH_KEY, [])
 
-        Map first = data["@graph"][0]
+        Map first = data[GRAPH_KEY][0]
         if (first == null)
-            ((List)data["@graph"]).add(["controlNumber":controlNumber])
-        else
-            data["@graph"][0]["controlNumber"] = controlNumber
+            ((List)(data[GRAPH_KEY])).add([:])
+
+        data[GRAPH_KEY][0][CONTROL_NUMBER_KEY] = controlNumber
     }
 
     static Object deepCopy(Object orig) {
