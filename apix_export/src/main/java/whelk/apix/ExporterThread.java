@@ -241,7 +241,8 @@ public class ExporterThread extends Thread
     private String apixRequest(String url, String httpVerb, String data)
             throws IOException
     {
-        LongTermHttpRequest request = new LongTermHttpRequest(url, httpVerb, "application/xml", data);
+        LongTermHttpRequest request = new LongTermHttpRequest(url, httpVerb, "application/xml",
+                data, m_properties.getProperty("apixUsername"), m_properties.getProperty("apixPassword"));
         int responseCode = request.getResponseCode();
         String responseData = request.getResponseData();
 
