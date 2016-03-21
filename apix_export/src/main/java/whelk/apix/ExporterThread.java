@@ -217,7 +217,7 @@ public class ExporterThread extends Thread
      */
     private String getVoyagerId(Document document)
     {
-        final String idPrefix = Document.getBASE_URI().toString(); // https://libris.kb.se/
+        final String idPrefix = "http://libris.kb.se/"; // Leave this hardcoded, as these URIs references voyager IDs, which do not change.
 
         List<String> ids = document.getIdentifiers();
         for (String id: ids)
