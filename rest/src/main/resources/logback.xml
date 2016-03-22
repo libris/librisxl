@@ -22,6 +22,7 @@
   <logger name="whelk.component.PostgreSQLComponent" level="debug"/>
   <logger name="whelk.component.ElasticSearch" level="debug"/>
   <logger name="whelk.JsonLd" level="trace"/>
+  <logger name="whelk.Document" level="debug"/>
 
   <root level="info">
       <appender-ref ref="FILE-WHELK" />
