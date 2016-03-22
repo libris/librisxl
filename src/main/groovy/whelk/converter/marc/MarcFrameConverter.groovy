@@ -124,8 +124,8 @@ class MarcFrameConverter implements FormatConverter {
             def source = converter.mapper.readValue(new File(fpath), Map)
             def result = null
             if (cmd == "revert") {
-                if (source.descriptions) {
-                    def entryId = source.descriptions.entry['@id']
+                if (source['@graph']) {
+                    def entryId = source['@graph'][0]['@id']
                     source = JsonLd.frame(entryId, source)
                 }
                 result = converter.runRevert(source)
