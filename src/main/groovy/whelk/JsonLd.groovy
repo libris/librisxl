@@ -119,12 +119,15 @@ public class JsonLd {
             return newList
         }
         if (o instanceof Map) {
+            def obj = null
             def oId = o.get(ID_KEY)
-            if (oId && !embedChain.contains(oId)) {
-                def obj = idMap.get(oId)
-                if (obj) {
-                    return embed(oId, obj, idMap, embedChain)
-                }
+            if (!oId) {
+                obj = o
+            } else if (!embedChain.contains(oId)) {
+                obj = idMap.get(oId)
+            }
+            if (obj) {
+                return embed(oId, obj, idMap, embedChain)
             }
         }
         return o
