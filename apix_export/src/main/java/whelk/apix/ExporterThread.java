@@ -100,6 +100,7 @@ public class ExporterThread extends Thread
                 {
                     e.printStackTrace();
                     // TODO: Call for human intervention? Log? Cannot silently ignore a failure to replicate data to Voyager
+                    // idea! Reset modified  to now (=schedule for rewrite)
                 }
                 ++exportedDocumentsCount;
             }
@@ -277,7 +278,7 @@ public class ExporterThread extends Thread
             throws IOException
     {
         String voyagerDatabase = m_properties.getProperty("apixDatabase");
-        Pattern pattern = Pattern.compile("0.1/cat/" + voyagerDatabase + "/(auth|bib|hold)/(\\d+)");
+        Pattern pattern = Pattern.compile("0.1/cat/" + voyagerDatabase + "/(auth|bib|hold)/(\\d+)\\z");
         Matcher matcher = pattern.matcher(urlLocation);
         if (matcher.find())
         {
