@@ -23,6 +23,7 @@ class Document {
     static final String CHANGED_IN_KEY = "changedIn" // The last system to affect a change in the document (xl by default, vcopy on imported posts)
     static final String CONTROL_NUMBER_KEY = "controlNumber"
     static final String ABOUT_KEY = "about"
+    static final String APIX_FAILURE_KEY = "apixExportFailedAt"
 
     static final URI BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
 
@@ -87,6 +88,16 @@ class Document {
         }
         if (isFramed()) {
             this.data.put(CREATED_KEY, this.created as String)
+        }
+    }
+
+    void setFailedApixExport(boolean failed) {
+        if (failed) {
+            this.manifest.put(APIX_FAILURE_KEY, new Date().toString())
+        }
+        else {
+            if (this.manifest.get(APIX_FAILURE_KEY) != null)
+                this.manifest.remove(APIX_FAILURE_KEY)
         }
     }
 
