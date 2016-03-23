@@ -16,18 +16,11 @@ repositories {
 dependencies {
 
     def jettyVersion="9.3.6.v20151106"
-    def groovyVersion= GroovySystem.getVersion()
 
     // XL dependencies
-    if ('useLocalDeps' in System.properties.keySet()) {
-        compile fileTree(dir: '../dep/lib/', include: ['*.jar'])
-    } else {
-        compile 'com.github.libris:whelk-core:develop-SNAPSHOT'
-    }
-
-    // misc
-    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
-    compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    compile('../../whelk-core' in project.subprojects*.name?
+            project(':../../whelk-core') :
+            'com.github.libris:whelk-core:develop-SNAPSHOT')
 
     // Jetty
     compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
