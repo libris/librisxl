@@ -135,26 +135,29 @@ public class ExporterThread extends Thread
                 } catch (Exception e)
                 {
                     document.setFailedApixExport(true);
-                    m_ui.outputText("Failed to export " + id + ", will automatically try again at a later time.");
                     m_postgreSQLComponent.store(document, true, true);
+					m_ui.outputText("Failed to export " + id + ", will automatically try again at a later time.");
                 }
                 ++documentsInBatchCount;
             }
 
-            switch (batchSelection)
-            {
-                case BATCH_NEXT_TIMESTAMP:
-                {
-                    m_exportNewerThan = modified;
-                    m_ui.outputText("Completed export of " + successfullyExportedDocumentsCount + " out of " + documentsInBatchCount + " document(s) with modified = " + modified);
-                    break;
-                }
-                case BATCH_PREVIOUSLY_FAILED:
-                {
-                    m_ui.outputText("Completed export of " + successfullyExportedDocumentsCount + " out of " + documentsInBatchCount + " document(s) queued for retry.");
-                    break;
-                }
-            }
+			if (documentsInBatchCount > 0)
+			{
+			   switch (batchSelection)
+			   {
+				  case BATCH_NEXT_TIMESTAMP:
+				  {
+					 m_exportNewerThan = modified;
+					 m_ui.outputText("Completed export of " + successfullyExportedDocumentsCount + " out of " + documentsInBatchCount + " document(s) with modified = " + modified);
+					 break;
+				  }
+				  case BATCH_PREVIOUSLY_FAILED:
+				  {
+					 m_ui.outputText("Completed export of " + successfullyExportedDocumentsCount + " out of " + documentsInBatchCount + " document(s) queued for retry.");
+					 break;
+				  }
+			   }
+			}
         }
         catch (Exception e)
         {
