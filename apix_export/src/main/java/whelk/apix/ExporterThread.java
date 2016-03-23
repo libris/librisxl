@@ -45,6 +45,12 @@ public class ExporterThread extends Thread
         APIX_DELETE
     }
 
+    private enum BatchSelection
+    {
+        BATCH_NEXT_TIMESTAMP, // Get all new/updated documents at the next timestamp (after m_exportNewerThan)
+        BATCH_PREVIOUSLY_FAILED // Get all documents we've tried and failed to export
+    }
+
     public ExporterThread(Properties properties, ZonedDateTime exportNewerThan, UI ui)
     {
         this.m_properties = properties;
@@ -64,7 +70,8 @@ public class ExporterThread extends Thread
 
         do
         {
-            exportBatch();
+            exportBatch(BatchSelection.BATCH_NEXT_TIMESTAMP);
+            exportBatch(BatchSelection.BATCH_PREVIOUSLY_FAILED);
             try
             {
                 sleep(2000);
@@ -76,41 +83,77 @@ public class ExporterThread extends Thread
     }
 
     /**
-     * A batch consists of all documents with identical (modified) timestamps. Since timestamps are usually unique, this
-     * means that most batches have only a single document, sometimes however there are batches of several documents.
-     * Especially after large import jobs.
+     * A batch consists of all documents with identical (modified) timestamps, (or all previously failed documents).
+     * Since timestamps are usually unique, this means that most batches have only a single document, sometimes however
+     * there are batches of several documents. Especially after large import jobs.
      */
-    private void exportBatch()
+    private void exportBatch(BatchSelection batchSelection)
     {
-        int exportedDocumentsCount = 0;
+        int successfullyExportedDocumentsCount = 0;
+        int documentsInBatchCount = 0;
 
         try ( Connection connection = m_postgreSQLComponent.getConnection();
-              PreparedStatement statement = prepareStatement(connection);
+              PreparedStatement statement = prepareStatement(connection, batchSelection);
               ResultSet resultSet = statement.executeQuery() )
         {
             ZonedDateTime modified = null;
             while( resultSet.next() )
             {
                 modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+                String id = resultSet.getString("id");
+                String data = resultSet.getString("data");
+                String manifest = resultSet.getString("manifest");
+                boolean deleted = resultSet.getBoolean("deleted");
+                HashMap datamap = m_mapper.readValue(data, HashMap.class);
+                HashMap manifestmap = m_mapper.readValue(manifest, HashMap.class);
+                Document document = new Document(id, datamap, manifestmap);
+                String voyagerId = getVoyagerId(document);
+                document.setFailedApixExport(false); // Clear any failure flag. It may be (re) set if we fail (again).
+
+                ApixOp operation;
+                if (deleted)
+                    operation = ApixOp.APIX_DELETE;
+                else if (voyagerId != null)
+                    operation = ApixOp.APIX_UPDATE;
+                else
+                    operation = ApixOp.APIX_NEW;
 
                 try
                 {
-                    exportDocument(resultSet);
+                    exportDocument(document, operation);
+
+                    // If we managed to exported a previous failure (=removal of the failure flag),
+                    // or the APIX operation was NEW (=we set a Voyager ID on the post)
+                    // we need to do a minor update in lddb.
+                    if (batchSelection == BatchSelection.BATCH_PREVIOUSLY_FAILED || operation == ApixOp.APIX_NEW)
+                    {
+                        m_postgreSQLComponent.store(document, true, true);
+                        m_elasticSearchComponent.index(document);
+                    }
+
+                    ++successfullyExportedDocumentsCount;
                 } catch (Exception e)
                 {
-                    e.printStackTrace();
-                    // TODO: Call for human intervention? Log? Cannot silently ignore a failure to replicate data to Voyager
-                    // idea! Reset modified  to now (=schedule for rewrite)
+                    document.setFailedApixExport(true);
+                    m_ui.outputText("Failed to export " + id + ", will automatically try again at a later time.");
+                    m_postgreSQLComponent.store(document, true, true);
                 }
-                ++exportedDocumentsCount;
+                ++documentsInBatchCount;
             }
 
-            // We now know that all rows with this specific 'modified' timestamp have been exported ok. The next batch
-            // will use the next following 'modified' timestamp
-            if (exportedDocumentsCount > 0)
+            switch (batchSelection)
             {
-                m_exportNewerThan = modified;
-                m_ui.outputText("Completed export of " + exportedDocumentsCount + " document(s) with modified = " + m_exportNewerThan);
+                case BATCH_NEXT_TIMESTAMP:
+                {
+                    m_exportNewerThan = modified;
+                    m_ui.outputText("Completed export of " + successfullyExportedDocumentsCount + " out of " + documentsInBatchCount + " document(s) with modified = " + modified);
+                    break;
+                }
+                case BATCH_PREVIOUSLY_FAILED:
+                {
+                    m_ui.outputText("Completed export of " + successfullyExportedDocumentsCount + " out of " + documentsInBatchCount + " document(s) queued for retry.");
+                    break;
+                }
             }
         }
         catch (Exception e)
@@ -122,29 +165,12 @@ public class ExporterThread extends Thread
         }
     }
 
-    private void exportDocument(ResultSet resultSet)
+    private void exportDocument(Document document, ApixOp operation)
             throws SQLException, IOException
     {
-        String id = resultSet.getString("id");
-        String data = resultSet.getString("data");
-        String manifest = resultSet.getString("manifest");
-        boolean deleted = resultSet.getBoolean("deleted");
-
-        HashMap datamap = m_mapper.readValue(data, HashMap.class);
-        HashMap manifestmap = m_mapper.readValue(manifest, HashMap.class);
-        Document document = new Document(id, datamap, manifestmap);
-
         String collection = document.getCollection();
         String voyagerId = getVoyagerId(document);
         String voyagerDatabase = m_properties.getProperty("apixDatabase");
-
-        ApixOp operation;
-        if (deleted)
-            operation = ApixOp.APIX_DELETE;
-        else if (voyagerId != null)
-            operation = ApixOp.APIX_UPDATE;
-        else
-            operation = ApixOp.APIX_NEW;
 
         switch (operation)
         {
@@ -171,7 +197,7 @@ public class ExporterThread extends Thread
                 // so change apixDocumentUrl here:
                 if (collection.equals("hold"))
                 {
-                    List graphList = (List) datamap.get("@graph");
+                    List graphList = (List) document.getData().get("@graph");
                     Map item = (Map) graphList.get(1);
                     Map holdingFor = (Map) item.get("holdingFor");
                     String bibId = (String) holdingFor.get("@id");
@@ -180,37 +206,51 @@ public class ExporterThread extends Thread
                     apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + "/bib/" + shortBibId + "/newhold";
                 }
 
-                Document convertedDoucment = m_converter.convert(document);
-                String convertedText = (String) convertedDoucment.getData().get("content");
+                Document convertedDocument = m_converter.convert(document);
+                String convertedText = (String) convertedDocument.getData().get("content");
                 String controlNumber = apixRequest(apixDocumentUrl, "PUT", convertedText);
                 document.addIdentifier("http://libris.kb.se/" + collection + "/" + controlNumber);
                 document.setControlNumber(controlNumber);
-                m_postgreSQLComponent.store(document, true);
-                m_elasticSearchComponent.index(document);
                 break;
             }
         }
     }
 
-    private PreparedStatement prepareStatement(Connection connection)
+    private PreparedStatement prepareStatement(Connection connection, BatchSelection batchSelection)
             throws SQLException
     {
-        // Select the 'next' timestamp after m_exportNewerThan, and then select all documents with that timestamp (as 'modified'),
-        // exlude everything in manifest->>'collection' = 'definitions' and manifest->'changedIn' = 'vcopy'.
-        String sql = "SELECT id, manifest, data, modified, deleted FROM " + m_properties.getProperty("sqlMaintable") +
-                " WHERE manifest->>'collection' <> 'definitions' AND (manifest->>'changedIn' <> 'vcopy' or (manifest->>'changedIn')::text is null) AND modified = " +
-                "(SELECT MIN(modified) FROM " + m_properties.getProperty("sqlMaintable") + " WHERE modified > ? AND manifest->>'collection' <> 'definitions'" +
-                " AND (manifest->>'changedIn' <> 'vcopy' or (manifest->>'changedIn')::text is null))";
+        switch (batchSelection)
+        {
+            case BATCH_NEXT_TIMESTAMP:
+            {
+                // Select the 'next' timestamp after m_exportNewerThan, and then select all documents with that timestamp (as 'modified'),
+                // exlude everything in manifest->>'collection' = 'definitions' and manifest->'changedIn' = 'vcopy'.
+                String sql = "SELECT id, manifest, data, modified, deleted FROM " + m_properties.getProperty("sqlMaintable") +
+                        " WHERE manifest->>'collection' <> 'definitions' AND (manifest->>'changedIn' <> 'vcopy' or (manifest->>'changedIn')::text is null) AND modified = " +
+                        "(SELECT MIN(modified) FROM " + m_properties.getProperty("sqlMaintable") + " WHERE modified > ? AND manifest->>'collection' <> 'definitions'" +
+                        " AND (manifest->>'changedIn' <> 'vcopy' or (manifest->>'changedIn')::text is null))";
 
-        PreparedStatement statement = connection.prepareStatement(sql);
+                PreparedStatement statement = connection.prepareStatement(sql);
 
-        // Postgres uses microsecond precision, we need match or exceed this to not risk SQL timetamps slipping between
-        // truncated java timestamps
-        Timestamp timestamp = new Timestamp(m_exportNewerThan.toInstant().toEpochMilli());
-        timestamp.setNanos(m_exportNewerThan.toInstant().getNano());
-        statement.setTimestamp(1, timestamp);
+                // Postgres uses microsecond precision, we need match or exceed this to not risk SQL timetamps slipping between
+                // truncated java timestamps
+                Timestamp timestamp = new Timestamp(m_exportNewerThan.toInstant().toEpochMilli());
+                timestamp.setNanos(m_exportNewerThan.toInstant().getNano());
+                statement.setTimestamp(1, timestamp);
 
-        return statement;
+                return statement;
+            }
+            case BATCH_PREVIOUSLY_FAILED:
+            {
+                // Select any documents that _have_ a manifest->apixExportFailedAt.
+                String sql = "SELECT id, manifest, data, modified, deleted FROM " + m_properties.getProperty("sqlMaintable") +
+                        " WHERE (manifest->>'" + Document.getAPIX_FAILURE_KEY() + "')::text is not null";
+                PreparedStatement statement = connection.prepareStatement(sql);
+                return statement;
+            }
+        }
+
+        return null; // unreachable
     }
 
     /**
