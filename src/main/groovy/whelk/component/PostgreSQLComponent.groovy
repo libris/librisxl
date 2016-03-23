@@ -203,6 +203,11 @@ class PostgreSQLComponent implements Storage {
 
     @Override
     Document store(Document doc, boolean upsert) {
+        return store(doc, upsert, false)
+    }
+
+
+    Document store(Document doc, boolean upsert, boolean minorUpdate) {
         log.debug("Saving ${doc.id}")
         Connection connection = getConnection()
         connection.setAutoCommit(false)
@@ -212,6 +217,9 @@ class PostgreSQLComponent implements Storage {
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement((upsert ? UPSERT_DOCUMENT : INSERT_DOCUMENT))
 
+            if (minorUpdate) {
+                now = status(doc.getURI(), connection)['modified']
+            }
             if (upsert) {
                 if (!saveVersion(doc, connection, now)) {
                     return doc // Same document already in storage.
