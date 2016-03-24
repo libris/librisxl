@@ -108,7 +108,6 @@ public class ExporterThread extends Thread
                 HashMap manifestmap = m_mapper.readValue(manifest, HashMap.class);
                 Document document = new Document(id, datamap, manifestmap);
                 String voyagerId = getVoyagerId(document);
-                document.setFailedApixExport(false); // Clear any failure flag. It may be (re) set if we fail (again).
 
                 ApixOp operation;
                 if (deleted)
@@ -120,23 +119,21 @@ public class ExporterThread extends Thread
 
                 try
                 {
-                    exportDocument(document, operation);
+                    String assignedVoyagerId = exportDocument(document, operation);
 
                     // If we managed to exported a previous failure (=removal of the failure flag),
                     // or the APIX operation was NEW (=we set a Voyager ID on the post)
                     // we need to do a minor update in lddb.
-                    if (batchSelection == BatchSelection.BATCH_PREVIOUSLY_FAILED || operation == ApixOp.APIX_NEW)
+                    if (batchSelection == BatchSelection.BATCH_PREVIOUSLY_FAILED || assignedVoyagerId != null)
                     {
-                        m_postgreSQLComponent.store(document, true, true);
-                        m_elasticSearchComponent.index(document);
+                        commitAtomicDocumentUpdate(id, assignedVoyagerId, false);
                     }
 
                     ++successfullyExportedDocumentsCount;
                 } catch (Exception e)
                 {
-                    document.setFailedApixExport(true);
-                    m_postgreSQLComponent.store(document, true, true);
-					m_ui.outputText("Failed to export " + id + ", will automatically try again at a later time.");
+                    commitAtomicDocumentUpdate(id, null, true);
+                    m_ui.outputText("Failed to export " + id + ", will automatically try again at a later time.");
                 }
                 ++documentsInBatchCount;
             }
@@ -168,7 +165,10 @@ public class ExporterThread extends Thread
         }
     }
 
-    private void exportDocument(Document document, ApixOp operation)
+    /**
+     * Returns the assigned voyager id if ApixOp was NEW, otherwise returns null or throws
+     */
+    private String exportDocument(Document document, ApixOp operation)
             throws SQLException, IOException
     {
         String collection = document.getCollection();
@@ -181,7 +181,7 @@ public class ExporterThread extends Thread
             {
                 String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + voyagerId;
                 apixRequest(apixDocumentUrl, "DELETE", null);
-                break;
+                return null;
             }
             case APIX_UPDATE:
             {
@@ -189,7 +189,7 @@ public class ExporterThread extends Thread
                 Document convertedDoucment = m_converter.convert(document);
                 String convertedText = (String) convertedDoucment.getData().get("content");
                 apixRequest(apixDocumentUrl, "PUT", convertedText);
-                break;
+                return null;
             }
             case APIX_NEW:
             {
@@ -212,11 +212,10 @@ public class ExporterThread extends Thread
                 Document convertedDocument = m_converter.convert(document);
                 String convertedText = (String) convertedDocument.getData().get("content");
                 String controlNumber = apixRequest(apixDocumentUrl, "PUT", convertedText);
-                document.addIdentifier("http://libris.kb.se/" + collection + "/" + controlNumber);
-                document.setControlNumber(controlNumber);
-                break;
+                return controlNumber;
             }
         }
+		return null;
     }
 
     private PreparedStatement prepareStatement(Connection connection, BatchSelection batchSelection)
@@ -328,5 +327,50 @@ public class ExporterThread extends Thread
             return matcher.group(2);
         }
         throw new IOException("Could not parse control number from APIX location header: " + urlLocation);
+    }
+
+    /**
+     * Update a document (with control number or failed flag) in a safe atomic manner (without risking overwrite of
+     * anyone else's changes)
+     * Will also reindex the document in elastic.
+     * Will not update the documents "modified" column.
+     */
+    private void commitAtomicDocumentUpdate(String id, String newVoyagerId, boolean failedExport)
+            throws IOException, SQLException
+    {
+        // TODO: This must be a single atomic transaction, wait for whelk-core to implement SELECT FOR UPDATE writes.
+        try ( Connection connection = m_postgreSQLComponent.getConnection();
+              PreparedStatement statement = prepareSelectForUpdateStatement(connection, id);
+              ResultSet resultSet = statement.executeQuery() )
+        {
+            if (!resultSet.next())
+                throw new SQLException("Document " + id + " must be in lddb but cannot be retrieved.");
+
+            String data = resultSet.getString("data");
+            String manifest = resultSet.getString("manifest");
+            HashMap datamap = m_mapper.readValue(data, HashMap.class);
+            HashMap manifestmap = m_mapper.readValue(manifest, HashMap.class);
+            Document document = new Document(id, datamap, manifestmap);
+
+            if (newVoyagerId != null)
+            {
+                document.addIdentifier("http://libris.kb.se/" + document.getCollection() + "/" + newVoyagerId);
+                document.setControlNumber(newVoyagerId);
+            }
+            document.setFailedApixExport(failedExport);
+
+            m_postgreSQLComponent.store(document, true, true);
+            m_elasticSearchComponent.index(document);
+        }
+    }
+
+    private PreparedStatement prepareSelectForUpdateStatement(Connection connection, String id)
+            throws SQLException
+    {
+        String sql = "SELECT manifest, data FROM " + m_properties.getProperty("sqlMaintable") +
+                " WHERE id = ?";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.setString(1, id);
+        return statement;
     }
 }
