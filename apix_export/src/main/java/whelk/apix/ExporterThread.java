@@ -338,33 +338,36 @@ public class ExporterThread extends Thread
     private void commitAtomicDocumentUpdate(String id, String newVoyagerId, boolean failedExport)
             throws IOException, SQLException
     {
-        // TODO: This must be a single atomic transaction, wait for whelk-core to implement SELECT FOR UPDATE writes.
+        // Store document atomically in lddb
+        m_postgreSQLComponent.storeAtomicUpdate(id, true,
+                (Document doc) ->
+                {
+                    if (newVoyagerId != null)
+                    {
+                        doc.addIdentifier("http://libris.kb.se/" + doc.getCollection() + "/" + newVoyagerId);
+                        doc.setControlNumber(newVoyagerId);
+                    }
+                    doc.setFailedApixExport(failedExport);
+                }
+        );
+
+        // Reindex document
         try ( Connection connection = m_postgreSQLComponent.getConnection();
-              PreparedStatement statement = prepareSelectForUpdateStatement(connection, id);
+              PreparedStatement statement = prepareSelectStatement(connection, id);
               ResultSet resultSet = statement.executeQuery() )
         {
             if (!resultSet.next())
                 throw new SQLException("Document " + id + " must be in lddb but cannot be retrieved.");
-
             String data = resultSet.getString("data");
             String manifest = resultSet.getString("manifest");
             HashMap datamap = m_mapper.readValue(data, HashMap.class);
             HashMap manifestmap = m_mapper.readValue(manifest, HashMap.class);
             Document document = new Document(id, datamap, manifestmap);
-
-            if (newVoyagerId != null)
-            {
-                document.addIdentifier("http://libris.kb.se/" + document.getCollection() + "/" + newVoyagerId);
-                document.setControlNumber(newVoyagerId);
-            }
-            document.setFailedApixExport(failedExport);
-
-            m_postgreSQLComponent.store(document, true, true);
             m_elasticSearchComponent.index(document);
         }
     }
 
-    private PreparedStatement prepareSelectForUpdateStatement(Connection connection, String id)
+    private PreparedStatement prepareSelectStatement(Connection connection, String id)
             throws SQLException
     {
         String sql = "SELECT manifest, data FROM " + m_properties.getProperty("sqlMaintable") +
