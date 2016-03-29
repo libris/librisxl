@@ -87,7 +87,7 @@ for i, line in enumerate(sys.stdin):
     recid = None
     leader = record['leader']
     rectype = leader[6]
-    biblevel = leader[7]
+    biblevel = leader[7] if marctype in {'bib', 'auth'} else '#'
     rectypebiblevel = rectype + biblevel
 
     stat = biblevelmap.get(biblevel)
