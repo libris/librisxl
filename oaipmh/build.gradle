@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-	compile 'com.github.libris:whelk-core:master-SNAPSHOT'
+	compile 'com.github.libris:whelk-core:b6ee34b2541b7c9a17aff0935ba091a515aa4cb6'
 
     def jettyVersion="9.3.6.v20151106"
 

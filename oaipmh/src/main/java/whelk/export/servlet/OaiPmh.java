@@ -120,8 +120,7 @@ public class OaiPmh extends HttpServlet
                     break;
                 default:
                     ResponseCommon.sendOaiPmhError(OAIPMH_ERROR_BAD_VERB, "OAI-PMH verb must be one of [GetRecord, Identify, " +
-                            "ListIdentifiers, ListMetadataFormats, ListRecords, ListSets] You may also use the non " +
-                            "OAI-PMH convenience verb ListRecordTrees.", req, res);
+                            "ListIdentifiers, ListMetadataFormats, ListRecords, ListSets].", req, res);
             }
         }
         catch (IOException | XMLStreamException e)
