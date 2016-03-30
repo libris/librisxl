@@ -273,7 +273,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     /**
-     * Take great care the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
+     * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
     void storeAtomicUpdate(String id, boolean minorUpdate, UpdateAgent updateAgent) {
