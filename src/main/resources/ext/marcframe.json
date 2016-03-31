@@ -50,10 +50,10 @@
         "p": "MixedMaterial",
         "r": "Realia",
         "t": "ManuscriptText",
-        "u": "HeldMaterial",
-        "v": "HeldMaterial",
-        "x": "HeldMaterial",
-        "y": "HeldMaterial",
+        "u": "Item",
+        "v": "Item",
+        "x": "Item",
+        "y": "Item",
         "z": null
       },
       "BibLevelType": {
@@ -3014,7 +3014,7 @@
     "562": {
       "addLink": "workExample",
       "embedded": true,
-      "resourceType": "Product",
+      "resourceType": "Item",
       "$a": {"addProperty": "itemCondition"},
       "$b": {"addProperty": "copyIdentification"},
       "$c": {"addProperty": "versionIdentification"},
@@ -4190,7 +4190,7 @@
       {
         "type": "MappedProperty",
         "sourceEntity": "?thing",
-        "sourceLink": "holdingFor",
+        "sourceLink": "itemOf",
         "sourceProperty": "@type",
         "targetEntity": "?record",
         "targetProperty": "holdingType",
@@ -4209,7 +4209,7 @@
           {
             "source": {
               "mainEntity": {
-                "holdingFor": {
+                "itemOf": {
                   "@type": ["Monograph"]
                 }
               }
@@ -4217,9 +4217,36 @@
             "result": {
               "holdingType": {"@id": "marc:SinglePartItemHolding"},
               "mainEntity": {
-                "holdingFor": {
+                "itemOf": {
                   "@type": ["Monograph"]
                 }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "TODO": "ExpandSimpleItem",
+        "_spec": [
+          {
+            "source": {
+              "@type": "Item",
+              "heldBy": {"@id": "/org/1"},
+              "itemOf": {"@id": "/bib/0"},
+              "shelfMark": "Hc.01/DR"
+            },
+            "result": {
+              "@type": "Record",
+              "mainEntity": {
+                "@type": "Item",
+                "itemOf": {"@id": "/bib/0"},
+                "heldBy": {"@id": "/org/1"},
+                "hasComponent": [
+                  {
+                    "@type": "Item",
+                    "shelfMark": "Hc.01/DR"
+                  }
+                ]
               }
             }
           }
@@ -4287,9 +4314,9 @@
             "marc:status": {"@id": "marc:New"},
             "marc:holdingType": {"@id": "marc:SinglePartItemHolding"},
             "mainEntity": {
-              "@type": "HeldMaterial",
+              "@type": "Item",
               "@id": "http://libris.kb.se/resource/hold/0000000",
-              "holdingFor": {"@id": "http://libris.kb.se/resource/bib/7149593"}
+              "itemOf": {"@id": "http://libris.kb.se/resource/bib/7149593"}
             }
           }
         }
@@ -4304,8 +4331,8 @@
     },
 
     "004": {
-      "aboutType": "HeldMaterial",
-      "link": "holdingFor", "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
+      "aboutType": "Item",
+      "link": "itemOf", "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
       "TODO:meta": {"property": "controlNumber"}
     },
 
@@ -4460,34 +4487,43 @@
     "084": {"inherit": "bib", "addLink": "callno"},
 
     "541": {
-      "addProperty": "immediateSourceOfAcquisitionOfItem",
+      "TODO:linkedEntity": "?example-$i",
+      "addLink": "workExample", "embedded": true, "resourceType": "Item",
+      "$a": {"addProperty": "immediateSourceOfAcquisition"},
       "repeatable": true
     },
 
     "561": {
-      "addLink": "workExample", "embedded": true, "resourceType": "Product",
-      "$a": {"addProperty": "custodialHistoryOfItem"}
+      "TODO:linkedEntity": "?example-$i",
+      "addLink": "workExample", "embedded": true, "resourceType": "Item",
+      "$a": {"addProperty": "custodialHistory"}
     },
 
     "562": {
+      "TODO:linkedEntity": "?example-$i",
       "inherit": "bib"
     },
 
     "563": {
-      "addLink": "workExample", "embedded": true, "resourceType": "Product",
+      "TODO:linkedEntity": "?example-$i",
+      "addLink": "workExample", "embedded": true, "resourceType": "Item",
       "$a": {"addProperty": "bindingInformation"}
     },
 
-    "600": {"inherit": "bib:100", "addLink": "subject"},
+    "600": {
+      "inherit": "bib:100",
+      "addLink": "subject",
+      "TODO:aboutEntity": "?exampleOfWork (which may be the sameAs ?itemOf)"
+    },
     "650": {"inherit": "bib:650"},
     "653": {},
     "698": {},
 
     "852": {
-      "aboutType": "HeldMaterial",
-      "addLink": "offers",
+      "aboutType": "Item",
+      "addLink": "hasComponent",
       "embedded": true,
-      "resourceType": "Offer",
+      "resourceType": "Item",
       "TODO:i1": {},
       "FIXME:i2": {
         "property": "shelfOrder"
@@ -4509,9 +4545,8 @@
       "$f": {"addProperty": "codedLocationQualifier"},
       "$g": {"addProperty": "nonCodedLocationQualifier"},
       "$h": {
-        "property": "classificationPart",
-        "TODO:property": "shelfMark? only for HeldItem?",
-        "NOTE": "libris deviates from standard (used for all kinds of shelfControlNumber?)"
+        "property": "shelfMark",
+        "NOTE": "libris deviates from standard classificationPart (libris use it for all kinds of shelfControlNumber?)"
       },
       "$i": {
         "addProperty": "availability",
@@ -4543,10 +4578,10 @@
           }},
           "result": {
             "mainEntity": {
-              "@type": "HeldMaterial",
-              "offers": [
+              "@type": "Item",
+              "hasComponent": [
                 {
-                  "@type": "Offer",
+                  "@type": "Item",
                   "copyNumber": "1",
                   "heldBy": [{"@type": "Organization", "notation": "H"}],
                   "shelfControlNumber": "65.465",
@@ -4562,14 +4597,45 @@
     "856": {
       "inherit": "bib"
     },
-    "866": {
-      "NOTE:domainIncludes": "Aggregate",
-      "addLink": "workExample",
+
+    "863": {
+      "addLink": "qualifiedEnumerationsAndChronologyNote",
       "embedded": true,
-      "resourceType": "SomeProducts",
+      "resourceType": "Note",
       "TODO:i1": {},
       "TODO:i2": {},
-      "$a": {"property": "description"},
+      "$a": {"property": "value"},
+      "$x": {"addProperty": "cataloguersNote"},
+      "$z": {"addProperty": "copyNote"}
+    },
+
+    "866": {
+      "addLink": "qualifiedBasicUnitNote",
+      "embedded": true,
+      "resourceType": "Note",
+      "TODO:i1": {},
+      "TODO:i2": {},
+      "$a": {"property": "value"},
+      "$x": {"addProperty": "cataloguersNote"},
+      "$z": {"addProperty": "copyNote"}
+    },
+    "867": {
+      "addLink": "qualifiedSupplementaryNote",
+      "embedded": true,
+      "resourceType": "Note",
+      "TODO:i1": {},
+      "TODO:i2": {},
+      "$a": {"property": "value"},
+      "$x": {"addProperty": "cataloguersNote"},
+      "$z": {"addProperty": "copyNote"}
+    },
+    "868": {
+      "addLink": "qualifiedIndexNote",
+      "embedded": true,
+      "resourceType": "Note",
+      "TODO:i1": {},
+      "TODO:i2": {},
+      "$a": {"property": "value"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"}
     }
