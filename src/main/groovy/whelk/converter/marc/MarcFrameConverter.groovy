@@ -280,6 +280,7 @@ class MarcConversion {
                 }
                 prefix = "location:"
                 if (it.startsWith(prefix) && !thing.heldBy) {
+                    // TODO: newEntity(state, "Organization")
                     thing.heldBy = ["@type": "Organization",
                                     notation: it.substring(prefix.size())]
                 }
@@ -482,7 +483,7 @@ class MarcRuleSet {
             } else if (tag == 'postProcessing') {
                 postProcSteps = dfn.collect {
                     conversion.parsePostProcStep(it)
-                }
+                }.findAll()
                 return
             }
 
@@ -896,6 +897,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         super(ruleSet, tag, fieldDfn)
         assert !link || repeatable // this kind should always be repeatable if linked
         if (fieldDfn['match-repeated']) {
+            // TODO: and .resourceType
             repeatedAddLink = fieldDfn['match-repeated'].addLink
         }
         this.baseConverter = new MarcFixedFieldHandler(ruleSet, tag, fieldDfn)
