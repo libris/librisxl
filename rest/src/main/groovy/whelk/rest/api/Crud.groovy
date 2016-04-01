@@ -405,9 +405,6 @@ class Crud extends HttpServlet {
     boolean hasPermission(info, newdoc, olddoc) {
         if (info) {
             log.debug("User is: $info")
-            if (info.user == "SYSTEM") {
-                return true
-            }
             return accessControl.checkDocument(newdoc, olddoc, info)
         }
         log.info("No user information received, denying request.")

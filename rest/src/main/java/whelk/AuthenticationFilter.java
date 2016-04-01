@@ -43,7 +43,7 @@ public class AuthenticationFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        if (isApiCall(httpRequest) && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
+        if (supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
             String json = null;
             try {
                 String token = httpRequest.getHeader("Authorization");
@@ -71,19 +71,9 @@ public class AuthenticationFilter implements Filter {
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
                 e.printStackTrace();
             }
-        } else if (supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
-            log.debug("Authentication check bypassed, creating dummy user.");
-            request.setAttribute("user", createDevelopmentUser());
-            chain.doFilter(request, response);
         } else {
             chain.doFilter(request, response);
         }
-    }
-
-    private Map createDevelopmentUser() {
-        Map emptyUser = new HashMap<String,Object>();
-        emptyUser.put("user", "SYSTEM");
-        return emptyUser;
     }
 
     private String verifyToken(String token) {
@@ -119,10 +109,6 @@ public class AuthenticationFilter implements Filter {
     @Override
     public void destroy() {
 
-    }
-
-    private boolean isApiCall(HttpServletRequest httpRequest) {
-        return filterOnPorts.contains(new Integer(httpRequest.getServerPort()).toString());
     }
 
     /*
