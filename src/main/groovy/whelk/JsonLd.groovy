@@ -3,6 +3,7 @@ package whelk
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import whelk.exception.FramingException
+import whelk.exception.ModelValidationException
 
 public class JsonLd {
 
@@ -212,5 +213,26 @@ public class JsonLd {
 
         }
         return idMap
+    }
+
+    static boolean validateItemModel(Document doc) {
+        if (!doc || !doc.data) {
+            throw new ModelValidationException("Document has no data to validate.")
+        }
+        Map docData = frame(doc.id, doc.data)
+        Map about = (docData.containsKey("about") ? docData.about : docData )
+        String type = about.get("@type")
+        if (type != "Item") {
+            throw new ModelValidationException("Document has mismatching @type ($type) for Item.")
+        }
+        if (!about.containsKey("heldBy") || !about.heldBy.containsKey("notation")) {
+            throw new ModelValidationException("Item is missing heldBy declaration.")
+        }
+        // TODO: Remove holdingFor option when data is coherent
+        Map itemOf = (about.containsKey("itemOf") ? about.get("itemOf") : about.get("holdingFor"))
+        if (!itemOf?.containsKey("@id")) {
+            throw new ModelValidationException("Item is missing itemOf declaration.")
+        }
+        return true
     }
 }
