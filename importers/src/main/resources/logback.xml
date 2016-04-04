@@ -21,6 +21,7 @@
     <logger name="whelk.importer.MySQLImporter" level="info"/>
     <logger name="whelk.importer.ImporterMain" level="info"/>
     <logger name="whelk.filter.LinkFinder" level="info"/>
+    <logger name="whelk.JsonLd" level="info"/>
 
     <root level=" info">
         <appender-ref ref="STDOUT" />
