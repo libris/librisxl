@@ -192,9 +192,6 @@ public class JsonLd {
                 }
                 if (item.containsKey(ID_KEY)) {
                     def id = item.get(ID_KEY)
-                    if (idMap.containsKey(id)) {
-                        throw new FramingException("Detected items in graph with colliding id: $id")
-                    }
                     idMap.put(id, item)
                 }
             }
