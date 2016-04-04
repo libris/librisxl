@@ -14,6 +14,7 @@ import whelk.component.StorageType
 import whelk.converter.FormatConverter
 import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.JsonLD2MarcXMLConverter
+import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
@@ -368,20 +369,29 @@ class Crud extends HttpServlet {
 
         Document doc = new Document(identifier, dataMap, existingDoc?.manifest)
 
-        log.debug("collection is now $collection")
+        log.debug("collection is now ${doc.collection}")
 
-        doc = doc.inCollection(collection)
-                .withContentType(ContentType.parse(request.getContentType()).getMimeType())
+        doc = doc.withContentType(ContentType.parse(request.getContentType()).getMimeType())
                 .withIdentifier(identifier)
                 .withDeleted(false)
+
+        if (collection) {
+            log.debug("Overriding collection. Setting $collection")
+            doc = doc.inCollection(collection)
+        }
 
         getAlternateIdentifiersFromLinkHeaders(request).each {
             doc.addIdentifier(it);
         }
 
         log.debug("Checking permissions for ${doc}")
-        if (!hasPermission(request.getAttribute("user"), doc, existingDoc)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
+        try {
+            if (!hasPermission(request.getAttribute("user"), doc, existingDoc)) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
+                return null
+            }
+        } catch (ModelValidationException mve) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, mve.getMessage())
             return null
         }
 

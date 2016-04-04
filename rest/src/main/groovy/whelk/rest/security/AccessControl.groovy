@@ -3,12 +3,14 @@ import groovy.util.logging.Slf4j as Log
 
 import whelk.Document
 import whelk.JsonLd
+import whelk.exception.ModelValidationException
 
 @Log
 class AccessControl {
 
     boolean checkDocument(Document newdoc, Document olddoc, Map userPrivileges) {
         if (newdoc?.collection == "hold") {
+            JsonLd.validateItemModel(newdoc)
             def sigel = JsonLd.frame(newdoc.id, newdoc.data).about.heldBy.notation
             log.debug("User tries to change a holding for sigel ${sigel}.")
 
@@ -24,7 +26,6 @@ class AccessControl {
                     log.trace("Checking sigel privs for existing document.")
                     privs = userPrivileges.authorization.find { it.sigel == currentSigel }
                     log.trace("User has these privs for current sigel ${sigel}: $privs")
-                    //if (!privs?.reg && !privs?.kat) {
                     if (!privs?.xlreg) {
                         log.debug("User does NOT have enough privileges.")
                         return false
@@ -34,7 +35,6 @@ class AccessControl {
         } else {
             log.info("Datasets 'bib' and 'auth' are not editable right now.")
             return false
-
         }
 
         if (newdoc) {
