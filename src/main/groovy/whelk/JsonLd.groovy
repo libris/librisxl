@@ -192,7 +192,12 @@ public class JsonLd {
                 }
                 if (item.containsKey(ID_KEY)) {
                     def id = item.get(ID_KEY)
-                    idMap.put(id, item)
+                    if (idMap.containsKey(id)) {
+                        Map existing = idMap.get(id)
+                        idMap.put(id, existing + item)
+                    } else {
+                        idMap.put(id, item)
+                    }
                 }
             }
         } else if (flatJsonLd.containsKey(DESCRIPTIONS_KEY)) {
