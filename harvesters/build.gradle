@@ -81,7 +81,7 @@ dependencies {
     def groovyVersion=GroovySystem.getVersion()
     def jettyVersion="8.1.16.v20140903"
 
-    compile 'com.github.libris:whelk-core:b6ee34b2541b7c9a17aff0935ba091a515aa4cb6'
+    compile 'com.github.libris:whelk-core:b2b00f1e3fd1f1abda892af8b40f62b5560c4732'
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
