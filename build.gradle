@@ -1,0 +1,34 @@
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'maven'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven { url "http://repository.codehaus.org/" }
+    maven { url "http://jitpack.io/" }
+}
+
+dependencies {
+
+    // XL dependencies
+    compile('../../whelk-core' in project.subprojects*.name?
+            project(':../../whelk-core') :
+            'com.github.libris:whelk-core:b2b00f1e3fd1f1abda892af8b40f62b5560c4732')
+
+}
+
+mainClassName = 'whelk.importer.Import'
+
+jar {
+    manifest {
+        attributes 'Implementation-Title':'Libris XL metadata importer',
+                'Implementation-Version': '1.0',
+                'Main-class': mainClassName
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
