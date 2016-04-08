@@ -120,18 +120,18 @@ public class ListRecordsWithHoldings {
 
         if (dataset.equals("bib"))
         {
-            emitAttachedHoldings(jsonLDdoc.getIdentifiers(), writer);
+            emitAttachedHoldings(jsonLDdoc.getItIdentifiers(), writer);
         }
 
         if (!onlyIdentifiers)
             writer.writeEndElement(); // record
     }
 
-    private static void emitAttachedHoldings(List<String> ids, XMLStreamWriter writer)
+    private static void emitAttachedHoldings(List<String> itIds, XMLStreamWriter writer)
             throws SQLException, XMLStreamException, IOException
     {
         try (Connection dbconn = DataBase.getConnection();
-             PreparedStatement preparedStatement = getAttachedHoldings(dbconn, ids);
+             PreparedStatement preparedStatement = getAttachedHoldings(dbconn, itIds);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
             // Is the resultset empty?
@@ -150,7 +150,7 @@ public class ListRecordsWithHoldings {
         }
     }
 
-    private static PreparedStatement getAttachedHoldings(Connection dbconn, List<String> ids)
+    private static PreparedStatement getAttachedHoldings(Connection dbconn, List<String> itIds)
             throws SQLException
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
@@ -158,12 +158,12 @@ public class ListRecordsWithHoldings {
         String selectSQL = "SELECT id, data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
                 tableName + " WHERE manifest->>'collection' = 'hold' AND deleted = false AND (";
 
-        for (int i = 0; i < ids.size(); ++i)
+        for (int i = 0; i < itIds.size(); ++i)
         {
             selectSQL += " data#>>'{@graph,1,holdingFor,@id}' = ? ";
 
             // If this is the last id
-            if (i+1 == ids.size())
+            if (i+1 == itIds.size())
                 selectSQL += ")";
             else
                 selectSQL += " OR ";
@@ -171,13 +171,12 @@ public class ListRecordsWithHoldings {
 
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
 
-        for (int i = 0; i < ids.size(); ++i)
+        for (int i = 0; i < itIds.size(); ++i)
         {
-            preparedStatement.setString(i+1, ids.get(i));
+            preparedStatement.setString(i+1, itIds.get(i));
         }
 
         preparedStatement.setFetchSize(32);
-        System.out.println(preparedStatement.toString());
         return preparedStatement;
     }
 }
