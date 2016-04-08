@@ -133,8 +133,8 @@ public class OaiPmh extends HttpServlet
         }
         catch (SQLException e)
         {
-            res.sendError(500);
             logger.error("Database error.", e);
+            res.sendError(500);
         }
     }
 }

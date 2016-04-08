@@ -1,5 +1,6 @@
 package whelk.export.servlet;
 
+import org.apache.commons.codec.binary.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
 
@@ -16,6 +17,7 @@ import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
+import java.util.List;
 
 public class ListRecordsWithHoldings {
 
@@ -61,12 +63,6 @@ public class ListRecordsWithHoldings {
         }
     }
 
-    /*
-    private static void emitRecordHeader(ResultSet resultSet, XMLStreamWriter writer, boolean onlyIdentifiers)
-            throws SQLException, XMLStreamException, IOException
-    {
-    }*/
-
     private static void emitRecord(ResultSet resultSet, XMLStreamWriter writer, String requestedFormat, boolean onlyIdentifiers)
             throws SQLException, XMLStreamException, IOException
     {
@@ -93,9 +89,8 @@ public class ListRecordsWithHoldings {
         writer.writeEndElement(); // identifier
 
         writer.writeStartElement("datestamp");
-        //ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
-        //writer.writeCharacters(modified.toString());
-        writer.writeCharacters(jsonLDdoc.getModified().toString());
+        ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
+        writer.writeCharacters(modified.toString());
         writer.writeEndElement(); // datestamp
 
         String dataset = (String) manifestmap.get("collection");
@@ -123,7 +118,66 @@ public class ListRecordsWithHoldings {
             writer.writeEndElement(); // metadata
         }
 
+        if (dataset.equals("bib"))
+        {
+            emitAttachedHoldings(jsonLDdoc.getIdentifiers(), writer);
+        }
+
         if (!onlyIdentifiers)
             writer.writeEndElement(); // record
+    }
+
+    private static void emitAttachedHoldings(List<String> ids, XMLStreamWriter writer)
+            throws SQLException, XMLStreamException, IOException
+    {
+        try (Connection dbconn = DataBase.getConnection();
+             PreparedStatement preparedStatement = getAttachedHoldings(dbconn, ids);
+             ResultSet resultSet = preparedStatement.executeQuery())
+        {
+            // Is the resultset empty?
+            if (!resultSet.isBeforeFirst())
+                return;
+
+            writer.writeStartElement("about");
+            while(resultSet.next())
+            {
+                writer.writeStartElement("holding");
+                writer.writeAttribute("sigel", resultSet.getString("sigel"));
+                writer.writeAttribute("id", resultSet.getString("id"));
+                writer.writeEndElement(); // holding
+            }
+            writer.writeEndElement(); // about
+        }
+    }
+
+    private static PreparedStatement getAttachedHoldings(Connection dbconn, List<String> ids)
+            throws SQLException
+    {
+        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+
+        String selectSQL = "SELECT id, data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
+                tableName + " WHERE manifest->>'collection' = 'hold' AND deleted = false AND (";
+
+        for (int i = 0; i < ids.size(); ++i)
+        {
+            selectSQL += " data#>>'{@graph,1,holdingFor,@id}' = ? ";
+
+            // If this is the last id
+            if (i+1 == ids.size())
+                selectSQL += ")";
+            else
+                selectSQL += " OR ";
+        }
+
+        PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
+
+        for (int i = 0; i < ids.size(); ++i)
+        {
+            preparedStatement.setString(i+1, ids.get(i));
+        }
+
+        preparedStatement.setFetchSize(32);
+        System.out.println(preparedStatement.toString());
+        return preparedStatement;
     }
 }
