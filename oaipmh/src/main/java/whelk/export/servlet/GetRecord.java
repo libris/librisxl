@@ -94,36 +94,9 @@ public class GetRecord
 
             ResponseCommon.writeOaiPmhHeader(writer, request, true);
             writer.writeStartElement("GetRecord");
-            writer.writeStartElement("record");
 
-            writer.writeStartElement("header");
+            ResponseCommon.emitRecord(resultSet, writer, metadataPrefix, false);
 
-            if (deleted)
-                writer.writeAttribute("status", "deleted");
-
-            writer.writeStartElement("identifier");
-            writer.writeCharacters(identifierUri);
-            writer.writeEndElement(); // identifier
-
-            writer.writeStartElement("datestamp");
-            writer.writeCharacters(modified.toString());
-            writer.writeEndElement(); // datestamp
-
-            writer.writeStartElement("setSpec");
-            String dataset = (String) manifestmap.get("collection");
-            writer.writeCharacters( dataset );
-            writer.writeEndElement(); // setSpec
-
-            writer.writeEndElement(); // header
-
-            if (!deleted)
-            {
-                writer.writeStartElement("metadata");
-                ResponseCommon.writeConvertedDocument(writer, metadataPrefix, jsonLDdoc);
-                writer.writeEndElement(); // metadata
-            }
-
-            writer.writeEndElement(); // record
             writer.writeEndElement(); // GetRecord
             ResponseCommon.writeOaiPmhClose(writer, request);
         }

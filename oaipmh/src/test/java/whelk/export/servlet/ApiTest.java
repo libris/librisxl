@@ -95,6 +95,7 @@ public class ApiTest
         Assert.assertTrue(response.contains("hold:Gbg"));
     }
 
+    /*
     @Test
     public void testExpandedFormAddsData() throws Exception
     {
@@ -113,6 +114,7 @@ public class ApiTest
             Assert.assertTrue( expandedRecords.contains(s) );
         }
     }
+    */
 
     @Test
     public void testOaiPmhSchemaValidation() throws Exception
@@ -129,14 +131,13 @@ public class ApiTest
         final String oaiPmhCalls[] = {
                 // Normal calls
                 "/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc&set=hold:S",
-                "/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc_expanded&set=hold:S",
+                //"/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc_expanded&set=hold:S",
                 "/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld&set=hold:KVIN",
-                "/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld_expanded&set=hold:KVIN",
+                //"/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld_expanded&set=hold:KVIN",
                 "/oaipmh/?verb=Identify",
                 "/oaipmh/?verb=ListSets",
                 "/oaipmh/?verb=ListaMetadataFormats",
-                // The GetRecord case is commented out, because identifiers are scrambled on re-reading the testdata.
-                //"/oaipmh/?verb=GetRecord&metadataPrefix=oai_dc&identifier=https://libris.kb.se/7cjmx02d3hj2p81"
+                "/oaipmh/?verb=GetRecord&metadataPrefix=oai_dc&identifier=https://libris.kb.se/7cjmx02d3hj2p81",
 
                 // Error calls
                 "/oaipmh/?verb=ListRecords",
@@ -210,5 +211,20 @@ public class ApiTest
             String response = TestCommon.httpGet(call);
             Assert.assertTrue( response.contains("noRecordsMatch") );
         }
+    }
+
+    //"/oaipmh/?verb=GetRecord&metadataPrefix=oai_dc&identifier=https://libris.kb.se/7cjmx02d3hj2p81",
+    @Test
+    public void testHoldingsForBibSingle() throws Exception
+    {
+        String response = TestCommon.httpGet("/oaipmh/?verb=GetRecord&metadataPrefix=oai_dc_includehold&identifier=https://libris.kb.se/l4xz4wvx42rfsnb");
+        Assert.assertTrue( response.contains("holding sigel=\"Gbg\" id=\"59hm0xrb4wxl4bm\"") );
+    }
+
+    @Test
+    public void testHoldingsForBibMultiple() throws Exception
+    {
+        String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc_includehold");
+        Assert.assertTrue( response.contains("holding sigel=\"Gbg\" id=\"59hm0xrb4wxl4bm\"") );
     }
 }
