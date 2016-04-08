@@ -66,7 +66,7 @@ public class ListRecords
         }
 
         // Was the data ordered in a format we know?
-        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix.replace(OaiPmh.FORMATEXPANDED_POSTFIX, "")))
+        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix.replace(OaiPmh.FORMAT_EXPANDED_POSTFIX, "")))
         {
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + metadataPrefix,
                     request, response);
@@ -76,15 +76,20 @@ public class ListRecords
         ZonedDateTime fromDateTime = Helpers.parseISO8601(from);
         ZonedDateTime untilDateTime = Helpers.parseISO8601(until);
 
-        if (metadataPrefix.endsWith(OaiPmh.FORMATEXPANDED_POSTFIX))
+        if (metadataPrefix.endsWith(OaiPmh.FORMAT_EXPANDED_POSTFIX))
         {
             // Expand each record with its dependency tree
             ListRecordTrees.respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix, onlyIdentifiers);
         }
+        else if (metadataPrefix.endsWith(OaiPmh.FORMAT_INCLUDE_HOLD_POSTFIX))
+        {
+            // Include <about> [.. holdid/sigel..] </about> list with each bib post
+            ListRecordsWithHoldings.respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix, onlyIdentifiers);
+        }
         else {
             // Normal record retrieval
             try (Connection dbconn = DataBase.getConnection();
-                 PreparedStatement preparedStatement = getMatchingDocuments(dbconn, fromDateTime, untilDateTime, setSpec);
+                 PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec);
                  ResultSet resultSet = preparedStatement.executeQuery())
             {
                 respond(request, response, metadataPrefix, onlyIdentifiers, resultSet);
@@ -96,8 +101,7 @@ public class ListRecords
                                 String requestedFormat, boolean onlyIdentifiers, ResultSet resultSet)
             throws IOException, XMLStreamException, SQLException
     {
-        // An inelegant (but recommended) way of checking if the ResultSet is empty.
-        // Avoids the need for "backing-up" which would prevent streaming of the ResultSet from the db.
+        // Is the resultset empty?
         if (!resultSet.isBeforeFirst())
         {
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
@@ -123,43 +127,6 @@ public class ListRecords
 
         writer.writeEndElement(); // ListIdentifiers/ListRecords
         ResponseCommon.writeOaiPmhClose(writer, request);
-    }
-
-    private static PreparedStatement getMatchingDocuments(Connection dbconn, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec)
-            throws SQLException
-    {
-        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-
-        // Construct the query
-        String selectSQL = "SELECT data, manifest, modified, deleted, " +
-                " data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
-                tableName + " WHERE manifest->>'collection' <> 'definitions' ";
-        if (fromDateTime != null)
-            selectSQL += " AND modified > ? ";
-        if (untilDateTime != null)
-            selectSQL += " AND modified < ? ";
-        if (setSpec.getRootSet() != null)
-            selectSQL += " AND manifest->>'collection' = ? ";
-
-        // Obviously query concatenation is dangerous business and should never be done, unfortunately JSONB fields
-        // much like table names cannot be parameterized, and so there is little choice.
-        if (setSpec.getSubset() != null)
-            selectSQL += " AND data @> '{\"@graph\":[{\"heldBy\": {\"@type\": \"Organization\", \"notation\": \"" +
-                    Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
-
-        PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
-        preparedStatement.setFetchSize(512);
-
-        // Assign parameters
-        int parameterIndex = 1;
-        if (fromDateTime != null)
-        preparedStatement.setTimestamp(parameterIndex++, new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L));
-        if (untilDateTime != null)
-            preparedStatement.setTimestamp(parameterIndex++, new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L));
-        if (setSpec.getRootSet() != null)
-            preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
-
-        return preparedStatement;
     }
 
     private static void emitRecord(ResultSet resultSet, XMLStreamWriter writer, String requestedFormat, boolean onlyIdentifiers)

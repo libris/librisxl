@@ -44,7 +44,8 @@ public class OaiPmh extends HttpServlet
         public final String xmlNamespace;
     }
     public final static HashMap<String, FormatDescription> supportedFormats;
-    public final static String FORMATEXPANDED_POSTFIX = "_expanded";
+    public final static String FORMAT_EXPANDED_POSTFIX = "_expanded";
+    public final static String FORMAT_INCLUDE_HOLD_POSTFIX = "_includehold";
     static
     {
         supportedFormats = new HashMap<String, FormatDescription>();
@@ -53,11 +54,12 @@ public class OaiPmh extends HttpServlet
         supportedFormats.put("rdfxml", new FormatDescription(new JsonLD2RdfXml(), true, null, null));
         supportedFormats.put("jsonld", new FormatDescription(null, false, null, null));
 
-        // For each format add another format with the :expanded postfix and the same parameters
+        // For each format add another format with the _expanded and _includehold postfixes and the same parameters
         HashMap<String, FormatDescription> expandedFormats = new HashMap<String, FormatDescription>();
         for (String formatKey : supportedFormats.keySet())
         {
-            expandedFormats.put(formatKey+FORMATEXPANDED_POSTFIX, supportedFormats.get(formatKey));
+            expandedFormats.put(formatKey+ FORMAT_EXPANDED_POSTFIX, supportedFormats.get(formatKey));
+            expandedFormats.put(formatKey+ FORMAT_INCLUDE_HOLD_POSTFIX, supportedFormats.get(formatKey));
         }
         supportedFormats.putAll(expandedFormats);
     }

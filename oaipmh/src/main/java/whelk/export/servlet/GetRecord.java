@@ -71,7 +71,7 @@ public class GetRecord
             Document jsonLDdoc = new Document(datamap, manifestmap);
 
             // Expanded format requested, we need to build trees.
-            if (metadataPrefix.endsWith(OaiPmh.FORMATEXPANDED_POSTFIX))
+            if (metadataPrefix.endsWith(OaiPmh.FORMAT_EXPANDED_POSTFIX))
             {
                 List<String> nodeDatas = new LinkedList<String>();
                 HashSet<String> visitedIDs = new HashSet<String>();
