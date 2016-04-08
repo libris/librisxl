@@ -220,6 +220,22 @@ class Document {
         return manifest.get(ALTERNATE_ID_KEY) as List ?: Collections.emptyList()
     }
 
+    /**
+     * Get a list of all known identifiers for the thing described by this document
+     * (e.g. fnrglfnrglfnrgl#it, http://libris.kb.se/resource/bib/123, etc)
+     */
+    @JsonIgnore
+    List<String> getItIdentifiers() {
+        List list = data[GRAPH_KEY][1][JSONLD_ALT_ID_KEY]
+        List<String> ret = []
+        for (Map m : list)
+        {
+            ret.add( m.get("@id") )
+        }
+        ret.add(id + "#it")
+        return ret
+    }
+
     void findIdentifiers() {
         log.debug("Finding identifiers in ${data}")
         addIdentifier(getURI().toString())
