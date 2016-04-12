@@ -87,7 +87,7 @@ public class JsonLd {
             String foundIdentifier = findIdentifier(flatJsonLd)
             log.debug("Result of findIdentifier: $foundIdentifier")
             if (foundIdentifier) {
-                mainItemMap = idMap.get(SLASH_URI.resolve(foundIdentifier).toString())
+                mainItemMap = idMap.get(Document.BASE_URI.resolve(foundIdentifier).toString())
             }
         }
         Map framedMap
