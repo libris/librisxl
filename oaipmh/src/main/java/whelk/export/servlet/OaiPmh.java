@@ -54,14 +54,17 @@ public class OaiPmh extends HttpServlet
         supportedFormats.put("rdfxml", new FormatDescription(new JsonLD2RdfXml(), true, null, null));
         supportedFormats.put("jsonld", new FormatDescription(null, false, null, null));
 
-        // For each format add another format with the _expanded and _includehold postfixes and the same parameters
-        HashMap<String, FormatDescription> expandedFormats = new HashMap<String, FormatDescription>();
-        for (String formatKey : supportedFormats.keySet())
+        // Add all formats with the "_includehold" postfix
+        for (String format : new String[] {"marcxml", "oai_dc", "rdfxml", "jsonld"})
         {
-            expandedFormats.put(formatKey+ FORMAT_EXPANDED_POSTFIX, supportedFormats.get(formatKey));
-            expandedFormats.put(formatKey+ FORMAT_INCLUDE_HOLD_POSTFIX, supportedFormats.get(formatKey));
+            supportedFormats.put(format+FORMAT_INCLUDE_HOLD_POSTFIX, supportedFormats.get(format));
         }
-        supportedFormats.putAll(expandedFormats);
+
+        // Add all RDF formats with the "_expanded" postfix
+        for (String format : new String[] {"rdfxml", "jsonld"})
+        {
+            supportedFormats.put(format+FORMAT_EXPANDED_POSTFIX, supportedFormats.get(format));
+        }
     }
 
     public static Properties configuration;

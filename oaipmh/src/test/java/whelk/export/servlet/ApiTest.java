@@ -95,7 +95,6 @@ public class ApiTest
         Assert.assertTrue(response.contains("hold:Gbg"));
     }
 
-    /*
     @Test
     public void testExpandedFormAddsData() throws Exception
     {
@@ -114,7 +113,6 @@ public class ApiTest
             Assert.assertTrue( expandedRecords.contains(s) );
         }
     }
-    */
 
     @Test
     public void testOaiPmhSchemaValidation() throws Exception
@@ -131,9 +129,9 @@ public class ApiTest
         final String oaiPmhCalls[] = {
                 // Normal calls
                 "/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc&set=hold:S",
-                //"/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc_expanded&set=hold:S",
+                "/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc_expanded&set=hold:S",
                 "/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld&set=hold:KVIN",
-                //"/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld_expanded&set=hold:KVIN",
+                "/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld_expanded&set=hold:KVIN",
                 "/oaipmh/?verb=Identify",
                 "/oaipmh/?verb=ListSets",
                 "/oaipmh/?verb=ListaMetadataFormats",
