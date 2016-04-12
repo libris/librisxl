@@ -68,10 +68,10 @@ public class GetRecord
             ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
             HashMap datamap = mapper.readValue(data, HashMap.class);
             HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
-            Document jsonLDdoc = new Document(datamap, manifestmap);
+            Document document = new Document(datamap, manifestmap);
 
             // Expanded format requested, we need to build trees.
-            if (metadataPrefix.endsWith(OaiPmh.FORMATEXPANDED_POSTFIX))
+            if (metadataPrefix.endsWith(OaiPmh.FORMAT_EXPANDED_POSTFIX))
             {
                 List<String> nodeDatas = new LinkedList<String>();
                 HashSet<String> visitedIDs = new HashSet<String>();
@@ -84,7 +84,7 @@ public class GetRecord
                 // Value of modificationTimes.latestModification will have changed during tree building.
                 modified = modificationTimes.latestModification;
 
-                jsonLDdoc = ListRecordTrees.mergeDocument(id, nodeDatas);
+                document = ListRecordTrees.mergeDocument(id, nodeDatas);
             }
 
             // Build the xml response feed
@@ -94,36 +94,9 @@ public class GetRecord
 
             ResponseCommon.writeOaiPmhHeader(writer, request, true);
             writer.writeStartElement("GetRecord");
-            writer.writeStartElement("record");
 
-            writer.writeStartElement("header");
+            ResponseCommon.emitRecord(resultSet, document, writer, metadataPrefix, false);
 
-            if (deleted)
-                writer.writeAttribute("status", "deleted");
-
-            writer.writeStartElement("identifier");
-            writer.writeCharacters(identifierUri);
-            writer.writeEndElement(); // identifier
-
-            writer.writeStartElement("datestamp");
-            writer.writeCharacters(modified.toString());
-            writer.writeEndElement(); // datestamp
-
-            writer.writeStartElement("setSpec");
-            String dataset = (String) manifestmap.get("collection");
-            writer.writeCharacters( dataset );
-            writer.writeEndElement(); // setSpec
-
-            writer.writeEndElement(); // header
-
-            if (!deleted)
-            {
-                writer.writeStartElement("metadata");
-                ResponseCommon.writeConvertedDocument(writer, metadataPrefix, jsonLDdoc);
-                writer.writeEndElement(); // metadata
-            }
-
-            writer.writeEndElement(); // record
             writer.writeEndElement(); // GetRecord
             ResponseCommon.writeOaiPmhClose(writer, request);
         }

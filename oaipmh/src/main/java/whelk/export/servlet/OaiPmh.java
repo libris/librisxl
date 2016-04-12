@@ -44,7 +44,8 @@ public class OaiPmh extends HttpServlet
         public final String xmlNamespace;
     }
     public final static HashMap<String, FormatDescription> supportedFormats;
-    public final static String FORMATEXPANDED_POSTFIX = "_expanded";
+    public final static String FORMAT_EXPANDED_POSTFIX = "_expanded";
+    public final static String FORMAT_INCLUDE_HOLD_POSTFIX = "_includehold";
     static
     {
         supportedFormats = new HashMap<String, FormatDescription>();
@@ -53,13 +54,17 @@ public class OaiPmh extends HttpServlet
         supportedFormats.put("rdfxml", new FormatDescription(new JsonLD2RdfXml(), true, null, null));
         supportedFormats.put("jsonld", new FormatDescription(null, false, null, null));
 
-        // For each format add another format with the :expanded postfix and the same parameters
-        HashMap<String, FormatDescription> expandedFormats = new HashMap<String, FormatDescription>();
-        for (String formatKey : supportedFormats.keySet())
+        // Add all formats with the "_includehold" postfix
+        for (String format : new String[] {"marcxml", "oai_dc", "rdfxml", "jsonld"})
         {
-            expandedFormats.put(formatKey+FORMATEXPANDED_POSTFIX, supportedFormats.get(formatKey));
+            supportedFormats.put(format+FORMAT_INCLUDE_HOLD_POSTFIX, supportedFormats.get(format));
         }
-        supportedFormats.putAll(expandedFormats);
+
+        // Add all RDF formats with the "_expanded" postfix
+        for (String format : new String[] {"rdfxml", "jsonld"})
+        {
+            supportedFormats.put(format+FORMAT_EXPANDED_POSTFIX, supportedFormats.get(format));
+        }
     }
 
     public static Properties configuration;
@@ -131,8 +136,8 @@ public class OaiPmh extends HttpServlet
         }
         catch (SQLException e)
         {
-            res.sendError(500);
             logger.error("Database error.", e);
+            res.sendError(500);
         }
     }
 }

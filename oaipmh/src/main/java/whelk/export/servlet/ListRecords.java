@@ -1,8 +1,5 @@
 package whelk.export.servlet;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import whelk.Document;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.stream.XMLOutputFactory;
@@ -10,9 +7,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.HashMap;
 
 public class ListRecords
 {
@@ -66,7 +61,7 @@ public class ListRecords
         }
 
         // Was the data ordered in a format we know?
-        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix.replace(OaiPmh.FORMATEXPANDED_POSTFIX, "")))
+        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix.replace(OaiPmh.FORMAT_EXPANDED_POSTFIX, "")))
         {
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + metadataPrefix,
                     request, response);
@@ -76,15 +71,14 @@ public class ListRecords
         ZonedDateTime fromDateTime = Helpers.parseISO8601(from);
         ZonedDateTime untilDateTime = Helpers.parseISO8601(until);
 
-        if (metadataPrefix.endsWith(OaiPmh.FORMATEXPANDED_POSTFIX))
+        if (metadataPrefix.endsWith(OaiPmh.FORMAT_EXPANDED_POSTFIX))
         {
             // Expand each record with its dependency tree
             ListRecordTrees.respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix, onlyIdentifiers);
-        }
-        else {
+        } else {
             // Normal record retrieval
             try (Connection dbconn = DataBase.getConnection();
-                 PreparedStatement preparedStatement = getMatchingDocuments(dbconn, fromDateTime, untilDateTime, setSpec);
+                 PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec);
                  ResultSet resultSet = preparedStatement.executeQuery())
             {
                 respond(request, response, metadataPrefix, onlyIdentifiers, resultSet);
@@ -96,8 +90,7 @@ public class ListRecords
                                 String requestedFormat, boolean onlyIdentifiers, ResultSet resultSet)
             throws IOException, XMLStreamException, SQLException
     {
-        // An inelegant (but recommended) way of checking if the ResultSet is empty.
-        // Avoids the need for "backing-up" which would prevent streaming of the ResultSet from the db.
+        // Is the resultset empty?
         if (!resultSet.isBeforeFirst())
         {
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
@@ -118,106 +111,10 @@ public class ListRecords
 
         while (resultSet.next())
         {
-            emitRecord(resultSet, writer, requestedFormat, onlyIdentifiers);
+            ResponseCommon.emitRecord(resultSet, null, writer, requestedFormat, onlyIdentifiers);
         }
 
         writer.writeEndElement(); // ListIdentifiers/ListRecords
         ResponseCommon.writeOaiPmhClose(writer, request);
-    }
-
-    private static PreparedStatement getMatchingDocuments(Connection dbconn, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec)
-            throws SQLException
-    {
-        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-
-        // Construct the query
-        String selectSQL = "SELECT data, manifest, modified, deleted, " +
-                " data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
-                tableName + " WHERE manifest->>'collection' <> 'definitions' ";
-        if (fromDateTime != null)
-            selectSQL += " AND modified > ? ";
-        if (untilDateTime != null)
-            selectSQL += " AND modified < ? ";
-        if (setSpec.getRootSet() != null)
-            selectSQL += " AND manifest->>'collection' = ? ";
-
-        // Obviously query concatenation is dangerous business and should never be done, unfortunately JSONB fields
-        // much like table names cannot be parameterized, and so there is little choice.
-        if (setSpec.getSubset() != null)
-            selectSQL += " AND data @> '{\"@graph\":[{\"heldBy\": {\"@type\": \"Organization\", \"notation\": \"" +
-                    Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
-
-        PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
-        preparedStatement.setFetchSize(512);
-
-        // Assign parameters
-        int parameterIndex = 1;
-        if (fromDateTime != null)
-        preparedStatement.setTimestamp(parameterIndex++, new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L));
-        if (untilDateTime != null)
-            preparedStatement.setTimestamp(parameterIndex++, new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L));
-        if (setSpec.getRootSet() != null)
-            preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
-
-        return preparedStatement;
-    }
-
-    private static void emitRecord(ResultSet resultSet, XMLStreamWriter writer, String requestedFormat, boolean onlyIdentifiers)
-            throws SQLException, XMLStreamException, IOException
-    {
-        ObjectMapper mapper = new ObjectMapper();
-
-        String data = resultSet.getString("data");
-        String manifest = resultSet.getString("manifest");
-        boolean deleted = resultSet.getBoolean("deleted");
-        String sigel = resultSet.getString("sigel");
-        HashMap datamap = mapper.readValue(data, HashMap.class);
-        HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
-        Document jsonLDdoc = new Document(datamap, manifestmap);
-
-        if (!onlyIdentifiers)
-            writer.writeStartElement("record");
-
-        writer.writeStartElement("header");
-
-        if (deleted)
-            writer.writeAttribute("status", "deleted");
-
-        writer.writeStartElement("identifier");
-        writer.writeCharacters(jsonLDdoc.getURI().toString());
-        writer.writeEndElement(); // identifier
-
-        writer.writeStartElement("datestamp");
-        ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
-        writer.writeCharacters(modified.toString());
-        writer.writeEndElement(); // datestamp
-
-        String dataset = (String) manifestmap.get("collection");
-        if (dataset != null)
-        {
-            writer.writeStartElement("setSpec");
-            writer.writeCharacters(dataset);
-            writer.writeEndElement(); // setSpec
-        }
-
-        if (sigel != null)
-        {
-            writer.writeStartElement("setSpec");
-            // Output sigel without quotation marks (").
-            writer.writeCharacters(dataset + ":" + sigel.replace("\"", ""));
-            writer.writeEndElement(); // setSpec
-        }
-
-        writer.writeEndElement(); // header
-
-        if (!onlyIdentifiers && !deleted)
-        {
-            writer.writeStartElement("metadata");
-            ResponseCommon.writeConvertedDocument(writer, requestedFormat, jsonLDdoc);
-            writer.writeEndElement(); // metadata
-        }
-
-        if (!onlyIdentifiers)
-            writer.writeEndElement(); // record
     }
 }
