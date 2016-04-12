@@ -129,7 +129,6 @@ public class ApiTest
         final String oaiPmhCalls[] = {
                 // Normal calls
                 "/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc&set=hold:S",
-                "/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc_expanded&set=hold:S",
                 "/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld&set=hold:KVIN",
                 "/oaipmh/?verb=ListIdentifiers&metadataPrefix=jsonld_expanded&set=hold:KVIN",
                 "/oaipmh/?verb=Identify",
