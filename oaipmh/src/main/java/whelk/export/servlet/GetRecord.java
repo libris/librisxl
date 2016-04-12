@@ -68,7 +68,7 @@ public class GetRecord
             ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
             HashMap datamap = mapper.readValue(data, HashMap.class);
             HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
-            Document jsonLDdoc = new Document(datamap, manifestmap);
+            Document document = new Document(datamap, manifestmap);
 
             // Expanded format requested, we need to build trees.
             if (metadataPrefix.endsWith(OaiPmh.FORMAT_EXPANDED_POSTFIX))
@@ -84,7 +84,7 @@ public class GetRecord
                 // Value of modificationTimes.latestModification will have changed during tree building.
                 modified = modificationTimes.latestModification;
 
-                jsonLDdoc = ListRecordTrees.mergeDocument(id, nodeDatas);
+                document = ListRecordTrees.mergeDocument(id, nodeDatas);
             }
 
             // Build the xml response feed
@@ -95,7 +95,7 @@ public class GetRecord
             ResponseCommon.writeOaiPmhHeader(writer, request, true);
             writer.writeStartElement("GetRecord");
 
-            ResponseCommon.emitRecord(resultSet, writer, metadataPrefix, false);
+            ResponseCommon.emitRecord(resultSet, document, writer, metadataPrefix, false);
 
             writer.writeEndElement(); // GetRecord
             ResponseCommon.writeOaiPmhClose(writer, request);

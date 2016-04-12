@@ -139,18 +139,26 @@ public class ResponseCommon
             writer.writeCData(convertedText);
     }
 
-    public static void emitRecord(ResultSet resultSet, XMLStreamWriter writer, String requestedFormat, boolean onlyIdentifiers)
+    public static void emitRecord(ResultSet resultSet, Document document, XMLStreamWriter writer, String requestedFormat, boolean onlyIdentifiers)
             throws SQLException, XMLStreamException, IOException
     {
-        ObjectMapper mapper = new ObjectMapper();
 
-        String data = resultSet.getString("data");
-        String manifest = resultSet.getString("manifest");
+
         boolean deleted = resultSet.getBoolean("deleted");
         String sigel = resultSet.getString("sigel");
-        HashMap datamap = mapper.readValue(data, HashMap.class);
-        HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
-        Document jsonLDdoc = new Document(datamap, manifestmap);
+
+        // If no document was explicitly passed, create one from the supplied resultset.
+        // The reason documents may be passed explicitly at all, is that sometimes the document is
+        // modified before this function is called, for example when doing expanded document trees.
+        if (document == null)
+        {
+            ObjectMapper mapper = new ObjectMapper();
+            String data = resultSet.getString("data");
+            String manifest = resultSet.getString("manifest");
+            HashMap datamap = mapper.readValue(data, HashMap.class);
+            HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
+            document = new Document(datamap, manifestmap);
+        }
 
         if (!onlyIdentifiers)
             writer.writeStartElement("record");
@@ -161,7 +169,7 @@ public class ResponseCommon
             writer.writeAttribute("status", "deleted");
 
         writer.writeStartElement("identifier");
-        writer.writeCharacters(jsonLDdoc.getURI().toString());
+        writer.writeCharacters(document.getURI().toString());
         writer.writeEndElement(); // identifier
 
         writer.writeStartElement("datestamp");
@@ -169,7 +177,7 @@ public class ResponseCommon
         writer.writeCharacters(modified.toString());
         writer.writeEndElement(); // datestamp
 
-        String dataset = (String) manifestmap.get("collection");
+        String dataset = (String) document.getManifest().get("collection");
         if (dataset != null)
         {
             writer.writeStartElement("setSpec");
@@ -190,13 +198,13 @@ public class ResponseCommon
         if (!onlyIdentifiers && !deleted)
         {
             writer.writeStartElement("metadata");
-            ResponseCommon.writeConvertedDocument(writer, requestedFormat, jsonLDdoc);
+            ResponseCommon.writeConvertedDocument(writer, requestedFormat, document);
             writer.writeEndElement(); // metadata
         }
 
         if (requestedFormat.endsWith(OaiPmh.FORMAT_INCLUDE_HOLD_POSTFIX) && dataset.equals("bib"))
         {
-            emitAttachedHoldings(jsonLDdoc.getItIdentifiers(), writer);
+            emitAttachedHoldings(document.getItIdentifiers(), writer);
         }
 
         if (!onlyIdentifiers)

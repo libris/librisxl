@@ -111,7 +111,7 @@ public class ListRecords
 
         while (resultSet.next())
         {
-            ResponseCommon.emitRecord(resultSet, writer, requestedFormat, onlyIdentifiers);
+            ResponseCommon.emitRecord(resultSet, null, writer, requestedFormat, onlyIdentifiers);
         }
 
         writer.writeEndElement(); // ListIdentifiers/ListRecords
