@@ -75,6 +75,8 @@ public class Helpers
             selectSQL += " AND data @> '{\"@graph\":[{\"heldBy\": {\"@type\": \"Organization\", \"notation\": \"" +
                     Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
 
+        selectSQL += " ORDER BY modified ";
+
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setFetchSize(512);
 
