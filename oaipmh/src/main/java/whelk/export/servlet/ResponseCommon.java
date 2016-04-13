@@ -122,7 +122,7 @@ public class ResponseCommon
                 Document convertedDocument = formatDescription.converter.convert(jsonLDdoc);
                 convertedText = (String) convertedDocument.getData().get("content");
             }
-            catch (Exception e) // Depending on the converter, a variety of exceptions may been thrown here.
+            catch (Exception | Error e) // Depending on the converter, a variety of problems may arise here
             {
                 writer.writeCharacters("Error: Document conversion failed.");
                 logger.error("Conversion failed for document: " + jsonLDdoc.getId(), e);
