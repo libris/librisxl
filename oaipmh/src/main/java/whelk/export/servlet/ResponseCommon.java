@@ -202,7 +202,7 @@ public class ResponseCommon
             writer.writeEndElement(); // metadata
         }
 
-        if (requestedFormat.endsWith(OaiPmh.FORMAT_INCLUDE_HOLD_POSTFIX) && dataset.equals("bib"))
+        if (!onlyIdentifiers && requestedFormat.endsWith(OaiPmh.FORMAT_INCLUDE_HOLD_POSTFIX) && dataset.equals("bib"))
         {
             emitAttachedHoldings(document.getItIdentifiers(), writer);
         }
