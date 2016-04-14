@@ -27,8 +27,8 @@ public class ExclusiveFile implements AutoCloseable
     public void close()
             throws IOException
     {
-        try { lock.release(); } catch (Exception e) { /* ignore */ };
-        try { channel.close(); } catch (Exception e) { /* ignore */ };
+        try { lock.release(); } catch (Exception e) { /* ignore */ }
+        try { channel.close(); } catch (Exception e) { /* ignore */ }
     }
 
     public InputStream getInputStream()

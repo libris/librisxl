@@ -13,9 +13,7 @@ package whelk.importer;
 */
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.SystemUtils;
 import se.kb.libris.util.marc.MarcRecord;
-import se.kb.libris.util.marc.io.Iso2709Deserializer;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
@@ -57,10 +55,13 @@ public class Import
         }
     }
 
+    /**
+     * Convenience method for turning files (paths) into reliable inputstreams and passing them along to importStream()
+     */
     private static void importFile(Path path, Parameters parameters)
             throws Exception
     {
-        System.out.println("Importing file: " + path.toString());
+        System.err.println("Importing file: " + path.toString());
         try (ExclusiveFile file = new ExclusiveFile(path);
              InputStream fileInStream = file.getInputStream())
         {
@@ -79,9 +80,8 @@ public class Import
         List<Transformer> transformers = parameters.getTransformers();
         for (Transformer transformer : transformers)
             inputStream = transform(transformer, inputStream);
-
-        //MarcXmlRecordReader.debug = true;
-        MarcRecord marcRecord = new MarcXmlRecordReader(inputStream).readRecord();
+        
+        MarcRecord marcRecord = new MarcXmlRecordReader(inputStream, "/collection/record", null).readRecord();
         if (marcRecord == null)
         {
             System.err.println("Input did not satisfy MarcXmlRecordReader! (returned null).");
@@ -90,6 +90,10 @@ public class Import
         importISO2709(marcRecord, parameters);
     }
 
+    /**
+     * Convert inputStream into a new InputStream which consists of XML records, regardless of the
+     * original format.
+     */
     private static InputStream streamAsXml(InputStream inputStream, Parameters parameters)
             throws IOException
     {
@@ -115,12 +119,16 @@ public class Import
             }
             writer.close();
             inputStream.close();
-            
+
             return new ByteArrayInputStream(buf.toByteArray());
         } else // Already xml
             return inputStream;
     }
 
+    /**
+     * Apply a transformation XSLT stylesheet on everything available in inputStream
+     * and generate a new InputStream of the transformed data.
+     */
     private static InputStream transform(Transformer transformer, InputStream inputStream)
             throws TransformerException, IOException
     {
@@ -131,6 +139,9 @@ public class Import
         return new ByteArrayInputStream(buf.toByteArray());
     }
 
+    /**
+     * Write a ISO2709 MarcRecord to LibrisXL
+     */
     private static void importISO2709(MarcRecord marcRecord, Parameters parameters)
             throws Exception
     {
@@ -143,7 +154,7 @@ public class Import
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         IOUtils.copy(inputStream, buf);
         inputStream.close();
-        System.out.println("Stream contents (" + description + "):\n" + new String(buf.toByteArray(), Charset.forName("UTF-8")));
+        System.err.println("Stream contents (" + description + "):\n" + new String(buf.toByteArray(), Charset.forName("UTF-8")));
         return new ByteArrayInputStream(buf.toByteArray());
     }
 }

@@ -39,7 +39,6 @@ public class Parameters
             {
                 String param = arg.substring(0, separatorIndex);
                 String value = arg.substring(separatorIndex+1);
-                System.out.println(param + " -> " + value);
                 interpretBinaryParameter(param, value);
             }
             else
@@ -58,7 +57,7 @@ public class Parameters
 
     private void printUsage()
     {
-        System.out.println("Usage: ..");
+        System.err.println("Usage: ..");
     }
 
     private void interpretBinaryParameter(String parameter, String value)
