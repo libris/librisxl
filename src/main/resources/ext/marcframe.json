@@ -620,7 +620,7 @@
       "Visual": {
         "[1:4]": {
           "property": "marc:runningTime",
-          "TODO:patternMap": "visualRunningTime"
+          "TODO:patternMap": "VisualRunningTimeType"
         },
         "[5:6]": {
           "link": "audience",
@@ -719,7 +719,7 @@
           "tokenMap": "SerialsRegularityType"
         },
         "[3:4]": {
-          "link": "marc:iSSN",
+          "link": "marc:issn",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsISSNType"
         },
@@ -866,7 +866,7 @@
         },
         "[6:9]": {
           "property": "imageBitDepth",
-          "TODO:patternMap": "computerImageBitDepth"
+          "TODO:patternMap": "ComputerImageBitDepthType"
         },
         "[9:10]": {
           "link": "marc:fileFormats",
@@ -1712,7 +1712,7 @@
           "tokenMap": "SerialsRegularityType"
         },
         "[20:21]": {
-          "link": "marc:iSSN",
+          "link": "marc:issn",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsISSNType"
         },
@@ -4390,7 +4390,7 @@
         "tokenMap": "CompletenessType"
       },
       "[17:20]": {
-        "property": "marc:numberOfItems",
+        "property": "inventoryLevel",
         "parseZeroPaddedNumber": true,
         "fixedDefault": "|||"
       },
