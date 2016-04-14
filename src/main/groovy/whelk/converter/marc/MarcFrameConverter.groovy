@@ -76,7 +76,7 @@ class MarcFrameConverter implements FormatConverter {
         maps.each { key, src ->
             if (src instanceof String) {
                 result[key] = readConfig("$cfgBase/$src") {
-                    mapper.readValue(it, List).collectEntries { [it.code, it] }
+                    mapper.readValue(it, Map)
                 }
             } else {
                 result[key] = src
@@ -1481,12 +1481,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     if (linkDfn == null) {
                         linkDfn = resourceMap[it.toLowerCase().replaceAll(/[^a-z0-9_-]/, '')]
                     }
-                    if (linkDfn instanceof Map)
-                        linkDfn.term
-                    else if (linkDfn instanceof String)
-                        linkDfn
+                    if (linkDfn instanceof String)
+                        return linkDfn
                     else
-                        fromTemplate(GENERIC_REL_URI_TEMPLATE).expand(["_": it])
+                        return fromTemplate(GENERIC_REL_URI_TEMPLATE).expand(["_": it])
                 }
                 if (useLinks.size() > 0) {
                     handled << use
