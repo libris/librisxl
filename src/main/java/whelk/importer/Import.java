@@ -13,17 +13,19 @@ package whelk.importer;
 */
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.SystemUtils;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.Iso2709Deserializer;
-import se.kb.libris.util.marc.io.Iso2709Serializer;
-import se.kb.libris.util.marc.io.MarcRecordReader;
+import se.kb.libris.util.marc.io.Iso2709MarcRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
+import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -48,7 +50,7 @@ public class Import
                         importFile(subFile.toPath(), parameters);
                 }
             }
-            else // regular file
+            else // regular file (not directory)
             {
                 importFile(file.toPath(), parameters);
             }
@@ -58,7 +60,7 @@ public class Import
     private static void importFile(Path path, Parameters parameters)
             throws Exception
     {
-        System.out.println("Doing file: " + path.toString());
+        System.out.println("Importing file: " + path.toString());
         try (ExclusiveFile file = new ExclusiveFile(path);
              InputStream fileInStream = file.getInputStream())
         {
@@ -69,40 +71,63 @@ public class Import
     private static void importStream(InputStream inputStream, Parameters parameters)
             throws Exception
     {
-        MarcRecord marcRecord = null;
+        inputStream = debug_printStreamToEnd(inputStream, "Before XML conversion");
+        inputStream = streamAsXml(inputStream, parameters);
+        inputStream = debug_printStreamToEnd(inputStream, "After XML conversion");
 
-        switch (parameters.getFormat())
+        // Apply any transforms
+        List<Transformer> transformers = parameters.getTransformers();
+        for (Transformer transformer : transformers)
+            inputStream = transform(transformer, inputStream);
+
+        //MarcXmlRecordReader.debug = true;
+        MarcRecord marcRecord = new MarcXmlRecordReader(inputStream).readRecord();
+        if (marcRecord == null)
         {
-            case FORMAT_XML:
-            {
-                // Apply any transforms
-                List<Transformer> transformers = parameters.getTransformers();
-                if (!transformers.isEmpty())
-                {
-                    for (Transformer transformer : transformers)
-                        inputStream = transform(transformer, inputStream);
-                }
-
-                marcRecord = new MarcXmlRecordReader(inputStream).readRecord();
-                break;
-            }
-
-            case FORMAT_ISO2709:
-            {
-                byte[] iso2709record = IOUtils.toByteArray(inputStream);
-                marcRecord = Iso2709Deserializer.deserialize(iso2709record);
-            }
+            System.err.println("Input did not satisfy MarcXmlRecordReader! (returned null).");
         }
 
         importISO2709(marcRecord, parameters);
     }
 
+    private static InputStream streamAsXml(InputStream inputStream, Parameters parameters)
+            throws IOException
+    {
+        if (parameters.getFormat() == Parameters.INPUT_FORMAT.FORMAT_ISO2709)
+        {
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+
+            Iso2709MarcRecordReader isoReader;
+            if (parameters.getInputEncoding() == null)
+            {
+                isoReader = new Iso2709MarcRecordReader(inputStream);
+            } else
+            {
+                isoReader = new Iso2709MarcRecordReader(inputStream, parameters.getInputEncoding());
+            }
+
+            MarcXmlRecordWriter writer = new MarcXmlRecordWriter(buf);
+
+            MarcRecord marcRecord;
+            while ((marcRecord = isoReader.readRecord()) != null)
+            {
+                writer.writeRecord(marcRecord);
+            }
+            writer.close();
+            inputStream.close();
+            
+            return new ByteArrayInputStream(buf.toByteArray());
+        } else // Already xml
+            return inputStream;
+    }
+
     private static InputStream transform(Transformer transformer, InputStream inputStream)
-            throws TransformerException
+            throws TransformerException, IOException
     {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         StreamResult result = new StreamResult(buf);
         transformer.transform( new StreamSource(inputStream), result );
+        inputStream.close();
         return new ByteArrayInputStream(buf.toByteArray());
     }
 
@@ -110,5 +135,15 @@ public class Import
             throws Exception
     {
         System.out.println("Would now import iso2709 record: " + marcRecord.toString());
+    }
+
+    private static InputStream debug_printStreamToEnd(InputStream inputStream, String description)
+            throws IOException
+    {
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        IOUtils.copy(inputStream, buf);
+        inputStream.close();
+        System.out.println("Stream contents (" + description + "):\n" + new String(buf.toByteArray(), Charset.forName("UTF-8")));
+        return new ByteArrayInputStream(buf.toByteArray());
     }
 }

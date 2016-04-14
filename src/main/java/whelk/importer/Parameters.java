@@ -15,11 +15,13 @@ public class Parameters
     private INPUT_FORMAT format;
     private boolean readOnly = true;
     private List<Transformer> transformers = new ArrayList<Transformer>();
+    private String inputEncoding;
 
     public Path getPath() { return path; }
     public INPUT_FORMAT getFormat() { return format; }
     public boolean getReadOnly() { return readOnly; }
     public List<Transformer> getTransformers() { return transformers; }
+    public String getInputEncoding() { return inputEncoding; }
 
     public enum INPUT_FORMAT
     {
@@ -85,6 +87,10 @@ public class Parameters
             case "--transformer":
                 transformers.add( TransformerFactory.newInstance().newTransformer(
                         new StreamSource(new File(value))) );
+                break;
+
+            case "--inEncoding":
+                inputEncoding = value;
                 break;
 
             default:
