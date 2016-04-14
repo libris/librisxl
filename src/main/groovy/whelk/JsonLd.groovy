@@ -3,6 +3,7 @@ package whelk
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import whelk.exception.FramingException
+import whelk.exception.ModelValidationException
 
 public class JsonLd {
 
@@ -100,7 +101,7 @@ public class JsonLd {
             String foundIdentifier = findIdentifier(flatJsonLd)
             log.debug("Result of findIdentifier: $foundIdentifier")
             if (foundIdentifier) {
-                mainItem = idMap.get(SLASH_URI.resolve(foundIdentifier).toString())
+                mainItem = idMap.get(Document.BASE_URI.resolve(foundIdentifier).toString())
             }
         }
         Map framedMap
@@ -206,9 +207,11 @@ public class JsonLd {
                 if (item.containsKey(ID_KEY)) {
                     def id = item.get(ID_KEY)
                     if (idMap.containsKey(id)) {
-                        throw new FramingException("Detected items in graph with colliding id: $id")
+                        Map existing = idMap.get(id)
+                        idMap.put(id, existing + item)
+                    } else {
+                        idMap.put(id, item)
                     }
-                    idMap.put(id, item)
                 }
             }
         } else if (flatJsonLd.containsKey(DESCRIPTIONS_KEY)) {
@@ -226,5 +229,26 @@ public class JsonLd {
 
         }
         return idMap
+    }
+
+    static boolean validateItemModel(Document doc) {
+        if (!doc || !doc.data) {
+            throw new ModelValidationException("Document has no data to validate.")
+        }
+        Map docData = frame(doc.id, doc.data)
+        Map about = (docData.containsKey("about") ? docData.about : docData )
+        String type = about.get("@type")
+        if (type != "Item") {
+            throw new ModelValidationException("Document has mismatching @type ($type) for Item.")
+        }
+        if (!about.containsKey("heldBy") || !about.heldBy.containsKey("notation")) {
+            throw new ModelValidationException("Item is missing heldBy declaration.")
+        }
+        // TODO: Remove holdingFor option when data is coherent
+        Map itemOf = (about.containsKey("itemOf") ? about.get("itemOf") : about.get("holdingFor"))
+        if (!itemOf?.containsKey("@id")) {
+            throw new ModelValidationException("Item is missing itemOf declaration.")
+        }
+        return true
     }
 }
