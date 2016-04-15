@@ -4441,34 +4441,34 @@
           }
         },
         {
-          "name": "parse zero padded numberOfItems",
+          "name": "parse zero padded inventoryLevel",
           "source": {"008": "900101||    |   |001||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "about": {
-              "marc:numberOfItems": 1
+              "inventoryLevel": 1
             }
           }
         },
         {
-          "name": "broken numberOfItems",
+          "name": "broken inventoryLevel",
           "source": {"008": "900101||    |   |NaN||und|000000"},
           "normalized": {"008": "900101||    |   ||||||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "about": {
-              "marc:numberOfItems": "NaN"
+              "inventoryLevel": "NaN"
             }
           }
         },
         {
-          "name": "non-zero-padded numberOfItems and odd dates",
+          "name": "non-zero-padded inventoryLevel and odd dates",
           "source": {"008": "121102||0   |||||1  b ||| 0     "},
           "normalized": {"008": "121102||    |   |001b|und|000000"},
           "result": {
             "created": "2012-11-02T00:00:00.0+01:00",
             "about": {
-              "marc:numberOfItems": 1,
+              "inventoryLevel": 1,
               "marc:lendingPolicy": {"@id": "marc:WillNotLend"}
             }
           }
