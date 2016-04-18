@@ -12,12 +12,12 @@ import java.nio.file.StandardOpenOption;
  * Opens a file and locks it. The point of this is that the lock can't/won't
  * be obtained until whoever is writing the file has finished, guaranteeing a complete file.
  */
-public class ExclusiveFile implements AutoCloseable
+class ExclusiveFile implements AutoCloseable
 {
     private FileChannel channel;
     private FileLock lock;
 
-    public ExclusiveFile(Path path)
+    ExclusiveFile(Path path)
             throws IOException
     {
         channel = FileChannel.open(path, StandardOpenOption.READ);
@@ -31,7 +31,7 @@ public class ExclusiveFile implements AutoCloseable
         try { channel.close(); } catch (Exception e) { /* ignore */ }
     }
 
-    public InputStream getInputStream()
+    InputStream getInputStream()
     {
         return Channels.newInputStream(channel);
     }

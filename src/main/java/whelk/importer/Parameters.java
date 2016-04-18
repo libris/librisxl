@@ -9,27 +9,27 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Parameters
+class Parameters
 {
     private Path path;
     private INPUT_FORMAT format;
     private boolean readOnly = true;
-    private List<Transformer> transformers = new ArrayList<Transformer>();
-    private String inputEncoding;
+    private List<Transformer> transformers = new ArrayList<>();
+    private String inputEncoding = "UTF-8";
 
-    public Path getPath() { return path; }
-    public INPUT_FORMAT getFormat() { return format; }
-    public boolean getReadOnly() { return readOnly; }
-    public List<Transformer> getTransformers() { return transformers; }
-    public String getInputEncoding() { return inputEncoding; }
+    Path getPath() { return path; }
+    INPUT_FORMAT getFormat() { return format; }
+    boolean getReadOnly() { return readOnly; }
+    List<Transformer> getTransformers() { return transformers; }
+    String getInputEncoding() { return inputEncoding; }
 
-    public enum INPUT_FORMAT
+    enum INPUT_FORMAT
     {
         FORMAT_ISO2709,
         FORMAT_XML,
     }
 
-    public Parameters(String[] args)
+    Parameters(String[] args)
             throws Exception
     {
         for (String arg : args)
@@ -88,7 +88,7 @@ public class Parameters
                         new StreamSource(new File(value))) );
                 break;
 
-            case "--inEncoding":
+            case "--inEncoding": // Only relevant for non-xml formats. XML files are expected to declare encoding in their header.
                 inputEncoding = value;
                 break;
 

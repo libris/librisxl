@@ -53,6 +53,8 @@ public class Import
                 importFile(file.toPath(), parameters);
             }
         }
+
+        System.err.println("All done.");
     }
 
     /**
@@ -72,22 +74,22 @@ public class Import
     private static void importStream(InputStream inputStream, Parameters parameters)
             throws Exception
     {
-        inputStream = debug_printStreamToEnd(inputStream, "Before XML conversion");
+        //inputStream = debug_printStreamToEnd(inputStream, "Before XML conversion");
         inputStream = streamAsXml(inputStream, parameters);
-        inputStream = debug_printStreamToEnd(inputStream, "After XML conversion");
+        //inputStream = debug_printStreamToEnd(inputStream, "After XML conversion");
 
         // Apply any transforms
         List<Transformer> transformers = parameters.getTransformers();
         for (Transformer transformer : transformers)
             inputStream = transform(transformer, inputStream);
-        
-        MarcRecord marcRecord = new MarcXmlRecordReader(inputStream, "/collection/record", null).readRecord();
-        if (marcRecord == null)
-        {
-            System.err.println("Input did not satisfy MarcXmlRecordReader! (returned null).");
-        }
 
-        importISO2709(marcRecord, parameters);
+        MarcXmlRecordReader reader = new MarcXmlRecordReader(inputStream, "/collection/record", null);
+        MarcRecord marcRecord;
+        while ((marcRecord = reader.readRecord()) != null)
+        {
+            importISO2709(marcRecord, parameters);
+        }
+        reader.close();
     }
 
     /**
@@ -102,13 +104,7 @@ public class Import
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
 
             Iso2709MarcRecordReader isoReader;
-            if (parameters.getInputEncoding() == null)
-            {
-                isoReader = new Iso2709MarcRecordReader(inputStream);
-            } else
-            {
-                isoReader = new Iso2709MarcRecordReader(inputStream, parameters.getInputEncoding());
-            }
+            isoReader = new Iso2709MarcRecordReader(inputStream, parameters.getInputEncoding());
 
             MarcXmlRecordWriter writer = new MarcXmlRecordWriter(buf);
 
@@ -117,6 +113,7 @@ public class Import
             {
                 writer.writeRecord(marcRecord);
             }
+            isoReader.close();
             writer.close();
             inputStream.close();
 

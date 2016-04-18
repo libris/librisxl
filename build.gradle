@@ -17,6 +17,14 @@ dependencies {
     compile('../whelk-core' in project.subprojects*.name?
             project(':../whelk-core') :
             'com.github.libris:whelk-core:b2b00f1e3fd1f1abda892af8b40f62b5560c4732')
+
+    /*
+    // local jmarctools
+    compile 'commons-io:commons-io:2.4'
+    compile('../jmarctools' in project.subprojects*.name?
+            project(':../jmarctools') :
+            'com.github.libris:jmarctools:90edfc74bcc006c2d45674cd67fbdc2db0964a97')
+            */
 }
 
 mainClassName = 'whelk.importer.Import'
