@@ -2,18 +2,18 @@ package whelk.importer;
 
 import se.kb.libris.util.marc.MarcRecord;
 import whelk.Document;
+import whelk.IdGenerator;
 import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
-import whelk.util.LegacyIntegrationTools;
+import whelk.converter.MarcJSONConverter;
+import whelk.converter.marc.MarcFrameConverter;
 import whelk.util.PropertyLoader;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 class XL
 {
@@ -21,6 +21,7 @@ class XL
     private ElasticSearch m_elasticSearchComponent;
     private Parameters m_parameters;
     private Properties m_properties;
+    private MarcFrameConverter m_marcFrameConverter;
 
     XL(Parameters parameters)
     {
@@ -28,6 +29,7 @@ class XL
         m_properties = PropertyLoader.loadProperties("secret");
         m_postgreSQLComponent = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
         m_elasticSearchComponent = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
+        m_marcFrameConverter = new MarcFrameConverter();
     }
 
     /**
@@ -64,7 +66,9 @@ class XL
         if (duplicateIDs.size() == 0)
         {
             // No coinciding documents, simple import
-            System.out.println("Would now import iso2709 record: " + marcRecord.toString());
+            Document rdfDoc = convertToRDF(marcRecord, collection, IdGenerator.generate(), null);
+            m_postgreSQLComponent.store(rdfDoc, false);
+            m_elasticSearchComponent.index(rdfDoc);
         }
         else if (duplicateIDs.size() == 1)
         {
@@ -76,6 +80,19 @@ class XL
             // Multiple coinciding documents. Exit with error?
             throw new Exception("Multiple duplicates for this record.");
         }
+    }
+
+    private Document convertToRDF(MarcRecord marcRecord, String collection, String id, List<String> altIDs)
+    {
+        Map<String, Object> manifest = new HashMap<>();
+        manifest.put(Document.getID_KEY(), id);
+        manifest.put(Document.getCOLLECTION_KEY(), collection);
+        manifest.put(Document.getCHANGED_IN_KEY(), "FTP-import");
+        if (altIDs != null)
+            manifest.put(Document.getALTERNATE_ID_KEY(), altIDs);
+
+        Document doc = new Document(MarcJSONConverter.toJSONMap(marcRecord), manifest);
+        return m_marcFrameConverter.convert(doc);
     }
 
     private List<String> getDuplicatesOnLibrisID(MarcRecord marcRecord, String collection)
