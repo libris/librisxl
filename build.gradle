@@ -27,7 +27,7 @@ dependencies {
             */
 }
 
-mainClassName = 'whelk.importer.Import'
+mainClassName = 'whelk.importer.Main'
 
 jar {
     manifest {

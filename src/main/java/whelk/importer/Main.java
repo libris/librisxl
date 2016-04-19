@@ -27,7 +27,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 
-public class Import
+public class Main
 {
 	public static void main(String[] args)
             throws Exception
@@ -74,22 +74,30 @@ public class Import
     private static void importStream(InputStream inputStream, Parameters parameters)
             throws Exception
     {
-        //inputStream = debug_printStreamToEnd(inputStream, "Before XML conversion");
         inputStream = streamAsXml(inputStream, parameters);
-        //inputStream = debug_printStreamToEnd(inputStream, "After XML conversion");
 
         // Apply any transforms
         List<Transformer> transformers = parameters.getTransformers();
         for (Transformer transformer : transformers)
             inputStream = transform(transformer, inputStream);
 
-        MarcXmlRecordReader reader = new MarcXmlRecordReader(inputStream, "/collection/record", null);
-        MarcRecord marcRecord;
-        while ((marcRecord = reader.readRecord()) != null)
+        XL librisXl = new XL(parameters);
+
+        MarcXmlRecordReader reader = null;
+        try
         {
-            importISO2709(marcRecord, parameters);
+            reader = new MarcXmlRecordReader(inputStream, "/collection/record", null);
+            MarcRecord marcRecord;
+            while ((marcRecord = reader.readRecord()) != null)
+            {
+                librisXl.importISO2709(marcRecord);
+            }
         }
-        reader.close();
+        finally
+        {
+            if (reader != null)
+                reader.close();
+        }
     }
 
     /**
@@ -134,15 +142,6 @@ public class Import
         transformer.transform( new StreamSource(inputStream), result );
         inputStream.close();
         return new ByteArrayInputStream(buf.toByteArray());
-    }
-
-    /**
-     * Write a ISO2709 MarcRecord to LibrisXL
-     */
-    private static void importISO2709(MarcRecord marcRecord, Parameters parameters)
-            throws Exception
-    {
-        System.out.println("Would now import iso2709 record: " + marcRecord.toString());
     }
 
     private static InputStream debug_printStreamToEnd(InputStream inputStream, String description)

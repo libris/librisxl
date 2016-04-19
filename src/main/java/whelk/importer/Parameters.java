@@ -15,18 +15,32 @@ class Parameters
     private INPUT_FORMAT format;
     private boolean readOnly = true;
     private List<Transformer> transformers = new ArrayList<>();
+    private List<DUPLICATION_TYPE> dupTypes = new ArrayList<>();
     private String inputEncoding = "UTF-8";
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
     boolean getReadOnly() { return readOnly; }
     List<Transformer> getTransformers() { return transformers; }
+    List<DUPLICATION_TYPE> getDuplicationTypes() { return dupTypes; }
     String getInputEncoding() { return inputEncoding; }
 
     enum INPUT_FORMAT
     {
         FORMAT_ISO2709,
         FORMAT_XML,
+    }
+
+    enum DUPLICATION_TYPE
+    {
+        DUPTYPE_ISBN,
+        DUPTYPE_ISSN,
+        DUPTYPE_ISNA,
+        DUPTYPE_ISNZ,
+        DUPTYPE_URN,
+        DUPTYPE_OAI,
+        DUPTYPE_035A,
+        DUPTYPE_LIBRISID
     }
 
     Parameters(String[] args)
@@ -92,9 +106,39 @@ class Parameters
                 inputEncoding = value;
                 break;
 
+            case "--dupType":
+                String[] types = value.split(",");
+                for (String type : types)
+                    dupTypes.add(translateDuplicationType(type));
+                break;
+
             default:
                 throw new IllegalArgumentException(parameter);
         }
+    }
+
+    private DUPLICATION_TYPE translateDuplicationType(String typeString)
+    {
+        switch (typeString)
+        {
+            case "ISBN":
+                return DUPLICATION_TYPE.DUPTYPE_ISBN;
+            case "ISSN":
+                return DUPLICATION_TYPE.DUPTYPE_ISSN;
+            case "ISNA":
+                return DUPLICATION_TYPE.DUPTYPE_ISNA;
+            case "ISNZ":
+                return DUPLICATION_TYPE.DUPTYPE_ISNZ;
+            case "URN":
+                return DUPLICATION_TYPE.DUPTYPE_URN;
+            case "OAI":
+                return DUPLICATION_TYPE.DUPTYPE_OAI;
+            case "035A":
+                return DUPLICATION_TYPE.DUPTYPE_035A;
+            case "LIBRIS-ID":
+                return DUPLICATION_TYPE.DUPTYPE_LIBRISID;
+        }
+        throw new IllegalArgumentException(typeString + " is not a valid value duplication type.");
     }
 
     private void interpretUnaryParameter(String parameter)
