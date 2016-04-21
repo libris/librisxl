@@ -1,0 +1,12 @@
+# Replace "service" for all properties with value from scheduledServices
+# e.g. bib.serviceUrl = http://localhost:8100/bib/oaipmh etc ...
+# The username and password properties aren't necessary if service is open.
+# harvestClass defaults to whelk.harvester.OaiPmhHarvester if not specified
+
+service.harvestClass = whelk.harvester.OaiPmhHarvester
+service.serviceUrl   = URL
+service.username     = USERNAME
+service.password     = PASSWORD
+service.interval     = NUMBER OF SECONDS BETWEEN HARVESTS
+service.sourceSystem = SOURCE_SYSTEM_DEFAULTS_TO_XL
+scheduledServices    = one,or,more,service

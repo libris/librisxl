@@ -1,0 +1,50 @@
+apply plugin: 'java'
+apply plugin: 'jetty'
+apply plugin: 'war'
+apply plugin: 'application'
+apply plugin: 'maven'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven { url "http://repository.codehaus.org/" }
+    maven { url "http://jitpack.io/" }
+}
+
+dependencies {
+
+    def jettyVersion="9.3.6.v20151106"
+
+    // XL dependencies
+    compile('../../whelk-core' in project.subprojects*.name?
+            project(':../../whelk-core') :
+            'com.github.libris:whelk-core:0.1.0')
+
+    // Jetty
+    compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
+    compile "org.eclipse.jetty:jetty-server:${jettyVersion}"
+    compile "org.eclipse.jetty:jetty-http:${jettyVersion}"
+    compile "org.eclipse.jetty:jetty-io:${jettyVersion}"
+
+    // Logging
+    compile 'org.slf4j:slf4j-api:1.7.6'
+    compile 'org.slf4j:log4j-over-slf4j:1.7.6'
+
+    // Testing
+    testCompile 'junit:junit:4.12'
+}
+
+mainClassName = 'whelk.apix.ConsoleUI'
+
+jar {
+    manifest {
+        attributes 'Implementation-Title':'APIX exporter',
+                'Implementation-Version': '1.0',
+                'Main-class': mainClassName
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}

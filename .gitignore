@@ -1,4 +1,5 @@
 .gradle
+*.properties
 /dep/locgov-*/build
 .*.swp
 /work
@@ -16,3 +17,7 @@ src/main/resources/version.properties
 src/main/resources/secrets.json
 src/main/resources/logback.xml
 catalina.base_IS_UNDEFINED
+*.*~
+src/main/resources/whelk.json
+
+out/artifacts/librisxl/exploded/whelk-0.8.14.x.war/META-INF/MANIFEST.MF

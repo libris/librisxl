@@ -1,12 +1,44 @@
 {
+    "settings": {
+        "index" : {
+            "max_result_window" : 100000
+        },
+        "analysis": {
+            "analyzer": {
+                "completer": {
+                    "filter": "custom_edge_ngram",
+                    "tokenizer": "lowercase",
+                    "type": "custom"
+                },
+                "default": {
+                    "filter": [
+                        "lowercase",
+                        "swe_light_stemmer"
+                    ],
+                    "stopwords": "_none_",
+                    "tokenizer": "standard"
+                }
+            },
+            "filter": {
+                "custom_edge_ngram": {
+                    "max_gram": 50,
+                    "min_gram": 2,
+                    "type": "edgeNGram"
+                },
+                "swe_light_stemmer": {
+                    "name": "light_swedish",
+                    "type": "stemmer"
+                }
+            }
+        }
+    },
     "mappings": {
         "_default_": {
             "_source": {
                 "enabled": true
             },
             "_timestamp": {
-                "enabled": true,
-                "store": true
+                "enabled": true
             },
             "date_detection": false,
             "dynamic_templates": [
@@ -69,7 +101,8 @@
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "string",
+                                    "boost": 50
                                 }
                             },
                             "type": "multi_field"
@@ -84,7 +117,8 @@
                             "fields": {
                                 "label": {
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "string",
+                                    "boost": 50
                                 },
                                 "raw": {
                                     "index": "not_analyzed",
@@ -126,7 +160,8 @@
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "string",
+                                    "boost": 50
                                 }
                             },
                             "type": "multi_field"
@@ -145,7 +180,8 @@
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "string",
+                                    "boost": 50
                                 }
                             },
                             "type": "multi_field"
@@ -164,7 +200,8 @@
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "string",
+                                    "boost": 50
                                 }
                             },
                             "type": "multi_field"
@@ -198,7 +235,7 @@
                 "about": {
                     "properties": {
                         "altLabel": {
-                            "index_analyzer": "completer",
+                            "analyzer": "completer",
                             "type": "string"
                         },
                         "closeMatch": {
@@ -206,7 +243,7 @@
                                 "inScheme": {
                                     "properties": {
                                         "prefLabel": {
-                                            "index_analyzer": "completer",
+                                            "analyzer": "completer",
                                             "type": "string"
                                         }
                                     }
@@ -214,37 +251,41 @@
                             }
                         },
                         "controlledLabel": {
-                            "index_analyzer": "completer",
-                            "type": "string"
+                            "analyzer": "completer",
+                            "type": "string",
+                            "boost": 5
                         },
                         "familyName": {
-                            "index_analyzer": "completer",
+                            "analyzer": "completer",
                             "type": "string"
                         },
                         "givenName": {
-                            "index_analyzer": "completer",
+                            "analyzer": "completer",
                             "type": "string"
                         },
                         "hiddenLabel": {
-                            "index_analyzer": "completer",
+                            "analyzer": "completer",
                             "type": "string"
                         },
                         "label": {
-                            "index_analyzer": "completer",
-                            "type": "string"
+                            "analyzer": "completer",
+                            "type": "string",
+                            "boost": 2
                         },
                         "name": {
-                            "index_analyzer": "completer",
-                            "type": "string"
+                            "analyzer": "completer",
+                            "type": "string",
+                            "boost": 10
                         },
                         "prefLabel": {
-                            "index_analyzer": "completer",
-                            "type": "string"
+                            "analyzer": "completer",
+                            "type": "string",
+                            "boost": 10
                         },
                         "sameAs": {
                             "properties": {
                                 "controlledLabel": {
-                                    "index_analyzer": "completer",
+                                    "analyzer": "completer",
                                     "type": "string"
                                 }
                             }
@@ -262,7 +303,7 @@
                                 "controlledLabel": {
                                     "fields": {
                                         "controlledLabel": {
-                                            "index_analyzer": "completer",
+                                            "analyzer": "completer",
                                             "type": "string"
                                         },
                                         "raw": {
@@ -279,7 +320,7 @@
                                 "controlledLabel": {
                                     "fields": {
                                         "controlledLabel": {
-                                            "index_analyzer": "completer",
+                                            "analyzer": "completer",
                                             "type": "string"
                                         },
                                         "raw": {
@@ -300,36 +341,6 @@
                 "index": {
                     "type": "object",
                     "enabled": false
-                }
-            }
-        }
-    },
-    "settings": {
-        "analysis": {
-            "analyzer": {
-                "completer": {
-                    "filter": "custom_edge_ngram",
-                    "tokenizer": "lowercase",
-                    "type": "custom"
-                },
-                "default": {
-                    "filter": [
-                        "lowercase",
-                        "swe_light_stemmer"
-                    ],
-                    "stopwords": "_none_",
-                    "tokenizer": "standard"
-                }
-            },
-            "filter": {
-                "custom_edge_ngram": {
-                    "max_gram": 50,
-                    "min_gram": 2,
-                    "type": "edgeNGram"
-                },
-                "swe_light_stemmer": {
-                    "name": "light_swedish",
-                    "type": "stemmer"
                 }
             }
         }
