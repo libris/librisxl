@@ -10,6 +10,7 @@ import whelk.util.PropertyLoader
 class Document {
     static final String GRAPH_KEY = "@graph"
     static final String ID_KEY = "identifier"
+    static final String TYPE_KEY = "@type"
     static final String CREATED_KEY = "created";
     static final String MODIFIED_KEY = "modified";
     static final String DELETED_KEY = "deleted";
@@ -20,9 +21,18 @@ class Document {
     static final String ALTERNATE_ID_KEY = "identifiers"
     static final String JSONLD_ALT_ID_KEY = "sameAs"
     static final String CHANGED_IN_KEY = "changedIn" // The last system to affect a change in the document (xl by default, vcopy on imported posts)
-
+    static final String CONTROL_NUMBER_KEY = "controlNumber"
+    static final String ABOUT_KEY = "about"
+    static final String APIX_FAILURE_KEY = "apixExportFailedAt"
 
     static final URI BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
+
+    @JsonIgnore
+    static final Map TYPE_COLLECTION = [
+            "auth": ["Person"],
+            "bib": ["Text", "Monograph"],
+            "hold": ["Item"]
+    ]
 
     @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()
@@ -38,8 +48,8 @@ class Document {
     Document() {}
 
     Document(String id, Map data) {
-        setId(id)
         setData(data)
+        setId(id)
     }
 
     Document(Map data, Map manifest) {
@@ -56,6 +66,12 @@ class Document {
     void setId(id) {
         this.id = id
         this.manifest[ID_KEY] = id
+        if (isFramed() && !this.data.containsKey(JsonLd.ID_KEY)) {
+            this.data[JsonLd.ID_KEY] = BASE_URI.resolve(id).toString()
+            if (this.data.containsKey(ABOUT_KEY) && !this.data[ABOUT_KEY].containsKey(JsonLd.ID_KEY)) {
+                this.data[ABOUT_KEY][JsonLd.ID_KEY] = this.data[JsonLd.ID_KEY] + "#it"
+            }
+        }
     }
 
     void setCreated(Date c) {
@@ -67,6 +83,22 @@ class Document {
     void setCreated(long c) {
         this.created = new Date(c)
         this.manifest.put(CREATED_KEY, this.created)
+        if (isFlat()) {
+            this.data.get(GRAPH_KEY)[0].put(CREATED_KEY, this.created as String)
+        }
+        if (isFramed()) {
+            this.data.put(CREATED_KEY, this.created as String)
+        }
+    }
+
+    void setFailedApixExport(boolean failed) {
+        if (failed) {
+            this.manifest.put(APIX_FAILURE_KEY, new Date().toString())
+        }
+        else {
+            if (this.manifest.get(APIX_FAILURE_KEY) != null)
+                this.manifest.remove(APIX_FAILURE_KEY)
+        }
     }
 
     void setModified(Date m) {
@@ -78,6 +110,12 @@ class Document {
     void setModified(long m) {
         this.modified = new Date(m)
         this.manifest.put(MODIFIED_KEY, this.modified)
+        if (isFlat()) {
+            this.data.get(GRAPH_KEY)[0].put(MODIFIED_KEY, this.modified as String)
+        }
+        if (isFramed()) {
+            this.data.put(MODIFIED_KEY, this.modified as String)
+        }
 
     }
 
@@ -87,6 +125,15 @@ class Document {
 
     void setData(Map d) {
         this.data = deepCopy(d)
+        // Determine collection
+        def types = []
+        types << getThing().get(TYPE_KEY)
+        String collection = null
+        types.flatten().each { type -> TYPE_COLLECTION.find { if (it.value.contains(type)) { collection = it.key } } }
+        if (collection) {
+            log.debug("Setting document collection: $collection")
+            inCollection(collection)
+        }
     }
 
     void setThing(Map thing) {
@@ -101,8 +148,13 @@ class Document {
         if (!thing.containsKey("@id")) {
             thing.put("@id", id + "#it")
         }
-        framed.put("about", thing)
+        framed.put(ABOUT_KEY, thing)
         data = JsonLd.flatten(framed)
+    }
+
+    Map getThing() {
+        Map framed = JsonLd.frame(id, deepCopy(this.data))
+        return framed.get(ABOUT_KEY, framed)
     }
 
     void setDeleted(boolean d) {
@@ -115,15 +167,15 @@ class Document {
     }
 
     void setControlNumber(String controlNumber) {
-        List graph = data.get("@graph")
+        List graph = data.get(GRAPH_KEY)
         if (graph == null)
-            data.put("@graph", [])
+            data.put(GRAPH_KEY, [])
 
-        Map first = data["@graph"][0]
+        Map first = data[GRAPH_KEY][0]
         if (first == null)
-            ((List)data["@graph"]).add(["controlNumber":controlNumber])
-        else
-            data["@graph"][0]["controlNumber"] = controlNumber
+            ((List)(data[GRAPH_KEY])).add([:])
+
+        data[GRAPH_KEY][0][CONTROL_NUMBER_KEY] = controlNumber
     }
 
     static Object deepCopy(Object orig) {
@@ -166,6 +218,22 @@ class Document {
             findIdentifiers()
         }
         return manifest.get(ALTERNATE_ID_KEY) as List ?: Collections.emptyList()
+    }
+
+    /**
+     * Get a list of all known identifiers for the thing described by this document
+     * (e.g. fnrglfnrglfnrgl#it, http://libris.kb.se/resource/bib/123, etc)
+     */
+    @JsonIgnore
+    List<String> getItIdentifiers() {
+        List list = data[GRAPH_KEY][1][JSONLD_ALT_ID_KEY]
+        List<String> ret = []
+        for (Map m : list)
+        {
+            ret.add( m.get("@id") )
+        }
+        ret.add(id + "#it")
+        return ret
     }
 
     void findIdentifiers() {
@@ -260,8 +328,7 @@ class Document {
     }
 
     Document withIdentifier(String identifier) {
-        this.id = identifier
-        this.manifest[ID_KEY] = id
+        setId(identifier)
         return this
      }
 
@@ -297,7 +364,9 @@ class Document {
     }
 
     Document inCollection(String ds) {
-        manifest[COLLECTION_KEY] = ds
+        if (ds) {
+            manifest[COLLECTION_KEY] = ds
+        }
         return this
     }
 
@@ -317,6 +386,13 @@ class Document {
     boolean isFlat() {
         if (isJsonLd()) {
             return JsonLd.isFlat(this.data)
+        }
+        return false
+    }
+
+    boolean isFramed() {
+        if (isJsonLd()) {
+            return JsonLd.isFramed(this.data)
         }
         return false
     }

@@ -33,10 +33,10 @@ class PostgreSQLComponent implements Storage {
     boolean versioning = true
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION,
+    protected String UPSERT_DOCUMENT, UPDATE_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION,
                      GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
                      LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE,
-                     INSERT_IDENTIFIERS, LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS
+                     INSERT_IDENTIFIERS, LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS, GET_DOCUMENT_FOR_UPDATE
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
 
@@ -95,6 +95,7 @@ class PostgreSQLComponent implements Storage {
         UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ? " +
                 "OR manifest @> ? RETURNING *) " +
             "INSERT INTO $mainTableName (id, data, quoted, manifest, deleted) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
+        UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ?"
         INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,quoted,manifest,deleted) VALUES (?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, identifier) VALUES (?,?)"
@@ -104,6 +105,7 @@ class PostgreSQLComponent implements Storage {
                 "ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"
 
         GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
+        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ? FOR UPDATE"
         GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created' AS created,modified,manifest->>'deleted' AS deleted " +
                 "FROM $versionsTableName WHERE id = ? ORDER BY modified"
@@ -203,6 +205,10 @@ class PostgreSQLComponent implements Storage {
 
     @Override
     Document store(Document doc, boolean upsert) {
+        return store(doc, upsert, false)
+    }
+
+    Document store(Document doc, boolean upsert, boolean minorUpdate) {
         log.debug("Saving ${doc.id}")
         Connection connection = getConnection()
         connection.setAutoCommit(false)
@@ -212,6 +218,9 @@ class PostgreSQLComponent implements Storage {
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement((upsert ? UPSERT_DOCUMENT : INSERT_DOCUMENT))
 
+            if (minorUpdate) {
+                now = status(doc.getURI(), connection)['modified']
+            }
             if (upsert) {
                 if (!saveVersion(doc, connection, now)) {
                     return doc // Same document already in storage.
@@ -232,6 +241,7 @@ class PostgreSQLComponent implements Storage {
             return doc
         } catch (PSQLException psqle) {
             log.debug("SQL failed: ${psqle.message}")
+            connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
                 Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
                 Matcher m = messageDetailPattern.matcher(psqle.message)
@@ -253,6 +263,82 @@ class PostgreSQLComponent implements Storage {
             log.debug("[store] Closed connection.")
         }
         return null
+    }
+
+    /**
+     * Interface for performing atomic document updates
+     */
+    public interface UpdateAgent {
+        public void update(Document doc)
+    }
+
+    /**
+     * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
+     * LOCKED while the update is in progress.
+     */
+    void storeAtomicUpdate(String id, boolean minorUpdate, UpdateAgent updateAgent) {
+        log.debug("Saving (atomic update) ${doc.id}")
+
+        // Resources to be closed
+        Connection connection = getConnection()
+        PreparedStatement selectStatement
+        PreparedStatement updateStatement
+        ResultSet resultSet
+
+        connection.setAutoCommit(false)
+        try {
+            selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
+            selectStatement.setString(1, id)
+            resultSet = selectStatement.executeQuery()
+            if (!resultSet.next())
+                throw new SQLException("There is no document with the id: " + id)
+
+            Document doc = assembleDocument(resultSet)
+            doc.findIdentifiers()
+            calculateChecksum(doc)
+
+            // Performs the callers updates on the document
+            updateAgent.update(doc)
+
+            Date modTime = new Date()
+            if (minorUpdate) {
+                modTime = new Date(resultSet.getTimestamp("modified").getTime())
+            }
+            updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
+            rigUpdateStatement(updateStatement, doc, modTime)
+            updateStatement.execute()
+
+            // The versions and identifiers tables are NOT under lock. Synchronization is only maintained on the main table.
+            saveVersion(doc, connection, modTime)
+            saveIdentifiers(doc, connection)
+            connection.commit()
+            log.debug("Saved document ${doc.identifier} with timestamps ${doc.created} / ${doc.modified}")
+        } catch (PSQLException psqle) {
+            log.debug("SQL failed: ${psqle.message}")
+            connection.rollback()
+            if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
+                Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
+                Matcher m = messageDetailPattern.matcher(psqle.message)
+                String duplicateId = doc.id
+                if (m.matches()) {
+                    log.debug("Problem is that ${m.group(1)} already contains value ${m.group(2)}")
+                    duplicateId = m.group(2)
+                }
+                throw new StorageCreateFailedException(duplicateId)
+            } else {
+                throw psqle
+            }
+        } catch (Exception e) {
+            log.error("Failed to save document: ${e.message}. Rolling back.")
+            connection.rollback()
+            throw e
+        } finally {
+            try { resultSet.close() } catch (Exception e) {}
+            try { selectStatement.close() } catch (Exception e) {}
+            try { updateStatement.close() } catch (Exception e) {}
+            try { connection.close() } catch (Exception e) {}
+            log.debug("[store] Closed connection.")
+        }
     }
 
     private void saveIdentifiers(Document doc, Connection connection) {
@@ -281,6 +367,16 @@ class PostgreSQLComponent implements Storage {
         insert.setObject(4, doc.manifestAsJson, java.sql.Types.OTHER)
         insert.setBoolean(5, doc.isDeleted())
         return insert
+    }
+
+    // UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ?"
+    private void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime) {
+        update.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
+        update.setObject(2, doc.quotedAsString, java.sql.Types.OTHER)
+        update.setObject(3, doc.manifestAsJson, java.sql.Types.OTHER)
+        update.setBoolean(4, doc.isDeleted())
+        update.setTimestamp(5, new Timestamp(modTime.getTime()))
+        update.setObject(6, doc.id, java.sql.Types.OTHER)
     }
 
     private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime) {
