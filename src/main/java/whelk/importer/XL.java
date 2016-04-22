@@ -49,13 +49,16 @@ class XL
         {
             switch (dupType)
             {
-                case DUPTYPE_ISBN:
-                case DUPTYPE_ISSN:
-                case DUPTYPE_ISNA:
-                case DUPTYPE_ISNZ:
-                case DUPTYPE_URN:
-                case DUPTYPE_OAI:
-                case DUPTYPE_035A:
+                case DUPTYPE_ISBN: // International Standard Book Number
+                    break;
+                case DUPTYPE_ISSN: // International Standard Serial Number (marc 022_A or 022_Z)
+                case DUPTYPE_ISNA: // International Standard Serial Number (only from marc 022_A)
+                case DUPTYPE_ISNZ: // International Standard Serial Number (only from marc 022_Z)
+                    break;
+                case DUPTYPE_URN: // Unknown and not in use by any provider, to be removed!
+                    break;
+                case DUPTYPE_OAI: // ?
+                case DUPTYPE_035A: // Unique id number in another system
                     break;
                 case DUPTYPE_LIBRISID:
                     duplicateIDs.addAll(getDuplicatesOnLibrisID(marcRecord, collection));
@@ -66,9 +69,28 @@ class XL
         if (duplicateIDs.size() == 0)
         {
             // No coinciding documents, simple import
-            Document rdfDoc = convertToRDF(marcRecord, collection, IdGenerator.generate(), null);
-            m_postgreSQLComponent.store(rdfDoc, false);
-            m_elasticSearchComponent.index(rdfDoc);
+
+            // Delete any existing 001 fields
+            String generatedId = IdGenerator.generate();
+            if (marcRecord.getControlfields("001").size() != 0)
+            {
+                marcRecord.getFields().remove(marcRecord.getControlfields("001").get(0));
+            }
+
+            // Always write a new 001. If one existed in the imported post it was moved to 035a.
+            // If it was not (because it was a valid libris id) then it was checked as a duplicate and
+            // duplicateIDs.size would be > 0, and we would not be here.
+            marcRecord.addField(marcRecord.createControlfield("001", generatedId));
+
+            Document rdfDoc = convertToRDF(marcRecord, collection, generatedId, null);
+            if (!m_parameters.getReadOnly())
+            {
+                m_postgreSQLComponent.store(rdfDoc, false);
+                m_elasticSearchComponent.index(rdfDoc);
+            }
+            else
+                System.out.println("Would now (if --live had been specified) have written the following json-ld to whelk:"
+                        + rdfDoc.getDataAsString());
         }
         else if (duplicateIDs.size() == 1)
         {
@@ -84,6 +106,7 @@ class XL
 
     private Document convertToRDF(MarcRecord marcRecord, String collection, String id, List<String> altIDs)
     {
+
         Map<String, Object> manifest = new HashMap<>();
         manifest.put(Document.getID_KEY(), id);
         manifest.put(Document.getCOLLECTION_KEY(), collection);
@@ -98,22 +121,24 @@ class XL
     private List<String> getDuplicatesOnLibrisID(MarcRecord marcRecord, String collection)
             throws SQLException
     {
-        String field001data = marcRecord.getControlfields("001").get(0).getData();
+        String librisId = DigId.grepLibrisId(marcRecord);
 
-        String id = null;
+        if (librisId == null)
+            return new ArrayList<>();
 
-        if (field001data.startsWith(Document.getBASE_URI().toString())) // xl id
+        // completely numeric? = classic voyager id.
+        // In theory an xl id could (though insanely unlikely) also be numeric :(
+        if (librisId.matches("[0-9]+"))
         {
-            id = field001data;
+            librisId = "http://libris.kb.se/"+collection+"/"+librisId;
         }
-        else if (field001data.matches("[0-9]+")) // completely numeric? = classic voyager id
+        else if ( ! librisId.startsWith(Document.getBASE_URI().toString()))
         {
-            String oldStyleIdentifier = "/"+collection+"/"+field001data;
-            id = oldStyleIdentifier;
+            librisId = Document.getBASE_URI().toString() + librisId;
         }
 
         try(Connection connection = m_postgreSQLComponent.getConnection();
-            PreparedStatement statement = getOnId_ps(connection, id);
+            PreparedStatement statement = getOnId_ps(connection, librisId);
             ResultSet resultSet = statement.executeQuery())
         {
             return collectIDs(resultSet);
