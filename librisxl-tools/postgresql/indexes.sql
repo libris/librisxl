@@ -7,6 +7,7 @@ CREATE INDEX idx_lddb_graph ON lddb USING GIN ((data->'@graph') jsonb_path_ops);
 CREATE INDEX idx_lddb_collection ON lddb ((manifest->>'collection'));
 CREATE INDEX idx_lddb_alt_ids ON lddb USING GIN ((manifest->'identifiers') jsonb_path_ops);
 CREATE INDEX idx_lddb_holding_for on lddb ((data#>>'{@graph,1,holdingFor,@id}'));
+CREATE INDEX idx_lddb_systemnumber on lddb using gin ((data#>'{@graph,0,systemNumber}'));
 
 CREATE INDEX idx_lddb__identifiers_id ON lddb__identifiers (id);
 CREATE INDEX idx_lddb__identifiers_identifier ON lddb__identifiers (identifier);
