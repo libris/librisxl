@@ -1,5 +1,7 @@
 package whelk.importer;
 
+import se.kb.libris.util.marc.Datafield;
+import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
 import whelk.Document;
 import whelk.IdGenerator;
@@ -9,10 +11,7 @@ import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
 import whelk.util.PropertyLoader;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 class XL
@@ -43,7 +42,7 @@ class XL
                 marcRecord.getLeader(6) == 'x' || marcRecord.getLeader(6) == 'y')
             collection = "hold";
 
-        List<String> duplicateIDs = new ArrayList<>();
+        Set<String> duplicateIDs = new HashSet<>();
 
         for (Parameters.DUPLICATION_TYPE dupType : m_parameters.getDuplicationTypes())
         {
@@ -58,9 +57,13 @@ class XL
                 case DUPTYPE_URN: // Unknown and not in use by any provider, to be removed!
                     break;
                 case DUPTYPE_OAI: // ?
-                case DUPTYPE_035A: // Unique id number in another system
+                case DUPTYPE_035A:
+                    // Unique id number in another system. The 035a of the post being imported will be checked against
+                    // the @graph,0,systemNumber array of existing posts
+                    duplicateIDs.addAll(getDuplicatesOn035a(marcRecord));
                     break;
                 case DUPTYPE_LIBRISID:
+                    // Assumes the post being imported carries a valid libris id in 001, and "SE-LIBR" or "LIBRIS" in 003
                     duplicateIDs.addAll(getDuplicatesOnLibrisID(marcRecord, collection));
                     break;
             }
@@ -115,7 +118,11 @@ class XL
             manifest.put(Document.getALTERNATE_ID_KEY(), altIDs);
 
         Document doc = new Document(MarcJSONConverter.toJSONMap(marcRecord), manifest);
-        return m_marcFrameConverter.convert(doc);
+        Document converted = m_marcFrameConverter.convert(doc);
+        /*System.out.println("Manifest after conversion:\n"+converted.getManifestAsJson());
+        System.out.println("Data after conversion:\n"+converted.getDataAsString());
+        System.out.println("---");*/
+        return converted;
     }
 
     private List<String> getDuplicatesOnLibrisID(MarcRecord marcRecord, String collection)
@@ -145,12 +152,44 @@ class XL
         }
     }
 
+    private List<String> getDuplicatesOn035a(MarcRecord marcRecord)
+            throws SQLException
+    {
+        // Get all of marcRecord's 035a (unique id in other system) id entries in a list
+        List<String> candidate035aIDs = new ArrayList<>();
+        for (Field field : marcRecord.getFields("035"))
+        {
+            candidate035aIDs.add( DigId.grep035a( (Datafield) field ) );
+        }
+
+        try(Connection connection = m_postgreSQLComponent.getConnection();
+            PreparedStatement statement = getOnSystemNumber_ps(connection, candidate035aIDs);
+            ResultSet resultSet = statement.executeQuery())
+        {
+            return collectIDs(resultSet);
+        }
+    }
+
     private PreparedStatement getOnId_ps(Connection connection, String id)
             throws SQLException
     {
         String query = "SELECT id FROM lddb__identifiers WHERE identifier = ?";
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setString(1, id);
+        return statement;
+    }
+
+    /**
+     * "System number" is our ld equivalent of marc's 035a
+     */
+    private PreparedStatement getOnSystemNumber_ps(Connection connection, List<String> ids)
+            throws SQLException
+    {
+        String query = "WITH s AS (SELECT id, data#>'{@graph,0,systemNumber}' AS system_number FROM lddb) SELECT id FROM s WHERE s.system_number ??| ?";
+        PreparedStatement statement = connection.prepareStatement(query);
+
+        Array tmpArr = connection.createArrayOf("text", ids.toArray());
+        statement.setObject(1, tmpArr, Types.ARRAY);
         return statement;
     }
 
