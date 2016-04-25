@@ -185,7 +185,7 @@ class XL
     private PreparedStatement getOnSystemNumber_ps(Connection connection, List<String> ids)
             throws SQLException
     {
-        String query = "WITH s AS (SELECT id, data#>'{@graph,0,systemNumber}' AS system_number FROM lddb) SELECT id FROM s WHERE s.system_number ??| ?";
+        String query = "SELECT id FROM lddb WHERE data#>'{@graph,0,systemNumber}' ??| ?";
         PreparedStatement statement = connection.prepareStatement(query);
 
         Array tmpArr = connection.createArrayOf("text", ids.toArray());
