@@ -68,34 +68,26 @@ class PostgresLoadfileWriter
         {
             loader.run { doc, specs ->
 
-                // Get the records controlnumber and generate an xl id.
-                String controlNumber = null;
-                def fields = doc.get("fields")
-                for (def field : fields)
-                {
-                    if (field.get("001") != null)
-                        controlNumber = field.get("001");
-                }
-                String oldStyleIdentifier = "/"+collection+"/"+controlNumber
+                if (isSuppressed(doc))
+                    return
+
+                String oldStyleIdentifier = "/"+collection+"/"+getControlNumber(doc)
                 String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
 
-                // Add set specs to manifest
                 def manifest = [(Document.ID_KEY):id,(Document.COLLECTION_KEY):collection, (Document.ALTERNATE_ID_KEY): [oldStyleIdentifier]]
-                for (String spec : specs)
-                {
-                    manifest.get("extraData", [:]).get("oaipmhSetSpecs", []).add(spec);
-                }
+
+                addSetSpecs(manifest, specs)
 
                 Map documentMap = new HashMap(2)
                 documentMap.put("record", doc)
                 documentMap.put("manifest", manifest)
                 m_outputQueue.add(documentMap);
+
                 if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD)
                 {
                     flushOutputQueue(m_outputQueue);
                     m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
                 }
-
 
                 if (++counter % 1000 == 0) {
                     def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
@@ -117,6 +109,60 @@ class PostgresLoadfileWriter
 
         def endSecs = (System.currentTimeMillis() - startTime) / 1000
         println "Done. Processed $counter documents in $endSecs seconds."
+    }
+
+    private static boolean isSuppressed(Map doc)
+    {
+        def fields = doc.get("fields")
+        for (def field : fields)
+        {
+            if (field.get("599") != null)
+            {
+                def field599 = field.get("599")
+                if (field599.get("subfields") != null)
+                {
+                    def subfields = field599.get("subfields")
+                    for (def subfield : subfields)
+                    {
+                        if (subfield.get("a").equals("SUPPRESSRECORD"))
+                            return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static String getControlNumber(Map doc)
+    {
+        def fields = doc.get("fields")
+        for (def field : fields)
+        {
+            if (field.get("001") != null)
+                return field.get("001");
+        }
+        return null
+    }
+
+    private static void addSetSpecs(Map manifest, List specs)
+    {
+        if (specs.size() == 0)
+            return
+        
+        def extradata = manifest.get("extraData")
+        if (extradata == null)
+            manifest.put("extraData", [:])
+        extradata = manifest.get("extraData")
+
+        def setSpecs = extradata.get("oaipmhSetSpecs")
+        if (setSpecs == null)
+            extradata.put("oaipmhSetSpecs", [:]);
+        setSpecs = extradata.get("oaipmhSetSpecs")
+
+        for (String spec : specs)
+        {
+            setSpecs.add(spec);
+        }
     }
 
     private static void flushOutputQueue(Vector<HashMap> threadWorkLoad)
