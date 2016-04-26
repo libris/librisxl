@@ -61,8 +61,8 @@ class ImporterMain {
     }
 
     void vcopydumpCmd(String toFileName, String collection) {
-        PostgresLoadfileWriter writer = new PostgresLoadfileWriter(toFileName, collection)
-        writer.generatePostgresLoadFile()
+        def connUrl = props.getProperty("mysqlConnectionUrl")
+        PostgresLoadfileWriter.dump(toFileName, collection, connUrl)
     }
 
     void vcopyjsondumpCmd(String collection, String toFileName) {

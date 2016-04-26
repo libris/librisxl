@@ -1,22 +1,15 @@
 package whelk.tools
 
-import se.kb.libris.util.marc.MarcRecord
-import se.kb.libris.util.marc.io.Iso2709Deserializer
 import whelk.Document
 import whelk.converter.MarcJSONConverter
 import whelk.converter.marc.MarcFrameConverter
-import whelk.importer.MySQLImporter
+import whelk.importer.MySQLLoader
 import whelk.util.LegacyIntegrationTools
-import whelk.util.PropertyLoader
 import groovy.util.logging.Slf4j as Log
 
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.sql.Connection
-import java.sql.DriverManager
-import java.sql.PreparedStatement
-import java.sql.ResultSet
 
 /**
  * Writes documents into a PostgreSQL load-file, which can be efficiently imported into lddb
@@ -24,7 +17,6 @@ import java.sql.ResultSet
 @Log
 class PostgresLoadfileWriter
 {
-    private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
     private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CONVERSIONS_PER_THREAD = 200;
 
@@ -32,17 +24,12 @@ class PostgresLoadfileWriter
     // _SKIP_ DOCUMENTS THAT FAIL CONVERSION, RESULTING IN POTENTIAL DATA LOSS IF USED WHEN IMPORTING TO A PRODUCTION XL
     private static final boolean FAULT_TOLERANT_MODE = true;
 
-    private final String m_exportFileName;
-    private final String m_collection;
-    private final Connection m_connection
-    private final PreparedStatement m_statement;
-    private final ResultSet m_resultSet;
-    private final MarcFrameConverter m_marcFrameConverter;
-    private final BufferedWriter m_mainTableWriter;
-    private final BufferedWriter m_identifiersWriter;
-    private final Thread[] m_threadPool;
-    private Vector<HashMap> m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
-    private Vector<String> m_failedIds = new Vector<String>();
+    private static MarcFrameConverter s_marcFrameConverter;
+    private static BufferedWriter s_mainTableWriter;
+    private static BufferedWriter s_identifiersWriter;
+    private static Thread[] s_threadPool;
+    private static Vector<String> s_failedIds = new Vector<String>();
+
 
     // Abort on unhandled exceptions, including those on worker threads.
     static
@@ -59,147 +46,127 @@ class PostgresLoadfileWriter
         });
     }
 
-    public PostgresLoadfileWriter(String exportFileName, String collection)
+    public static void dump(String exportFileName, String collection, String connectionUrl)
     {
+        Vector<HashMap> m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
+
         if (FAULT_TOLERANT_MODE)
             System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
-                "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
+                    "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
 
-        Class.forName(JDBC_DRIVER);
+        s_marcFrameConverter = new MarcFrameConverter();
+        s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
+        s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName+"_identifiers"), Charset.forName("UTF-8"));
+        s_threadPool = new Thread[THREAD_COUNT];
 
-        Properties props = PropertyLoader.loadProperties("mysql");
-        m_connection = DriverManager.getConnection(props.getProperty("mysqlConnectionUrl"));
-        m_connection.setAutoCommit(false);
+        def loader = new MySQLLoader(connectionUrl, collection);
 
-        switch (collection)
+        def counter = 0
+        def startTime = System.currentTimeMillis()
+
+        try
         {
-            case "auth":
-                m_statement = m_connection.prepareStatement("SELECT auth_id, data FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
-                break;
-            case "bib":
-                m_statement = m_connection.prepareStatement("SELECT bib.bib_id, bib.data, auth.auth_id FROM bib_record bib LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
-                break;
-            case "hold":
-                m_statement = m_connection.prepareStatement("SELECT mfhd_id, data, bib_id, shortname FROM mfhd_record WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id", java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
-                break;
-            default:
-                throw new Exception("No valid collection selected");
-        }
-        m_statement.setFetchSize(Integer.MIN_VALUE)
-        m_statement.setInt(1, 0); // start from id 0
-        m_resultSet = m_statement.executeQuery();
-        m_exportFileName = exportFileName;
-        m_collection = collection;
-        m_marcFrameConverter = new MarcFrameConverter();
-        m_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
-        m_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName+"_identifiers"), Charset.forName("UTF-8"));
-        m_threadPool = new Thread[THREAD_COUNT];
-    }
+            loader.run { doc, specs ->
 
-    public void generatePostgresLoadFile()
-    {
-        long startTime = System.currentTimeMillis();
-        int savedDocumentsCount = 0;
+                if (isSuppressed(doc))
+                    return
 
-        // The document we're currently building. May contain several ResultSet rows
-        String currentDocumentId = "";
-        HashMap documentMap = null;
-
-        while (m_resultSet.next())
-        {
-            MarcRecord record = Iso2709Deserializer.deserialize(
-                    MySQLImporter.normalizeString(new String(m_resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"));
-
-            if (record)
-            {
-                def field001List = record.getControlfields("001");
-
-                def aList = record.getDatafields("599").collect { it.getSubfields("a").data }.flatten()
-                if ("SUPPRESSRECORD" in aList)
-                    continue; // skip document if SUPRESSED
-
-                String oldStyleIdentifier = "/"+m_collection+"/"+field001List.get(0).getData()
+                String oldStyleIdentifier = "/"+collection+"/"+getControlNumber(doc)
                 String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
 
-                if (!id.equals(currentDocumentId))
-                {
-                    // New ID, store current document and begin constructing a new one
-                    if (documentMap)
-                    {
-                        m_outputQueue.add(documentMap);
-                        if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD)
-                            flushOutputQueue()
+                def manifest = [(Document.ID_KEY):id,(Document.COLLECTION_KEY):collection, (Document.ALTERNATE_ID_KEY): [oldStyleIdentifier]]
 
-                        if (++savedDocumentsCount % 1000 == 0)
-                        {
-                            long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
-                            if (elapsedSeconds > 0)
-                            {
-                                long documentsPerSecond = savedDocumentsCount / elapsedSeconds;
-                                System.out.println("Working. Currently " + savedDocumentsCount +
-                                        " documents saved. Crunching " + documentsPerSecond + " docs / s");
-                            }
-                        }
-                    }
-                    currentDocumentId = id;
-                    documentMap = new HashMap();
+                addSetSpecs(manifest, specs)
+
+                Map documentMap = new HashMap(2)
+                documentMap.put("record", doc)
+                documentMap.put("manifest", manifest)
+                m_outputQueue.add(documentMap);
+
+                if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD)
+                {
+                    flushOutputQueue(m_outputQueue);
+                    m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
                 }
 
-                documentMap.put("record", record)
-                documentMap.put("manifest", [(Document.ID_KEY):currentDocumentId,(Document.COLLECTION_KEY):m_collection, (Document.ALTERNATE_ID_KEY): [oldStyleIdentifier]])
+                if (++counter % 1000 == 0) {
+                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
+                    if (elapsedSecs > 0) {
+                        def docsPerSec = counter / elapsedSecs
+                        println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
+                    }
+                }
             }
-
-            addOaipmhSetSpecs(documentMap, m_resultSet);
-        }
-
-        // Don't forget about the last document being constructed. Must be written as well.
-        if ( ! (new HashMap().equals(documentMap)) )
-        {
-            m_outputQueue.add(documentMap);
-            ++savedDocumentsCount;
-        }
-        flushOutputQueue();
-
-        cleanup();
-
-        long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
-        System.out.println("Done. Processed " + savedDocumentsCount + " documents in " + elapsedSeconds + " seconds.");
-        if (!m_failedIds.isEmpty())
-        {
-            System.out.println("Out of the " + savedDocumentsCount + " documents, " + m_failedIds.size() +
-                    " failed conversion and WERE NOT INCLUDED IN THE GENERATED FILE:");
-            for ( String id : m_failedIds )
+        } finally {
+            for (int i = 0; i < THREAD_COUNT; ++i)
             {
-                System.out.println(id);
+                if (s_threadPool[i] != null)
+                    s_threadPool[i].join();
+            }
+            s_mainTableWriter.close()
+            s_identifiersWriter.close()
+        }
+
+        def endSecs = (System.currentTimeMillis() - startTime) / 1000
+        println "Done. Processed $counter documents in $endSecs seconds."
+    }
+
+    private static boolean isSuppressed(Map doc)
+    {
+        def fields = doc.get("fields")
+        for (def field : fields)
+        {
+            if (field.get("599") != null)
+            {
+                def field599 = field.get("599")
+                if (field599.get("subfields") != null)
+                {
+                    def subfields = field599.get("subfields")
+                    for (def subfield : subfields)
+                    {
+                        if (subfield.get("a").equals("SUPPRESSRECORD"))
+                            return true;
+                    }
+                }
             }
         }
+        return false;
     }
 
-    private void addOaipmhSetSpecs(HashMap documentMap, ResultSet resultSet)
+    private static String getControlNumber(Map doc)
     {
-        switch (m_collection)
+        def fields = doc.get("fields")
+        for (def field : fields)
         {
-            case "bib":
-                int auth_id = resultSet.getInt("auth_id")
-                if (auth_id > 0)
-                    documentMap.get("manifest", [:]).get("extraData", [:]).get("oaipmhSetSpecs", []).add("authority:" + auth_id)
-                break;
-            case "hold":
-                int bib_id = resultSet.getInt("bib_id")
-                String sigel = resultSet.getString("shortname")
-                if (bib_id > 0)
-                    documentMap.get("manifest", [:]).get("extraData", [:]).get("oaipmhSetSpecs", []).add("bibid:" + bib_id)
-                if (sigel)
-                    documentMap.get("manifest", [:]).get("extraData", [:]).get("oaipmhSetSpecs", []).add("location:" + sigel)
-                break;
+            if (field.get("001") != null)
+                return field.get("001");
+        }
+        return null
+    }
+
+    private static void addSetSpecs(Map manifest, List specs)
+    {
+        if (specs.size() == 0)
+            return
+        
+        def extradata = manifest.get("extraData")
+        if (extradata == null)
+            manifest.put("extraData", [:])
+        extradata = manifest.get("extraData")
+
+        def setSpecs = extradata.get("oaipmhSetSpecs")
+        if (setSpecs == null)
+            extradata.put("oaipmhSetSpecs", [:]);
+        setSpecs = extradata.get("oaipmhSetSpecs")
+
+        for (String spec : specs)
+        {
+            setSpecs.add(spec);
         }
     }
 
-    private void flushOutputQueue()
+    private static void flushOutputQueue(Vector<HashMap> threadWorkLoad)
     {
-        Vector<HashMap> threadWorkLoad = m_outputQueue;
-        m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
-
         // Find a suitable thread from the pool to do the conversion
 
         int i = 0;
@@ -212,9 +179,9 @@ class PostgresLoadfileWriter
                 Thread.yield();
             }
 
-            if (m_threadPool[i] == null || m_threadPool[i].state == Thread.State.TERMINATED)
+            if (s_threadPool[i] == null || s_threadPool[i].state == Thread.State.TERMINATED)
             {
-                m_threadPool[i] = new Thread(new Runnable()
+                s_threadPool[i] = new Thread(new Runnable()
                 {
                     void run()
                     {
@@ -226,31 +193,31 @@ class PostgresLoadfileWriter
                             {
                                 try
                                 {
-                                    doc = new Document(MarcJSONConverter.toJSONMap(dm.record), dm.manifest);
-                                    doc = m_marcFrameConverter.convert(doc);
+                                    doc = new Document(dm.record, dm.manifest);
+                                    doc = s_marcFrameConverter.convert(doc);
                                     writeDocumentToLoadFile(doc);
                                 } catch (Exception e)
                                 {
                                     String voyagerId = dm.manifest.get(Document.ALTERNATE_ID_KEY)[0];
-                                    m_failedIds.add(voyagerId);
+                                    s_failedIds.add(voyagerId);
                                 }
                             }
                             else
                             {
                                 doc = new Document(MarcJSONConverter.toJSONMap(dm.record), dm.manifest);
-                                doc = m_marcFrameConverter.convert(doc);
+                                doc = s_marcFrameConverter.convert(doc);
                                 writeDocumentToLoadFile(doc);
                             }
                         }
                     }
                 });
-                m_threadPool[i].start();
+                s_threadPool[i].start();
                 return;
             }
         }
     }
 
-    private synchronized void writeDocumentToLoadFile(Document doc)
+    private static synchronized void writeDocumentToLoadFile(Document doc)
     {
         /* columns:
         id text not null unique primary key,
@@ -273,20 +240,20 @@ class PostgresLoadfileWriter
 
         // Write to main table file
 
-        m_mainTableWriter.write(doc.getId());
-        m_mainTableWriter.write(delimiter);
-        m_mainTableWriter.write( doc.getDataAsString().replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
-        m_mainTableWriter.write(delimiter);
-        m_mainTableWriter.write( doc.getManifestAsJson().replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
-        m_mainTableWriter.write(delimiter);
+        s_mainTableWriter.write(doc.getId());
+        s_mainTableWriter.write(delimiter);
+        s_mainTableWriter.write( doc.getDataAsString().replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
+        s_mainTableWriter.write(delimiter);
+        s_mainTableWriter.write( doc.getManifestAsJson().replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
+        s_mainTableWriter.write(delimiter);
         if (quoted)
-            m_mainTableWriter.write(quoted.replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString));
+            s_mainTableWriter.write(quoted.replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString));
         else
-            m_mainTableWriter.write(nullString);
+            s_mainTableWriter.write(nullString);
 
         // remaining values have defaults.
 
-        m_mainTableWriter.newLine();
+        s_mainTableWriter.newLine();
 
         // Write to identifiers table file
 
@@ -297,27 +264,11 @@ class PostgresLoadfileWriter
 
         for (String identifier : identifiers)
         {
-            m_identifiersWriter.write(doc.getId());
-            m_identifiersWriter.write(delimiter);
-            m_identifiersWriter.write(identifier);
+            s_identifiersWriter.write(doc.getId());
+            s_identifiersWriter.write(delimiter);
+            s_identifiersWriter.write(identifier);
 
-            m_identifiersWriter.newLine();
+            s_identifiersWriter.newLine();
         }
-    }
-
-    private void cleanup()
-    {
-        for (int i = 0; i < THREAD_COUNT; ++i)
-        {
-            if (m_threadPool[i] != null)
-                m_threadPool[i].join();
-        }
-
-        m_identifiersWriter.close();
-        m_mainTableWriter.close();
-
-        m_resultSet.close();
-        m_statement.close();
-        m_connection.close();
     }
 }
