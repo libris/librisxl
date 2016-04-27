@@ -20,7 +20,7 @@ class AccessControl {
                 log.debug("User does not have sufficient privileges.")
                 return false
             }
-            if (olddoc) {
+            if (olddoc && !olddoc.deleted) {
                 def currentSigel = JsonLd.frame(olddoc.id, olddoc.data).about.heldBy.notation
                 if (currentSigel) {
                     log.trace("Checking sigel privs for existing document.")
