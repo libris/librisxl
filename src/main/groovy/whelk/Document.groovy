@@ -232,7 +232,7 @@ class Document {
         {
             ret.add( m.get("@id") )
         }
-        ret.add(id + "#it")
+        ret.add(data[GRAPH_KEY][0][ABOUT_KEY]["@id"])
         return ret
     }
 
