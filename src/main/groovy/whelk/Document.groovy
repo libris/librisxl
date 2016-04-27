@@ -226,13 +226,15 @@ class Document {
      */
     @JsonIgnore
     List<String> getItIdentifiers() {
-        List list = data[GRAPH_KEY][1][JSONLD_ALT_ID_KEY]
         List<String> ret = []
-        for (Map m : list)
+        ret.add(data[GRAPH_KEY][0][ABOUT_KEY]["@id"])
+        if (data[GRAPH_KEY].size > 1)
         {
-            ret.add( m.get("@id") )
+            for (Map m : data[GRAPH_KEY][1][JSONLD_ALT_ID_KEY])
+            {
+                ret.add( m.get("@id") )
+            }
         }
-        ret.add(id + "#it")
         return ret
     }
 
