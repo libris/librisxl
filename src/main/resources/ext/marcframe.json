@@ -2335,7 +2335,7 @@
       "NOTE:candidate:aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "Concept",
-      "uriTemplate": "http://id.kb.se/term/{+inScheme.notation}/{notation}",
+      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{notation}",
       "uriTemplateDefaults": {"inScheme.notation": "kssb"},
       "$a": {"property": "notation", "required": true},
       "$2": {"link": "inScheme",
@@ -3278,7 +3278,7 @@
       "inherit": "650",
       "addLink": "genre",
       "resourceType": "GenreTerm",
-      "uriTemplate": "http://id.kb.se/term/saogf/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
 
     "658": {},
@@ -4141,7 +4141,7 @@
     "551" : {
         "inherit": "550",
       "resourceType": "GeographicalTerm",
-      "uriTemplate": "http://id.kb.se/place/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/place/{prefLabel}"
     },
     "555" : {
       "inherit": "550",
