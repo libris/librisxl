@@ -33,11 +33,10 @@ class Parameters
 
     enum DUPLICATION_TYPE
     {
-        DUPTYPE_ISBN,
-        DUPTYPE_ISSN,
-        DUPTYPE_ISNA,
-        DUPTYPE_ISNZ,
-        DUPTYPE_URN,
+        DUPTYPE_ISBNA,
+        DUPTYPE_ISBNZ,
+        DUPTYPE_ISSNA,
+        DUPTYPE_ISSNZ,
         DUPTYPE_OAI,
         DUPTYPE_035A,
         DUPTYPE_LIBRISID
@@ -121,16 +120,14 @@ class Parameters
     {
         switch (typeString)
         {
-            case "ISBN":
-                return DUPLICATION_TYPE.DUPTYPE_ISBN;
-            case "ISSN":
-                return DUPLICATION_TYPE.DUPTYPE_ISSN;
-            case "ISNA":
-                return DUPLICATION_TYPE.DUPTYPE_ISNA;
-            case "ISNZ":
-                return DUPLICATION_TYPE.DUPTYPE_ISNZ;
-            case "URN":
-                return DUPLICATION_TYPE.DUPTYPE_URN;
+            case "ISBNA":
+                return DUPLICATION_TYPE.DUPTYPE_ISBNA;
+            case "ISBNZ":
+                return DUPLICATION_TYPE.DUPTYPE_ISBNZ;
+            case "ISSNA":
+                return DUPLICATION_TYPE.DUPTYPE_ISSNA;
+            case "ISSNZ":
+                return DUPLICATION_TYPE.DUPTYPE_ISSNZ;
             case "OAI":
                 return DUPLICATION_TYPE.DUPTYPE_OAI;
             case "035A":
