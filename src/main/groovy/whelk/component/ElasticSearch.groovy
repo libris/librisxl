@@ -181,10 +181,10 @@ class ElasticSearch implements Index {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         DeleteByQueryResponse rsp = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE)
                 .setIndices(defaultIndex)
-                .setTypes("mydocytype")
                 .setSource(["query":["term":["_id":toElasticId(identifier)]]])
                 .execute()
                 .actionGet();
+        log.debug("Response: ${rsp.totalDeleted}")
     }
 
     @Override
