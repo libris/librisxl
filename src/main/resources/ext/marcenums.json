@@ -5,7 +5,7 @@
     "e": "marc:Exchange",
     "f": "marc:Free",
     "g": "marc:Gift",
-    "l": "marc:Pliktleverans",
+    "l": "marc:LegalDeposit",
     "m": "marc:Membership",
     "n": "marc:NonLibraryPurchase",
     "p": "marc:Purchase",
@@ -51,7 +51,7 @@
     "x": "marc:DeletedHeadingReplacedByAnotherHeading"
   },
   "BibLevelType": {
-    "9": "marc:Avtalspost",
+    "9": "marc:LicenseAgreementBoundDescription",
     "a": "marc:MonographicComponentPart",
     "b": "marc:SerialComponentPart",
     "c": "marc:Collection",
@@ -293,7 +293,7 @@
     "z": "marc:OtherFrequencies-Obsolete"
   },
   "ComputerImageBitDepthType": {
-    "001~999": "todo:value-in-digit",
+    "001~999": "marc:BitDepth",
     "mmm": "marc:MultipleImageBitDepths"
   },
   "ComputerItemType": {
@@ -554,7 +554,7 @@
     "1": "marc:IndexPresent"
   },
   "ItemInfoInRecordType": {
-    "i": "marc:Exemplarinformation",
+    "i": "marc:ItemInfoInRecord",
     "n": false
   },
   "ItemType": {
@@ -689,7 +689,7 @@
     "__": "marc:ProjectionNotSpecified",
     "aa": "marc:Aitoff",
     "ab": "marc:Gnomic",
-    "ac": "marc:LambertSAzimuthalEqualArea",
+    "ac": "marc:LambertsAzimuthalEqualArea",
     "ad": "marc:Orthographic",
     "ae": "marc:AzimuthalEquidistant",
     "af": "marc:Stereographic",
@@ -700,8 +700,8 @@
     "au": "marc:AzimuthalSpecificTypeUnknown",
     "az": "marc:AzimuthalOther",
     "ba": "marc:Gall",
-    "bb": "marc:GoodeSHomolographic",
-    "bc": "marc:LambertSCylindricalEqualArea",
+    "bb": "marc:GoodesHomolographic",
+    "bc": "marc:LambertsCylindricalEqualArea",
     "bd": "marc:Mercator",
     "be": "marc:Miller",
     "bf": "marc:Mollweide",
@@ -716,9 +716,9 @@
     "bs": "marc:SpaceObliqueMercator",
     "bu": "marc:CylindricalSpecificTypeUnknown",
     "bz": "marc:CylindricalOther",
-    "ca": "marc:AlberSEqualArea",
+    "ca": "marc:AlbersEqualArea",
     "cb": "marc:Bonne",
-    "cc": "marc:LambertSConformalConic",
+    "cc": "marc:LambertsConformalConic",
     "ce": "marc:EquidistantConic",
     "cp": "marc:Polyconic",
     "cu": "marc:ConicSpecificTypeUnknown",
@@ -726,8 +726,8 @@
     "da": "marc:Armadillo",
     "db": "marc:Butterfly",
     "dc": "marc:Eckert",
-    "dd": "marc:GoodeSHomolosine",
-    "de": "marc:MillerSBipolarObliqueConformalConic",
+    "dd": "marc:GoodesHomolosine",
+    "de": "marc:MillersBipolarObliqueConformalConic",
     "df": "marc:VanDerGrinten",
     "dg": "marc:Dimaxion",
     "dh": "marc:Cordiform",
@@ -1322,12 +1322,12 @@
     "8": "marc:PermanentlyRetained"
   },
   "RetentionPolicyUnitType": {
-    "e": "marc:EditionSPart",
-    "i": "marc:IssueSPart",
-    "m": "marc:MonthSTime",
-    "s": "marc:SupplementSPart",
-    "w": "marc:WeekSTime",
-    "y": "marc:YearSTime"
+    "e": "marc:EditionsPart",
+    "i": "marc:IssuesPart",
+    "m": "marc:MonthsTime",
+    "s": "marc:SupplementsPart",
+    "w": "marc:WeeksTime",
+    "y": "marc:YearsTime"
   },
   "RomanizationType": {
     "a": "marc:InternationalStandard",
@@ -1588,9 +1588,9 @@
     "p": "marc:Previous"
   },
   "StatisticsType": {
-    "_": "marc:L\u00f6pande_katalogisering_-_Odefinierat",
-    "o": "marc:Undertrycks_i_nyf\u00f6rv\u00e4rvslista",
-    "r": "marc:Retrospektiv_katalogisering"
+    "_": "marc:RunningCataloguingOrUndefined",
+    "o": "marc:SuppressedInNewAquisitionsList",
+    "r": "marc:RetrospectiveCataloguing"
   },
   "StatusType": {
     "a": "marc:IncreaseInEncodingLevel",
@@ -1605,7 +1605,7 @@
   },
   "SubjectHeadingType": {
     "a": "marc:LibraryOfCongressSubjectHeading",
-    "b": "marc:LcSubjectHeadingsForChildrenSLiterature",
+    "b": "marc:LcSubjectHeadingsForChildrensLiterature",
     "c": "marc:MedicalSubjectHeading",
     "d": "marc:NationalAgriculturalLibrarySubjectAuthorityFile",
     "k": "marc:CanadianSubjectHeading",
