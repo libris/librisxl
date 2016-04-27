@@ -468,7 +468,8 @@ class Crud extends HttpServlet {
                 whelk.remove(id)
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
-        } catch (WhelkRuntimeException wre) {
+        } catch (Exception wre) {
+            log.error("Something went wrong", wre)
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
         }
 
