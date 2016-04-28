@@ -123,18 +123,33 @@ class XL
                     for (Field field : marcRecord.getFields("020"))
                     {
                         String isbn = DigId.grepIsbna( (Datafield) field );
-                        duplicateIDs.addAll(getDuplicatesOnISBN( isbn ) );
+                        duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('x', 'X') ));
+                        duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('X', 'x') ));
                     }
                     break;
                 case DUPTYPE_ISBNZ: // International Standard Book Number (only from subfield Z)
                     for (Field field : marcRecord.getFields("020"))
                     {
                         String isbn = DigId.grepIsbnz( (Datafield) field );
-                        duplicateIDs.addAll(getDuplicatesOnISBN( isbn ) );
+                        duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('x', 'X') ));
+                        duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('X', 'x') ));
                     }
                     break;
                 case DUPTYPE_ISSNA: // International Standard Serial Number (only from marc 022_A)
+                    for (Field field : marcRecord.getFields("022"))
+                    {
+                        String issn = DigId.grepIssn( (Datafield) field, 'a' );
+                        duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('x', 'X') ));
+                        duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('X', 'x') ));
+                    }
+                    break;
                 case DUPTYPE_ISSNZ: // International Standard Serial Number (only from marc 022_Z)
+                    for (Field field : marcRecord.getFields("022"))
+                    {
+                        String issn = DigId.grepIssn( (Datafield) field, 'z' );
+                        duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('x', 'X') ));
+                        duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('X', 'x') ));
+                    }
                     break;
                 case DUPTYPE_OAI: // ?
                     break;
@@ -213,6 +228,21 @@ class XL
         }
     }
 
+    private List<String> getDuplicatesOnISSN(String issn)
+            throws SQLException
+    {
+        if (issn == null)
+            return new ArrayList<>();
+
+        String numericIssn = issn.replaceAll("-", "");
+        try(Connection connection = m_postgreSQLComponent.getConnection();
+            PreparedStatement statement = getOnISSN_ps(connection, numericIssn);
+            ResultSet resultSet = statement.executeQuery())
+        {
+            return collectIDs(resultSet);
+        }
+    }
+
     private PreparedStatement getOnId_ps(Connection connection, String id)
             throws SQLException
     {
@@ -239,11 +269,22 @@ class XL
     private PreparedStatement getOnISBN_ps(Connection connection, String isbn)
             throws SQLException
     {
-        // require isbn to completely numeric. Not quite as nice as sql parametrization but still watertight.
-        if (!isbn.matches("\\d+"))
+        // required to be completely numeric (base 11, 0-9+x). Sql parametrization unfortunately not practical with jsonb
+        if (!isbn.matches("[\\dxX]+"))
             isbn = "0";
 
         String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifier}' @> '[{\"identifierScheme\": {\"@id\": \"https://id.kb.se/vocab/ISBN\"}, \"identifierValue\": \"" + isbn + "\"}]'";
+        return connection.prepareStatement(query);
+    }
+
+    private PreparedStatement getOnISSN_ps(Connection connection, String issn)
+            throws SQLException
+    {
+        // required to be completely numeric (base 11, 0-9+x). Sql parametrization unfortunately not practical with jsonb
+        if (!issn.matches("[\\dxX]+"))
+            issn = "0";
+
+        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifier}' @> '[{\"identifierScheme\": {\"@id\": \"https://id.kb.se/vocab/ISSN\"}, \"identifierValue\": \"" + issn + "\"}]'";
         return connection.prepareStatement(query);
     }
 
