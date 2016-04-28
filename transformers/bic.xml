@@ -1,0 +1,950 @@
+<?xml version="1.0"?>
+<bic:bics xmlns:bic="http://bic">
+<bic:bic name="A">
+<bic:Thema>A</bic:Thema>
+<bic:generellt>I/DR</bic:generellt>
+<bic:genre>The Arts</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="AC">
+<bic:Thema>AGA</bic:Thema>
+<bic:generellt>Ib/DR</bic:generellt>
+<bic:genre>History of Art</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="AJ">
+<bic:Thema>AJ</bic:Thema>
+<bic:generellt>In/DR</bic:generellt>
+<bic:genre>Film och fotografi</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="AM">
+<bic:Thema>AM</bic:Thema>
+<bic:generellt>Ic/DR</bic:generellt>
+<bic:genre>Architecture</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="AN">
+<bic:Thema>AT</bic:Thema>
+<bic:generellt>Ik/DR</bic:generellt>
+<bic:genre>Teater</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="AV">
+<bic:Thema>AV</bic:Thema>
+<bic:generellt>Ij/DR</bic:generellt>
+<bic:genre>Musik</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="B">
+<bic:generellt>L/DR</bic:generellt>
+<bic:genre>Biography &amp; True Stories</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="BG">
+<bic:generellt>Lz/DR</bic:generellt>
+<bic:genre>Memoarer och biografier</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="C">
+<bic:Thema>C</bic:Thema>
+<bic:generellt>F/DR</bic:generellt>
+<bic:genre>Language</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="CB">
+<bic:Thema>CB</bic:Thema>
+<bic:generellt>F/DR</bic:generellt>
+<bic:genre>Språk inkl. lexikon, parlörer och ordböcker</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="D">
+<bic:Thema>D</bic:Thema>
+<bic:genre>Litterature &amp; Literature Studies</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="DB">
+<bic:generellt>Ho/DR</bic:generellt>
+<bic:genre>Classical Texts</bic:genre>
+<bic:p008>|||| o    |||| 1 </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+</bic:bic>
+<bic:bic name="DC">
+<bic:Thema>DC</bic:Thema>
+<bic:ar>Hsg.03/DR</bic:ar>
+<bic:da>Hda.03/DR</bic:da>
+<bic:de>Hf.03/DR</bic:de>
+<bic:en>He.03/DR</bic:en>
+<bic:es>Hk.03/DR</bic:es>
+<bic:fa>Hqca.03/DR</bic:fa>
+<bic:fi>Hub.03/DR</bic:fi>
+<bic:fr>Hj.03/DR</bic:fr>
+<bic:generellt>H.03/DR</bic:generellt>
+<bic:genre>Lyrik</bic:genre>
+<bic:nl>Hg.03/DR</bic:nl>
+<bic:no>Hdb.03/DR</bic:no>
+<bic:p008>|||| o    |||| p </bic:p008>
+<bic:p008a>|||| o||||||p  | </bic:p008a>
+<bic:sv>Hc.03/DR</bic:sv>
+</bic:bic>
+<bic:bic name="DD">
+<bic:Thema>DD</bic:Thema>
+<bic:ar>Hsg.02/DR</bic:ar>
+<bic:da>Hda.02/DR</bic:da>
+<bic:de>Hf.02/DR</bic:de>
+<bic:en>He.02/DR</bic:en>
+<bic:es>Hk.02/DR</bic:es>
+<bic:fa>Hqca.02/DR</bic:fa>
+<bic:fi>Hub.02/DR</bic:fi>
+<bic:fr>Hj.02/DR</bic:fr>
+<bic:generellt>H.02/DR</bic:generellt>
+<bic:genre>Dramatik</bic:genre>
+<bic:nl>Hg.02/DR</bic:nl>
+<bic:no>Hdb.02/DR</bic:no>
+<bic:p008>|||| o    |||| d </bic:p008>
+<bic:p008a>|||| o||||||d  | </bic:p008a>
+<bic:sv>Hc.02/DR</bic:sv>
+</bic:bic>
+<bic:bic name="DNF">
+<bic:ar>Hsg.02/DR</bic:ar>
+<bic:da>Hda.04/DR</bic:da>
+<bic:de>Hf.04/DR</bic:de>
+<bic:en>He.04/DR</bic:en>
+<bic:es>Hk.02/DR</bic:es>
+<bic:fa>Hqca.02/DR</bic:fa>
+<bic:fi>Hub.04/DR</bic:fi>
+<bic:fr>Hj.04/DR</bic:fr>
+<bic:generellt>H.04/DR</bic:generellt>
+<bic:genre>Essäer</bic:genre>
+<bic:nl>Hg.02/DR</bic:nl>
+<bic:no>Hdb.04/DR</bic:no>
+<bic:p008>|||| o    |||| e </bic:p008>
+<bic:p008a>|||| o||||||e  | </bic:p008a>
+<bic:sv>Hc.04/DR</bic:sv>
+</bic:bic>
+<bic:bic name="DS">
+<bic:Thema>DS</bic:Thema>
+<bic:generellt>G/DR</bic:generellt>
+<bic:genre>Litteraturvetenskap</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="E">
+<bic:generellt>Eabf/DR</bic:generellt>
+<bic:genre>English Language Teaching (ELT)</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="F">
+<bic:Thema>F</bic:Thema>
+<bic:ar>Hsg/DR</bic:ar>
+<bic:da>Hda/DR</bic:da>
+<bic:de>Hf/DR</bic:de>
+<bic:en>He./DR</bic:en>
+<bic:es>Hk/DR</bic:es>
+<bic:fa>Hqca/DR</bic:fa>
+<bic:fi>Hub/DR</bic:fi>
+<bic:fr>Hj/DR</bic:fr>
+<bic:generellt>H/DR</bic:generellt>
+<bic:genre>Fiction &amp; Related Items</bic:genre>
+<bic:nl>Hg/DR</bic:nl>
+<bic:no>Hdb/DR</bic:no>
+<bic:p008>|||| o    |||| 1 </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FA">
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Modern &amp; Conntemporary Fiction</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FC">
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Classic Fiction</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FF">
+<bic:Thema>FF</bic:Thema>
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Crime &amp; Mystery</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FH">
+<bic:Thema>FH</bic:Thema>
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Thriller / Suspense</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FJ">
+<bic:Thema>FJ</bic:Thema>
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Adventure</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FK">
+<bic:Thema>FK</bic:Thema>
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Horror &amp; Ghost Stories</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FL">
+<bic:Thema>FL</bic:Thema>
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Science Fiction</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FM">
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Fantasy</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FP">
+<bic:Thema>FP</bic:Thema>
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Erotic Fiction</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FQ">
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Myth &amp; Legend told as Fiction</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FR">
+<bic:Thema>FR</bic:Thema>
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Romance</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FT">
+<bic:Thema>FT</bic:Thema>
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Sagas</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FV">
+<bic:Thema>FV</bic:Thema>
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Historical Fiction</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FW">
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:genre>Religious &amp; Spiritual Fiction</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o6   |||| 1 </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FX">
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.05/DR</bic:da>
+<bic:de>Hf.05/DR</bic:de>
+<bic:en>He.05/DR</bic:en>
+<bic:es>Hk.05/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.05/DR</bic:fi>
+<bic:fr>Hj.05/DR</bic:fr>
+<bic:generellt>H.05/DR</bic:generellt>
+<bic:genre>Graphic Novels</bic:genre>
+<bic:nl>Hg.05/DR</bic:nl>
+<bic:no>Hdb.05/DR</bic:no>
+<bic:p008>|||| o6   |||| 1 </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hci/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FY">
+<bic:ar>Hsg.01/DR</bic:ar>
+<bic:da>Hda.01/DR</bic:da>
+<bic:de>Hf.01/DR</bic:de>
+<bic:en>He.01/DR</bic:en>
+<bic:es>Hk.01/DR</bic:es>
+<bic:fa>Hqca.01/DR</bic:fa>
+<bic:fi>Hub.01/DR</bic:fi>
+<bic:fr>Hj.01/DR</bic:fr>
+<bic:generellt>H.01/DR</bic:generellt>
+<bic:genre>Fiction Special Features</bic:genre>
+<bic:nl>Hg.01/DR</bic:nl>
+<bic:no>Hdb.01/DR</bic:no>
+<bic:p008>|||| o    |||| f </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc.01/DR</bic:sv>
+</bic:bic>
+<bic:bic name="FZ">
+<bic:Thema>FZ</bic:Thema>
+<bic:generellt>G/DR</bic:generellt>
+<bic:genre>Fiction-Related Items</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="G">
+<bic:Thema>G</bic:Thema>
+<bic:generellt></bic:generellt>
+<bic:genre>Reference, Information …</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="GB">
+<bic:Thema>GB</bic:Thema>
+<bic:generellt>Ba/DR</bic:generellt>
+<bic:genre>Uppslagsböcker mm.</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="GBC">
+<bic:generellt>Bbh/DR</bic:generellt>
+<bic:genre>Citatsamlingar och aforismer</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="GBGM">
+<bic:genre>Kartor</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="GL">
+<bic:generellt>Ab/DR</bic:generellt>
+<bic:genre>Library &amp; Information Sciences</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="GM">
+<bic:generellt>Bg/DR</bic:generellt>
+<bic:genre>Museology &amp; Heritage Studies</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="H">
+<bic:genre>Humanities</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="HB">
+<bic:generellt>K/DR</bic:generellt>
+<bic:genre>Historia och arkeologi</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="HBTB">
+<bic:generellt>Kt/DR</bic:generellt>
+<bic:genre>Kulturhistoria</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="HD">
+<bic:generellt>J/DR</bic:generellt>
+<bic:genre>Arkeologi</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="HP">
+<bic:Thema>QD</bic:Thema>
+<bic:generellt>D/DR</bic:generellt>
+<bic:genre>Filosofi och idéhistoria</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="HR">
+<bic:Thema>QR</bic:Thema>
+<bic:generellt>C/DR</bic:generellt>
+<bic:genre>Religion</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="I">
+<bic:genre></bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="J">
+<bic:Thema>J</bic:Thema>
+<bic:generellt>O/DR</bic:generellt>
+<bic:genre>Society &amp; Social Sciences</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="JHB">
+<bic:generellt>Oa/DR</bic:generellt>
+<bic:genre>Sociology</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="JHM">
+<bic:generellt>M/DR</bic:generellt>
+<bic:genre>Anthropology</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="JKS">
+<bic:generellt>Oh/DR</bic:generellt>
+<bic:genre>Social welfare &amp; social services</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="JKV">
+<bic:generellt>Oep/DR</bic:generellt>
+<bic:genre>Crime &amp; Criminology</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="JM">
+<bic:Thema>JM</bic:Thema>
+<bic:generellt>Do/DR</bic:generellt>
+<bic:genre>Psykologi</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="JN">
+<bic:Thema>JN</bic:Thema>
+<bic:generellt>Ea/DR</bic:generellt>
+<bic:genre>Pedagogik</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="JP">
+<bic:generellt>Oc/DR</bic:generellt>
+<bic:genre>Politics &amp; Government</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="JW">
+<bic:Thema>JW</bic:Thema>
+<bic:generellt>S/DR</bic:generellt>
+<bic:genre>Militärväsen och vapen</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="K">
+<bic:Thema>K</bic:Thema>
+<bic:generellt>Q/DR</bic:generellt>
+<bic:genre>Ekonomi</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="KF">
+<bic:generellt>Qa/DR</bic:generellt>
+<bic:genre>Finance &amp; Accounting</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="KJ">
+<bic:Thema>KJ</bic:Thema>
+<bic:generellt>Qb/DR</bic:generellt>
+<bic:genre>Management</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="KN">
+<bic:generellt></bic:generellt>
+<bic:genre>Industry &amp; Industrial Studies</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="L">
+<bic:Thema>L</bic:Thema>
+<bic:generellt>Oe/DR</bic:generellt>
+<bic:genre>Juridik</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="M">
+<bic:Thema>M</bic:Thema>
+<bic:generellt>V/DR</bic:generellt>
+<bic:genre>Medicin och vård</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="MZ">
+<bic:generellt>Qdf/DR</bic:generellt>
+<bic:genre>Veterinärmedicin</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="N">
+<bic:genre></bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="O">
+<bic:genre></bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="P">
+<bic:Thema>P</bic:Thema>
+<bic:genre>Mathematics &amp; Science</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="PB">
+<bic:Thema>PB</bic:Thema>
+<bic:generellt>T/DR</bic:generellt>
+<bic:genre>Matematik och statistik</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="PD">
+<bic:Thema>PD</bic:Thema>
+<bic:generellt>U/DR</bic:generellt>
+<bic:genre>Naturvetenskap</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="PG">
+<bic:generellt>Ua/DR</bic:generellt>
+<bic:genre>Astronomi</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="PH">
+<bic:Thema>PH</bic:Thema>
+<bic:generellt>Ucc/DR</bic:generellt>
+<bic:genre>Fysik</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="PN">
+<bic:Thema>PN</bic:Thema>
+<bic:generellt>Uce/DR</bic:generellt>
+<bic:genre>Kemi</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="Q">
+<bic:genre></bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="R">
+<bic:Thema>R</bic:Thema>
+<bic:genre>Earth Sciences, Geography …</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="RB">
+<bic:generellt>Ud/DR</bic:generellt>
+<bic:genre>Earth Sciences</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="RG">
+<bic:Thema>RG</bic:Thema>
+<bic:generellt>N/DR</bic:generellt>
+<bic:genre>Geografi</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="RN">
+<bic:Thema>RN</bic:Thema>
+<bic:generellt>Uh/DR</bic:generellt>
+<bic:genre>Miljö</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="RP">
+<bic:generellt>Od/DR</bic:generellt>
+<bic:genre>Regional &amp; Area Planning</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="S">
+<bic:genre></bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="T">
+<bic:Thema>T</bic:Thema>
+<bic:generellt>P/DR</bic:generellt>
+<bic:genre>Technology, Engineering …</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="TV">
+<bic:Thema>TV</bic:Thema>
+<bic:generellt>Qd/DR</bic:generellt>
+<bic:genre>Jord- och skogsbruk</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="U">
+<bic:Thema>U</bic:Thema>
+<bic:generellt>Pu/DR</bic:generellt>
+<bic:genre>IT</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="UB">
+<bic:generellt>Bv/DR</bic:generellt>
+<bic:genre>Infoprmation Technology …</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="UF">
+<bic:generellt>Bv/DR</bic:generellt>
+<bic:genre>Digital Lifestyle</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="V">
+<bic:Thema>V</bic:Thema>
+<bic:genre>Health &amp; Personal Development</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="VS">
+<bic:generellt>Dok/DR</bic:generellt>
+<bic:genre>Sel-Help &amp; Personal Development</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="VXFA">
+<bic:Thema>VXFA</bic:Thema>
+<bic:generellt>Bl/DR</bic:generellt>
+<bic:genre>Astrologi och esoterika</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="W">
+<bic:Thema>W</bic:Thema>
+<bic:genre>Lifestyle, Sport &amp; Leisure</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WB">
+<bic:Thema>WB</bic:Thema>
+<bic:generellt>Qca/DR</bic:generellt>
+<bic:genre>Mat och dryck</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WD">
+<bic:Thema>WD</bic:Thema>
+<bic:generellt>Rd/DR</bic:generellt>
+<bic:genre>Spel</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WDH">
+<bic:Thema>WDH</bic:Thema>
+<bic:generellt>P.09/DR</bic:generellt>
+<bic:genre>Hantverk och hobby</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WFB">
+<bic:Thema>WFB</bic:Thema>
+<bic:generellt>Qcc/DR</bic:generellt>
+<bic:genre>Sömnad och handarbete</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WG">
+<bic:generellt>Pr/DR</bic:generellt>
+<bic:genre>Transport …</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WH">
+<bic:Thema>WH</bic:Thema>
+<bic:ar>Hsg/DR</bic:ar>
+<bic:da>Hda/DR</bic:da>
+<bic:de>Hf.017/DR</bic:de>
+<bic:en>He/DR</bic:en>
+<bic:es>Hk/DR</bic:es>
+<bic:fa>Hqca/DR</bic:fa>
+<bic:fi>Hub/DR</bic:fi>
+<bic:fr>Hj/DR</bic:fr>
+<bic:generellt>H/DR</bic:generellt>
+<bic:genre>Humor och kåserier</bic:genre>
+<bic:nl>Hg/DR</bic:nl>
+<bic:no>Hdb/DR</bic:no>
+<bic:p008>|||| o    |||| h </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hc/DR</bic:sv>
+</bic:bic>
+<bic:bic name="WHC">
+<bic:ar>Hsg.05/DR</bic:ar>
+<bic:da>Hda.05/DR</bic:da>
+<bic:de>Hf.05/DR</bic:de>
+<bic:en>He.05/DR</bic:en>
+<bic:es>Hk.05/DR</bic:es>
+<bic:fa>Hqca.05/DR</bic:fa>
+<bic:fi>Hub.05/DR</bic:fi>
+<bic:fr>Hj.05/DR</bic:fr>
+<bic:generellt>H.05/DR</bic:generellt>
+<bic:genre>Serier och skämtteckningar</bic:genre>
+<bic:nl>Hg.05/DR</bic:nl>
+<bic:no>Hdb.05/DR</bic:no>
+<bic:p008>|||| o6   |||| 1 </bic:p008>
+<bic:p008a>|||| o||||||f  | </bic:p008a>
+<bic:sv>Hci/DR</bic:sv>
+</bic:bic>
+<bic:bic name="WK">
+<bic:Thema>WK</bic:Thema>
+<bic:generellt>Qcb/DR</bic:generellt>
+<bic:genre>Hus och hem</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WMP">
+<bic:Thema>WMP</bic:Thema>
+<bic:generellt>Qe/DR</bic:generellt>
+<bic:genre>Trädgård</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WNC">
+<bic:Thema>WNC</bic:Thema>
+<bic:generellt>Ug/DR</bic:generellt>
+<bic:genre>Vilda djur</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WNG">
+<bic:Thema>WNG</bic:Thema>
+<bic:generellt>Qdf/DR</bic:generellt>
+<bic:genre>Husdjur</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WNP">
+<bic:Thema>WNP</bic:Thema>
+<bic:generellt>Qe/DR</bic:generellt>
+<bic:genre>Växter</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WS">
+<bic:generellt>R/DR</bic:generellt>
+<bic:genre>Sports &amp; Outdoor Recreation</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WSX">
+<bic:generellt>Qg/Dr</bic:generellt>
+<bic:genre>Jakt och fiske</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="WT">
+<bic:Thema>WT</bic:Thema>
+<bic:generellt>N.08/DR</bic:generellt>
+<bic:genre>Resor</bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="X">
+<bic:genre></bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+<bic:bic name="YB">
+<bic:Thema>YB</bic:Thema>
+<bic:generellt>Sätt 852$h enligt första BIC A-Z</bic:generellt>
+<bic:genre>Barn/Ungdom -- Skönlitteratur</bic:genre>
+<bic:p008>||||jo    |||| 1 </bic:p008>
+<bic:p008a>||||jo||||||f  | </bic:p008a>
+</bic:bic>
+<bic:bic name="YD">
+<bic:Thema>YD</bic:Thema>
+<bic:comment>Kommentar till värden i 008:</bic:comment>
+<bic:generellt>Sätt 852$h enligt första BIC A-Z</bic:generellt>
+<bic:genre>Barn/Ungdom -- Skönlitteratur</bic:genre>
+<bic:p008>||||jo    |||| 1 </bic:p008>
+<bic:p008a>||||jo||||||f  | </bic:p008a>
+</bic:bic>
+<bic:bic name="YF">
+<bic:Thema>YF</bic:Thema>
+<bic:comment>* Stora bokstäver = Sätt in aktuellt värde</bic:comment>
+<bic:generellt>Sätt 852$h enligt första BIC A-Z</bic:generellt>
+<bic:genre>Barn/Ungdom -- Skönlitteratur</bic:genre>
+<bic:p008>||||jo    |||| 1 </bic:p008>
+<bic:p008a>||||jo||||||f  | </bic:p008a>
+</bic:bic>
+<bic:bic name="YN">
+<bic:comment>- YYMMDD = konverteringsdatum, 6 siffror</bic:comment>
+<bic:generellt>Sätt 852$h enligt första BIC A-Z</bic:generellt>
+<bic:genre>Barn/Ungdom -- Facklitteratur</bic:genre>
+<bic:p008>||||jo    |||| 1 </bic:p008>
+<bic:p008a>||||jo||||||f  | </bic:p008a>
+</bic:bic>
+<bic:bic name="Z">
+<bic:genre></bic:genre>
+<bic:p008>|||| o    |||| 0 </bic:p008>
+<bic:p008a>|||| o||||||   | </bic:p008a>
+</bic:bic>
+</bic:bics>
