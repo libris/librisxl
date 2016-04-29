@@ -488,9 +488,13 @@ class MarcRuleSet {
             }
 
             dfn = processInherit(config, subConf, tag, dfn)
+
+            dfn = processInclude(config, dfn, tag)
+
             if (dfn.ignored || dfn.size() == 0) {
                 return
             }
+
             def handler = null
             if (dfn.tokenTypeMap) {
                 handler = new TokenSwitchFieldHandler(this, tag, dfn)
@@ -535,6 +539,25 @@ class MarcRuleSet {
         }
         def merged = baseDfn + fieldDfn
         merged.remove('inherit')
+        return merged
+    }
+
+    static Map processInclude(Map config, Map fieldDfn, String tag="N/A") {
+        def includes = fieldDfn.include
+        if (!includes) {
+            return fieldDfn
+        }
+        def merged = [:] + fieldDfn
+        for (include in Util.asList(includes)) {
+            def baseDfn = config['patterns'][include]
+            assert tag && baseDfn
+            if (baseDfn.include) {
+                baseDfn = processInclude(config, baseDfn, tag)
+            }
+            assert tag && !(baseDfn.keySet().intersect(fieldDfn.keySet()) - 'include')
+            merged += baseDfn
+            merged.remove('include')
+        }
         return merged
     }
 
@@ -654,7 +677,7 @@ class ConversionPart {
         }
     }
 
-    Map newEntity(Map state, String type, String id=null) {
+    Map newEntity(Map state, String type, String id=null, Boolean embedded=embedded) {
         def ent = [:]
         if (type) ent["@type"] = type
         if (id) ent["@id"] = id
@@ -1231,6 +1254,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 
 }
 
+// TODO: when pendingResources with about can be reverted:
+// remove splitLink and spliceEntity code, no longer needed!
 @Log
 @CompileStatic
 class MarcFieldHandler extends BaseMarcFieldHandler {
@@ -1527,12 +1552,18 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         ]
     }
 
-    Map getLocalEntity(Map state, Map owner, String id, Map localEntites) {
-        def entity = (Map) localEntites[id]
+    Map getLocalEntity(Map state, Map owner, String id, Map localEntities) {
+        def entity = (Map) localEntities[id]
         if (entity == null) {
             def pending = pendingResources[id]
-            entity = localEntites[id] = newEntity(state, (String) pending.resourceType)
+            entity = localEntities[id] = newEntity(state,
+                    (String) pending.resourceType,
+                    null, // id
+                    (Boolean) pending.embedded)
             def link = (String) (pending.link ?: pending.addLink)
+            if (pending.about) {
+                owner = getLocalEntity(state, owner, (String) pending.about, localEntities)
+            }
             addValue(owner, link, entity, pending.containsKey('addLink'))
         }
         return entity
@@ -1562,8 +1593,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (definesDomainEntityType && !(types.contains(definesDomainEntityType)))
             return null
 
-        def entities = [entity]
-
         def results = []
 
         def useLinks = []
@@ -1582,7 +1611,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         for (useLink in useLinks) {
-            def useEntities = entities
+            def useEntities = [entity]
             if (useLink.link) {
                 useEntities = entity[useLink.link]
                 if (!(useEntities instanceof List)) // should be if repeat == true
@@ -1603,7 +1632,15 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     def link = pending.link ?: pending.addLink
                     def resourceType = pending.resourceType
                     useEntities.each {
-                        def about = it[link]
+                        def parent = it
+                        if (pending.about) {
+                            def pendingParent = pendingResources[pending.about]
+                            if (pendingParent) {
+                                def parentLink = pendingParent.link ?: pendingParent.addLink
+                                parent = it[parentLink]
+                            }
+                        }
+                        def about = parent? parent[link] : null
                         // TODO: if multiple, spread according to repeated subfield groups(?)...
                         if (about instanceof List) {
                             about = about[0]
@@ -1706,6 +1743,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
         }
+
+        /* FIXME: match-i1 before match-code resolves agent wrongly and this fails...
+        if (tag == '700:match-code:t') {
+            assert subs && !failedRequired
+        }
+        */
 
         return !failedRequired && i1 != null && i2 != null && subs.length?
             [ind1: i1, ind2: i2, subfields: subs] :
@@ -1995,7 +2038,7 @@ abstract class MatchRule {
                 comboDfn.nestedMatch = true
             }
             comboDfn += matchDfn
-            def tag = null
+            def tag = "${handler.tag}:match-code:${key}"
             ruleMap[key] = new MarcFieldHandler(handler.ruleSet, tag, comboDfn)
         }
     }

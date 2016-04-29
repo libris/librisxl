@@ -132,12 +132,95 @@
   ],
 
   "patterns": {
+
+    "agentdata": {
+      "match-i1": {
+        "0": {
+          "$a": {"about": "_:agent", "property": "name", "required": true}
+        },
+        "1": {
+          "$a": {
+            "about": "_:agent",
+            "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
+            "required": true
+          }
+        },
+        "3": {
+          "resourceType": "Family",
+          "$a": {"about": "_:agent", "property": "name", "required": true}
+        }
+      },
+      "$a": {"required": true},
+      "$b": {"about": "_:agent", "property": "numeration"},
+      "$c": {"about": "_:agent", "addProperty": "qualifyingNote"},
+      "$d": {
+        "about": "_:agent",
+        "property": "lifeSpan",
+        "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
+          "splitValueProperties": ["birthYear", "deathYear"],
+          "rejoin": "-",
+          "allowEmpty": true
+      },
+      "$j": {"about": "_:agent", "property": "comment"},
+      "$q": {"about": "_:agent", "property": "label"}
+    },
+
+    "attribution": {
+      "include": "agentdata",
+      "addLink": "qualifiedAttribution",
+      "embedded": true,
+      "pendingResources": {
+        "_:agent": {"link": "agent", "resourceType": "Person"}
+      },
+      "$4": {"link": "role", "property": "notation", "uriTemplate": "{notation}", "TODO:mapping": "relatorCode"},
+      "$e": {"addProperty": "roleNote"}
+    },
+
+    "splicedworkentity": {
+      "TODO:l": "see-other-fields",
+      "match-code": {
+        "t": {
+          "pendingResources": {
+            "_:work": {"addLink": "subject", "resourceType": "UniformWork", "embedded": false},
+            "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
+        }
+      }
+    },
+
+    "subjectbase": {
+      "i2": {
+        "link": "inScheme",
+        "resourceType": "ConceptScheme",
+        "uriTemplate": "https://id.kb.se/term/{+_}",
+        "property": "notation",
+        "tokenMap": "thesaurus",
+        "marcDefault": "4",
+        "definedElsewhereToken": "7"
+      },
+      "$2": {
+        "requires-i2": "7",
+        "link": "inScheme",
+        "uriTemplate": "https://id.kb.se/term/{+_}",
+        "resourceType": "ConceptScheme",
+        "property": "notation"
+      }
+    },
+
     "termid": {
       "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{prefLabel}"
     },
-    "termbase": {
-      "inherit": "patterns:termid",
+    "termbase_noid": {
       "$a": {"property": "prefLabel"},
+      "$0": {"property": "controlNumber"},
+      "TODO:$0": {
+        "addLink": "sameAs",
+        "uriTemplate": "http://libris.kb.se/resource/auth/{_}",
+        "property": "controlNumber"
+      },
       "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
       "constructProperties": {
         "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
@@ -163,7 +246,14 @@
                  "property": "prefLabel"}
         }
       }
+    },
+    "termbase": {
+      "include": ["termbase_noid", "termid"]
+    },
+    "relation_from_w": {
+      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
     }
+
   },
 
   "bib": {
@@ -2348,32 +2438,8 @@
 
     "100": {
       "NOTE:candidate:aboutEntity": "?work",
-      "resourceType": "Person",
-      "match-i1": {
-        "0": {
-          "$a": {"property": "name", "required": true}
-        },
-        "1": {
-          "$a": {
-            "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
-            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
-            "required": true
-          }
-        },
-        "3": {
-          "resourceType": "Family",
-          "$a": {"property": "name", "required": true}
-        }
-      },
-      "link": "attributedTo",
-      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-      "$a": {"required": true},
-      "$b": {"property": "numeration"},
-      "$c": {"addProperty": "qualifyingNote"},
-      "$d": {"property": "lifeSpan", "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
-        "splitValueProperties": ["birthYear", "deathYear"], "rejoin": "-", "allowEmpty": true},
-      "$j": {"property": "comment"},
-      "$q": {"property": "label"},
+      "include": "attribution",
+      "resourceType": "MainAttribution",
       "_spec": [
         {
           "source": {
@@ -2387,11 +2453,16 @@
               {"d": "1914-2001"}
           ]}},
           "result": {"mainEntity": {
-            "attributedTo": {"@type": "Person",
-              "familyName":  "Jansson",
-              "givenName":  "Tove",
-              "birthYear":  "1914",
-              "deathYear":  "2001"}
+            "qualifiedAttribution": [
+              {
+                "@type": "MainAttribution",
+                "agent": {"@type": "Person",
+                  "familyName":  "Jansson",
+                  "givenName":  "Tove",
+                  "birthYear":  "1914",
+                  "deathYear":  "2001"}
+              }
+            ]
           }}
         }
       ]
@@ -2402,7 +2473,7 @@
       "link": "attributedTo",
       "TODO": [
         "change splitValueProperties to work on result, to handle match combo",
-        "splitByRepetitionAndInterpunctionPattern ($n $d ...)?"
+        "groupByRepetitionAndInterpunctionPattern ($n $d ...)?"
       ],
       "i1": {"marcDefault": "2"},
       "match-i1": {
@@ -2604,23 +2675,20 @@
 
     "260": {
       "aboutEntity": "?thing",
-      "addLink": "provision",
-      "embedded": true,
       "ignoreOnRevertInFavourOf": "264",
-      "splitLink": [
-        {"codes": ["3", "a", "b", "c"], "addLink": "publication"},
-        {"codes": ["e", "f", "g"], "addLink": "manufacture"}
-      ],
-      "TODO": "splitByRepetitionAndInterpunctionPattern",
-      "resourceType": "ProviderEvent",
+      "pendingResources": {
+        "?publication": {"resourceType": "ProviderEvent", "addLink": "publication", "embedded": true},
+        "?manufacture": {"resourceType": "ProviderEvent", "addLink": "manufacture", "embedded": true}
+      },
+      "TODO:groupByRepetitionAndInterpunctionPattern": "$3 $a $b $c $e $f $g",
       "TODO:i1": {"property": "latest", "tokenMap": {"2": false, "3": true}},
-      "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
-      "$b": {"property": "providerName", "interpunctionChars": ",:;"},
-      "$c": {"property": "providerDate", "interpunctionChars": ",;"},
-      "$e": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
-      "$f": {"property": "providerName", "interpunctionChars": ",:;"},
-      "$g": {"property": "providerDate", "interpunctionChars": ",;"},
-      "$3": {"property": "scopeNote", "position": 0, "TODO": "put in first out-split entity"},
+      "$a": {"about": "?publication", "link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
+      "$b": {"about": "?publication", "property": "providerName", "interpunctionChars": ",:;"},
+      "$c": {"about": "?publication", "property": "providerDate", "interpunctionChars": ",;"},
+      "$e": {"about": "?manufacture", "link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
+      "$f": {"about": "?manufacture", "property": "providerName", "interpunctionChars": ",:;"},
+      "$g": {"about": "?manufacture", "property": "providerDate", "interpunctionChars": ",;"},
+      "$3": {"about": "?publication", "property": "scopeNote", "position": 0, "TODO": "put in first out-split entity"},
       "_spec": [
         {
           "source": {
@@ -3054,33 +3122,18 @@
     },
 
     "600": {
-      "inherit": "100",
-      "TOOO:i1": {},
-      "TOOO:i2": {},
-      "match-code": {
-        "t": {
-          "$t": {"property": "title"},
-          "splitLink": [
-            {"codes": ["t"], "addLink": "subject", "spliceEntity": "UniformWork"}
-          ],
-          "link": "attributedTo"
-        }
-      },
-      "addLink": "subject", "resourceType": "Person"
+      "include": ["subjectbase", "agentdata", "splicedworkentity"],
+      "addLink": "subject",
+      "resourceType": "Concept",
+      "pendingResources": {
+        "_:agent": {"link": "focus", "resourceType": "Person", "embedded": false}
+      }
     },
     "610": {
+      "include": "subjectbase",
       "addLink": "subject",
       "resourceType": "OrganizationTerm",
       "i1": {"marcDefault": "2"},
-      "i2": {
-        "link": "inScheme",
-        "resourceType": "ConceptScheme",
-        "uriTemplate": "https://id.kb.se/term/{+_}",
-        "property": "notation",
-        "tokenMap": "thesaurus",
-        "marcDefault": "4",
-        "definedElsewhereToken": "7"
-      },
       "match-i1": {
         "0": {
           "$a": {
@@ -3109,13 +3162,6 @@
         }
       },
       "$a": {"property": "name", "required": true},
-      "$2": {
-        "requires-i2": "7",
-        "link": "inScheme",
-        "uriTemplate": "https://id.kb.se/term/{+_}",
-        "resourceType": "ConceptScheme",
-        "property": "notation"
-      },
       "_spec": [
         {
           "source": {
@@ -3155,12 +3201,12 @@
       "inherit": "130", "addLink": "subject", "resourceType": "UniformWork"
     },
     "648": {
-      "inherit": "650",
-      "resourceType": "ChronologicalTerm",
-      "$a": {"property": "prefLabel"}
+      "include": ["subjectbase", "termbase"],
+      "addLink": "subject",
+      "resourceType": "ChronologicalTerm"
     },
     "650": {
-      "inherit": "patterns:termbase",
+      "include": ["subjectbase", "termbase"],
       "NOTE:candidate:aboutEntity": "?work",
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
@@ -3177,27 +3223,6 @@
           "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
         }
       },
-      "i2": {
-        "link": "inScheme",
-        "resourceType": "ConceptScheme",
-        "uriTemplate": "https://id.kb.se/term/{+_}",
-        "property": "notation",
-        "tokenMap": "thesaurus",
-        "marcDefault": "4",
-        "definedElsewhereToken": "7"
-      },
-      "$0": {
-        "addLink": "sameAs",
-        "uriTemplate": "http://libris.kb.se/resource/auth/{_}",
-        "property": "notation",
-        "ignored": true
-      },
-      "$2": {
-        "requires-i2": "7",
-        "link": "inScheme",
-        "resourceType": "ConceptScheme",
-        "property": "notation"
-      },
       "_spec": [
         {
           "source": {"650": {"ind1": " ", "ind2": "7",
@@ -3208,7 +3233,11 @@
               {
                 "@id": "https://id.kb.se/term/sao/Fysik",
                 "@type": "TopicalTerm",
-                "inScheme": {"@type": "ConceptScheme", "notation": "sao"},
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/sao",
+                  "@type": "ConceptScheme",
+                  "notation": "sao"
+                },
                 "prefLabel": "Fysik"
               }
             ]
@@ -3246,11 +3275,10 @@
       ]
     },
     "651": {
-      "inherit": "650",
+      "include": ["subjectbase", "termbase"],
+      "addLink": "subject",
       "resourceType": "GeographicalTerm",
-      "TOOO:i2": {},
-      "i1": null,
-      "$a": {"property": "prefLabel"}
+      "i1": null
     },
     "653": {
       "TOOO:i1": {},
@@ -3264,7 +3292,8 @@
     },
 
     "655" : {
-      "inherit": "650",
+      "include": ["subjectbase", "termbase_noid"],
+      "addLink": "subject",
       "addLink": "genre",
       "resourceType": "GenreTerm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
@@ -3285,18 +3314,19 @@
     "690": {},
 
     "700": {
-      "inherit": "100",
+      "NOTE:candidate:aboutEntity": "?work",
+      "include": "attribution",
+      "resourceType": "AdditionalAttribution",
       "match-code": {
         "t": {
-          "$t": {"property": "title"},
-          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-          "splitLink": [
-            {"codes": ["t", "l"], "addLink": "influencedBy", "spliceEntity": "UniformWork"}
-          ],
-          "link": "attributedTo"
+          "pendingResources": {
+            "_:work": {"link": "agent", "resourceType": "UniformWork", "embedded": false},
+            "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
         }
       },
-      "addLink": "influencedBy", "resourceType": "Person",
       "TOOO:i2": {},
       "_spec": [
         {
@@ -3306,11 +3336,34 @@
             ]}
           },
           "result": {"mainEntity": {
-            "influencedBy": [
-              {"@type": "Person",
-                "familyName":  "Pietilä",
-                "givenName":  "Tuulikki",
-                "birthYear":  "1917"}
+            "qualifiedAttribution": [
+              {
+                "@type": "AdditionalAttribution",
+                "agent": {"@type": "Person",
+                    "familyName":  "Pietilä",
+                    "givenName":  "Tuulikki",
+                    "birthYear":  "1917"}
+              }
+            ]
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove"},
+              {"t": "Anteckningar från en ö"}
+          ]}},
+          "result": {"mainEntity": {
+            "qualifiedAttribution": [
+              {
+                "@type": "AdditionalAttribution",
+                "agent": {
+                  "@type": "UniformWork",
+                  "title": "Anteckningar från en ö",
+                  "attributedTo": {"@type": "Person",
+                    "familyName":  "Jansson", "givenName":  "Tove"}
+                }
+              }
             ]
           }}
         }
@@ -3815,20 +3868,21 @@
     },
 
     "100" : {
-      "inherit": "bib",
+      "include": "agentdata",
       "aboutEntity": "?record",
       "aboutType": "PersonTerm",
-      "link": "focus", "embedded": true, "resourceType": "Person",
+      "pendingResources": {
+        "_:agent": {"link": "focus", "resourceType": "Person", "embedded": true}
+      },
       "match-code": {
-        "t v x y z": {
+        "t": {
           "aboutType": "WorkTerm",
-          "splitLink": [
-            {"codes": ["t"], "link": "focus", "spliceEntity": "UniformWork"}
-          ],
-          "link": "attributedTo",
-          "embedded": false,
-          "resourceType": "Person",
-          "$t": {"property": "title"}
+          "pendingResources": {
+            "_:work": {"link": "focus", "resourceType": "UniformWork", "embedded": false},
+            "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
         }
       },
       "_spec": [
@@ -3889,11 +3943,11 @@
       "uriTemplate": "https://id.kb.se/term/sao/{prefLabel}"
     },
     "150" : {
-      "inherit": "patterns:termbase",
+      "include": "termbase",
       "aboutEntity": "?record",
       "aboutType": "TopicalTerm",
       "dependsOn": ["040", "042"],
-      "$0": null,
+      "TODO:ignore:$0": "not-defined-for-150;or-assert-equal-to-001",
       "_spec": [
         {
           "name": "",
@@ -3956,26 +4010,26 @@
       ]
     },
     "151" : {
-      "inherit": "patterns:termbase",
+      "include": "termbase",
       "aboutEntity": "?record",
       "aboutType": "GeographicalTerm"
     },
     "155" : {
-      "inherit": "patterns:termbase",
+      "include": "termbase",
       "aboutEntity": "?record",
       "aboutType": "GenreTerm",
       "TODO:just-assert-inScheme=saogf?:uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "TODO:if-inScheme=barn?:uriTemplate": "https://id.kb.se/term/barn/gf/{prefLabel}"
     },
     "162" : {
-      "inherit": "patterns:termbase",
+      "include": "termbase",
       "TODO": "besättning - musik",
       "aboutEntity": "?record",
       "aboutType": "OrchestraTerm"
     },
 
     "180" : {
-      "inherit": "patterns:termid",
+      "include": "termid",
       "aboutEntity": "?record",
       "aboutType": "SubdivisionTerm",
       "$x": {
@@ -3984,33 +4038,39 @@
       }
     },
     "181" : {
-      "inherit": "patterns:termid",
+      "include": "termid",
       "aboutEntity": "?record",
       "aboutType": "GeographicalSubdivisionTerm",
       "$z": {"property": "prefLabel"}
     },
     "182" : {
-      "inherit": "patterns:termid",
+      "include": "termid",
       "aboutEntity": "?record",
       "aboutType": "ChronologicalSubdivisionTerm",
       "$y": {"property": "prefLabel"}
     },
     "185" : {
-      "inherit": "patterns:termid",
+      "include": "termid",
       "aboutEntity": "?record",
       "aboutType": "GenreSubdivisionTerm",
       "$v": {"property": "prefLabel"}
     },
 
     "400": {
-      "inherit": "bib:100",
+      "TODO:remnants-of-inherit": "bib:100",
+      "include": ["agentdata"],
+      "aboutEntity": "?record",
+      "pendingResources": {
+        "_:agent": {"link": "attributedTo", "resourceType": "Person"}
+      },
       "match-code": {
         "t": {
-          "$t": {"property": "title"},
-          "splitLink": [
-            {"codes": ["t"], "addLink": "hasVersion", "spliceEntity": "UniformWork"}
-          ],
-          "link": "attributedTo"
+          "pendingResources": {
+            "_:work": {"addLink": "hasVersion", "resourceType": "UniformWork", "embedded": false},
+            "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
         }
       },
       "match-domain": {
@@ -4021,14 +4081,11 @@
           "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
         }
-      },
-      "aboutEntity": "?record",
-      "addLink": "attributedTo",
-      "resourceType": "Person"
+      }
     },
     "410": {
       "inherit": "bib:610",
-      "i2": null,
+      "TODO:i2": null,
       "aboutEntity": "?record",
       "addLink": "hasVersion",
       "resourceType": "OrganizationTerm"
@@ -4055,22 +4112,20 @@
     },
     "455" : {"inherit": "450"},
     "500": {
-      "inherit": "bib:100",
+      "TODO:remnants-of-inherit": "bib:100",
+      "include": ["agentdata", "splicedworkentity"],
       "TODO": "this is really a link to other auth post..",
       "aboutEntity": "?thing", "NOTE": "not really though - see 100",
-      "addLink": "hasPersona",
-      "embedded": true,
-      "resourceType": "Person"
+      "pendingResources": {
+        "_:agent": {"link": "hasPersona", "resourceType": "Person"}
+      }
     },
     "510" : {"inherit": "bib:110", "aboutEntity": null, "addLink": "seeAlso"},
     "511" : {"inherit": "bib:111", "aboutType": null, "addLink": "seeAlso"},
     "550" : {
-      "inherit": "150",
+      "include": ["termbase", "relation_from_w"],
       "aboutEntity": "?record",
-      "aboutType": null,
       "resourceType": "TopicalTerm",
-      "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}},
-      "$0": {"property": "controlNumber"},
       "_spec": [
         {
           "source": [
@@ -4110,12 +4165,13 @@
       ]
     },
     "551" : {
-        "inherit": "550",
+      "include": ["termbase_noid", "relation_from_w"],
       "resourceType": "GeographicalTerm",
       "uriTemplate": "https://id.kb.se/place/{prefLabel}"
     },
     "555" : {
-      "inherit": "550",
+      "include": ["termbase_noid", "relation_from_w"],
+      "aboutEntity": "?record",
       "resourceType": "GenreTerm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
@@ -4155,28 +4211,24 @@
     },
 
     "750" : {
-      "inherit": "bib:650",
+      "include": ["subjectbase", "termbase"],
       "i1": null,
       "aboutEntity": "?record",
-      "computeLinks": null,
       "addLink": "closeMatch",
+      "resourceType": "TopicalTerm",
       "match-domain": {
         "WorkTerm": {"addLink": "subject"}
       },
-      "$0": {"addProperty": "notation"},
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html"
     },
     "755" : {
-      "inherit": "750",
+      "include": ["subjectbase", "termbase_noid"],
+      "i1": null,
+      "aboutEntity": "?record",
+      "addLink": "closeMatch",
       "resourceType": "GenreTerm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
-      "$2": {
-        "requires-i2": "7",
-        "link": "inScheme",
-        "resourceType": "ConceptScheme", "uriTemplate": "https://id.kb.se/term/{+_}",
-        "property": "notation",
-        "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
-      }
+      "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
     },
     "780" : {
       "inherit": "750",
@@ -4540,9 +4592,12 @@
     },
 
     "600": {
-      "inherit": "bib:100",
-      "addLink": "subject",
-      "TODO:aboutEntity": "?exampleOfWork (which may be the sameAs ?itemOf)"
+      "TODO:aboutEntity": "?exampleOfWork (which may be the sameAs ?itemOf)",
+      "TODO:remnants-of-inherit": "bib:100",
+      "include": ["agentdata"],
+      "pendingResources": {
+        "_:agent": {"link": "subject", "resourceType": "Person"}
+      }
     },
     "650": {"inherit": "bib:650"},
     "653": {},

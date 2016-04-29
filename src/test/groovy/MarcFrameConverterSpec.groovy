@@ -323,6 +323,11 @@ class MarcFrameConverterSpec extends Specification {
                 [item: [key: '2']]]]    | 'part.item.key'   | ['1', '2']
     }
 
+    def "should process includes"() {
+        expect:
+        MarcRuleSet.processInclude([patterns: [a: [a:1]]], [include: 'a', b:2]) == [a:1, b:2]
+    }
+
     void assertJsonEquals(result, expected) {
         def resultJson = json(result)
         def expectedJson = json(expected)
