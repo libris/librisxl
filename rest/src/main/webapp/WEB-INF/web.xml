@@ -28,8 +28,8 @@
             <param-value>POST, PUT, DELETE</param-value>
         </init-param>
         <init-param>
-            <param-name>filterOnPorts</param-name>
-            <param-value>80,8080</param-value>
+            <param-name>mockAuthentication</param-name>
+            <param-value>false</param-value>
         </init-param>
     </filter>
 

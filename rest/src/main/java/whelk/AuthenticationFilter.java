@@ -16,7 +16,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 
@@ -24,7 +23,7 @@ public class AuthenticationFilter implements Filter {
 
     private static final ObjectMapper mapper = new ObjectMapper();
     private List<String> supportedMethods;
-    private List<String> filterOnPorts;
+    private boolean mockAuthMode = false;
     private String url = null;
 
     final static Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
@@ -33,17 +32,19 @@ public class AuthenticationFilter implements Filter {
     public void init(FilterConfig filterConfig) throws ServletException {
 
         String initParams = filterConfig.getInitParameter("supportedMethods");
-        String filterOnPortsStr = filterConfig.getInitParameter("filterOnPorts");
-
+        mockAuthMode = filterConfig.getInitParameter("mockAuthentication").equals("true");
+        if (mockAuthMode) {
+            log.warn("Starting authentication filter in development mode. System is wide open.");
+        }
+        log.debug("Mock auth mode: " + mockAuthMode);
         supportedMethods = splitInitParameters(initParams);
-        filterOnPorts = splitInitParameters(filterOnPortsStr);
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        if (supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
+        if (!mockAuthMode && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
             String json = null;
             try {
                 String token = httpRequest.getHeader("Authorization");
@@ -72,8 +73,18 @@ public class AuthenticationFilter implements Filter {
                 e.printStackTrace();
             }
         } else {
+            if (mockAuthMode) {
+                log.warn("Mock authentication mode enabled, creating dummy user.");
+                request.setAttribute("user", createDevelopmentUser());
+            }
             chain.doFilter(request, response);
         }
+    }
+
+    private Map createDevelopmentUser() {
+        Map emptyUser = new HashMap<String,Object>();
+        emptyUser.put("user", "SYSTEM");
+        return emptyUser;
     }
 
     private String verifyToken(String token) {
