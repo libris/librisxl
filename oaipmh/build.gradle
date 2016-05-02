@@ -21,9 +21,6 @@ dependencies {
 
     def jettyVersion="9.3.6.v20151106"
 
-    // Sql connection pool
-    compile 'com.zaxxer:HikariCP:2.4.3'
-
     // Jetty
     compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
     compile "org.eclipse.jetty:jetty-server:${jettyVersion}"

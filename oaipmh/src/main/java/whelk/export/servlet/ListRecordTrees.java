@@ -39,7 +39,7 @@ public class ListRecordTrees
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // First connection, used for iterating over the requested root nodes. ID only.
-        try (Connection dbconn = DataBase.getConnection();
+        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
              PreparedStatement preparedStatement = prepareRootStatement(dbconn, setSpec);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
@@ -110,7 +110,7 @@ public class ListRecordTrees
 
         Map map = null;
 
-        try (Connection dbconn = DataBase.getConnection();
+        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
              PreparedStatement preparedStatement = prepareNodeStatement(dbconn, id);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
@@ -259,7 +259,7 @@ public class ListRecordTrees
 
         LinkedList<String> linkedIDs = new LinkedList<String>();
 
-        try (Connection dbconn = DataBase.getConnection();
+        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
              PreparedStatement preparedStatement = prepareIdentifiersStatement(dbconn, potentialID);
              ResultSet resultSet = preparedStatement.executeQuery())
         {

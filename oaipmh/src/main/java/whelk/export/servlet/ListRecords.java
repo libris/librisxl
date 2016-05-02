@@ -77,7 +77,7 @@ public class ListRecords
             ListRecordTrees.respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix, onlyIdentifiers);
         } else {
             // Normal record retrieval
-            try (Connection dbconn = DataBase.getConnection();
+            try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
                  PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec);
                  ResultSet resultSet = preparedStatement.executeQuery())
             {

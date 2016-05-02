@@ -214,7 +214,7 @@ public class ResponseCommon
     private static void emitAttachedHoldings(List<String> itIds, XMLStreamWriter writer)
             throws SQLException, XMLStreamException, IOException
     {
-        try (Connection dbconn = DataBase.getConnection();
+        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
              PreparedStatement preparedStatement = getAttachedHoldings(dbconn, itIds);
              ResultSet resultSet = preparedStatement.executeQuery())
         {

@@ -69,7 +69,7 @@ public class ListSets
         writer.writeEndElement(); // set
 
         // Dynamic sigel-sets
-        try (Connection dbconn = DataBase.getConnection();
+        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
              PreparedStatement preparedStatement = prepareStatement(dbconn);
              ResultSet resultSet = preparedStatement.executeQuery())
         {

@@ -51,7 +51,7 @@ public class GetRecord
 
         String id = Helpers.getShorthandDocumentId(identifierUri);
 
-        try (Connection dbconn = DataBase.getConnection();
+        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
              PreparedStatement preparedStatement = prepareStatement(dbconn, id);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
