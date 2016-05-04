@@ -100,7 +100,85 @@ public class JsonLd {
             throw new FramingException("Unable to frame JSONLD ($flatJsonLd). Recursive loop?)", sofe)
         }
 
+        Set referencedBNodes = new HashSet()
+        getReferencedBNodes(framedMap, referencedBNodes)
+
+        cleanUnreferencedBNodeIDs(framedMap, referencedBNodes)
+
         return framedMap
+    }
+
+    /**
+     * Fills the referencedBNodes set with all "_:*" ids that are referenced anywhere in the structure/document
+     * (and thus cannot be safely removed)
+     */
+    private static void getReferencedBNodes(Map map, Set referencedBNodes)
+    {
+        // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
+        if (map.size() == 1)
+        {
+            String key = map.keySet().getAt(0)
+            if (key.equals("@id"))
+            {
+                String id = map.get(key)
+                if (id.startsWith("_:"))
+                    referencedBNodes.add(id)
+            }
+        }
+
+        for (Object keyObj : map.keySet())
+        {
+            Object subobject = map.get(keyObj);
+
+            if ( subobject instanceof Map )
+                getReferencedBNodes( (Map) subobject, referencedBNodes );
+            else if ( subobject instanceof List )
+                getReferencedBNodes( (List) subobject, referencedBNodes );
+        }
+    }
+
+    private static void getReferencedBNodes(List list, Set referencedBNodes)
+    {
+        for (Object item : list)
+        {
+            if ( item instanceof Map )
+                getReferencedBNodes( (Map) item, referencedBNodes );
+        }
+    }
+
+    private static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes)
+    {
+        if (map.size() > 1)
+        {
+            if (map.containsKey("@id"))
+            {
+                String id = map.get("@id")
+
+                if (id.startsWith("_:") && !referencedBNodes.contains(id))
+                {
+                    map.remove("@id")
+                }
+            }
+        }
+
+        for (Object keyObj : map.keySet())
+        {
+            Object subobject = map.get(keyObj);
+
+            if ( subobject instanceof Map )
+                cleanUnreferencedBNodeIDs( (Map) subobject, referencedBNodes );
+            else if ( subobject instanceof List )
+                cleanUnreferencedBNodeIDs( (List) subobject, referencedBNodes );
+        }
+    }
+
+    private static void cleanUnreferencedBNodeIDs(List list, Set referencedBNodes)
+    {
+        for (Object item : list)
+        {
+            if ( item instanceof Map )
+                cleanUnreferencedBNodeIDs( (Map) item, referencedBNodes );
+        }
     }
 
     private static Map embed(String mainId, Map mainItemMap, Map idMap, Set embedChain) {
