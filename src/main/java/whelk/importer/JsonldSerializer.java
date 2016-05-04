@@ -126,35 +126,16 @@ public class JsonldSerializer
                 {
                     Map objectMap = _optGraphMap.get(triple[0]);
 
-                    // Does the object already have an instance of this predicate?
-                    // If so, convert that instance to a list
-                    if (objectMap.keySet().contains(triple[1]))
-                    {
-                        Object tmp = objectMap.get(triple[1]);
-                        List objectList = null;
-                        if (!(tmp instanceof List))
-                        {
-                            objectList = new ArrayList<>();
-                            objectMap.put(triple[1], objectList); // removal of the old object is implicit
-                            objectList.add(tmp);
-                        }
-                        else
-                            objectList = (List) tmp;
-
-                        objectList.add(triple[2]);
-                    }
-                    else // add normally
-                    {
-                        objectMap.put(triple[1], triple[2]);
-                    }
+                    addTripleToObject(objectMap, triple);
                 }
                 else
                 {
                     Map objectMap = new HashMap<>();
                     objectMap.put("@id", triple[0]);
-                    objectMap.put(triple[1], triple[2]);
                     graphList.add(objectMap);
                     _optGraphMap.put(triple[0], objectMap);
+
+                    addTripleToObject(objectMap, triple);
                 }
             }
         }
@@ -166,4 +147,42 @@ public class JsonldSerializer
         return result;
     }
 
+    private static void addTripleToObject(Map objectMap, String[] triple)
+    {
+        // The thing to be added might be just a string (if the triple object is a literal),
+        // or a map containing an @id if the triple object is an identifiable node in itself.
+        Object toBeAdded;
+        if ( triple[2].startsWith(LITERAL_PREFIX) )
+        {
+            toBeAdded = triple[2].substring(LITERAL_PREFIX.length());
+        }
+        else
+        {
+            Map map = new HashMap();
+            map.put("@id", triple[2]);
+            toBeAdded = map;
+        }
+
+        // Does the object already have an instance of this predicate?
+        // If so, convert that instance to a list
+        if (objectMap.keySet().contains(triple[1]))
+        {
+            Object tmp = objectMap.get(triple[1]);
+            List objectList = null;
+            if (!(tmp instanceof List))
+            {
+                objectList = new ArrayList<>();
+                objectMap.put(triple[1], objectList); // removal of the old object is implicit
+                objectList.add(tmp);
+            }
+            else
+                objectList = (List) tmp;
+
+            objectList.add(toBeAdded);
+        }
+        else // add normally
+        {
+            objectMap.put(triple[1], toBeAdded);
+        }
+    }
 }
