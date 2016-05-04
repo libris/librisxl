@@ -37,6 +37,10 @@ public class Enricher
             System.out.println(triple[0] + " -> " + triple[1] + " -> " + triple[2]);
         }
 
+        Map reverted = JsonldSerializer.serialize(triples);
+        String rev_string = m_mapper.writeValueAsString(reverted);
+        System.out.println(rev_string);
+
         //RDFDataset rdf = Tools.toDataTriples(withDocument, contextMap);
         //Tools.fromTriples(rdf);
 

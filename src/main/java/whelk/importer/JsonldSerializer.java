@@ -1,9 +1,6 @@
 package whelk.importer;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class serializes and deserializes RDF triples (represented as String[3]) to/from a subset of jsonld.
@@ -12,6 +9,7 @@ public class JsonldSerializer
 {
     private static int lastBlankNodeId = -1;
     public static final String LITERAL_PREFIX = "__literal:";
+    public static final String BLANKNODE_PREFIX = "_:b";
 
     /*******************************************************************************************************************
      * Deserialization
@@ -99,7 +97,7 @@ public class JsonldSerializer
 
     private static String newBlankNodeId()
     {
-        return "_:b" + ++lastBlankNodeId;
+        return BLANKNODE_PREFIX + ++lastBlankNodeId;
     }
 
     /*******************************************************************************************************************
@@ -113,8 +111,59 @@ public class JsonldSerializer
      */
     public static Map serialize(List<String[]> triples)
     {
+        List graphList = new ArrayList<>();
+
+        // an optimization to find items in the graph list without searching
+        Map<String, Map> _optGraphMap = new HashMap<>();
+
+        // Add all identifiable nodes first
+        for (String[] triple : triples)
+        {
+            if ( !triple[0].startsWith(BLANKNODE_PREFIX) )
+            {
+                // Has this object already been added to the graph?
+                if (_optGraphMap.keySet().contains(triple[0]))
+                {
+                    Map objectMap = _optGraphMap.get(triple[0]);
+
+                    // Does the object already have an instance of this predicate?
+                    // If so, convert that instance to a list
+                    if (objectMap.keySet().contains(triple[1]))
+                    {
+                        Object tmp = objectMap.get(triple[1]);
+                        List objectList = null;
+                        if (!(tmp instanceof List))
+                        {
+                            objectList = new ArrayList<>();
+                            objectMap.put(triple[1], objectList); // removal of the old object is implicit
+                            objectList.add(tmp);
+                        }
+                        else
+                            objectList = (List) tmp;
+
+                        objectList.add(triple[2]);
+                    }
+                    else // add normally
+                    {
+                        objectMap.put(triple[1], triple[2]);
+                    }
+                }
+                else
+                {
+                    Map objectMap = new HashMap<>();
+                    objectMap.put("@id", triple[0]);
+                    objectMap.put(triple[1], triple[2]);
+                    graphList.add(objectMap);
+                    _optGraphMap.put(triple[0], objectMap);
+                }
+            }
+        }
+
+        // Embed all blank nodes
+
         Map result = new HashMap<>();
-        return null;
+        result.put("@graph", graphList);
+        return result;
     }
 
 }
