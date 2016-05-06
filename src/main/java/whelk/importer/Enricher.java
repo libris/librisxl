@@ -1,8 +1,10 @@
 package whelk.importer;
 
 import com.github.jsonldjava.core.RDFDataset;
+import com.google.common.collect.Lists;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
+import whelk.JsonLd;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.JsonLD2RdfXml;
 import whelk.util.Tools;
@@ -28,6 +30,7 @@ public class Enricher
     public void enrich(String id, Document withDocument)
             throws IOException
     {
+        System.out.println("Enrich on: " + id);
         //Map contextMap = m_mapper.readValue(m_jsonldContext, HashMap.class);
 
         List<String[]> triples = JsonldSerializer.deserialize(withDocument.getData());
@@ -38,11 +41,27 @@ public class Enricher
         }
 
         Map reverted = JsonldSerializer.serialize(triples);
-        String rev_string = m_mapper.writeValueAsString(reverted);
-        System.out.println(rev_string);
+        /*
+        {
+            String rev_string = m_mapper.writeValueAsString(reverted);
+            System.out.println(rev_string);
+        }*/
 
-        //RDFDataset rdf = Tools.toDataTriples(withDocument, contextMap);
-        //Tools.fromTriples(rdf);
+        //reverted = JsonLd.frame(withDocument.getId(), reverted);
+        //reverted = JsonLd.flatten(reverted);
+        {
+            String rev_string = m_mapper.writeValueAsString(reverted);
+            System.out.println("Generated jsonld:\n" + rev_string);
+        }
+
+        /*
+        {
+            Map reference = JsonLd.flatten(withDocument.getData());
+            String rev_string = m_mapper.writeValueAsString(reference);
+            System.out.println("Reference jsonld:\n" + rev_string);
+        }*/
+
+
 
         /*
         m_postgreSQLComponent.storeAtomicUpdate(id, false,

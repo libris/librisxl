@@ -1,5 +1,7 @@
 package whelk.importer;
 
+import whelk.JsonLd;
+
 import java.util.*;
 
 /**
@@ -119,31 +121,29 @@ public class JsonldSerializer
         // Add all identifiable nodes first
         for (String[] triple : triples)
         {
-            if ( !triple[0].startsWith(BLANKNODE_PREFIX) )
+            // Has this object already been added to the graph?
+            if (_optGraphMap.keySet().contains(triple[0]))
             {
-                // Has this object already been added to the graph?
-                if (_optGraphMap.keySet().contains(triple[0]))
-                {
-                    Map objectMap = _optGraphMap.get(triple[0]);
+                Map objectMap = _optGraphMap.get(triple[0]);
 
-                    addTripleToObject(objectMap, triple);
-                }
-                else
-                {
-                    Map objectMap = new HashMap<>();
-                    objectMap.put("@id", triple[0]);
-                    graphList.add(objectMap);
-                    _optGraphMap.put(triple[0], objectMap);
+                addTripleToObject(objectMap, triple);
+            }
+            else
+            {
+                Map objectMap = new HashMap<>();
+                objectMap.put("@id", triple[0]);
+                graphList.add(objectMap);
+                _optGraphMap.put(triple[0], objectMap);
 
-                    addTripleToObject(objectMap, triple);
-                }
+                addTripleToObject(objectMap, triple);
             }
         }
 
-        // Embed all blank nodes
+        // Half-frame to the form produced by the jsonld converter ?
 
         Map result = new HashMap<>();
         result.put("@graph", graphList);
+
         return result;
     }
 
