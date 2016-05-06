@@ -62,10 +62,6 @@ public class Graph
         }
     }
 
-    /**********************************/
-
-
-
     /**
      * Generates a map where BNode ids in otherGraph are mapped to BNode ids in this map (where the mapping can be
      * done with surety)
@@ -96,19 +92,12 @@ public class Graph
      */
     private boolean hasEquivalentEdges(String subject, String otherSubject, Graph otherGraph)
     {
-        System.out.println("Called to compare " + subject + " to " + otherSubject);
         List<String[]> otherEdges = otherGraph.edgesFromId.get(otherSubject);
         if (otherEdges == null)
-        {
-            System.out.println("ret true");
             return true; // nothing more to check
-        }
         List<String[]> edges = edgesFromId.get(subject);
         if (edges == null)
-        {
-            System.out.println("ret false0");
             return false; // no more edges in (possibly) containing graph to compare with
-        }
 
         for (String[] otherEdge : otherEdges)
         {
@@ -117,7 +106,6 @@ public class Graph
             // Does each 'otherEdge' have an equivalent in this graph ?
             for (String[] edge : edges)
             {
-                System.out.println("\tEdgecompare, predicates: " + edge[0] + ", " + otherEdge[0]);
                 boolean edgesMatch =
                         edge[0].equals(otherEdge[0]) && // predicate is the same and
                         ( (edge[1].equals(otherEdge[1]) && !edge[1].startsWith(JsonldSerializer.BLANKNODE_PREFIX) ) // object is the same (and not a blank node),
@@ -127,23 +115,14 @@ public class Graph
                                         hasEquivalentEdges(edge[1], otherEdge[1], otherGraph)
                                 ));
                 if (edgesMatch)
-                {
-                    System.out.println("\t\tmatch.");
                     hasEquivalentEdges = true;
-                }
             }
 
             if (!hasEquivalentEdges)
-            {
-                System.out.println("ret false1");
                 return false;
-            }
         }
-        System.out.println("ret true");
         return true;
     }
-
-    /**********************************/
 
     public String toString()
     {
