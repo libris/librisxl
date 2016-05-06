@@ -64,73 +64,11 @@ public class Graph
 
     /**********************************/
 
-    /**
-     * Tests if this graph is a superset of the supplied graph.
-     */
-    public boolean contains(Graph subgraph)
-    {
-        for ( String subgraphSubject : subgraph.edgesFromId.keySet() )
-        {
-            /*
-            if ( ! containsSubjectSubgraph(subgraphSubject, subgraph) )
-                return false;
-                */
 
-
-            /*
-            List<String[]> edges = edgesFromId.get(subgraphSubject);
-            List<String[]> subgraphEdges = subgraph.edgesFromId.get(subgraphSubject);
-
-            for (String[] subgraphEdge : subgraphEdges)
-            {
-                for (String[] edge : )
-            }
-            */
-        }
-        return true;
-    }
 
     /**
-     * Is there a (blank) node in this graph with the equivalent of the supplied edges?
-     */
-    /*
-    private boolean existsSuchANode(List<String[]> candidateEdges)
-    {
-        for (String[] candidateEdge : candidateEdges)
-        {
-            boolean equivalentFound = false;
-
-            for ( String subject : edgesFromId.keySet() )
-            {
-                List<String[]> edges = edgesFromId.get(subject);
-                for (String[] edge : edges)
-                {
-                    if (candidateEdge[0].equals(edge[0]) && // predicate is the same and
-                            (
-                                    // object is the same,
-                                    candidateEdge[1].equals(edge[1]) ||
-                                            // or both objects are blank nodes
-                                            (
-                                                    candidateEdge[1].startsWith(JsonldSerializer.BLANKNODE_PREFIX) &&
-                                                    edge[1].startsWith(JsonldSerializer.BLANKNODE_PREFIX))
-                                                    // and
-                                            )
-                            )
-                    {
-                        equivalentFound = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!equivalentFound)
-                return false;
-        }
-        return true;
-    }*/
-
-    /**
-     * Generates a map where BNode ids in otherGraph (assumed to be a subgraph) are mapped to BNode ids in this map
+     * Generates a map where BNode ids in otherGraph are mapped to BNode ids in this map (where the mapping can be
+     * done with surety)
      */
     public Map generateBNodeMapFrom(Graph otherGraph)
     {
@@ -158,30 +96,50 @@ public class Graph
      */
     private boolean hasEquivalentEdges(String subject, String otherSubject, Graph otherGraph)
     {
+        System.out.println("Called to compare " + subject + " to " + otherSubject);
         List<String[]> otherEdges = otherGraph.edgesFromId.get(otherSubject);
         if (otherEdges == null)
+        {
+            System.out.println("ret true");
             return true; // nothing more to check
+        }
         List<String[]> edges = edgesFromId.get(subject);
         if (edges == null)
+        {
+            System.out.println("ret false0");
             return false; // no more edges in (possibly) containing graph to compare with
+        }
 
         for (String[] otherEdge : otherEdges)
         {
-            // Does each edge have an equivalent in this graph
+            boolean hasEquivalentEdges = false;
+
+            // Does each 'otherEdge' have an equivalent in this graph ?
             for (String[] edge : edges)
             {
-                boolean hasEquivalentEdges =
+                System.out.println("\tEdgecompare, predicates: " + edge[0] + ", " + otherEdge[0]);
+                boolean edgesMatch =
                         edge[0].equals(otherEdge[0]) && // predicate is the same and
-                        ( (edge[1].equals(otherEdge[1]) && !edge[1].startsWith(JsonldSerializer.BLANKNODE_PREFIX) ) // object is the same (and not blank node),
-                                || // or both are blank nodes, and in turn have equivalent edges
+                        ( (edge[1].equals(otherEdge[1]) && !edge[1].startsWith(JsonldSerializer.BLANKNODE_PREFIX) ) // object is the same (and not a blank node),
+                                || // or both objects are blank nodes, and in turn have equivalent edges
                                 (
                                         edge[1].startsWith(JsonldSerializer.BLANKNODE_PREFIX) && otherEdge[1].startsWith(JsonldSerializer.BLANKNODE_PREFIX) &&
                                         hasEquivalentEdges(edge[1], otherEdge[1], otherGraph)
                                 ));
-                if (!hasEquivalentEdges)
-                    return false;
+                if (edgesMatch)
+                {
+                    System.out.println("\t\tmatch.");
+                    hasEquivalentEdges = true;
+                }
+            }
+
+            if (!hasEquivalentEdges)
+            {
+                System.out.println("ret false1");
+                return false;
             }
         }
+        System.out.println("ret true");
         return true;
     }
 
