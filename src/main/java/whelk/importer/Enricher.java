@@ -35,10 +35,15 @@ public class Enricher
 
         List<String[]> triples = JsonldSerializer.deserialize(withDocument.getData());
 
-        for (String[] triple : triples)
+        /*for (String[] triple : triples)
         {
             System.out.println(triple[0] + " -> " + triple[1] + " -> " + triple[2]);
-        }
+        }*/
+
+        Graph graph = new Graph(triples);
+        Graph subgraph = graph.getSubGraphFrom("https://libris.kb.se/"+withDocument.getId()+"#it");
+        //graph.render();
+        System.out.println(subgraph);
 
         Map reverted = JsonldSerializer.serialize(triples);
         /*
