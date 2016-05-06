@@ -31,21 +31,36 @@ public class Enricher
             throws IOException
     {
         System.out.println("Enrich on: " + id);
+
+        Document originalDocument = m_postgreSQLComponent.load(id);
         //Map contextMap = m_mapper.readValue(m_jsonldContext, HashMap.class);
 
-        List<String[]> triples = JsonldSerializer.deserialize(withDocument.getData());
+        List<String[]> withTriples = JsonldSerializer.deserialize(withDocument.getData());
+        List<String[]> originalTriples = JsonldSerializer.deserialize(originalDocument.getData());
 
         /*for (String[] triple : triples)
         {
             System.out.println(triple[0] + " -> " + triple[1] + " -> " + triple[2]);
         }*/
 
-        Graph graph = new Graph(triples);
-        Graph subgraph = graph.getSubGraphFrom("https://libris.kb.se/"+withDocument.getId()+"#it");
+        Graph originalGraph = new Graph(originalTriples);
+        Graph withGraph = new Graph(withTriples);
+        //Graph subgraph = graph.getSubGraphFrom("https://libris.kb.se/"+withDocument.getId()+"#it");
         //graph.render();
-        System.out.println(subgraph);
 
-        Map reverted = JsonldSerializer.serialize(triples);
+        System.out.println(originalGraph);
+        System.out.println(withGraph);
+
+        Map<String, String> BNodeMapping = withGraph.generateBNodeMapFrom(originalGraph);
+
+        System.out.println("BNODE MAPPINGS:");
+        for (String withBNode : BNodeMapping.keySet())
+        {
+            String bnode = BNodeMapping.get(withBNode);
+            System.out.println("with: " + withBNode + " -> " + bnode);
+        }
+
+        //Map reverted = JsonldSerializer.serialize(triples);
         /*
         {
             String rev_string = m_mapper.writeValueAsString(reverted);
@@ -54,10 +69,10 @@ public class Enricher
 
         //reverted = JsonLd.frame(withDocument.getId(), reverted);
         //reverted = JsonLd.flatten(reverted);
-        {
+        /*{
             String rev_string = m_mapper.writeValueAsString(reverted);
             System.out.println("Generated jsonld:\n" + rev_string);
-        }
+        }*/
 
         /*
         {
