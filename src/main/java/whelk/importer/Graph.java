@@ -1,7 +1,5 @@
 package whelk.importer;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.*;
 
 public class Graph
@@ -9,7 +7,7 @@ public class Graph
     /**
      * The adjacency list (map).
      *
-     * Mapping node IDs (A) to lists of predicate-subject pairs to which the (A) is connected
+     * Mapping node IDs (A) to lists of predicate-subject pairs (edges) that connect (A) with other nodes
      */
     private Map<String, List<String[]>> edgesFromId;
 
@@ -38,37 +36,12 @@ public class Graph
     }
 
     /**
-     * Generates the subgraph extending from a given node in this graph.
-     */
-    public Graph getSubGraphFrom(String subject)
-    {
-        List<String[]> triples = new ArrayList<>();
-        buildSubgraph(subject, triples);
-        return new Graph(triples);
-    }
-
-    private void buildSubgraph(String subject, List<String[]> triples)
-    {
-        List<String[]> edges = edgesFromId.get(subject);
-        if (edges == null)
-            return;
-
-        for (String[] edge : edges)
-        {
-            String[] triple = new String[] {subject, edge[0], edge[1]};
-            triples.add(triple);
-
-            buildSubgraph(edge[1], triples);
-        }
-    }
-
-    /**
      * Generates a map where BNode ids in otherGraph are mapped to BNode ids in this map (where the mapping can be
      * done with surety)
      */
-    public Map generateBNodeMapFrom(Graph otherGraph)
+    public Map<String, String> generateBNodeMapFrom(Graph otherGraph)
     {
-        Map BNodeMap = new HashMap<>();
+        Map<String, String> BNodeMap = new HashMap<>();
         for (String otherSubject : otherGraph.edgesFromId.keySet())
         {
             if (otherSubject.startsWith(JsonldSerializer.BLANKNODE_PREFIX))
@@ -90,7 +63,8 @@ public class Graph
     /**
      * Does 'subject' have the equivalent edges in this graph, compared to 'otherSubject' in otherGraph ?
      */
-    private boolean hasEquivalentEdges(String subject, String otherSubject, Graph otherGraph, Map cycleGuard, Map otherCycleGuard)
+    private boolean hasEquivalentEdges(String subject, String otherSubject, Graph otherGraph, Map<String,
+            String> cycleGuard, Map<String, String> otherCycleGuard)
     {
         // Check for going in circles
         if ( cycleGuard.keySet().contains(subject) && otherCycleGuard.keySet().contains(otherSubject) )

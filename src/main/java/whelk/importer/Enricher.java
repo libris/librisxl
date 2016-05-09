@@ -1,18 +1,11 @@
 package whelk.importer;
 
-import com.github.jsonldjava.core.RDFDataset;
-import com.google.common.collect.Lists;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
-import whelk.JsonLd;
 import whelk.component.PostgreSQLComponent;
-import whelk.converter.JsonLD2RdfXml;
-import whelk.util.Tools;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Enricher
 {
@@ -48,24 +41,42 @@ public class Enricher
         //Graph subgraph = graph.getSubGraphFrom("https://libris.kb.se/"+withDocument.getId()+"#it");
         //graph.render();
 
-        System.out.println(originalGraph);
-        System.out.println(withGraph);
+        //System.out.println(originalGraph);
+        //System.out.println(withGraph);
 
-        Map<String, String> BNodeMapping = withGraph.generateBNodeMapFrom(originalGraph);
+        Map<String, String> bNodeMapping = withGraph.generateBNodeMapFrom(originalGraph);
+        Set<String> mergedTriples = new HashSet<>(); // Just to make sure we don't introduce doubles of triples.
+        for (String[] triple : originalTriples)
+            mergedTriples.add(triple[0]+triple[1]+triple[2]);
+        for (String[] triple : withTriples)
+        {
+            String subject = getTranslatedNodeId(triple[0], bNodeMapping);
+            String predicate = triple[1];
+            String object = getTranslatedNodeId(triple[2], bNodeMapping);
 
-        System.out.println("BNODE MAPPINGS:");
+            if (subject != null && object != null)
+            {
+                String setRepresentation = subject+predicate+object;
+                if (!mergedTriples.contains(setRepresentation))
+                {
+                    mergedTriples.add(setRepresentation);
+                    originalTriples.add(new String[]{subject, predicate, object});
+                }
+            }
+        }
+
+        /*System.out.println("BNODE MAPPINGS:");
         for (String withBNode : BNodeMapping.keySet())
         {
             String bnode = BNodeMapping.get(withBNode);
             System.out.println("with: " + withBNode + " -> " + bnode);
-        }
+        }*/
 
-        //Map reverted = JsonldSerializer.serialize(triples);
-        /*
+        Map reverted = JsonldSerializer.serialize(originalTriples);
         {
             String rev_string = m_mapper.writeValueAsString(reverted);
             System.out.println(rev_string);
-        }*/
+        }
 
         //reverted = JsonLd.frame(withDocument.getId(), reverted);
         //reverted = JsonLd.flatten(reverted);
@@ -109,5 +120,19 @@ public class Enricher
         });
 */
 
+    }
+
+    /**
+     * Given a node id, get the corresponding node id in this graph (which is the same unless it is a blank node id).
+     */
+    private String getTranslatedNodeId(String naiveNodeId, Map<String, String> bNodeMapping)
+    {
+        if (naiveNodeId.startsWith(JsonldSerializer.BLANKNODE_PREFIX))
+        {
+            if (bNodeMapping.keySet().contains(naiveNodeId))
+                return bNodeMapping.get(naiveNodeId);
+            return null;
+        }
+        return naiveNodeId;
     }
 }
