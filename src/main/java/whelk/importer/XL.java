@@ -9,6 +9,7 @@ import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
+import whelk.filter.LinkFinder;
 import whelk.util.PropertyLoader;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ class XL
     private Parameters m_parameters;
     private Properties m_properties;
     private MarcFrameConverter m_marcFrameConverter;
+    private LinkFinder m_linkfinder;
 
     XL(Parameters parameters)
     {
@@ -31,6 +33,7 @@ class XL
         m_postgreSQLComponent = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
         m_elasticSearchComponent = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
         m_marcFrameConverter = new MarcFrameConverter();
+        m_linkfinder = new LinkFinder(m_postgreSQLComponent);
     }
 
     /**
@@ -84,6 +87,8 @@ class XL
         marcRecord.addField(marcRecord.createControlfield("001", generatedId));
 
         Document rdfDoc = convertToRDF(marcRecord, collection, generatedId, null);
+        m_linkfinder.findLinks(rdfDoc);
+
         if (!m_parameters.getReadOnly())
         {
             m_postgreSQLComponent.store(rdfDoc, false);
@@ -99,6 +104,7 @@ class XL
     {
         String generatedId = IdGenerator.generate();
         Document rdfDoc = convertToRDF(marcRecord, collection, generatedId, null);
+        m_linkfinder.findLinks(rdfDoc);
 
         if (!m_parameters.getReadOnly())
         {

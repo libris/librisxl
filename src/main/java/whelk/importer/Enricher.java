@@ -1,6 +1,4 @@
 package whelk.importer;
-
-import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
 
 import java.io.IOException;
@@ -8,8 +6,6 @@ import java.util.*;
 
 public class Enricher
 {
-    static ObjectMapper s_mapper = new ObjectMapper();
-
     public static void enrich(Document mutableDocument, Document withDocument)
             throws IOException
     {
