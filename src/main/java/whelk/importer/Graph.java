@@ -78,7 +78,7 @@ public class Graph
                     if (subject.startsWith(JsonldSerializer.BLANKNODE_PREFIX))
                     {
                         // subject and otherSubject are both blank nodes.
-                        if (hasEquivalentEdges(subject, otherSubject, otherGraph))
+                        if (hasEquivalentEdges(subject, otherSubject, otherGraph, new HashMap<>(), new HashMap<>()))
                             BNodeMap.put(otherSubject, subject);
                     }
                 }
@@ -90,8 +90,21 @@ public class Graph
     /**
      * Does 'subject' have the equivalent edges in this graph, compared to 'otherSubject' in otherGraph ?
      */
-    private boolean hasEquivalentEdges(String subject, String otherSubject, Graph otherGraph)
+    private boolean hasEquivalentEdges(String subject, String otherSubject, Graph otherGraph, Map cycleGuard, Map otherCycleGuard)
     {
+        // Check for going in circles
+        if ( cycleGuard.keySet().contains(subject) && otherCycleGuard.keySet().contains(otherSubject) )
+        {
+            // Cycle detected in both graphs. Is the other graph in the same position it was the last time we were here?
+            if ( cycleGuard.get(subject).equals(otherSubject) && otherCycleGuard.get(otherSubject).equals(subject) )
+                return true;
+        }
+        if (cycleGuard.keySet().contains(subject) || otherCycleGuard.keySet().contains(otherSubject))
+            return false; // We've been here already in one graph, but the position in the other graph was different then.
+        cycleGuard.put(subject, otherSubject);
+        otherCycleGuard.put(otherSubject, subject);
+
+        // Normal recursive base cases
         List<String[]> otherEdges = otherGraph.edgesFromId.get(otherSubject);
         if (otherEdges == null)
             return true; // nothing more to check
@@ -99,11 +112,12 @@ public class Graph
         if (edges == null)
             return false; // no more edges in (possibly) containing graph to compare with
 
+        // Compare the edges from this node (with the other graph)
         for (String[] otherEdge : otherEdges)
         {
             boolean hasEquivalentEdges = false;
 
-            // Does each 'otherEdge' have an equivalent in this graph ?
+            // Does each 'otherEdge' have an equivalent edge in this graph ?
             for (String[] edge : edges)
             {
                 boolean edgesMatch =
@@ -112,7 +126,7 @@ public class Graph
                                 || // or both objects are blank nodes, and in turn have equivalent edges
                                 (
                                         edge[1].startsWith(JsonldSerializer.BLANKNODE_PREFIX) && otherEdge[1].startsWith(JsonldSerializer.BLANKNODE_PREFIX) &&
-                                        hasEquivalentEdges(edge[1], otherEdge[1], otherGraph)
+                                        hasEquivalentEdges(edge[1], otherEdge[1], otherGraph, cycleGuard, otherCycleGuard)
                                 ));
                 if (edgesMatch)
                     hasEquivalentEdges = true;
@@ -135,7 +149,12 @@ public class Graph
 
             for (String[] edge : edges)
             {
-                result.append(subject + " [" + edge[0] + " ->] " + edge[1] + "\n");
+                result.append(subject);
+                result.append(" [");
+                result.append(edge[0]);
+                result.append(" ->] ");
+                result.append(edge[1]);
+                result.append("\n");
             }
         }
 
