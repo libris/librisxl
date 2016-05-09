@@ -60,21 +60,7 @@ class XL
             // every REPLACE here. REPLACE is not currently in use for any source, do not enable this.
 
             // Enrich (or "merge")
-            String generatedId = IdGenerator.generate();
-            Document rdfDoc = convertToRDF(marcRecord, collection, generatedId, null);
-
-            m_postgreSQLComponent.storeAtomicUpdate((String) duplicateIDs.toArray()[0], false,
-                    (Document doc) ->
-                    {
-                        try
-                        {
-                            Enricher.enrich( doc, rdfDoc );
-                            System.out.println("Enriched data: " + doc.getDataAsString());
-                        } catch (IOException e)
-                        {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
+            enrichRecord( (String) duplicateIDs.toArray()[0], marcRecord, collection );
         }
         else
         {
@@ -106,6 +92,36 @@ class XL
         else
             System.out.println("Would now (if --live had been specified) have written the following json-ld to whelk:"
                     + rdfDoc.getDataAsString());
+    }
+
+    private void enrichRecord(String ourId, MarcRecord marcRecord, String collection)
+            throws IOException
+    {
+        String generatedId = IdGenerator.generate();
+        Document rdfDoc = convertToRDF(marcRecord, collection, generatedId, null);
+
+        if (!m_parameters.getReadOnly())
+        {
+            m_postgreSQLComponent.storeAtomicUpdate(ourId, false,
+                    (Document doc) ->
+                    {
+                        try
+                        {
+                            Enricher.enrich( doc, rdfDoc );
+                        } catch (IOException e)
+                        {
+                            throw new UncheckedIOException(e);
+                        }
+                    });
+        }
+        else
+        {
+            Document doc = m_postgreSQLComponent.load( ourId );
+            Enricher.enrich( doc, rdfDoc );
+            System.out.println("Would now (if --live had been specified) have written the following (merged) json-ld to whelk:");
+            System.out.println("id:\n" + doc.getId());
+            System.out.println("data:\n" + doc.getDataAsString());
+        }
     }
 
     private Document convertToRDF(MarcRecord marcRecord, String collection, String id, List<String> altIDs)
