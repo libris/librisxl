@@ -11,6 +11,8 @@ import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
 import whelk.util.PropertyLoader;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.sql.*;
 import java.util.*;
 
@@ -21,7 +23,6 @@ class XL
     private Parameters m_parameters;
     private Properties m_properties;
     private MarcFrameConverter m_marcFrameConverter;
-    private Enricher m_enricher;
 
     XL(Parameters parameters)
     {
@@ -30,7 +31,6 @@ class XL
         m_postgreSQLComponent = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
         m_elasticSearchComponent = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
         m_marcFrameConverter = new MarcFrameConverter();
-        m_enricher = new Enricher(m_postgreSQLComponent);
     }
 
     /**
@@ -59,10 +59,22 @@ class XL
             // we would loose our "controlNumber" reference into voyager/vcopy and create a new duplicate there with
             // every REPLACE here. REPLACE is not currently in use for any source, do not enable this.
 
+            // Enrich (or "merge")
             String generatedId = IdGenerator.generate();
             Document rdfDoc = convertToRDF(marcRecord, collection, generatedId, null);
-            m_enricher.enrich( (String) duplicateIDs.toArray()[0], rdfDoc);
 
+            m_postgreSQLComponent.storeAtomicUpdate((String) duplicateIDs.toArray()[0], false,
+                    (Document doc) ->
+                    {
+                        try
+                        {
+                            Enricher.enrich( doc, rdfDoc );
+                            System.out.println("Enriched data: " + doc.getDataAsString());
+                        } catch (IOException e)
+                        {
+                            throw new UncheckedIOException(e);
+                        }
+                    });
         }
         else
         {
