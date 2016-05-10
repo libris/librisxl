@@ -102,8 +102,7 @@ class XL
     private void enrichRecord(String ourId, MarcRecord marcRecord, String collection)
             throws IOException
     {
-        String generatedId = IdGenerator.generate();
-        Document rdfDoc = convertToRDF(marcRecord, collection, generatedId, null);
+        Document rdfDoc = convertToRDF(marcRecord, collection, ourId, null);
         m_linkfinder.findLinks(rdfDoc);
 
         if (!m_parameters.getReadOnly())
@@ -132,7 +131,6 @@ class XL
 
     private Document convertToRDF(MarcRecord marcRecord, String collection, String id, List<String> altIDs)
     {
-
         Map<String, Object> manifest = new HashMap<>();
         manifest.put(Document.getID_KEY(), id);
         manifest.put(Document.getCOLLECTION_KEY(), collection);
@@ -140,7 +138,7 @@ class XL
         if (altIDs != null)
             manifest.put(Document.getALTERNATE_ID_KEY(), altIDs);
 
-        Document doc = new Document(MarcJSONConverter.toJSONMap(marcRecord), manifest);
+        Document doc = new Document(id, MarcJSONConverter.toJSONMap(marcRecord), manifest);
         Document converted = m_marcFrameConverter.convert(doc);
         /*System.out.println("Manifest after conversion:\n"+converted.getManifestAsJson());
         System.out.println("Data after conversion:\n"+converted.getDataAsString());
