@@ -37,6 +37,7 @@ public class Enricher
         }
 
         Map enrichedData = JsonldSerializer.serialize(originalTriples);
+        JsonldSerializer.normalize(enrichedData, mutableDocument.getId());
         mutableDocument.setData(enrichedData);
     }
 

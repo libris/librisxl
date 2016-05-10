@@ -1,5 +1,6 @@
 package whelk.importer;
 
+import whelk.Document;
 import whelk.JsonLd;
 
 import java.util.*;
@@ -7,6 +8,7 @@ import java.util.*;
 /**
  * This class serializes and deserializes RDF triples (represented as String[3]) to/from a subset of jsonld.
  */
+@SuppressWarnings("unchecked")
 public class JsonldSerializer
 {
     private static int lastBlankNodeId = -1;
@@ -103,7 +105,7 @@ public class JsonldSerializer
     }
 
     /*******************************************************************************************************************
-     * Serialization
+     * Serialization (to flat JSON-LD)
      ******************************************************************************************************************/
 
     /**
@@ -183,6 +185,93 @@ public class JsonldSerializer
         else // add normally
         {
             objectMap.put(triple[1], toBeAdded);
+        }
+    }
+
+    /*******************************************************************************************************************
+     * Normalization
+     ******************************************************************************************************************/
+
+    // method:
+    // First find the main id, and its about id
+    // Build jsonld
+    // Embed everything that is not main or about id.
+    // Place main id at 0 and about id at 1
+    // clean out unnecessary bnodeids
+
+    /**
+     * Assumes the provided jsonld to be flat.
+     */
+    public static void normalize(Map map, String mainId)
+    {
+        List graphList = (List) map.get("@graph");
+
+        // find the resource (thing) node id
+        String thingId = null;
+        for (Object object : graphList)
+        {
+            Map objectMap = (Map) object;
+            if (objectMap.containsKey("@id") &&  objectMap.get("@id").equals(Document.getBASE_URI()+mainId))
+            {
+                Map thingReference = (Map) objectMap.get(Document.getABOUT_KEY());
+                thingId = (String) thingReference.get("@id");
+            }
+        }
+
+        // Embed and delete root objects where possible
+        Iterator it = graphList.iterator();
+        while(it.hasNext())
+        {
+            Map objectMap = (Map) it.next();
+            if (objectMap.containsKey("@id"))
+            {
+                String objectId = (String) objectMap.get("@id");
+
+                if ( objectId.equals(mainId) || objectId.equals(thingId) )
+                    continue;
+
+                List references = new ArrayList<>();
+                gatherReferences(map, objectId, references);
+
+                if (references.size() > 0)
+                {
+                    for (Object reference: references)
+                    {
+                        Map referencingMap = (Map) reference;
+                        referencingMap.putAll(objectMap);
+                    }
+                    it.remove();
+                }
+            }
+        }
+    }
+
+    private static void gatherReferences(Map map, String id, List references)
+    {
+        if (map.size() == 1)
+        {
+            String key = (String) map.keySet().toArray()[0];
+            if ( key.equals("@id") && map.get(key).equals(id) )
+                references.add(map);
+        }
+
+        for (Object key : map.keySet())
+        {
+            Object subobject = map.get(key);
+
+            if ( subobject instanceof Map )
+                gatherReferences( (Map) subobject, id, references );
+            else if ( subobject instanceof List )
+                gatherReferences( (List) subobject, id, references );
+        }
+    }
+
+    private static void gatherReferences(List list, String id, List references)
+    {
+        for (Object item : list)
+        {
+            if ( item instanceof Map )
+                gatherReferences( (Map) item, id, references );
         }
     }
 }
