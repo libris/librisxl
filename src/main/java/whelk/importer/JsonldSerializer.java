@@ -196,6 +196,7 @@ public class JsonldSerializer
     // First find the main id, and its about id
     // Build jsonld
     // Embed everything that is not main or about id.
+    // flatten everything in a @graph or with a /some uri ??
     // Place main id at 0 and about id at 1
     // clean out unnecessary bnodeids
 
@@ -206,16 +207,37 @@ public class JsonldSerializer
     {
         List graphList = (List) map.get("@graph");
 
-        // find the resource (thing) node id
+        // find the resource (thing) node id. And the list indices for the main node and the thing node
         String thingId = null;
-        for (Object object : graphList)
+        int mainNodeIndex = -1;
+        int thingNodeIndex = -1;
+        for (int i = 0; i < graphList.size(); ++i)
         {
-            Map objectMap = (Map) object;
+            Map objectMap = (Map) graphList.get(i);
             if (objectMap.containsKey("@id") &&  objectMap.get("@id").equals(Document.getBASE_URI()+mainId))
             {
+                mainNodeIndex = i;
                 Map thingReference = (Map) objectMap.get(Document.getABOUT_KEY());
                 thingId = (String) thingReference.get("@id");
             }
+        }
+
+        for (int i = 0; i < graphList.size(); ++i)
+        {
+            Map objectMap = (Map) graphList.get(i);
+            if (objectMap.containsKey("@id") &&  objectMap.get("@id").equals(thingId))
+                thingNodeIndex = i;
+        }
+
+        // Make sure the main node is at index 0 in the graph list and the thing node at index 1
+        if (mainNodeIndex == 1 && thingNodeIndex == 0)
+            Collections.swap(graphList, 0, 1);
+        else
+        {
+            if (mainNodeIndex != 0)
+                Collections.swap(graphList, 0, mainNodeIndex);
+            if (thingNodeIndex != 1)
+                Collections.swap(graphList, 1, thingNodeIndex);
         }
 
         // Embed and delete root objects where possible
