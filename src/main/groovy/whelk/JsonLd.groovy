@@ -112,7 +112,7 @@ public class JsonLd {
      * Fills the referencedBNodes set with all "_:*" ids that are referenced anywhere in the structure/document
      * (and thus cannot be safely removed)
      */
-    private static void getReferencedBNodes(Map map, Set referencedBNodes)
+    public static void getReferencedBNodes(Map map, Set referencedBNodes)
     {
         // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
         if (map.size() == 1)
@@ -137,7 +137,7 @@ public class JsonLd {
         }
     }
 
-    private static void getReferencedBNodes(List list, Set referencedBNodes)
+    public static void getReferencedBNodes(List list, Set referencedBNodes)
     {
         for (Object item : list)
         {
@@ -146,7 +146,7 @@ public class JsonLd {
         }
     }
 
-    private static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes)
+    public static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes)
     {
         if (map.size() > 1)
         {
@@ -172,7 +172,7 @@ public class JsonLd {
         }
     }
 
-    private static void cleanUnreferencedBNodeIDs(List list, Set referencedBNodes)
+    public static void cleanUnreferencedBNodeIDs(List list, Set referencedBNodes)
     {
         for (Object item : list)
         {
