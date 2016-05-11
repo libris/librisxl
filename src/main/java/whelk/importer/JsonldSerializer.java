@@ -260,6 +260,11 @@ public class JsonldSerializer
         }
 
         pullQuoted(map);
+
+        Set referencedBNodes = new HashSet();
+        JsonLd.getReferencedBNodes(map, referencedBNodes);
+
+        JsonLd.cleanUnreferencedBNodeIDs(map, referencedBNodes);
     }
 
     private static void gatherReferences(Map map, String id, List references)
@@ -304,7 +309,6 @@ public class JsonldSerializer
             if (objectMap.containsKey("@graph"))
             {
                 Map quotedObject = (Map) objectMap.get("@graph");
-                System.out.println("quoted graph found.. had id: " + quotedObject.get("@id"));
                 pullId(map, (String) quotedObject.get("@id"), quotedObject);
             }
         }
