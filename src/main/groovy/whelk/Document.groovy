@@ -6,6 +6,10 @@ import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 import whelk.util.PropertyLoader
 
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
 @Log
 class Document {
     static final String GRAPH_KEY = "@graph"
@@ -83,11 +87,12 @@ class Document {
     void setCreated(long c) {
         this.created = new Date(c)
         this.manifest.put(CREATED_KEY, this.created)
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(this.created.toInstant(), ZoneId.systemDefault())
         if (isFlat()) {
-            this.data.get(GRAPH_KEY)[0].put(CREATED_KEY, this.created as String)
+            this.data.get(GRAPH_KEY)[0].put(CREATED_KEY, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt))
         }
         if (isFramed()) {
-            this.data.put(CREATED_KEY, this.created as String)
+            this.data.put(CREATED_KEY, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt))
         }
     }
 
@@ -110,11 +115,12 @@ class Document {
     void setModified(long m) {
         this.modified = new Date(m)
         this.manifest.put(MODIFIED_KEY, this.modified)
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(this.modified.toInstant(), ZoneId.systemDefault())
         if (isFlat()) {
-            this.data.get(GRAPH_KEY)[0].put(MODIFIED_KEY, this.modified as String)
+            this.data.get(GRAPH_KEY)[0].put(MODIFIED_KEY, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt))
         }
         if (isFramed()) {
-            this.data.put(MODIFIED_KEY, this.modified as String)
+            this.data.put(MODIFIED_KEY, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt))
         }
 
     }
