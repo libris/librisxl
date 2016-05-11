@@ -322,7 +322,6 @@ public class JsonldSerializer
     {
         if ( map.containsKey("@id") && map.get("@id").equals(id) && map != exception )
         {
-            //System.out.println("Found embedded object with id: " + id + " . Would now leave only ref.");
             map.clear();
             map.put("@id", id);
         }
