@@ -189,16 +189,8 @@ public class JsonldSerializer
     }
 
     /*******************************************************************************************************************
-     * Normalization
+     * Normalization (to the JSON-LD form kept in the Whelk database)
      ******************************************************************************************************************/
-
-    // method:
-    // First find the main id, and its about id
-    // Build jsonld
-    // Embed everything that is not main or about id.
-    // flatten everything in a @graph or with a /some uri ??
-    // Place main id at 0 and about id at 1
-    // clean out unnecessary bnodeids
 
     /**
      * Assumes the provided jsonld to be flat.
@@ -266,6 +258,8 @@ public class JsonldSerializer
                 }
             }
         }
+
+        pullQuoted(map);
     }
 
     private static void gatherReferences(Map map, String id, List references)
@@ -294,6 +288,58 @@ public class JsonldSerializer
         {
             if ( item instanceof Map )
                 gatherReferences( (Map) item, id, references );
+        }
+    }
+
+    /**
+     * Pull all quoted data out of embedded objects and leave only references embedded
+     */
+    private static void pullQuoted(Map map)
+    {
+        List graphList = (List) map.get("@graph");
+
+        for (Object object : graphList)
+        {
+            Map objectMap = (Map) object;
+            if (objectMap.containsKey("@graph"))
+            {
+                Map quotedObject = (Map) objectMap.get("@graph");
+                System.out.println("quoted graph found.. had id: " + quotedObject.get("@id"));
+                pullId(map, (String) quotedObject.get("@id"), quotedObject);
+            }
+        }
+    }
+
+    /**
+     * Finds embedded objects with id 'id' and clears them out leaving only the id as a reference.
+     * The object 'exception' is the only one allowed to keep the actual object in its entirety.
+     */
+    private static void pullId(Map map, String id, Object exception)
+    {
+        if ( map.containsKey("@id") && map.get("@id").equals(id) && map != exception )
+        {
+            //System.out.println("Found embedded object with id: " + id + " . Would now leave only ref.");
+            map.clear();
+            map.put("@id", id);
+        }
+
+        for (Object key : map.keySet())
+        {
+            Object subobject = map.get(key);
+
+            if ( subobject instanceof Map )
+                pullId( (Map) subobject, id, exception );
+            else if ( subobject instanceof List )
+                pullId( (List) subobject, id, exception );
+        }
+    }
+
+    private static void pullId(List list, String id, Object exception)
+    {
+        for (Object item : list)
+        {
+            if ( item instanceof Map )
+                pullId( (Map) item, id, exception );
         }
     }
 }
