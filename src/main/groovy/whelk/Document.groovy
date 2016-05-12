@@ -229,12 +229,13 @@ class Document {
 
     /**
      * Get a list of all known identifiers for the thing described by this document
-     * (e.g. fnrglfnrglfnrgl#it, http://libris.kb.se/resource/bib/123, etc)
+     * (e.g. fnrglfnrglfnrgl#it, http://libris.kb.se/resource/bib/123, etc).
+     * By convention the first id in the returned list is the MAIN resource id.
      */
     @JsonIgnore
     List<String> getItIdentifiers() {
         List<String> ret = []
-        ret.add(data[GRAPH_KEY][0][ABOUT_KEY]["@id"])
+        ret.add(data[GRAPH_KEY][0][ABOUT_KEY]["@id"]) // must come first in the list.
         if (data[GRAPH_KEY].size > 1)
         {
             for (Map m : data[GRAPH_KEY][1][JSONLD_ALT_ID_KEY])
