@@ -37,11 +37,11 @@ class XL
     }
 
     /**
-     * Write a ISO2709 MarcRecord to LibrisXL. returns a document ID if the resulting document (merged or new) was in "bib".
-     * This ID should then be passed (as 'relatedWithBibDocumentId') when importing any subsequent related holdings post.
+     * Write a ISO2709 MarcRecord to LibrisXL. returns a resource ID if the resulting document (merged or new) was in "bib".
+     * This ID should then be passed (as 'relatedWithBibResourceId') when importing any subsequent related holdings post.
      * Returns null when supplied a hold post
      */
-    String importISO2709(MarcRecord marcRecord, String relatedWithBibDocumentId)
+    String importISO2709(MarcRecord marcRecord, String relatedWithBibResourceId)
             throws Exception
     {
         String collection = "bib"; // assumption
@@ -49,13 +49,13 @@ class XL
                 marcRecord.getLeader(6) == 'x' || marcRecord.getLeader(6) == 'y')
             collection = "hold";
 
-        Set<String> duplicateIDs = getDuplicates(marcRecord, collection);
+        Set<String> duplicateIDs = getDuplicates(marcRecord, collection, relatedWithBibResourceId);
 
-        String resultingId = null;
+        String resultingResourceId = null;
 
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
-            resultingId = importNewRecord(marcRecord, collection);
+            resultingResourceId = importNewRecord(marcRecord, collection, relatedWithBibResourceId);
         }
         else if (duplicateIDs.size() == 1)
         {
@@ -67,8 +67,7 @@ class XL
             // every REPLACE here. REPLACE is not currently in use for any source, do not enable this.
 
             // Enrich (or "merge")
-            resultingId = (String) duplicateIDs.toArray()[0];
-            enrichRecord( resultingId, marcRecord, collection );
+            resultingResourceId = enrichRecord( (String) duplicateIDs.toArray()[0], marcRecord, collection, relatedWithBibResourceId );
         }
         else
         {
@@ -77,11 +76,11 @@ class XL
         }
 
         if (collection.equals("bib"))
-            return resultingId;
+            return resultingResourceId;
         return null;
     }
 
-    private String importNewRecord(MarcRecord marcRecord, String collection)
+    private String importNewRecord(MarcRecord marcRecord, String collection, String relatedWithBibResourceId)
     {
         // Delete any existing 001 fields
         String generatedId = IdGenerator.generate();
@@ -95,7 +94,9 @@ class XL
         // duplicateIDs.size would be > 0, and we would not be here.
         marcRecord.addField(marcRecord.createControlfield("001", generatedId));
 
-        Document rdfDoc = convertToRDF(marcRecord, collection, generatedId, null);
+        Document rdfDoc = convertToRDF(marcRecord, collection, generatedId);
+        if (collection.equals("hold"))
+            rdfDoc.setHoldingFor(relatedWithBibResourceId);
         m_linkfinder.findLinks(rdfDoc);
 
         if (!m_parameters.getReadOnly())
@@ -107,13 +108,15 @@ class XL
             System.out.println("Would now (if --live had been specified) have written the following json-ld to whelk:"
                     + rdfDoc.getDataAsString());
 
-        return generatedId;
+        return rdfDoc.getItIdentifiers().get(0);
     }
 
-    private void enrichRecord(String ourId, MarcRecord marcRecord, String collection)
+    private String enrichRecord(String ourId, MarcRecord marcRecord, String collection, String relatedWithBibResourceId)
             throws IOException
     {
-        Document rdfDoc = convertToRDF(marcRecord, collection, ourId, null);
+        Document rdfDoc = convertToRDF(marcRecord, collection, ourId);
+        if (collection.equals("hold"))
+            rdfDoc.setHoldingFor(relatedWithBibResourceId);
         m_linkfinder.findLinks(rdfDoc);
 
         if (!m_parameters.getReadOnly())
@@ -151,16 +154,16 @@ class XL
             System.out.println("id:\n" + doc.getId());
             System.out.println("data:\n" + doc.getDataAsString());
         }
+
+        return rdfDoc.getItIdentifiers().get(0);
     }
 
-    private Document convertToRDF(MarcRecord marcRecord, String collection, String id, List<String> altIDs)
+    private Document convertToRDF(MarcRecord marcRecord, String collection, String id)
     {
         Map<String, Object> manifest = new HashMap<>();
         manifest.put(Document.getID_KEY(), id);
         manifest.put(Document.getCOLLECTION_KEY(), collection);
         manifest.put(Document.getCHANGED_IN_KEY(), "FTP-import");
-        if (altIDs != null)
-            manifest.put(Document.getALTERNATE_ID_KEY(), altIDs);
 
         Document doc = new Document(id, MarcJSONConverter.toJSONMap(marcRecord), manifest);
         Document converted = m_marcFrameConverter.convert(doc);
@@ -170,7 +173,7 @@ class XL
         return converted;
     }
 
-    private Set<String> getDuplicates(MarcRecord marcRecord, String collection)
+    private Set<String> getDuplicates(MarcRecord marcRecord, String collection, String relatedWithBibResourceId)
             throws SQLException
     {
         switch (collection)
@@ -178,20 +181,20 @@ class XL
             case "bib":
                 return getBibDuplicates(marcRecord);
             case "hold":
-                return getHoldDuplicates(marcRecord);
+                return getHoldDuplicates(marcRecord, relatedWithBibResourceId);
             default:
                 return new HashSet<>();
         }
     }
 
-    private Set<String> getHoldDuplicates(MarcRecord marcRecord)
+    private Set<String> getHoldDuplicates(MarcRecord marcRecord, String relatedWithBibResourceId)
             throws SQLException
     {
         Set<String> duplicateIDs = new HashSet<>();
 
         // Assumes the post being imported carries a valid libris id in 001, and "SE-LIBR" or "LIBRIS" in 003
         duplicateIDs.addAll(getDuplicatesOnLibrisID(marcRecord, "hold"));
-        duplicateIDs.addAll(getDuplicatesOnHeldByHoldingFor(marcRecord));
+        duplicateIDs.addAll(getDuplicatesOnHeldByHoldingFor(marcRecord, relatedWithBibResourceId));
 
         return duplicateIDs;
     }
@@ -329,7 +332,7 @@ class XL
         }
     }
 
-    private List<String> getDuplicatesOnHeldByHoldingFor(MarcRecord marcRecord)
+    private List<String> getDuplicatesOnHeldByHoldingFor(MarcRecord marcRecord, String relatedWithBibResourceId)
             throws SQLException
     {
         System.out.println(marcRecord);
@@ -341,10 +344,9 @@ class XL
             return new ArrayList<>();
         String sigel = df.getSubfields("b").get(0).getData();
 
-        String holdingForId = null;
 
         try(Connection connection = m_postgreSQLComponent.getConnection();
-            PreparedStatement statement = getOnHeldByHoldingFor_ps(connection, sigel, holdingForId);
+            PreparedStatement statement = getOnHeldByHoldingFor_ps(connection, sigel, relatedWithBibResourceId);
             ResultSet resultSet = statement.executeQuery())
         {
             return collectIDs(resultSet);
