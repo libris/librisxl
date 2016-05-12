@@ -107,17 +107,30 @@ class XL
 
         if (!m_parameters.getReadOnly())
         {
-            m_postgreSQLComponent.storeAtomicUpdate(ourId, false,
-                    (Document doc) ->
-                    {
-                        try
+            try
+            {
+                m_postgreSQLComponent.storeAtomicUpdate(ourId, false,
+                        (Document doc) ->
                         {
-                            Enricher.enrich( doc, rdfDoc );
-                        } catch (IOException e)
-                        {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
+                            if (collection.equals("bib"))
+                            {
+                                if (!doc.getEncodingLevel().equals("marc:PartialPreliminaryLevel"))
+                                    throw new TooHighEncodingLevelException();
+                            }
+
+                            try
+                            {
+                                Enricher.enrich( doc, rdfDoc );
+                            } catch (IOException e)
+                            {
+                                throw new UncheckedIOException(e);
+                            }
+                        });
+            }
+            catch (TooHighEncodingLevelException e)
+            {
+                System.out.println("Not enriching id: " + ourId + ", because it no longer has encoding level marc:PartialPreliminaryLevel");
+            }
         }
         else
         {
@@ -334,4 +347,6 @@ class XL
         }
         return ids;
     }
+
+    private class TooHighEncodingLevelException extends RuntimeException {}
 }
