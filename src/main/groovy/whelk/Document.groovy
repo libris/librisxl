@@ -28,6 +28,7 @@ class Document {
     static final String CONTROL_NUMBER_KEY = "controlNumber"
     static final String ABOUT_KEY = "about"
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
+    static final String ENCODING_LEVEL_KEY = "marc:encLevel"
 
     static final URI BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
 
@@ -242,6 +243,11 @@ class Document {
             }
         }
         return ret
+    }
+
+    @JsonIgnore
+    String getEncodingLevel() {
+        return data[GRAPH_KEY][0][ENCODING_LEVEL_KEY]["@id"];
     }
 
     void findIdentifiers() {

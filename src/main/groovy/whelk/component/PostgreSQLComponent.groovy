@@ -356,7 +356,7 @@ class PostgreSQLComponent implements Storage {
                 throw psqle
             }
         } catch (Exception e) {
-            log.error("Failed to save document: ${e.message}. Rolling back.")
+            log.info("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
             throw e
         } finally {
