@@ -37,9 +37,11 @@ class XL
     }
 
     /**
-     * Write a ISO2709 MarcRecord to LibrisXL
+     * Write a ISO2709 MarcRecord to LibrisXL. returns a document ID if the resulting document (merged or new) was in "bib".
+     * This ID should then be passed (as 'relatedWithBibDocumentId') when importing any subsequent related holdings post.
+     * Returns null when supplied a hold post
      */
-    void importISO2709(MarcRecord marcRecord)
+    String importISO2709(MarcRecord marcRecord, String relatedWithBibDocumentId)
             throws Exception
     {
         String collection = "bib"; // assumption
@@ -49,9 +51,11 @@ class XL
 
         Set<String> duplicateIDs = getDuplicates(marcRecord, collection);
 
+        String resultingId = null;
+
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
-            importNewRecord(marcRecord, collection);
+            resultingId = importNewRecord(marcRecord, collection);
         }
         else if (duplicateIDs.size() == 1)
         {
@@ -63,16 +67,21 @@ class XL
             // every REPLACE here. REPLACE is not currently in use for any source, do not enable this.
 
             // Enrich (or "merge")
-            enrichRecord( (String) duplicateIDs.toArray()[0], marcRecord, collection );
+            resultingId = (String) duplicateIDs.toArray()[0];
+            enrichRecord( resultingId, marcRecord, collection );
         }
         else
         {
             // Multiple coinciding documents. Exit with error?
             throw new Exception("Multiple duplicates for this record.");
         }
+
+        if (collection.equals("bib"))
+            return resultingId;
+        return null;
     }
 
-    private void importNewRecord(MarcRecord marcRecord, String collection)
+    private String importNewRecord(MarcRecord marcRecord, String collection)
     {
         // Delete any existing 001 fields
         String generatedId = IdGenerator.generate();
@@ -97,6 +106,8 @@ class XL
         else
             System.out.println("Would now (if --live had been specified) have written the following json-ld to whelk:"
                     + rdfDoc.getDataAsString());
+
+        return generatedId;
     }
 
     private void enrichRecord(String ourId, MarcRecord marcRecord, String collection)
@@ -162,6 +173,32 @@ class XL
     private Set<String> getDuplicates(MarcRecord marcRecord, String collection)
             throws SQLException
     {
+        switch (collection)
+        {
+            case "bib":
+                return getBibDuplicates(marcRecord);
+            case "hold":
+                return getHoldDuplicates(marcRecord);
+            default:
+                return new HashSet<>();
+        }
+    }
+
+    private Set<String> getHoldDuplicates(MarcRecord marcRecord)
+            throws SQLException
+    {
+        Set<String> duplicateIDs = new HashSet<>();
+
+        // Assumes the post being imported carries a valid libris id in 001, and "SE-LIBR" or "LIBRIS" in 003
+        duplicateIDs.addAll(getDuplicatesOnLibrisID(marcRecord, "hold"));
+        duplicateIDs.addAll(getDuplicatesOnHeldByHoldingFor(marcRecord));
+
+        return duplicateIDs;
+    }
+
+    private Set<String> getBibDuplicates(MarcRecord marcRecord)
+            throws SQLException
+    {
         Set<String> duplicateIDs = new HashSet<>();
 
         for (Parameters.DUPLICATION_TYPE dupType : m_parameters.getDuplicationTypes())
@@ -209,7 +246,7 @@ class XL
                     break;
                 case DUPTYPE_LIBRISID:
                     // Assumes the post being imported carries a valid libris id in 001, and "SE-LIBR" or "LIBRIS" in 003
-                    duplicateIDs.addAll(getDuplicatesOnLibrisID(marcRecord, collection));
+                    duplicateIDs.addAll(getDuplicatesOnLibrisID(marcRecord, "bib"));
                     break;
             }
         }
@@ -292,6 +329,28 @@ class XL
         }
     }
 
+    private List<String> getDuplicatesOnHeldByHoldingFor(MarcRecord marcRecord)
+            throws SQLException
+    {
+        System.out.println(marcRecord);
+
+        if (marcRecord.getFields("852").size() < 1)
+            return new ArrayList<>();
+        Datafield df = (Datafield) marcRecord.getFields("852").get(0);
+        if (df.getSubfields("b").size() < 1)
+            return new ArrayList<>();
+        String sigel = df.getSubfields("b").get(0).getData();
+
+        String holdingForId = null;
+
+        try(Connection connection = m_postgreSQLComponent.getConnection();
+            PreparedStatement statement = getOnHeldByHoldingFor_ps(connection, sigel, holdingForId);
+            ResultSet resultSet = statement.executeQuery())
+        {
+            return collectIDs(resultSet);
+        }
+    }
+
     private PreparedStatement getOnId_ps(Connection connection, String id)
             throws SQLException
     {
@@ -335,6 +394,12 @@ class XL
 
         String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifier}' @> '[{\"identifierScheme\": {\"@id\": \"https://id.kb.se/vocab/ISSN\"}, \"identifierValue\": \"" + issn + "\"}]'";
         return connection.prepareStatement(query);
+    }
+
+    private PreparedStatement getOnHeldByHoldingFor_ps(Connection connection, String heldBy, String holdingForId)
+            throws SQLException
+    {
+        throw new SQLException("TEMP");
     }
 
     private List<String> collectIDs(ResultSet resultSet)

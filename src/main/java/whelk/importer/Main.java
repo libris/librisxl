@@ -88,9 +88,12 @@ public class Main
         {
             reader = new MarcXmlRecordReader(inputStream, "/collection/record", null);
             MarcRecord marcRecord;
+            String lastKnownBibDocId = null;
             while ((marcRecord = reader.readRecord()) != null)
             {
-                librisXl.importISO2709(marcRecord);
+                String resultingId = librisXl.importISO2709(marcRecord, lastKnownBibDocId);
+                if (resultingId != null)
+                    lastKnownBibDocId = resultingId;
             }
         }
         finally
