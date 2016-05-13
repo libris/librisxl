@@ -53,6 +53,8 @@ class XL
 
         String resultingResourceId = null;
 
+        System.out.println("Duplicates: " + duplicateIDs.size());
+
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
             resultingResourceId = importNewRecord(marcRecord, collection, relatedWithBibResourceId);
@@ -75,9 +77,7 @@ class XL
             throw new Exception("Multiple duplicates for this record.");
         }
 
-        if (collection.equals("bib"))
-            return resultingResourceId;
-        return null;
+        return resultingResourceId;
     }
 
     private String importNewRecord(MarcRecord marcRecord, String collection, String relatedWithBibResourceId)
@@ -108,7 +108,9 @@ class XL
             System.out.println("Would now (if --live had been specified) have written the following json-ld to whelk:"
                     + rdfDoc.getDataAsString());
 
-        return rdfDoc.getItIdentifiers().get(0);
+        if (collection.equals("bib"))
+            return rdfDoc.getItIdentifiers().get(0);
+        return null;
     }
 
     private String enrichRecord(String ourId, MarcRecord marcRecord, String collection, String relatedWithBibResourceId)
@@ -155,7 +157,9 @@ class XL
             System.out.println("data:\n" + doc.getDataAsString());
         }
 
-        return rdfDoc.getItIdentifiers().get(0);
+        if (collection.equals("bib"))
+            return rdfDoc.getItIdentifiers().get(0);
+        return null;
     }
 
     private Document convertToRDF(MarcRecord marcRecord, String collection, String id)
@@ -335,8 +339,6 @@ class XL
     private List<String> getDuplicatesOnHeldByHoldingFor(MarcRecord marcRecord, String relatedWithBibResourceId)
             throws SQLException
     {
-        System.out.println(marcRecord);
-
         if (marcRecord.getFields("852").size() < 1)
             return new ArrayList<>();
         Datafield df = (Datafield) marcRecord.getFields("852").get(0);
@@ -344,11 +346,11 @@ class XL
             return new ArrayList<>();
         String sigel = df.getSubfields("b").get(0).getData();
 
-
         try(Connection connection = m_postgreSQLComponent.getConnection();
             PreparedStatement statement = getOnHeldByHoldingFor_ps(connection, sigel, relatedWithBibResourceId);
             ResultSet resultSet = statement.executeQuery())
         {
+            System.out.println("Getting hold dupliates with: " + statement);
             return collectIDs(resultSet);
         }
     }
@@ -401,7 +403,13 @@ class XL
     private PreparedStatement getOnHeldByHoldingFor_ps(Connection connection, String heldBy, String holdingForId)
             throws SQLException
     {
-        throw new SQLException("TEMP");
+        String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,heldBy,notation}' = ? AND data#>>'{@graph,1,holdingFor,@id}' = ? AND manifest->>'collection' = 'hold'";
+        PreparedStatement statement = connection.prepareStatement(query);
+
+        statement.setString(1, heldBy);
+        statement.setString(2, holdingForId);
+
+        return statement;
     }
 
     private List<String> collectIDs(ResultSet resultSet)
