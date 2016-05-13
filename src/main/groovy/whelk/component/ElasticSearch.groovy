@@ -159,7 +159,9 @@ class ElasticSearch implements Index {
     }
 
     @Override
-    public void index(Document doc) {
+    public void index(Document _doc) {
+        // Do not modify the passed in document!
+        Document doc = new Document(_doc.getId(), Document.deepCopy(_doc.getData()), Document.deepCopy(_doc.getManifest()))
         if (doc.isJson()) {
             if (doc.isJsonLd()) {
                 log.trace("Framing ${doc.id}")

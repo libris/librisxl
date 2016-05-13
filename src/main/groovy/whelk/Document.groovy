@@ -29,6 +29,7 @@ class Document {
     static final String ABOUT_KEY = "about"
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
+    static final String HOLDING_FOR_KEY = "holdingFor"
 
     static final URI BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
 
@@ -183,6 +184,21 @@ class Document {
             ((List)(data[GRAPH_KEY])).add([:])
 
         data[GRAPH_KEY][0][CONTROL_NUMBER_KEY] = controlNumber
+    }
+
+    void setHoldingFor(String resourceId) {
+        List graph = data.get(GRAPH_KEY)
+        if (graph == null)
+            data.put(GRAPH_KEY, [])
+
+        Map second = data[GRAPH_KEY][1]
+        while ( (second = data[GRAPH_KEY][1]) == null)
+            ((List)(data[GRAPH_KEY])).add([:])
+
+        if (second[HOLDING_FOR_KEY] == null)
+            second.put(HOLDING_FOR_KEY, [:])
+
+        second[HOLDING_FOR_KEY]["@id"] = resourceId
     }
 
     static Object deepCopy(Object orig) {
