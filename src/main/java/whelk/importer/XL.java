@@ -136,7 +136,7 @@ class XL
 
                             try
                             {
-                                Enricher.enrich( doc, rdfDoc );
+                                enrich( doc, rdfDoc );
                             } catch (IOException e)
                             {
                                 throw new UncheckedIOException(e);
@@ -151,7 +151,7 @@ class XL
         else
         {
             Document doc = m_postgreSQLComponent.load( ourId );
-            Enricher.enrich( doc, rdfDoc );
+            enrich( doc, rdfDoc );
             System.out.println("Would now (if --live had been specified) have written the following (merged) json-ld to whelk:");
             System.out.println("id:\n" + doc.getId());
             System.out.println("data:\n" + doc.getDataAsString());
@@ -160,6 +160,22 @@ class XL
         if (collection.equals("bib"))
             return rdfDoc.getItIdentifiers().get(0);
         return null;
+    }
+
+    private void enrich(Document mutableDocument, Document withDocument)
+            throws IOException
+    {
+        List<String[]> withTriples = JsonldSerializer.deserialize(withDocument.getData());
+        List<String[]> originalTriples = JsonldSerializer.deserialize(mutableDocument.getData());
+
+        Graph originalGraph = new Graph(originalTriples);
+        Graph withGraph = new Graph(withTriples);
+
+        originalGraph.enrichWith(withGraph);
+
+        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples());
+        JsonldSerializer.normalize(enrichedData, mutableDocument.getId());
+        mutableDocument.setData(enrichedData);
     }
 
     private Document convertToRDF(MarcRecord marcRecord, String collection, String id)
