@@ -11,9 +11,11 @@ import java.util.*;
 @SuppressWarnings("unchecked")
 public class JsonldSerializer
 {
-    private static int lastBlankNodeId = -1;
     public static final String LITERAL_PREFIX = "__literal:";
     public static final String BLANKNODE_PREFIX = "_:b";
+
+    // State required for deserialization (for assigning new BNode IDs)
+    private int m_lastBlankNodeId = -1;
 
     /*******************************************************************************************************************
      * Deserialization
@@ -26,18 +28,61 @@ public class JsonldSerializer
      * Map jsonMap = new ObjectMapper().readValue(jsonString, HashMap.class);
      * The jsonld structure need not contain any context definition.
      */
-    public static List<String[]> deserialize(Map jsonMap)
+    public List<String[]> deserialize(Map jsonMap)
     {
+        m_lastBlankNodeId = getHighestBNodeID(jsonMap);
         List<String[]> result = new ArrayList<String[]>();
         parseMap(jsonMap, result, null);
         return result;
     }
 
     /**
+     * Find an integer I, such that new BNodes _:b(I+N) for N=1,2,3.. can be safely added (without risk of collision).
+     */
+    private static int getHighestBNodeID(Map map)
+    {
+        int candidate = 0;
+        for (Object keyObj : map.keySet())
+        {
+            String key = (String) keyObj;
+            if (key.equals("@id") && ((String)map.get(key)).startsWith(BLANKNODE_PREFIX))
+            {
+                // This might throw a integer parsing exception with blank nodes that use a different naming scheme.
+                // Such bnodes can be safely ignored, as they will not interfere with our bnode enumeration anyway.
+                try
+                {
+                    String bNodeId = (String)map.get(key);
+                    int bnodeNumber = Integer.parseInt(bNodeId.substring( JsonldSerializer.BLANKNODE_PREFIX.length() ));
+                    candidate = Math.max(candidate, bnodeNumber);
+                }
+                catch (Exception e) { /* ignore */ }
+            }
+
+            Object subobject = map.get(key);
+            if ( subobject instanceof Map )
+                candidate = Math.max(candidate, getHighestBNodeID( (Map) subobject ));
+            else if ( subobject instanceof List )
+                candidate = Math.max(candidate, getHighestBNodeID( (List) subobject ));
+        }
+        return candidate;
+    }
+
+    private static int getHighestBNodeID(List list)
+    {
+        int candidate = 0;
+        for (Object item : list)
+        {
+            if ( item instanceof Map )
+                candidate = Math.max(candidate, getHighestBNodeID( (Map) item ));
+        }
+        return candidate;
+    }
+
+    /**
      * nodeId is the id of the node we're currently traversing, which might be a blank node id
      * (or null at the beginning).
      */
-    private static void parseMap(Map jsonMap, List<String[]> result, String nodeId)
+    private void parseMap(Map jsonMap, List<String[]> result, String nodeId)
     {
         for (Object keyObj : jsonMap.keySet())
         {
@@ -65,7 +110,7 @@ public class JsonldSerializer
         }
     }
 
-    private static void parseList(List jsonList, List<String[]> result, String nodeId, String predicate)
+    private void parseList(List jsonList, List<String[]> result, String nodeId, String predicate)
     {
         for (Object item : jsonList)
         {
@@ -82,7 +127,7 @@ public class JsonldSerializer
         }
     }
 
-    private static String getObjectId(Object object)
+    private String getObjectId(Object object)
     {
         if (object instanceof String) // literal object
             return LITERAL_PREFIX + (String) object;
@@ -99,9 +144,9 @@ public class JsonldSerializer
         return null;
     }
 
-    private static String newBlankNodeId()
+    private String newBlankNodeId()
     {
-        return BLANKNODE_PREFIX + ++lastBlankNodeId;
+        return BLANKNODE_PREFIX + (++m_lastBlankNodeId);
     }
 
     /*******************************************************************************************************************

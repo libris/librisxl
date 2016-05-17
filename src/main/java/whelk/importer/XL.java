@@ -165,8 +165,9 @@ class XL
     private void enrich(Document mutableDocument, Document withDocument)
             throws IOException
     {
-        List<String[]> withTriples = JsonldSerializer.deserialize(withDocument.getData());
-        List<String[]> originalTriples = JsonldSerializer.deserialize(mutableDocument.getData());
+        JsonldSerializer serializer = new JsonldSerializer();
+        List<String[]> withTriples = serializer.deserialize(withDocument.getData());
+        List<String[]> originalTriples = serializer.deserialize(mutableDocument.getData());
 
         Graph originalGraph = new Graph(originalTriples);
         Graph withGraph = new Graph(withTriples);

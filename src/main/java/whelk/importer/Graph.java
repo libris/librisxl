@@ -11,10 +11,7 @@ public class Graph
      */
     private Map<String, List<String[]>> m_edgesFromId;
 
-    /**
-     * Keep track of the highest currently assigned BNode id in the graph (so that new BNode ids can be assigned)
-     */
-    private int m_nextBNodeIDNumber = 0;
+    private int m_currentHighestBNodeID = 0;
 
     public Graph(List<String[]> triples)
     {
@@ -53,25 +50,13 @@ public class Graph
 
         // add the edge represented by this triple
         edges.add(new String[]{predicate, object});
-
-        // keep track of the highest BNode id
-        if (subject.startsWith(JsonldSerializer.BLANKNODE_PREFIX))
-        {
-            // There may be BNode ids that are formatted in other ways and may fail the below check. But Such IDs are
-            // of no consequence as they will for the same reason not interfere with new BNode IDs we assign later on.
-            try
-            {
-                int bnodeNumber = Integer.parseInt(subject.substring( JsonldSerializer.BLANKNODE_PREFIX.length() ));
-                if (bnodeNumber >= m_nextBNodeIDNumber)
-                    m_nextBNodeIDNumber = bnodeNumber + 1;
-            }
-            catch (Exception e) { /* ignore */ }
-        }
     }
 
     public void enrichWith(Graph otherGraph)
     {
         Map<String, String> bNodeMapping = otherGraph.generateBNodeMapTo(this);
+
+        m_currentHighestBNodeID = getCurrentHighestBNodeID();
 
         for (String subject : otherGraph.m_edgesFromId.keySet())
         {
@@ -130,6 +115,31 @@ public class Graph
         return result.toString();
     }
 
+    /**
+     * Find an integer I, such that new BNodes _:b(I+N) for N=1,2,3.. can be safely (without risk of collision) added to this graph
+     */
+    private int getCurrentHighestBNodeID()
+    {
+        int currentHighestBNodeID = 0;
+        for (String subject : m_edgesFromId.keySet())
+        {
+            List<String[]> edges = m_edgesFromId.get(subject);
+            for (String[] edge: edges)
+            {
+                String predicate = edge[0];
+                String object = edge[1];
+
+                try
+                {
+                    int bnodeNumber = Integer.parseInt(subject.substring( JsonldSerializer.BLANKNODE_PREFIX.length() ));
+                    if (bnodeNumber >= currentHighestBNodeID)
+                        currentHighestBNodeID = bnodeNumber;
+                }
+                catch (Exception e) { /* ignore */ }
+            }
+        }
+        return  currentHighestBNodeID;
+    }
 
     /**
      * Given a node id in the graph from which bNodeMapping is derived, get the corresponding node id in this graph
@@ -144,7 +154,7 @@ public class Graph
 
             // A blank node without mapping? Give it a new blank node id in this graph
             // and add the mapping, so the linked web remains intact
-            String newBNodeId = JsonldSerializer.BLANKNODE_PREFIX + m_nextBNodeIDNumber++;
+            String newBNodeId = JsonldSerializer.BLANKNODE_PREFIX + (++m_currentHighestBNodeID);
             bNodeMapping.put(naiveNodeId, newBNodeId);
             return newBNodeId;
         }
