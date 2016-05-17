@@ -1,18 +1,5 @@
 package whelk.importer;
 
-/* lxl_import, Synopsis
-
-0. Setup configuration variables for channel
-1. Choose reader for channel (xml, iso2709, json, json-ld,tsv)
-2. Transform (if necessary, possibly to several records)
-3. For each record in (transformed) stream:
-4. Select whelk-id's (for duplicate check)
-5. Depending on id's (what if multiple?) and recordtype (bib,hold,auth)
-6. Action=delete,merge,add,replace (from marc-leader? or config?)
-
-*/
-
-import org.apache.commons.io.IOUtils;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
@@ -23,12 +10,26 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 
 public class Main
 {
+    // Abort on unhandled exceptions, including those on worker threads.
+    static
+    {
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()
+        {
+            @Override
+            public void uncaughtException(Thread thread, Throwable throwable)
+            {
+                System.err.println("PANIC ABORT, unhandled exception:\n");
+                throwable.printStackTrace();
+                System.exit(-1);
+            }
+        });
+    }
+
 	public static void main(String[] args)
             throws Exception
 	{
@@ -111,6 +112,14 @@ public class Main
         }
     }
 
+    private static File getTemporaryFile()
+            throws IOException
+    {
+        File tempFile = File.createTempFile("xlimport", ".tmp");
+        tempFile.deleteOnExit();
+        return tempFile;
+    }
+
     /**
      * Convert inputStream into a new InputStream which consists of XML records, regardless of the
      * original format.
@@ -120,23 +129,26 @@ public class Main
     {
         if (parameters.getFormat() == Parameters.INPUT_FORMAT.FORMAT_ISO2709)
         {
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            File tmpFile = getTemporaryFile();
 
-            Iso2709MarcRecordReader isoReader;
-            isoReader = new Iso2709MarcRecordReader(inputStream, parameters.getInputEncoding());
-
-            MarcXmlRecordWriter writer = new MarcXmlRecordWriter(buf);
-
-            MarcRecord marcRecord;
-            while ((marcRecord = isoReader.readRecord()) != null)
+            try(OutputStream tmpOut = new FileOutputStream(tmpFile))
             {
-                writer.writeRecord(marcRecord);
-            }
-            isoReader.close();
-            writer.close();
-            inputStream.close();
+                Iso2709MarcRecordReader isoReader;
+                isoReader = new Iso2709MarcRecordReader(inputStream, parameters.getInputEncoding());
 
-            return new ByteArrayInputStream(buf.toByteArray());
+                MarcXmlRecordWriter writer = new MarcXmlRecordWriter(tmpOut);
+
+                MarcRecord marcRecord;
+                while ((marcRecord = isoReader.readRecord()) != null)
+                {
+                    writer.writeRecord(marcRecord);
+                }
+                isoReader.close();
+                writer.close();
+                inputStream.close();
+            }
+
+            return new FileInputStream(tmpFile);
         } else // Already xml
             return inputStream;
     }
@@ -148,20 +160,13 @@ public class Main
     private static InputStream transform(Transformer transformer, InputStream inputStream)
             throws TransformerException, IOException
     {
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        StreamResult result = new StreamResult(buf);
-        transformer.transform( new StreamSource(inputStream), result );
-        inputStream.close();
-        return new ByteArrayInputStream(buf.toByteArray());
-    }
-
-    private static InputStream debug_printStreamToEnd(InputStream inputStream, String description)
-            throws IOException
-    {
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        IOUtils.copy(inputStream, buf);
-        inputStream.close();
-        System.err.println("Stream contents (" + description + "):\n" + new String(buf.toByteArray(), Charset.forName("UTF-8")));
-        return new ByteArrayInputStream(buf.toByteArray());
+        File tmpFile = getTemporaryFile();
+        try(OutputStream tmpOut = new FileOutputStream(tmpFile))
+        {
+            StreamResult result = new StreamResult(tmpOut);
+            transformer.transform( new StreamSource(inputStream), result );
+            inputStream.close();
+        }
+        return new FileInputStream(tmpFile);
     }
 }
