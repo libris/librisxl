@@ -71,7 +71,7 @@ public class Graph
 
     public void enrichWith(Graph otherGraph)
     {
-        Map<String, String> bNodeMapping = generateBNodeMapFrom(otherGraph);
+        Map<String, String> bNodeMapping = otherGraph.generateBNodeMapTo(this);
 
         for (String subject : otherGraph.m_edgesFromId.keySet())
         {
@@ -81,7 +81,6 @@ public class Graph
             {
                 String predicate = otherEdge[0];
                 String object = getTranslatedNodeId(otherEdge[1], bNodeMapping);
-
                 addTriple(new String[]{subject, predicate, object});
             }
         }
@@ -156,7 +155,7 @@ public class Graph
      * Generates a map where BNode ids in otherGraph are mapped to BNode ids in this map (where the mapping can be
      * done with surety)
      */
-    private Map<String, String> generateBNodeMapFrom(Graph otherGraph)
+    private Map<String, String> generateBNodeMapTo(Graph otherGraph)
     {
         Map<String, String> BNodeMap = new HashMap<>();
         for (String otherSubject : otherGraph.m_edgesFromId.keySet())
@@ -169,7 +168,7 @@ public class Graph
                     {
                         // subject and otherSubject are both blank nodes.
                         if (hasEquivalentEdges(subject, otherSubject, otherGraph, new HashMap<>(), new HashMap<>()))
-                            BNodeMap.put(otherSubject, subject);
+                            BNodeMap.put(subject, otherSubject);
                     }
                 }
             }

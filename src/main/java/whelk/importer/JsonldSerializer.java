@@ -224,7 +224,7 @@ public class JsonldSerializer
         // Make sure the main node is at index 0 in the graph list and the thing node at index 1
         if (mainNodeIndex == 1 && thingNodeIndex == 0)
             Collections.swap(graphList, 0, 1);
-        else
+        else if (mainNodeIndex != -1 && thingNodeIndex != -1)
         {
             if (mainNodeIndex != 0)
                 Collections.swap(graphList, 0, mainNodeIndex);
