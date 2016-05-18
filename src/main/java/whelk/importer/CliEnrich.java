@@ -1,7 +1,6 @@
 package whelk.importer;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import whelk.Document;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,7 +25,9 @@ public class CliEnrich
         //System.out.println( "original:\n" + originalGraph );
         //System.out.println( "other:\n" + otherGraph );
 
-        originalGraph.enrichWith(otherGraph);
+        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+
+        originalGraph.enrichWith(otherGraph, specialRules);
 
         //System.out.println( "enriched:\n" + originalGraph );
 

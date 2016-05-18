@@ -5,6 +5,21 @@ import java.util.*;
 public class Graph
 {
     /**
+     * When enriching one graph with another, sometimes special rules need to be applied to certain predicates, in order
+     * to maintain the domain-specific correctness of the resulting graph.
+     * For example a Whelk document should have only one "created"-timestamp, while the graphs being merged will
+     * typically have one each, and so the special rule RULE_PREFER_ORIGINAL should be used.
+     *
+     * All predicates for which there are no special rules will be considered belonging to the aggregate category.
+     * Meaning edges with such predicates will be aggregated side by side (in a list in json-ld terms).
+     */
+    public enum PREDICATE_RULES
+    {
+        RULE_PREFER_ORIGINAL, // Only one such predicate per subject, prefer the original documents version to the incoming
+        RULE_PREFER_INCOMING, // Only one such predicate per subject, prefer the incoming documents version to the original (= overwrite)
+    };
+
+    /**
      * The adjacency list (map).
      *
      * Mapping node IDs (A) to lists of predicate-subject pairs (edges) that connect (A) with other nodes
@@ -52,7 +67,7 @@ public class Graph
         edges.add(new String[]{predicate, object});
     }
 
-    public void enrichWith(Graph otherGraph)
+    public void enrichWith(Graph otherGraph, Map<String, PREDICATE_RULES> specialRules)
     {
         Map<String, String> bNodeMapping = otherGraph.generateBNodeMapTo(this);
 
@@ -66,7 +81,32 @@ public class Graph
             {
                 String predicate = otherEdge[0];
                 String object = getTranslatedNodeId(otherEdge[1], bNodeMapping);
-                addTriple(new String[]{subject, predicate, object});
+
+                if (specialRules.get(predicate) == null) // default, AGGREGATE
+                {
+                    addTriple(new String[]{subject, predicate, object});
+                }
+                else if (specialRules.get(predicate) == PREDICATE_RULES.RULE_PREFER_ORIGINAL)
+                {
+                    // Add the triple only if we don't already have such a subject-predicate pair.
+                    int occurrences = subjectPredicatePairOccurrences(subject, predicate);
+                    if (occurrences == 0)
+                        addTriple(new String[]{subject, predicate, object});
+                }
+                else if (specialRules.get(predicate) == PREDICATE_RULES.RULE_PREFER_INCOMING)
+                {
+                    // delete any preexisting edges in this graph that match this subject-predicate pair.
+                    List<String[]> subjectEdges = m_edgesFromId.get(subject);
+                    Iterator<String[]> it = subjectEdges.iterator();
+                    while (it.hasNext())
+                    {
+                        String[] edge = it.next();
+                        if (edge[0].equals(predicate))
+                            it.remove();
+                    }
+
+                    addTriple(new String[]{subject, predicate, object});
+                }
             }
         }
     }
@@ -113,6 +153,23 @@ public class Graph
         }
 
         return result.toString();
+    }
+
+    /**
+     * Is there such an edge in this graph, that 'subject' is connected to some (arbitrary)
+     * other node via an edge of type 'predicate' ?
+     * Returns the number of such edges.
+     */
+    private int subjectPredicatePairOccurrences(String subject, String predicate)
+    {
+        List<String[]> edges = m_edgesFromId.get(subject);
+        int result = 0;
+        for (String[] edge : edges)
+        {
+            if (predicate.equals(edge[0]))
+                ++result;
+        }
+        return result;
     }
 
     /**

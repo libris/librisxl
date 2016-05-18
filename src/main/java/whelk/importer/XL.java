@@ -172,7 +172,12 @@ class XL
         Graph originalGraph = new Graph(originalTriples);
         Graph withGraph = new Graph(withTriples);
 
-        originalGraph.enrichWith(withGraph);
+        // This is temporary, these special rules should not be hardcoded here, but rather obtained from (presumably)
+        // whelk-core's marcframe.json.
+        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+        specialRules.put("created", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
+
+        originalGraph.enrichWith(withGraph, specialRules);
 
         Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples());
         JsonldSerializer.normalize(enrichedData, mutableDocument.getId());
