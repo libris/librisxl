@@ -36,7 +36,7 @@ class PostgreSQLComponent implements Storage {
     protected String UPSERT_DOCUMENT, UPDATE_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION,
                      GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
                      LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE,
-                     INSERT_IDENTIFIERS, LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS, GET_DOCUMENT_FOR_UPDATE
+                     INSERT_IDENTIFIERS, LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS, GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
 
@@ -123,6 +123,7 @@ class PostgreSQLComponent implements Storage {
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
                 "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.identifier = ?"
+        GET_CONTEXT = "SELECT data#>>'{@graph,0}' FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE identifier = 'https://id.kb.se/vocab/context')"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -265,6 +266,32 @@ class PostgreSQLComponent implements Storage {
         return null
     }
 
+    String getContext()
+    {
+        Connection connection;
+        PreparedStatement selectStatement;
+        ResultSet resultSet;
+
+        try
+        {
+            connection = getConnection()
+            selectStatement = connection.prepareStatement(GET_CONTEXT)
+            resultSet = selectStatement.executeQuery()
+
+            if (resultSet.next())
+            {
+                return resultSet.getString(1);
+            }
+            return null;
+        }
+        finally
+        {
+            try {resultSet.close()} catch (Exception e) { /* ignore */ }
+            try {selectStatement.close()} catch (Exception e) { /* ignore */ }
+            try {connection.close()} catch (Exception e) { /* ignore */ }
+        }
+    }
+
     /**
      * Interface for performing atomic document updates
      */
@@ -329,7 +356,7 @@ class PostgreSQLComponent implements Storage {
                 throw psqle
             }
         } catch (Exception e) {
-            log.error("Failed to save document: ${e.message}. Rolling back.")
+            log.info("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
             throw e
         } finally {
