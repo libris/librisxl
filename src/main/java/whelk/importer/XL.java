@@ -177,9 +177,17 @@ class XL
         Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
         specialRules.put("created", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
 
+        // These should also be retrieved from whelk-core's marcframe.json.
+        // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
+        // has only a single member.
+        Set<String> alwaysSets = new HashSet<>();
+        alwaysSets.add("sameAs");
+        alwaysSets.add("genre");
+        alwaysSets.add("comment");
+
         originalGraph.enrichWith(withGraph, specialRules);
 
-        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples());
+        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), alwaysSets);
         JsonldSerializer.normalize(enrichedData, mutableDocument.getId());
         mutableDocument.setData(enrichedData);
     }

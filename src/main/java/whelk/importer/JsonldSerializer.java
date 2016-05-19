@@ -158,7 +158,7 @@ public class JsonldSerializer
      * to a jsonld string using an ObjectMapper).
      * @param triples must be a list of String[3] subject-predicate-object triples.
      */
-    public static Map serialize(List<String[]> triples)
+    public static Map serialize(List<String[]> triples, Set<String> alwaysSets)
     {
         List graphList = new ArrayList<>();
 
@@ -173,7 +173,7 @@ public class JsonldSerializer
             {
                 Map objectMap = _optGraphMap.get(triple[0]);
 
-                addTripleToObject(objectMap, triple);
+                addTripleToObject(objectMap, triple, alwaysSets);
             }
             else
             {
@@ -182,7 +182,7 @@ public class JsonldSerializer
                 graphList.add(objectMap);
                 _optGraphMap.put(triple[0], objectMap);
 
-                addTripleToObject(objectMap, triple);
+                addTripleToObject(objectMap, triple, alwaysSets);
             }
         }
 
@@ -194,7 +194,7 @@ public class JsonldSerializer
         return result;
     }
 
-    private static void addTripleToObject(Map objectMap, String[] triple)
+    private static void addTripleToObject(Map objectMap, String[] triple, Set<String> alwaysSets)
     {
         // The thing to be added might be just a string (if the triple object is a literal),
         // or a map containing an @id if the triple object is an identifiable node in itself.
@@ -229,7 +229,15 @@ public class JsonldSerializer
         }
         else // add normally
         {
-            objectMap.put(triple[1], toBeAdded);
+            // Is this predicate one of those that must always be in a list, even if there is just one of them?
+            if ( alwaysSets.contains( triple[1] ) )
+            {
+                List objectList = new ArrayList<>();
+                objectList.add(toBeAdded);
+                objectMap.put(triple[1], objectList);
+            }
+            else
+                objectMap.put(triple[1], toBeAdded);
         }
     }
 

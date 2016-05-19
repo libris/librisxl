@@ -4,9 +4,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CliEnrich
 {
@@ -31,7 +29,7 @@ public class CliEnrich
 
         //System.out.println( "enriched:\n" + originalGraph );
 
-        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples());
+        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), new HashSet<>());
         JsonldSerializer.normalize(enrichedData, "noid");
         System.out.println(mapper.writeValueAsString(enrichedData));
     }
