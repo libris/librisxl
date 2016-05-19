@@ -11,10 +11,13 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Main
 {
+    static XL s_librisXl = null;
+
     // Abort on unhandled exceptions, including those on worker threads.
     static
     {
@@ -42,6 +45,7 @@ public class Main
 
         // Normal importing operations
 		Parameters parameters = new Parameters(args);
+        s_librisXl = new XL(parameters);
 
         if (parameters.getPath() == null)
             importStream(System.in, parameters);
@@ -90,25 +94,60 @@ public class Main
         for (Transformer transformer : transformers)
             inputStream = transform(transformer, inputStream);
 
-        XL librisXl = new XL(parameters);
+        ThreadPool threadPool = new ThreadPool();
 
         MarcXmlRecordReader reader = null;
         try
         {
             reader = new MarcXmlRecordReader(inputStream, "/collection/record", null);
+
+            // Assemble a batch of records (= one bib followed by zero or more hold)
             MarcRecord marcRecord;
-            String lastKnownBibDocId = null;
+            List<MarcRecord> batch = null;
             while ((marcRecord = reader.readRecord()) != null)
             {
-                String resultingId = librisXl.importISO2709(marcRecord, lastKnownBibDocId);
-                if (resultingId != null)
-                    lastKnownBibDocId = resultingId;
+                String collection = "bib"; // assumption
+                if (marcRecord.getLeader(6) == 'u' || marcRecord.getLeader(6) == 'v' ||
+                        marcRecord.getLeader(6) == 'x' || marcRecord.getLeader(6) == 'y')
+                    collection = "hold";
+
+                if (collection.equals("bib"))
+                {
+                    if (batch != null)
+                        threadPool.executeOnThread(batch, Main::importBatch);
+                    batch = new ArrayList<>();
+                }
+                batch.add(marcRecord);
             }
+            // The last batch will not be followed by another bib.
+            if (batch != null)
+                threadPool.executeOnThread(batch, Main::importBatch);
         }
         finally
         {
             if (reader != null)
                 reader.close();
+            threadPool.joinAll();
+        }
+    }
+
+    private static void importBatch(List<MarcRecord> batch)
+    {
+        try
+        {
+            String lastKnownBibDocId = null;
+            for (MarcRecord marcRecord : batch)
+            {
+                String resultingId = s_librisXl.importISO2709(marcRecord, lastKnownBibDocId);
+                if (resultingId != null)
+                {
+                    System.out.println("Running batch for id: " + resultingId);
+                    lastKnownBibDocId = resultingId;
+                }
+            }
+        } catch (Exception e)
+        {
+            throw new RuntimeException(e);
         }
     }
 
