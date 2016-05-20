@@ -3799,9 +3799,18 @@
       "$f": {
         "aboutEntity": "?record",
         "IMPROVE:about": "$thing if Concept else $record",
-        "TODO": "inCollection if . = sgp?",
         "link": "inScheme", "resourceType": "ConceptScheme",
+        "TODO:set-link-to?": "inCollection if . = sgp?",
+        "TODO:uriMap?": "if token is unknown: make bnode scheme and keep notation",
         "uriTemplate": "https://id.kb.se/term/{_}",
+        "tokenMap": {
+            "sao": "sao",
+            "saogf": "saogf",
+            "barn": "barn",
+            "barngf": "barngf",
+            "sgp": "sgp",
+            "gmgpc//swe": "gmgpc//swe"
+        },
         "property": "notation"
       },
       "_spec": [
