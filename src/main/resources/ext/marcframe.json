@@ -215,8 +215,7 @@
     },
     "termbase_noid": {
       "$a": {"property": "prefLabel"},
-      "$0": {"property": "controlNumber"},
-      "TODO:$0": {
+      "$0": {
         "addLink": "sameAs",
         "uriTemplate": "http://libris.kb.se/resource/auth/{_}",
         "property": "controlNumber"
@@ -2087,12 +2086,9 @@
           "1": "UPC",
           "2": "ISMN",
           "3": "EAN",
-          "4": "SICI"
-        },
-        "definedElsewhereToken": "7"
-      },
-      "match-i1": {
-        "7": {"resourceType": "Identifier"}
+          "4": "SICI",
+          "7": "Identifier"
+        }
       },
       "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
       "$a": {"property": "value"},
@@ -3856,6 +3852,7 @@
 
     "073": {
       "TODO": "ignore entirely (should be removed)",
+      "ignoreOnRevertInFavourOf": "550",
       "aboutEntity": "?record",
       "addLink": "broader",
       "resourceType": "TopicalTerm",
@@ -3887,7 +3884,7 @@
         "t": {
           "aboutType": "WorkTerm",
           "pendingResources": {
-            "_:work": {"link": "focus", "resourceType": "UniformWork", "embedded": false},
+            "_:work": {"link": "focus", "resourceType": "UniformWork", "embedded": true},
             "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
           },
           "$t": {"about": "_:work", "property": "title"},
@@ -3972,8 +3969,8 @@
         {
           "name": "",
           "source": [
-            {"040": {"subfields": [{"f":"sao"}]}},
-            {"150": {"subfields": [{"a": "Barnpsykologi"}]}}
+            {"040": {"ind1": " ", "ind2": " ", "subfields": [{"f":"sao"}]}},
+            {"150": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Barnpsykologi"}]}}
           ],
           "result": {
             "@type": "TopicalTerm",

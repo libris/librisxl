@@ -1579,9 +1579,22 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def matchedResults = []
 
         if (matchCandidate == null) {
-            for (rule in matchRules) {
+            // NOTE: The order of rules upon revert must be reverse, since that
+            // incidentally runs the most independent and specific rules last.
+            // TODO: MatchRule mechanics should be simplified!
+            for (rule in matchRules.reverse(false)) {
                 for (candidate in rule.candidates) {
-                    matchedResults += candidate.handler.revert(data, result, candidate)
+                    // NOTE: Combinations allow for one nested level...
+                    if (candidate.handler.matchRules) {
+                        for (subrule in candidate.handler.matchRules) {
+                            for (subcandidate in subrule.candidates) {
+                                def matchres = subcandidate.handler.revert(data, result, subcandidate)
+                                matchedResults += matchres
+                            }
+                        }
+                    }
+                    def matchres = candidate.handler.revert(data, result, candidate)
+                    matchedResults += matchres
                 }
             }
         }
@@ -1698,17 +1711,25 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     def revertOne(Map data, Map currentEntity, Set onlyCodes=null, Map aboutMap=null,
             MatchCandidate matchCandidate=null) {
 
-        def i1 = ind1? ind1.revert(data, currentEntity) : (matchCandidate?.ind1 ?: ' ')
-        def i2 = ind2? ind2.revert(data, currentEntity) : (matchCandidate?.ind2 ?: ' ')
+        def i1 = matchCandidate?.ind1 ?: ind1? ind1.revert(data, currentEntity) : ' '
+        def i2 = matchCandidate?.ind2 ?: ind2? ind2.revert(data, currentEntity) : ' '
 
         def subs = []
         def failedRequired = false
 
-        subfields.collect { code, subhandler ->
+        def selectedEntities = new HashSet()
+        def thisTag = this.tag.split(':')[0]
+
+        subfields.each { code, subhandler ->
+            if (failedRequired)
+                return
+
             if (!subhandler)
                 return
+
             if (onlyCodes && !onlyCodes.contains(code))
                 return
+
             if (subhandler.requiresI1) {
                 if (i1 == null) {
                     i1 = subhandler.requiresI1
@@ -1726,6 +1747,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def selectedEntity = subhandler.about? aboutMap[subhandler.about] : currentEntity
             if (!selectedEntity)
                 return
+
+            if (selectedEntity != currentEntity && selectedEntity._revertedBy == thisTag) {
+                failedRequired = true
+                //return
+            }
+
             def value = subhandler.revert(data, selectedEntity)
             if (value instanceof List) {
                 value.each {
@@ -1742,17 +1769,21 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     failedRequired = true
                 }
             }
+
+            if (!failedRequired) {
+                selectedEntities << selectedEntity
+            }
         }
 
-        /* FIXME: match-i1 before match-code resolves agent wrongly and this fails...
-        if (tag == '700:match-code:t') {
-            assert subs && !failedRequired
+        if (!failedRequired && i1 != null && i2 != null && subs.length) {
+            // FIXME: store reverted input refs instead of tagging input data
+            selectedEntities.each {
+                it._revertedBy = thisTag
+            }
+            return [ind1: i1, ind2: i2, subfields: subs]
+        } else {
+            return null
         }
-        */
-
-        return !failedRequired && i1 != null && i2 != null && subs.length?
-            [ind1: i1, ind2: i2, subfields: subs] :
-            null
     }
 }
 
@@ -2023,22 +2054,29 @@ abstract class MatchRule {
 
     Map ruleMap = [:]
 
+    boolean combinatory = false
+
     MatchRule(MarcFieldHandler handler, Map fieldDfn, String ruleKey, rules) {
         rules.each { String key, Map matchDfn ->
             def comboDfn = (Map) fieldDfn.clone()
+            if (!combinatory) {
+                comboDfn.remove(ruleKey)
+            }
             // create nested combinations, but prevent recursive nesting
             if (comboDfn.nestedMatch) {
                 matchRuleKeys.each {
                     comboDfn.remove(it)
                 }
             } else {
-                def newRule = (Map) comboDfn[ruleKey].clone()
-                newRule.remove(key)
-                comboDfn[ruleKey] = newRule
                 comboDfn.nestedMatch = true
+                if (combinatory) {
+                    def newRule = (Map) comboDfn[ruleKey].clone()
+                    newRule.remove(key)
+                    comboDfn[ruleKey] = newRule
+                }
             }
             comboDfn += matchDfn
-            def tag = "${handler.tag}:match-code:${key}"
+            def tag = "${handler.tag}:${ruleKey}:${key}"
             ruleMap[key] = new MarcFieldHandler(handler.ruleSet, tag, comboDfn)
         }
     }
@@ -2112,6 +2150,9 @@ class IndMatchRule extends MatchRule {
 }
 
 class CodeMatchRule extends MatchRule {
+
+    boolean combinatory = true
+
     CodeMatchRule(handler, fieldDfn, ruleKey, rules) {
         super(handler, fieldDfn, ruleKey, parseRules(rules))
     }
