@@ -270,4 +270,39 @@ public class EnrichTest
 
         testEnrich(original, incoming, expectedResult);
     }
+
+    @Test
+    public void nonmatchingBNode() throws Exception
+    {
+        // Merging two graphs with one BNode each which can't be determined to represent the same thing.
+
+        String original = "{\n" +
+                "    \"@graph\": [\n" +
+                "        {\n" +
+                "            \"this bnode\": \"should not match\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}\n";
+
+        String incoming = "{\n" +
+                "    \"@graph\": [\n" +
+                "        {\n" +
+                "            \"with\": \"this bnode\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}\n";
+
+        String expectedResult = "{\n" +
+                "    \"@graph\": [\n" +
+                "        {\n" +
+                "            \"with\": \"this bnode\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"this bnode\": \"should not match\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}\n";
+
+        testEnrich(original, incoming, expectedResult);
+    }
 }
