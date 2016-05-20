@@ -50,7 +50,7 @@ public class Main
         if (parameters.getPath() == null)
             importStream(System.in, parameters);
 
-        else // A path was speficied
+        else // A path was specified
         {
             File file = new File(parameters.getPath().toString());
             if (file.isDirectory())
@@ -89,21 +89,29 @@ public class Main
     {
         inputStream = streamAsXml(inputStream, parameters);
 
-        // Apply any transforms
+        // Apply any transforms specified on the command line.
+        // The expectation is that after these transforms, the stream will consist of a series
+        // of marcxml records that the jmarctools.MarcXmlRecordReader can read. The order of the records
+        // is also expected to be; one bib record followed by any related holding records, after which
+        // comes the next bib record and so on.
         List<Transformer> transformers = parameters.getTransformers();
         for (Transformer transformer : transformers)
             inputStream = transform(transformer, inputStream);
 
-        ThreadPool threadPool = new ThreadPool();
+        ThreadPool threadPool = new ThreadPool( 2 * Runtime.getRuntime().availableProcessors() );
 
         MarcXmlRecordReader reader = null;
         try
         {
             reader = new MarcXmlRecordReader(inputStream, "/collection/record", null);
 
-            // Assemble a batch of records (= one bib followed by zero or more hold)
+            long start = System.currentTimeMillis();
+            long recordsBatched = 0;
+            int recordsInBatch = 0;
+
+            // Assemble a batch of records (= N * (one bib followed by zero or more hold) )
             MarcRecord marcRecord;
-            List<MarcRecord> batch = null;
+            List<MarcRecord> batch = new ArrayList<>();
             while ((marcRecord = reader.readRecord()) != null)
             {
                 String collection = "bib"; // assumption
@@ -113,11 +121,26 @@ public class Main
 
                 if (collection.equals("bib"))
                 {
-                    if (batch != null)
+                    if (batch != null && recordsInBatch > 200)
+                    {
                         threadPool.executeOnThread(batch, Main::importBatch);
-                    batch = new ArrayList<>();
+                        batch = new ArrayList<>();
+                        recordsInBatch = 0;
+                    }
                 }
                 batch.add(marcRecord);
+                ++recordsBatched;
+                ++recordsInBatch;
+
+                if (recordsBatched % 100 == 0)
+                {
+                    long secondDiff = (System.currentTimeMillis() - start) / 1000;
+                    if (secondDiff > 0)
+                    {
+                        long recordsPerSec = recordsBatched / secondDiff;
+                        System.err.println("Currently importing " + recordsPerSec + " records / sec. Active threads: " + threadPool.getActiveThreadCount());
+                    }
+                }
             }
             // The last batch will not be followed by another bib.
             if (batch != null)
@@ -140,10 +163,7 @@ public class Main
             {
                 String resultingId = s_librisXl.importISO2709(marcRecord, lastKnownBibDocId);
                 if (resultingId != null)
-                {
-                    System.out.println("Running batch for id: " + resultingId);
                     lastKnownBibDocId = resultingId;
-                }
             }
         } catch (Exception e)
         {

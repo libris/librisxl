@@ -53,7 +53,7 @@ class XL
 
         String resultingResourceId = null;
 
-        System.out.println("Duplicates: " + duplicateIDs.size());
+        //System.out.println("Duplicates: " + duplicateIDs.size());
 
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
@@ -246,32 +246,44 @@ class XL
                     for (Field field : marcRecord.getFields("020"))
                     {
                         String isbn = DigId.grepIsbna( (Datafield) field );
-                        duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('x', 'X') ));
-                        duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('X', 'x') ));
+                        if (isbn != null)
+                        {
+                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('x', 'X') ));
+                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('X', 'x') ));
+                        }
                     }
                     break;
                 case DUPTYPE_ISBNZ: // International Standard Book Number (only from subfield Z)
                     for (Field field : marcRecord.getFields("020"))
                     {
                         String isbn = DigId.grepIsbnz( (Datafield) field );
-                        duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('x', 'X') ));
-                        duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('X', 'x') ));
+                        if (isbn != null)
+                        {
+                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('x', 'X') ));
+                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('X', 'x') ));
+                        }
                     }
                     break;
                 case DUPTYPE_ISSNA: // International Standard Serial Number (only from marc 022_A)
                     for (Field field : marcRecord.getFields("022"))
                     {
                         String issn = DigId.grepIssn( (Datafield) field, 'a' );
-                        duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('x', 'X') ));
-                        duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('X', 'x') ));
+                        if (issn != null)
+                        {
+                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('x', 'X') ));
+                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('X', 'x') ));
+                        }
                     }
                     break;
                 case DUPTYPE_ISSNZ: // International Standard Serial Number (only from marc 022_Z)
                     for (Field field : marcRecord.getFields("022"))
                     {
                         String issn = DigId.grepIssn( (Datafield) field, 'z' );
-                        duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('x', 'X') ));
-                        duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('X', 'x') ));
+                        if (issn != null)
+                        {
+                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('x', 'X') ));
+                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('X', 'x') ));
+                        }
                     }
                     break;
                 case DUPTYPE_OAI: // ?
@@ -328,6 +340,9 @@ class XL
             candidate035aIDs.add( DigId.grep035a( (Datafield) field ) );
         }
 
+        if (candidate035aIDs.isEmpty())
+            return new ArrayList<>();
+
         try(Connection connection = m_postgreSQLComponent.getConnection();
             PreparedStatement statement = getOnSystemNumber_ps(connection, candidate035aIDs);
             ResultSet resultSet = statement.executeQuery())
@@ -380,7 +395,7 @@ class XL
             PreparedStatement statement = getOnHeldByHoldingFor_ps(connection, sigel, relatedWithBibResourceId);
             ResultSet resultSet = statement.executeQuery())
         {
-            System.out.println("Getting hold dupliates with: " + statement);
+            //System.out.println("Getting hold dupliates with: " + statement);
             return collectIDs(resultSet);
         }
     }

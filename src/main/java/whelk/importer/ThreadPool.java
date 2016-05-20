@@ -2,8 +2,14 @@ package whelk.importer;
 
 public class ThreadPool
 {
-    private final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
-    private final Thread[] s_threadPool = new Thread[THREAD_COUNT];
+    private final int THREAD_COUNT;
+    private final Thread[] s_threadPool;
+
+    public ThreadPool(int threadCount)
+    {
+        THREAD_COUNT = threadCount;
+        s_threadPool = new Thread[THREAD_COUNT];
+    }
 
     public interface Worker<T>
     {
@@ -40,6 +46,17 @@ public class ThreadPool
                 return;
             }
         }
+    }
+
+    public int getActiveThreadCount()
+    {
+        int activeThreadCount = 0;
+        for (int i = 0; i < THREAD_COUNT; ++i)
+        {
+            if (s_threadPool[i] != null && s_threadPool[i].getState() != Thread.State.TERMINATED)
+                ++activeThreadCount;
+        }
+        return activeThreadCount;
     }
 
     public void joinAll()
