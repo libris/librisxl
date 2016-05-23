@@ -184,6 +184,8 @@ class XL
         alwaysSets.add("sameAs");
         alwaysSets.add("genre");
         alwaysSets.add("comment");
+        alwaysSets.add("offers");
+        alwaysSets.add("heldBy");
 
         originalGraph.enrichWith(withGraph, specialRules);
 
@@ -448,10 +450,13 @@ class XL
     private PreparedStatement getOnHeldByHoldingFor_ps(Connection connection, String heldBy, String holdingForId)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,heldBy,notation}' = ? AND data#>>'{@graph,1,holdingFor,@id}' = ? AND manifest->>'collection' = 'hold'";
+        // todo: update to a proper library uri, whatever that is (when it is decided).
+        String libraryUri = "https://libris.kb.se/library/" + heldBy;
+
+        String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,offers,0,heldBy,0,@id}' = ? AND data#>>'{@graph,1,holdingFor,@id}' = ? AND manifest->>'collection' = 'hold'";
         PreparedStatement statement = connection.prepareStatement(query);
 
-        statement.setString(1, heldBy);
+        statement.setString(1, libraryUri);
         statement.setString(2, holdingForId);
 
         return statement;
