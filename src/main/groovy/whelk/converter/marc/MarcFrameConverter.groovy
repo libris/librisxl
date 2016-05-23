@@ -1254,8 +1254,6 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
 
 }
 
-// TODO: when pendingResources with about can be reverted:
-// remove splitLink and spliceEntity code, no longer needed!
 @Log
 @CompileStatic
 class MarcFieldHandler extends BaseMarcFieldHandler {
@@ -1268,7 +1266,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Set<String> uriTemplateKeys
     Map uriTemplateDefaults
     Map computeLinks
-    List<Map> splitLinkRules
     Map<String, MarcSubFieldHandler> subfields = [:]
     List<MatchRule> matchRules = []
     Map<String, Map> pendingResources
@@ -1298,12 +1295,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (computeLinks) {
             computeLinks.use = computeLinks.use.replaceFirst(/^\$/, '')
         }
-        splitLinkRules = fieldDfn.splitLink.collect {
-            [codes: new HashSet(it.codes),
-                link: it.link ?: it.addLink,
-                spliceEntityName: it.spliceEntity,
-                repeatable: 'addLink' in it]
-        }
 
         def matchDomain = fieldDfn['match-domain']
         if (matchDomain) {
@@ -1332,9 +1323,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             if (m) {
                 addSubfield(m.group(1), obj)
             }
-        }
-        if (splitLinkRules) {
-            assert resourceType, "splitLinks requires resourceType in: ${fieldDfn}"
         }
     }
 
@@ -1374,7 +1362,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def handled = new HashSet()
 
         def linkage = computeLinkage(state, entity, value, handled)
-        def codeLinkSplits = (Map) linkage.codeLinkSplits
         if (linkage.newEntity != null) {
             entity = (Map) linkage.newEntity
         }
@@ -1400,9 +1387,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 def subDfn = (MarcSubFieldHandler) subfields[code]
                 boolean ok = false
                 if (subDfn) {
-                    def ent = (Map) ((subDfn.aboutEntityName)?
-                        entityMap[subDfn.aboutEntityName] :
-                        (codeLinkSplits[code] ?: entity))
+                    def entKey = subDfn.aboutEntityName
+                    def ent = (Map) (entKey? entityMap[entKey] : entity)
                     if ((subDfn.requiresI1 && subDfn.requiresI1 != value.ind1) ||
                         (subDfn.requiresI2 && subDfn.requiresI2 != value.ind2)) {
                         ok = true // rule does not apply here
@@ -1460,40 +1446,13 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        linkage.splitResults.each { Map it ->
-            if (((Map) it.entity).find { k, v -> k != "@type" }) {
-                def rule = (Map) it.rule
-                addValue(aboutEntity, (String) rule.link,
-                        (Map) it.entity, (boolean) rule.repeatable)
-            }
-        }
-
         return new ConvertResult(unhandled)
     }
 
     @CompileStatic(SKIP)
     Map computeLinkage(Map state, Map entity, Map value, Set handled) {
-        def codeLinkSplits = [:]
-        // TODO: clear unused codeLinkSplits afterwards..
-        def splitResults = []
-        def spliceEntity = null
-        if (splitLinkRules) {
-            splitLinkRules.each { rule ->
-                def newEnt = null
-                if (rule.spliceEntityName) {
-                    newEnt = ["@type": rule.spliceEntityName]
-                    spliceEntity = newEnt
-                } else {
-                    newEnt = ["@type": resourceType]
-                }
-                splitResults << [rule: rule, entity: newEnt]
-                rule.codes.each {
-                    codeLinkSplits[it] = newEnt
-                }
-            }
-        }
         def newEnt = null
-        if ((!splitResults && link) || ((!splitResults || spliceEntity) && resourceType)) {
+        if (link || resourceType) {
             def useLinks = Collections.emptyList()
             if (computeLinks) {
                 def use = computeLinks.use
@@ -1527,9 +1486,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             if (useLinks) {
                 lRepeatLink = true
             }
-            if (spliceEntity) {
-                entity = spliceEntity
-            }
 
             // TODO: use @id (existing or added bnode-id) instead of duplicating newEnt
             def entRef = newEnt
@@ -1545,9 +1501,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 addValue(entity, it, entRef, lRepeatLink)
             }
         }
-        return [
-            codeLinkSplits: codeLinkSplits,
-            splitResults: splitResults,
+        return [ // TODO: just returning the entity would be enough
             newEntity: newEnt
         ]
     }
@@ -1676,34 +1630,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        if (splitLinkRules) {
-            // TODO: refine, e.g. handle spliceEntityName..
-            def resultItems = []
-            for (rule in splitLinkRules) {
-                def linked = entity[rule.link]
-                if (!linked)
-                    continue
-                if (!(linked instanceof List)) {
-                    linked = [linked]
-                }
-                linked.each {
-                    def item = revertOne(data, it, rule.codes)
-                    if (item)
-                        resultItems << item
-                }
-            }
-            if (resultItems.size() /*&& !repeatable*/) {
-                def merged = resultItems[0]
-                if (resultItems.size() > 1) {
-                    for (map in resultItems[1..-1]) {
-                        merged.subfields += map.subfields
-                    }
-                }
-                results << merged
-            } else {
-                results += resultItems
-            }
-        }
         return results + matchedResults
     }
 
