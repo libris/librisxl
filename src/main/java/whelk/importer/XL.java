@@ -176,6 +176,8 @@ class XL
         // whelk-core's marcframe.json.
         Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
         specialRules.put("created", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
+        specialRules.put("controlNumber", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
+        specialRules.put("modified", Graph.PREDICATE_RULES.RULE_PREFER_INCOMING);
 
         // These should also be retrieved from whelk-core's marcframe.json.
         // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
