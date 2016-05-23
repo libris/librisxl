@@ -248,8 +248,8 @@ class XL
                         String isbn = DigId.grepIsbna( (Datafield) field );
                         if (isbn != null)
                         {
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('x', 'X') ));
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('X', 'x') ));
+                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toLowerCase() ));
+                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toUpperCase() ));
                         }
                     }
                     break;
@@ -259,8 +259,8 @@ class XL
                         String isbn = DigId.grepIsbnz( (Datafield) field );
                         if (isbn != null)
                         {
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('x', 'X') ));
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.replace('X', 'x') ));
+                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toLowerCase() ));
+                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toUpperCase() ));
                         }
                     }
                     break;
@@ -270,8 +270,8 @@ class XL
                         String issn = DigId.grepIssn( (Datafield) field, 'a' );
                         if (issn != null)
                         {
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('x', 'X') ));
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('X', 'x') ));
+                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toLowerCase() ));
+                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toUpperCase() ));
                         }
                     }
                     break;
@@ -281,8 +281,8 @@ class XL
                         String issn = DigId.grepIssn( (Datafield) field, 'z' );
                         if (issn != null)
                         {
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('x', 'X') ));
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.replace('X', 'x') ));
+                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toLowerCase() ));
+                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toUpperCase() ));
                         }
                     }
                     break;
