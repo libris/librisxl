@@ -4625,6 +4625,8 @@
       "$b": {
         "addLink": "heldBy",
         "resourceType": "Organization",
+        "uriTemplate": "https://libris.kb.se/library/{_}",
+        "matchUriToken": "^\\S+$",
         "property": "notation",
         "TODO": "move to mainEntity and auto-repeat here",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
@@ -4673,7 +4675,7 @@
                 {
                   "@type": "Item",
                   "copyNumber": "1",
-                  "heldBy": [{"@type": "Organization", "notation": "H"}],
+                  "heldBy": [{"@id": "https://libris.kb.se/library/H", "@type": "Organization", "notation": "H"}],
                   "shelfControlNumber": "65.465",
                   "shelfLocation": ["MAG"]
                 }
