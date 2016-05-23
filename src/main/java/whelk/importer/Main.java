@@ -121,7 +121,7 @@ public class Main
 
                 if (collection.equals("bib"))
                 {
-                    if (batch != null && recordsInBatch > 200)
+                    if (recordsInBatch > 200)
                     {
                         threadPool.executeOnThread(batch, Main::importBatch);
                         batch = new ArrayList<>();
@@ -143,8 +143,7 @@ public class Main
                 }
             }
             // The last batch will not be followed by another bib.
-            if (batch != null)
-                threadPool.executeOnThread(batch, Main::importBatch);
+            threadPool.executeOnThread(batch, Main::importBatch);
         }
         finally
         {
