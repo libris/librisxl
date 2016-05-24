@@ -266,7 +266,7 @@
         "statusFlagValue": "marc:SingleKnownDateProbableDate",
         "sourceProperty": "marc:publishedYear",
         "matchValuePattern": "^[0-9u]{4}$",
-        "property": "providerDate",
+        "property": "date",
         "defaultLink": "publication",
         "typeLinkMap": {
           "Manuscript": "manufacture"
@@ -279,32 +279,32 @@
               "marc:publishedYear": "1977"
             },
             "result": {
-              "publication": [ {"providerDate": "1977"} ]
+              "publication": [ {"date": "1977"} ]
             }
           },
           {
             "source": {
               "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
               "marc:publishedYear": "1977",
-              "publication": [ {"@type": "ProviderEvent", "providerDate": "1977"} ]
+              "publication": [ {"@type": "Publication", "date": "1977"} ]
             },
             "result": {
-              "publication": [ {"@type": "ProviderEvent", "providerDate": "1977"} ]
+              "publication": [ {"@type": "Publication", "date": "1977"} ]
             }
           },
           {
             "source": {
               "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
               "marc:publishedYear": "1977",
-              "publication": [ {"@type": "ProviderEvent", "providerDate": "ca 1977"} ]
+              "publication": [ {"@type": "Publication", "date": "ca 1977"} ]
             },
             "result": {
               "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
               "marc:publishedYear": "1977",
               "publication": [
                 {
-                  "@type": "ProviderEvent",
-                  "providerDate": "ca 1977"
+                  "@type": "Publication",
+                  "date": "ca 1977"
                 }
               ]
             }
@@ -317,7 +317,7 @@
             },
             "result": {
               "@type": ["ManuscriptText"],
-              "manufacture": [ {"providerDate": "1977"} ]
+              "manufacture": [ {"date": "1977"} ]
             }
           }
         ]
@@ -2673,17 +2673,17 @@
       "aboutEntity": "?thing",
       "ignoreOnRevertInFavourOf": "264",
       "pendingResources": {
-        "?publication": {"resourceType": "ProviderEvent", "addLink": "publication", "embedded": true},
-        "?manufacture": {"resourceType": "ProviderEvent", "addLink": "manufacture", "embedded": true}
+        "?publication": {"resourceType": "Publication", "addLink": "publication", "embedded": true},
+        "?manufacture": {"resourceType": "Manufacture", "addLink": "manufacture", "embedded": true}
       },
       "TODO:groupByRepetitionAndInterpunctionPattern": "$3 $a $b $c $e $f $g",
       "TODO:i1": {"property": "latest", "tokenMap": {"2": false, "3": true}},
       "$a": {"about": "?publication", "link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
-      "$b": {"about": "?publication", "property": "providerName", "interpunctionChars": ",:;"},
-      "$c": {"about": "?publication", "property": "providerDate", "interpunctionChars": ",;"},
+      "$b": {"about": "?publication", "link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;"},
+      "$c": {"about": "?publication", "property": "date", "interpunctionChars": ",;"},
       "$e": {"about": "?manufacture", "link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
-      "$f": {"about": "?manufacture", "property": "providerName", "interpunctionChars": ",:;"},
-      "$g": {"about": "?manufacture", "property": "providerDate", "interpunctionChars": ",;"},
+      "$f": {"about": "?manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;"},
+      "$g": {"about": "?manufacture", "property": "date", "interpunctionChars": ",;"},
       "$3": {"about": "?publication", "property": "scopeNote", "position": 0, "TODO": "put in first out-split entity"},
       "_spec": [
         {
@@ -2702,13 +2702,13 @@
           ],
           "result": {"mainEntity": {
             "publication": [
-              {"@type": "ProviderEvent",
+              {"@type": "Publication",
                 "place": {"@type": "Place", "label":  "Stockholm"},
-                  "providerName":  "Bonnier",
-                  "providerDate":  "1996"}
+                  "agent":  {"@type": "Agent", "label": "Bonnier"},
+                  "date":  "1996"}
             ],
             "manufacture": [
-              {"@type": "ProviderEvent",
+              {"@type": "Manufacture",
                 "place": {"@type": "Place", "label":  "Finland"}}
             ]
           }}
@@ -2718,14 +2718,14 @@
           },
           "TODO:result": {"mainEntity": {
             "publication": [
-              {"@type": "ProviderEvent",
+              {"@type": "Publication",
                 "place": [{"@type": "Place", "label":  "London"},
                         {"@type": "Place", "label":  "New York"}],
-                  "providerName":  "Routledge Falmer"},
-              {"@type": "ProviderEvent",
+                  "agent":  {"@type": "Agent", "label": "Routledge Falmer"}},
+              {"@type": "Publication",
                 "assumedPlace": {"@type": "Place", "label":  "London"},
-                  "providerName":  "Open University",
-                  "providerDate":  "2002"}
+                  "agent":  {"@type": "Agent", "label": "Open University"},
+                  "date":  "2002"}
             ]
           }}
         },
@@ -2761,18 +2761,18 @@
     "264": {
       "TOOO:i1": {},
       "match-i2": {
-        "0": {"addLink": "production"},
-        "1": {"addLink": "publication"},
-        "2": {"addLink": "distribution"},
-        "3": {"addLink": "manufacture"},
-        "4": {"addLink": "copyright"}
+        "0": {"addLink": "production", "resourceType": "Production"},
+        "1": {"addLink": "publication", "resourceType": "Publication"},
+        "2": {"addLink": "distribution", "resourceType": "Distribution"},
+        "3": {"addLink": "manufacture", "resourceType": "Manufacture"},
+        "4": {"addLink": "copyright", "resourceType": "Copyright"}
       },
       "addLink": "provision",
       "embedded": true,
-      "resourceType": "ProviderEvent",
+      "resourceType": "ProvisionActivity",
       "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
-      "$b": {"property": "providerName", "interpunctionChars": ",:;"},
-      "$c": {"property": "providerDate", "interpunctionChars": ",;"},
+      "$b": {"link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;"},
+      "$c": {"property": "date", "interpunctionChars": ",;"},
       "_spec": [
         {
           "source": [
@@ -2785,13 +2785,13 @@
           ],
           "result": {"mainEntity": {
             "publication": [
-              {"@type": "ProviderEvent",
+              {"@type": "Publication",
                 "place": {"@type": "Place", "label":  "Stockholm"},
-                  "providerName":  "Bonnier",
-                  "providerDate":  "1996"}
+                  "agent":  {"@type": "Agent", "label": "Bonnier"},
+                  "date":  "1996"}
             ],
             "manufacture": [
-              {"@type": "ProviderEvent",
+              {"@type": "Manufacture",
                 "place": {"@type": "Place", "label":  "Finland"}}
             ]
           }}
@@ -3030,16 +3030,16 @@
     "530": {"addLink": "hasFormat", "$a": {"addProperty": "comment"}, "embedded": true},
 
     "533": {
-      "addLink": "reproduction",
+      "addLink": "hasReproduction",
       "embedded": true,
-      "resourceType": "CreativeWork",
+      "resourceType": "Instance",
       "pendingResources": {
-        "_:event": {"addLink": "provision", "resourceType": "ProviderEvent"}
+        "_:event": {"addLink": "provision", "resourceType": "ProvisionActivity"}
       },
       "$a": {"property": "description", "interpunctionChars": ":"},
-      "$b": {"about": "_:event", "addLink": "providerPlace", "resourceType": "Place", "property": "label", "interpunctionChars": ":"},
-      "$c": {"about": "_:event", "addProperty": "providerName", "interpunctionChars": ","},
-      "$d": {"about": "_:event", "property": "providerDate"},
+      "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ":", "embedded": false},
+      "$c": {"about": "_:event", "link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",", "embedded": false},
+      "$d": {"about": "_:event", "property": "date"},
       "$e": {"property": "physicalDescription"},
       "$f": {"addProperty": "seriesStatement"},
       "$m": {"addProperty": "datesAndOrSequentialDesignationOfIssuesReproduced"},
@@ -3057,14 +3057,14 @@
                 {"c": "Litteraturbanken"},
                 {"d": "2010"} ]}},
           "result": {"mainEntity": {
-            "reproduction": [
+            "hasReproduction": [
               {
-                "@type": "CreativeWork",
+                "@type": "Instance",
                 "description":  "Digitalt faksimil och elektronisk text",
                 "provision":  [
-                    {"@type": "ProviderEvent",
-                        "providerDate":  "2010",
-                        "providerName":  ["Litteraturbanken"]
+                    {"@type": "ProvisionActivity",
+                        "date":  "2010",
+                        "agent":  [{"@type": "Agent", "label": "Litteraturbanken"}]
                     }]
               }
             ]
