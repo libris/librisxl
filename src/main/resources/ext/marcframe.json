@@ -3038,7 +3038,7 @@
       },
       "$a": {"property": "description", "interpunctionChars": ":"},
       "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ":", "embedded": false},
-      "$c": {"about": "_:event", "link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",", "embedded": false},
+      "$c": {"about": "_:event", "link": "addAgent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",", "embedded": false},
       "$d": {"about": "_:event", "property": "date"},
       "$e": {"property": "physicalDescription"},
       "$f": {"addProperty": "seriesStatement"},
