@@ -177,8 +177,8 @@ public class ListRecordTrees
         if (setSpec.getRootSet() != null)
             selectSQL += " AND manifest->>'collection' = ?";
         if (setSpec.getSubset() != null)
-            selectSQL += " AND data @> '{\"@graph\":[{\"heldBy\": {\"@type\": \"Organization\", \"notation\": \"" +
-                    Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
+            selectSQL += " AND data @> '{\"@graph\":[{\"offers\":[{\"heldBy\":[{\"@id\": \""+
+                    Helpers.scrubSQL(LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset()) )+"\"}]}]}]}' ";
 
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
 

@@ -74,7 +74,7 @@ public class Helpers
         // much like table names cannot be parameterized, and so there is little choice.
         if (setSpec.getSubset() != null)
             selectSQL += " AND data @> '{\"@graph\":[{\"offers\":[{\"heldBy\":[{\"@id\": \""+
-                    Helpers.scrubSQL(LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset()) )+"\"}]}]}]}' "; // }]}]}]}
+                    Helpers.scrubSQL(LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset()) )+"\"}]}]}]}' ";
 
         selectSQL += " ORDER BY modified ";
 
