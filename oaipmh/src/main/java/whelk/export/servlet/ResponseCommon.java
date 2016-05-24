@@ -4,6 +4,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import whelk.Document;
+import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -142,10 +143,10 @@ public class ResponseCommon
     public static void emitRecord(ResultSet resultSet, Document document, XMLStreamWriter writer, String requestedFormat, boolean onlyIdentifiers)
             throws SQLException, XMLStreamException, IOException
     {
-
-
         boolean deleted = resultSet.getBoolean("deleted");
         String sigel = resultSet.getString("sigel");
+        if (sigel != null)
+            sigel = LegacyIntegrationTools.uriToLegacySigel( resultSet.getString("sigel").replace("\"", "") );
 
         // If no document was explicitly passed, create one from the supplied resultset.
         // The reason documents may be passed explicitly at all, is that sometimes the document is
@@ -189,7 +190,7 @@ public class ResponseCommon
         {
             writer.writeStartElement("setSpec");
             // Output sigel without quotation marks (").
-            writer.writeCharacters(dataset + ":" + sigel.replace("\"", ""));
+            writer.writeCharacters(dataset + ":" + sigel);
             writer.writeEndElement(); // setSpec
         }
 
@@ -226,7 +227,10 @@ public class ResponseCommon
             while(resultSet.next())
             {
                 writer.writeStartElement("holding");
-                writer.writeAttribute("sigel", resultSet.getString("sigel").replace("\"", ""));
+
+                String sigel = LegacyIntegrationTools.uriToLegacySigel(resultSet.getString("sigel").replace("\"", ""));
+
+                writer.writeAttribute("sigel", sigel);
                 writer.writeAttribute("id", resultSet.getString("id"));
                 writer.writeEndElement(); // holding
             }
@@ -239,7 +243,7 @@ public class ResponseCommon
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
-        StringBuilder selectSQL = new StringBuilder("SELECT id, data#>'{@graph,1,heldBy,notation}' AS sigel FROM ");
+        StringBuilder selectSQL = new StringBuilder("SELECT id, data#>>'{@graph,1,offers,0,heldBy,0,@id}' AS sigel FROM ");
         selectSQL.append(tableName);
         selectSQL.append(" WHERE manifest->>'collection' = 'hold' AND deleted = false AND (");
 

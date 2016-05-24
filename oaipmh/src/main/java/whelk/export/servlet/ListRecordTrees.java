@@ -2,6 +2,7 @@ package whelk.export.servlet;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
+import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -171,7 +172,7 @@ public class ListRecordTrees
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT id, manifest, deleted, modified, data#>'{@graph,1,heldBy,notation}' AS sigel FROM "
+        String selectSQL = "SELECT id, manifest, deleted, modified, data#>>'{@graph,1,offers,0,heldBy,0,@id}' AS sigel FROM "
                 + tableName + " WHERE manifest->>'collection' <> 'definitions' ";
         if (setSpec.getRootSet() != null)
             selectSQL += " AND manifest->>'collection' = ?";
@@ -284,6 +285,8 @@ public class ListRecordTrees
         String manifest = resultSet.getString("manifest");
         boolean deleted = resultSet.getBoolean("deleted");
         String sigel = resultSet.getString("sigel");
+        if (sigel != null)
+            sigel = LegacyIntegrationTools.uriToLegacySigel( resultSet.getString("sigel").replace("\"", "") );
         HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
 
         writer.writeStartElement("record");
@@ -314,7 +317,7 @@ public class ListRecordTrees
         {
             writer.writeStartElement("setSpec");
             // Output sigel without quotation marks (").
-            writer.writeCharacters(dataset + ":" + sigel.replace("\"", ""));
+            writer.writeCharacters(dataset + ":" + sigel);
             writer.writeEndElement(); // setSpec
         }
 

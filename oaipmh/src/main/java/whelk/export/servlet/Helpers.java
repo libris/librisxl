@@ -1,6 +1,7 @@
 package whelk.export.servlet;
 
 import whelk.Document;
+import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
 import java.sql.Connection;
@@ -60,7 +61,7 @@ public class Helpers
 
         // Construct the query
         String selectSQL = "SELECT data, manifest, modified, deleted, " +
-                " data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
+                " data#>>'{@graph,1,offers,0,heldBy,0,@id}' AS sigel FROM " +
                 tableName + " WHERE manifest->>'collection' <> 'definitions' ";
         if (fromDateTime != null)
             selectSQL += " AND modified > ? ";
@@ -72,8 +73,8 @@ public class Helpers
         // Obviously query concatenation is dangerous business and should never be done, unfortunately JSONB fields
         // much like table names cannot be parameterized, and so there is little choice.
         if (setSpec.getSubset() != null)
-            selectSQL += " AND data @> '{\"@graph\":[{\"heldBy\": {\"@type\": \"Organization\", \"notation\": \"" +
-                    Helpers.scrubSQL(setSpec.getSubset()) + "\"}}]}' ";
+            selectSQL += " AND data @> '{\"@graph\":[{\"offers\":[{\"heldBy\":[{\"@id\": \""+
+                    Helpers.scrubSQL(LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset()) )+"\"}]}]}]}' "; // }]}]}]}
 
         selectSQL += " ORDER BY modified ";
 
@@ -99,7 +100,7 @@ public class Helpers
     private final static HashSet<Character> s_allowedChars;
     static
     {
-        char[] allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖabcdefghijklmnopqrstuvwxyzåäö0123456789".toCharArray();
+        char[] allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖabcdefghijklmnopqrstuvwxyzåäö0123456789:/.".toCharArray();
         s_allowedChars = new HashSet<Character>();
         for (char c : allowedChars)
             s_allowedChars.add(c);
