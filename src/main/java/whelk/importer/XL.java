@@ -10,6 +10,7 @@ import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
 import whelk.filter.LinkFinder;
+import whelk.util.LegacyIntegrationTools;
 import whelk.util.PropertyLoader;
 
 import java.io.IOException;
@@ -399,7 +400,6 @@ class XL
             PreparedStatement statement = getOnHeldByHoldingFor_ps(connection, sigel, relatedWithBibResourceId);
             ResultSet resultSet = statement.executeQuery())
         {
-            //System.out.println("Getting hold dupliates with: " + statement);
             return collectIDs(resultSet);
         }
     }
@@ -452,8 +452,7 @@ class XL
     private PreparedStatement getOnHeldByHoldingFor_ps(Connection connection, String heldBy, String holdingForId)
             throws SQLException
     {
-        // todo: update to a proper library uri, whatever that is (when it is decided).
-        String libraryUri = "https://libris.kb.se/library/" + heldBy;
+        String libraryUri = LegacyIntegrationTools.legacySigelToUri(heldBy);
 
         String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,offers,0,heldBy,0,@id}' = ? AND data#>>'{@graph,1,holdingFor,@id}' = ? AND manifest->>'collection' = 'hold'";
         PreparedStatement statement = connection.prepareStatement(query);

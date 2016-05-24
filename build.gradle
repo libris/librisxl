@@ -16,7 +16,7 @@ dependencies {
     // XL dependencies
     compile('../whelk-core' in project.subprojects*.name?
             project(':../whelk-core') :
-            'com.github.libris:whelk-core:48062ba2e7a45bfadd73f237bb940e81cd0dad35')
+            'com.github.libris:whelk-core:8daf49c6ee1a8fcad5aa2d73d97d2f15c446db44')
 
     /*
     // local jmarctools
