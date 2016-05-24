@@ -18,6 +18,8 @@ import java.util.*;
 
 public class ListRecordTrees
 {
+    private static ObjectMapper s_mapper = new ObjectMapper();
+
     // The ModificationTimes class is used as a crutch to simulate "pass by reference"-mechanics. The point of this is that (a pointer to)
     // an instance of ModificationTimes is passed around in the tree building process, being _updated_ (which a ZonedDateTime cannot be)
     // with each documents created-timestamp.
@@ -134,8 +136,7 @@ public class ListRecordTrees
             if (modified.compareTo(modificationTimes.latestModification) > 0)
                 modificationTimes.latestModification = modified;
 
-            ObjectMapper mapper = new ObjectMapper();
-            map = mapper.readValue(jsonBlob, HashMap.class);
+            map = s_mapper.readValue(jsonBlob, HashMap.class);
         }
 
         if (map != null)
@@ -146,17 +147,15 @@ public class ListRecordTrees
     public static Document mergeDocument(String id, List<String> nodeDatas)
             throws IOException
     {
-        ObjectMapper mapper = new ObjectMapper();
-
         // One element in the list is guaranteed.
         String rootData = nodeDatas.get(0);
-        Map rootMap = mapper.readValue(rootData, HashMap.class);
+        Map rootMap = s_mapper.readValue(rootData, HashMap.class);
         List mergedGraph = (List) rootMap.get("@graph");
 
         for (int i = 1; i < nodeDatas.size(); ++i)
         {
             String nodeData = nodeDatas.get(i);
-            Map nodeRootMap = mapper.readValue(nodeData, HashMap.class);
+            Map nodeRootMap = s_mapper.readValue(nodeData, HashMap.class);
             List nodeGraph = (List) nodeRootMap.get("@graph");
             mergedGraph.addAll(nodeGraph);
         }
@@ -167,7 +166,7 @@ public class ListRecordTrees
     }
 
     private static PreparedStatement prepareRootStatement(Connection dbconn, SetSpec setSpec)
-            throws SQLException
+            throws IOException, SQLException
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
@@ -177,14 +176,22 @@ public class ListRecordTrees
         if (setSpec.getRootSet() != null)
             selectSQL += " AND manifest->>'collection' = ?";
         if (setSpec.getSubset() != null)
-            selectSQL += " AND data @> '{\"@graph\":[{\"offers\":[{\"heldBy\":[{\"@id\": \""+
-                    Helpers.scrubSQL(LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset()) )+"\"}]}]}]}' ";
+            selectSQL += " AND data @> ?";
 
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
 
         // Assign parameters
         if (setSpec.getRootSet() != null)
             preparedStatement.setString(1, setSpec.getRootSet());
+
+        if (setSpec.getSubset() != null)
+        {
+            String strMap = "{\"@graph\":[{\"offers\":[{\"heldBy\":[{\"@id\": \""+
+                    LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset())+
+                    "\"}]}]}]}";
+
+            preparedStatement.setObject(2, strMap, java.sql.Types.OTHER);
+        }
 
         preparedStatement.setFetchSize(512);
 

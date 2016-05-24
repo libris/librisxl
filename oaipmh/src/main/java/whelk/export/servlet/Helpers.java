@@ -73,8 +73,7 @@ public class Helpers
         // Obviously query concatenation is dangerous business and should never be done, unfortunately JSONB fields
         // much like table names cannot be parameterized, and so there is little choice.
         if (setSpec.getSubset() != null)
-            selectSQL += " AND data @> '{\"@graph\":[{\"offers\":[{\"heldBy\":[{\"@id\": \""+
-                    Helpers.scrubSQL(LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset()) )+"\"}]}]}]}' ";
+            selectSQL += " AND data @> ?";
 
         selectSQL += " ORDER BY modified ";
 
@@ -89,31 +88,15 @@ public class Helpers
             preparedStatement.setTimestamp(parameterIndex++, new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L));
         if (setSpec.getRootSet() != null)
             preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
+        if (setSpec.getSubset() != null)
+        {
+            String strMap = "{\"@graph\":[{\"offers\":[{\"heldBy\":[{\"@id\": \""+
+                    LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset())+
+                    "\"}]}]}]}";
+
+            preparedStatement.setObject(parameterIndex++, strMap, java.sql.Types.OTHER);
+        }
 
         return preparedStatement;
-    }
-
-    /**
-     * Obviously parametrized prepared statements are best. But Postgres JSONB fields can't be parameterized using
-     * normal means, so this hack becomes an unfortunate necessity.
-     */
-    private final static HashSet<Character> s_allowedChars;
-    static
-    {
-        char[] allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖabcdefghijklmnopqrstuvwxyzåäö0123456789:/.".toCharArray();
-        s_allowedChars = new HashSet<Character>();
-        for (char c : allowedChars)
-            s_allowedChars.add(c);
-    }
-    public static String scrubSQL(String unsafeSql)
-    {
-        StringBuilder scrubbed = new StringBuilder("");
-        for (int i = 0; i < unsafeSql.length(); ++i)
-        {
-            char c = unsafeSql.charAt(i);
-            if ( s_allowedChars.contains( c ) )
-                scrubbed.append( c );
-        }
-        return  scrubbed.toString();
     }
 }
