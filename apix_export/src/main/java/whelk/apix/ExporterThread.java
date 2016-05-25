@@ -70,6 +70,7 @@ public class ExporterThread extends Thread
             from = m_exportNewerThan.format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
 
         m_ui.outputText("Beginning export batch from: " + from + ".");
+        s_logger.info("Beginning export batch from: " + from + ".");
 
         do
         {
@@ -83,6 +84,7 @@ public class ExporterThread extends Thread
         while (!stopAtOpportunity.get());
 
         m_ui.outputText("Export batch ended. Will do nothing more without user input.");
+        s_logger.info("Export batch ended. Will do nothing more without user input.");
     }
 
     /**
