@@ -219,7 +219,7 @@ public class Graph
     }
 
     /**
-     * Generates a map where BNode ids in otherGraph are mapped to BNode ids in this map (where the mapping can be
+     * Generates a map where BNode ids in this graph are mapped to BNode ids in otherGraph (where the mapping can be
      * done with surety)
      */
     private Map<String, String> generateBNodeMapTo(Graph otherGraph)
@@ -245,6 +245,7 @@ public class Graph
 
     /**
      * Does 'subject' have the equivalent edges in this graph, compared to 'otherSubject' in otherGraph ?
+     * (are the edges of otherGraph[otherSubject] a subset of the edges of this[subject])
      */
     private boolean hasEquivalentEdges(String subject, String otherSubject, Graph otherGraph, Map<String,
             String> cycleGuard, Map<String, String> otherCycleGuard)
@@ -269,7 +270,7 @@ public class Graph
         if (edges == null)
             return false; // no more edges in (possibly) containing graph to compare with
 
-        // Compare the edges from this node (with the other graph)
+        // Compare edges
         for (String[] otherEdge : otherEdges)
         {
             boolean hasEquivalentEdges = false;

@@ -42,15 +42,15 @@ class XL
      * This ID should then be passed (as 'relatedWithBibResourceId') when importing any subsequent related holdings post.
      * Returns null when supplied a hold post
      */
-    String importISO2709(MarcRecord marcRecord, String relatedWithBibResourceId)
+    String importISO2709(MarcRecord incomingMarcRecord, String relatedWithBibResourceId)
             throws Exception
     {
         String collection = "bib"; // assumption
-        if (marcRecord.getLeader(6) == 'u' || marcRecord.getLeader(6) == 'v' ||
-                marcRecord.getLeader(6) == 'x' || marcRecord.getLeader(6) == 'y')
+        if (incomingMarcRecord.getLeader(6) == 'u' || incomingMarcRecord.getLeader(6) == 'v' ||
+                incomingMarcRecord.getLeader(6) == 'x' || incomingMarcRecord.getLeader(6) == 'y')
             collection = "hold";
 
-        Set<String> duplicateIDs = getDuplicates(marcRecord, collection, relatedWithBibResourceId);
+        Set<String> duplicateIDs = getDuplicates(incomingMarcRecord, collection, relatedWithBibResourceId);
 
         String resultingResourceId = null;
 
@@ -58,7 +58,7 @@ class XL
 
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
-            resultingResourceId = importNewRecord(marcRecord, collection, relatedWithBibResourceId);
+            resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId);
         }
         else if (duplicateIDs.size() == 1)
         {
@@ -70,7 +70,7 @@ class XL
             // every REPLACE here. REPLACE is not currently in use for any source, do not enable this.
 
             // Enrich (or "merge")
-            resultingResourceId = enrichRecord( (String) duplicateIDs.toArray()[0], marcRecord, collection, relatedWithBibResourceId );
+            resultingResourceId = enrichRecord( (String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId );
         }
         else
         {
@@ -114,10 +114,10 @@ class XL
         return null;
     }
 
-    private String enrichRecord(String ourId, MarcRecord marcRecord, String collection, String relatedWithBibResourceId)
+    private String enrichRecord(String ourId, MarcRecord incomingMarcRecord, String collection, String relatedWithBibResourceId)
             throws IOException
     {
-        Document rdfDoc = convertToRDF(marcRecord, collection, ourId);
+        Document rdfDoc = convertToRDF(incomingMarcRecord, collection, ourId);
         if (collection.equals("hold"))
             rdfDoc.setHoldingFor(relatedWithBibResourceId);
         m_linkfinder.findLinks(rdfDoc);
@@ -206,9 +206,6 @@ class XL
 
         Document doc = new Document(id, MarcJSONConverter.toJSONMap(marcRecord), manifest);
         Document converted = m_marcFrameConverter.convert(doc);
-        /*System.out.println("Manifest after conversion:\n"+converted.getManifestAsJson());
-        System.out.println("Data after conversion:\n"+converted.getDataAsString());
-        System.out.println("---");*/
         return converted;
     }
 

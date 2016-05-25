@@ -20,14 +20,9 @@ public class CliEnrich
         Graph originalGraph = new Graph(originalTriples);
         Graph otherGraph = new Graph(otherTriples);
 
-        //System.out.println( "original:\n" + originalGraph );
-        //System.out.println( "other:\n" + otherGraph );
-
         Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
 
         originalGraph.enrichWith(otherGraph, specialRules);
-
-        //System.out.println( "enriched:\n" + originalGraph );
 
         Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), new HashSet<>());
         JsonldSerializer.normalize(enrichedData, "noid");
