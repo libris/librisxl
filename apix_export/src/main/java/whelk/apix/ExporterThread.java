@@ -1,6 +1,8 @@
 package whelk.apix;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import whelk.Document;
 import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
@@ -37,6 +39,7 @@ public class ExporterThread extends Thread
     private final ElasticSearch m_elasticSearchComponent;
     private final ObjectMapper m_mapper = new ObjectMapper();
     private final JsonLD2MarcXMLConverter m_converter = new JsonLD2MarcXMLConverter();
+    private final Logger s_logger = LoggerFactory.getLogger(this.getClass());
 
     private enum ApixOp
     {
@@ -134,7 +137,7 @@ public class ExporterThread extends Thread
                 {
                     commitAtomicDocumentUpdate(id, null, true);
                     m_ui.outputText("Failed to export " + id + ", will automatically try again at a later time.");
-                    e.printStackTrace();
+                    s_logger.error("Failed to export " + id + ", will automatically try again at a later time.", e);
                 }
                 ++documentsInBatchCount;
             }
@@ -163,6 +166,7 @@ public class ExporterThread extends Thread
             for (StackTraceElement frame : e.getStackTrace())
                 callStack.append(frame.toString() + "\n");
             m_ui.outputText("Export batch stopped with exception: " + e + " Callstack:\n" + callStack);
+            s_logger.error("Export batch stopped with exception. ", e);
         }
     }
 
@@ -210,6 +214,7 @@ public class ExporterThread extends Thread
                     apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + "/bib/" + shortBibId + "/newhold";
                 }
 
+                s_logger.debug("Will now attempt JsonLD2MarcXMLConverter.convert() of manifest:\n"+document.getManifestAsJson()+"\ndata:"+document.getDataAsString());
                 Document convertedDocument = m_converter.convert(document);
                 String convertedText = (String) convertedDocument.getData().get("content");
                 String controlNumber = apixRequest(apixDocumentUrl, "PUT", convertedText);
@@ -296,7 +301,10 @@ public class ExporterThread extends Thread
             {
                 // error in disguise? 200 is only legitimately returned on GET or DELETE. POST/PUT only returns 200 on error.
                 if (httpVerb.equals("DELETE"))
+                {
+                    s_logger.info("APIX DELETE OK on: " + url);
                     return null;
+                }
 
                 if (responseData == null)
                     responseData = "";
@@ -306,6 +314,7 @@ public class ExporterThread extends Thread
             case 303: // fine, happens on save/update
             {
                 String location = request.getResponseHeaders().get("Location");
+                s_logger.info("APIX PUT OK on: " + url + ", location returned: " + location);
                 return parseControlNumberFromAPIXLocation(location);
             }
             default:
