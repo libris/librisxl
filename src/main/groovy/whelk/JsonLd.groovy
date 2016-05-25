@@ -1,5 +1,6 @@
 package whelk
 
+import org.codehaus.jackson.map.ObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import whelk.exception.FramingException
@@ -11,6 +12,9 @@ public class JsonLd {
     static final String ID_KEY = "@id"
     static final String DESCRIPTIONS_KEY = "descriptions"
     static final URI SLASH_URI = new URI("/")
+    static final ObjectMapper mapper = new ObjectMapper()
+
+    static final MARCFRAMEMAP = mapper.readValue(JsonLd.getClassLoader().getResourceAsStream("ext/marcframe.json"), Map)
 
     private static Logger log = LoggerFactory.getLogger(JsonLd.class)
 
@@ -300,18 +304,23 @@ public class JsonLd {
             throw new ModelValidationException("Document has no data to validate.")
         }
         Map docData = frame(doc.id, doc.data)
-        Map about = (docData.containsKey("about") ? docData.about : docData )
+        String thingLink = MARCFRAMEMAP.get(doc.collection)?.get("thingLink")
+        String collectionType = MARCFRAMEMAP[doc.collection]['000']['_spec'][0]["result"][thingLink]["@type"]
+
+        Map about = (docData.containsKey(thingLink) ? docData.get(thingLink) : docData )
         String type = about.get("@type")
-        if (type != "Item") {
-            throw new ModelValidationException("Document has mismatching @type ($type) for Item.")
+        if (type != collectionType) {
+            throw new ModelValidationException("Document has mismatching @type ($type) for ${collectionType}.")
         }
-        if (!about.containsKey("heldBy") || !about.heldBy.containsKey("notation")) {
-            throw new ModelValidationException("Item is missing heldBy declaration.")
-        }
-        // TODO: Remove holdingFor option when data is coherent
-        Map itemOf = (about.containsKey("itemOf") ? about.get("itemOf") : about.get("holdingFor"))
-        if (!itemOf?.containsKey("@id")) {
-            throw new ModelValidationException("Item is missing itemOf declaration.")
+        if (doc.collection == "hold") {
+            if (!about.containsKey("heldBy") || !about.heldBy.containsKey("notation")) {
+                throw new ModelValidationException("Item is missing heldBy declaration.")
+            }
+            // TODO: Remove holdingFor option when data is coherent
+            Map itemOf = (about.containsKey("itemOf") ? about.get("itemOf") : about.get("holdingFor"))
+            if (!itemOf?.containsKey("@id")) {
+                throw new ModelValidationException("Item is missing itemOf declaration.")
+            }
         }
         return true
     }
