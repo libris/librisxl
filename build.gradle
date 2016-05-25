@@ -34,7 +34,7 @@ dependencies {
     def groovyVersion=GroovySystem.getVersion()
 
     // KB tools
-    compile 'com.github.libris:jmarctools:90edfc74bcc006c2d45674cd67fbdc2db0964a97'
+    compile 'com.github.libris:jmarctools:59b75016c28ea3f997651711f15d9d8b7f97fffb'
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"

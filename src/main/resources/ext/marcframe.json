@@ -2335,7 +2335,7 @@
       "NOTE:candidate:aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "Concept",
-      "uriTemplate": "http://id.kb.se/term/{+inScheme.notation}/{notation}",
+      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{notation}",
       "uriTemplateDefaults": {"inScheme.notation": "kssb"},
       "$a": {"property": "notation", "required": true},
       "$2": {"link": "inScheme",
@@ -3278,7 +3278,7 @@
       "inherit": "650",
       "addLink": "genre",
       "resourceType": "GenreTerm",
-      "uriTemplate": "http://id.kb.se/term/saogf/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
 
     "658": {},
@@ -3775,9 +3775,18 @@
       "$f": {
         "aboutEntity": "?record",
         "IMPROVE:about": "$thing if Concept else $record",
-        "TODO": "inCollection if . = sgp?",
         "link": "inScheme", "resourceType": "ConceptScheme",
+        "TODO:set-link-to?": "inCollection if . = sgp?",
+        "TODO:uriMap?": "if token is unknown: make bnode scheme and keep notation",
         "uriTemplate": "https://id.kb.se/term/{_}",
+        "tokenMap": {
+            "sao": "sao",
+            "saogf": "saogf",
+            "barn": "barn",
+            "barngf": "barngf",
+            "sgp": "sgp",
+            "gmgpc//swe": "gmgpc//swe"
+        },
         "property": "notation"
       },
       "_spec": [
@@ -4141,7 +4150,7 @@
     "551" : {
         "inherit": "550",
       "resourceType": "GeographicalTerm",
-      "uriTemplate": "http://id.kb.se/place/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/place/{prefLabel}"
     },
     "555" : {
       "inherit": "550",
@@ -4557,6 +4566,8 @@
       "$b": {
         "addLink": "heldBy",
         "resourceType": "Organization",
+        "uriTemplate": "https://libris.kb.se/library/{_}",
+        "matchUriToken": "^\\S+$",
         "property": "notation",
         "TODO": "move to about-resource and auto-repeat here",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
@@ -4606,7 +4617,7 @@
                 {
                   "@type": "Offer",
                   "copyNumber": "1",
-                  "heldBy": [{"@type": "Organization", "notation": "H"}],
+                  "heldBy": [{"@id": "https://libris.kb.se/library/H", "@type": "Organization", "notation": "H"}],
                   "shelfControlNumber": "65.465",
                   "shelfLocation": ["MAG"]
                 }

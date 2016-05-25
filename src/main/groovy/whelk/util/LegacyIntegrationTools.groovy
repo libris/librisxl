@@ -18,4 +18,14 @@ class LegacyIntegrationTools {
         return IdGenerator.generate(numericId, originalIdentifier)
     }
 
+    static final String BASE_LIBRARY_URI = "https://libris.kb.se/library/";
+
+    static String legacySigelToUri(String sigel) {
+        return BASE_LIBRARY_URI + sigel;
+    }
+
+    static String uriToLegacySigel(String uri) {
+        return uri.substring(BASE_LIBRARY_URI.length());
+    }
+
 }

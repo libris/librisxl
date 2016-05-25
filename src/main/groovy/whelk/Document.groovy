@@ -6,6 +6,10 @@ import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 import whelk.util.PropertyLoader
 
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
 @Log
 class Document {
     static final String GRAPH_KEY = "@graph"
@@ -24,6 +28,8 @@ class Document {
     static final String CONTROL_NUMBER_KEY = "controlNumber"
     static final String ABOUT_KEY = "about"
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
+    static final String ENCODING_LEVEL_KEY = "marc:encLevel"
+    static final String HOLDING_FOR_KEY = "holdingFor"
 
     static final URI BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
 
@@ -31,7 +37,7 @@ class Document {
     static final Map TYPE_COLLECTION = [
             "auth": ["Person"],
             "bib": ["Text", "Monograph"],
-            "hold": ["Item"]
+            "hold": ["HeldMaterial", "Item"]
     ]
 
     @JsonIgnore
@@ -83,11 +89,12 @@ class Document {
     void setCreated(long c) {
         this.created = new Date(c)
         this.manifest.put(CREATED_KEY, this.created)
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(this.created.toInstant(), ZoneId.systemDefault())
         if (isFlat()) {
-            this.data.get(GRAPH_KEY)[0].put(CREATED_KEY, this.created as String)
+            this.data.get(GRAPH_KEY)[0].put(CREATED_KEY, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt))
         }
         if (isFramed()) {
-            this.data.put(CREATED_KEY, this.created as String)
+            this.data.put(CREATED_KEY, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt))
         }
     }
 
@@ -110,11 +117,12 @@ class Document {
     void setModified(long m) {
         this.modified = new Date(m)
         this.manifest.put(MODIFIED_KEY, this.modified)
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(this.modified.toInstant(), ZoneId.systemDefault())
         if (isFlat()) {
-            this.data.get(GRAPH_KEY)[0].put(MODIFIED_KEY, this.modified as String)
+            this.data.get(GRAPH_KEY)[0].put(MODIFIED_KEY, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt))
         }
         if (isFramed()) {
-            this.data.put(MODIFIED_KEY, this.modified as String)
+            this.data.put(MODIFIED_KEY, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt))
         }
 
     }
@@ -178,6 +186,21 @@ class Document {
         data[GRAPH_KEY][0][CONTROL_NUMBER_KEY] = controlNumber
     }
 
+    void setHoldingFor(String resourceId) {
+        List graph = data.get(GRAPH_KEY)
+        if (graph == null)
+            data.put(GRAPH_KEY, [])
+
+        Map second = data[GRAPH_KEY][1]
+        while ( (second = data[GRAPH_KEY][1]) == null)
+            ((List)(data[GRAPH_KEY])).add([:])
+
+        if (second[HOLDING_FOR_KEY] == null)
+            second.put(HOLDING_FOR_KEY, [:])
+
+        second[HOLDING_FOR_KEY]["@id"] = resourceId
+    }
+
     static Object deepCopy(Object orig) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream()
         ObjectOutputStream oos = new ObjectOutputStream(bos)
@@ -222,12 +245,13 @@ class Document {
 
     /**
      * Get a list of all known identifiers for the thing described by this document
-     * (e.g. fnrglfnrglfnrgl#it, http://libris.kb.se/resource/bib/123, etc)
+     * (e.g. fnrglfnrglfnrgl#it, http://libris.kb.se/resource/bib/123, etc).
+     * By convention the first id in the returned list is the MAIN resource id.
      */
     @JsonIgnore
     List<String> getItIdentifiers() {
         List<String> ret = []
-        ret.add(data[GRAPH_KEY][0][ABOUT_KEY]["@id"])
+        ret.add(data[GRAPH_KEY][0][ABOUT_KEY]["@id"]) // must come first in the list.
         if (data[GRAPH_KEY].size > 1)
         {
             for (Map m : data[GRAPH_KEY][1][JSONLD_ALT_ID_KEY])
@@ -236,6 +260,11 @@ class Document {
             }
         }
         return ret
+    }
+
+    @JsonIgnore
+    String getEncodingLevel() {
+        return data[GRAPH_KEY][0][ENCODING_LEVEL_KEY]["@id"];
     }
 
     void findIdentifiers() {

@@ -110,7 +110,8 @@ class LinkFinder {
         } finally {
             connection.close()
         }
-        CACHED_LINKS.put(queryString, uri)
+        if (uri)
+            CACHED_LINKS.put(queryString, uri)
         return uri
     }
 }

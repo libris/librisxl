@@ -1,5 +1,6 @@
 package whelk
 
+import org.codehaus.jackson.map.ObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import whelk.exception.FramingException
@@ -11,6 +12,9 @@ public class JsonLd {
     static final String ID_KEY = "@id"
     static final String DESCRIPTIONS_KEY = "descriptions"
     static final URI SLASH_URI = new URI("/")
+    static final ObjectMapper mapper = new ObjectMapper()
+
+    static final MARCFRAMEMAP = mapper.readValue(JsonLd.getClassLoader().getResourceAsStream("ext/marcframe.json"), Map)
 
     private static Logger log = LoggerFactory.getLogger(JsonLd.class)
 
@@ -100,7 +104,85 @@ public class JsonLd {
             throw new FramingException("Unable to frame JSONLD ($flatJsonLd). Recursive loop?)", sofe)
         }
 
+        Set referencedBNodes = new HashSet()
+        getReferencedBNodes(framedMap, referencedBNodes)
+
+        cleanUnreferencedBNodeIDs(framedMap, referencedBNodes)
+
         return framedMap
+    }
+
+    /**
+     * Fills the referencedBNodes set with all "_:*" ids that are referenced anywhere in the structure/document
+     * (and thus cannot be safely removed)
+     */
+    public static void getReferencedBNodes(Map map, Set referencedBNodes)
+    {
+        // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
+        if (map.size() == 1)
+        {
+            String key = map.keySet().getAt(0)
+            if (key.equals("@id"))
+            {
+                String id = map.get(key)
+                if (id.startsWith("_:"))
+                    referencedBNodes.add(id)
+            }
+        }
+
+        for (Object keyObj : map.keySet())
+        {
+            Object subobject = map.get(keyObj);
+
+            if ( subobject instanceof Map )
+                getReferencedBNodes( (Map) subobject, referencedBNodes );
+            else if ( subobject instanceof List )
+                getReferencedBNodes( (List) subobject, referencedBNodes );
+        }
+    }
+
+    public static void getReferencedBNodes(List list, Set referencedBNodes)
+    {
+        for (Object item : list)
+        {
+            if ( item instanceof Map )
+                getReferencedBNodes( (Map) item, referencedBNodes );
+        }
+    }
+
+    public static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes)
+    {
+        if (map.size() > 1)
+        {
+            if (map.containsKey("@id"))
+            {
+                String id = map.get("@id")
+
+                if (id.startsWith("_:") && !referencedBNodes.contains(id))
+                {
+                    map.remove("@id")
+                }
+            }
+        }
+
+        for (Object keyObj : map.keySet())
+        {
+            Object subobject = map.get(keyObj);
+
+            if ( subobject instanceof Map )
+                cleanUnreferencedBNodeIDs( (Map) subobject, referencedBNodes );
+            else if ( subobject instanceof List )
+                cleanUnreferencedBNodeIDs( (List) subobject, referencedBNodes );
+        }
+    }
+
+    public static void cleanUnreferencedBNodeIDs(List list, Set referencedBNodes)
+    {
+        for (Object item : list)
+        {
+            if ( item instanceof Map )
+                cleanUnreferencedBNodeIDs( (Map) item, referencedBNodes );
+        }
     }
 
     private static Map embed(String mainId, Map mainItemMap, Map idMap, Set embedChain) {
@@ -222,18 +304,23 @@ public class JsonLd {
             throw new ModelValidationException("Document has no data to validate.")
         }
         Map docData = frame(doc.id, doc.data)
-        Map about = (docData.containsKey("about") ? docData.about : docData )
+        String thingLink = MARCFRAMEMAP.get(doc.collection)?.get("thingLink")
+        String collectionType = MARCFRAMEMAP[doc.collection]['000']['_spec'][0]["result"][thingLink]["@type"]
+
+        Map about = (docData.containsKey(thingLink) ? docData.get(thingLink) : docData )
         String type = about.get("@type")
-        if (type != "Item") {
-            throw new ModelValidationException("Document has mismatching @type ($type) for Item.")
+        if (type != collectionType) {
+            throw new ModelValidationException("Document has mismatching @type ($type) for ${collectionType}.")
         }
-        if (!about.containsKey("heldBy") || !about.heldBy.containsKey("notation")) {
-            throw new ModelValidationException("Item is missing heldBy declaration.")
-        }
-        // TODO: Remove holdingFor option when data is coherent
-        Map itemOf = (about.containsKey("itemOf") ? about.get("itemOf") : about.get("holdingFor"))
-        if (!itemOf?.containsKey("@id")) {
-            throw new ModelValidationException("Item is missing itemOf declaration.")
+        if (doc.collection == "hold") {
+            if (!about.containsKey("heldBy") || !about.heldBy.containsKey("notation")) {
+                throw new ModelValidationException("Item is missing heldBy declaration.")
+            }
+            // TODO: Remove holdingFor option when data is coherent
+            Map itemOf = (about.containsKey("itemOf") ? about.get("itemOf") : about.get("holdingFor"))
+            if (!itemOf?.containsKey("@id")) {
+                throw new ModelValidationException("Item is missing itemOf declaration.")
+            }
         }
         return true
     }
