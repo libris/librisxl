@@ -160,7 +160,7 @@ public class ExporterThread extends Thread
 			   }
 			}
         }
-        catch (Exception e)
+        catch (Throwable e)
         {
             StringBuilder callStack = new StringBuilder("");
             for (StackTraceElement frame : e.getStackTrace())
