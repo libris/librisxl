@@ -288,8 +288,6 @@ class XL
                         }
                     }
                     break;
-                case DUPTYPE_OAI: // ?
-                    break;
                 case DUPTYPE_035A:
                     // Unique id number in another system. The 035a of the post being imported will be checked against
                     // the @graph,0,systemNumber array of existing posts

@@ -37,7 +37,6 @@ class Parameters
         DUPTYPE_ISBNZ,
         DUPTYPE_ISSNA,
         DUPTYPE_ISSNZ,
-        DUPTYPE_OAI,
         DUPTYPE_035A,
         DUPTYPE_LIBRISID
     }
@@ -128,8 +127,6 @@ class Parameters
                 return DUPLICATION_TYPE.DUPTYPE_ISSNA;
             case "ISSNZ":
                 return DUPLICATION_TYPE.DUPTYPE_ISSNZ;
-            case "OAI":
-                return DUPLICATION_TYPE.DUPTYPE_OAI;
             case "035A":
                 return DUPLICATION_TYPE.DUPTYPE_035A;
             case "LIBRIS-ID":
