@@ -304,7 +304,7 @@ class PostgreSQLComponent implements Storage {
      * LOCKED while the update is in progress.
      */
     void storeAtomicUpdate(String id, boolean minorUpdate, UpdateAgent updateAgent) {
-        log.debug("Saving (atomic update) ${doc.id}")
+        log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
         Connection connection = getConnection()
