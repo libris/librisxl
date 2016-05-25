@@ -17,12 +17,9 @@ dependencies {
     // XL dependencies
     compile('../../whelk-core' in project.subprojects*.name?
             project(':../../whelk-core') :
-            'com.github.libris:whelk-core:0.1.1')
+            'com.github.libris:whelk-core:0.1.3')
 
     def jettyVersion="9.3.6.v20151106"
-
-    // Sql connection pool
-    compile 'com.zaxxer:HikariCP:2.4.3'
 
     // Jetty
     compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"

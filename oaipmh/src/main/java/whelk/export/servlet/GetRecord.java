@@ -51,7 +51,7 @@ public class GetRecord
 
         String id = Helpers.getShorthandDocumentId(identifierUri);
 
-        try (Connection dbconn = DataBase.getConnection();
+        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
              PreparedStatement preparedStatement = prepareStatement(dbconn, id);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
@@ -108,7 +108,7 @@ public class GetRecord
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT data, manifest, modified, deleted, data#>'{@graph,1,heldBy,notation}' AS sigel FROM " +
+        String selectSQL = "SELECT data, manifest, modified, deleted, data#>>'{@graph,1,offers,0,heldBy,0,@id}' AS sigel FROM " +
                 tableName + " WHERE id = ? AND manifest->>'collection' <> 'definitions' ";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);

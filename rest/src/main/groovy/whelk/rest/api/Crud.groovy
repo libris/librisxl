@@ -412,10 +412,14 @@ class Crud extends HttpServlet {
     }
 
 
-    boolean hasPermission(info, newdoc, olddoc) {
-        if (info) {
-            log.debug("User is: $info")
-            return accessControl.checkDocument(newdoc, olddoc, info)
+    boolean hasPermission(userInfo, newdoc, olddoc) {
+        if (userInfo) {
+            log.debug("User is: $userInfo")
+            if (userInfo.user == "SYSTEM") {
+                log.warn("User is SYSTEM. Allowing access to all.")
+                return true
+            }
+            return accessControl.checkDocument(newdoc, olddoc, userInfo)
         }
         log.info("No user information received, denying request.")
         return false
@@ -461,15 +465,15 @@ class Crud extends HttpServlet {
         try {
             String id = request.pathInfo.substring(1)
             def doc = whelk.storage.load(id)
-            if (doc && !hasPermission(request.getAttribute("user"), doc, null)) {
+            if (doc && !hasPermission(request.getAttribute("user"), null, doc)) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
             } else {
                 log.debug("Removing resource at ${id}")
                 whelk.remove(id)
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
-
             }
-        } catch (WhelkRuntimeException wre) {
+        } catch (Exception wre) {
+            log.error("Something went wrong", wre)
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
         }
 

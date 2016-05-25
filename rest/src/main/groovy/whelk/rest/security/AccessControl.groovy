@@ -9,18 +9,21 @@ import whelk.exception.ModelValidationException
 class AccessControl {
 
     boolean checkDocument(Document newdoc, Document olddoc, Map userPrivileges) {
-        if (newdoc?.collection == "hold") {
-            JsonLd.validateItemModel(newdoc)
-            def sigel = JsonLd.frame(newdoc.id, newdoc.data).about.heldBy.notation
-            log.debug("User tries to change a holding for sigel ${sigel}.")
+        def privs = null
+        if (newdoc?.collection == "hold" || newdoc == null) {
+            if (newdoc) {
+                JsonLd.validateItemModel(newdoc)
+                def sigel = JsonLd.frame(newdoc.id, newdoc.data).about.heldBy.notation
+                log.debug("User tries to change a holding for sigel ${sigel}.")
 
-            def privs = userPrivileges.authorization.find { it.sigel == sigel }
-            log.trace("User has these privs for ${sigel}: $privs")
-            if (!privs?.xlreg) {
-                log.debug("User does not have sufficient privileges.")
-                return false
+                privs = userPrivileges.authorization.find { it.sigel == sigel }
+                log.trace("User has these privs for ${sigel}: $privs")
+                if (!privs?.xlreg) {
+                    log.debug("User does not have sufficient privileges.")
+                    return false
+                }
             }
-            if (olddoc) {
+            if (olddoc && !olddoc.deleted) {
                 def currentSigel = JsonLd.frame(olddoc.id, olddoc.data).about.heldBy.notation
                 if (currentSigel) {
                     log.trace("Checking sigel privs for existing document.")

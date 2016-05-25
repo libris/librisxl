@@ -134,6 +134,7 @@ public class ExporterThread extends Thread
                 {
                     commitAtomicDocumentUpdate(id, null, true);
                     m_ui.outputText("Failed to export " + id + ", will automatically try again at a later time.");
+                    e.printStackTrace();
                 }
                 ++documentsInBatchCount;
             }

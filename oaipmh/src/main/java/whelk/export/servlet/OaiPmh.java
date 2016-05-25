@@ -1,5 +1,6 @@
 package whelk.export.servlet;
 
+import whelk.component.PostgreSQLComponent;
 import whelk.converter.FormatConverter;
 import whelk.converter.JsonLD2DublinCoreConverter;
 import whelk.converter.JsonLD2RdfXml;
@@ -68,6 +69,7 @@ public class OaiPmh extends HttpServlet
     }
 
     public static Properties configuration;
+    public static PostgreSQLComponent s_postgreSqlComponent;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
@@ -83,12 +85,11 @@ public class OaiPmh extends HttpServlet
     public void init()
     {
         configuration = PropertyLoader.loadProperties("secret");
-        DataBase.init();
+        s_postgreSqlComponent = new PostgreSQLComponent(configuration.getProperty("sqlUrl"), configuration.getProperty("sqlMaintable"));
     }
 
     public void destroy()
     {
-        DataBase.destroy();
     }
 
     private void handleRequest(HttpServletRequest req, HttpServletResponse res) throws IOException

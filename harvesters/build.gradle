@@ -31,7 +31,7 @@ try {
 } catch (Exception e) {}
 
 // Version is set on deploy, but to maintain semblance of control, update default value appropriately when releasing.
-version = versionprops.get("releaseTag", "0.9.0.x")
+def versionNumber = versionprops.get("releaseTag", "0.9.0.x")
 
 archivesBaseName = "oaipmhharvester"
 
@@ -81,7 +81,7 @@ dependencies {
     def groovyVersion=GroovySystem.getVersion()
     def jettyVersion="8.1.16.v20140903"
 
-    compile 'com.github.libris:whelk-core:0.1.1'
+    compile 'com.github.libris:whelk-core:0.1.3'
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
@@ -147,7 +147,7 @@ war {
 
     manifest {
         attributes 'Implementation-Title': 'Standalone Whelk',
-        'Implementation-Version': version,
+        'Implementation-Version': versionNumber,
         'Main-Class': 'whelk.component.support.JettyServer',
         'Class-Path': manifestClasspath
     }

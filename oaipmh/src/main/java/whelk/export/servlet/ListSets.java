@@ -1,5 +1,7 @@
 package whelk.export.servlet;
 
+import whelk.util.LegacyIntegrationTools;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.stream.XMLOutputFactory;
@@ -69,13 +71,14 @@ public class ListSets
         writer.writeEndElement(); // set
 
         // Dynamic sigel-sets
-        try (Connection dbconn = DataBase.getConnection();
+        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
              PreparedStatement preparedStatement = prepareStatement(dbconn);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
             while (resultSet.next())
             {
-                String sigel = resultSet.getString("sigel");
+                String sigel = LegacyIntegrationTools.uriToLegacySigel(resultSet.getString("sigel"));
+
                 if (sigel != null)
                 {
                     writer.writeStartElement("set");
@@ -100,7 +103,7 @@ public class ListSets
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT DISTINCT data#>>'{@graph,1,heldBy,notation}' AS sigel FROM " + tableName +
+        String selectSQL = "SELECT DISTINCT data#>>'{@graph,1,offers,0,heldBy,0,@id}' AS sigel FROM " + tableName +
                 " WHERE manifest->>'collection' = 'hold' ";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setFetchSize(512);
