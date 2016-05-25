@@ -270,6 +270,7 @@ class Crud extends HttpServlet {
                 log.debug("Saving document (${doc.identifier})")
                 boolean newDocument = (doc.created == null)
                 log.info("Document accepted: created is: ${doc.created}")
+                doc.manifest.put(Document.CHANGED_IN_KEY, "xl")
                 doc = whelk.store(doc, (request.getMethod() == "PUT"))
 
                 sendDocumentSavedResponse(response, doc.getURI().toString(), doc.modified.getTime() as String, newDocument)
