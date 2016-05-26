@@ -1,7 +1,6 @@
 package whelk
 
 import groovy.util.logging.Slf4j as Log
-
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 import whelk.util.PropertyLoader
@@ -31,7 +30,21 @@ class Document {
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
     static final String HOLDING_FOR_KEY = "holdingFor"
 
-    static final URI BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
+    // If we _statically_ call loadProperties("secret"), without a try/catch it means that no code with a dependency on
+    // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
+    // depending on whelk-core) sometimes need to do.
+    static final URI BASE_URI;
+    static
+    {
+        try
+        {
+            BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
+        }
+        catch (Exception e)
+        {
+            System.err.println(e);
+        }
+    }
 
     @JsonIgnore
     static final Map TYPE_COLLECTION = [
