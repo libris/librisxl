@@ -37,7 +37,7 @@ class Document {
     static final Map TYPE_COLLECTION = [
             "auth": ["Person"],
             "bib": ["Text", "Monograph"],
-            "hold": ["Item"]
+            "hold": ["HeldMaterial", "Item"]
     ]
 
     @JsonIgnore
