@@ -135,7 +135,7 @@ public class ExporterThread extends Thread
                     }
 
                     ++successfullyExportedDocumentsCount;
-                } catch (Exception e)
+                } catch (Throwable e)
                 {
                     commitAtomicDocumentUpdate(id, null, true);
                     m_ui.outputText("Failed to export " + id + ", will automatically try again at a later time.");
