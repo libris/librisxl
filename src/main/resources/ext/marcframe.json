@@ -376,12 +376,12 @@
       "[6:7]": {
         "aboutEntity": "?thing",
         "tokenMap": "TypeOfRecordType",
-        "addProperty": "@type"
+        "property": "@type"
       },
       "[7:8]": {
         "aboutEntity": "?thing",
         "tokenMap": "BibLevelType",
-        "addProperty": "@type"
+        "property": "issuanceType"
       },
       "[8:9]": {
         "aboutEntity": "?record",
@@ -434,7 +434,11 @@
             "marc:status": {"@id": "marc:CorrectedOrRevised"},
             "marc:catForm": {"@id": "marc:Aacr2"},
             "controlNumber": "0000000",
-            "mainEntity": {"@type": ["Text", "Monograph"], "@id": "http://libris.kb.se/resource/bib/0000000"}
+            "mainEntity": {
+              "@type": "Text",
+              "issuanceType": "Monograph",
+              "@id": "http://libris.kb.se/resource/bib/0000000"
+            }
           }
         }
       ]
@@ -2175,7 +2179,7 @@
       "TODO:i1": {},
       "TODO:i2": {"0": "OuterRing", "1": "ExcludingRing"},
       "$2": {"property": "source"},
-      "$3": {"property": "scopeNote"},
+      "$3": {"property": "part"},
       "$a": {"property": "cartographicScale"},
       "$b": {"addProperty": "constantRatioLinearHorizontalScale"},
       "$c": {"addProperty": "constantRatioLinearVerticalScale"},
@@ -2269,7 +2273,7 @@
         "link": "hasSummaryLanguage"
       },
       "$h": {
-        "TODO": "sync with some isVersionOf/translationOf built from many fields",
+        "TODO": "sync with some versionOf/translationOf built from many fields",
         "addLink": "originalLanguage",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       },
@@ -2386,7 +2390,7 @@
         "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
         "defaults": {
           "notation": "DDC",
-          "isVersionOf": {"@id": "http://dewey.info/scheme/ddc/"}
+          "versionOf": {"@id": "http://dewey.info/scheme/ddc/"}
         },
         "property": "version",
         "splitValuePattern": "(\\d+)(?:/(swe))?",
@@ -2435,7 +2439,7 @@
     "100": {
       "NOTE:candidate:aboutEntity": "?work",
       "include": "attribution",
-      "resourceType": "MainAttribution",
+      "resourceType": "marc:MainEntry",
       "_spec": [
         {
           "source": {
@@ -2451,7 +2455,7 @@
           "result": {"mainEntity": {
             "qualifiedAttribution": [
               {
-                "@type": "MainAttribution",
+                "@type": "marc:MainEntry",
                 "agent": {"@type": "Person",
                   "familyName":  "Jansson",
                   "givenName":  "Tove",
@@ -2560,7 +2564,7 @@
     "243": {},
 
     "245": {
-      "i1": {"property": "searchElement", "tokenMap": {"0": false}, "marcDefault": "1"},
+      "i1": {"property": "marc:searchElement", "tokenMap": {"0": false}, "marcDefault": "1"},
       "i2": {"marcDefault": "0"},
       "aboutEntity": "?thing",
       "link": "hasTitle",
@@ -2607,7 +2611,7 @@
           "result": {"mainEntity": {
             "hasTitle": {"@type": "Title",
               "mainTitle":  "Anteckningar från en ö",
-              "searchElement": false
+              "marc:searchElement": false
             },
             "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
           }}
@@ -2640,8 +2644,9 @@
       "TODO:match-repetition?": {
       },
       "addLink": "hasVersion", "resourceType": "Product",
-      "$a": {"property": "edition"},
-      "$b": {"property": "editionResponsibility"}
+      "$a": {"property": "editionEnumeration"},
+      "$b": {"property": "editionStatement"},
+      "$3": {"property": "part"}
     },
 
     "254": {},
@@ -2684,7 +2689,7 @@
       "$e": {"about": "?manufacture", "link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
       "$f": {"about": "?manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;"},
       "$g": {"about": "?manufacture", "property": "date", "interpunctionChars": ",;"},
-      "$3": {"about": "?publication", "property": "scopeNote", "position": 0, "TODO": "put in first out-split entity"},
+      "$3": {"about": "?publication", "property": "part", "position": 0, "TODO": "put in first out-split entity"},
       "_spec": [
         {
           "source": {
@@ -2918,7 +2923,7 @@
 
     "440": {
       "NOTE:candidate:aboutEntity": "?work",
-      "TODO:prefer": "490 or 773? See also mapping for 240",
+      "TODO:ignoreOnRevertInFavourOf": "490 or 773? See also mapping for 240",
       "addLink": "series",
       "embedded": true,
       "resourceType": "Serial",
@@ -2935,7 +2940,7 @@
       "inherit": "440",
       "TOOO:i1": {},
       "i2": null,
-      "TODO:preferLinkedVersion": "773?",
+      "TODO:ignoreOnRevertInFavourOf": "773?",
       "$l": {"link": "callno", "resourceType": "Concept", "property": "notation"}
     },
 
@@ -3312,7 +3317,8 @@
     "700": {
       "NOTE:candidate:aboutEntity": "?work",
       "include": "attribution",
-      "resourceType": "AdditionalAttribution",
+      "resourceType": "marc:AddedEntry",
+      "TODO:if-resourceType-ignoreOnRevertInFavourOf": "100",
       "match-code": {
         "t": {
           "pendingResources": {
@@ -3334,7 +3340,7 @@
           "result": {"mainEntity": {
             "qualifiedAttribution": [
               {
-                "@type": "AdditionalAttribution",
+                "@type": "marc:AddedEntry",
                 "agent": {"@type": "Person",
                     "familyName":  "Pietilä",
                     "givenName":  "Tuulikki",
@@ -3352,7 +3358,7 @@
           "result": {"mainEntity": {
             "qualifiedAttribution": [
               {
-                "@type": "AdditionalAttribution",
+                "@type": "marc:AddedEntry",
                 "agent": {
                   "@type": "UniformWork",
                   "title": "Anteckningar från en ö",
@@ -3407,7 +3413,7 @@
       "$b": {"property": "edition", "TODO:targetMatch": "250"},
       "$c": {"property": "qualifyingNote"},
       "$d": {"property": "placePublisherAndDateOfPublication", "TODO:targetMatch": "260$c"},
-      "$g": {"addProperty": "scopeNote"},
+      "$g": {"addProperty": "part"},
       "$h": {"property": "physicalDescription"},
       "$i": {"addProperty": "linkNote"},
       "$k": {"addProperty": "seriesLabel", "TODO:targetMatch": "4xx, 8xx"},
