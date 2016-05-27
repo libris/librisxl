@@ -214,7 +214,7 @@ public class ListRecordTrees
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
-        String sql = "SELECT id FROM lddb__identifiers WHERE identifier = ?";
+        String sql = "SELECT id FROM " + tableName + "__identifiers WHERE identifier = ?";
         PreparedStatement preparedStatement = dbconn.prepareStatement(sql);
         preparedStatement.setString(1, id);
 
