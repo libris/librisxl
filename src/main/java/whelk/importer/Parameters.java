@@ -69,7 +69,48 @@ class Parameters
 
     private void printUsage()
     {
-        System.err.println("Usage: ..");
+        System.err.println("Usage: java -Dxl.secret.properties=PROPSFILE -jar lxl_import.jar [PARAMETERS] [DATA]");
+        System.err.println("");
+        System.err.println("Imports records into Libris XL.");
+        System.err.println("");
+        System.err.println("In order to function, this program needs a Libris XL secret properties file. Please consult");
+        System.err.println("the whelk-core readme, for information on how to build such a file");
+        System.err.println("");
+        System.err.println("This program expects records fed to it have a certain order, which is that each bibliograhic");
+        System.err.println("record be followed by the holding records for that record. This ordering of the data must be");
+        System.err.println("in effect at the latest after any XSLT transforms have been applied.");
+        System.err.println("");
+        System.err.println("Parameters:");
+        System.err.println("");
+        System.err.println("--path        A file path to use as input data. If this path represents a folder, all");
+        System.err.println("              files in that folder will be imported (but no subfolders).");
+        System.err.println("              If the path represents a file, only that specific file will be imported.");
+        System.err.println("              If this parameter is omitted, lxl_import will expect its input on stdin.");
+        System.err.println("");
+        System.err.println("--format      The format of the input data. Can be either \"iso2709\" or \"xml\".");
+        System.err.println("");
+        System.err.println("--transformer The path to an XSLT stylsheet that should be used to transform the input");
+        System.err.println("              before importing. This parameter may be used even if the input format is");
+        System.err.println("              \"iso2709\", in which case the stream will be translated to MARCXML before");
+        System.err.println("              transformation. If more than one transformer is specified these will be");
+        System.err.println("              applied in the same order they are specified on the command line.");
+        System.err.println("");
+        System.err.println("--inEncoding  The character encoding of the incoming data. Only relevant if the format");
+        System.err.println("              is \"iso2709\" as xml documents are expected to declare their encoding in the");
+        System.err.println("              xml header. Defaults to UTF-8.");
+        System.err.println("");
+        System.err.println("--dupType     The type of duplication checking that should be done for each incoming");
+        System.err.println("              record. The value of this parameter may be a comma-separated list of any");
+        System.err.println("              combination of duplication types. If a duplicate is found for an incoming");
+        System.err.println("              record, that record will be enriched with any additional information in the");
+        System.err.println("              incoming record.");
+        System.err.println("              Duplication types:");
+        System.err.println("                ISBNA     ISBN number, obtained from MARC subfield $a of the incoming record");
+        System.err.println("                ISBNZ     ISBN number, obtained from MARC subfield $z of the incoming record");
+        System.err.println("                ISSNA     ISSN number, obtained from MARC subfield $a of the incoming record");
+        System.err.println("                ISSNZ     ISSN number, obtained from MARC subfield $z of the incoming record");
+        System.err.println("                035A      ID in other system, obtained from MARC 035 $a of the incoming record");
+        System.err.println("                LIBRIS-ID ID in Libris.");
     }
 
     private void interpretBinaryParameter(String parameter, String value)
