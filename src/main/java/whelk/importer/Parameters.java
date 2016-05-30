@@ -116,6 +116,9 @@ class Parameters
         System.err.println("                ISSNZ     ISSN number, obtained from MARC subfield $z of the incoming record");
         System.err.println("                035A      ID in other system, obtained from MARC 035 $a of the incoming record");
         System.err.println("                LIBRIS-ID ID in Libris.");
+        System.err.println("");
+        System.err.println("--live        Write to Whelk (without this flag operations against the Whelk are readonly");
+        System.err.println("              and results are only printed to stdout).");
     }
 
     private void interpretBinaryParameter(String parameter, String value)

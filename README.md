@@ -35,12 +35,17 @@ The character encoding of the incoming data. Only relevant if the format is "iso
 ### --dupType
 The type of duplication checking that should be done for each incoming record. The value of this parameter may be a comma-separated list of any combination of duplication types. If a duplicate is found for an incoming record, that record will be enriched with any additional information in the incoming record.
 
+### --live
+Write to Whelk (without this flag operations against the Whelk are readonly, and results are only printed to stdout).
+
 ## Duplication types
 
-ISBNA     ISBN number, obtained from MARC subfield $a of the incoming record
-ISBNZ     ISBN number, obtained from MARC subfield $z of the incoming record
-ISSNA     ISSN number, obtained from MARC subfield $a of the incoming record
-ISSNZ     ISSN number, obtained from MARC subfield $z of the incoming record
-035A      ID in other system, obtained from MARC 035 $a of the incoming record
-LIBRIS-ID ID in Libris.
+- ISBNA     ISBN number, obtained from MARC subfield $a of the incoming record
+- ISBNZ     ISBN number, obtained from MARC subfield $z of the incoming record
+- ISSNA     ISSN number, obtained from MARC subfield $a of the incoming record
+- ISSNZ     ISSN number, obtained from MARC subfield $z of the incoming record
+- 035A      ID in other system, obtained from MARC 035 $a of the incoming record
+- LIBRIS-ID ID in Libris.
 
+## Example usage
+    $ java -jar build/libs/lxl_import.jar --format=xml --path=input/adlibrismessedup/ --transformer=transformers/forvarv.xsl --dupType=ISSNA --live
