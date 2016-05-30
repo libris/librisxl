@@ -7,6 +7,7 @@ import org.junit.*;
 import java.io.IOException;
 import java.util.*;
 
+@SuppressWarnings("unchecked")
 public class EnrichTest
 {
     private static final ObjectMapper s_mapper = new ObjectMapper();
