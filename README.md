@@ -20,22 +20,23 @@ lxl_import expects records fed to it have a certain order, such that each biblio
 
 Parameters:
 
-# --path
+### --path
 A file path to use as input data. If this path represents a folder, all files in that folder will be imported (but no subfolders). If the path represents a file, only that specific file will be imported. If this parameter is omitted, lxl_import will expect its input on stdin.
 
-# --format
+### --format
 The format of the input data. Can be either "iso2709" or "xml". This parameter must be specified. If the format is "xml", the structure of the xml document must be that of MARCXML at the latest after any XSLT transforms have been applied.
 
-# --transformer
+### --transformer
 The path to an XSLT stylsheet that should be used to transform the input before importing. This parameter may be used even if the input format is "iso2709", in which case the stream will be translated to MARCXML before transformation. If more than one transformer is specified these will be applied in the same order they are specified on the command line. XSLT transformation is optional.
 
-# --inEncoding
+### --inEncoding
 The character encoding of the incoming data. Only relevant if the format is "iso2709" as xml documents are expected to declare their encoding in the xml header. Defaults to UTF-8.
 
---dupType
+### --dupType
 The type of duplication checking that should be done for each incoming record. The value of this parameter may be a comma-separated list of any combination of duplication types. If a duplicate is found for an incoming record, that record will be enriched with any additional information in the incoming record.
 
-Duplication types:
+## Duplication types
+
 ISBNA     ISBN number, obtained from MARC subfield $a of the incoming record
 ISBNZ     ISBN number, obtained from MARC subfield $z of the incoming record
 ISSNA     ISSN number, obtained from MARC subfield $a of the incoming record
