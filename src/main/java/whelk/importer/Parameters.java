@@ -76,7 +76,7 @@ class Parameters
         System.err.println("In order to function, this program needs a Libris XL secret properties file. Please consult");
         System.err.println("the whelk-core readme, for information on how to build such a file");
         System.err.println("");
-        System.err.println("This program expects records fed to it have a certain order, such that each bibliograhic");
+        System.err.println("This program expects records fed to it to have a certain order, such that each bibliograhic");
         System.err.println("record be followed by the holding records for that record (if any). This ordering of the");
         System.err.println("data must be in effect at the latest after any XSLT transforms have been applied. This");
         System.err.println("program should NOT be used to import authority records.");
