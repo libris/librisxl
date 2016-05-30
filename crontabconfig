@@ -1,2 +1,2 @@
 # temporary entry, for testing purposes.
-* * * * * touch ~/cron_test_ok
+* * * * * ./scripts/temp.sh >/dev/null 2>&1
