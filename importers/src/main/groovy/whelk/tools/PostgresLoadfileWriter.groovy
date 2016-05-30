@@ -76,7 +76,8 @@ class PostgresLoadfileWriter
 
                 def manifest = [(Document.ID_KEY):id,(Document.COLLECTION_KEY):collection, (Document.ALTERNATE_ID_KEY): [oldStyleIdentifier]]
 
-                addSetSpecs(manifest, specs)
+                if (specs != null)
+                    addSetSpecs(manifest, specs)
 
                 Map documentMap = new HashMap(2)
                 documentMap.put("record", doc)
