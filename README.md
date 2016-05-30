@@ -14,7 +14,7 @@ Libris XL batch import of metadata.
 
 The importing mechanism for Libris XL consists of a number of scripts (see the scripts directory) that are used for fetching data from various sources and placing it as files in a directory structure. These files are then used as the input to the lxl_import java program which transforms and imports the data into the Whelk (Libris XL).
 
-In order to function, this program needs a Libris XL secret properties file. Please consult the whelk-core readme, for information on how to build such a file
+In order to function, this program needs a Libris XL secret properties file. Please consult the [https://github.com/libris/whelk-core](whelk-core) readme, for information on how to build such a file
 
 lxl_import expects records fed to it to have a certain order, such that each bibliograhic record be followed by the holding records for that record (if any). This ordering of the data must be in effect at the latest after any XSLT transforms have been applied. This program should NOT be used to import authority records.
 
@@ -24,7 +24,7 @@ Parameters:
 A file path to use as input data. If this path represents a folder, all files in that folder will be imported (but no subfolders). If the path represents a file, only that specific file will be imported. If this parameter is omitted, lxl_import will expect its input on stdin.
 
 ### --format
-The format of the input data. Can be either "iso2709" or "xml". This parameter must be specified. If the format is "xml", the structure of the xml document must be that of MARCXML (as defined by libris/jmarctools, nominally: www.loc.gov/MARC21/slim) at the latest after any XSLT transforms have been applied.
+The format of the input data. Can be either "iso2709" or "xml". This parameter must be specified. If the format is "xml", the structure of the xml document must be that of MARCXML (as defined by [https://github.com/libris/jmarctools](jmarctools), nominally: www.loc.gov/MARC21/slim) at the latest after any XSLT transforms have been applied.
 
 ### --transformer
 The path to an XSLT stylsheet that should be used to transform the input before importing. This parameter may be used even if the input format is "iso2709", in which case the stream will be translated to MARCXML before transformation. If more than one transformer is specified these will be applied in the same order they are specified on the command line. XSLT transformation is optional.
