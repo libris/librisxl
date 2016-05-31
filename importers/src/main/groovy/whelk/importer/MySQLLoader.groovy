@@ -81,6 +81,7 @@ class MySQLLoader {
         if (record) {
             doc = MarcJSONConverter.toJSONMap(record)
             if (!recordId.equals(currentRecordId)) {
+                specs = getOaipmhSetSpecs(resultSet)
                 if (doc) {
                     handler.handle(doc, specs)
                 }

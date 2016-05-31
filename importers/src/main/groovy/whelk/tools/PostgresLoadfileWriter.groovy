@@ -150,15 +150,8 @@ class PostgresLoadfileWriter
         if (specs.size() == 0)
             return
         
-        def extradata = manifest.get("extraData")
-        if (extradata == null)
-            manifest.put("extraData", [:])
-        extradata = manifest.get("extraData")
-
-        def setSpecs = extradata.get("oaipmhSetSpecs")
-        if (setSpecs == null)
-            extradata.put("oaipmhSetSpecs", [:]);
-        setSpecs = extradata.get("oaipmhSetSpecs")
+        def extradata = manifest.get("extraData", [:])
+        def setSpecs = extradata.get("oaipmhSetSpecs", [])
 
         for (String spec : specs)
         {
