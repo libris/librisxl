@@ -2514,9 +2514,9 @@
 
     "210": {
       "aboutEntity": "?thing",
-      "addLink": "abbreviatedTitle",
+      "addLink": "hasTitle",
       "embedded": true,
-      "resourceType": "Title",
+      "resourceType": "AbbreviatedTitle",
       "TOOO:i1": {},
       "TOOO:i2": {},
       "$a": {"property": "mainTitle"},
@@ -2526,7 +2526,8 @@
     "222": {
       "inherit": "210",
       "NOTE:domain": "Serial/Periodical",
-      "addLink": "keyTitle",
+      "addLink": "hasTitle",
+      "resourceType": "KeyTitle",
       "$2": null
     },
     "240": {
@@ -2569,13 +2570,13 @@
       "aboutEntity": "?thing",
       "link": "hasTitle",
       "embedded": true,
-      "resourceType": "Title",
+      "resourceType": "InstanceTitle",
       "$a": {
         "property": "mainTitle",
         "interpunctionChars": ":/",
         "TODO:interpunctionRules": {
           " :": {"$b": {"property": "subtitle"}},
-          " =": {"$b": {"property": "parallellTitle"}},
+          " =": {"$b": {"property": "parallelTitle"}},
           " .": {"TODO": "$a and $b represent equal titles"}
         }
       },
@@ -2621,6 +2622,7 @@
     "246": {
       "inherit": "245",
       "addLink": "hasTitleVariant",
+      "resourceType": "VariantTitle",
       "i2": {
         "property": "typeNote",
         "TODO:tokenMap": {}, "TODO:if _": "use $i"
@@ -2652,18 +2654,17 @@
     "254": {},
 
     "255": {
-      "TODO:match-repetition?": {
-        "addLink": "hasFormat", "resourceType": "Product", "embedded": true
-      },
       "NOTE:domain": "Cartography",
-      "$a": {"property": "cartographicScale"},
-      "$c": {"property": "cartographicCoordinates"},
-      "$b": {"property": "cartographicProjection"},
-      "$e": {"property": "cartographicEquinox"},
+      "addLink": "cartographicAttributes",
+      "resourceType": "Cartographic",
+      "embedded": true,
+      "$a": {"property": "scale"},
+      "$c": {"property": "coordinates"},
+      "$b": {"property": "projection"},
+      "$e": {"property": "equinox"},
       "$d": {"property": "cartographicZone"},
-      "$g": {"property": "cartographicExclusionGRing"},
-      "$f": {"property": "cartographicOuterGRing"},
-      "TODO": "repeatable, use addProperty for all or wrap in object?"
+      "$g": {"property": "exclusionGRing"},
+      "$f": {"property": "outerGRing"}
     },
 
     "256": {
