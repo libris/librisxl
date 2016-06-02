@@ -2598,7 +2598,7 @@
               {"a": "Anteckningar från en ö"}
           ]}},
           "result": {"mainEntity": {
-            "hasTitle": {"@type": "Title",
+            "hasTitle": {"@type": "InstanceTitle",
               "mainTitle":  "Anteckningar från en ö"
             }
           }}
@@ -2610,7 +2610,7 @@
               {"c": "Tove Jansson, Tuulikki Pietilä"}
           ]}},
           "result": {"mainEntity": {
-            "hasTitle": {"@type": "Title",
+            "hasTitle": {"@type": "InstanceTitle",
               "mainTitle":  "Anteckningar från en ö",
               "marc:searchElement": false
             },
