@@ -43,6 +43,11 @@
         <servlet-class>whelk.rest.api.RemoteSearchAPI</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
+    <servlet>
+        <servlet-name>MarcConverter</servlet-name>
+        <servlet-class>whelk.rest.api.ConverterAPI</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
 
     <servlet-mapping>
         <servlet-name>WhelkServlet</servlet-name>
@@ -52,6 +57,11 @@
     <servlet-mapping>
         <servlet-name>RemoteSearch</servlet-name>
         <url-pattern>/_remotesearch</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>MarcConverter</servlet-name>
+        <url-pattern>/_convert</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>

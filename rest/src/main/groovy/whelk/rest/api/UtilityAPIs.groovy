@@ -15,44 +15,6 @@ import se.kb.libris.utils.isbn.*
 import java.util.regex.Pattern
 
 @Log
-class FormatterAPI implements RestAPI {
-
-    String description = "API to transform between formats the whelk is capable of handling."
-
-    Pattern pathPattern = Pattern.compile("/_format")
-
-
-    void handle(HttpServletRequest request, HttpServletResponse response, List pathVars) {
-        if (request.method == "POST") {
-            String requestedContentType = request.getParameter("to")
-            if (request.getContentLength() == 0) {
-                log.warn("[${this.id}] Received no content to reformat.")
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No content received.")
-            } else {
-                String ctype = ContentType.parse(request.getContentType()).getMimeType()
-                Document doc = whelk.createDocument(ctype).withData(Tools.normalizeString(request.getInputStream().getText("UTF-8"))).withEntry([CONTENT_TYPE_KEY:ctype, (Document.CREATED_KEY): new Date().getTime()])
-                if (requestedContentType) {
-                    log.info("Constructed document. Asking for converter for $requestedContentType")
-                    def fc = plugins.find { it.requiredContentType == doc.contentType && it.resultContentType == requestedContentType }
-                    if (fc) {
-                        log.info("Found converter: ${fc.id}")
-                        doc = fc.convert(doc)
-                    } else {
-                        log.error("No formatconverter found to convert from ${doc.contentType} to $requestedContentType")
-                        response.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE)
-                    }
-                } else {
-                    log.info("No conversion requested. Returning document as is.")
-                }
-                HttpTools.sendResponse(response, doc.dataAsString, doc.contentType)
-            }
-        } else {
-            response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED)
-        }
-    }
-}
-
-@Log
 class HoldCounter extends SearchAPI {
     String description = "Custom search API for counting holdings."
 
