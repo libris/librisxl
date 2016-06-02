@@ -2572,7 +2572,7 @@
     },
     "242": {
       "inherit": "245",
-      "addLink": "translatedTitle",
+      "addLink": "marc:hasTranslatedTitle",
       "$f": null,
       "$g": null,
       "$y": {"link": "language", "property": "notation"},
@@ -2638,7 +2638,7 @@
     },
     "246": {
       "inherit": "245",
-      "addLink": "hasTitleVariant",
+      "addLink": "hasTitle",
       "resourceType": "VariantTitle",
       "i2": {
         "property": "typeNote",
@@ -2650,7 +2650,7 @@
       "$h": {"property": "mediaTerm", "surroundingChars": "[]"}
     },
     "247": {
-      "NOTE:domain": "Integrating",
+      "NOTE:domainIncludes": "Integrating",
       "inherit": "245",
       "addLink": "previousTitle",
       "TODO": "Previously misused as 246?"
