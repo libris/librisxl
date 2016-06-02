@@ -876,7 +876,10 @@
     },
 
     "007": {
-      "addLink": "hasFormat",
+      "TODO:match-repetition": {
+        "addLink": "hasInstance"
+      },
+      "addLink": "hasInstance",
       "[0:1]": {
         "addProperty": "@type",
         "tokenMap": {
@@ -1435,7 +1438,7 @@
           "tokenMap": "MotionPicConfigurationOrVideoPlaybackType"
         }
       },
-      "Unspecified": {},
+      "marc:Unspecified": {},
       "repeatable": true,
       "_spec": [
         {
@@ -1443,7 +1446,7 @@
           "normalized": {"007":"aj |a|||               "},
           "result": {
             "mainEntity": {
-              "hasFormat": [
+              "hasInstance": [
                 {
                   "@type": ["Map"],
                   "carrierType": [{"@id": "marc:MapATwoDimensionalMap"}],
@@ -2320,6 +2323,7 @@
     "052": {},
     "055": {},
     "060": {
+      "NOTE:candidate:aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "Concept",
       "TOOO:i1": {},
@@ -2538,7 +2542,7 @@
     },
     "222": {
       "inherit": "210",
-      "NOTE:domain": "Serial/Periodical",
+      "NOTE:domainIncludes": "Serial/Periodical",
       "addLink": "hasTitle",
       "resourceType": "KeyTitle",
       "$2": null
@@ -2658,7 +2662,7 @@
       "aboutEntity": "?thing",
       "TODO:match-repetition?": {
       },
-      "addLink": "hasVersion", "resourceType": "Product",
+      "addLink": "hasVersion", "resourceType": "Instance",
       "$a": {"property": "editionEnumeration"},
       "$b": {"property": "editionStatement"},
       "$3": {"property": "part"}
@@ -2822,17 +2826,19 @@
     "270": {},
 
     "300": {
-      "TODO:match-repetition?": {
-        "addLink": "hasFormat"
-      },
       "aboutEntity": "?thing",
-      "addLink": "hasFormat",
-      "embedded": true,
-      "resourceType": "Product",
+      "match-repeated": {
+        "addLink": "hasPart",
+      "resourceType": "Instance",
+      "embedded": true
+      },
       "$a": {"property": "extent", "interpunctionChars": "+:;"},
+      "$b": {"property": "marc:otherPhysicalDetails", "interpunctionChars": ";+"},
       "$c": {"property": "dimensions", "interpunctionChars": ":;+"},
-      "$b": {"property": "otherPhysicalDetails", "interpunctionChars": ";+"},
-      "$e": {"property": "accompanyingMaterial"},
+      "$e": {
+        "TODO:previousSubfieldEndsWith": "+",
+        "link": "accompaniedBy", "property": "label", "embedded": true
+      },
       "$f": {"link": "device", "resourceType": "Device", "property": "label"},
       "$3": {
         "property": "part"
@@ -2870,8 +2876,8 @@
       "pendingResources": {
         "_:mediaType": {"link": "mediaType", "resourceType": "MediaType"}
       },
-      "addLink": "hasFormat",
-      "resourceType": "Product",
+      "addLink": "hasInstance",
+      "resourceType": "Instance",
       "$a": {"about": "_:mediaType", "property": "label"},
       "$b": {"about": "_:mediaType", "property": "notation"},
       "$2": {"about": "_:mediaType", "property": "termGroup"},
@@ -2881,7 +2887,7 @@
       "pendingResources": {
         "_:carrierType": {"link": "carrierType", "resourceType": "CarrierType"}
       },
-      "addLink": "hasFormat", "resourceType": "Product",
+      "addLink": "hasInstance", "resourceType": "Instance",
       "$a": {"about": "_:carrierType", "property": "label"},
       "$b": {"about": "_:carrierType", "property": "notation"},
       "$2": {"about": "_:carrierType", "property": "termGroup"},
@@ -2893,8 +2899,8 @@
           },
           "result": {
             "mainEntity": {
-              "hasFormat": [{
-                "@type": "Product",
+              "hasInstance": [{
+                "@type": "Instance",
                 "carrierType": {"@type": "CarrierType", "notation": "nc", "label": "volume", "termGroup": "rdacarrier"}
               }]
             }
@@ -3045,7 +3051,7 @@
     "525": {},
     "526": {},
 
-    "530": {"addLink": "hasFormat", "$a": {"addProperty": "comment"}, "embedded": true},
+    "530": {"addLink": "hasInstance", "$a": {"addProperty": "comment"}, "embedded": true},
 
     "533": {
       "addLink": "hasReproduction",
@@ -3477,26 +3483,26 @@
       "addLink": "isPartOf",
       "resourceType": "Aggregate",
       "$c": null,
-      "$p": {"property": "abbrevTitle", "TODO:targetMatch": "210"},
+      "$p": {"property": "abbreviatedTitle", "TODO:targetMatch": "210"},
       "$q": {"property": "pagination"}
     },
     "774": {
       "inherit": "772",
       "addLink": "hasPart",
-      "domainIncludes": "Serial",
+      "NOTE:domainIncludes": "Serial",
       "resourceType": "CreativeWork"
     },
     "775": {
       "inherit": "772",
       "TODO:note": "uncommon",
-      "addLink": "alternateEdition",
+      "addLink": "otherEdition",
       "$e": {"link": "language", "resourceType": "Language", "property": "label", "TODO:inherit": "008:[35:38]"},
       "$f": {"property": "publicationCountry", "TODO:inherit": "008:[15:18]"}
     },
     "776": {
       "inherit": "772",
-      "addLink": "alternateFormat",
-      "resourceType": "Product"
+      "addLink": "otherPhysicalFormat",
+      "resourceType": "Instance"
     },
     "777": {
       "inherit": "772",
@@ -3563,7 +3569,7 @@
       },
       "match-i2": {
         "0": {"addLink": "associatedMedia", "resourceType": "MediaObject"},
-        "1": {"addLink": "alternateFormat", "resourceType": "Electronic"},
+        "1": {"addLink": "otherPhysicalFormat", "resourceType": "Electronic"},
         "2": {"addLink": "isPrimaryTopicOf", "resourceType": "Document"},
         "8": {"addLink": "relation", "resourceType": "Document"}
       },
