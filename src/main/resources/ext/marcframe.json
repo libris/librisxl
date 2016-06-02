@@ -2532,10 +2532,11 @@
       "$d": {"property": "date"}
     },
     "130": {
-      "link": "hasUniformWork",
-      "resourceType": "UniformWork",
-      "TODO": "Similar to 240. Could use link:exampleOfWork if 130 XOR 240",
-      "$a": {"property": "uniformTitle"},
+      "NOTE:candidate:aboutEntity": "?work",
+      "link": "expressionOf",
+      "resourceType": "CanonicalWork",
+      "TODO": "Similar to 240. Could use link:expressionOf if 130 XOR 240",
+      "$a": {"property": "workTitle"},
       "$d": {"property": "date"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"}
     },
@@ -2559,10 +2560,11 @@
       "$2": null
     },
     "240": {
+      "NOTE:candidate:aboutEntity": "?work",
       "TODO:i1": {},
       "TODO:i2": {},
-      "link": "exampleOfWork",
-      "resourceType": "UniformWork",
+      "link": "expressionOf",
+      "resourceType": "Work",
       "$0": {
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
         "uriTemplate": "http://libris.kb.se/auth/{_}"
@@ -2954,7 +2956,7 @@
     "440": {
       "NOTE:candidate:aboutEntity": "?work",
       "TODO:ignoreOnRevertInFavourOf": "490 or 773? See also mapping for 240",
-      "addLink": "series",
+      "addLink": "hasSeries",
       "embedded": true,
       "resourceType": "Serial",
       "TOOO:i2": {},
@@ -3453,7 +3455,7 @@
         "addProperty": "identifier"
       },
       "$r": {"addProperty": "reportNumber", "TODO:targetMatch": "088"},
-      "$s": {"property": "uniformTitle", "TODO:targetMatch": "240"},
+      "$s": {"property": "workTitle", "TODO:targetMatch": "240"},
       "$t": {"property": "title", "TODO:targetMatch": "222, 245"},
       "$u": {"property": "standardTechnicalReportNumber", "TODO:targetMatch": "027"},
       "$w": {
@@ -3481,7 +3483,7 @@
             "isPartOf": [
               {
                 "@type": "CreativeWork",
-                "uniformTitle": "Main Thing",
+                "workTitle": "Main Thing",
                 "isbn": ["00-0-000000-0"]
               }
             ]
@@ -3548,7 +3550,7 @@
     "830": {
       "addLink": "isPartOf", "resourceType": "PublicationVolume",
       "TODO:i2": {},
-      "$a": {"property": "uniformTitle"},
+      "$a": {"property": "workTitle"},
       "$d": {"addProperty": "date"},
       "$v": {"property": "volumeNumber"},
       "$x": {"property": "issn", "interpunctionChars": ".,=;"}
