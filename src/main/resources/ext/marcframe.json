@@ -2279,6 +2279,13 @@
         "addLink": "hasPart",
         "embedded": true
       },
+      "NOTE:candidate:aboutEntity": "?work",
+      "TODO:pending": "merge entities from pending in similar fields",
+      "pendingResources": {
+        "_:original": {"link": "originalVersion", "resourceType": "Work"},
+        "_:summary": {"link": "summary", "resourceType": "Summary"},
+        "_:translationSource": {"link": "translationOf", "resourceType": "Work"}
+      },
       "$a": {
         "TODO:unifyWith": ["008:language", "240.a?", "546"],
         "TODO": "not repeated if equal with existing",
@@ -2286,15 +2293,19 @@
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       },
       "$b": {
-        "link": "hasSummaryLanguage"
+        "about": "_:summary",
+        "addLink": "language",
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       },
       "$h": {
-        "TODO": "sync with some versionOf/translationOf built from many fields",
-        "addLink": "originalLanguage",
+        "about": "_:translationSource",
+        "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       },
       "$k": {
-        "link": "translatedFromLanguage"
+        "about": "_:original",
+        "addLink": "language",
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       }
     },
     "042": {
