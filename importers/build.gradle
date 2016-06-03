@@ -36,7 +36,7 @@ dependencies {
     compile project(':../harvesters')
     compile('../../whelk-core' in project.subprojects*.name?
             project(':../../whelk-core') :
-            'com.github.libris:whelk-core:336f196e0985eeb2aa6d805eb00f962f781e03e7')
+            'com.github.libris:whelk-core:0.1.4')
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
