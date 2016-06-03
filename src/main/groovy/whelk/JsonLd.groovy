@@ -3,8 +3,14 @@ package whelk
 import org.codehaus.jackson.map.ObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import se.kb.libris.util.marc.Controlfield
+import se.kb.libris.util.marc.Datafield
+import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.exception.FramingException
 import whelk.exception.ModelValidationException
+
+import se.kb.libris.util.marc.io.MarcXmlRecordReader;
+import se.kb.libris.util.marc.MarcRecord;
 
 public class JsonLd {
 
@@ -15,6 +21,8 @@ public class JsonLd {
     static final ObjectMapper mapper = new ObjectMapper()
 
     static final MARCFRAMEMAP = mapper.readValue(JsonLd.getClassLoader().getResourceAsStream("ext/marcframe.json"), Map)
+
+    static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
 
     private static Logger log = LoggerFactory.getLogger(JsonLd.class)
 
@@ -303,25 +311,39 @@ public class JsonLd {
         if (!doc || !doc.data) {
             throw new ModelValidationException("Document has no data to validate.")
         }
-        Map docData = frame(doc.id, doc.data)
-        String thingLink = MARCFRAMEMAP.get(doc.collection)?.get("thingLink")
-        String collectionType = MARCFRAMEMAP[doc.collection]['000']['_spec'][0]["result"][thingLink]["@type"]
 
-        Map about = (docData.containsKey(thingLink) ? docData.get(thingLink) : docData )
-        String type = about.get("@type")
-        if (type != collectionType) {
-            throw new ModelValidationException("Document has mismatching @type ($type) for ${collectionType}.")
+        // The real test of the "Item Model" is whether or not the supplied document can be converted into
+        // some kind of correct(ish) MARC.
+
+        MarcRecord marcRecord;
+        try {
+            Document convertedDocument = converter.convert(doc);
+            String convertedText = (String) convertedDocument.getData().get("content");
+            marcRecord = MarcXmlRecordReader.fromXml(convertedText);
+        } catch (Throwable e) {
+            // Catch _everything_ that could go wrong with the convert() call, including Asserts (Errors)
+            return false;
         }
-        if (doc.collection == "hold") {
-            if (!about.containsKey("heldBy") || !about.heldBy.containsKey("notation")) {
-                throw new ModelValidationException("Item is missing heldBy declaration.")
-            }
-            // TODO: Remove holdingFor option when data is coherent
-            Map itemOf = (about.containsKey("itemOf") ? about.get("itemOf") : about.get("holdingFor"))
-            if (!itemOf?.containsKey("@id")) {
-                throw new ModelValidationException("Item is missing itemOf declaration.")
+
+        // Do some basic sanity checking on the resulting MARC holdings post.
+
+        // Holdings posts must have 32 positions in 008
+        for (Controlfield field008 : marcRecord.getControlfields("008")) {
+            if (field008.getData().length() != 32)
+                return false;
+        }
+
+        // Holdings posts must have (at least one) 852 $b (sigel)
+        boolean containsSigel = false;
+        for (Datafield field852 : marcRecord.getDatafields("852")) {
+            if (field852.getSubfields("b").size() > 0) {
+                containsSigel = true;
+                break;
             }
         }
+        if (!containsSigel)
+            return false;
+
         return true
     }
 }
