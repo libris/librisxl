@@ -102,8 +102,8 @@ class MarcFrameConverter implements FormatConverter {
     @Override
     Document convert(final Document doc) {
         def source = doc.data
-        def meta = doc.manifest?.extraData
-        def result = runConvert(source, doc.identifier, meta)
+        def extraData = doc.manifest?.extraData
+        def result = runConvert(source, doc.identifier, extraData)
         log.trace("Created frame: $result")
 
         return new Document(result, doc.manifest).withIdentifier(((String)doc.identifier)).withContentType(getResultContentType())
@@ -246,6 +246,8 @@ class MarcConversion {
 
         marcRuleSet.convert(marcSource, state)
 
+        marcRuleSet.processExtraData(state.entityMap, extraData)
+
         def record = state.entityMap['?record']
         def thing = state.entityMap['?thing']
 
@@ -265,23 +267,6 @@ class MarcConversion {
             }
             marcRuleSet.postProcSteps.each {
                 it.modify(record, thing)
-            }
-        }
-
-        // TODO: move this to an "extra data" section in marcframe.json?
-        extraData?.get("oaipmhSetSpecs")?.each {
-            if (marcCat == "hold") {
-                def prefix = "bibid:"
-                if (it.startsWith(prefix) && !thing.holdingFor) {
-                    thing.holdingFor = ["@type": "Record",
-                                        controlNumber: it.substring(prefix.size())]
-                }
-                prefix = "location:"
-                if (it.startsWith(prefix) && !thing.heldBy) {
-                    // TODO: newEntity(state, "Organization")
-                    thing.heldBy = ["@type": "Organization",
-                                    notation: it.substring(prefix.size())]
-                }
             }
         }
 
@@ -439,6 +424,8 @@ class MarcRuleSet {
 
     Map topPendingResources = [:]
 
+    Map oaipmhSetSpecPrefixMap = [:]
+
     MarcRuleSet(conversion, name) {
         this.conversion = conversion
         this.name = name
@@ -463,8 +450,8 @@ class MarcRuleSet {
             } else if (tag == 'pendingResources') {
                 topPendingResources.putAll(dfn)
                 return
-            } else if (tag == 'oaipmhSetPrefixMap') {
-                // TODO: see oaipmhSetSpecs above
+            } else if (tag == 'oaipmhSetSpecPrefixMap') {
+                oaipmhSetSpecPrefixMap = dfn
                 return
             }
 
@@ -616,6 +603,37 @@ class MarcRuleSet {
         }
     }
 
+    void processExtraData(Map entityMap, Map extraData) {
+        extraData?.get("oaipmhSetSpecs")?.each {
+            def cIdx = it.indexOf(':')
+            if (cIdx == -1)
+                return
+            def prefix = it.substring(0, cIdx)
+            def value = it.substring(cIdx + 1)
+
+            def dfn = oaipmhSetSpecPrefixMap[prefix]
+            if (!dfn)
+                return
+
+            def about = entityMap[dfn.about]
+            if (about.containsKey(dfn.link))
+                return
+
+            def target = [:]
+            about[dfn.link] = target
+            if (dfn.resourceType)
+                target["@type"] = dfn.resourceType
+            if (dfn.property) {
+                target[dfn.property] = value
+            }
+            if (dfn.uriTemplate) {
+                def uri = conversion.resolve(fromTemplate(
+                    dfn.uriTemplate).set('_', value).set(target).expand())
+                target["@id"] = uri
+            }
+        }
+    }
+
     void completeEntities(Map entityMap) {
         def recordUriTemplate = topPendingResources['?record'].uriTemplate
 
@@ -660,7 +678,6 @@ class MarcRuleSet {
                 }
             }
         }
-
     }
 
 }

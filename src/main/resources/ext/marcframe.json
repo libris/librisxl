@@ -4348,6 +4348,22 @@
 
   "hold": {
 
+    "oaipmhSetSpecPrefixMap": {
+      "bibid": {
+        "about": "?thing",
+        "link": "holdingFor",
+        "uriTemplate": "http://libris.kb.se/resource/bib/{_}"
+      },
+      "location": {
+        "TODO:apply": "852-$b",
+        "about": "?thing",
+        "link": "heldBy",
+        "uriTemplate": "http://libris.kb.se/library/{notation}",
+        "resourceType": "Organization",
+        "property": "notation"
+      }
+    },
+
     "postProcessing": [
       {
         "type": "MappedProperty",

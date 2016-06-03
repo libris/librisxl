@@ -242,6 +242,19 @@ class MarcFrameConverterSpec extends Specification {
         item << postProcStepSpecs
     }
 
+    def "should process extra data"() {
+        given:
+        def conv = converter.conversion
+        def thing = [:]
+        def entityMap = ['?thing': thing]
+        def extraData = ['oaipmhSetSpecs': ['bibid:123', 'location:S']]
+        when:
+        conv.marcRuleSets['hold'].processExtraData(entityMap, extraData)
+        then:
+        thing['heldBy']['@id'] == 'http://libris.kb.se/library/S'
+        thing['holdingFor']['@id'] == 'http://libris.kb.se/resource/bib/123'
+    }
+
     def completeEntities = converter.conversion.marcRuleSets['auth'].&completeEntities
     String r(path) { new URI("http://libris.kb.se/").resolve(path) }
     def link(v) { ['@id': r(v)] }
