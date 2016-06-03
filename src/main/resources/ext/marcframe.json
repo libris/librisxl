@@ -9,12 +9,6 @@
     "z": "auth"
   },
 
-  "baseUri": "https://libris.kb.se/",
-  "uriTemplates": {
-    "record": "http://libris.kb.se/{marcType}/{controlNumber}",
-    "thing": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
-  },
-
   "tokenMaps": [
 
     "marcenums.json",
@@ -255,9 +249,36 @@
 
   },
 
+  "NOTE:baseUri:fromSystem": "https://libris.kb.se/",
+
+  "someUriTemplate": "/some{?data*}",
+
+  "pendingResources": {
+    "?record": {
+      "about": "?thing",
+      "TODO:link": "meta",
+      "resourceType": "Record",
+      "uriTemplate": "http://libris.kb.se/{marcType}/{controlNumber}"
+    },
+    "?thing": {
+      "about": "?record",
+      "link": "mainEntity",
+      "resourceType": "Instance",
+      "fragmentId": "it",
+      "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
+    }
+  },
+
   "bib": {
 
-    "thingLink": "mainEntity",
+    "pendingResources": {
+      "?work": {
+        "about": "?thing",
+        "link": "instanceOf",
+        "resourceType": "Work",
+        "fragmentId": "work"
+      }
+    },
 
     "postProcessing": [
       {
@@ -374,7 +395,7 @@
         "tokenMap": "StatusType"
       },
       "[6:7]": {
-        "aboutEntity": "?thing",
+        "NOTE:candidate:aboutEntity": "?work",
         "tokenMap": "TypeOfRecordType",
         "property": "@type"
       },
@@ -470,6 +491,7 @@
     "006": {
       "TODO:tokenSyncedWith": "typeOfRecord",
       "TODO:repeats": "008",
+      "NOTE:candidate:aboutEntity": "?work",
       "addLink": "hasPart",
       "[0:1]": {
         "tokenMap": {
@@ -877,9 +899,13 @@
 
     "007": {
       "TODO:match-repetition": {
-        "addLink": "hasInstance"
+        "NOTE:candidate:aboutEntity": "?work",
+        "TODO": "local pendingResources for ?work (i.e. one work per instance)",
+        "addLink": "hasPart"
       },
+      "NOTE:candidate:aboutEntity": "?work",
       "addLink": "hasInstance",
+      "embedded": true,
       "[0:1]": {
         "addProperty": "@type",
         "tokenMap": {
@@ -2954,7 +2980,6 @@
     "411": {},
 
     "440": {
-      "NOTE:candidate:aboutEntity": "?work",
       "TODO:ignoreOnRevertInFavourOf": "490 or 773? See also mapping for 240",
       "addLink": "hasSeries",
       "embedded": true,
@@ -3664,7 +3689,20 @@
 
   "auth": {
 
-    "thingLink": "focus",
+    "pendingResources": {
+      "?record": {
+        "resourceType": "Concept",
+        "uriTemplate": "http://libris.kb.se/auth/{controlNumber}"
+      },
+      "?thing": {
+        "about": "?record",
+        "link": "focus",
+        "resourceType": "Thing",
+        "fragmentId": "it",
+        "uriTemplate": "http://libris.kb.se/resource/auth/{controlNumber}",
+        "addEmpty": true
+      }
+    },
 
     "000": {
       "inherit": "bib",
@@ -3692,6 +3730,7 @@
             "marc:encLevel": {"@id": "marc:CompleteAuthorityRecord"},
             "marc:status": {"@id": "marc:CorrectedOrRevised"},
             "focus": {
+              "@type": "Thing",
               "@id": "http://libris.kb.se/resource/auth/140482"
             }
           }
@@ -4308,8 +4347,6 @@
   },
 
   "hold": {
-
-    "thingLink": "mainEntity",
 
     "postProcessing": [
       {

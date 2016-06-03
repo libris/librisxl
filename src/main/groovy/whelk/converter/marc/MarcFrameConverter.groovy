@@ -153,16 +153,16 @@ class MarcConversion {
     Map tokenMaps
 
     URI baseUri = Document.BASE_URI
-    String recordUriTemplate
-    String thingUriTemplate
+    String someUriTemplate
+    Set someUriVars
 
     MarcConversion(Map config, Map tokenMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.tokenMaps = tokenMaps
         //this.baseUri = new URI(config.baseUri ?: '/')
-        if (config.uriTemplates) {
-            recordUriTemplate = config.uriTemplates.record
-            thingUriTemplate = config.uriTemplates.thing
+        if (config.someUriTemplate) {
+            someUriTemplate = config.someUriTemplate
+            someUriVars = fromTemplate(someUriTemplate).getVariables() as Set
         }
 
         this.sharedPostProcSteps = config.postProcessing.collect {
@@ -234,20 +234,20 @@ class MarcConversion {
         def marcCat = getMarcCategory(leader)
         def marcRuleSet = marcRuleSets[marcCat]
 
-        def record = ["@id": resolve(recordId)]
-        def thing = [:]
-
         def marcRemains = [failedFixedFields: [:], uncompleted: [], broken: []]
 
         def state = [
             sourceMap: [leader: leader],
             bnodeCounter: 0,
-            entityMap: ['?record': record, '?thing': thing],
+            entityMap: [:],
             quotedEntities: [],
             marcRemains: marcRemains
         ]
 
         marcRuleSet.convert(marcSource, state)
+
+        def record = state.entityMap['?record']
+        def thing = state.entityMap['?thing']
 
         if (marcRemains.uncompleted.size() > 0) {
             record._marcUncompleted = marcRemains.uncompleted
@@ -268,8 +268,6 @@ class MarcConversion {
             }
         }
 
-        manageIds(marcCat, record, thing)
-
         // TODO: move this to an "extra data" section in marcframe.json?
         extraData?.get("oaipmhSetSpecs")?.each {
             if (marcCat == "hold") {
@@ -286,6 +284,10 @@ class MarcConversion {
                 }
             }
         }
+
+        record["@id"] = resolve(recordId)
+
+        marcRuleSet.completeEntities(state.entityMap)
 
         def linkedThing = record[marcRuleSet.thingLink]
         if (linkedThing) {
@@ -309,34 +311,6 @@ class MarcConversion {
         } else {
             return record
         }
-    }
-
-    void manageIds(String marcCat, Map record, Map thing) {
-        def givenRecId = record['@id']
-        def builtRecId = resolve(fromTemplate(
-                recordUriTemplate).set('marcType', marcCat).set(record).expand())
-
-        if (givenRecId == null) {
-            record['@id'] = builtRecId
-        } else {
-            record.get('sameAs', []) << ['@id': builtRecId]
-        }
-
-        def givenThingId = thing['@id']
-        def builtThingId = resolve(fromTemplate(
-                thingUriTemplate).set('marcType', marcCat).set(record).expand())
-
-        if (givenThingId == null) {
-            if (givenRecId) {
-                thing['@id'] = givenRecId + '#it'
-                thing.get('sameAs', []) << ['@id': builtThingId]
-            } else {
-                thing['@id'] = builtThingId
-            }
-        } else {
-            thing.get('sameAs', []) << ['@id': builtThingId]
-        }
-
     }
 
     def toFlatQuotedForm(state, thingLink) {
@@ -366,17 +340,15 @@ class MarcConversion {
             }
         }
 
+        def entities = state.entityMap.values()
         return [
             //'descriptions': [entry: record, items: [thing], quoted: quotedEntities]
-            '@graph': [record, thing] + quotedEntities
+            '@graph': entities + quotedEntities
         ]
     }
 
-    // TODO: define uriTemplate in marcframe or entityshapes...
-    String someUriTemplate = '/some{?data*}' // {?type,q}
     String someUriValuesVar = 'q'
     String someUriDataVar = 'data'
-    Set someUriVars = fromTemplate(someUriTemplate).getVariables() as Set
 
     String makeSomeId(Map ent) {
         def data = [:]
@@ -389,7 +361,7 @@ class MarcConversion {
         if (someUriDataVar in someUriVars) {
             data[someUriDataVar] = data.clone()
         }
-        return fromTemplate(someUriTemplate).expand(data)
+        return resolve(fromTemplate(someUriTemplate).expand(data))
     }
 
     void collectUriData(Map obj, Map acc, String path='') {
@@ -465,6 +437,8 @@ class MarcRuleSet {
     Set primaryTags = new HashSet()
     Map<String, Set<String>> aboutTypeMap = new HashMap<String, Set<String>>()
 
+    Map topPendingResources = [:]
+
     MarcRuleSet(conversion, name) {
         this.conversion = conversion
         this.name = name
@@ -475,17 +449,26 @@ class MarcRuleSet {
     void buildHandlers(Map config) {
         def subConf = config[name]
 
+        if (config.pendingResources) {
+            topPendingResources.putAll(config.pendingResources)
+        }
+
         subConf.each { tag, dfn ->
 
-            if (tag == 'thingLink') {
-                thingLink = dfn
-                return
-            } else if (tag == 'postProcessing') {
+            if (tag == 'postProcessing') {
                 postProcSteps = dfn.collect {
                     conversion.parsePostProcStep(it)
                 }.findAll()
                 return
+            } else if (tag == 'pendingResources') {
+                topPendingResources.putAll(dfn)
+                return
+            } else if (tag == 'oaipmhSetPrefixMap') {
+                // TODO: see oaipmhSetSpecs above
+                return
             }
+
+            thingLink = topPendingResources['?thing'].link
 
             dfn = processInherit(config, subConf, tag, dfn)
 
@@ -582,6 +565,10 @@ class MarcRuleSet {
         def primaryFields = []
         def otherFields = []
 
+        topPendingResources.each { key, dfn ->
+            state.entityMap[key] = [:]
+        }
+
         marcSource.fields.each { field ->
             field.each { tag, value ->
                 def fieldsByTag = state.sourceMap[tag]
@@ -627,6 +614,53 @@ class MarcRuleSet {
                 state.marcRemains.broken << field
             }
         }
+    }
+
+    void completeEntities(Map entityMap) {
+        def recordUriTemplate = topPendingResources['?record'].uriTemplate
+
+        def record = entityMap['?record']
+        def givenRecId = record['@id']
+
+        topPendingResources.each { key, dfn ->
+            def thing = entityMap[key]
+            if (!thing && !dfn.addEmpty)
+                return
+
+            if (!thing['@type']) {
+                thing['@type'] = dfn.resourceType
+            }
+
+            def thingId = thing['@id']
+            def builtThingId = dfn.uriTemplate? conversion.resolve(fromTemplate(
+                    dfn.uriTemplate).set('marcType', name).set(record).expand()) : null
+
+            if (!thingId && givenRecId && dfn.fragmentId) {
+                thingId = thing['@id'] = givenRecId +'#'+ dfn.fragmentId
+            }
+            if (builtThingId) {
+                if (!thingId) {
+                    thing['@id'] = builtThingId
+                } else {
+                    thing.get('sameAs', []) << ['@id': builtThingId]
+                }
+            }
+
+            if (dfn.about && dfn.link) {
+                def about = entityMap[dfn.about]
+                def existing = about[dfn.link]
+                if (existing) {
+                    thing.each { k, v ->
+                        if (!existing.containsKey(k)) {
+                            existing[k] = v
+                        }
+                    }
+                } else {
+                    about[dfn.link] = thing
+                }
+            }
+        }
+
     }
 
 }
@@ -994,7 +1028,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         }
         def entityMap = state.entityMap
         if (addLink) {
-            def ent = entityMap['?thing']
+            def ent = entityMap[aboutEntityName]
             def newEnt = newEntity(state, null)
             addValue(ent, addLink, newEnt, true)
             state = state.clone()
@@ -2052,7 +2086,7 @@ class DomainMatchRule extends MatchRule {
     }
     List<String> getKeys(entity, value) {
         def types = entity['@type']
-        return types instanceof String? [types] : types
+        return types instanceof String? [types] : types ?: []
     }
     String getSingleKey(entity, value) {
         throw new UnsupportedOperationException()

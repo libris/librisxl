@@ -14,6 +14,7 @@ class MarcFrameConverterSpec extends Specification {
             this.config = config
             super.conversion.doPostProcessing = false
             super.conversion.flatQuotedForm = false
+            super.conversion.baseUri = new URI("/")
         }
     }
 
@@ -241,7 +242,7 @@ class MarcFrameConverterSpec extends Specification {
         item << postProcStepSpecs
     }
 
-    def manageIds = converter.conversion.&manageIds
+    def completeEntities = converter.conversion.marcRuleSets['auth'].&completeEntities
     String r(path) { new URI("http://libris.kb.se/").resolve(path) }
     def link(v) { ['@id': r(v)] }
 
@@ -250,10 +251,10 @@ class MarcFrameConverterSpec extends Specification {
         def record = ['@id': null, controlNumber: "123"]
         def thing = ['@id': null]
         when:
-        manageIds('auth', record, thing)
+        completeEntities(['?record': record, '?thing': thing])
         then:
-        record == ['@id': r('auth/123'), controlNumber: "123"]
-        thing == ['@id': r('resource/auth/123')]
+        record['@id'] == r('auth/123')
+        thing['@id'] == r('resource/auth/123')
     }
 
     def "should use record id"() {
@@ -261,10 +262,12 @@ class MarcFrameConverterSpec extends Specification {
         def record = ['@id': '/fnrblgr', controlNumber: "123"]
         def thing = ['@id': null]
         when:
-        manageIds('auth', record, thing)
+        completeEntities(['?record': record, '?thing': thing])
         then:
-        record == ['@id': '/fnrblgr', 'sameAs': [link('auth/123')], controlNumber: "123"]
-        thing == ['@id': '/fnrblgr#it', 'sameAs': [link('resource/auth/123')]]
+        record['@id'] == '/fnrblgr'
+        record['sameAs'] == [link('auth/123')]
+        thing['@id'] == '/fnrblgr#it'
+        thing['sameAs'] == [link('resource/auth/123')]
     }
 
     def "should use thing id"() {
@@ -272,10 +275,11 @@ class MarcFrameConverterSpec extends Specification {
         def record = ['@id': null, controlNumber: "123"]
         def thing = ['@id': '/thing']
         when:
-        manageIds('auth', record, thing)
+        completeEntities(['?record': record, '?thing': thing])
         then:
-        record == ['@id': r('auth/123'), controlNumber: "123"]
-        thing == ['@id': '/thing', 'sameAs': [link('resource/auth/123')]]
+        record['@id'] == r('auth/123')
+        thing['@id'] == '/thing'
+        thing['sameAs'] == [link('resource/auth/123')]
     }
 
     def "should use record and thing id"() {
@@ -283,10 +287,12 @@ class MarcFrameConverterSpec extends Specification {
         def record = ['@id': '/fnrblgr', controlNumber: "123"]
         def thing = ['@id': '/thing']
         when:
-        manageIds('auth', record, thing)
+        completeEntities(['?record': record, '?thing': thing])
         then:
-        record == ['@id': '/fnrblgr', 'sameAs': [link('auth/123')], controlNumber: "123"]
-        thing == ['@id': '/thing', 'sameAs': [link('resource/auth/123')]]
+        record['@id'] == '/fnrblgr'
+        record['sameAs'] == [link('auth/123')]
+        thing['@id'] == '/thing'
+        thing['sameAs'] == [link('resource/auth/123')]
     }
 
     def "should make some id"() {
