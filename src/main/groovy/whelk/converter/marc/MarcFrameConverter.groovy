@@ -292,18 +292,22 @@ class MarcConversion {
         }
 
         if (flatQuotedForm) {
-            return toFlatQuotedForm(state, marcRuleSet.thingLink)
+            return toFlatQuotedForm(state, marcRuleSet)
         } else {
             return record
         }
     }
 
-    def toFlatQuotedForm(state, thingLink) {
-        def record = state.entityMap['?record']
-        def thing = record[thingLink]
-        def thingId = thing['@id']
-        if (thingId) {
-            record[thingLink] = ['@id': thingId]
+    def toFlatQuotedForm(state, marcRuleSet) {
+        marcRuleSet.topPendingResources.each { key, dfn ->
+            if (dfn.about && dfn.link) {
+                def ent = state.entityMap[dfn.about]
+                def linked = ent[dfn.link]
+                def linkedId = linked['@id']
+                if (linkedId) {
+                    ent[dfn.link] = ['@id': linkedId]
+                }
+            }
         }
 
         def quotedEntities = []
@@ -327,7 +331,6 @@ class MarcConversion {
 
         def entities = state.entityMap.values()
         return [
-            //'descriptions': [entry: record, items: [thing], quoted: quotedEntities]
             '@graph': entities + quotedEntities
         ]
     }
