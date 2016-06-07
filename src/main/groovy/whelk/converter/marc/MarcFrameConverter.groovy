@@ -970,15 +970,14 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
     MarcFixedFieldHandler baseConverter
     Map<String, MarcFixedFieldHandler> handlerMap = [:]
     boolean useRecTypeBibLevel = false
-    String repeatedAddLink = null
+    Map matchRepeated = null
     Map tokenNames = [:]
 
     TokenSwitchFieldHandler(ruleSet, tag, Map fieldDfn, tokenMapKey='tokenTypeMap') {
         super(ruleSet, tag, fieldDfn)
         assert !link || repeatable // this kind should always be repeatable if linked
         if (fieldDfn['match-repeated']) {
-            // TODO: and .resourceType
-            repeatedAddLink = fieldDfn['match-repeated'].addLink
+            matchRepeated = fieldDfn['match-repeated']
         }
         this.baseConverter = new MarcFixedFieldHandler(ruleSet, tag, fieldDfn)
         def tokenMap = fieldDfn[tokenMapKey]
@@ -1045,15 +1044,24 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         if (converter == null)
             return FAIL
 
-        def addLink = this.link
-        if (state.sourceMap[tag].size() > 1 && repeatedAddLink) {
-            addLink = repeatedAddLink
+        // TODO: generalize matchRepeated to use in at least MarcFieldHandler as well
+        // .. Also, make it work with revert
+        def use = [
+            addLink: this.link,
+            resourceType: this.resourceType,
+            embedded: this.embedded
+        ]
+        if (matchRepeated) {
+            def tagValues = state.sourceMap[tag]
+            if (tagValues.size() > 1 && !value.is(tagValues[0][tag])) {
+                use = matchRepeated
+            }
         }
         def entityMap = state.entityMap
-        if (addLink) {
+        if (use.addLink) {
             def ent = entityMap[aboutEntityName]
-            def newEnt = newEntity(state, null)
-            addValue(ent, addLink, newEnt, true)
+            def newEnt = newEntity(state, use.resourceType, null, use.embedded)
+            addValue(ent, use.addLink, newEnt, true)
             state = state.clone()
             state.entityMap = entityMap.clone()
             state.entityMap['?thing'] = newEnt
