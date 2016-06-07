@@ -303,9 +303,11 @@ class MarcConversion {
             if (dfn.about && dfn.link) {
                 def ent = state.entityMap[dfn.about]
                 def linked = ent[dfn.link]
-                def linkedId = linked['@id']
-                if (linkedId) {
-                    ent[dfn.link] = ['@id': linkedId]
+                if (linked) {
+                    def linkedId = linked['@id']
+                    if (linkedId) {
+                        ent[dfn.link] = ['@id': linkedId]
+                    }
                 }
             }
         }
@@ -418,7 +420,7 @@ class MarcRuleSet {
     MarcConversion conversion
     String name
 
-    String thingLink
+    String thingLink // TODO: remove when revert code is adapted to topPendingResources
     def fieldHandlers = [:]
     List<MarcFramePostProcStep> postProcSteps
 
@@ -710,6 +712,7 @@ class ConversionPart {
     }
 
     Map getEntity(Map data) {
+        // FIXME: adapt to topPendingResources
         if (aboutEntityName == '?record') {
             return data
         }
