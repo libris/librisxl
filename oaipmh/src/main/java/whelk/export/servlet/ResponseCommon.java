@@ -229,8 +229,8 @@ public class ResponseCommon
                 writer.writeStartElement("holding");
 
                 String sigel = LegacyIntegrationTools.uriToLegacySigel(resultSet.getString("sigel").replace("\"", ""));
-
-                writer.writeAttribute("sigel", sigel);
+                if (sigel != null)
+                    writer.writeAttribute("sigel", sigel);
                 writer.writeAttribute("id", resultSet.getString("id"));
                 writer.writeEndElement(); // holding
             }
