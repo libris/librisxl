@@ -64,14 +64,12 @@ public class Helpers
                 " data#>>'{@graph,1,offers,0,heldBy,0,@id}' AS sigel FROM " +
                 tableName + " WHERE manifest->>'collection' <> 'definitions' ";
         if (fromDateTime != null)
-            selectSQL += " AND modified > ? ";
+            selectSQL += " AND modified >= ? ";
         if (untilDateTime != null)
-            selectSQL += " AND modified < ? ";
+            selectSQL += " AND modified <= ? ";
         if (setSpec.getRootSet() != null)
             selectSQL += " AND manifest->>'collection' = ? ";
 
-        // Obviously query concatenation is dangerous business and should never be done, unfortunately JSONB fields
-        // much like table names cannot be parameterized, and so there is little choice.
         if (setSpec.getSubset() != null)
             selectSQL += " AND data @> ?";
 
