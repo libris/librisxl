@@ -275,6 +275,29 @@ class Document {
         return ret
     }
 
+    /**
+     * Add an identifier to the thing described by this document.
+     */
+    @JsonIgnore
+    void addItIdentifier(String identifier) {
+        List graph = data.get(GRAPH_KEY)
+        if (graph == null)
+            data.put(GRAPH_KEY, [])
+
+        Map second
+        while ( (second = data[GRAPH_KEY][1]) == null)
+            ((List)(data[GRAPH_KEY])).add([:])
+
+        List altIds
+        while ( (altIds = second[JSONLD_ALT_ID_KEY]) == null)
+            second.put(JSONLD_ALT_ID_KEY, [])
+
+        def object = [:]
+        object.put("@id", identifier)
+        if (! altIds.contains(object) )
+            altIds.add(object)
+    }
+
     @JsonIgnore
     String getEncodingLevel() {
         return data[GRAPH_KEY][0][ENCODING_LEVEL_KEY]["@id"];
