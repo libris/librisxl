@@ -21,10 +21,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * A thing to wary about is the situation where a record is saved to APIX (and thus Voyager),
- * but is deleted from Voyager before it can be synced to VCOPY. That will lead to a "dead" record in XL.
- */
 public class ExporterThread extends Thread
 {
     // This atomic boolean may be toggled from outside, causing the thread to stop exporting and return
@@ -234,7 +230,7 @@ public class ExporterThread extends Thread
             case BATCH_NEXT_TIMESTAMP:
             {
                 // Select the 'next' timestamp after m_exportNewerThan, and then select all documents with that timestamp (as 'modified'),
-                // exlude everything in manifest->>'collection' = 'definitions' and manifest->'changedIn' = 'vcopy'.
+                // exclude everything in manifest->>'collection' = 'definitions' and manifest->'changedIn' = 'vcopy'.
                 String sql = "SELECT id, manifest, data, modified, deleted FROM " + m_properties.getProperty("sqlMaintable") +
                         " WHERE manifest->>'collection' <> 'definitions' AND (manifest->>'changedIn' <> 'vcopy' or (manifest->>'changedIn')::text is null) AND modified = " +
                         "(SELECT MIN(modified) FROM " + m_properties.getProperty("sqlMaintable") + " WHERE modified > ? AND manifest->>'collection' <> 'definitions'" +
@@ -242,7 +238,7 @@ public class ExporterThread extends Thread
 
                 PreparedStatement statement = connection.prepareStatement(sql);
 
-                // Postgres uses microsecond precision, we need match or exceed this to not risk SQL timetamps slipping between
+                // Postgres uses microsecond precision, we need match or exceed this to not risk SQL timestamps slipping between
                 // truncated java timestamps
                 Timestamp timestamp = new Timestamp(m_exportNewerThan.toInstant().toEpochMilli());
                 timestamp.setNanos(m_exportNewerThan.toInstant().getNano());
