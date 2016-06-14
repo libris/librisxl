@@ -356,7 +356,9 @@ public class ExporterThread extends Thread
                 {
                     if (newVoyagerId != null)
                     {
-                        doc.addIdentifier("http://libris.kb.se/" + doc.getCollection() + "/" + newVoyagerId);
+                        String collection = doc.getCollection();
+                        doc.addIdentifier("http://libris.kb.se/" + collection + "/" + newVoyagerId);
+                        doc.addItIdentifier("http://libris.kb.se/resource/" + collection + "/" + newVoyagerId);
                         doc.setControlNumber(newVoyagerId);
                     }
                     doc.setFailedApixExport(failedExport);

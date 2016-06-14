@@ -27,7 +27,8 @@ class ConverterAPI extends HttpServlet {
         log.info("Started ...")
     }
 
-    public void doPost(HttpServletRequest request, HttpServletResponse response) {
+    @Override
+    void doPost(HttpServletRequest request, HttpServletResponse response) {
         String requestedContentType = request.getParameter("to")
         if (request.getContentLength() == 0) {
             log.warn("[${this.id}] Received no content to reformat.")
@@ -47,7 +48,8 @@ class ConverterAPI extends HttpServlet {
         }
     }
 
-    public void doGet(HttpServletRequest request, HttpServletResponse response) {
+    @Override
+    void doGet(HttpServletRequest request, HttpServletResponse response) {
         response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED)
     }
 }
