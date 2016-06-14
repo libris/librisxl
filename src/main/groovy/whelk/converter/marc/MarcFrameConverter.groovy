@@ -646,26 +646,26 @@ class MarcRuleSet {
         def givenRecId = record['@id']
 
         topPendingResources.each { key, dfn ->
-            def thing = entityMap[key]
-            if (!thing && !dfn.addEmpty)
+            def entity = entityMap[key]
+            if (!entity && !dfn.addEmpty)
                 return
 
-            if (!thing['@type']) {
-                thing['@type'] = dfn.resourceType
+            if (!entity['@type']) {
+                entity['@type'] = dfn.resourceType
             }
 
-            def thingId = thing['@id']
-            def builtThingId = dfn.uriTemplate? conversion.resolve(fromTemplate(
+            def entityId = entity['@id']
+            def builtEntityId = dfn.uriTemplate? conversion.resolve(fromTemplate(
                     dfn.uriTemplate).set('marcType', name).set(record).expand()) : null
 
-            if (!thingId && givenRecId && dfn.fragmentId) {
-                thingId = thing['@id'] = givenRecId +'#'+ dfn.fragmentId
+            if (!entityId && givenRecId && dfn.fragmentId) {
+                entityId = entity['@id'] = givenRecId +'#'+ dfn.fragmentId
             }
-            if (builtThingId) {
-                if (!thingId) {
-                    thing['@id'] = builtThingId
+            if (builtEntityId) {
+                if (!entityId) {
+                    entity['@id'] = builtEntityId
                 } else {
-                    thing.get('sameAs', []) << ['@id': builtThingId]
+                    entity.get('sameAs', []) << ['@id': builtEntityId]
                 }
             }
 
@@ -673,13 +673,13 @@ class MarcRuleSet {
                 def about = entityMap[dfn.about]
                 def existing = about[dfn.link]
                 if (existing) {
-                    thing.each { k, v ->
+                    entity.each { k, v ->
                         if (!existing.containsKey(k)) {
                             existing[k] = v
                         }
                     }
                 } else {
-                    about[dfn.link] = thing
+                    about[dfn.link] = entity
                 }
             }
         }
