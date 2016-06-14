@@ -65,7 +65,8 @@ class PostgreSQLComponentSpec extends Specification {
 
     def "should load document from database"() {
         given:
-        result.next() >> { true }
+        2 * result.next() >> { true }
+        1 * result.next() >> { false }
         result.getString(_) >> {
             if (it.first() == "id") {
                 return "testid"
