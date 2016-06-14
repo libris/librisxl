@@ -8,7 +8,6 @@ import spock.lang.Specification
 import groovy.util.logging.Slf4j as Log
 import whelk.component.PostgreSQLComponent
 import whelk.component.Storage
-import whelk.component.StorageType
 import whelk.converter.marc.MarcFrameConverter
 
 @Log
