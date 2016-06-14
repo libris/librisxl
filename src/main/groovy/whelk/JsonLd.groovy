@@ -79,6 +79,10 @@ public class JsonLd {
 
 
     public static Map frame(String mainId, Map flatJsonLd) {
+        return frame(mainId, THING_KEY, flatJsonLd)
+    }
+
+    public static Map frame(String mainId, String thingLink, Map flatJsonLd) {
         if (isFramed(flatJsonLd)) {
             return flatJsonLd
         }
@@ -90,14 +94,16 @@ public class JsonLd {
 
         def mainItem = idMap[mainId]
         if (mainItem) {
-            def thingRef = mainItem[THING_KEY]
-            if (thingRef) {
-                def thingId = thingRef[ID_KEY]
-                def thing = idMap[thingId]
-                thing[RECORD_KEY] = [(ID_KEY): mainId]
-                mainId = thingId
-                idMap[mainId] = thingRef
-                mainItem = thing
+            if (thingLink) {
+                def thingRef = mainItem[thingLink]
+                if (thingRef) {
+                    def thingId = thingRef[ID_KEY]
+                    def thing = idMap[thingId]
+                    thing[RECORD_KEY] = [(ID_KEY): mainId]
+                    mainId = thingId
+                    idMap[mainId] = thingRef
+                    mainItem = thing
+                }
             }
         } else {
             log.debug("No main item map found for $mainId, trying to find an identifier")
