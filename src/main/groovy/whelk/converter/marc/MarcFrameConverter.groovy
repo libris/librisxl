@@ -126,7 +126,7 @@ class MarcFrameConverter implements FormatConverter {
             if (cmd == "revert") {
                 if (source['@graph']) {
                     def entryId = source['@graph'][0]['@id']
-                    source = JsonLd.frame(entryId, source)
+                    source = JsonLd.frame(entryId, null, source)
                 }
                 result = converter.runRevert(source)
             } else {
@@ -420,7 +420,10 @@ class MarcRuleSet {
     MarcConversion conversion
     String name
 
-    String thingLink // TODO: remove when revert code is adapted to topPendingResources
+    // TODO: too rigid, change to topPendingResourcesChain computed from topPendingResources
+    String thingLink
+    String definingTrait
+
     def fieldHandlers = [:]
     List<MarcFramePostProcStep> postProcSteps
 
@@ -461,6 +464,7 @@ class MarcRuleSet {
             }
 
             thingLink = topPendingResources['?thing'].link
+            definingTrait = topPendingResources['?work']?.link
 
             dfn = processInherit(config, subConf, tag, dfn)
 
@@ -537,6 +541,12 @@ class MarcRuleSet {
     }
 
     boolean matchesData(Map data) {
+        // TODO:
+        // - Should be one of instanceOf, itemOf, focus? Must not collide.
+        // - Remove type-matching altogether?
+        if (definingTrait && data[thingLink] && data[thingLink][definingTrait])
+            return true
+
         if (hasIntersection(Util.asList(data['@type']), aboutTypeMap['?record']))
             return true
         def thing = data[thingLink]
@@ -712,12 +722,25 @@ class ConversionPart {
     }
 
     Map getEntity(Map data) {
-        // FIXME: adapt to topPendingResources
+        /* TODO: build topPendingResources once then revert all fields
+        for (linkStep in topPendingResourcesChain[aboutEntityName]) {
+            def child = data[linkStep]
+            if (child) {
+                data = child
+            } else {
+                return null
+            }
+        }
+        return data
+        */
         if (aboutEntityName == '?record') {
             return data
         }
         if (ruleSet.thingLink in data) {
-            return (Map) data[ruleSet.thingLink]
+            data = (Map) data[ruleSet.thingLink]
+            if (aboutEntityName != '?thing' && ruleSet.definingTrait in data) {
+                data = (Map) data[ruleSet.definingTrait]
+            }
         }
         return data
     }
