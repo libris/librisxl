@@ -132,10 +132,8 @@ class PostgreSQLComponentSpec extends Specification {
         String cs2 = storage.calculateChecksum(new Document("testid", ["@id": "testid", "key":"some data"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 1298461982639, "checksum": "qwudhqiuwhdiu1287ssss2"]))
         String cs3 = storage.calculateChecksum(new Document("testid", ["@id": "testid", "key":"some new data"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 1298461982639, "checksum": "qwudhqiuwhdiu1287ssss2"]))
         then:
-        cs1 == "16e8221f8f252482e4c12fd3fcc5703c"
-        cs2 == "16e8221f8f252482e4c12fd3fcc5703c"
-        cs3 == "eb5a60fe9ba7a02f1b2e58a30328762a"
-
+        cs1 == cs2
+        cs2 != cs3
     }
 
 
