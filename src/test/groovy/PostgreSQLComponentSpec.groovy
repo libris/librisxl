@@ -41,6 +41,7 @@ class PostgreSQLComponentSpec extends Specification {
         result.getTimestamp(_) >> {
             return new Timestamp(new Date().getTime())
         }
+        result.getString("id") >> { return "hej" }
         stmt.executeUpdate() >> { 1 }
 
         Document doc = null

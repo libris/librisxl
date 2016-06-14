@@ -67,8 +67,8 @@ class Document {
     Document() {}
 
     Document(String id, Map data) {
-        setData(data)
         setId(id)
+        setData(data)
     }
 
     Document(Map data, Map manifest) {
@@ -77,9 +77,9 @@ class Document {
     }
 
     Document(String id, Map data, Map manifest) {
+        setId(id)
         withManifest(manifest)
         setData(data)
-        setId(id)
     }
 
     void setId(id) {

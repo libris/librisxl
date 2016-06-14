@@ -34,12 +34,12 @@ class LinkFinderSpec extends Specification {
     def DOCUMENT_DATA1 = [
         "@graph": [
             [
-                "@id":"/foobar",
+                "@id": Document.BASE_URI.resolve("/foobar").toString(),
                 "createdBy": ["@id":"/some?type=Something"],
                 "name":"Not important"
             ],
             [
-                "@id":"/foobar#it",
+                "@id": Document.BASE_URI.resolve("/foobar").toString() + "#it",
                 "attributedTo":["@id":"/some?type=Person"]
             ],
             [
@@ -57,12 +57,12 @@ class LinkFinderSpec extends Specification {
     def DOCUMENT_DATA2 = [
             "@graph": [
                     [
-                            "@id":"/foobar",
+                            "@id": Document.BASE_URI.resolve("/foobar").toString(),
                             "createdBy": ["@id":"/barfoo"],
                             "name":"Not important"
                     ],
                     [
-                            "@id":"/foobar#it",
+                            "@id": Document.BASE_URI.resolve("/foobar").toString() + "#it",
                             "attributedTo":["@id":"/barfoo2"]
                     ],
                     [
@@ -80,7 +80,7 @@ class LinkFinderSpec extends Specification {
 
     def "should replace all /some?-identifiers"() {
         given:
-        Document unfilteredDocument = new Document("foobar", DOCUMENT_DATA1).withContentType("application/ld+json")
+        Document unfilteredDocument = new Document( Document.BASE_URI.resolve("/foobar").toString(), DOCUMENT_DATA1).withContentType("application/ld+json")
         Document filteredDocument = linkFinder.findLinks(unfilteredDocument)
         expect:
         filteredDocument != null
