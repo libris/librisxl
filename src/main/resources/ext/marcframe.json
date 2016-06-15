@@ -3649,7 +3649,7 @@
     },
     "787": {
       "inherit": "772",
-      "addLink": "relation"
+      "addLink": "relatedTo"
     },
 
     "800": {},
@@ -3692,7 +3692,7 @@
         "0": {"addLink": "associatedMedia", "resourceType": "MediaObject"},
         "1": {"addLink": "otherPhysicalFormat", "resourceType": "Electronic"},
         "2": {"addLink": "isPrimaryTopicOf", "resourceType": "Document"},
-        "8": {"addLink": "relation", "resourceType": "Document"}
+        "8": {"addLink": "relatedTo", "resourceType": "Document"}
       },
       "TODO?": {
         "if $x=digipic or $y=bild": {"addLink": "depiction"},
@@ -4417,14 +4417,14 @@
 
     "856": {
       "inherit": "bib",
-      "addLink": "relation",
+      "addLink": "relatedTo",
       "resourceType": "Document",
       "TODO:i1": {},
       "match-i2": {
         "0": {"addLink": "sameAs", "resourceType": "Thing"},
         "1": {"addLink": "isPrimaryTopicOf", "resourceType": "Electronic"},
-        "2": {"addLink": "relation", "resourceType": "Document"},
-        "8": {"addLink": "relation", "resourceType": "Document"}
+        "2": {"addLink": "relatedTo", "resourceType": "Document"},
+        "8": {"addLink": "relatedTo", "resourceType": "Document"}
       }
     }
   },
