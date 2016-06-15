@@ -402,7 +402,8 @@
       "[7:8]": {
         "aboutEntity": "?thing",
         "tokenMap": "BibLevelType",
-        "property": "issuanceType"
+        "property": "issuanceType",
+        "TODO:implied?:fixedDefault": "m"
       },
       "[8:9]": {
         "aboutEntity": "?record",
@@ -899,14 +900,10 @@
     },
 
     "007": {
-      "TODO:match-repetition": {
-        "NOTE:candidate:aboutEntity": "?work",
-        "TODO": "local pendingResources for ?work (i.e. one work per instance)",
-        "addLink": "hasPart"
+      "match-repeated": {
+        "addLink": "hasPart",
+        "embedded": true
       },
-      "NOTE:candidate:aboutEntity": "?work",
-      "addLink": "hasInstance",
-      "embedded": true,
       "[0:1]": {
         "addProperty": "@type",
         "tokenMap": {
@@ -1473,11 +1470,27 @@
           "normalized": {"007":"aj |a|||               "},
           "result": {
             "mainEntity": {
-              "hasInstance": [
+              "@type": ["Map"],
+              "carrierType": [{"@id": "marc:MapATwoDimensionalMap"}],
+              "marc:medium": {"@id": "marc:Paper"}
+            }
+          }
+        },
+        {
+          "source": [
+            {"007": "aj |a|||               "},
+            {"007": "cj |||   a||||         "}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": ["Map"],
+              "carrierType": [{"@id": "marc:MapATwoDimensionalMap"}],
+              "marc:medium": {"@id": "marc:Paper"},
+              "hasPart": [
                 {
-                  "@type": ["Map"],
-                  "carrierType": [{"@id": "marc:MapATwoDimensionalMap"}],
-                  "marc:medium": {"@id": "marc:Paper"}
+                  "@type": ["Electronic"],
+                  "carrierType": [{"@id": "marc:MagneticDisk"}],
+                  "marc:fileFormats": {"@id": "marc:OneFileFormat"}
                 }
               ]
             }
@@ -2339,7 +2352,7 @@
       "$9": {"property": "license"}
     },
     "041": {
-      "TODO:match-repetition": {
+      "TODO:match-repeated": {
         "addLink": "hasPart",
         "embedded": true
       },

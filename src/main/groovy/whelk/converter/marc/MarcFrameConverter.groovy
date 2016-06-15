@@ -1098,9 +1098,16 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
     }
 
     def revert(Map data, Map result) {
-        def entities = [data]
+        def rootEntity = getEntity(data)
+        def entities = [rootEntity]
         if (link) {
-            entities = getEntity(data).get(link) ?: []
+            entities = rootEntity.get(link) ?: []
+        }
+        if (matchRepeated) {
+            def entitiesFromRepeated = rootEntity.get(matchRepeated.addLink)
+            if (entitiesFromRepeated) {
+                entities += entitiesFromRepeated
+            }
         }
         def values = []
         for (entity in entities) {
