@@ -1099,7 +1099,8 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
 
     def revert(Map data, Map result) {
         def rootEntity = getEntity(data)
-        def entities = [rootEntity]
+        // TODO: using rootEntity instead of data fails when reverting bib 008
+        def entities = [data]
         if (link) {
             entities = rootEntity.get(link) ?: []
         }
