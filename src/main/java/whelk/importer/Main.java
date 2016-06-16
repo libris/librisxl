@@ -98,7 +98,10 @@ public class Main
         for (Transformer transformer : transformers)
             inputStream = transform(transformer, inputStream);
 
-        ThreadPool threadPool = new ThreadPool( 2 * Runtime.getRuntime().availableProcessors() );
+        int threadCount = 1;
+        if (parameters.runParallel())
+            threadCount = 2 * Runtime.getRuntime().availableProcessors();
+        ThreadPool threadPool = new ThreadPool( threadCount );
 
         MarcXmlRecordReader reader = null;
         try

@@ -17,6 +17,7 @@ class Parameters
     private List<Transformer> transformers = new ArrayList<>();
     private List<DUPLICATION_TYPE> dupTypes = new ArrayList<>();
     private String inputEncoding = "UTF-8";
+    private boolean parallel = false;
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
@@ -24,6 +25,7 @@ class Parameters
     List<Transformer> getTransformers() { return transformers; }
     List<DUPLICATION_TYPE> getDuplicationTypes() { return dupTypes; }
     String getInputEncoding() { return inputEncoding; }
+    boolean runParallel() { return parallel; }
 
     enum INPUT_FORMAT
     {
@@ -119,6 +121,12 @@ class Parameters
         System.err.println("");
         System.err.println("--live        Write to Whelk (without this flag operations against the Whelk are readonly");
         System.err.println("              and results are only printed to stdout).");
+        System.err.println("");
+        System.err.println("--parallel    Do document conversion, enrichment and duplicate checking in parallel. Use with");
+        System.err.println("              care. Specifically do not use for sources where multiples of the same document");
+        System.err.println("              may appear in one batch. If you do, you risk introducing multiples in the");
+        System.err.println("              database, because there is no synchronization in between duplicate checks");
+        System.err.println("              and writing a document.");
     }
 
     private void interpretBinaryParameter(String parameter, String value)
@@ -191,6 +199,8 @@ class Parameters
             case "--live":
                 readOnly = false;
                 break;
+            case "--parallel":
+                parallel = true;
             default:
                 throw new IllegalArgumentException(parameter);
         }
