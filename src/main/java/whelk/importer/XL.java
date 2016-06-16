@@ -131,7 +131,8 @@ class XL
                         {
                             if (collection.equals("bib"))
                             {
-                                if (!doc.getEncodingLevel().equals("marc:PartialPreliminaryLevel"))
+                                String encodingLevel = doc.getEncodingLevel();
+                                if (encodingLevel == null || !encodingLevel.equals("marc:PartialPreliminaryLevel"))
                                     throw new TooHighEncodingLevelException();
                             }
 
@@ -179,6 +180,7 @@ class XL
         specialRules.put("created", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
         specialRules.put("controlNumber", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
         specialRules.put("modified", Graph.PREDICATE_RULES.RULE_PREFER_INCOMING);
+        specialRules.put("marc:encLevel", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
 
         // These should also be retrieved from whelk-core's marcframe.json.
         // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
