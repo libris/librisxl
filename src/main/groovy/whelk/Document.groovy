@@ -300,7 +300,10 @@ class Document {
 
     @JsonIgnore
     String getEncodingLevel() {
-        return data[GRAPH_KEY][0][ENCODING_LEVEL_KEY]["@id"];
+        Object encLevel = data[GRAPH_KEY][0][ENCODING_LEVEL_KEY]
+        if (encLevel != null && encLevel instanceof Map)
+            return encLevel["@id"];
+        return null;
     }
 
     void findIdentifiers() {
