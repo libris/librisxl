@@ -16,6 +16,9 @@ public class JsonLd {
 
     static final String GRAPH_KEY = "@graph"
     static final String ID_KEY = "@id"
+    static final String THING_KEY = "mainEntity"
+    static final String RECORD_KEY = "meta"
+
     static final String DESCRIPTIONS_KEY = "descriptions"
     static final URI SLASH_URI = new URI("/")
     static final ObjectMapper mapper = new ObjectMapper()
@@ -53,7 +56,6 @@ public class JsonLd {
         }
     }
 
-
     private static storeFlattened(current, result) {
         if (current instanceof Map) {
             def flattened = makeFlat(current, result)
@@ -85,26 +87,44 @@ public class JsonLd {
 
 
     public static Map frame(String mainId, Map flatJsonLd) {
+        return frame(mainId, null, flatJsonLd)
+    }
+
+    public static Map frame(String mainId, String thingLink, Map flatJsonLd) {
         if (isFramed(flatJsonLd)) {
             return flatJsonLd
         }
-        Map idMap = getIdMap(flatJsonLd)
         if (mainId) {
             mainId = Document.BASE_URI.resolve(mainId)
         }
-        Map mainItemMap = (mainId ? idMap.get(mainId) : null)
-        if (!mainItemMap) {
+
+        def idMap = getIdMap(flatJsonLd)
+
+        def mainItem = idMap[mainId]
+        if (mainItem) {
+            if (thingLink) {
+                def thingRef = mainItem[thingLink]
+                if (thingRef) {
+                    def thingId = thingRef[ID_KEY]
+                    def thing = idMap[thingId]
+                    thing[RECORD_KEY] = [(ID_KEY): mainId]
+                    mainId = thingId
+                    idMap[mainId] = thingRef
+                    mainItem = thing
+                }
+            }
+        } else {
             log.debug("No main item map found for $mainId, trying to find an identifier")
             // Try to find an identifier to frame around
             String foundIdentifier = findIdentifier(flatJsonLd)
             log.debug("Result of findIdentifier: $foundIdentifier")
             if (foundIdentifier) {
-                mainItemMap = idMap.get(Document.BASE_URI.resolve(foundIdentifier).toString())
+                mainItem = idMap.get(Document.BASE_URI.resolve(foundIdentifier).toString())
             }
         }
         Map framedMap
         try {
-            framedMap = embed(mainId, mainItemMap, idMap, new HashSet<String>())
+            framedMap = embed(mainId, mainItem, idMap, new HashSet<String>())
             if (!framedMap) {
                 throw new FramingException("Failed to frame JSONLD ($flatJsonLd)")
             }
