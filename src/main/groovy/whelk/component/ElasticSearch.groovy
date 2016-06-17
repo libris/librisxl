@@ -128,14 +128,7 @@ class ElasticSearch implements Index {
             for (doc in docs) {
                 if (doc.isJson()) {
                     try {
-                        if (doc.isJsonLd()) {
-                            log.debug("Framing ${doc.id}")
-                            doc.data = JsonLd.frame(doc.id, doc.data)
-                            log.trace("Framed data: ${doc.data}")
-                            if (expander) {
-                                doc = expander.filter(doc)
-                            }
-                        }
+                        doc = getShapeForIndex(doc)
                         bulk.add(new IndexRequest(getIndexName(), (doc.collection ?: defaultType), toElasticId(doc.id)).source(doc.data))
                     } catch (Throwable e) {
                         log.error("Failed to create indexrequest for document ${doc.id}. Reason: ${e.message}")
@@ -163,13 +156,7 @@ class ElasticSearch implements Index {
         // Do not modify the passed in document!
         Document doc = new Document(_doc.getId(), Document.deepCopy(_doc.getData()), Document.deepCopy(_doc.getManifest()))
         if (doc.isJson()) {
-            if (doc.isJsonLd()) {
-                log.trace("Framing ${doc.id}")
-                doc.data = JsonLd.frame(doc.id, doc.data)
-                if (expander) {
-                    doc = expander.filter(doc)
-                }
-            }
+            doc = getShapeForIndex(doc)
             def idxReq = new IndexRequest(getIndexName(), (doc.collection ?: defaultType), toElasticId(doc.id)).source(doc.data)
             def response = performExecute(idxReq)
             log.debug("Indexed the document ${doc.id} as ${indexName}/${(doc.collection ?: defaultType)}/${response.getId()} as version ${response.getVersion()}")
@@ -187,6 +174,18 @@ class ElasticSearch implements Index {
                 .execute()
                 .actionGet();
         log.debug("Response: ${rsp.totalDeleted}")
+    }
+
+    Document getShapeForIndex(Document doc) {
+        if (doc.isJsonLd()) {
+            log.debug("Framing ${doc.id}")
+            doc.data = JsonLd.frame(doc.id, JsonLd.THING_KEY, doc.data)
+            log.trace("Framed data: ${doc.data}")
+            if (expander) {
+                doc = expander.filter(doc)
+            }
+        }
+        return doc
     }
 
     @Override
