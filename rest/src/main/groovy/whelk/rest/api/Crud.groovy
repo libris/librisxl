@@ -133,6 +133,13 @@ class Crud extends HttpServlet {
 
         try {
             def (path, mode) = determineDisplayMode(request.pathInfo)
+
+            // Tomcat incorrectly strips away double slashes from the pathinfo. Compensate here.
+            if (path ==~ "/http:/[^/].+")
+            {
+                path = path.replace("http:/", "http://")
+            }
+
             String version = request.getParameter("version")
             boolean flat = request.getParameter("flat") == "true"
 
