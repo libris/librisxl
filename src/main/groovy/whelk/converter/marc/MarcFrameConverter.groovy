@@ -126,7 +126,7 @@ class MarcFrameConverter implements FormatConverter {
             if (cmd == "revert") {
                 if (source['@graph']) {
                     def entryId = source['@graph'][0]['@id']
-                    source = JsonLd.frame(entryId, null, source)
+                    source = JsonLd.frame(entryId, source)
                 }
                 result = converter.runRevert(source)
             } else {

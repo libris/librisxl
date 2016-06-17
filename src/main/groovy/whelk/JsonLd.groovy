@@ -79,7 +79,7 @@ public class JsonLd {
 
 
     public static Map frame(String mainId, Map flatJsonLd) {
-        return frame(mainId, THING_KEY, flatJsonLd)
+        return frame(mainId, null, flatJsonLd)
     }
 
     public static Map frame(String mainId, String thingLink, Map flatJsonLd) {
