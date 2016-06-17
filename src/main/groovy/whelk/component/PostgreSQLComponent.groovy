@@ -791,7 +791,7 @@ class PostgreSQLComponent implements Storage {
     Document loadBySameAsIdentifier(String identifier) {
         log.info("Using loadBySameAsIdentifier")
         //return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]]) // This one is for descriptionsbased data
-        return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [[["sameAs":["@id":identifier]]]])
+        return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[[["sameAs":["@id":identifier]]]]])
     }
 
     List<Document> loadAllVersions(String identifier) {
