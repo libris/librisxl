@@ -27,7 +27,7 @@ class PropertyLoader {
                 } else {
                     System.err.println("No system property \'${SYSTEM_PROPERTY_PREFIX + propName + PROPERTY_EXTENSION}\' specified and no file named ${propName + PROPERTY_EXTENSION} found in classpath.")
                 }
-                System.exit(1)
+                throw new Exception("Unable to load " + propName + " properties.")
             }
             props.load(propStream)
         }

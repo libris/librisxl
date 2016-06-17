@@ -1,7 +1,6 @@
 package whelk
 
 import groovy.util.logging.Slf4j as Log
-
 import org.codehaus.jackson.map.*
 import org.codehaus.jackson.annotate.JsonIgnore
 import whelk.util.PropertyLoader
@@ -31,7 +30,21 @@ class Document {
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
     static final String HOLDING_FOR_KEY = "holdingFor"
 
-    static final URI BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
+    // If we _statically_ call loadProperties("secret"), without a try/catch it means that no code with a dependency on
+    // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
+    // depending on whelk-core) sometimes need to do.
+    static final URI BASE_URI;
+    static
+    {
+        try
+        {
+            BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
+        }
+        catch (Exception e)
+        {
+            System.err.println(e);
+        }
+    }
 
     @JsonIgnore
     static final Map TYPE_COLLECTION = [
@@ -54,8 +67,8 @@ class Document {
     Document() {}
 
     Document(String id, Map data) {
-        setData(data)
         setId(id)
+        setData(data)
     }
 
     Document(Map data, Map manifest) {
@@ -64,9 +77,9 @@ class Document {
     }
 
     Document(String id, Map data, Map manifest) {
+        setId(id)
         withManifest(manifest)
         setData(data)
-        setId(id)
     }
 
     void setId(id) {
@@ -262,9 +275,35 @@ class Document {
         return ret
     }
 
+    /**
+     * Add an identifier to the thing described by this document.
+     */
+    @JsonIgnore
+    void addItIdentifier(String identifier) {
+        List graph = data.get(GRAPH_KEY)
+        if (graph == null)
+            data.put(GRAPH_KEY, [])
+
+        Map second
+        while ( (second = data[GRAPH_KEY][1]) == null)
+            ((List)(data[GRAPH_KEY])).add([:])
+
+        List altIds
+        while ( (altIds = second[JSONLD_ALT_ID_KEY]) == null)
+            second.put(JSONLD_ALT_ID_KEY, [])
+
+        def object = [:]
+        object.put("@id", identifier)
+        if (! altIds.contains(object) )
+            altIds.add(object)
+    }
+
     @JsonIgnore
     String getEncodingLevel() {
-        return data[GRAPH_KEY][0][ENCODING_LEVEL_KEY]["@id"];
+        Object encLevel = data[GRAPH_KEY][0][ENCODING_LEVEL_KEY]
+        if (encLevel != null && encLevel instanceof Map)
+            return encLevel["@id"];
+        return null;
     }
 
     void findIdentifiers() {
