@@ -18,6 +18,7 @@ class Parameters
     private List<DUPLICATION_TYPE> dupTypes = new ArrayList<>();
     private String inputEncoding = "UTF-8";
     private boolean parallel = false;
+    private boolean enrichMulDup = false;
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
@@ -25,7 +26,8 @@ class Parameters
     List<Transformer> getTransformers() { return transformers; }
     List<DUPLICATION_TYPE> getDuplicationTypes() { return dupTypes; }
     String getInputEncoding() { return inputEncoding; }
-    boolean runParallel() { return parallel; }
+    boolean getRunParallel() { return parallel; }
+    boolean getEnrichMulDup() { return enrichMulDup; }
 
     enum INPUT_FORMAT
     {
@@ -127,6 +129,11 @@ class Parameters
         System.err.println("              may appear in one batch. If you do, you risk introducing multiples in the");
         System.err.println("              database, because there is no synchronization in between duplicate checks");
         System.err.println("              and writing a document.");
+        System.err.println("");
+        System.err.println("--enrichMulDup If duplication checking finds more than one duplicate for an incoming");
+        System.err.println("              document, the incoming document is normally ignored/skipped. If this flag is");
+        System.err.println("              set however, all found duplicates will be enriched with the information from");
+        System.err.println("              the incoming record.");
     }
 
     private void interpretBinaryParameter(String parameter, String value)
@@ -201,6 +208,10 @@ class Parameters
                 break;
             case "--parallel":
                 parallel = true;
+                break;
+            case "--enrichMulDup":
+                enrichMulDup = true;
+                break;
             default:
                 throw new IllegalArgumentException(parameter);
         }

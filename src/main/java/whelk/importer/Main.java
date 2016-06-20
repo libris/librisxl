@@ -99,7 +99,7 @@ public class Main
             inputStream = transform(transformer, inputStream);
 
         int threadCount = 1;
-        if (parameters.runParallel())
+        if (parameters.getRunParallel())
             threadCount = 2 * Runtime.getRuntime().availableProcessors();
         ThreadPool threadPool = new ThreadPool( threadCount );
 

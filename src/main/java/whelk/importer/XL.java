@@ -54,8 +54,6 @@ class XL
 
         String resultingResourceId = null;
 
-        //System.out.println("Duplicates: " + duplicateIDs.size());
-
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
             resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId);
@@ -74,8 +72,26 @@ class XL
         }
         else
         {
-            // Multiple coinciding documents. Exit with error?
-            throw new Exception("Multiple duplicates for this record.");
+            // Multiple coinciding documents.
+
+            if (m_parameters.getEnrichMulDup())
+            {
+                for (String id : duplicateIDs)
+                {
+                    enrichRecord( id, incomingMarcRecord, collection, relatedWithBibResourceId );
+                }
+            }
+
+            if (collection.equals("bib"))
+            {
+                // In order to keep the program deterministic, the bib post to which subsequent holdings should attach
+                // when there are multiple duplicates is defined as the one with the "lowest" alpha numeric id.
+                List<String> duplicateList = new ArrayList<>(duplicateIDs);
+                Collections.sort(duplicateList);
+                resultingResourceId = duplicateList.get(0);
+            }
+            else
+                resultingResourceId = null;
         }
 
         return resultingResourceId;
