@@ -311,13 +311,14 @@ class Crud extends HttpServlet {
             dataMap = mapper.readValue(data, Map)
             // Check if supplied data has "about"-form
             dataMap = JsonLd.frame(null, dataMap)
-            if (!dataMap.containsKey("about")) {
+            if (!dataMap.containsKey(Document.ABOUT_KEY)) {
                 Map aboutMap = Document.deepCopy(dataMap)
                 String suppliedId = aboutMap.get("@id")
-                dataMap = ["about": aboutMap]
+                dataMap = [:]
+                dataMap.put(Document.ABOUT_KEY, aboutMap)
                 if (suppliedId) {
                     dataMap["@id"] = suppliedId
-                    dataMap["about"]["@id"] = dataMap["@id"] + "#it"
+                    dataMap[Document.ABOUT_KEY]["@id"] = dataMap["@id"] + "#it"
                 }
             }
         } else {
