@@ -447,7 +447,7 @@ class XL
         if (!isbn.matches("[\\dxX]+"))
             isbn = "0";
 
-        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifier}' @> '[{\"identifierScheme\": {\"@id\": \"https://id.kb.se/vocab/ISBN\"}, \"identifierValue\": \"" + isbn + "\"}]'";
+        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> '[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]'";
         return connection.prepareStatement(query);
     }
 
@@ -458,7 +458,7 @@ class XL
         if (!issn.matches("[\\dxX]+"))
             issn = "0";
 
-        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifier}' @> '[{\"identifierScheme\": {\"@id\": \"https://id.kb.se/vocab/ISSN\"}, \"identifierValue\": \"" + issn + "\"}]'";
+        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> '[{\"@type\": \"ISSN\", \"value\": \"" + issn + "\"}]'";
         return connection.prepareStatement(query);
     }
 
@@ -467,7 +467,7 @@ class XL
     {
         String libraryUri = LegacyIntegrationTools.legacySigelToUri(heldBy);
 
-        String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,offers,0,heldBy,0,@id}' = ? AND data#>>'{@graph,1,holdingFor,@id}' = ? AND manifest->>'collection' = 'hold'";
+        String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' = ? AND data#>>'{@graph,1,holdingFor,@id}' = ? AND manifest->>'collection' = 'hold'";
         PreparedStatement statement = connection.prepareStatement(query);
 
         statement.setString(1, libraryUri);
