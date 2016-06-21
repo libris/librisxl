@@ -25,7 +25,7 @@ class Document {
     static final String JSONLD_ALT_ID_KEY = "sameAs"
     static final String CHANGED_IN_KEY = "changedIn" // The last system to affect a change in the document (xl by default, vcopy on imported posts)
     static final String CONTROL_NUMBER_KEY = "controlNumber"
-    static final String ABOUT_KEY = "about"
+    static final String ABOUT_KEY = "mainEntity"
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
     static final String HOLDING_FOR_KEY = "holdingFor"
