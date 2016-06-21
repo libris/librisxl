@@ -443,23 +443,31 @@ class XL
     private PreparedStatement getOnISBN_ps(Connection connection, String isbn)
             throws SQLException
     {
-        // required to be completely numeric (base 11, 0-9+x). Sql parametrization unfortunately not practical with jsonb
+        // required to be completely numeric (base 11, 0-9+x).
         if (!isbn.matches("[\\dxX]+"))
             isbn = "0";
 
-        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> '[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]'";
-        return connection.prepareStatement(query);
+        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
+        PreparedStatement statement =  connection.prepareStatement(query);
+        
+        statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
+
+        return  statement;
     }
 
     private PreparedStatement getOnISSN_ps(Connection connection, String issn)
             throws SQLException
     {
-        // required to be completely numeric (base 11, 0-9+x). Sql parametrization unfortunately not practical with jsonb
+        // required to be completely numeric (base 11, 0-9+x).
         if (!issn.matches("[\\dxX]+"))
             issn = "0";
 
-        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> '[{\"@type\": \"ISSN\", \"value\": \"" + issn + "\"}]'";
-        return connection.prepareStatement(query);
+        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
+        PreparedStatement statement =  connection.prepareStatement(query);
+
+        statement.setObject(1, "[{\"@type\": \"ISSN\", \"value\": \"" + issn + "\"}]", java.sql.Types.OTHER);
+
+        return  statement;
     }
 
     private PreparedStatement getOnHeldByHoldingFor_ps(Connection connection, String heldBy, String holdingForId)
