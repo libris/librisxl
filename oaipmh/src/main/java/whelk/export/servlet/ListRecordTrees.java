@@ -171,7 +171,7 @@ public class ListRecordTrees
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT id, manifest, deleted, modified, data#>>'{@graph,1,offers,0,heldBy,0,@id}' AS sigel FROM "
+        String selectSQL = "SELECT id, manifest, deleted, modified, data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM "
                 + tableName + " WHERE manifest->>'collection' <> 'definitions' ";
         if (setSpec.getRootSet() != null)
             selectSQL += " AND manifest->>'collection' = ?";
@@ -186,7 +186,7 @@ public class ListRecordTrees
 
         if (setSpec.getSubset() != null)
         {
-            String strMap = "{\"@graph\":[{\"offers\":[{\"heldBy\":[{\"@id\": \""+
+            String strMap = "{\"@graph\":[{\"hasComponent\":[{\"heldBy\":[{\"@id\": \""+
                     LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset())+
                     "\"}]}]}]}";
 

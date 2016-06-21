@@ -61,7 +61,7 @@ public class Helpers
 
         // Construct the query
         String selectSQL = "SELECT data, manifest, modified, deleted, " +
-                " data#>>'{@graph,1,offers,0,heldBy,0,@id}' AS sigel FROM " +
+                " data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM " +
                 tableName + " WHERE manifest->>'collection' <> 'definitions' ";
         if (fromDateTime != null)
             selectSQL += " AND modified >= ? ";
@@ -88,7 +88,7 @@ public class Helpers
             preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
         if (setSpec.getSubset() != null)
         {
-            String strMap = "{\"@graph\":[{\"offers\":[{\"heldBy\":[{\"@id\": \""+
+            String strMap = "{\"@graph\":[{\"hasComponent\":[{\"heldBy\":[{\"@id\": \""+
                     LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset())+
                     "\"}]}]}]}";
 

@@ -243,7 +243,7 @@ public class ResponseCommon
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
-        StringBuilder selectSQL = new StringBuilder("SELECT id, data#>>'{@graph,1,offers,0,heldBy,0,@id}' AS sigel FROM ");
+        StringBuilder selectSQL = new StringBuilder("SELECT id, data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM ");
         selectSQL.append(tableName);
         selectSQL.append(" WHERE manifest->>'collection' = 'hold' AND deleted = false AND (");
 
