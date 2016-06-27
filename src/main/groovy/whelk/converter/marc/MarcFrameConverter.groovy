@@ -650,8 +650,6 @@ class MarcRuleSet {
     }
 
     void completeEntities(Map entityMap) {
-        def recordUriTemplate = topPendingResources['?record'].uriTemplate
-
         def record = entityMap['?record']
         def givenRecId = record['@id']
 
@@ -665,12 +663,22 @@ class MarcRuleSet {
             }
 
             def entityId = entity['@id']
-            def builtEntityId = dfn.uriTemplate? conversion.resolve(fromTemplate(
-                    dfn.uriTemplate).set('marcType', name).set(record).expand()) : null
+            def builtEntityId = null
+
+            if (dfn.uriTemplate) {
+                try {
+                    builtEntityId = conversion.resolve(
+                            fromTemplate(dfn.uriTemplate)
+                            .set('marcType', name).set(record).expandPartial())
+                } catch (IllegalArgumentException e) {
+                    ; // Fails on resolve if expanded is only partially filled
+                }
+            }
 
             if (!entityId && givenRecId && dfn.fragmentId) {
                 entityId = entity['@id'] = givenRecId +'#'+ dfn.fragmentId
             }
+
             if (builtEntityId) {
                 if (!entityId) {
                     entity['@id'] = builtEntityId
