@@ -222,6 +222,10 @@ class XL
         manifest.put(Document.getCOLLECTION_KEY(), collection);
         manifest.put(Document.getCHANGED_IN_KEY(), "FTP-import");
 
+        // The conversion process needs a 001 field to work correctly.
+        if (marcRecord.getControlfields("001").size() == 0)
+            marcRecord.addField(marcRecord.createControlfield("001", id));
+
         Document doc = new Document(id, MarcJSONConverter.toJSONMap(marcRecord), manifest);
         Document converted = m_marcFrameConverter.convert(doc);
         return converted;
