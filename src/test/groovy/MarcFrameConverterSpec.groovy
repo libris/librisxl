@@ -38,8 +38,7 @@ class MarcFrameConverterSpec extends Specification {
             converter.config[marcType].each { code, dfn ->
                 def ruleSet = ruleSets[marcType]
                 def thingLink = ruleSet.thingLink
-                if (code == 'thingLink')
-                    return
+
                 if (code == 'postProcessing') {
                     ruleSet.postProcSteps.eachWithIndex { step, i ->
                         dfn[i]._spec.each {
@@ -203,8 +202,9 @@ class MarcFrameConverterSpec extends Specification {
         given:
         def jsonld = [
             controlNumber: "0000000",
-            (converter.conversion.marcRuleSets['bib'].thingLink): [
-                "@type": ["Text", "Monograph"]
+            "mainEntity": [
+                "@type": "Instance",
+                "instanceOf": ["@type": "Text"]
             ],
             _marcUncompleted: [
                 ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
