@@ -306,4 +306,52 @@ public class EnrichTest
 
         testEnrich(original, incoming, expectedResult);
     }
+
+    @Test
+    public void valueTypes() throws Exception
+    {
+        // Enriching must work with literal values of type String, int, float, boolean
+
+        String original = "{\n" +
+                "    \"@graph\": [\n" +
+                "        {\n" +
+                "            \"@id\": \"someid\",\n" +
+                "            \"somebool\": true,\n" +
+                "            \"somefloat\": 4.0,\n" +
+                "            \"someint\": 3,\n" +
+                "            \"somestring\": \"string\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}\n";
+
+        String incoming = "{\n" +
+                "    \"@graph\": [\n" +
+                "        {\n" +
+                "            \"@id\": \"someid\",\n" +
+                "            \"someotherbool\": false,\n" +
+                "            \"someotherfloat\": 5.0,\n" +
+                "            \"someotherint\": 7,\n" +
+                "            \"someotherstring\": \"otherstring\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}\n";
+
+        String expectedResult = "{\n" +
+                "    \"@graph\": [\n" +
+                "        {\n" +
+                "            \"@id\": \"someid\",\n" +
+                "            \"somebool\": true,\n" +
+                "            \"somefloat\": 4.0,\n" +
+                "            \"someint\": 3,\n" +
+                "            \"someotherbool\": false,\n" +
+                "            \"someotherfloat\": 5.0,\n" +
+                "            \"someotherint\": 7,\n" +
+                "            \"someotherstring\": \"otherstring\",\n" +
+                "            \"somestring\": \"string\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}\n";
+
+        testEnrich(original, incoming, expectedResult);
+    }
 }

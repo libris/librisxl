@@ -11,7 +11,10 @@ import java.util.*;
 @SuppressWarnings("unchecked")
 public class JsonldSerializer
 {
-    public static final String LITERAL_PREFIX = "__literal:";
+    public static final String LITERAL_STRING_PREFIX = "__literal_string:";
+    public static final String LITERAL_INTEGER_PREFIX = "__literal_integer:";
+    public static final String LITERAL_FLOAT_PREFIX = "__literal_float:";
+    public static final String LITERAL_BOOLEAN_PREFIX = "__literal_boolean:";
     public static final String BLANKNODE_PREFIX = "_:b";
 
     // State required for deserialization (for assigning new BNode IDs)
@@ -94,7 +97,7 @@ public class JsonldSerializer
                 String object = null;
 
                 Object objectCandidate = jsonMap.get(key);
-                object = getObjectId(objectCandidate);
+                object = getObjectIdOrLiteralValue(objectCandidate);
 
                 // store triple
                 if (subject != null && object != null)
@@ -115,7 +118,7 @@ public class JsonldSerializer
         for (Object item : jsonList)
         {
             String subject = nodeId;
-            String object = getObjectId(item);
+            String object = getObjectIdOrLiteralValue(item);
 
             // store triple
             if (subject != null && object != null)
@@ -127,10 +130,22 @@ public class JsonldSerializer
         }
     }
 
-    private String getObjectId(Object object)
+    private String getObjectIdOrLiteralValue(Object object)
     {
-        if (object instanceof String) // literal object
-            return LITERAL_PREFIX + (String) object;
+        if (object instanceof String) // literal string
+            return LITERAL_STRING_PREFIX + (String) object;
+
+        else if (object instanceof Integer)
+            return LITERAL_INTEGER_PREFIX + Integer.toString( (Integer) object );
+
+        else if (object instanceof Float)
+            return LITERAL_FLOAT_PREFIX + Float.toString( (Float) object );
+
+        else if (object instanceof Double)
+            return LITERAL_FLOAT_PREFIX + Double.toString( (Double) object );
+
+        else if (object instanceof Boolean)
+            return LITERAL_BOOLEAN_PREFIX + Boolean.toString( (Boolean) object );
 
         else if (object instanceof Map)
         {
@@ -197,9 +212,21 @@ public class JsonldSerializer
         // The thing to be added might be just a string (if the triple object is a literal),
         // or a map containing an @id if the triple object is an identifiable node in itself.
         Object toBeAdded;
-        if ( triple[2].startsWith(LITERAL_PREFIX) )
+        if ( triple[2].startsWith(LITERAL_STRING_PREFIX) )
         {
-            toBeAdded = triple[2].substring(LITERAL_PREFIX.length());
+            toBeAdded = triple[2].substring(LITERAL_STRING_PREFIX.length());
+        }
+        else if ( triple[2].startsWith(LITERAL_INTEGER_PREFIX) )
+        {
+            toBeAdded = Integer.parseInt( triple[2].substring(LITERAL_INTEGER_PREFIX.length()) );
+        }
+        else if ( triple[2].startsWith(LITERAL_FLOAT_PREFIX) )
+        {
+            toBeAdded = Double.parseDouble( triple[2].substring(LITERAL_FLOAT_PREFIX.length()) );
+        }
+        else if ( triple[2].startsWith(LITERAL_BOOLEAN_PREFIX) )
+        {
+            toBeAdded = Boolean.parseBoolean( triple[2].substring(LITERAL_BOOLEAN_PREFIX.length()) );
         }
         else
         {
