@@ -205,7 +205,7 @@ class XL
         alwaysSets.add("sameAs");
         alwaysSets.add("genre");
         alwaysSets.add("comment");
-        alwaysSets.add("offers");
+        alwaysSets.add("hasComponent");
         alwaysSets.add("heldBy");
 
         originalGraph.enrichWith(withGraph, specialRules);

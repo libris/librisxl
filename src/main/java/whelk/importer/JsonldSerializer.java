@@ -186,8 +186,6 @@ public class JsonldSerializer
             }
         }
 
-        // Half-frame to the form produced by the jsonld converter ?
-
         Map result = new HashMap<>();
         result.put("@graph", graphList);
 
