@@ -98,6 +98,10 @@ class PostgresLoadfileWriter
                     }
                 }
             }
+
+            if (!m_outputQueue.isEmpty())
+                flushOutputQueue(m_outputQueue);
+
         } finally {
             for (int i = 0; i < THREAD_COUNT; ++i)
             {
