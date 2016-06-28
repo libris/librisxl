@@ -68,6 +68,12 @@ From the librisxl repository root
   $ curl -XPOST http://localhost:9200/yourindexname
       -d@librisxl-tools/elasticsearch/libris_config.json
 
+### Add the delete-by-query plugin
+
+The delete-by-query functionality was removed in ElasticSearch 2.0 and needs to be added as a plugin.
+
+  $ bin/plugin install delete-by-query
+
 ### Setup whelk properties
 
 Any properties bundled in the applications can be overridden by adding a -Dxl."property" system property when starting.

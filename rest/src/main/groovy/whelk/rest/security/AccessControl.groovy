@@ -36,6 +36,7 @@ class AccessControl {
                 }
             }
         } else {
+            privs = userPrivileges.authorization.find { it.kat == true }
             if (!privs?.kat) {
                 log.info("User does NOT have privileges to edit bib or auth.")
                 return false
