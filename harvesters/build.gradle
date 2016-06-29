@@ -56,7 +56,7 @@ test.testLogging {
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
-    maven { url "http://jitpack.io/" }
+    maven { url "https://jitpack.io/" }
 
 }
 
