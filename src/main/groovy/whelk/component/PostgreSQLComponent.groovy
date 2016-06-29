@@ -179,11 +179,11 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    Document store(Document doc, boolean upsert) {
-        return store(doc, upsert, false)
+    Document store(Document doc, boolean upsert, String changedIn, String changedBy) {
+        return store(doc, upsert, false, changedIn, changedBy)
     }
 
-    Document store(Document doc, boolean upsert, boolean minorUpdate) {
+    Document store(Document doc, boolean upsert, boolean minorUpdate, String changedIn, String changedBy) {
         log.debug("Saving ${doc.id}")
         Connection connection = getConnection()
         connection.setAutoCommit(false)
@@ -200,10 +200,10 @@ class PostgreSQLComponent implements Storage {
                 if (!saveVersion(doc, connection, now)) {
                     return doc // Same document already in storage.
                 }
-                insert = rigUpsertStatement(insert, doc, now)
+                insert = rigUpsertStatement(insert, doc, now, changedIn, changedBy)
                 insert.executeUpdate()
             } else {
-                insert = rigInsertStatement(insert, doc)
+                insert = rigInsertStatement(insert, doc, changedIn, changedBy)
                 insert.executeUpdate()
                 saveVersion(doc, connection, now)
             }
@@ -277,7 +277,7 @@ class PostgreSQLComponent implements Storage {
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    void storeAtomicUpdate(String id, boolean minorUpdate, UpdateAgent updateAgent) {
+    void storeAtomicUpdate(String id, boolean minorUpdate, UpdateAgent updateAgent, String changedIn, String changedBy) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
@@ -306,7 +306,7 @@ class PostgreSQLComponent implements Storage {
                 modTime = new Date(resultSet.getTimestamp("modified").getTime())
             }
             updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
-            rigUpdateStatement(updateStatement, doc, modTime)
+            rigUpdateStatement(updateStatement, doc, modTime, changedIn, changedBy)
             updateStatement.execute()
 
             // The versions and identifiers tables are NOT under lock. Synchronization is only maintained on the main table.
@@ -361,26 +361,25 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc) {
+    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, String changedIn, String changedBy) {
         insert.setString(1, doc.id)
         insert.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
         insert.setObject(3, doc.quotedAsString, java.sql.Types.OTHER)
         insert.setString(4, doc.collection)
-        insert.setString(5, "PLACEHOLDER CHANGED IN")
-        insert.setString(6, "PLACEHOLDER CHANGED BY")
+        insert.setString(5, changedIn)
+        insert.setString(6, changedBy)
         insert.setString(7, doc.getChecksum())
         insert.setBoolean(8, doc.isDeleted())
         return insert
     }
 
-    // UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ?"
-    private void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime) {
+    private void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime, String changedIn, String changedBy) {
         update.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
         update.setObject(2, doc.quotedAsString, java.sql.Types.OTHER)
 
         update.setString(3, doc.collection)
-        update.setString(4, "PLACEHOLDER CHANGED IN")
-        update.setString(5, "PLACEHOLDER CHANGED BY")
+        update.setString(4, changedIn)
+        update.setString(5, changedBy)
         update.setString(6, doc.getChecksum())
 
         update.setBoolean(7, doc.isDeleted())
@@ -388,19 +387,14 @@ class PostgreSQLComponent implements Storage {
         update.setObject(9, doc.id, java.sql.Types.OTHER)
     }
 
-    private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime) {
-
-        /*
-        * UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, quoted = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ? " +
-                "RETURNING *) " +
-            "INSERT INTO $mainTableName (id, data, quoted, collection, changedIn, changedBy, checksum, deleted) SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"*/
+    private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime, String changedIn, String changedBy) {
 
         insert.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
         insert.setObject(2, doc.quotedAsString, java.sql.Types.OTHER)
 
         insert.setString(3, doc.collection)
-        insert.setString(4, "PLACEHOLDER CHANGED IN")
-        insert.setString(5, "PLACEHOLDER CHANGED BY")
+        insert.setString(4, changedIn)
+        insert.setString(5, changedBy)
         insert.setString(6, doc.getChecksum())
 
         insert.setBoolean(7, doc.isDeleted())
@@ -411,8 +405,8 @@ class PostgreSQLComponent implements Storage {
         insert.setObject(12, doc.quotedAsString, java.sql.Types.OTHER)
 
         insert.setString(13, doc.collection)
-        insert.setString(14, "PLACEHOLDER CHANGED IN")
-        insert.setString(15, "PLACEHOLDER CHANGED BY")
+        insert.setString(14, changedIn)
+        insert.setString(15, changedBy)
         insert.setString(16, doc.getChecksum())
 
         insert.setBoolean(17, doc.isDeleted())
@@ -425,12 +419,12 @@ class PostgreSQLComponent implements Storage {
 
     }
 
-    boolean saveVersion(Document doc, Connection connection, Date modTime) {
+    boolean saveVersion(Document doc, Connection connection, Date modTime, String changedIn, String changedBy) {
         if (versioning) {
             PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
                 log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: $modTime")
-                insvers = rigVersionStatement(insvers, doc, modTime)
+                insvers = rigVersionStatement(insvers, doc, modTime, changedIn, changedBy)
                 int updated = insvers.executeUpdate()
                 log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
                 return (updated > 0)
@@ -442,12 +436,12 @@ class PostgreSQLComponent implements Storage {
             return false
         }
     }
-    private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc, Date modTime) {
+    private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc, Date modTime, String changedIn, String changedBy) {
         insvers.setString(1, doc.identifier)
         insvers.setObject(2, doc.dataAsString, Types.OTHER)
         insvers.setString(3, doc.collection)
-        insvers.setString(4, "PLACEHOLDER CHANGED IN")
-        insvers.setString(5, "PLACEHOLDER CHANGED BY")
+        insvers.setString(4, changedIn)
+        insvers.setString(5, changedBy)
         insvers.setString(6, doc.checksum)
         insvers.setTimestamp(7, new Timestamp(modTime.getTime()))
         insvers.setString(8, doc.identifier)
@@ -456,7 +450,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    boolean bulkStore(final List<Document> docs, boolean upsert) {
+    boolean bulkStore(final List<Document> docs, boolean upsert, String changedIn, String changedBy) {
         if (!docs || docs.isEmpty()) {
             return true
         }
@@ -471,13 +465,13 @@ class PostgreSQLComponent implements Storage {
                 doc.findIdentifiers()
                 calculateChecksum(doc)
                 if (versioning) {
-                    ver_batch = rigVersionStatement(ver_batch, doc, now)
+                    ver_batch = rigVersionStatement(ver_batch, doc, now, changedIn, changedBy)
                     ver_batch.addBatch()
                 }
                 if (upsert) {
-                    batch = rigUpsertStatement(batch, doc, now)
+                    batch = rigUpsertStatement(batch, doc, now, changedIn, changedBy)
                 } else {
-                    batch = rigInsertStatement(batch, doc)
+                    batch = rigInsertStatement(batch, doc, changedIn, changedBy)
                 }
                 batch.addBatch()
                 saveIdentifiers(doc, connection)

@@ -10,8 +10,8 @@ import java.util.Map;
  * Created by markus on 15-09-18.
  */
 public interface Storage {
-    Document store(Document document, boolean createOrUpdate);
-    boolean bulkStore(List<Document> documents, boolean createOrUpdate);
+    Document store(Document document, boolean createOrUpdate, String changedIn, String changedBy);
+    boolean bulkStore(List<Document> documents, boolean createOrUpdate, String changedIn, String changedBy);
     Location locate(String uri, boolean loadDocumentIfFound);
     Document load(String id);
     List<String> loadCollections();
