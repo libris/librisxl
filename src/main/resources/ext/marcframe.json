@@ -144,6 +144,44 @@
       "$z": {"addProperty": "hiddenValue"}
     },
 
+    "titlesearchelem": {
+      "i1": {"property": "marc:searchElement", "tokenMap": {"0": false}, "marcDefault": "1"}
+    },
+
+    "titledetails": {
+      "$d": {"addProperty": "treatySigningDate"},
+      "$f": {"property": "date"},
+      "$g": {"property": "comment"},
+      "$h": {"property": "medium"},
+      "$k": {"addProperty": "qualifyingNote"},
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+      "$m": {"addProperty": "musicPerformanceMedium"},
+      "$n": {"addProperty": "partNumber"},
+      "$o": {"property": "musicArrangement"},
+      "$p": {"addProperty": "partTitle"},
+      "$r": {"property": "musicKey"},
+      "$s": {"property": "version"},
+      "$0": {
+        "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
+        "uriTemplate": "http://libris.kb.se/auth/{_}"
+      }
+    },
+
+    "structuredtitle": {
+      "$a": {
+        "property": "mainTitle",
+        "interpunctionChars": ":/",
+        "TODO:interpunctionRules": {
+          " :": {"$b": {"property": "subtitle"}},
+          " =": {"$b": {"property": "parallelTitle"}},
+          " .": {"TODO": "$a and $b represent equal titles"}
+        }
+      },
+      "$b": {"property": "titleRemainder", "interpunctionChars": "/"},
+      "$n": {"addProperty": "partNumber"},
+      "$p": {"addProperty": "partTitle"}
+    },
+
     "agentdata": {
       "match-i1": {
         "0": {
@@ -2426,8 +2464,10 @@
       ]
     },
 
-    "036": {},
+    "036": {"NOTE:record-count": 118, "ignored": true},
+
     "037": {},
+
     "038": {},
 
     "040": {
@@ -2525,12 +2565,14 @@
     "071": {},
 
     "072": {
-      "inherit": "084",
+      "include": ["termid"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Concept",
       "TOOO:i2": {},
-      "$b": {"addProperty": "classificationItem"}
+      "$a": {"property": "label"},
+      "$x": {"link": "inCollection", "property": "label"},
+      "$2": {"link": "source", "property": "code"}
     },
 
     "074": {},
@@ -2670,6 +2712,7 @@
         }
       ]
     },
+
     "110": {
       "aboutEntity": "?work",
       "resourceType": "Organization",
@@ -2700,12 +2743,14 @@
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "name"}
     },
+
     "111": {
       "inherit": "110",
       "resourceType": "Meeting",
       "$c": {"link": "location", "resourceType": "Place", "property": "label"},
       "$d": {"property": "date"}
     },
+
     "130": {
       "aboutEntity": "?work",
       "link": "expressionOf",
@@ -2717,84 +2762,71 @@
     },
 
     "210": {
+      "include": ["titlesearchelem"],
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
       "embedded": true,
       "resourceType": "AbbreviatedTitle",
-      "TOOO:i1": {},
       "TOOO:i2": {},
       "$a": {"property": "mainTitle"},
       "$b": {"property": "qualifyingNote"},
       "$2": {"property": "sourceNote"}
     },
+
     "222": {
-      "inherit": "210",
+      "aboutEntity": "?thing",
       "NOTE:domainIncludes": "Serial/Periodical",
       "addLink": "hasTitle",
+      "embedded": true,
       "resourceType": "KeyTitle",
-      "$2": null
+      "$a": {"property": "mainTitle"},
+      "$b": {"property": "qualifyingNote"}
     },
+
     "240": {
       "aboutEntity": "?work",
-      "TODO:i1": {},
       "TODO:i2": {},
+      "include": ["titledetails", "titlesearchelem"],
+      "TODO": "See also 100$t and 130.",
       "link": "expressionOf",
       "resourceType": "Work",
-      "$0": {
-        "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
-        "uriTemplate": "http://libris.kb.se/auth/{_}"
-      },
-      "$a": {"property": "title"},
-      "$k": {"addProperty": "subtitle"},
-      "$p": {"addProperty": "partTitle"},
-      "$n": {"addProperty": "partNumber"},
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$f": {"property": "date"},
-      "$d": {"addProperty": "treatySigningDate"},
-      "$s": {"property": "version"},
-      "$g": {"property": "comment"},
-      "$h": {"property": "medium"},
-      "$m": {"addProperty": "musicPerformanceMedium"},
-      "$o": {"property": "musicArrangement"},
-      "$r": {"property": "musicKey"}
+      "$a": {"property": "title"}
     },
+
     "242": {
-      "inherit": "245",
-      "addLink": "marc:hasTranslatedTitle",
-      "$f": null,
-      "$g": null,
-      "$y": {"link": "language", "property": "notation"},
-      "TODO": "Correct property? merge into 245?"
-    },
-
-    "243": {},
-
-    "245": {
-      "i1": {"property": "marc:searchElement", "tokenMap": {"0": false}, "marcDefault": "1"},
-      "i2": {"marcDefault": "0"},
+      "include": ["structuredtitle", "titlesearchelem"],
       "aboutEntity": "?thing",
-      "link": "hasTitle",
+      "addLink": "marc:hasTranslatedTitle",
       "embedded": true,
       "resourceType": "InstanceTitle",
-      "$a": {
-        "property": "mainTitle",
-        "interpunctionChars": ":/",
-        "TODO:interpunctionRules": {
-          " :": {"$b": {"property": "subtitle"}},
-          " =": {"$b": {"property": "parallelTitle"}},
-          " .": {"TODO": "$a and $b represent equal titles"}
-        }
-      },
-      "$b": {"property": "titleRemainder", "interpunctionChars": "/"},
+      "$c": {"property": "responsibilityStatement"},
+      "$h": {"property": "marc:mediaTerm"},
+      "$y": {"link": "language", "property": "notation"},
+      "TODO": "Translation of? merge into 245?"
+    },
+
+    "243": {
+      "include": ["titledetails", "titlesearchelem"],
+      "addLink": "hasTitle",
+      "embedded": true,
+      "resourceType": "CollectiveTitle",
+      "$a": {"property": "mainTitle"}
+    },
+
+    "245": {
+      "include": ["structuredtitle", "titlesearchelem"],
+      "aboutEntity": "?thing",
+      "addLink": "hasTitle",
+      "embedded": true,
+      "resourceType": "InstanceTitle",
+      "i2": {"marcDefault": "0"},
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
         "NOTE": "interpunction may include data about included parts (e.g. short stories)"
       },
-      "$f": {"aboutEntity": "?thing", "property": "temporalCoverageNote"},
-      "$g": {"aboutEntity": "?thing", "property": "generalTemporalCoverageNote"},
-      "$h": {"aboutEntity": "?thing", "property": "mediaTerm", "surroundingChars": "[]"},
-      "$n": {"addProperty": "partNumber"},
-      "$p": {"addProperty": "partTitle"},
+      "$f": {"aboutEntity": "?thing", "property": "marc:temporalCoverageNote"},
+      "$g": {"aboutEntity": "?thing", "property": "marc:generalTemporalCoverageNote"},
+      "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "surroundingChars": "[]"},
       "$s": {"property": "version"},
       "_spec": [
         {
@@ -2803,9 +2835,9 @@
               {"a": "Anteckningar från en ö"}
           ]}},
           "result": {"mainEntity": {
-            "hasTitle": {"@type": "InstanceTitle",
+            "hasTitle": [ {"@type": "InstanceTitle",
               "mainTitle":  "Anteckningar från en ö"
-            }
+            } ]
           }}
         },
         {
@@ -2815,20 +2847,49 @@
               {"c": "Tove Jansson, Tuulikki Pietilä"}
           ]}},
           "result": {"mainEntity": {
-            "hasTitle": {"@type": "InstanceTitle",
+            "hasTitle": [ {"@type": "InstanceTitle",
               "mainTitle":  "Anteckningar från en ö",
               "marc:searchElement": false
-            },
+            } ],
             "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
           }}
         }
       ]
     },
+
     "246": {
+      "include": ["structuredtitle"],
       "aboutEntity": "?thing",
-      "inherit": "245",
       "addLink": "hasTitle",
+      "embedded": true,
       "resourceType": "VariantTitle",
+      "i1": {
+        "property": "marc:searchElement",
+        "tokenMap": {
+          "0": false,
+          "2": {"@id": "marc:NoRemarkNoSearch"},
+          "3": {"@id": "marc:NoRemark"}
+        },
+        "marcDefault": "1"
+      },
+      "i2": {
+        "property": "@type",
+        "tokenMap": {
+          "0": "marc:TitlePart",
+          "1": "ParallelTitle",
+          "2": "VariantTitle",
+          "3": "marc:AlsoTitle",
+          "4": "CoverTitle",
+          "5": "TitlePage",
+          "6": "HeadingTitle",
+          "7": "ColumnTitle",
+          "8": "SpineTitle"
+        }
+      },
+      "$f": {"property": "marc:temporalCoverageNote"},
+      "$g": {"property": "comment"},
+      "$h": {"property": "marc:mediaTerm", "surroundingChars": "[]"},
+      "$i": {"property": "qualifyingNote"},
       "i2": {
         "property": "typeNote",
         "TODO:tokenMap": {}, "TODO:if _": "use $i"
@@ -2836,13 +2897,31 @@
       "$i": {"property": "typeNote"},
       "$f": {"property": "coverage"},
       "$g": {"property": "note"},
-      "$h": {"property": "mediaTerm", "surroundingChars": "[]"}
+      "$h": {"property": "marc:mediaTerm", "surroundingChars": "[]"}
     },
+
     "247": {
+      "TODO": "Previously misused as 246?",
+      "include": ["structuredtitle"],
       "NOTE:domainIncludes": "Integrating",
-      "inherit": "245",
-      "addLink": "previousTitle",
-      "TODO": "Previously misused as 246?"
+      "aboutEntity": "?thing",
+      "addLink": "marc:previousTitle",
+      "embedded": true,
+      "resourceType": "InstanceTitle",
+      "i1": {
+        "property": "marc:isAddedEntry",
+        "tokenMap": {"1": true},
+        "marcDefault": "0"
+      },
+      "i2": {
+        "property": "marc:showRemark",
+        "tokenMap": {"1": true},
+        "marcDefault": "0"
+      },
+      "$f": {"property": "date"},
+      "$g": {"property": "comment"},
+      "$h": {"property": "medium"},
+      "$x": {"addProperty": "issn"}
     },
 
     "249": {},
