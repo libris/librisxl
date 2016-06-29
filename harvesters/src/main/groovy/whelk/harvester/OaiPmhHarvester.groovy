@@ -24,6 +24,7 @@ import java.text.Normalizer
 class OaiPmhHarvester {
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
+    static final String DEFAULT_SOURCE_SYSTEM = "xl"
     Whelk whelk
     MarcFrameConverter marcFrameConverter
 
@@ -134,7 +135,8 @@ class OaiPmhHarvester {
             }
         }
         // Store remaining documents
-        whelk.bulkStore(documentList)
+        String sourceSystem = hdata.sourceSystem == null ? DEFAULT_SOURCE_SYSTEM : hdata.sourceSystem
+        whelk.bulkStore(documentList, sourceSystem, null)
         log.debug("Done reading stream. Documents still in documentList: ${documentList.size()}")
         log.debug("Imported ${hdata.numberOfDocuments}. Last timestamp: ${hdata.lastRecordDatestamp}. Number deleted: ${hdata.numberOfDocumentsDeleted}")
         return hdata
@@ -216,14 +218,14 @@ class OaiPmhHarvester {
         } else {
             Document doc = createDocument(record)
             if (doc) {
-                doc.manifest.put("changedIn", hdata.sourceSystem)
                 docs << doc
                 hdata.numberOfDocuments++
             } else {
                 hdata.numberOfDocumentsSkipped++
             }
             if (docs.size() % 1000 == 0) {
-                whelk.bulkStore(docs)
+                String sourceSystem = hdata.sourceSystem == null ? DEFAULT_SOURCE_SYSTEM : hdata.sourceSystem
+                whelk.bulkStore(docs, sourceSystem, null)
                 docs = []
             }
         }
