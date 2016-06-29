@@ -92,32 +92,29 @@ class PostgreSQLComponent implements Storage {
         }
 
         // Setting up sql-statements
-        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ? " +
-                "OR manifest @> ? RETURNING *) " +
-            "INSERT INTO $mainTableName (id, data, quoted, manifest, deleted) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
-        UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ?"
-        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,quoted,manifest,deleted) VALUES (?,?,?,?,?)"
+        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, quoted = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ? " +
+                "RETURNING *) " +
+            "INSERT INTO $mainTableName (id, data, quoted, collection, changedIn, changedBy, checksum, deleted) SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
+        UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, quoted = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
+        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,quoted,collection,changedBy,changedIn,checksum,deleted) VALUES (?,?,?,?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, identifier) VALUES (?,?)"
 
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? " +
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, modified) SELECT ?,?,?,?,?,?,? " +
                 "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
                 "ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"
 
-        GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
-        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ? FOR UPDATE"
-        GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
-        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created' AS created,modified,manifest->>'deleted' AS deleted " +
+        GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
+        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ? FOR UPDATE"
+        GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
+        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,data->>'created' AS created,modified" +
                 "FROM $versionsTableName WHERE id = ? ORDER BY modified"
-        //GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName " +
-        //        "WHERE data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
-        GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName " +
+        GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE data->'@graph' @> ?"
-        LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
-        LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
-        LOAD_COLLECTIONS = "SELECT DISTINCT manifest->>'collection' as collection FROM $mainTableName"
-        LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName " +
-                "WHERE modified >= ? AND modified <= ? AND manifest->>'collection' = ?"
+        LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
+        LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
+        LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
+                "WHERE modified >= ? AND modified <= ? AND collection = ?"
         LOAD_IDENTIFIERS = "SELECT identifier from $idTableName WHERE id = ?"
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
@@ -126,35 +123,12 @@ class PostgreSQLComponent implements Storage {
         GET_CONTEXT = "SELECT data#>>'{@graph,0}' FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE identifier = 'https://id.kb.se/vocab/context')"
 
         // Queries
-        QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
+        QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
 
         // SQL for settings management
         LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
         SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
                 "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
-
-        // Deprecated
-        LOAD_ALL_DOCUMENTS_WITH_LINKS = """
-            SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
-            FROM (
-                SELECT * FROM (
-                    SELECT identifier as id, identifier as link FROM $mainTableName
-                    UNION ALL
-                    SELECT identifier as id, jsonb_array_elements_text(manifest->'links') as link FROM $mainTableName
-                ) AS links GROUP by id,link
-            ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
-            """
-        LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION = """
-            SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
-            FROM (
-                SELECT * FROM (
-                    SELECT identifier as id, identifier as link FROM $mainTableName WHERE collection = ?
-                    UNION ALL
-                    SELECT identifier as id, jsonb_array_elements_text(manifest->'links') as link FROM $mainTableName WHERE collection = ?
-                ) AS links GROUP by id,link
-            ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
-            """
-
     }
 
 
@@ -391,8 +365,11 @@ class PostgreSQLComponent implements Storage {
         insert.setString(1, doc.id)
         insert.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
         insert.setObject(3, doc.quotedAsString, java.sql.Types.OTHER)
-        insert.setObject(4, doc.manifestAsJson, java.sql.Types.OTHER)
-        insert.setBoolean(5, doc.isDeleted())
+        insert.setString(4, doc.collection)
+        insert.setString(5, "PLACEHOLDER CHANGED IN")
+        insert.setString(6, "PLACEHOLDER CHANGED BY")
+        insert.setString(7, doc.getChecksum())
+        insert.setBoolean(8, doc.isDeleted())
         return insert
     }
 
@@ -400,25 +377,45 @@ class PostgreSQLComponent implements Storage {
     private void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime) {
         update.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
         update.setObject(2, doc.quotedAsString, java.sql.Types.OTHER)
-        update.setObject(3, doc.manifestAsJson, java.sql.Types.OTHER)
-        update.setBoolean(4, doc.isDeleted())
-        update.setTimestamp(5, new Timestamp(modTime.getTime()))
-        update.setObject(6, doc.id, java.sql.Types.OTHER)
+
+        update.setString(3, doc.collection)
+        update.setString(4, "PLACEHOLDER CHANGED IN")
+        update.setString(5, "PLACEHOLDER CHANGED BY")
+        update.setString(6, doc.getChecksum())
+
+        update.setBoolean(7, doc.isDeleted())
+        update.setTimestamp(8, new Timestamp(modTime.getTime()))
+        update.setObject(9, doc.id, java.sql.Types.OTHER)
     }
 
     private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime) {
+
+        /*
+        * UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, quoted = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ? " +
+                "RETURNING *) " +
+            "INSERT INTO $mainTableName (id, data, quoted, collection, changedIn, changedBy, checksum, deleted) SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"*/
+
         insert.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
         insert.setObject(2, doc.quotedAsString, java.sql.Types.OTHER)
-        insert.setObject(3, doc.manifestAsJson, java.sql.Types.OTHER)
-        insert.setBoolean(4, doc.isDeleted())
-        insert.setTimestamp(5, new Timestamp(modTime.getTime()))
-        insert.setString(6, doc.identifier)
-        insert.setObject(7, matchAlternateIdentifierJson(doc.id), java.sql.Types.OTHER)
-        insert.setString(8, doc.identifier)
-        insert.setObject(9, doc.dataAsString, java.sql.Types.OTHER)
-        insert.setObject(10, doc.quotedAsString, java.sql.Types.OTHER)
-        insert.setObject(11, doc.manifestAsJson, java.sql.Types.OTHER)
-        insert.setBoolean(12, doc.isDeleted())
+
+        insert.setString(3, doc.collection)
+        insert.setString(4, "PLACEHOLDER CHANGED IN")
+        insert.setString(5, "PLACEHOLDER CHANGED BY")
+        insert.setString(6, doc.getChecksum())
+
+        insert.setBoolean(7, doc.isDeleted())
+        insert.setTimestamp(8, new Timestamp(modTime.getTime()))
+        insert.setString(9, doc.identifier)
+        insert.setString(10, doc.identifier)
+        insert.setObject(11, doc.dataAsString, java.sql.Types.OTHER)
+        insert.setObject(12, doc.quotedAsString, java.sql.Types.OTHER)
+
+        insert.setString(13, doc.collection)
+        insert.setString(14, "PLACEHOLDER CHANGED IN")
+        insert.setString(15, "PLACEHOLDER CHANGED BY")
+        insert.setString(16, doc.getChecksum())
+
+        insert.setBoolean(17, doc.isDeleted())
 
         return insert
     }
@@ -445,15 +442,16 @@ class PostgreSQLComponent implements Storage {
             return false
         }
     }
-
     private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc, Date modTime) {
         insvers.setString(1, doc.identifier)
         insvers.setObject(2, doc.dataAsString, Types.OTHER)
-        insvers.setObject(3, doc.manifestAsJson, Types.OTHER)
-        insvers.setString(4, doc.checksum)
-        insvers.setTimestamp(5, new Timestamp(modTime.getTime()))
-        insvers.setString(6, doc.identifier)
-        insvers.setString(7, doc.checksum)
+        insvers.setString(3, doc.collection)
+        insvers.setString(4, "PLACEHOLDER CHANGED IN")
+        insvers.setString(5, "PLACEHOLDER CHANGED BY")
+        insvers.setString(6, doc.checksum)
+        insvers.setTimestamp(7, new Timestamp(modTime.getTime()))
+        insvers.setString(8, doc.identifier)
+        insvers.setString(9, doc.checksum)
         return insvers
     }
 
