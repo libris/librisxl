@@ -2886,10 +2886,10 @@
           "8": "SpineTitle"
         }
       },
-      "$f": {"property": "marc:temporalCoverageNote"},
+      "$f": {"property": "qualifyingNote"},
       "$g": {"property": "comment"},
       "$h": {"property": "marc:mediaTerm", "surroundingChars": "[]"},
-      "$i": {"property": "qualifyingNote"},
+      "$i": {"property": "typeNote"},
       "i2": {
         "property": "typeNote",
         "TODO:tokenMap": {}, "TODO:if _": "use $i"
