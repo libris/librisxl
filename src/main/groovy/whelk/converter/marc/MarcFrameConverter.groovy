@@ -90,6 +90,10 @@ class MarcFrameConverter implements FormatConverter {
     }
 
     Map runRevert(Map data) {
+        if (data['@graph']) {
+            def entryId = data['@graph'][0]['@id']
+                data = JsonLd.frame(entryId, data)
+        }
         return conversion.revert(data)
     }
 
@@ -124,10 +128,6 @@ class MarcFrameConverter implements FormatConverter {
             def source = converter.mapper.readValue(new File(fpath), Map)
             def result = null
             if (cmd == "revert") {
-                if (source['@graph']) {
-                    def entryId = source['@graph'][0]['@id']
-                    source = JsonLd.frame(entryId, source)
-                }
                 result = converter.runRevert(source)
             } else {
                 result = converter.runConvert(source, fpath)
@@ -650,8 +650,6 @@ class MarcRuleSet {
     }
 
     void completeEntities(Map entityMap) {
-        def recordUriTemplate = topPendingResources['?record'].uriTemplate
-
         def record = entityMap['?record']
         def givenRecId = record['@id']
 
@@ -665,12 +663,22 @@ class MarcRuleSet {
             }
 
             def entityId = entity['@id']
-            def builtEntityId = dfn.uriTemplate? conversion.resolve(fromTemplate(
-                    dfn.uriTemplate).set('marcType', name).set(record).expand()) : null
+            def builtEntityId = null
+
+            if (dfn.uriTemplate) {
+                try {
+                    builtEntityId = conversion.resolve(
+                            fromTemplate(dfn.uriTemplate)
+                            .set('marcType', name).set(record).expandPartial())
+                } catch (IllegalArgumentException e) {
+                    ; // Fails on resolve if expanded is only partially filled
+                }
+            }
 
             if (!entityId && givenRecId && dfn.fragmentId) {
                 entityId = entity['@id'] = givenRecId +'#'+ dfn.fragmentId
             }
+
             if (builtEntityId) {
                 if (!entityId) {
                     entity['@id'] = builtEntityId
