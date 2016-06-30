@@ -10,7 +10,8 @@ import whelk.exception.FramingException
 import whelk.exception.ModelValidationException
 
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
-import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.MarcRecord
+import whelk.util.PropertyLoader;
 
 public class JsonLd {
 
@@ -18,13 +19,39 @@ public class JsonLd {
     static final String ID_KEY = "@id"
     static final String THING_KEY = "mainEntity"
     static final String RECORD_KEY = "meta"
+    static final String TYPE_KEY = "@type"
+    static final String CREATED_KEY = "created";
+    static final String MODIFIED_KEY = "modified";
+    static final String DELETED_KEY = "deleted";
+    static final String COLLECTION_KEY = "collection";
+    static final String CONTENT_TYPE_KEY = "contentType";
+    static final String CHECKSUM_KEY = "checksum";
+    static final String NON_JSON_CONTENT_KEY = "content"
+    static final String ALTERNATE_ID_KEY = "identifiers"
+    static final String JSONLD_ALT_ID_KEY = "sameAs"
+    static final String CONTROL_NUMBER_KEY = "controlNumber"
+    static final String ABOUT_KEY = "mainEntity"
+    static final String APIX_FAILURE_KEY = "apixExportFailedAt"
+    static final String ENCODING_LEVEL_KEY = "marc:encLevel"
+    static final String HOLDING_FOR_KEY = "holdingFor"
 
-    static final String DESCRIPTIONS_KEY = "descriptions"
-    static final URI SLASH_URI = new URI("/")
+    // If we _statically_ call loadProperties("secret"), without a try/catch it means that no code with a dependency on
+    // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
+    // depending on whelk-core) sometimes need to do.
+    static final URI BASE_URI;
+    static
+    {
+        try
+        {
+            BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
+        }
+        catch (Exception e)
+        {
+            System.err.println(e);
+        }
+    }
+
     static final ObjectMapper mapper = new ObjectMapper()
-
-    static final MARCFRAMEMAP = mapper.readValue(JsonLd.getClassLoader().getResourceAsStream("ext/marcframe.json"), Map)
-
     static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
 
     private static Logger log = LoggerFactory.getLogger(JsonLd.class)
@@ -279,15 +306,14 @@ public class JsonLd {
 
 
     static boolean isFlat(Map jsonLd) {
-        if ((jsonLd.containsKey(GRAPH_KEY) && jsonLd.get(GRAPH_KEY) instanceof List || jsonLd.containsKey(DESCRIPTIONS_KEY))) {
-        //if (jsonLd.size() == 1 && (jsonLd.containsKey(GRAPH_KEY) || jsonLd.containsKey(DESCRIPTIONS_KEY))) {
+        if ((jsonLd.containsKey(GRAPH_KEY) && jsonLd.get(GRAPH_KEY) instanceof List)) {
             return true
         }
         return false
     }
 
     static boolean isFramed(Map jsonLd) {
-        if (jsonLd && !jsonLd.containsKey(GRAPH_KEY) && !jsonLd.containsKey(DESCRIPTIONS_KEY)) {
+        if (jsonLd && !jsonLd.containsKey(GRAPH_KEY)) {
             return true
         }
         return false
@@ -310,19 +336,6 @@ public class JsonLd {
                     }
                 }
             }
-        } else if (flatJsonLd.containsKey(DESCRIPTIONS_KEY)) {
-            idMap.put(flatJsonLd.get(DESCRIPTIONS_KEY).get("entry").get(ID_KEY), flatJsonLd.get(DESCRIPTIONS_KEY).get("entry"))
-            for (item in flatJsonLd.get(DESCRIPTIONS_KEY).get("items")) {
-                if (item.containsKey(ID_KEY)) {
-                    idMap.put(item.get(ID_KEY), item)
-                }
-            }
-            for (item in flatJsonLd.get(DESCRIPTIONS_KEY).get("quoted")) {
-                if (item.get(GRAPH_KEY).containsKey(ID_KEY)) {
-                    idMap.put(item.get(GRAPH_KEY).get(ID_KEY), item.get(GRAPH_KEY))
-                }
-            }
-
         }
         return idMap
     }

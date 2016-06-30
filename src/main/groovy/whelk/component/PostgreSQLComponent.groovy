@@ -557,7 +557,7 @@ class PostgreSQLComponent implements Storage {
         StringBuilder whereClause = new StringBuilder("(")
 
         if (collection) {
-            whereClause.append("manifest->>'collection' = ?")
+            whereClause.append("collection = ?")
             values.add(collection)
             firstKey = false
         }
