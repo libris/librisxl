@@ -3,6 +3,7 @@ package whelk
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.*
 
+import java.lang.reflect.Array
 import java.lang.reflect.Type
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -18,6 +19,7 @@ class Document {
     static final ObjectMapper mapper = new ObjectMapper()
 
     static final List thingIdPath = ["@graph", 0, "mainEntity", "@id"]
+    static final List thingIdPath2 = ["@graph", 1, "@id"]
     static final List thingSameAsPath = ["@graph", 1, "sameAs"]
     static final List recordIdPath = ["@graph", 0, "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
@@ -50,26 +52,26 @@ class Document {
         return mapper.writeValueAsString(data)
     }
 
-    void setId(id) { set(recordIdPath, id) }
+    void setId(id) { set(recordIdPath, id, HashMap) }
     String getId() { get(recordIdPath) }
 
-    void setApixExportFailFlag(boolean failed) { set(failedApixExportPath, failed) }
+    void setApixExportFailFlag(boolean failed) { set(failedApixExportPath, failed, HashMap) }
     boolean getApixExportFailFlag() { get(failedApixExportPath) }
 
-    void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber) }
+    void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber, HashMap) }
     String getControlNumber() { get(controlNumberPath) }
 
-    void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor) }
+    void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor, HashMap) }
     String getHoldingFor() { get(holdingForPath) }
 
-    void setEncodingLevel(encLevel) { set(encLevelPath, encLevel) }
+    void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, HashMap) }
     String getEncodingLevel() { get(encLevelPath) }
 
     void setCreated(Date created)
     {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(created.toInstant(), ZoneId.systemDefault())
         String formatedCreated = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-        set(createdPath, formatedCreated)
+        set(createdPath, formatedCreated, HashMap)
     }
     String getCreated() { get(createdPath) }
 
@@ -77,7 +79,7 @@ class Document {
     {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(modified.toInstant(), ZoneId.systemDefault())
         String formatedModified = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-        set(modifiedPath, formatedModified)
+        set(modifiedPath, formatedModified, HashMap)
     }
     String getModified() { get(modifiedPath) }
 
@@ -99,6 +101,21 @@ class Document {
         return ret
     }
 
+    void addThingIdentifier(String identifier)
+    {
+        if (get(thingIdPath) == null)
+        {
+            set(thingIdPath2, identifier, HashMap)
+            set(thingIdPath, identifier, HashMap)
+            return
+        }
+
+        preparePath(thingSameAsPath, ArrayList)
+        System.out.println(data);
+        List sameAsList = get(thingSameAsPath)
+        sameAsList.add(["@id" : identifier])
+    }
+
     /**
      * By convention the first id in the returned list is the MAIN record id.
      */
@@ -117,35 +134,23 @@ class Document {
         return ret
     }
 
-    void addThingIdentifier(String identifier)
-    {
-        if (get(thingIdPath) == null)
-        {
-            set(thingIdPath, identifier)
-            return
-        }
-
-        preparePath(thingSameAsPath)
-        System.out.println(data);
-        List sameAsList = get(thingSameAsPath)
-        //if (sameAsList != null)
-
-        sameAsList.add(["@id" : identifier])
-    }
-
     /**
      * Adds empty structure to the document so that 'path' can be traversed.
      */
-    private void preparePath(List path)
+    private void preparePath(List path, Type leafType)
     {
         // Start at root data node
         Object node = data;
 
-        for (int i = 0; i < path.size() - 1; ++i)
+        for (int i = 0; i < path.size(); ++i)
         {
             Object step = path.get(i)
 
-            Type nextReplacementType = (path.get(i+1) instanceof Integer) ? ArrayList : HashMap
+            Type nextReplacementType;
+            if (i < path.size() - 1) // use the next step to determine the type of the next object
+                nextReplacementType = (path.get(i+1) instanceof Integer) ? ArrayList : HashMap
+            else
+                nextReplacementType = leafType
 
             Object candidate = null;
             if (node instanceof Map)
@@ -158,12 +163,12 @@ class Document {
 
             if (candidate == null)
             {
-                System.out.println("Adding for step: " + step);
                 if (node instanceof Map)
                     node.put(step, nextReplacementType.newInstance())
                 else if (node instanceof List)
                 {
-                    for (int j = 0; j < step+1; ++j)
+                    int initialSize = node.size()
+                    for (int j = 0; j < step+1 - initialSize; ++j)
                         node.add(nextReplacementType.newInstance())
                 }
             }
@@ -174,9 +179,12 @@ class Document {
         }
     }
 
-    private boolean set(List path, value)
+    /**
+     * Set 'value' at 'path'. 'container' should be ArrayList or HashMap depending on if value should reside in a list or an object
+     */
+    private boolean set(List path, Object value, Type container)
     {
-        preparePath(path)
+        preparePath(path, container)
 
         // Start at root data node
         Object node = data;
