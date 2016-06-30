@@ -119,34 +119,34 @@ bib/8435499	[-||-]
 bib/8435506	[-||-]
 bib/8595377	[–||– förenklat sätt att notera repliker som följer på artikel/recension = ?,?,?]
 bib/10796401	subject.broader:historia
-bib/11311266
-bib/11357644
-bib/11601582
-bib/11691597
-bib/11850823
-bib/11911628
-bib/12035894
-bib/12289439
+bib/11311266	
+bib/11357644	
+bib/11601582	
+bib/11691597	
+bib/11850823	
+bib/11911628	
+bib/12035894	
+bib/12289439	
 bib/1234	Water and water pollution handbook. Vol. 2
-bib/12384646
-bib/12732969
-bib/12743333
-bib/13531679
-bib/13543149
-bib/13584984
-bib/13884869
-bib/13973072
+bib/12384646	
+bib/12732969	
+bib/12743333	
+bib/13531679	
+bib/13543149	
+bib/13584984	
+bib/13884869	
+bib/13973072	
 bib/14006223	har subject.broader.prefLabel:Aktiemarknad
 bib/2912361	har relation.@type=Work, relation.uniformTitle:Metamorphoses (auth/345526)
-bib/3222798
-bib/3678656
-bib/4582889
+bib/3222798	
+bib/3678656	
+bib/4582889	
 bib/48077	Länkar till Pengar auth/156486 via subject
-bib/5067018
-bib/5299954
-bib/6128247
+bib/5067018	
+bib/5299954	
+bib/6128247	
 bib/664491	(länkar till Tove Jansson auth/19153 via attributedTo)
-bib/7149593
+bib/7149593	
 bib/816912	Mumintrollet (huvudpost; länkar till Lars Jansson auth/191493 via contributorList)
 bib/816913	Mumintrollet (del 1)
 bib/8261338	Kalle Anka & C:o (Serie)
@@ -265,8 +265,8 @@ bib/480417	Franska - Les œuvres complètes. ‡n 41, ‡p Œuvres critiques. �
 bib/3398365	Franska - Œuvres complètes. ‡n T. 14, ‡p Art poétique françois = Les œuvres
 bib/17063241	Tyska - Lesefutter für Groß und Klein : ‡b Kinder- und Jugendliteratur nach 2000 und literarisches Lernen im medienintegrativen Deutschunterricht / ‡c Petra Josting, Ricarda Dreier (Hgg.)
 bib/10724158	Latin (bok från 1640)... cùm divinâ disponente providentiâ, ex clementissimo s. r. m:tis indultu, admodum reverendus & præcellens vir dn. Laurentius Paulinus Gothus ... sub magnificentissimo, perillustris, celsi ac generosi domini, dn. Magni Gabrielis de la Gardie comitis de Lecköö, l. bar. de Eekholmen, domini de Hapsal, Dagdön, Kolta, Kydha, Runßön, &c. Rectoratu Academico, 4. non. junij anni post natum Mundi salvatorem M DC XL. Summis dignè oblatis, solenniter investiret honorîbus ac sacro sanctæ theologiæ doctores, Ubsaliæ Sveonum, inauguraret.
-bib/3313799
-bib/3678902
+bib/3313799	
+bib/3678902	
 bib/12077095	Livet deluxe / Jens Lapidus
 bib/10729106	Snabba Cash / Jens Lapidus
 bib/8354559	 Agnes Cecilia / Maria Gripe
@@ -301,34 +301,34 @@ bib/8999794	Mio Min Mio / Astrid Lindgren
 bib/7237796	Bröderna Lejonhjärta / Astrid Lindgren
 bib/7234965	Ronja rövardotter / Astrid Lindgren
 
-hold/15726821
-hold/15958795
-hold/18472436
-hold/22266746
-hold/23452070
-hold/32752629
-hold/718795
-hold/718796
-hold/718797
-hold/718798
-hold/718800
-hold/718801
-hold/718802
-hold/718803
-hold/718804
-hold/718805
-hold/718806
-hold/718807
-hold/718809
-hold/718810
-hold/718811
-hold/718812
-hold/718813
-hold/718814
-hold/718815
-hold/718817
-hold/718818
-hold/718819
+hold/15726821	
+hold/15958795	
+hold/18472436	
+hold/22266746	
+hold/23452070	
+hold/32752629	
+hold/718795	
+hold/718796	
+hold/718797	
+hold/718798	
+hold/718800	
+hold/718801	
+hold/718802	
+hold/718803	
+hold/718804	
+hold/718805	
+hold/718806	
+hold/718807	
+hold/718809	
+hold/718810	
+hold/718811	
+hold/718812	
+hold/718813	
+hold/718814	
+hold/718815	
+hold/718817	
+hold/718818	
+hold/718819	
 hold/26746600	(http://libris.kb.se/bib/11798968?tab3=marc&vw=full) – monografiskt bestånd med enbart sigel
 hold/39698169	(http://libris.kb.se/bib/16583077?tab3=marc&vw=full) – monografiskt videobestånd med enkelt hyllsignum (852h)
 hold/37789933	(http://libris.kb.se/bib/14854711?tab3=marc&vw=full) – monografiskt bestånd med flerledat hyllsignum (852h+j), intern beståndsanmärkning, teknisk anmärkning (NB-kodning som används för uttag av NB-produkter) m.m.
