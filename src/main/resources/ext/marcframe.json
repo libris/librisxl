@@ -240,6 +240,28 @@
       }
     },
 
+    "classification-ddc": {
+      "TODO:$a": {"property": "classificationDdc", "note": "use this flattened form?"},
+      "resourceType": "ClassificationDdc",
+      "TOOO:i1": {},
+      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}/",
+      "$a": {"property": "notation", "required": true},
+      "$2": {
+        "note": "ignorable (just use defaults)?",
+        "link": "inScheme", "resourceType": "ConceptScheme",
+        "required": true,
+        "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
+        "defaults": {
+          "notation": "DDC",
+          "versionOf": {"@id": "http://dewey.info/scheme/ddc/"}
+        },
+        "property": "version",
+        "splitValuePattern": "(\\d+)(?:/(swe))?",
+        "splitValueProperties": ["version", "language"],
+        "rejoin": "/"
+      }
+    },
+
     "subjectbase": {
       "i2": {
         "link": "inScheme",
@@ -2544,19 +2566,10 @@
     "060": {
       "aboutEntity": "?work",
       "addLink": "classification",
-      "resourceType": "Concept",
+      "resourceType": "ClassificationNlm",
       "TOOO:i1": {},
       "TOOO:i2": {},
-      "$a": {
-        "property": "notation",
-        "defaults": {
-          "inScheme": {
-            "@id": "/ext/scheme/nlm",
-            "@type": "ConceptScheme",
-            "notation": "NLM"
-          }
-        }
-      },
+      "$a": {"property": "notation"},
       "$b": {"property": "classificationItem", "ignored": true}
     },
     "061": {},
@@ -2581,17 +2594,8 @@
       "aboutEntity": "?work",
       "TOOO:i1": {},
       "addLink": "classification",
-      "resourceType": "Concept",
-      "$a": {
-        "property": "notation",
-        "defaults": {
-          "inScheme": {
-            "@id": "http://udcdata.info/udc-schema",
-            "@type": "ConceptScheme",
-            "notation": "UDC"
-          }
-        }
-      },
+      "resourceType": "ClassificationUdc",
+      "$a": {"property": "notation"},
       "_spec": [
         {
           "source": {
@@ -2602,12 +2606,7 @@
               "instanceOf": {
                 "@type": "Text",
                 "classification": [
-                  {
-                    "@type": "Concept",
-                    "notation": "030",
-                    "inScheme": {"@id": "http://udcdata.info/udc-schema",
-                      "@type": "ConceptScheme", "notation": "UDC"}
-                  }
+                  {"@type": "ClassificationUdc", "notation": "030"}
                 ]
               }
             }
@@ -2618,27 +2617,9 @@
 
     "082": {
       "aboutEntity": "?work",
-      "TODO:$a": {"property": "classificationDdc", "note": "use this flattened form?"},
       "addLink": "classification",
-      "resourceType": "Concept",
-      "TOOO:i1": {},
+      "include": ["classification-ddc"],
       "TOOO:i2": {},
-      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}/",
-      "$a": {"property": "notation", "required": true},
-      "$2": {
-        "note": "ignorable (just use defaults)?",
-        "link": "inScheme", "resourceType": "ConceptScheme",
-        "required": true,
-        "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
-        "defaults": {
-          "notation": "DDC",
-          "versionOf": {"@id": "http://dewey.info/scheme/ddc/"}
-        },
-        "property": "version",
-        "splitValuePattern": "(\\d+)(?:/(swe))?",
-        "splitValueProperties": ["version", "language"],
-        "rejoin": "/"
-      },
       "_spec": [
         {
           "name": "TODO",
@@ -2648,21 +2629,26 @@
       ]
     },
     "083": {
-      "inherit": "082",
-      "i2": null
+      "aboutEntity": "?work",
+      "addLink": "classification",
+      "include": ["classification-ddc"]
     },
 
     "084": {
+      "include": [],
       "aboutEntity": "?work",
       "addLink": "classification",
-      "resourceType": "Concept",
+      "resourceType": "Classification",
       "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{notation}",
       "uriTemplateDefaults": {"inScheme.notation": "kssb"},
       "$a": {"property": "notation", "required": true},
-      "$2": {"link": "inScheme",
-             "resourceType": "ConceptScheme", "uriTemplate": "https://id.kb.se/term/{+_}",
-             "property": "notation"},
-      "$b": {"property": "classificationItem", "ignored": true},
+      "$2": {
+        "link": "inScheme",
+        "resourceType": "ConceptScheme",
+        "uriTemplate": "https://id.kb.se/term/{+_}",
+        "property": "notation"
+      },
+      "$b": {"property": "classificationItem"},
       "_spec": [
         {
           "name": "TODO",
@@ -3925,7 +3911,7 @@
       "aboutEntity": "?work",
       "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{notation}",
       "addLink": "classification",
-      "resourceType": "Concept",
+      "resourceType": "Classification",
       "i2": {
         "link": "inScheme", "resourceType": "ConceptScheme",
         "uriTemplate": "https://id.kb.se/term/{+_}",
@@ -4170,14 +4156,9 @@
         "$g": {"property": "deathDate"}
     },
     "065" : {
-      "inherit": "083",
-      "addLink": "broadMatch",
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{notation}",
-      "$2": {
-        "link": "inScheme", "resourceType": "ConceptScheme",
-        "uriTemplate": "https://id.kb.se/term/{+_}",
-        "property": "notation"
-      }
+      "inherit": "bib:084",
+      "aboutEntity": "?record",
+      "addLink": "broadMatch"
     },
 
     "073": {
@@ -4191,9 +4172,11 @@
       "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{prefLabel}"
     },
 
-    "082" : {"inherit": "bib"},
+    "082" : {
+      "inherit": "bib"
+    },
     "083" : {
-      "inherit": "bib:082",
+      "inherit": "bib",
       "aboutEntity": "?record",
       "addLink": "closeMatch",
       "match-domain": {
