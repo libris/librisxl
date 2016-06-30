@@ -111,7 +111,6 @@ class Document {
         }
 
         preparePath(thingSameAsPath, ArrayList)
-        System.out.println(data);
         List sameAsList = get(thingSameAsPath)
         sameAsList.add(["@id" : identifier])
     }
@@ -132,6 +131,19 @@ class Document {
         }
 
         return ret
+    }
+
+    void addRecordIdentifier(String identifier)
+    {
+        if (get(recordIdPath) == null)
+        {
+            set(recordIdPath, identifier, HashMap)
+            return
+        }
+
+        preparePath(recordSameAsPath, ArrayList)
+        List sameAsList = get(recordSameAsPath)
+        sameAsList.add(["@id" : identifier])
     }
 
     /**
