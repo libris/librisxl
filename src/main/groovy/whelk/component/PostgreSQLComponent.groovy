@@ -655,32 +655,6 @@ class PostgreSQLComponent implements Storage {
         return [jsonbPath.toString(), value]
     }
 
-        String calculateChecksum(Document doc) {
-        log.trace("Calculating checksum with manifest: ${doc.manifest}")
-        MessageDigest m = MessageDigest.getInstance("MD5")
-        m.reset()
-        TreeMap sortedData = new TreeMap(doc.data)
-        byte[] databytes = mapper.writeValueAsBytes(sortedData)
-        // Remove created and modified from manifest in preparation for checksum calculation
-        Date created = doc.manifest.remove(Document.CREATED_KEY)
-        Date modified = doc.manifest.remove(Document.MODIFIED_KEY)
-        doc.manifest.remove(Document.CHECKSUM_KEY)
-        byte[] manifestbytes= mapper.writeValueAsBytes(doc.manifest)
-        byte[] checksumbytes = new byte[databytes.length + manifestbytes.length];
-        System.arraycopy(databytes, 0, checksumbytes, 0, databytes.length);
-        System.arraycopy(manifestbytes, 0, checksumbytes, databytes.length, manifestbytes.length);
-        m.update(checksumbytes)
-        byte[] digest = m.digest()
-        BigInteger bigInt = new BigInteger(1,digest)
-        String hashtext = bigInt.toString(16)
-        log.trace("calculated checksum: $hashtext")
-        doc.manifest[Document.CHECKSUM_KEY] = hashtext
-        // Reinsert created and modified
-        doc.setCreated(created)
-        doc.setModified(modified)
-        return hashtext
-    }
-
     // TODO: Update to real locate
     @Override
     Location locate(String identifier, boolean loadDoc) {

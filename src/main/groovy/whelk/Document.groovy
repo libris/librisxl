@@ -5,6 +5,7 @@ import org.codehaus.jackson.map.*
 
 import java.lang.reflect.Array
 import java.lang.reflect.Type
+import java.security.MessageDigest
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -258,7 +259,8 @@ class Document {
         return node;
     }
 
-    static Object deepCopy(Object orig) {
+    static Object deepCopy(Object orig)
+    {
         ByteArrayOutputStream bos = new ByteArrayOutputStream()
         ObjectOutputStream oos = new ObjectOutputStream(bos)
         oos.writeObject(orig); oos.flush()
@@ -267,14 +269,21 @@ class Document {
         return ois.readObject()
     }
 
+    String getChecksum()
+    {
+        Document clone = clone();
 
+        // timestamps not part of checksum
+        clone.set(modifiedPath, "", HashMap)
+        clone.set(createdPath, "", HashMap)
 
-
-    // LEGACY:
-
-
-    String getChecksum() {
-        return null
+        MessageDigest m = MessageDigest.getInstance("MD5")
+        m.reset()
+        byte[] databytes = mapper.writeValueAsBytes(clone.data)
+        m.update(databytes)
+        byte[] digest = m.digest()
+        BigInteger bigInt = new BigInteger(1,digest)
+        String hashtext = bigInt.toString(16)
+        return hashtext
     }
-
 }
