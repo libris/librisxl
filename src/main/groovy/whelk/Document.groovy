@@ -3,7 +3,6 @@ package whelk
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.*
 
-import java.lang.reflect.Array
 import java.lang.reflect.Type
 import java.security.MessageDigest
 import java.time.ZoneId
@@ -269,6 +268,11 @@ class Document {
         return ois.readObject()
     }
 
+    /**
+     * This function relies on the fact the deserialized jsonld (using Jackson ObjectMapper) consists of LinkedHashMaps
+     * (which preserves order), unlike normal HashMaps which do not, so be careful not to place HashMaps into a document
+     * structure and then try to calculate a checksum.
+     */
     String getChecksum()
     {
         Document clone = clone();
