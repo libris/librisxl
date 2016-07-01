@@ -52,19 +52,19 @@ class Document {
         return mapper.writeValueAsString(data)
     }
 
-    void setId(id) { set(recordIdPath, id, HashMap) }
+    void setId(id) { set(recordIdPath, id, LinkedHashMap) }
     String getId() { get(recordIdPath) }
 
-    void setApixExportFailFlag(boolean failed) { set(failedApixExportPath, failed, HashMap) }
+    void setApixExportFailFlag(boolean failed) { set(failedApixExportPath, failed, LinkedHashMap) }
     boolean getApixExportFailFlag() { get(failedApixExportPath) }
 
-    void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber, HashMap) }
+    void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber, LinkedHashMap) }
     String getControlNumber() { get(controlNumberPath) }
 
-    void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor, HashMap) }
+    void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor, LinkedHashMap) }
     String getHoldingFor() { get(holdingForPath) }
 
-    void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, HashMap) }
+    void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, LinkedHashMap) }
     String getEncodingLevel() { get(encLevelPath) }
 
     void setCreated(Date created)
@@ -269,7 +269,7 @@ class Document {
     }
 
     /**
-     * This function relies on the fact the deserialized jsonld (using Jackson ObjectMapper) consists of LinkedHashMaps
+     * This function relies on the fact that the deserialized jsonld (using Jackson ObjectMapper) consists of LinkedHashMaps
      * (which preserves order), unlike normal HashMaps which do not, so be careful not to place HashMaps into a document
      * structure and then try to calculate a checksum.
      */
