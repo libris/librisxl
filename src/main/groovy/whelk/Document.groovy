@@ -278,8 +278,8 @@ class Document {
         Document clone = clone();
 
         // timestamps not part of checksum
-        clone.set(modifiedPath, "", HashMap)
-        clone.set(createdPath, "", HashMap)
+        clone.set(modifiedPath, "", LinkedHashMap)
+        clone.set(createdPath, "", LinkedHashMap)
 
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()
