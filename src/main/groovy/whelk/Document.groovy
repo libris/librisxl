@@ -110,9 +110,11 @@ class Document {
             return
         }
 
-        preparePath(thingSameAsPath, ArrayList)
-        List sameAsList = get(thingSameAsPath)
-        sameAsList.add(["@id" : identifier])
+        if (preparePath(thingSameAsPath, ArrayList))
+        {
+            List sameAsList = get(thingSameAsPath)
+            sameAsList.add(["@id" : identifier])
+        }
     }
 
     /**
@@ -141,15 +143,17 @@ class Document {
             return
         }
 
-        preparePath(recordSameAsPath, ArrayList)
-        List sameAsList = get(recordSameAsPath)
-        sameAsList.add(["@id" : identifier])
+        if (preparePath(recordSameAsPath, ArrayList))
+        {
+            List sameAsList = get(recordSameAsPath)
+            sameAsList.add(["@id" : identifier])
+        }
     }
 
     /**
      * Adds empty structure to the document so that 'path' can be traversed.
      */
-    private void preparePath(List path, Type leafType)
+    private boolean preparePath(List path, Type leafType)
     {
         // Start at root data node
         Object node = data;
@@ -164,6 +168,7 @@ class Document {
             else
                 nextReplacementType = leafType
 
+            // Get the next object along the path (candidate)
             Object candidate = null;
             if (node instanceof Map)
                 candidate = node.get(step)
@@ -173,22 +178,28 @@ class Document {
                     candidate = node.get(step)
             }
 
+            // If that step can't be taken in the current structure, expand the structure
             if (candidate == null)
             {
                 if (node instanceof Map)
                     node.put(step, nextReplacementType.newInstance())
                 else if (node instanceof List)
                 {
-                    int initialSize = node.size()
-                    for (int j = 0; j < step+1 - initialSize; ++j)
+                    while (node.size() < step+1)
                         node.add(nextReplacementType.newInstance())
                 }
             }
-            else if (! candidate instanceof Map)
-                log.warn("Structure conflict, path: " + path + " data:\n" + data);
+            // Check path integrity, in all but the last step (which will presumably be replaced)
+            else if ((i < path.size() - 1) &&
+                    ! matchingContainer(candidate.getClass(), nextReplacementType))
+            {
+                log.warn("Structure conflict, path: " + path + ", at token: " + (i+1) + ", expected data to be: " + nextReplacementType + ", data was: " + candidate.getClass() + ", data:\n" + data );
+                return false
+            }
 
             node = node.get(step)
         }
+        return true
     }
 
     /**
@@ -196,7 +207,8 @@ class Document {
      */
     private boolean set(List path, Object value, Type container)
     {
-        preparePath(path, container)
+        if (! preparePath(path, container))
+            return false
 
         // Start at root data node
         Object node = data;
@@ -204,33 +216,20 @@ class Document {
         for (int i = 0; i < path.size() - 1; ++i) // follow all but last step
         {
             Object step = path.get(i)
-            if (node instanceof Map && !step instanceof String)
-            {
-                log.warn("Needed string as map key, but was given: " + step + ". (path was: " + path + ")")
-                return false
-            }
-            else if (node instanceof List && !step instanceof Integer)
-            {
-                log.warn("Needed integer as list index, but was given: " + step + ". (path was: " + path + ")")
-                return false
-            }
-
             node = node.get(step)
-            if (node == null)
-            {
-                log.warn("Document did not have the required structure for placing a value at: " + path)
-                return false
-            }
         }
 
-        // The path has now been followed up to the last step, which is now replaced with our new value
-        if ( !node instanceof Map )
-        {
-            log.warn("Document did not have the required structure for placing a value at: " + path)
-            return false
-        }
         node.put(path.get(path.size()-1), value)
         return true;
+    }
+
+    private boolean matchingContainer(Class c1, Class c2)
+    {
+        if ( (Map.class.isAssignableFrom(c1)) && (Map.class.isAssignableFrom(c2)) )
+            return true
+        if ( (List.class.isAssignableFrom(c1)) && (List.class.isAssignableFrom(c2)) )
+            return true
+        return false;
     }
 
     private Object get(List path)
@@ -240,12 +239,12 @@ class Document {
 
         for (Object step : path)
         {
-            if (node instanceof Map && !step instanceof String)
+            if ( (node instanceof Map) && !(step instanceof String) )
             {
                 log.warn("Needed string as map key, but was given: " + step + ". (path was: " + path + ")")
                 return null;
             }
-            else if (node instanceof List && !step instanceof Integer)
+            else if ( (node instanceof List) && !(step instanceof Integer) )
             {
                 log.warn("Needed integer as list index, but was given: " + step + ". (path was: " + path + ")")
                 return null;
@@ -274,118 +273,8 @@ class Document {
     // LEGACY:
 
 
-    void addAliases(Map entry) {
-        for (sameAs in asList(entry.get(JSONLD_ALT_ID_KEY))) {
-            if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
-                String identifier = sameAs.get(JsonLd.ID_KEY)
-                int pipeZ = identifier.indexOf(" |z")
-                if (pipeZ > 0) {
-                    identifier = identifier.substring(0,pipeZ)
-                }
-                identifier = identifier.trim().replaceAll(/\n|\r/, "")
-                identifier = identifier.replaceAll(/\s/, "%20")
-                addIdentifier(identifier)
-                log.debug("Added ${identifier} to ${getURI()}")
-            }
-        }
-    }
-
     String getChecksum() {
         return null
     }
-
-    List getQuoted() {
-        if (data.containsKey(JsonLd.DESCRIPTIONS_KEY)){
-            return getData().get(JsonLd.DESCRIPTIONS_KEY).get("quoted")
-        } else {
-            def quoted = []
-            for (item in data.get(GRAPH_KEY)) {
-                if (item.containsKey(GRAPH_KEY)) {
-                    quoted << item
-                }
-            }
-            return quoted
-        }
-        return Collections.emptyList()
-    }
-
-    String getQuotedAsString() {
-        List quoteds = getQuoted()
-        if (quoteds) {
-            return mapper.writeValueAsString(quoteds)
-        }
-        return null
-    }
-
-    Document withData(Map data) {
-        setData(data)
-        return this
-    }
-
-    Document addIdentifier(String identifier) {
-        Set<String> ids = new HashSet<String>()
-        /*ids.addAll(manifest.get(ALTERNATE_ID_KEY) ?: [])
-        ids.add(identifier)
-        manifest.put(ALTERNATE_ID_KEY, ids)*/
-        data[GRAPH_KEY][0][JSONLD_ALT_ID_KEY]
-        return this
-    }
-
-    Document withIdentifier(String identifier) {
-        setId(identifier)
-        return this
-    }
-
-    Document withContentType(String contentType) {
-        manifest.put(CONTENT_TYPE_KEY, contentType)
-        return this
-    }
-
-    Document inCollection(String ds) {
-        if (ds) {
-            manifest[COLLECTION_KEY] = ds
-        }
-        return this
-    }
-
-    Document withDeleted(boolean d) {
-        setDeleted(d)
-        return this
-    }
-
-    static boolean isJson(String ct) {
-        ct ==~ /application\/(\w+\+)*json/ || ct ==~ /application\/x-(\w+)-json/
-    }
-
-    boolean isJson() {
-        return isJson(getContentType())
-    }
-
-    boolean isFlat() {
-        if (isJsonLd()) {
-            return JsonLd.isFlat(this.data)
-        }
-        return false
-    }
-
-    boolean isFramed() {
-        if (isJsonLd()) {
-            return JsonLd.isFramed(this.data)
-        }
-        return false
-    }
-
-    static boolean isJsonLd(String ct) {
-        return "application/ld+json" == ct
-    }
-
-    boolean isJsonLd() {
-        return isJsonLd(getContentType())
-    }
-
-    private asList(obj) {
-        return obj instanceof List? obj : [obj]
-    }
-
 
 }
