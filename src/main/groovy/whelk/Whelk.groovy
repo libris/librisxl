@@ -57,8 +57,8 @@ class Whelk {
         return pico
     }
 
-    Document store(Document document, String changedIn, String changedBy, boolean createOrUpdate = true) {
-        if (storage.store(document, createOrUpdate, changedIn, changedBy)) {
+    Document store(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean createOrUpdate = true) {
+        if (storage.store(document, createOrUpdate, changedIn, changedBy, collection, deleted)) {
             if (elastic) {
                 elastic.index(document)
             }
@@ -66,10 +66,10 @@ class Whelk {
         return document
     }
 
-    void bulkStore(final List<Document> documents, String changedIn, String changedBy, boolean createOrUpdate = true) {
-        if (storage.bulkStore(documents, createOrUpdate, changedIn, changedBy)) {
+    void bulkStore(final List<Document> documents, String changedIn, String changedBy, String collection, boolean createOrUpdate = true) {
+        if (storage.bulkStore(documents, createOrUpdate, changedIn, changedBy, collection)) {
             if (elastic) {
-                elastic.bulkIndex(documents)
+                elastic.bulkIndex(documents, collection)
             }
         } else {
             log.warn("Bulk store failed, not indexing : ${documents.first().id} - ${documents.last().id}")

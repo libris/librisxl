@@ -2,6 +2,7 @@ package whelk
 
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.*
+import whelk.util.PropertyLoader
 
 import java.lang.reflect.Type
 import java.security.MessageDigest
@@ -16,6 +17,23 @@ import java.time.format.DateTimeFormatter
  */
 @Log
 class Document {
+
+    // If we _statically_ call loadProperties("secret"), without a try/catch it means that no code with a dependency on
+    // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
+    // depending on whelk-core) sometimes need to do.
+    static final URI BASE_URI;
+    static
+    {
+        try
+        {
+            BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
+        }
+        catch (Exception e)
+        {
+            System.err.println(e);
+        }
+    }
+
     static final ObjectMapper mapper = new ObjectMapper()
 
     static final List thingIdPath = ["@graph", 0, "mainEntity", "@id"]
@@ -44,7 +62,7 @@ class Document {
 
     URI getURI()
     {
-        return JsonLd.BASE_URI.resolve(getId())
+        return BASE_URI.resolve(getId())
     }
 
     String getDataAsString()
@@ -270,7 +288,7 @@ class Document {
 
     /**
      * This function relies on the fact that the deserialized jsonld (using Jackson ObjectMapper) consists of LinkedHashMaps
-     * (which preserves order), unlike normal HashMaps which do not, so be careful not to place HashMaps into a document
+     * (which preserve order), unlike normal HashMaps which do not, so be careful not to place HashMaps into a document
      * structure and then try to calculate a checksum.
      */
     String getChecksum()

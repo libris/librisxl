@@ -35,22 +35,6 @@ public class JsonLd {
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
     static final String HOLDING_FOR_KEY = "holdingFor"
 
-    // If we _statically_ call loadProperties("secret"), without a try/catch it means that no code with a dependency on
-    // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
-    // depending on whelk-core) sometimes need to do.
-    static final URI BASE_URI;
-    static
-    {
-        try
-        {
-            BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
-        }
-        catch (Exception e)
-        {
-            System.err.println(e);
-        }
-    }
-
     static final ObjectMapper mapper = new ObjectMapper()
     static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
 
@@ -69,18 +53,6 @@ public class JsonLd {
         storeFlattened(framedJsonLd, flatList)
 
         return [(GRAPH_KEY): flatList.reverse()]
-    }
-
-    static Map flattenWithDescriptions(Map framedJsonLd) {
-        if (isFlat(framedJsonLd)) {
-            return framedJsonLd
-        }
-        def descriptionsFlatMap = ["descriptions": [:]]
-        flatten(framedJsonLd).eachWithIndex { i, item ->
-            if (i == 0) {
-                descriptionsFlatMap['descriptions']['entry'] = item
-            }
-        }
     }
 
     private static storeFlattened(current, result) {
@@ -111,7 +83,6 @@ public class JsonLd {
         }
         return updated
     }
-
 
     public static Map frame(String mainId, Map flatJsonLd) {
         return frame(mainId, null, flatJsonLd)
@@ -146,7 +117,7 @@ public class JsonLd {
             String foundIdentifier = findIdentifier(flatJsonLd)
             log.debug("Result of findIdentifier: $foundIdentifier")
             if (foundIdentifier) {
-                mainItem = idMap.get(Document.BASE_URI.resolve(foundIdentifier).toString())
+                mainItem = idMap.get(foundIdentifier)
             }
         }
         Map framedMap
