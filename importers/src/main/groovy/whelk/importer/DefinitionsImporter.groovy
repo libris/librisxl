@@ -26,12 +26,13 @@ class DefinitionsImporter extends Importer {
         defFile.eachLine {
             def data = mapper.readValue(it.getBytes("UTF-8"), Map)
             def newId = IdGenerator.generate()
-            Document doc = new Document(newId, data).withContentType("application/ld+json").inCollection(collection)
+            Document doc = new Document(data) //.withContentType("application/ld+json").inCollection(collection)
+            doc.setId(newId)
             documentList.add(doc)
             counter++
         }
         println("Created $counter documents from $definitionsFilename in ${(System.currentTimeMillis()-startTime)/1000} seconds. Now storing to system.")
-        whelk.bulkStore(documentList, "xl", null)
+        whelk.bulkStore(documentList, "xl", null, collection)
         println("Operation complete. Time elapsed: ${(System.currentTimeMillis() - startTime)/1000} seconds.")
     }
 }

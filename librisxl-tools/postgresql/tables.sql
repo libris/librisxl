@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS lddb (
     id text not null unique primary key,
     data jsonb not null,
-    quoted jsonb,
     collection text not null,
     changedIn text not null,
     changedBy text,

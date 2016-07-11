@@ -1,6 +1,5 @@
 CREATE INDEX idx_lddb_alive ON lddb (id) WHERE deleted IS NOT true;
 CREATE INDEX idx_lddb_modified ON lddb (modified);
-CREATE INDEX idx_lddb_quoted ON lddb USING GIN (quoted jsonb_path_ops);
 
 CREATE INDEX idx_lddb_graph ON lddb USING GIN ((data->'@graph') jsonb_path_ops);
 CREATE INDEX idx_lddb_holding_for on lddb ((data#>>'{@graph,1,holdingFor,@id}'));
