@@ -22,20 +22,16 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
     @Override
     Map convert(Map data, String id)
     {
-        // Perform a deep copy, so that the original document remains unchanged.
-        //Document doc = new Document(_doc.getId(), _doc.getData(), _doc.getManifest())
+        Document originalDocument = new Document(data);
 
-        //doc.withData(JsonLd.frame(doc.id, doc.data))
+        Map marcJsonData = jsonldConverter.convert(data, id)
 
-        Document marcJsonDocument = jsonldConverter.convert(doc)
+        MarcRecord record = JSONMarcConverter.fromJson(mapper.writeValueAsString(marcJsonData))
 
-        MarcRecord record = JSONMarcConverter.fromJson(marcJsonDocument.getDataAsString())
+        record = prepareRecord(record, id, originalDocument.getModified(), originalDocument.getChecksum())
 
-        record = prepareRecord(record, doc.id, doc.modified, doc.checksum)
+        Map xmlDocument = [(JsonLd.NON_JSON_CONTENT_KEY): whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record)]
 
-        Document xmlDocument = new Document(doc.id, [(Document.NON_JSON_CONTENT_KEY): whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record)], doc.manifest).withContentType(getResultContentType())
-
-        log.debug("Document ${xmlDocument.identifier} created successfully with entry: ${xmlDocument.manifest}")
         return xmlDocument
     }
 
