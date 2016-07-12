@@ -303,7 +303,7 @@ class OaiPmhHarvester {
                 mainId = LegacyIntegrationTools.generateId(recordId)
             Map converted = marcFrameConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), mainId)
             Document doc = new Document(converted)
-            
+
             doc.addRecordIdentifier(Document.BASE_URI.resolve(recordId).toString())
 
             log.trace("Created document with ID ${doc.id}")

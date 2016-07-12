@@ -162,7 +162,9 @@ public class ListRecordTrees
 
         rootMap.replace("@graph", mergedGraph);
 
-        return new Document(id, rootMap);
+        Document document = new Document(rootMap);
+        document.setId(id);
+        return document;
     }
 
     private static PreparedStatement prepareRootStatement(Connection dbconn, SetSpec setSpec)
@@ -171,10 +173,10 @@ public class ListRecordTrees
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT id, manifest, deleted, modified, data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM "
-                + tableName + " WHERE manifest->>'collection' <> 'definitions' ";
+        String selectSQL = "SELECT id, collection, deleted, modified, data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM "
+                + tableName + " WHERE collection <> 'definitions' ";
         if (setSpec.getRootSet() != null)
-            selectSQL += " AND manifest->>'collection' = ?";
+            selectSQL += " AND collection = ?";
         if (setSpec.getSubset() != null)
             selectSQL += " AND data @> ?";
 
@@ -202,7 +204,7 @@ public class ListRecordTrees
             throws SQLException
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-        String selectSQL = "SELECT id, data, modified, manifest->>'collection' as collection FROM " + tableName + " WHERE id = ?";
+        String selectSQL = "SELECT id, data, modified, collection FROM " + tableName + " WHERE id = ?";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);
 
@@ -289,12 +291,10 @@ public class ListRecordTrees
         // The ResultSet refers only to the root document. mergedDocument represents the entire tree.
 
         ObjectMapper mapper = new ObjectMapper();
-        String manifest = resultSet.getString("manifest");
         boolean deleted = resultSet.getBoolean("deleted");
         String sigel = resultSet.getString("sigel");
         if (sigel != null)
             sigel = LegacyIntegrationTools.uriToLegacySigel( resultSet.getString("sigel").replace("\"", "") );
-        HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
 
         writer.writeStartElement("record");
 
@@ -312,7 +312,7 @@ public class ListRecordTrees
         writer.writeCharacters(modificationTimes.latestModification.toString());
         writer.writeEndElement(); // datestamp
 
-        String dataset = (String) manifestmap.get("collection");
+        String dataset = resultSet.getString("collection");
         if (dataset != null)
         {
             writer.writeStartElement("setSpec");

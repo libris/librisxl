@@ -4,6 +4,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import whelk.Document;
+import whelk.JsonLd;
 import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,6 +22,7 @@ import java.time.ZonedDateTime;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ResponseCommon
 {
@@ -120,8 +122,10 @@ public class ResponseCommon
         {
             try
             {
-                Document convertedDocument = formatDescription.converter.convert(jsonLDdoc);
-                convertedText = (String) convertedDocument.getData().get("content");
+                /*Document convertedDocument = formatDescription.converter.convert(jsonLDdoc);
+                convertedText = (String) convertedDocument.getData().get("content");*/
+
+                convertedText = (String) formatDescription.converter.convert(jsonLDdoc.data, jsonLDdoc.getId()).get(JsonLd.getNON_JSON_CONTENT_KEY());
             }
             catch (Exception | Error e) // Depending on the converter, a variety of problems may arise here
             {
@@ -155,10 +159,8 @@ public class ResponseCommon
         {
             ObjectMapper mapper = new ObjectMapper();
             String data = resultSet.getString("data");
-            String manifest = resultSet.getString("manifest");
             HashMap datamap = mapper.readValue(data, HashMap.class);
-            HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
-            document = new Document(datamap, manifestmap);
+            document = new Document(datamap);
         }
 
         if (!onlyIdentifiers)
@@ -178,7 +180,7 @@ public class ResponseCommon
         writer.writeCharacters(modified.toString());
         writer.writeEndElement(); // datestamp
 
-        String dataset = (String) document.getManifest().get("collection");
+        String dataset = resultSet.getString("collection");
         if (dataset != null)
         {
             writer.writeStartElement("setSpec");
@@ -205,7 +207,7 @@ public class ResponseCommon
 
         if (!onlyIdentifiers && requestedFormat.endsWith(OaiPmh.FORMAT_INCLUDE_HOLD_POSTFIX) && dataset.equals("bib"))
         {
-            emitAttachedHoldings(document.getItIdentifiers(), writer);
+            emitAttachedHoldings(document.getRecordIdentifiers(), writer);
         }
 
         if (!onlyIdentifiers)
@@ -245,7 +247,7 @@ public class ResponseCommon
 
         StringBuilder selectSQL = new StringBuilder("SELECT id, data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM ");
         selectSQL.append(tableName);
-        selectSQL.append(" WHERE manifest->>'collection' = 'hold' AND deleted = false AND (");
+        selectSQL.append(" WHERE collection = 'hold' AND deleted = false AND (");
 
         for (int i = 0; i < itIds.size(); ++i)
         {

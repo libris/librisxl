@@ -60,15 +60,15 @@ public class Helpers
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT data, manifest, modified, deleted, " +
+        String selectSQL = "SELECT data, collection, modified, deleted, " +
                 " data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM " +
-                tableName + " WHERE manifest->>'collection' <> 'definitions' ";
+                tableName + " WHERE collection <> 'definitions' ";
         if (fromDateTime != null)
             selectSQL += " AND modified >= ? ";
         if (untilDateTime != null)
             selectSQL += " AND modified <= ? ";
         if (setSpec.getRootSet() != null)
-            selectSQL += " AND manifest->>'collection' = ? ";
+            selectSQL += " AND collection = ? ";
 
         if (setSpec.getSubset() != null)
             selectSQL += " AND data @> ?";
