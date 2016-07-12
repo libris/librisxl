@@ -147,7 +147,8 @@ class Document {
         List sameAsObjects = get(recordSameAsPath)
         for (Map object : sameAsObjects)
         {
-            ret.add( object.get("@id") )
+            if (object.get("@id") != null)
+                ret.add( object.get("@id") )
         }
 
         return ret
@@ -155,6 +156,9 @@ class Document {
 
     void addRecordIdentifier(String identifier)
     {
+        if (identifier == null)
+            throw new NullPointerException("Attempted to add null-identifier.");
+
         if (get(recordIdPath) == null)
         {
             set(recordIdPath, identifier, HashMap)

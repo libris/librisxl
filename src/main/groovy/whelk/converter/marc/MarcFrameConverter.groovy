@@ -104,13 +104,10 @@ class MarcFrameConverter implements FormatConverter {
     String getRequiredContentType() { "application/x-marc-json" }
 
     @Override
-    Document convert(final Document doc) {
-        def source = doc.data
-        def extraData = doc.manifest?.extraData
-        def result = runConvert(source, doc.identifier, extraData)
+    Map convert(Map source, String id) {
+        def result = runConvert(source, id, null)
         log.trace("Created frame: $result")
-
-        return new Document(result, doc.manifest).withIdentifier(((String)doc.identifier)).withContentType(getResultContentType())
+        return result
     }
 
     public static void main(String[] args) {
