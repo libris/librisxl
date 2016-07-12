@@ -104,7 +104,7 @@ public class ListSets
 
         // Construct the query
         String selectSQL = "SELECT DISTINCT data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM " + tableName +
-                " WHERE manifest->>'collection' = 'hold' ";
+                " WHERE collection = 'hold' ";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setFetchSize(512);
 

@@ -207,7 +207,7 @@ public class ResponseCommon
 
         if (!onlyIdentifiers && requestedFormat.endsWith(OaiPmh.FORMAT_INCLUDE_HOLD_POSTFIX) && dataset.equals("bib"))
         {
-            emitAttachedHoldings(document.getRecordIdentifiers(), writer);
+            emitAttachedHoldings(document.getThingIdentifiers(), writer);
         }
 
         if (!onlyIdentifiers)

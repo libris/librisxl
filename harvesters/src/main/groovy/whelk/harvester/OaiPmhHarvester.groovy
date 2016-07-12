@@ -301,7 +301,13 @@ class OaiPmhHarvester {
                 mainId = originalIdentifier
             else
                 mainId = LegacyIntegrationTools.generateId(recordId)
-            Map converted = marcFrameConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), mainId)
+
+            def extraData = [:]
+            for (spec in oaiPmhRecord.setSpecs) {
+                extraData.get("oaipmhSetSpecs", []).add(spec.toString())
+            }
+
+            Map converted = marcFrameConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), mainId, extraData)
             Document doc = new Document(converted)
 
             doc.addRecordIdentifier(Document.BASE_URI.resolve(recordId).toString())
