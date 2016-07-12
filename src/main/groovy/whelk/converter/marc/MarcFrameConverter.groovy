@@ -110,6 +110,12 @@ class MarcFrameConverter implements FormatConverter {
         return result
     }
 
+    Map convert(Map source, String id, Map extraData) {
+        def result = runConvert(source, id, extraData)
+        log.trace("Created frame: $result")
+        return result
+    }
+
     public static void main(String[] args) {
         List fpaths
         def cmd = "convert"

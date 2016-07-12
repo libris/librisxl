@@ -70,9 +70,6 @@ class Document {
         return mapper.writeValueAsString(data)
     }
 
-    void setId(id) { set(recordIdPath, id, LinkedHashMap) }
-    String getId() { get(recordIdPath) }
-
     void setApixExportFailFlag(boolean failed) { set(failedApixExportPath, failed, LinkedHashMap) }
     boolean getApixExportFailFlag() { get(failedApixExportPath) }
 
@@ -84,6 +81,19 @@ class Document {
 
     void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, LinkedHashMap) }
     String getEncodingLevel() { get(encLevelPath) }
+
+    void setId(String id) { set(recordIdPath, id, LinkedHashMap) }
+
+    /**
+     * Gets the document id (short form).
+     */
+    String getId()
+    {
+        String fullyQualifiedID = get(recordIdPath)
+        if (fullyQualifiedID.startsWith(whelk.Document.BASE_URI.toString()))
+            return fullyQualifiedID.substring(whelk.Document.BASE_URI.toString().length())
+        return fullyQualifiedID
+    }
 
     void setCreated(Date created)
     {

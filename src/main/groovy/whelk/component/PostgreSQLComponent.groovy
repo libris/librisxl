@@ -343,7 +343,7 @@ class PostgreSQLComponent implements Storage {
         PreparedStatement removeIdentifiers = connection.prepareStatement(DELETE_IDENTIFIERS)
         removeIdentifiers.setString(1, doc.getId())
         int numRemoved = removeIdentifiers.executeUpdate()
-        log.debug("Removed $numRemoved identifiers for id ${doc.id}")
+        log.debug("Removed $numRemoved identifiers for id ${doc.getId()}")
         PreparedStatement altIdInsert = connection.prepareStatement(INSERT_IDENTIFIERS)
         for (altId in doc.getRecordIdentifiers()) {
             altIdInsert.setString(1, doc.getId())
