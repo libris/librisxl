@@ -272,9 +272,9 @@ class Crud extends HttpServlet {
         try {
             Document doc = createDocumentIfOkToSave(data, collection, request, response)
             if (doc) {
-                doc.data = JsonLd.flatten(doc.data)
-                log.debug("Saving document (${doc.getId()})")
-                boolean newDocument = (doc.created == null)
+                //doc.data = JsonLd.flatten(doc.data)
+                log.debug("Saving document (${doc.getShortId()})")
+                boolean newDocument = (doc.getCreated() == null)
                 log.info("Document accepted: created is: ${doc.getCreated()}")
 
                 doc = whelk.store(doc, "xl", null, collection, false, (request.getMethod() == "PUT"))
@@ -308,18 +308,6 @@ class Crud extends HttpServlet {
         Map dataMap
         if ( cType.equals("application/ld+json")) {
             dataMap = mapper.readValue(data, Map)
-            // Check if supplied data has "about"-form
-            dataMap = JsonLd.frame(null, dataMap)
-            if (!dataMap.containsKey(JsonLd.ABOUT_KEY)) {
-                Map aboutMap = Document.deepCopy(dataMap)
-                String suppliedId = aboutMap.get("@id")
-                dataMap = [:]
-                dataMap.put(JsonLd.ABOUT_KEY, aboutMap)
-                if (suppliedId) {
-                    dataMap["@id"] = suppliedId
-                    dataMap[JsonLd.ABOUT_KEY]["@id"] = dataMap["@id"] + "#it"
-                }
-            }
         } else if ( cType.equals("application/x-marc-json")) {
             dataMap = converter.convert(dataMap)
         } else

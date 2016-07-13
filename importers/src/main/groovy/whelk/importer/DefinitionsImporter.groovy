@@ -26,7 +26,7 @@ class DefinitionsImporter extends Importer {
         defFile.eachLine {
             def data = mapper.readValue(it.getBytes("UTF-8"), Map)
             def newId = IdGenerator.generate()
-            Document doc = new Document(data) //.withContentType("application/ld+json").inCollection(collection)
+            Document doc = new Document(data)
             doc.setId(newId)
             documentList.add(doc)
             counter++
