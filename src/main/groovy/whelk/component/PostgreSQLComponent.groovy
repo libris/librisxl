@@ -100,7 +100,7 @@ class PostgreSQLComponent implements Storage {
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, identifier) VALUES (?,?)"
 
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, modified) SELECT ?,?,?,?,?,?,? " +
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, modified, deleted) SELECT ?,?,?,?,?,?,?,? " +
                 "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
                 "ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"
 
@@ -208,9 +208,11 @@ class PostgreSQLComponent implements Storage {
             saveIdentifiers(doc, connection)
             connection.commit()
             def status = status(doc.getURI(), connection)
-            doc.setCreated(status['created'])
-            doc.setModified(status['modified'])
-            log.debug("Saved document ${doc.identifier} with timestamps ${doc.created} / ${doc.modified}")
+            if (status.exists) {
+                doc.setCreated(status['created'])
+                doc.setModified(status['modified'])
+            }
+            log.debug("Saved document ${doc.getId()} with timestamps ${doc.created} / ${doc.modified}")
             return
         } catch (PSQLException psqle) {
             log.debug("SQL failed: ${psqle.message}")
@@ -405,16 +407,11 @@ class PostgreSQLComponent implements Storage {
         return insert
     }
 
-    private static String matchAlternateIdentifierJson(String id) {
-        return mapper.writeValueAsString([(Document.ALTERNATE_ID_KEY): [id]])
-
-    }
-
     boolean saveVersion(Document doc, Connection connection, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
         if (versioning) {
             PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
-                log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: $modTime")
+                log.debug("Trying to save a version of ${doc.getId()} with checksum ${doc.getChecksum()}. Modified: $modTime")
                 insvers = rigVersionStatement(insvers, doc, modTime, changedIn, changedBy, collection, deleted)
                 int updated = insvers.executeUpdate()
                 log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
@@ -428,7 +425,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc, Date modTime, String changedIn, String changedBy, String collection) {
+    private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc, Date modTime, String changedIn, String changedBy, String collection, deleted) {
         insvers.setString(1, doc.getId())
         insvers.setObject(2, doc.dataAsString, Types.OTHER)
         insvers.setString(3, collection)
@@ -436,8 +433,9 @@ class PostgreSQLComponent implements Storage {
         insvers.setString(5, changedBy)
         insvers.setString(6, doc.getChecksum())
         insvers.setTimestamp(7, new Timestamp(modTime.getTime()))
-        insvers.setString(8, doc.getId())
-        insvers.setString(9, doc.getChecksum())
+        insvers.setBoolean(8, deleted)
+        insvers.setString(9, doc.getId())
+        insvers.setString(10, doc.getChecksum())
         return insvers
     }
 
@@ -777,26 +775,17 @@ class PostgreSQLComponent implements Storage {
     }
 
     private Document assembleDocument(ResultSet rs) {
-        /*
-        Document doc = new Document(mapper.readValue(rs.getString("data"), Map), mapper.readValue(rs.getString("manifest"), Map))
-        doc.setCreated(rs.getTimestamp("created")?.getTime())
-        doc.setModified(rs.getTimestamp("modified").getTime())
-        doc.setDeleted(rs.getBoolean("deleted") ?: false)
-        */
 
-        def manifest = mapper.readValue(rs.getString("manifest"), Map)
-        manifest.remove(Document.ALTERNATE_ID_KEY)
-        Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
-        doc.setModified(rs.getTimestamp("modified").getTime())
+        Document doc = new Document(mapper.readValue(rs.getString("data"), Map))
+        doc.setModified( new Date(rs.getTimestamp("modified").getTime()) )
         try {
-            doc.setCreated(rs.getTimestamp("created")?.getTime())
-            doc.deleted = rs.getBoolean("deleted")
+            doc.setCreated( new Date(rs.getTimestamp("created")?.getTime()) )
         } catch (SQLException sqle) {
-            log.trace("Resultset didn't have created or deleted. Probably a version request.")
+            log.trace("Resultset didn't have created. Probably a version request.")
         }
 
-        for (altId in loadIdentifiers(doc.id)) {
-            doc.addIdentifier(altId)
+        for (altId in loadIdentifiers(doc.getId())) {
+            doc.addRecordIdentifier(altId)
         }
         return doc
 

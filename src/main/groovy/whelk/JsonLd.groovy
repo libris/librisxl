@@ -114,7 +114,7 @@ public class JsonLd {
         } else {
             log.debug("No main item map found for $mainId, trying to find an identifier")
             // Try to find an identifier to frame around
-            String foundIdentifier = findIdentifier(flatJsonLd)
+            String foundIdentifier = Document.BASE_URI.resolve(findIdentifier(flatJsonLd))
             log.debug("Result of findIdentifier: $foundIdentifier")
             if (foundIdentifier) {
                 mainItem = idMap.get(foundIdentifier)
