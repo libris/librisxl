@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS lddb__versions (
     changedBy text,
     checksum text not null,
     modified timestamp with time zone not null default now(),
+    deleted boolean default false,
     unique (id, checksum, modified)
     );
 

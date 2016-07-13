@@ -40,6 +40,8 @@ class Crud extends HttpServlet {
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
     final static String DOCBASE_URI = "http://libris.kb.se/"
 
+    static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
+
     MimetypesFileTypeMap mimeTypes = new MimetypesFileTypeMap()
 
     final static Map contextHeaders = [
@@ -270,17 +272,14 @@ class Crud extends HttpServlet {
         try {
             Document doc = createDocumentIfOkToSave(data, collection, request, response)
             if (doc) {
-                if (doc.contentType == "application/ld+json") {
-                    log.debug("Flattening ${doc.id}")
-                    doc.data = JsonLd.flatten(doc.data)
-                }
-                log.debug("Saving document (${doc.identifier})")
+                doc.data = JsonLd.flatten(doc.data)
+                log.debug("Saving document (${doc.getId()})")
                 boolean newDocument = (doc.created == null)
-                log.info("Document accepted: created is: ${doc.created}")
-                doc.manifest.put(Document.CHANGED_IN_KEY, "xl")
-                doc = whelk.store(doc, (request.getMethod() == "PUT"))
+                log.info("Document accepted: created is: ${doc.getCreated()}")
 
-                sendDocumentSavedResponse(response, doc.getURI().toString(), doc.modified.getTime() as String, newDocument)
+                doc = whelk.store(doc, "xl", null, collection, false, (request.getMethod() == "PUT"))
+
+                sendDocumentSavedResponse(response, doc.getURI().toString(), doc.getModified() as String, newDocument)
             }
         } catch (StorageCreateFailedException scfe) {
             log.warn("Already have document with id ${scfe.duplicateId}")
@@ -307,23 +306,24 @@ class Crud extends HttpServlet {
         }
 
         Map dataMap
-        if (Document.isJson(cType)) {
+        if ( cType.equals("application/ld+json")) {
             dataMap = mapper.readValue(data, Map)
             // Check if supplied data has "about"-form
             dataMap = JsonLd.frame(null, dataMap)
-            if (!dataMap.containsKey(Document.ABOUT_KEY)) {
+            if (!dataMap.containsKey(JsonLd.ABOUT_KEY)) {
                 Map aboutMap = Document.deepCopy(dataMap)
                 String suppliedId = aboutMap.get("@id")
                 dataMap = [:]
-                dataMap.put(Document.ABOUT_KEY, aboutMap)
+                dataMap.put(JsonLd.ABOUT_KEY, aboutMap)
                 if (suppliedId) {
                     dataMap["@id"] = suppliedId
-                    dataMap[Document.ABOUT_KEY]["@id"] = dataMap["@id"] + "#it"
+                    dataMap[JsonLd.ABOUT_KEY]["@id"] = dataMap["@id"] + "#it"
                 }
             }
-        } else {
-            dataMap = [(Document.NON_JSON_CONTENT_KEY): new String(data)]
-        }
+        } else if ( cType.equals("application/x-marc-json")) {
+            dataMap = converter.convert(dataMap)
+        } else
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Content-Type not supported")
 
         String identifier = null
         if (request.method == "POST") {
@@ -333,7 +333,7 @@ class Crud extends HttpServlet {
                 response.sendError(response.SC_BAD_REQUEST, "POST only allowed to root or collection")
                 return null
             }
-            if (Document.isJsonLd(cType)) {
+            if ( cType.equals("application/ld+json")) {
                 identifier = JsonLd.findIdentifier(dataMap)
                 log.debug("Found identifier: $identifier")
             }
@@ -362,6 +362,7 @@ class Crud extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_CONFLICT, "Document with identifier ${identifier} already exists. Use PUT if you want to update.")
                 return null
             }
+            // Big no-no, race condition incoming. Use postgresqlcomponent.storeAtomicUpdate() instead.
             if (request.getHeader("If-Match") && existingDoc.modified as String != request.getHeader("If-Match")) {
                 log.debug("Document with identifier ${existingDoc.identifier} already exists.")
                 response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
@@ -376,24 +377,15 @@ class Crud extends HttpServlet {
             identifier = mintIdentifier(dataMap)
         }
 
-        Document doc = new Document(identifier, dataMap, existingDoc?.manifest)
-
-        log.debug("collection is now ${doc.collection}")
-
-        doc = doc.withContentType(ContentType.parse(request.getContentType()).getMimeType())
-                .withIdentifier(identifier)
-                .withDeleted(false)
-
-        if (collection) {
-            log.debug("Overriding collection. Setting $collection")
-            doc = doc.inCollection(collection)
-        }
+        Document doc = new Document(dataMap)
+        doc.setId(identifier)
 
         getAlternateIdentifiersFromLinkHeaders(request).each {
-            doc.addIdentifier(it);
+            doc.addRecordIdentifier(it);
         }
 
         log.debug("Checking permissions for ${doc}")
+        // todo: 'collection' must also match the collection 'existingDoc' is in.
         try {
             if (!hasPermission(request.getAttribute("user"), doc, existingDoc)) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
