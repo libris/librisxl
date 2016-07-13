@@ -96,7 +96,7 @@ class PostgreSQLComponent implements Storage {
                 "RETURNING *) " +
             "INSERT INTO $mainTableName (id, data, collection, changedIn, changedBy, checksum, deleted) SELECT ?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
-        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedBy,changedIn,checksum,deleted) VALUES (?,?,?,?,?,?,?)"
+        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted) VALUES (?,?,?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, identifier) VALUES (?,?)"
 
@@ -184,7 +184,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     void store(Document doc, boolean upsert, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted) {
-        log.debug("Saving ${doc.id}")
+        log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
         Connection connection = getConnection()
         connection.setAutoCommit(false)
         try {
@@ -212,7 +212,7 @@ class PostgreSQLComponent implements Storage {
                 doc.setCreated(status['created'])
                 doc.setModified(status['modified'])
             }
-            log.debug("Saved document ${doc.getId()} with timestamps ${doc.created} / ${doc.modified}")
+            log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
             return
         } catch (PSQLException psqle) {
             log.debug("SQL failed: ${psqle.message}")
@@ -220,7 +220,7 @@ class PostgreSQLComponent implements Storage {
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
                 Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
                 Matcher m = messageDetailPattern.matcher(psqle.message)
-                String duplicateId = doc.id
+                String duplicateId = doc.getShortId()
                 if (m.matches()) {
                     log.debug("Problem is that ${m.group(1)} already contains value ${m.group(2)}")
                     duplicateId = m.group(2)
@@ -276,7 +276,7 @@ class PostgreSQLComponent implements Storage {
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    void storeAtomicUpdate(String id, boolean minorUpdate, UpdateAgent updateAgent, String changedIn, String changedBy, boolean deleted) {
+    void storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, UpdateAgent updateAgent) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
@@ -294,8 +294,6 @@ class PostgreSQLComponent implements Storage {
                 throw new SQLException("There is no document with the id: " + id)
 
             Document doc = assembleDocument(resultSet)
-            doc.findIdentifiers()
-            calculateChecksum(doc)
 
             // Performs the callers updates on the document
             updateAgent.update(doc)
@@ -305,26 +303,21 @@ class PostgreSQLComponent implements Storage {
                 modTime = new Date(resultSet.getTimestamp("modified").getTime())
             }
             updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
-            rigUpdateStatement(updateStatement, doc, modTime, changedIn, changedBy, deleted)
+            rigUpdateStatement(updateStatement, doc, modTime, changedIn, changedBy, collection, deleted)
             updateStatement.execute()
 
             // The versions and identifiers tables are NOT under lock. Synchronization is only maintained on the main table.
-            saveVersion(doc, connection, modTime)
+            saveVersion(doc, connection, modTime, changedIn, changedBy, collection, deleted)
             saveIdentifiers(doc, connection)
             connection.commit()
-            log.debug("Saved document ${doc.identifier} with timestamps ${doc.created} / ${doc.modified}")
+            log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
             log.debug("SQL failed: ${psqle.message}")
             connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
                 Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
                 Matcher m = messageDetailPattern.matcher(psqle.message)
-                String duplicateId = doc.id
-                if (m.matches()) {
-                    log.debug("Problem is that ${m.group(1)} already contains value ${m.group(2)}")
-                    duplicateId = m.group(2)
-                }
-                throw new StorageCreateFailedException(duplicateId)
+                throw new StorageCreateFailedException()
             } else {
                 throw psqle
             }
@@ -343,25 +336,25 @@ class PostgreSQLComponent implements Storage {
 
     private void saveIdentifiers(Document doc, Connection connection) {
         PreparedStatement removeIdentifiers = connection.prepareStatement(DELETE_IDENTIFIERS)
-        removeIdentifiers.setString(1, doc.getId())
+        removeIdentifiers.setString(1, doc.getShortId())
         int numRemoved = removeIdentifiers.executeUpdate()
-        log.debug("Removed $numRemoved identifiers for id ${doc.getId()}")
+        log.debug("Removed $numRemoved identifiers for id ${doc.getShortId()}")
         PreparedStatement altIdInsert = connection.prepareStatement(INSERT_IDENTIFIERS)
         for (altId in doc.getRecordIdentifiers()) {
-            altIdInsert.setString(1, doc.getId())
+            altIdInsert.setString(1, doc.getShortId())
             altIdInsert.setString(2, altId)
             altIdInsert.addBatch()
         }
         try {
             altIdInsert.executeBatch()
         } catch (BatchUpdateException bue) {
-            log.error("Failed saving identifiers for ${doc.id}")
+            log.error("Failed saving identifiers for ${doc.getShortId()}")
             throw bue.getNextException()
         }
     }
 
     private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
-        insert.setString(1, doc.getId())
+        insert.setString(1, doc.getShortId())
         insert.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
         insert.setString(3, collection)
         insert.setString(4, changedIn)
@@ -379,7 +372,7 @@ class PostgreSQLComponent implements Storage {
         update.setString(5, doc.getChecksum())
         update.setBoolean(6, deleted)
         update.setTimestamp(7, new Timestamp(modTime.getTime()))
-        update.setObject(8, doc.id, java.sql.Types.OTHER)
+        update.setObject(8, doc.getShortId(), java.sql.Types.OTHER)
     }
 
     private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
@@ -393,8 +386,8 @@ class PostgreSQLComponent implements Storage {
 
         insert.setBoolean(6, deleted)
         insert.setTimestamp(7, new Timestamp(modTime.getTime()))
-        insert.setString(8, doc.getId())
-        insert.setString(9, doc.getId())
+        insert.setString(8, doc.getShortId())
+        insert.setString(9, doc.getShortId())
         insert.setObject(10, doc.dataAsString, java.sql.Types.OTHER)
 
         insert.setString(11, collection)
@@ -411,7 +404,7 @@ class PostgreSQLComponent implements Storage {
         if (versioning) {
             PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
-                log.debug("Trying to save a version of ${doc.getId()} with checksum ${doc.getChecksum()}. Modified: $modTime")
+                log.debug("Trying to save a version of ${doc.getShortId()} with checksum ${doc.getChecksum()}. Modified: $modTime")
                 insvers = rigVersionStatement(insvers, doc, modTime, changedIn, changedBy, collection, deleted)
                 int updated = insvers.executeUpdate()
                 log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
@@ -426,7 +419,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc, Date modTime, String changedIn, String changedBy, String collection, deleted) {
-        insvers.setString(1, doc.getId())
+        insvers.setString(1, doc.getShortId())
         insvers.setObject(2, doc.dataAsString, Types.OTHER)
         insvers.setString(3, collection)
         insvers.setString(4, changedIn)
@@ -434,7 +427,7 @@ class PostgreSQLComponent implements Storage {
         insvers.setString(6, doc.getChecksum())
         insvers.setTimestamp(7, new Timestamp(modTime.getTime()))
         insvers.setBoolean(8, deleted)
-        insvers.setString(9, doc.getId())
+        insvers.setString(9, doc.getShortId())
         insvers.setString(10, doc.getChecksum())
         return insvers
     }
@@ -453,7 +446,7 @@ class PostgreSQLComponent implements Storage {
             docs.each { doc ->
                 Date now = new Date()
                 if (versioning) {
-                    ver_batch = rigVersionStatement(ver_batch, doc, now, changedIn, changedBy, collection)
+                    ver_batch = rigVersionStatement(ver_batch, doc, now, changedIn, changedBy, collection, false)
                     ver_batch.addBatch()
                 }
                 if (upsert) {
@@ -525,7 +518,7 @@ class PostgreSQLComponent implements Storage {
                 Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
                 doc.setCreated(rs.getTimestamp("created").getTime())
                 doc.setModified(rs.getTimestamp("modified").getTime())
-                log.trace("Created document with id ${doc.id}")
+                log.trace("Created document with id ${doc.getShortId()}")
                 items.add(doc.data)
             }
             results.put("startIndex", offset)
@@ -676,7 +669,7 @@ class PostgreSQLComponent implements Storage {
                 if (loadDoc) {
                     return new Location(doc).withResponseCode(303)
                 } else {
-                    return new Location().withId(doc.id).withURI(doc.getURI()).withResponseCode(303)
+                    return new Location().withId(doc.getShortId()).withURI(doc.getURI()).withResponseCode(303)
                 }
             }
         }
@@ -729,7 +722,7 @@ class PostgreSQLComponent implements Storage {
             if (rs.next()) {
                 log.trace("next")
                 doc = assembleDocument(rs)
-                log.trace("Created document with id ${doc.id}")
+                log.trace("Created document with id ${doc.getShortId()}")
             } else if (log.isTraceEnabled()) {
                 log.trace("No results returned for get($id)")
             }
@@ -784,7 +777,7 @@ class PostgreSQLComponent implements Storage {
             log.trace("Resultset didn't have created. Probably a version request.")
         }
 
-        for (altId in loadIdentifiers(doc.getId())) {
+        for (altId in loadIdentifiers(doc.getShortId())) {
             doc.addRecordIdentifier(altId)
         }
         return doc

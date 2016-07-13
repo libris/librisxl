@@ -109,6 +109,7 @@ public class JsonLd {
                     mainId = thingId
                     idMap[mainId] = thingRef
                     mainItem = thing
+                    log.debug("Using think-link. Framing around ${mainId}")
                 }
             }
         } else {

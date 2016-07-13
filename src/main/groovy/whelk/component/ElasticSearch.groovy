@@ -128,9 +128,9 @@ class ElasticSearch implements Index {
             for (doc in docs) {
                 try {
                     Map shapedData = getShapeForIndex(doc)
-                    bulk.add(new IndexRequest(getIndexName(), collection, toElasticId(doc.getId())).source(shapedData))
+                    bulk.add(new IndexRequest(getIndexName(), collection, toElasticId(doc.getShortId())).source(shapedData))
                 } catch (Throwable e) {
-                    log.error("Failed to create indexrequest for document ${doc.id}. Reason: ${e.message}")
+                    log.error("Failed to create indexrequest for document ${doc.getShortId()}. Reason: ${e.message}")
                     if (haltOnFailure) {
                         throw e
                     }
@@ -148,13 +148,11 @@ class ElasticSearch implements Index {
     }
 
     @Override
-    public void index(Document _doc, String collection) {
-        // Do not modify the passed in document!
-        Document doc = _doc.clone()
+    public void index(Document doc, String collection) {
         Map shapedData = getShapeForIndex(doc)
-        def idxReq = new IndexRequest(getIndexName(), collection, toElasticId(doc.getId())).source(shapedData)
+        def idxReq = new IndexRequest(getIndexName(), collection, toElasticId(doc.getShortId())).source(shapedData)
         def response = performExecute(idxReq)
-        log.debug("Indexed the document ${doc.id} as ${indexName}/${collection}/${response.getId()} as version ${response.getVersion()}")
+        log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${response.getId()} as version ${response.getVersion()}")
     }
 
     @Override
@@ -169,8 +167,8 @@ class ElasticSearch implements Index {
     }
 
     Map getShapeForIndex(Document doc) {
-        log.debug("Framing ${doc.id}")
-        Map framed = JsonLd.frame(doc.getId(), JsonLd.THING_KEY, doc.data)
+        log.debug("Framing ${doc.getShortId()}")
+        Map framed = JsonLd.frame(doc.getCompleteId(), JsonLd.THING_KEY, doc.data)
         log.trace("Framed data: ${framed}")
         /*if (expander) {
             doc = expander.filter(doc)

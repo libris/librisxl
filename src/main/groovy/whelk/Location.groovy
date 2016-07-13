@@ -15,7 +15,7 @@ class Location {
 
     Location(Document doc) {
         this.document = doc
-        this.id = doc.id
+        this.id = doc.getShortId()
     }
 
     Location withResponseCode(int code) {

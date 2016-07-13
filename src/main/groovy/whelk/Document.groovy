@@ -62,7 +62,7 @@ class Document {
 
     URI getURI()
     {
-        return BASE_URI.resolve(getId())
+        return BASE_URI.resolve(getShortId())
     }
 
     String getDataAsString()
@@ -82,17 +82,33 @@ class Document {
     void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, LinkedHashMap) }
     String getEncodingLevel() { get(encLevelPath) }
 
-    void setId(String id) { set(recordIdPath, id, LinkedHashMap) }
+    /**
+     * Will have base URI prepended if not already there
+     */
+    void setId(String id)
+    {
+        if (!id.startsWith(whelk.Document.BASE_URI.toString()))
+            id = Document.BASE_URI.resolve(id)
+        set(recordIdPath, id, LinkedHashMap)
+    }
 
     /**
-     * Gets the document id (short form).
+     * Gets the document id (short form, without base URI).
      */
-    String getId()
+    String getShortId()
     {
         String fullyQualifiedID = get(recordIdPath)
         if (fullyQualifiedID.startsWith(whelk.Document.BASE_URI.toString()))
             return fullyQualifiedID.substring(whelk.Document.BASE_URI.toString().length())
         return fullyQualifiedID
+    }
+
+    /**
+     * Gets the document id (long form with base uri)
+     */
+    String getCompleteId()
+    {
+        return get(recordIdPath)
     }
 
     void setCreated(Date created)
@@ -141,7 +157,9 @@ class Document {
         if (preparePath(thingSameAsPath, ArrayList))
         {
             List sameAsList = get(thingSameAsPath)
-            sameAsList.add(["@id" : identifier])
+            def idObject = ["@id" : identifier]
+            if (!sameAsList.contains(idObject))
+                sameAsList.add(idObject)
         }
     }
 
@@ -178,7 +196,9 @@ class Document {
         if (preparePath(recordSameAsPath, ArrayList))
         {
             List sameAsList = get(recordSameAsPath)
-            sameAsList.add(["@id" : identifier])
+            def idObject = ["@id" : identifier]
+            if (!sameAsList.contains(idObject))
+                sameAsList.add(idObject)
         }
     }
 
