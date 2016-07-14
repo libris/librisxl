@@ -125,12 +125,12 @@ public class ResponseCommon
                 /*Document convertedDocument = formatDescription.converter.convert(jsonLDdoc);
                 convertedText = (String) convertedDocument.getData().get("content");*/
 
-                convertedText = (String) formatDescription.converter.convert(jsonLDdoc.data, jsonLDdoc.getId()).get(JsonLd.getNON_JSON_CONTENT_KEY());
+                convertedText = (String) formatDescription.converter.convert(jsonLDdoc.data, jsonLDdoc.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY());
             }
             catch (Exception | Error e) // Depending on the converter, a variety of problems may arise here
             {
                 writer.writeCharacters("Error: Document conversion failed.");
-                logger.error("Conversion failed for document: " + jsonLDdoc.getId(), e);
+                logger.error("Conversion failed for document: " + jsonLDdoc.getShortId(), e);
                 return;
             }
         }
