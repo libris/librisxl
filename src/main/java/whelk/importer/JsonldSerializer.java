@@ -287,7 +287,7 @@ public class JsonldSerializer
             if (objectMap.containsKey("@id") &&  objectMap.get("@id").equals(Document.getBASE_URI()+mainId))
             {
                 mainNodeIndex = i;
-                Map thingReference = (Map) objectMap.get(Document.getABOUT_KEY());
+                Map thingReference = (Map) objectMap.get(JsonLd.getABOUT_KEY());
                 thingId = (String) thingReference.get("@id");
             }
         }

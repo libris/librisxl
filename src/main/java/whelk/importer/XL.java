@@ -27,6 +27,8 @@ class XL
     private MarcFrameConverter m_marcFrameConverter;
     private LinkFinder m_linkfinder;
 
+    private final static String IMPORT_SYSTEM_CODE = "batch import";
+
     XL(Parameters parameters)
     {
         m_parameters = parameters;
@@ -111,29 +113,29 @@ class XL
         // duplicateIDs.size would be > 0, and we would not be here.
         marcRecord.addField(marcRecord.createControlfield("001", generatedId));
 
-        Document rdfDoc = convertToRDF(marcRecord, collection, generatedId);
+        Document rdfDoc = convertToRDF(marcRecord, generatedId);
         if (collection.equals("hold"))
             rdfDoc.setHoldingFor(relatedWithBibResourceId);
         m_linkfinder.findLinks(rdfDoc);
 
         if (!m_parameters.getReadOnly())
         {
-            m_postgreSQLComponent.store(rdfDoc, false);
-            m_elasticSearchComponent.index(rdfDoc);
+            m_postgreSQLComponent.store(rdfDoc, false, IMPORT_SYSTEM_CODE, null, collection, false);
+            m_elasticSearchComponent.index(rdfDoc, collection);
         }
         else
             System.out.println("Would now (if --live had been specified) have written the following json-ld to whelk:"
                     + rdfDoc.getDataAsString());
 
         if (collection.equals("bib"))
-            return rdfDoc.getItIdentifiers().get(0);
+            return rdfDoc.getThingIdentifiers().get(0);
         return null;
     }
 
     private String enrichRecord(String ourId, MarcRecord incomingMarcRecord, String collection, String relatedWithBibResourceId)
             throws IOException
     {
-        Document rdfDoc = convertToRDF(incomingMarcRecord, collection, ourId);
+        Document rdfDoc = convertToRDF(incomingMarcRecord, ourId);
         if (collection.equals("hold"))
             rdfDoc.setHoldingFor(relatedWithBibResourceId);
         m_linkfinder.findLinks(rdfDoc);
@@ -142,7 +144,7 @@ class XL
         {
             try
             {
-                m_postgreSQLComponent.storeAtomicUpdate(ourId, false,
+                m_postgreSQLComponent.storeAtomicUpdate(ourId, false, IMPORT_SYSTEM_CODE, null, collection, false,
                         (Document doc) ->
                         {
                             if (collection.equals("bib"))
@@ -171,12 +173,12 @@ class XL
             Document doc = m_postgreSQLComponent.load( ourId );
             enrich( doc, rdfDoc );
             System.out.println("Would now (if --live had been specified) have written the following (merged) json-ld to whelk:");
-            System.out.println("id:\n" + doc.getId());
+            System.out.println("id:\n" + doc.getShortId());
             System.out.println("data:\n" + doc.getDataAsString());
         }
 
         if (collection.equals("bib"))
-            return rdfDoc.getItIdentifiers().get(0);
+            return rdfDoc.getThingIdentifiers().get(0);
         return null;
     }
 
@@ -184,8 +186,8 @@ class XL
             throws IOException
     {
         JsonldSerializer serializer = new JsonldSerializer();
-        List<String[]> withTriples = serializer.deserialize(withDocument.getData());
-        List<String[]> originalTriples = serializer.deserialize(mutableDocument.getData());
+        List<String[]> withTriples = serializer.deserialize(withDocument.data);
+        List<String[]> originalTriples = serializer.deserialize(mutableDocument.data);
 
         Graph originalGraph = new Graph(originalTriples);
         Graph withGraph = new Graph(withTriples);
@@ -211,24 +213,20 @@ class XL
         originalGraph.enrichWith(withGraph, specialRules);
 
         Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), alwaysSets);
-        JsonldSerializer.normalize(enrichedData, mutableDocument.getId());
-        mutableDocument.setData(enrichedData);
+        JsonldSerializer.normalize(enrichedData, mutableDocument.getShortId());
+        mutableDocument.data = enrichedData;
     }
 
-    private Document convertToRDF(MarcRecord marcRecord, String collection, String id)
+    private Document convertToRDF(MarcRecord marcRecord, String id)
     {
-        Map<String, Object> manifest = new HashMap<>();
-        manifest.put(Document.getID_KEY(), id);
-        manifest.put(Document.getCOLLECTION_KEY(), collection);
-        manifest.put(Document.getCHANGED_IN_KEY(), "FTP-import");
-
         // The conversion process needs a 001 field to work correctly.
         if (marcRecord.getControlfields("001").size() == 0)
             marcRecord.addField(marcRecord.createControlfield("001", id));
 
-        Document doc = new Document(id, MarcJSONConverter.toJSONMap(marcRecord), manifest);
-        Document converted = m_marcFrameConverter.convert(doc);
-        return converted;
+        Map convertedData = m_marcFrameConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), id);
+        Document convertedDocument = new Document(convertedData);
+        convertedDocument.setId(id);
+        return convertedDocument;
     }
 
     private Set<String> getDuplicates(MarcRecord marcRecord, String collection, String relatedWithBibResourceId)
@@ -479,7 +477,7 @@ class XL
     {
         String libraryUri = LegacyIntegrationTools.legacySigelToUri(heldBy);
 
-        String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' = ? AND data#>>'{@graph,1,holdingFor,@id}' = ? AND manifest->>'collection' = 'hold'";
+        String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' = ? AND data#>>'{@graph,1,holdingFor,@id}' = ? AND collection = 'hold'";
         PreparedStatement statement = connection.prepareStatement(query);
 
         statement.setString(1, libraryUri);
