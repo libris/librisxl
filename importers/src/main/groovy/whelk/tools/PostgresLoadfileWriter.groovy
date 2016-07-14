@@ -1,6 +1,7 @@
 package whelk.tools
 
 import whelk.Document
+import whelk.JsonLd
 import whelk.converter.MarcJSONConverter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
@@ -66,7 +67,7 @@ class PostgresLoadfileWriter
 
         try
         {
-            loader.run { doc, specs ->
+            loader.run { doc, specs, createDate ->
 
                 if (isSuppressed(doc))
                     return
@@ -74,14 +75,12 @@ class PostgresLoadfileWriter
                 String oldStyleIdentifier = "/"+collection+"/"+getControlNumber(doc)
                 String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
 
-                def manifest = [(Document.ID_KEY):id,(Document.COLLECTION_KEY):collection, (Document.ALTERNATE_ID_KEY): [oldStyleIdentifier]]
-
-                if (specs != null)
-                    addSetSpecs(manifest, specs)
 
                 Map documentMap = new HashMap(2)
                 documentMap.put("record", doc)
-                documentMap.put("manifest", manifest)
+                documentMap.put("collection", collection)
+                documentMap.put("id", id)
+                documentMap.put("created", createDate)
                 m_outputQueue.add(documentMap);
 
                 if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD)
@@ -149,6 +148,7 @@ class PostgresLoadfileWriter
         return null
     }
 
+    /*
     private static void addSetSpecs(Map manifest, List specs)
     {
         if (specs.size() == 0)
@@ -162,6 +162,7 @@ class PostgresLoadfileWriter
             setSpecs.add(spec);
         }
     }
+    */
 
     private static void flushOutputQueue(Vector<HashMap> threadWorkLoad)
     {
@@ -185,26 +186,29 @@ class PostgresLoadfileWriter
                     {
                         for (HashMap dm : threadWorkLoad)
                         {
-                            dm.manifest[Document.CHANGED_IN_KEY] = "vcopy";
-                            Document doc = null;
                             if (FAULT_TOLERANT_MODE)
                             {
                                 try
                                 {
-                                    doc = new Document(dm.record, dm.manifest);
-                                    doc = s_marcFrameConverter.convert(doc);
-                                    writeDocumentToLoadFile(doc);
-                                } catch (Exception e)
+                                    Map convertedData = s_marcFrameConverter.convert(dm.record, dm.id);
+                                    Document doc = new Document(convertedData)
+                                    doc.setCreated(dm.created)
+
+                                    writeDocumentToLoadFile(doc, dm.collection);
+                                } catch (Throwable e)
                                 {
-                                    String voyagerId = dm.manifest.get(Document.ALTERNATE_ID_KEY)[0];
+                                    e.printStackTrace()
+                                    String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
                                     s_failedIds.add(voyagerId);
                                 }
                             }
                             else
                             {
-                                doc = new Document(MarcJSONConverter.toJSONMap(dm.record), dm.manifest);
-                                doc = s_marcFrameConverter.convert(doc);
-                                writeDocumentToLoadFile(doc);
+                                Map convertedData = s_marcFrameConverter.convert(dm.record, dm.id);
+                                Document doc = new Document(convertedData)
+                                doc.setCreated(dm.created)
+
+                                writeDocumentToLoadFile(doc, dm.collection);
                             }
                         }
                     }
@@ -215,42 +219,47 @@ class PostgresLoadfileWriter
         }
     }
 
-    private static synchronized void writeDocumentToLoadFile(Document doc)
+    private static synchronized void writeDocumentToLoadFile(Document doc, String collection)
     {
         /* columns:
+
         id text not null unique primary key,
         data jsonb not null,
-        manifest jsonb not null,
-        quoted jsonb,
+        collection text not null,
+        changedIn text not null,
+        changedBy text,
+        checksum text not null,
         created timestamp with time zone not null default now(),
         modified timestamp with time zone not null default now(),
-        deleted boolean default false*/
+        deleted boolean default false
+
+        */
 
         final char delimiter = '\t';
         final String nullString = "\\N";
 
         final delimiterString = new String(delimiter);
 
-        String quoted = doc.getQuotedAsString();
-
-        doc.findIdentifiers()
-        List<String> identifiers = doc.getIdentifiers();
+        List<String> identifiers = doc.getRecordIdentifiers();
 
         // Write to main table file
 
-        s_mainTableWriter.write(doc.getId());
+        s_mainTableWriter.write(doc.getShortId());
         s_mainTableWriter.write(delimiter);
         s_mainTableWriter.write( doc.getDataAsString().replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
         s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write( doc.getManifestAsJson().replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
+        s_mainTableWriter.write( collection.replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
         s_mainTableWriter.write(delimiter);
-        if (quoted)
-            s_mainTableWriter.write(quoted.replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString));
-        else
-            s_mainTableWriter.write(nullString);
+        s_mainTableWriter.write( "vcopy" );
+        s_mainTableWriter.write(delimiter);
+        s_mainTableWriter.write( nullString );
+        s_mainTableWriter.write(delimiter);
+        s_mainTableWriter.write( doc.getChecksum().replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
+        s_mainTableWriter.write(delimiter);
+        s_mainTableWriter.write( doc.getCreated() );
 
-        // remaining values have defaults.
-
+        // remaining values have sufficient defaults.
+        
         s_mainTableWriter.newLine();
 
         // Write to identifiers table file
@@ -262,7 +271,7 @@ class PostgresLoadfileWriter
 
         for (String identifier : identifiers)
         {
-            s_identifiersWriter.write(doc.getId());
+            s_identifiersWriter.write(doc.getShortId());
             s_identifiersWriter.write(delimiter);
             s_identifiersWriter.write(identifier);
 

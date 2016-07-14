@@ -25,17 +25,17 @@ class MySQLLoader {
     static Map<String, String> selectByMarcType = [
 
         auth: """
-            SELECT auth_id, data FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id
+            SELECT auth_id, data, create_date FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id
             """,
 
         bib: """
-            SELECT bib.bib_id, bib.data, auth.auth_id FROM bib_record bib
+            SELECT bib.bib_id, bib.data, bib.create_date, auth.auth_id FROM bib_record bib
             LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id
             WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id
             """,
 
         hold: """
-            SELECT mfhd_id, data, bib_id, shortname FROM mfhd_record
+            SELECT mfhd_id, data, bib_id, shortname, create_date FROM mfhd_record
             WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id
             """
     ]
@@ -83,7 +83,7 @@ class MySQLLoader {
             if (!recordId.equals(currentRecordId)) {
                 specs = getOaipmhSetSpecs(resultSet)
                 if (doc) {
-                    handler.handle(doc, specs)
+                    handler.handle(doc, specs, resultSet.getTimestamp("create_date"))
                 }
                 currentRecordId = recordId
                 doc = [:]
@@ -92,7 +92,7 @@ class MySQLLoader {
         }
         specs = getOaipmhSetSpecs(resultSet)
         if (doc) {
-            handler.handle(doc, specs)
+            handler.handle(doc, specs, resultSet.getTimestamp("create_date"))
         }
     }
 
@@ -122,7 +122,7 @@ class MySQLLoader {
     }
 
     static interface LoadHandler {
-        void handle(Map doc, List specs)
+        void handle(Map doc, List specs, Date createDate)
     }
 
 }
