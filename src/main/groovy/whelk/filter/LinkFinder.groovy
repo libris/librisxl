@@ -36,7 +36,7 @@ class LinkFinder {
         long startTime = System.currentTimeMillis()
         numCalls = 0
         boolean foundLinks = false
-        if (doc && doc.isJsonLd()) {
+        if (doc) {
             for (item in doc.data.get("@graph")) {
                 foundLinks = locateSomeEntity(item, false) || foundLinks
             }
