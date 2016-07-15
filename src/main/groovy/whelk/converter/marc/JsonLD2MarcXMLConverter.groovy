@@ -55,8 +55,6 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
     }
 
     DocumentFragment convertToFragment(final Document doc) {
-        doc.withData(JsonLd.frame(doc.id, doc.data))
-
         Document marcJsonDocument = jsonldConverter.convert(doc)
 
         MarcRecord record = JSONMarcConverter.fromJson(marcJsonDocument.dataAsString)
