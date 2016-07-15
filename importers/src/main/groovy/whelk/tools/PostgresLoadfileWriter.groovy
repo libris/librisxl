@@ -259,7 +259,7 @@ class PostgresLoadfileWriter
         s_mainTableWriter.write( doc.getCreated() );
 
         // remaining values have sufficient defaults.
-        
+
         s_mainTableWriter.newLine();
 
         // Write to identifiers table file

@@ -25,7 +25,7 @@ test.testLogging {
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
-    maven { url "http://jitpack.io/" }
+    maven { url "https://jitpack.io/" }
 }
 
 dependencies {
@@ -37,7 +37,7 @@ dependencies {
     if ('useLocalDeps' in System.properties.keySet()) {
         compile project(':../../whelk-core')
     } else {
-        compile 'com.github.libris:whelk-core:302dca1b25f4c7903279e9ba584c694753151589'
+        compile 'com.github.libris:whelk-core:bd662ecad35a9046ad83c4bc30e2a0d7c45827a9'
     }
 
     // Common tools
