@@ -6,7 +6,7 @@ import org.apache.http.entity.ContentType
 import whelk.Whelk
 import whelk.Document
 import whelk.util.Tools
-import whelk.converter.marc.JsonLD2MarcXMLConverter
+import whelk.converter.marc.MarcFrameConverter
 import whelk.util.PropertyLoader
 
 import javax.servlet.http.HttpServlet
@@ -16,40 +16,54 @@ import javax.servlet.http.HttpServletResponse
 @Log
 class ConverterAPI extends HttpServlet {
 
-    JsonLD2MarcXMLConverter marcConverter
-
+    MarcFrameConverter marcFrameConverter
 
     public ConverterAPI() {
         log.info("Starting converterAPI ...")
-
-        marcConverter = new JsonLD2MarcXMLConverter()
-
+        marcFrameConverter = new MarcFrameConverter()
         log.info("Started ...")
-    }
-
-    @Override
-    void doPost(HttpServletRequest request, HttpServletResponse response) {
-        String requestedContentType = request.getParameter("to")
-        if (request.getContentLength() == 0) {
-            log.warn("[${this.id}] Received no content to reformat.")
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No content received.")
-        } else {
-            String ctype = ContentType.parse(request.getContentType()).getMimeType()
-            Document doc = new Document("nodoc", [(Document.NON_JSON_CONTENT_KEY): Tools.normalizeString(request.getInputStream().getText("UTF-8"))], [(Document.CONTENT_TYPE_KEY): ctype])
-            if (!requestedContentType || requestedContentType == "application/x-marcxml") {
-                log.info("Constructed document. Converting to $requestedContentType")
-                doc = marcConverter.convert(doc)
-            } else if (requestedContentType) {
-                log.info("Can not convert to $requestedContentType.")
-            } else {
-                log.info("No conversion requested. Returning document as is.")
-            }
-            HttpTools.sendResponse(response, doc.dataAsString, doc.contentType)
-        }
     }
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED)
     }
+
+    @Override
+    void doPost(HttpServletRequest request, HttpServletResponse response) {
+        String ctype = ContentType.parse(request.getContentType()).getMimeType()
+        if (ctype != "application/ld+json") {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Received data in unexpected format: ${ctype}")
+            return
+        }
+        if (request.getContentLength() == 0) {
+            log.warn("Received no content to reformat.")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No content received.")
+            return
+        }
+
+        String requestedContentType = request.getParameter("to") ?:
+            ContentType.parse(request.getHeader("Accept")).getMimeType() ?:
+            "application/x-marcjson"
+
+        if (requestedContentType == "application/x-marcjson") {
+            String jsonText = Tools.normalizeString(request.getInputStream().getText("UTF-8"))
+            Map json = marcFrameConverter.mapper.readValue(jsonText, Map)
+            log.info("Constructed document. Converting to $requestedContentType")
+            json = marcFrameConverter.runRevert(json)
+            def framedText = marcFrameConverter.mapper.writeValueAsString(json)
+            HttpTools.sendResponse(response, framedText, requestedContentType)
+        }
+        else if (requestedContentType) {
+            def msg = "Can not convert to $requestedContentType."
+            log.info(msg)
+            response.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE , msg)
+        } else {
+            def msg = "No conversion requested."
+            log.info(msg)
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, msg)
+        }
+    }
+
 }
