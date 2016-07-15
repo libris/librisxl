@@ -16,12 +16,11 @@ class JsonLD2RdfXml implements FormatConverter {
 
     Map m_context = null;
 
-    public Document convert(Document doc)
+    Map convert(Map originaldata, String id)
     {
         readContextFromDb();
+        Map framed = JsonLd.frame(id, originaldata);
 
-        Map originalData = doc.getData();
-        Map framed = JsonLd.frame(doc.getId(), originalData);
         framed.putAll(m_context);
         String framedString = mapper.writeValueAsString(framed);
 
@@ -34,9 +33,8 @@ class JsonLD2RdfXml implements FormatConverter {
         writer.write(model, baos, Document.BASE_URI.toString())
 
         HashMap<String, String> data = new HashMap<String, String>();
-        data.put( Document.NON_JSON_CONTENT_KEY, baos.toString("UTF-8") );
-        Document converted = new Document(doc.getId(), data, doc.getManifest());
-        return converted;
+        data.put( JsonLd.NON_JSON_CONTENT_KEY, baos.toString("UTF-8") );
+        return data
     }
 
     public String getRequiredContentType()

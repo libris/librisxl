@@ -10,7 +10,8 @@ import whelk.exception.FramingException
 import whelk.exception.ModelValidationException
 
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
-import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.MarcRecord
+import whelk.util.PropertyLoader;
 
 public class JsonLd {
 
@@ -18,13 +19,23 @@ public class JsonLd {
     static final String ID_KEY = "@id"
     static final String THING_KEY = "mainEntity"
     static final String RECORD_KEY = "meta"
+    static final String TYPE_KEY = "@type"
+    static final String CREATED_KEY = "created";
+    static final String MODIFIED_KEY = "modified";
+    static final String DELETED_KEY = "deleted";
+    static final String COLLECTION_KEY = "collection";
+    static final String CONTENT_TYPE_KEY = "contentType";
+    static final String CHECKSUM_KEY = "checksum";
+    static final String NON_JSON_CONTENT_KEY = "content"
+    static final String ALTERNATE_ID_KEY = "identifiers"
+    static final String JSONLD_ALT_ID_KEY = "sameAs"
+    static final String CONTROL_NUMBER_KEY = "controlNumber"
+    static final String ABOUT_KEY = "mainEntity"
+    static final String APIX_FAILURE_KEY = "apixExportFailedAt"
+    static final String ENCODING_LEVEL_KEY = "marc:encLevel"
+    static final String HOLDING_FOR_KEY = "holdingFor"
 
-    static final String DESCRIPTIONS_KEY = "descriptions"
-    static final URI SLASH_URI = new URI("/")
     static final ObjectMapper mapper = new ObjectMapper()
-
-    static final MARCFRAMEMAP = mapper.readValue(JsonLd.getClassLoader().getResourceAsStream("ext/marcframe.json"), Map)
-
     static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
 
     private static Logger log = LoggerFactory.getLogger(JsonLd.class)
@@ -42,18 +53,6 @@ public class JsonLd {
         storeFlattened(framedJsonLd, flatList)
 
         return [(GRAPH_KEY): flatList.reverse()]
-    }
-
-    static Map flattenWithDescriptions(Map framedJsonLd) {
-        if (isFlat(framedJsonLd)) {
-            return framedJsonLd
-        }
-        def descriptionsFlatMap = ["descriptions": [:]]
-        flatten(framedJsonLd).eachWithIndex { i, item ->
-            if (i == 0) {
-                descriptionsFlatMap['descriptions']['entry'] = item
-            }
-        }
     }
 
     private static storeFlattened(current, result) {
@@ -85,7 +84,6 @@ public class JsonLd {
         return updated
     }
 
-
     public static Map frame(String mainId, Map flatJsonLd) {
         return frame(mainId, null, flatJsonLd)
     }
@@ -111,15 +109,16 @@ public class JsonLd {
                     mainId = thingId
                     idMap[mainId] = thingRef
                     mainItem = thing
+                    log.debug("Using think-link. Framing around ${mainId}")
                 }
             }
         } else {
             log.debug("No main item map found for $mainId, trying to find an identifier")
             // Try to find an identifier to frame around
-            String foundIdentifier = findIdentifier(flatJsonLd)
+            String foundIdentifier = Document.BASE_URI.resolve(findIdentifier(flatJsonLd))
             log.debug("Result of findIdentifier: $foundIdentifier")
             if (foundIdentifier) {
-                mainItem = idMap.get(Document.BASE_URI.resolve(foundIdentifier).toString())
+                mainItem = idMap.get(foundIdentifier)
             }
         }
         Map framedMap
@@ -279,15 +278,14 @@ public class JsonLd {
 
 
     static boolean isFlat(Map jsonLd) {
-        if ((jsonLd.containsKey(GRAPH_KEY) && jsonLd.get(GRAPH_KEY) instanceof List || jsonLd.containsKey(DESCRIPTIONS_KEY))) {
-        //if (jsonLd.size() == 1 && (jsonLd.containsKey(GRAPH_KEY) || jsonLd.containsKey(DESCRIPTIONS_KEY))) {
+        if ((jsonLd.containsKey(GRAPH_KEY) && jsonLd.get(GRAPH_KEY) instanceof List)) {
             return true
         }
         return false
     }
 
     static boolean isFramed(Map jsonLd) {
-        if (jsonLd && !jsonLd.containsKey(GRAPH_KEY) && !jsonLd.containsKey(DESCRIPTIONS_KEY)) {
+        if (jsonLd && !jsonLd.containsKey(GRAPH_KEY)) {
             return true
         }
         return false
@@ -310,19 +308,6 @@ public class JsonLd {
                     }
                 }
             }
-        } else if (flatJsonLd.containsKey(DESCRIPTIONS_KEY)) {
-            idMap.put(flatJsonLd.get(DESCRIPTIONS_KEY).get("entry").get(ID_KEY), flatJsonLd.get(DESCRIPTIONS_KEY).get("entry"))
-            for (item in flatJsonLd.get(DESCRIPTIONS_KEY).get("items")) {
-                if (item.containsKey(ID_KEY)) {
-                    idMap.put(item.get(ID_KEY), item)
-                }
-            }
-            for (item in flatJsonLd.get(DESCRIPTIONS_KEY).get("quoted")) {
-                if (item.get(GRAPH_KEY).containsKey(ID_KEY)) {
-                    idMap.put(item.get(GRAPH_KEY).get(ID_KEY), item.get(GRAPH_KEY))
-                }
-            }
-
         }
         return idMap
     }

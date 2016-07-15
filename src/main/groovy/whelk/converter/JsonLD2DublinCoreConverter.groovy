@@ -1,10 +1,8 @@
 package whelk.converter
 
-import org.w3c.dom.Element
 import whelk.Document
+import whelk.JsonLd
 
-import javax.xml.parsers.DocumentBuilder
-import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.stream.XMLOutputFactory
 import javax.xml.stream.XMLStreamWriter
 
@@ -13,7 +11,7 @@ import javax.xml.stream.XMLStreamWriter
  */
 class JsonLD2DublinCoreConverter implements FormatConverter
 {
-    public Document convert(Document doc)
+    Map convert(Map originaldata, String id)
     {
         HashMap<String, String> data = new HashMap<String, String>();
 
@@ -28,7 +26,7 @@ class JsonLD2DublinCoreConverter implements FormatConverter
                 "http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd");
 
         writer.writeStartElement("http://purl.org/dc/elements/1.1/", "identifier");
-        writer.writeCharacters(doc.getURI().toString());
+        writer.writeCharacters(Document.BASE_URI.resolve(id).toString());
         writer.writeEndElement();
 
         writer.writeEndElement();
@@ -37,10 +35,9 @@ class JsonLD2DublinCoreConverter implements FormatConverter
 
         String xmlString = baos.toString("UTF-8")
 
-        data.put( Document.NON_JSON_CONTENT_KEY, xmlString );
+        data.put( JsonLd.NON_JSON_CONTENT_KEY, xmlString );
 
-        Document converted = new Document(doc.getId(), data);
-        return converted;
+        return data;
     }
 
     public String getRequiredContentType()

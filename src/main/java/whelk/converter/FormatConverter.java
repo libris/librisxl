@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface FormatConverter {
-    public Document convert(Document doc);
+    public Map convert(Map data, String id);
     public String getRequiredContentType();
     public String getResultContentType();
 }
