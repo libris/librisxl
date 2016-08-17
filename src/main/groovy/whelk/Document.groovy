@@ -113,6 +113,11 @@ class Document {
         return get(recordIdPath)
     }
 
+    /**
+     * Alias for getCompleteId, for backwards compatibility.
+     */
+    String getId() { return getCompleteId() }
+
     void setCreated(Date created)
     {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(created.toInstant(), ZoneId.systemDefault())
