@@ -90,7 +90,12 @@ class Document {
         if (!id.startsWith(Document.BASE_URI.toString()))
             id = Document.BASE_URI.resolve(id)
 
+        String currentId = get(recordIdPath)
+
         set(recordIdPath, id, LinkedHashMap)
+
+        if (currentId)
+            addRecordIdentifier(currentId)
     }
 
     /**
@@ -141,7 +146,9 @@ class Document {
     {
         List<String> ret = []
 
-        ret.add( get(thingIdPath) ) // must come first in the list.
+        String thingId = get(thingIdPath)
+        if (thingId)
+            ret.add(thingId)
 
         List sameAsObjects = get(thingSameAsPath)
         for (Map object : sameAsObjects)
@@ -177,7 +184,7 @@ class Document {
     {
         List<String> ret = []
 
-        ret.add( get(recordIdPath) ) // must come first in the list.
+        ret.add(get(recordIdPath)) // must be present
 
         List sameAsObjects = get(recordSameAsPath)
         for (Map object : sameAsObjects)
@@ -308,7 +315,7 @@ class Document {
                 log.warn("Needed integer as list index, but was given: " + step + ". (path was: " + path + ")")
                 return null;
             }
-            node = node.get(step)
+            node = node[step]
 
             if (node == null)
                 return null;
