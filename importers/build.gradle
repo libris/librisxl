@@ -37,7 +37,7 @@ dependencies {
     if ('useLocalDeps' in System.properties.keySet()) {
         compile project(':../../whelk-core')
     } else {
-        compile 'com.github.libris:whelk-core:bd662ecad35a9046ad83c4bc30e2a0d7c45827a9'
+        compile 'com.github.libris:whelk-core:847c2a97edd6d7669c47d539e6d26ac33bb85d85'
     }
 
     // Common tools
