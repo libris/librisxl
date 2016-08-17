@@ -463,7 +463,7 @@ class PostgreSQLComponent implements Storage {
             log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
             return true
         } catch (Exception e) {
-            log.error("Failed to save batch: ${e.message}. Rolling back.", e)
+            log.error("Failed to save batch: ${e.message}. Next exception was: ${e.nextException.message} Rolling back.", e)
             connection.rollback()
         } finally {
             connection.close()
