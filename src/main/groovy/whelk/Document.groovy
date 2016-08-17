@@ -87,8 +87,9 @@ class Document {
      */
     void setId(String id)
     {
-        if (!id.startsWith(whelk.Document.BASE_URI.toString()))
+        if (!id.startsWith(Document.BASE_URI.toString()))
             id = Document.BASE_URI.resolve(id)
+
         set(recordIdPath, id, LinkedHashMap)
     }
 
@@ -98,8 +99,9 @@ class Document {
     String getShortId()
     {
         String fullyQualifiedID = get(recordIdPath)
-        if (fullyQualifiedID.startsWith(whelk.Document.BASE_URI.toString()))
-            return fullyQualifiedID.substring(whelk.Document.BASE_URI.toString().length())
+        String base = Document.BASE_URI.toString()
+        if (fullyQualifiedID.startsWith(base))
+            return fullyQualifiedID.substring(base.length())
         return fullyQualifiedID
     }
 
