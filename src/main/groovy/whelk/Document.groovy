@@ -90,12 +90,7 @@ class Document {
         if (!id.startsWith(Document.BASE_URI.toString()))
             id = Document.BASE_URI.resolve(id)
 
-        String currentId = get(recordIdPath)
-
-        set(recordIdPath, id, LinkedHashMap)
-
-        if (currentId)
-            addRecordIdentifier(currentId)
+        addRecordIdentifier(id)
     }
 
     /**
@@ -103,11 +98,11 @@ class Document {
      */
     String getShortId()
     {
-        String fullyQualifiedID = get(recordIdPath)
         String base = Document.BASE_URI.toString()
-        if (fullyQualifiedID.startsWith(base))
-            return fullyQualifiedID.substring(base.length())
-        return fullyQualifiedID
+        for (id in getRecordIdentifiers())
+            if (id.startsWith(base))
+                return id.substring(base.length())
+        return null
     }
 
     /**
