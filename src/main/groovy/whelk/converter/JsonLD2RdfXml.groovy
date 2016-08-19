@@ -14,46 +14,41 @@ class JsonLD2RdfXml implements FormatConverter {
 
     static final ObjectMapper mapper = new ObjectMapper()
 
-    Map m_context = null;
+    Map m_context = null
 
-    Map convert(Map originaldata, String id)
-    {
-        readContextFromDb();
-        Map framed = JsonLd.frame(id, originaldata);
+    Map convert(Map originaldata, String id) {
+        readContextFromDb()
+        Map framed = JsonLd.frame(id, originaldata)
 
-        framed.putAll(m_context);
-        String framedString = mapper.writeValueAsString(framed);
+        framed.putAll(m_context)
+        String framedString = mapper.writeValueAsString(framed)
 
-        InputStream input = IOUtils.toInputStream(framedString);
-        Model model = ModelFactory.createDefaultModel();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        model = model.read(input, Document.BASE_URI.toString(), "JSONLD");
+        InputStream input = IOUtils.toInputStream(framedString)
+        Model model = ModelFactory.createDefaultModel()
+        ByteArrayOutputStream baos = new ByteArrayOutputStream()
+        model = model.read(input, Document.BASE_URI.toString(), "JSONLD")
         RDFWriter writer = model.getWriter("RDF/XML")
         writer.setProperty("allowBadURIs","true")
         writer.write(model, baos, Document.BASE_URI.toString())
 
-        HashMap<String, String> data = new HashMap<String, String>();
-        data.put( JsonLd.NON_JSON_CONTENT_KEY, baos.toString("UTF-8") );
+        HashMap<String, String> data = new HashMap<String, String>()
+        data.put(JsonLd.NON_JSON_CONTENT_KEY, baos.toString("UTF-8"))
         return data
     }
 
-    public String getRequiredContentType()
-    {
-        return "application/ld+json";
+    public String getRequiredContentType() {
+        return "application/ld+json"
     }
 
-    public String getResultContentType()
-    {
-        return "application/rdf+xml";
+    public String getResultContentType() {
+        return "application/rdf+xml"
     }
 
-    private synchronized readContextFromDb()
-    {
-        if (m_context == null)
-        {
+    private synchronized readContextFromDb() {
+        if (m_context == null) {
             Properties props = PropertyLoader.loadProperties("secret")
-            PostgreSQLComponent postgreSQLComponent = new PostgreSQLComponent(props.getProperty("sqlUrl"), props.getProperty("sqlMaintable"));
-            m_context = mapper.readValue(postgreSQLComponent.getContext(), HashMap.class);
+            PostgreSQLComponent postgreSQLComponent = new PostgreSQLComponent(props.getProperty("sqlUrl"), props.getProperty("sqlMaintable"))
+            m_context = mapper.readValue(postgreSQLComponent.getContext(), HashMap.class)
         }
     }
 }

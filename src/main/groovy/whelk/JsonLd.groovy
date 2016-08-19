@@ -9,9 +9,9 @@ import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.exception.FramingException
 import whelk.exception.ModelValidationException
 
-import se.kb.libris.util.marc.io.MarcXmlRecordReader;
+import se.kb.libris.util.marc.io.MarcXmlRecordReader
 import se.kb.libris.util.marc.MarcRecord
-import whelk.util.PropertyLoader;
+import whelk.util.PropertyLoader
 
 public class JsonLd {
 
@@ -20,12 +20,12 @@ public class JsonLd {
     static final String THING_KEY = "mainEntity"
     static final String RECORD_KEY = "meta"
     static final String TYPE_KEY = "@type"
-    static final String CREATED_KEY = "created";
-    static final String MODIFIED_KEY = "modified";
-    static final String DELETED_KEY = "deleted";
-    static final String COLLECTION_KEY = "collection";
-    static final String CONTENT_TYPE_KEY = "contentType";
-    static final String CHECKSUM_KEY = "checksum";
+    static final String CREATED_KEY = "created"
+    static final String MODIFIED_KEY = "modified"
+    static final String DELETED_KEY = "deleted"
+    static final String COLLECTION_KEY = "collection"
+    static final String CONTENT_TYPE_KEY = "contentType"
+    static final String CHECKSUM_KEY = "checksum"
     static final String NON_JSON_CONTENT_KEY = "content"
     static final String ALTERNATE_ID_KEY = "identifiers"
     static final String JSONLD_ALT_ID_KEY = "sameAs"
@@ -36,7 +36,7 @@ public class JsonLd {
     static final String HOLDING_FOR_KEY = "holdingFor"
 
     static final ObjectMapper mapper = new ObjectMapper()
-    static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
+    static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter()
 
     private static Logger log = LoggerFactory.getLogger(JsonLd.class)
 
@@ -147,72 +147,59 @@ public class JsonLd {
      * Fills the referencedBNodes set with all "_:*" ids that are referenced anywhere in the structure/document
      * (and thus cannot be safely removed)
      */
-    public static void getReferencedBNodes(Map map, Set referencedBNodes)
-    {
+    public static void getReferencedBNodes(Map map, Set referencedBNodes) {
         // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
-        if (map.size() == 1)
-        {
+        if (map.size() == 1) {
             String key = map.keySet().getAt(0)
-            if (key.equals("@id"))
-            {
+            if (key.equals("@id")) {
                 String id = map.get(key)
                 if (id.startsWith("_:"))
                     referencedBNodes.add(id)
             }
         }
 
-        for (Object keyObj : map.keySet())
-        {
-            Object subobject = map.get(keyObj);
+        for (Object keyObj : map.keySet()) {
+            Object subobject = map.get(keyObj)
 
-            if ( subobject instanceof Map )
-                getReferencedBNodes( (Map) subobject, referencedBNodes );
-            else if ( subobject instanceof List )
-                getReferencedBNodes( (List) subobject, referencedBNodes );
+            if (subobject instanceof Map)
+                getReferencedBNodes((Map) subobject, referencedBNodes)
+            else if (subobject instanceof List)
+                getReferencedBNodes((List) subobject, referencedBNodes)
         }
     }
 
-    public static void getReferencedBNodes(List list, Set referencedBNodes)
-    {
-        for (Object item : list)
-        {
-            if ( item instanceof Map )
-                getReferencedBNodes( (Map) item, referencedBNodes );
+    public static void getReferencedBNodes(List list, Set referencedBNodes) {
+        for (Object item : list) {
+            if (item instanceof Map)
+                getReferencedBNodes((Map) item, referencedBNodes)
         }
     }
 
-    public static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes)
-    {
-        if (map.size() > 1)
-        {
-            if (map.containsKey("@id"))
-            {
+    public static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes) {
+        if (map.size() > 1) {
+            if (map.containsKey("@id")) {
                 String id = map.get("@id")
 
-                if (id.startsWith("_:") && !referencedBNodes.contains(id))
-                {
+                if (id.startsWith("_:") && !referencedBNodes.contains(id)) {
                     map.remove("@id")
                 }
             }
         }
 
-        for (Object keyObj : map.keySet())
-        {
-            Object subobject = map.get(keyObj);
+        for (Object keyObj : map.keySet()) {
+            Object subobject = map.get(keyObj)
 
-            if ( subobject instanceof Map )
-                cleanUnreferencedBNodeIDs( (Map) subobject, referencedBNodes );
-            else if ( subobject instanceof List )
-                cleanUnreferencedBNodeIDs( (List) subobject, referencedBNodes );
+            if (subobject instanceof Map)
+                cleanUnreferencedBNodeIDs((Map) subobject, referencedBNodes)
+            else if (subobject instanceof List)
+                cleanUnreferencedBNodeIDs((List) subobject, referencedBNodes)
         }
     }
 
-    public static void cleanUnreferencedBNodeIDs(List list, Set referencedBNodes)
-    {
-        for (Object item : list)
-        {
-            if ( item instanceof Map )
-                cleanUnreferencedBNodeIDs( (Map) item, referencedBNodes );
+    public static void cleanUnreferencedBNodeIDs(List list, Set referencedBNodes) {
+        for (Object item : list) {
+            if (item instanceof Map)
+                cleanUnreferencedBNodeIDs((Map) item, referencedBNodes)
         }
     }
 
@@ -324,14 +311,14 @@ public class JsonLd {
         // The real test of the "Item Model" is whether or not the supplied document can be converted into
         // some kind of correct(ish) MARC.
 
-        MarcRecord marcRecord;
+        MarcRecord marcRecord
         try {
-            Document convertedDocument = converter.convert(doc);
-            String convertedText = (String) convertedDocument.getData().get("content");
-            marcRecord = MarcXmlRecordReader.fromXml(convertedText);
+            Document convertedDocument = converter.convert(doc)
+            String convertedText = (String) convertedDocument.getData().get("content")
+            marcRecord = MarcXmlRecordReader.fromXml(convertedText)
         } catch (Throwable e) {
             // Catch _everything_ that could go wrong with the convert() call, including Asserts (Errors)
-            return false;
+            return false
         }
 
         // Do some basic sanity checking on the resulting MARC holdings post.
@@ -339,19 +326,19 @@ public class JsonLd {
         // Holdings posts must have 32 positions in 008
         for (Controlfield field008 : marcRecord.getControlfields("008")) {
             if (field008.getData().length() != 32)
-                return false;
+                return false
         }
 
         // Holdings posts must have (at least one) 852 $b (sigel)
-        boolean containsSigel = false;
+        boolean containsSigel = false
         for (Datafield field852 : marcRecord.getDatafields("852")) {
             if (field852.getSubfields("b").size() > 0) {
-                containsSigel = true;
-                break;
+                containsSigel = true
+                break
             }
         }
         if (!containsSigel)
-            return false;
+            return false
 
         return true
     }

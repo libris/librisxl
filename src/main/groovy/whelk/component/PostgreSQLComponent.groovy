@@ -65,7 +65,7 @@ class PostgreSQLComponent implements Storage {
         String settingsTableName = mainTableName + "__settings"
 
 
-        connectionPool = new BasicDataSource();
+        connectionPool = new BasicDataSource()
 
         if (sqlUrl) {
             URI connURI = new URI(sqlUrl.substring(5)) // Cut the "jdbc:"-part of the sqlUrl.
@@ -239,26 +239,22 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    String getContext()
-    {
-        Connection connection;
-        PreparedStatement selectStatement;
-        ResultSet resultSet;
+    String getContext() {
+        Connection connection
+        PreparedStatement selectStatement
+        ResultSet resultSet
 
-        try
-        {
+        try {
             connection = getConnection()
             selectStatement = connection.prepareStatement(GET_CONTEXT)
             resultSet = selectStatement.executeQuery()
 
-            if (resultSet.next())
-            {
-                return resultSet.getString(1);
+            if (resultSet.next()) {
+                return resultSet.getString(1)
             }
-            return null;
+            return null
         }
-        finally
-        {
+        finally {
             try {resultSet.close()} catch (Exception e) { /* ignore */ }
             try {selectStatement.close()} catch (Exception e) { /* ignore */ }
             try {connection.close()} catch (Exception e) { /* ignore */ }
@@ -629,7 +625,7 @@ class PostgreSQLComponent implements Storage {
                 // Probably search in control field
                 value = mapper.writeValueAsString([[(keyElements[0]): value]])
             } else {
-                value = mapper.writeValueAsString([[(keyElements[0]): ["subfields": [[(keyElements[1]):value]]] ]]);
+                value = mapper.writeValueAsString([[(keyElements[0]): ["subfields": [[(keyElements[1]):value]]] ]])
 
             }
         }
@@ -773,9 +769,9 @@ class PostgreSQLComponent implements Storage {
     private Document assembleDocument(ResultSet rs) {
 
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map))
-        doc.setModified( new Date(rs.getTimestamp("modified").getTime()) )
+        doc.setModified(new Date(rs.getTimestamp("modified").getTime()))
         try {
-            doc.setCreated( new Date(rs.getTimestamp("created")?.getTime()) )
+            doc.setCreated(new Date(rs.getTimestamp("created")?.getTime()))
         } catch (SQLException sqle) {
             log.trace("Resultset didn't have created. Probably a version request.")
         }
@@ -789,7 +785,7 @@ class PostgreSQLComponent implements Storage {
 
     private List<String> loadIdentifiers(String id) {
         List<String> identifiers = []
-        Connection connection = getConnection();
+        Connection connection = getConnection()
         PreparedStatement loadIds = connection.prepareStatement(LOAD_IDENTIFIERS)
         try {
             loadIds.setString(1, id)

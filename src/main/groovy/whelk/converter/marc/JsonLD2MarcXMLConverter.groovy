@@ -20,9 +20,8 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
     }
 
     @Override
-    Map convert(Map data, String id)
-    {
-        Document originalDocument = new Document(data);
+    Map convert(Map data, String id) {
+        Document originalDocument = new Document(data)
 
         Map marcJsonData = jsonldConverter.convert(data, id)
 

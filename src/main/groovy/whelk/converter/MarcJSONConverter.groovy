@@ -19,7 +19,7 @@ import org.codehaus.jackson.node.ObjectNode
 @Log
 class MarcJSONConverter {
 
-    protected final static ObjectMapper mapper = new ObjectMapper();
+    protected final static ObjectMapper mapper = new ObjectMapper()
 
     static String old_toJSONString(MarcRecord record) {
         def builder = new groovy.json.JsonBuilder()

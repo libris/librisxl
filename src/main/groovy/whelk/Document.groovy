@@ -21,16 +21,14 @@ class Document {
     // If we _statically_ call loadProperties("secret"), without a try/catch it means that no code with a dependency on
     // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
     // depending on whelk-core) sometimes need to do.
-    static final URI BASE_URI;
+    static final URI BASE_URI
     static
     {
-        try
-        {
+        try {
             BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
         }
-        catch (Exception e)
-        {
-            System.err.println(e);
+        catch (Exception e) {
+            System.err.println(e)
         }
     }
 
@@ -51,22 +49,19 @@ class Document {
     public Map data = [:]
 
     Document(Map data) {
-        this.data = data;
+        this.data = data
     }
 
-    Document clone()
-    {
+    Document clone() {
         Map clonedDate = deepCopy(data)
         return new Document(clonedDate)
     }
 
-    URI getURI()
-    {
+    URI getURI() {
         return BASE_URI.resolve(getShortId())
     }
 
-    String getDataAsString()
-    {
+    String getDataAsString() {
         return mapper.writeValueAsString(data)
     }
 
@@ -85,8 +80,7 @@ class Document {
     /**
      * Will have base URI prepended if not already there
      */
-    void setId(String id)
-    {
+    void setId(String id) {
         if (!id.startsWith(Document.BASE_URI.toString()))
             id = Document.BASE_URI.resolve(id)
 
@@ -96,8 +90,7 @@ class Document {
     /**
      * Gets the document id (short form, without base URI).
      */
-    String getShortId()
-    {
+    String getShortId() {
         String base = Document.BASE_URI.toString()
         for (id in getRecordIdentifiers())
             if (id.startsWith(base))
@@ -108,8 +101,7 @@ class Document {
     /**
      * Gets the document id (long form with base uri)
      */
-    String getCompleteId()
-    {
+    String getCompleteId() {
         return get(recordIdPath)
     }
 
@@ -118,16 +110,14 @@ class Document {
      */
     String getId() { return getCompleteId() }
 
-    void setCreated(Date created)
-    {
+    void setCreated(Date created) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(created.toInstant(), ZoneId.systemDefault())
         String formatedCreated = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
         set(createdPath, formatedCreated, HashMap)
     }
     String getCreated() { get(createdPath) }
 
-    void setModified(Date modified)
-    {
+    void setModified(Date modified) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(modified.toInstant(), ZoneId.systemDefault())
         String formatedModified = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
         set(modifiedPath, formatedModified, HashMap)
@@ -137,8 +127,7 @@ class Document {
     /**
      * By convention the first id in the returned list is the MAIN resource id.
      */
-    List<String> getThingIdentifiers()
-    {
+    List<String> getThingIdentifiers() {
         List<String> ret = []
 
         String thingId = get(thingIdPath)
@@ -146,25 +135,21 @@ class Document {
             ret.add(thingId)
 
         List sameAsObjects = get(thingSameAsPath)
-        for (Map object : sameAsObjects)
-        {
-            ret.add( object.get("@id") )
+        for (Map object : sameAsObjects) {
+            ret.add(object.get("@id"))
         }
 
         return ret
     }
 
-    void addThingIdentifier(String identifier)
-    {
-        if (get(thingIdPath) == null)
-        {
+    void addThingIdentifier(String identifier) {
+        if (get(thingIdPath) == null) {
             set(thingIdPath2, identifier, HashMap)
             set(thingIdPath, identifier, HashMap)
             return
         }
 
-        if (preparePath(thingSameAsPath, ArrayList))
-        {
+        if (preparePath(thingSameAsPath, ArrayList)) {
             List sameAsList = get(thingSameAsPath)
             def idObject = ["@id" : identifier]
             if (!sameAsList.contains(idObject))
@@ -175,35 +160,30 @@ class Document {
     /**
      * By convention the first id in the returned list is the MAIN record id.
      */
-    List<String> getRecordIdentifiers()
-    {
+    List<String> getRecordIdentifiers() {
         List<String> ret = []
 
         ret.add(get(recordIdPath)) // must be present
 
         List sameAsObjects = get(recordSameAsPath)
-        for (Map object : sameAsObjects)
-        {
+        for (Map object : sameAsObjects) {
             if (object.get("@id") != null)
-                ret.add( object.get("@id") )
+                ret.add(object.get("@id"))
         }
 
         return ret
     }
 
-    void addRecordIdentifier(String identifier)
-    {
+    void addRecordIdentifier(String identifier) {
         if (identifier == null)
-            throw new NullPointerException("Attempted to add null-identifier.");
+            throw new NullPointerException("Attempted to add null-identifier.")
 
-        if (get(recordIdPath) == null)
-        {
+        if (get(recordIdPath) == null) {
             set(recordIdPath, identifier, HashMap)
             return
         }
 
-        if (preparePath(recordSameAsPath, ArrayList))
-        {
+        if (preparePath(recordSameAsPath, ArrayList)) {
             List sameAsList = get(recordSameAsPath)
             def idObject = ["@id" : identifier]
             if (!sameAsList.contains(idObject))
@@ -214,47 +194,41 @@ class Document {
     /**
      * Adds empty structure to the document so that 'path' can be traversed.
      */
-    private boolean preparePath(List path, Type leafType)
-    {
+    private boolean preparePath(List path, Type leafType) {
         // Start at root data node
-        Object node = data;
+        Object node = data
 
-        for (int i = 0; i < path.size(); ++i)
-        {
+        for (int i = 0; i < path.size(); ++i) {
             Object step = path.get(i)
 
-            Type nextReplacementType;
+            Type nextReplacementType
             if (i < path.size() - 1) // use the next step to determine the type of the next object
                 nextReplacementType = (path.get(i+1) instanceof Integer) ? ArrayList : HashMap
             else
                 nextReplacementType = leafType
 
             // Get the next object along the path (candidate)
-            Object candidate = null;
+            Object candidate = null
             if (node instanceof Map)
                 candidate = node.get(step)
-            else if (node instanceof List)
-            {
+            else if (node instanceof List) {
                 if (node.size() > step)
                     candidate = node.get(step)
             }
 
             // If that step can't be taken in the current structure, expand the structure
-            if (candidate == null)
-            {
+            if (candidate == null) {
                 if (node instanceof Map)
                     node.put(step, nextReplacementType.newInstance())
-                else if (node instanceof List)
-                {
+                else if (node instanceof List) {
                     while (node.size() < step+1)
                         node.add(nextReplacementType.newInstance())
                 }
             }
             // Check path integrity, in all but the last step (which will presumably be replaced)
             else if ((i < path.size() - 1) &&
-                    ! matchingContainer(candidate.getClass(), nextReplacementType))
-            {
-                log.warn("Structure conflict, path: " + path + ", at token: " + (i+1) + ", expected data to be: " + nextReplacementType + ", data was: " + candidate.getClass() + ", data:\n" + data );
+                    ! matchingContainer(candidate.getClass(), nextReplacementType)) {
+                log.warn("Structure conflict, path: " + path + ", at token: " + (i+1) + ", expected data to be: " + nextReplacementType + ", data was: " + candidate.getClass() + ", data:\n" + data )
                 return false
             }
 
@@ -266,13 +240,12 @@ class Document {
     /**
      * Set 'value' at 'path'. 'container' should be ArrayList or HashMap depending on if value should reside in a list or an object
      */
-    private boolean set(List path, Object value, Type container)
-    {
+    private boolean set(List path, Object value, Type container) {
         if (! preparePath(path, container))
             return false
 
         // Start at root data node
-        Object node = data;
+        Object node = data
 
         for (int i = 0; i < path.size() - 1; ++i) // follow all but last step
         {
@@ -281,46 +254,40 @@ class Document {
         }
 
         node.put(path.get(path.size()-1), value)
-        return true;
+        return true
     }
 
-    private boolean matchingContainer(Class c1, Class c2)
-    {
-        if ( (Map.class.isAssignableFrom(c1)) && (Map.class.isAssignableFrom(c2)) )
+    private boolean matchingContainer(Class c1, Class c2) {
+        if ((Map.class.isAssignableFrom(c1)) && (Map.class.isAssignableFrom(c2)))
             return true
-        if ( (List.class.isAssignableFrom(c1)) && (List.class.isAssignableFrom(c2)) )
+        if ((List.class.isAssignableFrom(c1)) && (List.class.isAssignableFrom(c2)))
             return true
-        return false;
+        return false
     }
 
-    private Object get(List path)
-    {
+    private Object get(List path) {
         // Start at root data node
-        Object node = data;
+        Object node = data
 
-        for (Object step : path)
-        {
-            if ( (node instanceof Map) && !(step instanceof String) )
-            {
+        for (Object step : path) {
+            if ((node instanceof Map) && !(step instanceof String)) {
                 log.warn("Needed string as map key, but was given: " + step + ". (path was: " + path + ")")
-                return null;
+                return null
             }
-            else if ( (node instanceof List) && !(step instanceof Integer) )
-            {
+            else if ((node instanceof List) && !(step instanceof Integer)) {
                 log.warn("Needed integer as list index, but was given: " + step + ". (path was: " + path + ")")
-                return null;
+                return null
             }
             node = node[step]
 
             if (node == null)
-                return null;
+                return null
         }
 
-        return node;
+        return node
     }
 
-    static Object deepCopy(Object orig)
-    {
+    static Object deepCopy(Object orig) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream()
         ObjectOutputStream oos = new ObjectOutputStream(bos)
         oos.writeObject(orig); oos.flush()
@@ -334,9 +301,8 @@ class Document {
      * (which preserve order), unlike normal HashMaps which do not, so be careful not to place HashMaps into a document
      * structure and then try to calculate a checksum.
      */
-    String getChecksum()
-    {
-        Document clone = clone();
+    String getChecksum() {
+        Document clone = clone()
 
         // timestamps not part of checksum
         clone.set(modifiedPath, "", LinkedHashMap)

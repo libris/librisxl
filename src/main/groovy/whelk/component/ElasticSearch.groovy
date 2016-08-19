@@ -70,7 +70,7 @@ class ElasticSearch implements Index {
             if (elasticcluster) {
                 sb = sb.put("cluster.name", elasticcluster)
             }
-            Settings elasticSettings = sb.build();
+            Settings elasticSettings = sb.build()
 
             client = TransportClient.builder().settings(elasticSettings).addPlugin(DeleteByQueryPlugin.class).build()
             try {
@@ -162,7 +162,7 @@ class ElasticSearch implements Index {
                 .setIndices(defaultIndex)
                 .setSource(["query":["term":["_id":toElasticId(identifier)]]])
                 .execute()
-                .actionGet();
+                .actionGet()
         log.debug("Response: ${rsp.totalDeleted}")
     }
 

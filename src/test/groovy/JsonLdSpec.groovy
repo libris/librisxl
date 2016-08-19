@@ -12,9 +12,9 @@ import whelk.exception.ModelValidationException
 class JsonLdSpec extends Specification {
 
     static final ObjectMapper mapper = new ObjectMapper()
-    static List<String> flatfiles = IOUtils.readLines(JsonLdSpec.class.getClassLoader().getResourceAsStream("flatfiles/"), Charsets.UTF_8);
-    static List<String> describedflatfiles = IOUtils.readLines(JsonLdSpec.class.getClassLoader().getResourceAsStream("describedflatfiles/"), Charsets.UTF_8);
-    static List<String> framefiles = IOUtils.readLines(JsonLdSpec.class.getClassLoader().getResourceAsStream("framefiles/"), Charsets.UTF_8);
+    static List<String> flatfiles = IOUtils.readLines(JsonLdSpec.class.getClassLoader().getResourceAsStream("flatfiles/"), Charsets.UTF_8)
+    static List<String> describedflatfiles = IOUtils.readLines(JsonLdSpec.class.getClassLoader().getResourceAsStream("describedflatfiles/"), Charsets.UTF_8)
+    static List<String> framefiles = IOUtils.readLines(JsonLdSpec.class.getClassLoader().getResourceAsStream("framefiles/"), Charsets.UTF_8)
 
     def "should get id map"() {
         expect:
