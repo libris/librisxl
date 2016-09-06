@@ -53,22 +53,6 @@ class CrudSpec extends Specification {
         crud.whelk = whelk
     }
 
-    def "should return correct responseurl for PUT"() {
-        when:
-        request.getRequestURL() >> { new StringBuffer("http://localhost:8180/whelk/fnörgel") }
-        String responseUrl = crud.getResponseUrl(request, "fnörgel")
-        then:
-        responseUrl == "http://localhost:8180/whelk/fnörgel"
-    }
-
-    def "should return correct responseurl for POST"() {
-        when:
-        request.getRequestURL() >> { new StringBuffer("http://localhost:8180/whelk/") }
-        String responseUrl = crud.getResponseUrl(request, "qwerty12345")
-        then:
-        responseUrl == "http://localhost:8180/whelk/qwerty12345"
-    }
-
     def "should display requested document"() {
         given:
         request.getPathInfo() >> { "/bib/1234" }
