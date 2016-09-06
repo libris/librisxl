@@ -31,6 +31,10 @@ sourceSets {
     }
 }
 
+test {
+    systemProperty 'xl.secret.properties', '../secret.properties'
+}
+
 test.testLogging {
     showStandardStreams true
     exceptionFormat "full"
