@@ -77,11 +77,16 @@ public class ListRecords
             ListRecordTrees.respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix, onlyIdentifiers);
         } else {
             // Normal record retrieval
-            try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
-                 PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec);
-                 ResultSet resultSet = preparedStatement.executeQuery())
+            try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection())
             {
-                respond(request, response, metadataPrefix, onlyIdentifiers, resultSet);
+                dbconn.setAutoCommit(false);
+                try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec);
+                    ResultSet resultSet = preparedStatement.executeQuery())
+                {
+                    respond(request, response, metadataPrefix, onlyIdentifiers, resultSet);
+                } finally {
+                    dbconn.commit();
+                }
             }
         }
     }
