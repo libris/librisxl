@@ -4,6 +4,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import spock.lang.Specification
 import groovy.util.logging.Slf4j as Log
 import whelk.Document
+import whelk.DocumentSpec
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -46,21 +47,21 @@ class PostgreSQLComponentSpec extends Specification {
 
         Document doc = null
         when:
-        doc = new Document("hej", ["@id": "hej"]).inCollection("test")
+        doc = new Document(["@graph": DocumentSpec.examples.first().data])
         then:
-        doc.checksum == null
-        doc.id == "hej"
-        doc.collection == "test"
+        doc.checksum != null
+        doc.id == "http://example.org/record"
+        //doc.collection == "test" //no collection property anymore
         doc.created == null
         doc.modified == null
         and:
-        Document r = storage.store(doc, true)
+        storage.store(doc, true, null, null, "", false)
         then:
-        r.created != null
-        r.modified != null
-        r.collection == "test"
-        r.id == "hej"
-        r.checksum != null
+        doc.created != null
+        doc.modified != null
+       // r.collection == "test" //no collection property anymore
+        doc.id == "http://example.org/record"
+        doc.checksum != null
     }
 
     def "should load document from database"() {
