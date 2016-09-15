@@ -22,6 +22,7 @@ class Document {
     // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
     // depending on whelk-core) sometimes need to do.
     static final URI BASE_URI
+
     static
     {
         try {
@@ -29,6 +30,7 @@ class Document {
         }
         catch (Exception e) {
             System.err.println(e)
+            BASE_URI = new URI("https://libris.kb.se/");
         }
     }
 
@@ -115,7 +117,9 @@ class Document {
         String formatedCreated = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
         set(createdPath, formatedCreated, HashMap)
     }
-    String getCreated() { get(createdPath) }
+    String getCreated() {
+        get(createdPath)
+    }
 
     void setModified(Date modified) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(modified.toInstant(), ZoneId.systemDefault())
@@ -184,9 +188,9 @@ class Document {
         }
 
         if (preparePath(recordSameAsPath, ArrayList)) {
-            List sameAsList = get(recordSameAsPath)
+            Object sameAsList = get(recordSameAsPath)
             def idObject = ["@id" : identifier]
-            if (!sameAsList.contains(idObject))
+            if (sameAsList.every{it->it!=idObject})
                 sameAsList.add(idObject)
         }
     }
@@ -280,8 +284,8 @@ class Document {
             }
             node = node[step]
 
-            if (node == null)
-                return null
+            if (node == null){
+                return null   }
         }
 
         return node
