@@ -60,6 +60,18 @@ do
 done
 
 
+# Prepare databases
+if [ "$DBUSER" ]; then
+    REBUILD_ARGS="-D ${DBUSER}"
+fi
+
+if [ "$CREATEDB_USER" ]; then
+    REBUILD_ARGS="${REBUILD_ARGS} -C ${CREATEDB_USER}"
+fi
+
+$TOOLDIR/scripts/manage-whelk-storage.sh -n $WHELKNAME $REBUILD_ARGS -R
+
+
 # Verify that mandatory arguments have been supplied
 if [ -z "$WHELKNAME" ]; then
     echo "ERROR: Whelk name not specified!"
@@ -75,38 +87,6 @@ if [ -z "$OAIPMH_CREDENTIALS" ]; then
     exit 1
 fi
 
-
-# Set up PostgreSQL database
-echo "Setting up PostgreSQL..."
-echo ""
-
-if [ -z "$CREATEDB_USER" ]; then
-    dropdb $WHELKNAME
-    createdb $WHELKNAME
-else
-    sudo -u $CREATEDB_USER dropdb $WHELKNAME
-    sudo -u $CREATEDB_USER createdb $WHELKNAME
-fi
-
-if [ -z "$DBUSER" ]; then
-    psql $WHELKNAME < $TOOLDIR/postgresql/tables.sql
-    psql $WHELKNAME < $TOOLDIR/postgresql/indexes.sql
-else
-    psql -U $DBUSER -h localhost $WHELKNAME < \
-         $TOOLDIR/postgresql/tables.sql
-    psql -U $DBUSER -h localhost $WHELKNAME < \
-         $TOOLDIR/postgresql/indexes.sql
-fi
-
-
-# Set up ElasticSearch
-echo ""
-echo "Setting up ElasticSearch..."
-echo ""
-
-curl -XDELETE http://localhost:9200/$WHELKNAME
-curl -XPOST http://localhost:9200/$WHELKNAME \
-     -d@$TOOLDIR/elasticsearch/libris_config.json
 
 
 # Create OAI-PMH files from examples unless they exist
