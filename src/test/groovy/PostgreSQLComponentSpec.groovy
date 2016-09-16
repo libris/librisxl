@@ -135,12 +135,17 @@ class PostgreSQLComponentSpec extends Specification {
 
     def "should calculate correct checksum regardless of created, modified or previous checksum"() {
         when:
-        String cs1 = new Document("@graph": [["key": "some data", "@id": "testid"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 10284701287]]).checksum
-        String cs2 = new Document("@graph": [["@id": "testid", "key": "some data"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 1298461982639]]).checksum
-        String cs3 = new Document("@graph": [["@id": "testid", "key": "some new data"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 1298461982639]]).checksum
+        //String cs1 = new Document(["@graph": [["key": "some data", "@id": "testid"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 10284701287]]]).checksum
+        String cs1 = new Document(["@graph": [["key": "some data", "@id": "testid", "created": 1298619387, "modified": 10284701387], ["identifier": "testid", "collection": "test"]]]).checksum
+        String cs2 = new Document(["@graph": [["@id": "testid", "key": "some data", "created": 1298619287, "modified": 10284701287], ["identifier": "testid", "collection": "test"]]]).checksum
+        String cs3 = new Document(["@graph": [["@id": "testid", "key": "some new data", "created": 1298619287, "modified": 1298461982639], ["identifier": "testid", "collection": "test"]]]).checksum
+        String cs4 = new Document(["@graph": [["@id": "testid", "key": "some data", "created": 1298619387, "modified": 10284701387], ["identifier": "testid", "collection": "test"]]]).checksum
+
         then:
-        cs1 == cs2
+        cs4 == cs2
         cs2 != cs3
+        cs1 == cs2
+
     }
 
 

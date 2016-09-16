@@ -68,7 +68,7 @@ class JsonLdSpec extends Specification {
         JsonLd.isFlat(framedJson) == false
     }
 
-    def "should retrieve actual URI from @id in document"() {
+    def  "should retrieve actual URI from @id in document"() {
         when:
         URI uri1 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "/qowiudhqw", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
         URI uri2 = JsonLd.findRecordURI(["descriptions": ["entry": ["@id": "http://id.kb.se/foo/bar", "name": "foo"], "items": [["@id":"/qowiudhqw#it"]]]])
