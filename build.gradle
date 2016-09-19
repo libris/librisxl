@@ -1,6 +1,7 @@
 apply plugin: 'groovy'
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'jacoco'
 
 archivesBaseName = "xlcore"
 
@@ -19,9 +20,30 @@ sourceSets {
     }
 }
 
+test {
+    jacoco {
+        append = false
+        destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
+        classDumpFile = file("$buildDir/jacoco/classpathdumps")
+    }
+}
+
 test.testLogging {
     showStandardStreams true
     exceptionFormat "full"
+}
+
+jacoco {
+    toolVersion = "0.7.6.201602180812"
+    reportsDir = file("$buildDir/coverage_report")
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.destination "${buildDir}/coverage_report/html"
+    }
 }
 
 repositories {
