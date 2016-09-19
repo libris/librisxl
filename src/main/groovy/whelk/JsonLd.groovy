@@ -308,16 +308,17 @@ public class JsonLd {
             throw new ModelValidationException("Document has no data to validate.")
         }
 
-        // The real test of the "Item Model" is whether or not the supplied document can be converted into
-        // some kind of correct(ish) MARC.
+        // The real test of the "Item Model" is whether or not the supplied
+        // document can be converted into some kind of correct(ish) MARC.
 
         MarcRecord marcRecord
         try {
-            Document convertedDocument = converter.convert(doc)
-            String convertedText = (String) convertedDocument.getData().get("content")
+            Document convertedDocument = converter.convert(doc.data, doc.id)
+            String convertedText = (String) convertedDocument.data.get("content")
             marcRecord = MarcXmlRecordReader.fromXml(convertedText)
         } catch (Throwable e) {
-            // Catch _everything_ that could go wrong with the convert() call, including Asserts (Errors)
+            // Catch _everything_ that could go wrong with the convert() call,
+            // including Asserts (Errors)
             return false
         }
 
@@ -325,8 +326,9 @@ public class JsonLd {
 
         // Holdings posts must have 32 positions in 008
         for (Controlfield field008 : marcRecord.getControlfields("008")) {
-            if (field008.getData().length() != 32)
+            if (field008.getData().length() != 32) {
                 return false
+            }
         }
 
         // Holdings posts must have (at least one) 852 $b (sigel)
@@ -337,8 +339,9 @@ public class JsonLd {
                 break
             }
         }
-        if (!containsSigel)
+        if (!containsSigel) {
             return false
+        }
 
         return true
     }
