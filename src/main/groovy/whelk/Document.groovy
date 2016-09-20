@@ -49,6 +49,7 @@ class Document {
     static final List encLevelPath = ["@graph", 0, "marc:encLevel", "@id"]
 
     public Map data = [:]
+    boolean deleted
 
     Document(Map data) {
         this.data = data
