@@ -10,7 +10,7 @@ class AccessControl {
 
     boolean checkDocument(Document newdoc, Document olddoc, Map userPrivileges) {
         def privs = null
-        if (newdoc?.collection == "hold" || newdoc == null) {
+        if (isHolding(newdoc)) {
             if (newdoc) {
                 JsonLd.validateItemModel(newdoc)
                 def sigel = JsonLd.frame(newdoc.id, newdoc.data).about.heldBy.notation
@@ -23,7 +23,7 @@ class AccessControl {
                     return false
                 }
             }
-            if (olddoc && !olddoc.deleted && olddoc.collection == "hold") {
+            if (olddoc && !olddoc.deleted && isHolding(olddoc)) {
                 def currentSigel = JsonLd.frame(olddoc.id, olddoc.data).about.heldBy.notation
                 if (currentSigel) {
                     log.trace("Checking sigel privs for existing document.")
@@ -48,5 +48,10 @@ class AccessControl {
         }
         log.debug("User is authorized to make the change.")
         return true
+    }
+
+    boolean isHolding(Document doc) {
+      // FIXME this needs to be implemented in whelk-core
+      return false
     }
 }
