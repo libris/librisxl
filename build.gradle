@@ -77,8 +77,8 @@ dependencies {
     compile 'org.apache.jena:apache-jena-libs:3.0.1'
 
     // Integration
-    compile "org.elasticsearch:elasticsearch:2.2.0"
-    compile "org.elasticsearch.plugin:delete-by-query:2.2.0"
+    compile "org.elasticsearch:elasticsearch:2.4.0"
+    compile "org.elasticsearch.plugin:delete-by-query:2.4.0"
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile 'com.vividsolutions:jts:1.13'
     compile 'org.postgresql:postgresql:9.4-1200-jdbc41'
