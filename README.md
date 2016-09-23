@@ -249,7 +249,7 @@ To clear out any existing definitions (before reloading them), run this script
 (or see the source for details):
 
 ```
-$ librisxl-tools/scripts/nuke-collection.sh whelk_dev definitions
+$ ./librisxl-tools/scripts/manage-whelk-storage.sh -n whelk_dev --nuke-definitions
 ```
 
 ### New Elasticsearch config
