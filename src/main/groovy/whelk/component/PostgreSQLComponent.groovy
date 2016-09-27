@@ -889,10 +889,11 @@ class PostgreSQLComponent implements whelk.component.Storage {
     }
 
     @Override
-    boolean remove(String identifier) {
+    boolean remove(String identifier, String changedIn, String changedBy, String collection) {
         if (versioning) {
             log.debug("Creating tombstone record with id ${identifier}")
-            return store(createTombstone(identifier), true)
+            Document tombstone = createTombstone(identifier)
+            return store(tombstone, true, changedIn, changedBy, collection, true)
         } else {
             Connection connection = getConnection()
             PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
@@ -913,7 +914,9 @@ class PostgreSQLComponent implements whelk.component.Storage {
 
 
     protected Document createTombstone(String id) {
-        return new Document(["@graph": [["@id": id, "@type": "Tombstone"]]])
+        // FIXME verify that this is correct behavior
+        String fullId = Document.BASE_URI.resolve(id).toString()
+        return new Document(["@graph": [["@id": fullId, "@type": "Tombstone"]]])
     }
 
     public Map loadSettings(String key) {
