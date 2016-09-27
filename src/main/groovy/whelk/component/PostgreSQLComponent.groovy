@@ -785,6 +785,9 @@ class PostgreSQLComponent implements whelk.component.Storage {
 
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map))
         doc.setModified(new Date(rs.getTimestamp("modified").getTime()))
+
+        doc.setDeleted(rs.getBoolean("deleted"))
+
         try {
             doc.setCreated(new Date(rs.getTimestamp("created")?.getTime()))
         } catch (SQLException sqle) {
