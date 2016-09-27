@@ -23,7 +23,7 @@ Usage: ./setup-dev-whelk.sh -n <NAME> -O <OAIPMH CREDENTIALS> [-D <DATABASE USER
         If unset, runs 'createdb' without 'sudo'.
 
     -F, --force-rebuild
-        If set, rebuild definitions, OAIPMH files, and import JAR.
+        If set, rebuild virtualenvs, definitions, OAIPMH files, and JAR files
 EOF
 }
 
@@ -96,17 +96,18 @@ if [ "$FORCE_REBUILD" = true ] || [ ! -f $WORKDIR/oaidump/bib/oaipmh ]; then
     echo ""
 
     mkdir -p $WORKDIR/oaidump
-    if [ ! -d .venv ]; then
-        virtualenv .venv
-        source .venv/bin/activate
-        pip install -r librisxl-tools/scripts/requirements.txt
-    else
-	source .venv/bin/activate
+
+    if [ "$FORCE_REBUILD" = true ]; then
+        rm -rf .venv
     fi
-    python librisxl-tools/scripts/assemble_oaipmh_records.py \
+    if [ ! -d .venv ]; then
+        virtualenv -p python2.7 .venv
+        .venv/bin/pip install -r librisxl-tools/scripts/requirements.txt
+    fi
+
+    .venv/bin/python librisxl-tools/scripts/assemble_oaipmh_records.py \
            $OAIPMH_CREDENTIALS \
            librisxl-tools/scripts/example_records.tsv $WORKDIR/oaidump/
-    deactivate
 fi
 
 
@@ -118,15 +119,15 @@ if [ "$FORCE_REBUILD" = true ] || [ ! -f $DEFS_FILE ]; then
     echo ""
 
     pushd ../definitions
-    if [ ! -d .venv ]; then
-        virtualenv .venv
-        source .venv/bin/activate
-        pip install -r requirements.txt
-    else
-        source .venv/bin/activate
+    git pull
+    if [ "$FORCE_REBUILD" = true ]; then
+        rm -rf .venv
     fi
-    python datasets.py -l
-    deactivate
+    if [ ! -d .venv ]; then
+        virtualenv -p python2.7 .venv
+        .venv/bin/pip install -r requirements.txt
+    fi
+    .venv/bin/python datasets.py -l
     popd
 fi
 
