@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 TOOLDIR=$(dirname $(dirname $0))
 WORKDIR=$(pwd)/work
 
