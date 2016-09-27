@@ -242,28 +242,39 @@ public class JsonLd {
         return null
     }
 
-    static String findIdentifier(Map jsonLd) {
+    static String findFullIdentifier(Map jsonLd) {
         String foundIdentifier = null
+
         if (!jsonLd) {
             return null
         }
+
         if (isFlat(jsonLd)) {
             log.trace("Received json is flat")
             if (jsonLd.containsKey(GRAPH_KEY)) {
                 foundIdentifier = jsonLd.get(GRAPH_KEY).first().get(ID_KEY)
             }
         }
+
         if (isFramed(jsonLd)) {
             foundIdentifier = jsonLd.get(ID_KEY)
         }
+
+        return foundIdentifier
+    }
+
+    static String findIdentifier(Map jsonLd) {
+        String foundIdentifier = findFullIdentifier(jsonLd)
+
         if (foundIdentifier) {
             if (foundIdentifier.startsWith("/") || foundIdentifier.startsWith(Document.BASE_URI.toString())) {
                 // Assumes only identifier in uri path
                 return Document.BASE_URI.resolve(foundIdentifier).getPath().substring(1)
             }
             return foundIdentifier
+        } else {
+            return null
         }
-        return null
     }
 
 
