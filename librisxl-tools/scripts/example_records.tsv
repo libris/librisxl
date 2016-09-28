@@ -77,6 +77,10 @@ auth/375218	Långfilmer 	    		[linked to by bib posts in this data set]
 auth/376822	Drama (film)			[linked to by bib posts in this data set]
 auth/244847	Fordon				[linked to by bib posts in this data set]
 auth/319968	Maskiner			[linked to by bib posts in this data set]
+auth/347758	Ljudböcker saogf
+auth/374342	Animerade filmer saogf
+auth/44914	Carroll, Lewis, 1832-1898
+auth/96337	Tenniel, John, Sir, 1820-1914
 
 bib/11279947	[Akademisk avhandling = Text,Monograph,Thesis] Neural correlates of individual differences in personality and intelligence
 bib/16309110	[Bilder = ?,?,?] Julkalendern 2013
@@ -119,34 +123,34 @@ bib/8435499	[-||-]
 bib/8435506	[-||-]
 bib/8595377	[–||– förenklat sätt att notera repliker som följer på artikel/recension = ?,?,?]
 bib/10796401	subject.broader:historia
-bib/11311266	
-bib/11357644	
-bib/11601582	
-bib/11691597	
-bib/11850823	
-bib/11911628	
-bib/12035894	
-bib/12289439	
+bib/11311266	0-4 sui zhineng xunlian baike quanshu / Zhang Qian
+bib/11357644	Leadership in organizations / Gary Yukl
+bib/11601582	Vägkartan. Norra Sverige [Elektronisk resurs] : DVD-ROM för Windows & Windows Mobile / [producerad av] Lantmäteriet
+bib/11691597	Översiktsplan för nationalstadsparken [Kartografiskt material] : stockholmsdelen : antagen av kommunfullmäktige, 20 april 2009
+bib/11850823	Ondskan [Ljudupptagning] / Jan Guillou
+bib/11911628	I havsbandet [Elektronisk resurs] / [August Strindberg] ; texten redigerad och kommenterad av Hans Lindström
+bib/12035894	100 greatest Western themes [Ljudupptagning]
+bib/12289439	[Recension av: Fornaldarsagaerne]
 bib/1234	Water and water pollution handbook. Vol. 2
-bib/12384646	
-bib/12732969	
-bib/12743333	
-bib/13531679	
-bib/13543149	
-bib/13584984	
-bib/13884869	
-bib/13973072	
+bib/12384646	Extreme killing : understanding serial and mass murder / James Alan Fox, Jack Levin
+bib/12732969	Analysis for Science, Engineering and Beyond [Elektronisk resurs] : The Tribute Workshop in Honour of Gunnar Sparr held in Lund, May 8-9, 2008 / edited by Kalle Åström, Lars-Erik Persson, Sergei D. Silvestrov
+bib/12743333	Att bryta ny marc [Elektronisk resurs] : LIBRIS 40 : en jubileumsskrift / [redaktör: Barbro Thomas]
+bib/13531679	Där ute i mörkret [Elektronisk resurs]
+bib/13543149	Gender / Harriet Bradley
+bib/13584984	The lie of the land : gender, farm work, and land in a rural Vietnamese village / Cecilia Bergstedt
+bib/13884869	Big data : a revolution that will transform how we live, work, and think / Viktor Mayer-Schönberger and Kenneth Cukier
+bib/13973072	Essays on unemployment insurance design / Susanne Ek
 bib/14006223	har subject.broader.prefLabel:Aktiemarknad
 bib/2912361	har relation.@type=Work, relation.uniformTitle:Metamorphoses (auth/345526)
-bib/3222798	
-bib/3678656	
-bib/4582889	
+bib/3222798	Otto Edvard Carlsund : skeppsbyggmästare, maskinkonstruktör och industriledare
+bib/3678656	Blondie : roar alla! [serial]
+bib/4582889	The call of Cthulhu & other weird stories / H. P. Lovecraft
 bib/48077	Länkar till Pengar auth/156486 via subject
-bib/5067018	
-bib/5299954	
-bib/6128247	
+bib/5067018	Billy Liar / Keith Waterhouse. The loneliness of the long-distance runner / Alan Sillitoe
+bib/5299954	Erzählte Verwandlung : eine Poetik epischer Metamorphosen (Ovid - Kafka - Ransmayr) / Friedmann Harzer
+bib/6128247	Lie of the land : earth body material / Marina Abramović ... [et al.] ; with essays by Paul Carter, Elaine Scarry ; curated by Antonia Payne
 bib/664491	(länkar till Tove Jansson auth/19153 via attributedTo)
-bib/7149593	
+bib/7149593	Anteckningar från en ö / Tove Jansson, Tuulikki Pietilä
 bib/816912	Mumintrollet (huvudpost; länkar till Lars Jansson auth/191493 via contributorList)
 bib/816913	Mumintrollet (del 1)
 bib/8261338	Kalle Anka & C:o (Serie)
@@ -265,11 +269,11 @@ bib/480417	Franska - Les œuvres complètes. ‡n 41, ‡p Œuvres critiques. �
 bib/3398365	Franska - Œuvres complètes. ‡n T. 14, ‡p Art poétique françois = Les œuvres
 bib/17063241	Tyska - Lesefutter für Groß und Klein : ‡b Kinder- und Jugendliteratur nach 2000 und literarisches Lernen im medienintegrativen Deutschunterricht / ‡c Petra Josting, Ricarda Dreier (Hgg.)
 bib/10724158	Latin (bok från 1640)... cùm divinâ disponente providentiâ, ex clementissimo s. r. m:tis indultu, admodum reverendus & præcellens vir dn. Laurentius Paulinus Gothus ... sub magnificentissimo, perillustris, celsi ac generosi domini, dn. Magni Gabrielis de la Gardie comitis de Lecköö, l. bar. de Eekholmen, domini de Hapsal, Dagdön, Kolta, Kydha, Runßön, &c. Rectoratu Academico, 4. non. junij anni post natum Mundi salvatorem M DC XL. Summis dignè oblatis, solenniter investiret honorîbus ac sacro sanctæ theologiæ doctores, Ubsaliæ Sveonum, inauguraret.
-bib/3313799	
-bib/3678902	
+bib/3313799	Sikaren : Sundbybergs IK:s medlemstidning
+bib/3678902	Gigant : Stålmannens nya jätte-tidning
 bib/12077095	Livet deluxe / Jens Lapidus
 bib/10729106	Snabba Cash / Jens Lapidus
-bib/8354559	 Agnes Cecilia / Maria Gripe
+bib/8354559	Agnes Cecilia / Maria Gripe
 bib/13924314	Svek / Karin Alvtegen
 bib/16507496	Kvicksand / Henning Mankell
 bib/9803785	Brandbilen som försvann / Sjöwall, wahlöö
@@ -300,6 +304,16 @@ bib/7153476	Kristin Lavransdotter / av Sigrid Undset
 bib/8999794	Mio Min Mio / Astrid Lindgren
 bib/7237796	Bröderna Lejonhjärta / Astrid Lindgren
 bib/7234965	Ronja rövardotter / Astrid Lindgren
+bib/18546404	Alice i Underlandet / av Lewis Carroll ; i översättning av Åke Runnquist ; med illustrationer av Tove Jansson
+bib/17619536	Alice i Underlandet / Lewis Carroll ; med förord av Lydia Wistisen ; översättning av Harry Lundin
+bib/12345451	Songs from Alice : Alice in wonderland & Through the looking-glass / words by Lewis Carroll set to music by Don Harper with illustrations by Charles Folkard.
+bib/11472526	Alice i Underlandet [Video (DVD)] = Alice in Wonderland / regi: Clyde Geronimi, Wilfred Jackso
+bib/11287326	Alice i Underlandet [Ljudupptagning] / Lewis Carroll
+bib/1390474	Alice in Wonderland and Through the looking-glass
+bib/9826870	Alice i Underlandet ; Spegellandet / Lewis Carroll ; med originalillustrationer av John Tenniel ; översättning: Harry Lundin
+bib/12141831	Alice in Wonderland / adapted by T.T Sutherland ; based on the screenplay
+bib/7107097	Alice's adventures in Wonderland : an 1865 printing re-described and newly identified as the...
+bib/5744697	The Tenniel illustrations to the Alice books / by Michael Hancher
 
 bib/11788294	Kartografi (modell)
 bib/12219281	Kartografi ("vanlig")
