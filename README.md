@@ -59,8 +59,6 @@ Related external repositories:
 
 2. [Elasticsearch](http://elasticsearch.org/)
 
-   Tested with version 2.2.0 only.
-
     For OS X:
     ```
     $ brew install elasticsearch
@@ -70,7 +68,7 @@ Related external repositories:
     https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-repositories.html
     first, then:
     ```
-    apt-get install elasticsearch=2.2.0
+    apt-get install elasticsearch
     ```
 
     **NOTE:** You will also need to set `cluster.name` in
@@ -84,6 +82,9 @@ Related external repositories:
     ```
     $ /path/to/elasticsearch/bin/plugin install delete-by-query
     ```
+
+    **NOTE:** You will need to reinstall the plugin whenever you
+      upgrade ElasticSearch.
 
 3. [PostgreSQL](https://www.postgresql.org/) (version 9.4 or later)
 
