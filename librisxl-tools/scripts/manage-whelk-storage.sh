@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 TOOLDIR=$(dirname $(dirname $0))
 RECREATE_DB=false
 NUKE_DEFINITIONS=false
@@ -120,13 +122,7 @@ if [ "$RECREATE_DB" = true ]; then
     echo "(Re)creating PostgreSQL database..."
     echo ""
 
-    if [ -z "$CREATEDB_USER" ]; then
-        dropdb $WHELKNAME
-        createdb $WHELKNAME
-    else
-        sudo -u $CREATEDB_USER dropdb $WHELKNAME
-        sudo -u $CREATEDB_USER createdb $WHELKNAME
-    fi
+    $TOOLDIR/drop-tables-and-indexes-sql.sh | psql -h $DBHOST $DBUSER_ARG $WHELKNAME
 
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $TOOLDIR/postgresql/tables.sql
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $TOOLDIR/postgresql/indexes.sql
