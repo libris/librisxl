@@ -122,7 +122,7 @@ if [ "$RECREATE_DB" = true ]; then
     echo "(Re)creating PostgreSQL database..."
     echo ""
 
-    $TOOLDIR/drop-tables-and-indexes-sql.sh | psql -h $DBHOST $DBUSER_ARG $WHELKNAME
+    $TOOLDIR/postgresql/drop-tables-and-indexes-sql.sh | psql -h $DBHOST $DBUSER_ARG $WHELKNAME
 
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $TOOLDIR/postgresql/tables.sql
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $TOOLDIR/postgresql/indexes.sql
