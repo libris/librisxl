@@ -18,6 +18,7 @@ class ElasticReindexer {
 
 
     void reindex(String collection) {
+        assert collection
         int counter = 0
         long startTime = System.currentTimeMillis()
         List<Document> documents = []
