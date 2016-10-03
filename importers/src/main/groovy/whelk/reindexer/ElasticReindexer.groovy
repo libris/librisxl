@@ -18,7 +18,6 @@ class ElasticReindexer {
 
 
     void reindex(String suppliedCollection) {
-        assert collection
         int counter = 0
         long startTime = System.currentTimeMillis()
         List<String> collections = suppliedCollection ? [suppliedCollection] : whelk.storage.loadCollections()
