@@ -124,8 +124,8 @@ class ElasticSearch implements Index {
     @Override
     public void bulkIndex(List<Document> docs, String collection) {
         assert collection
-        println getShapeForIndex(docs.first())
-        new IndexRequest(getIndexName(), collection, toElasticId(docs.first().getShortId())).source(getShapeForIndex(docs.first()))
+        log.error(getShapeForIndex(docs.first()))
+        log.error(new IndexRequest(getIndexName(), collection, toElasticId(docs.first().getShortId())).source(getShapeForIndex(docs.first())))
         if (docs) {
             BulkRequest bulk = new BulkRequest()
             for (doc in docs) {
