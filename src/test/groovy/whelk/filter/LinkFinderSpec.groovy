@@ -80,7 +80,7 @@ class LinkFinderSpec extends Specification {
 
     def "should replace all /some?-identifiers"() {
         given:
-        Document unfilteredDocument = new Document( Document.BASE_URI.resolve("/foobar").toString(), DOCUMENT_DATA1).withContentType("application/ld+json")
+        Document unfilteredDocument = new Document(DOCUMENT_DATA1)
         Document filteredDocument = linkFinder.findLinks(unfilteredDocument)
         expect:
         filteredDocument != null
@@ -92,7 +92,7 @@ class LinkFinderSpec extends Specification {
 
     def "should return null for unchanged document"() {
         given:
-        Document unfilteredDocument = new Document("foobar", DOCUMENT_DATA2).withContentType("application/ld+json")
+        Document unfilteredDocument = new Document(DOCUMENT_DATA2)
         Document filteredDocument = linkFinder.findLinks(unfilteredDocument)
         expect:
         filteredDocument == null

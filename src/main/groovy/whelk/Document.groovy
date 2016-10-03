@@ -1,7 +1,7 @@
 package whelk
 
 import groovy.util.logging.Slf4j as Log
-import org.codehaus.jackson.map.*
+import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.PropertyLoader
 
 import java.lang.reflect.Type
@@ -22,6 +22,7 @@ class Document {
     // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
     // depending on whelk-core) sometimes need to do.
     static final URI BASE_URI
+
     static
     {
         try {
@@ -29,6 +30,7 @@ class Document {
         }
         catch (Exception e) {
             System.err.println(e)
+            BASE_URI = new URI("https://libris.kb.se/");
         }
     }
 
@@ -66,15 +68,19 @@ class Document {
     }
 
     void setApixExportFailFlag(boolean failed) { set(failedApixExportPath, failed, LinkedHashMap) }
+
     boolean getApixExportFailFlag() { get(failedApixExportPath) }
 
     void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber, LinkedHashMap) }
+
     String getControlNumber() { get(controlNumberPath) }
 
     void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor, LinkedHashMap) }
+
     String getHoldingFor() { get(holdingForPath) }
 
     void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, LinkedHashMap) }
+
     String getEncodingLevel() { get(encLevelPath) }
 
     /**
@@ -115,13 +121,17 @@ class Document {
         String formatedCreated = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
         set(createdPath, formatedCreated, HashMap)
     }
-    String getCreated() { get(createdPath) }
+
+    String getCreated() {
+        get(createdPath)
+    }
 
     void setModified(Date modified) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(modified.toInstant(), ZoneId.systemDefault())
         String formatedModified = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
         set(modifiedPath, formatedModified, HashMap)
     }
+
     String getModified() { get(modifiedPath) }
 
     /**
@@ -151,7 +161,7 @@ class Document {
 
         if (preparePath(thingSameAsPath, ArrayList)) {
             List sameAsList = get(thingSameAsPath)
-            def idObject = ["@id" : identifier]
+            def idObject = ["@id": identifier]
             if (!sameAsList.contains(idObject))
                 sameAsList.add(idObject)
         }
@@ -184,9 +194,9 @@ class Document {
         }
 
         if (preparePath(recordSameAsPath, ArrayList)) {
-            List sameAsList = get(recordSameAsPath)
-            def idObject = ["@id" : identifier]
-            if (!sameAsList.contains(idObject))
+            Object sameAsList = get(recordSameAsPath)
+            def idObject = ["@id": identifier]
+            if (sameAsList.every { it -> it != idObject })
                 sameAsList.add(idObject)
         }
     }
@@ -203,7 +213,7 @@ class Document {
 
             Type nextReplacementType
             if (i < path.size() - 1) // use the next step to determine the type of the next object
-                nextReplacementType = (path.get(i+1) instanceof Integer) ? ArrayList : HashMap
+                nextReplacementType = (path.get(i + 1) instanceof Integer) ? ArrayList : HashMap
             else
                 nextReplacementType = leafType
 
@@ -221,14 +231,14 @@ class Document {
                 if (node instanceof Map)
                     node.put(step, nextReplacementType.newInstance())
                 else if (node instanceof List) {
-                    while (node.size() < step+1)
+                    while (node.size() < step + 1)
                         node.add(nextReplacementType.newInstance())
                 }
             }
             // Check path integrity, in all but the last step (which will presumably be replaced)
             else if ((i < path.size() - 1) &&
-                    ! matchingContainer(candidate.getClass(), nextReplacementType)) {
-                log.warn("Structure conflict, path: " + path + ", at token: " + (i+1) + ", expected data to be: " + nextReplacementType + ", data was: " + candidate.getClass() + ", data:\n" + data )
+                    !matchingContainer(candidate.getClass(), nextReplacementType)) {
+                log.warn("Structure conflict, path: " + path + ", at token: " + (i + 1) + ", expected data to be: " + nextReplacementType + ", data was: " + candidate.getClass() + ", data:\n" + data)
                 return false
             }
 
@@ -241,7 +251,7 @@ class Document {
      * Set 'value' at 'path'. 'container' should be ArrayList or HashMap depending on if value should reside in a list or an object
      */
     private boolean set(List path, Object value, Type container) {
-        if (! preparePath(path, container))
+        if (!preparePath(path, container))
             return false
 
         // Start at root data node
@@ -253,7 +263,7 @@ class Document {
             node = node.get(step)
         }
 
-        node.put(path.get(path.size()-1), value)
+        node.put(path.get(path.size() - 1), value)
         return true
     }
 
@@ -273,15 +283,15 @@ class Document {
             if ((node instanceof Map) && !(step instanceof String)) {
                 log.warn("Needed string as map key, but was given: " + step + ". (path was: " + path + ")")
                 return null
-            }
-            else if ((node instanceof List) && !(step instanceof Integer)) {
+            } else if ((node instanceof List) && !(step instanceof Integer)) {
                 log.warn("Needed integer as list index, but was given: " + step + ". (path was: " + path + ")")
                 return null
             }
             node = node[step]
 
-            if (node == null)
+            if (node == null) {
                 return null
+            }
         }
 
         return node
@@ -299,7 +309,7 @@ class Document {
     /**
      * This function relies on the fact that the deserialized jsonld (using Jackson ObjectMapper) consists of LinkedHashMaps
      * (which preserve order), unlike normal HashMaps which do not, so be careful not to place HashMaps into a document
-     * structure and then try to calculate a checksum.
+     * structure and then try to calculate a checksum. Makes the order of the inner elements not matter for the caclulation
      */
     String getChecksum() {
         Document clone = clone()
@@ -307,13 +317,16 @@ class Document {
         // timestamps not part of checksum
         clone.set(modifiedPath, "", LinkedHashMap)
         clone.set(createdPath, "", LinkedHashMap)
-
+        clone.data = clone.data["@graph"].collectEntries {
+            it ->
+                it.toSorted {a, b -> a.key <=> b.key}
+        }
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()
         byte[] databytes = mapper.writeValueAsBytes(clone.data)
         m.update(databytes)
         byte[] digest = m.digest()
-        BigInteger bigInt = new BigInteger(1,digest)
+        BigInteger bigInt = new BigInteger(1, digest)
         String hashtext = bigInt.toString(16)
         return hashtext
     }

@@ -1,29 +1,21 @@
 package whelk.component
 
 import groovy.util.logging.Slf4j as Log
-
 import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
 import whelk.Document
-import whelk.JsonLd
 import whelk.Location
 import whelk.exception.StorageCreateFailedException
 
-import java.security.MessageDigest
-import java.sql.BatchUpdateException
-import java.sql.ResultSet
-import java.sql.SQLException
-import java.sql.Timestamp
-import java.sql.PreparedStatement
-import java.sql.Connection
-import java.sql.Types
+import java.sql.*
+import java.util.Date
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 @Log
-class PostgreSQLComponent implements Storage {
+class PostgreSQLComponent implements whelk.component.Storage {
 
     private BasicDataSource connectionPool
     static String driverClass = "org.postgresql.Driver"
@@ -44,19 +36,19 @@ class PostgreSQLComponent implements Storage {
     protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
 
     // Query defaults
-    static final int DEFAULT_PAGE_SIZE=50
+    static final int DEFAULT_PAGE_SIZE = 50
 
     // Query idiomatic data
     static final Map<StorageType, String> SQL_PREFIXES = [
-            (StorageType.JSONLD): "data->'@graph'",
+            (StorageType.JSONLD)                       : "data->'@graph'",
             (StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS): "data->'descriptions'",
-            (StorageType.MARC21_JSON): "data->'fields'"
+            (StorageType.MARC21_JSON)                  : "data->'fields'"
     ]
 
     String mainTableName
 
     // for testing
-    PostgreSQLComponent() { }
+    PostgreSQLComponent() {}
 
     PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
         mainTableName = sqlMaintable
@@ -94,7 +86,7 @@ class PostgreSQLComponent implements Storage {
         // Setting up sql-statements
         UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ? " +
                 "RETURNING *) " +
-            "INSERT INTO $mainTableName (id, data, collection, changedIn, changedBy, checksum, deleted) SELECT ?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
+                "INSERT INTO $mainTableName (id, data, collection, changedIn, changedBy, checksum, deleted) SELECT ?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
         INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted) VALUES (?,?,?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
@@ -212,6 +204,8 @@ class PostgreSQLComponent implements Storage {
                 doc.setCreated(status['created'])
                 doc.setModified(status['modified'])
             }
+
+
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
             return
         } catch (PSQLException psqle) {
@@ -255,9 +249,18 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            try {resultSet.close()} catch (Exception e) { /* ignore */ }
-            try {selectStatement.close()} catch (Exception e) { /* ignore */ }
-            try {connection.close()} catch (Exception e) { /* ignore */ }
+            try {
+                resultSet.close()
+            } catch (Exception e) { /* ignore */
+            }
+            try {
+                selectStatement.close()
+            } catch (Exception e) { /* ignore */
+            }
+            try {
+                connection.close()
+            } catch (Exception e) { /* ignore */
+            }
         }
     }
 
@@ -322,10 +325,22 @@ class PostgreSQLComponent implements Storage {
             connection.rollback()
             throw e
         } finally {
-            try { resultSet.close() } catch (Exception e) {}
-            try { selectStatement.close() } catch (Exception e) {}
-            try { updateStatement.close() } catch (Exception e) {}
-            try { connection.close() } catch (Exception e) {}
+            try {
+                resultSet.close()
+            } catch (Exception e) {
+            }
+            try {
+                selectStatement.close()
+            } catch (Exception e) {
+            }
+            try {
+                updateStatement.close()
+            } catch (Exception e) {
+            }
+            try {
+                connection.close()
+            } catch (Exception e) {
+            }
             log.debug("[store] Closed connection.")
         }
     }
@@ -400,15 +415,15 @@ class PostgreSQLComponent implements Storage {
         if (versioning) {
             PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
-                log.debug("Trying to save a version of ${doc.getShortId()} with checksum ${doc.getChecksum()}. Modified: $modTime")
+                log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum()}. Modified: $modTime")
                 insvers = rigVersionStatement(insvers, doc, modTime, changedIn, changedBy, collection, deleted)
                 int updated = insvers.executeUpdate()
                 log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
                 return (updated > 0)
             } catch (Exception e) {
-            log.error("Failed to save document version: ${e.message}")
-            throw e
-        }
+                log.error("Failed to save document version: ${e.message}")
+                throw e
+            }
         } else {
             return false
         }
@@ -429,7 +444,8 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    boolean bulkStore(final List<Document> docs, boolean upsert, String changedIn, String changedBy, String collection) {
+    boolean bulkStore(
+            final List<Document> docs, boolean upsert, String changedIn, String changedBy, String collection) {
         if (!docs || docs.isEmpty()) {
             return true
         }
@@ -461,7 +477,7 @@ class PostgreSQLComponent implements Storage {
         } catch (Exception e) {
             log.error("Failed to save batch: ${e.message}. Rolling back..", e)
             if (e instanceof SQLException) {
-              log.error("Note: next exception was: ${e.nextException.message}.", e.nextException)
+                log.error("Note: next exception was: ${e.nextException.message}.", e.nextException)
             }
             connection.rollback()
         } finally {
@@ -477,7 +493,7 @@ class PostgreSQLComponent implements Storage {
         long startTime = System.currentTimeMillis()
         Connection connection = getConnection()
         // Extract LDAPI parameters
-        String pageSize = queryParameters.remove("_pageSize")?.first() ?: ""+DEFAULT_PAGE_SIZE
+        String pageSize = queryParameters.remove("_pageSize")?.first() ?: "" + DEFAULT_PAGE_SIZE
         String page = queryParameters.remove("_page")?.first() ?: "1"
         String sort = queryParameters.remove("_sort")?.first()
         queryParameters.remove("_where") // Not supported
@@ -487,9 +503,9 @@ class PostgreSQLComponent implements Storage {
         def (whereClause, values) = buildQueryString(queryParameters, collection, storageType)
 
         int limit = pageSize as int
-        int offset = (Integer.parseInt(page)-1) * limit
+        int offset = (Integer.parseInt(page) - 1) * limit
 
-        StringBuilder finalQuery = new StringBuilder("${values ? QUERY_LD_API + whereClause : (collection ? LOAD_ALL_DOCUMENTS_BY_COLLECTION : LOAD_ALL_DOCUMENTS)+ " AND deleted IS NOT true"} OFFSET $offset LIMIT $limit")
+        StringBuilder finalQuery = new StringBuilder("${values ? QUERY_LD_API + whereClause : (collection ? LOAD_ALL_DOCUMENTS_BY_COLLECTION : LOAD_ALL_DOCUMENTS) + " AND deleted IS NOT true"} OFFSET $offset LIMIT $limit")
 
         if (sort) {
             finalQuery.append(" ORDER BY ${translateSort(sort, storageType)}")
@@ -575,7 +591,7 @@ class PostgreSQLComponent implements Storage {
             int elementIndex = 0
             for (element in key.split("\\.")) {
                 if (elementIndex == 0) {
-                    jsonbPath.append(SQL_PREFIXES.get(storageType, "")+"->")
+                    jsonbPath.append(SQL_PREFIXES.get(storageType, "") + "->")
                 } else {
                     jsonbPath.append("->")
                 }
@@ -590,7 +606,7 @@ class PostgreSQLComponent implements Storage {
                 jsonbPath.append("'${element}'")
                 elementIndex++
             }
-            jsonbPath.append(" "+direction)
+            jsonbPath.append(" " + direction)
         }
         return jsonbPath.toString()
 
@@ -609,7 +625,7 @@ class PostgreSQLComponent implements Storage {
                 jsonbPath.append("->'items'")
                 Map jsonbQueryStructure = [:]
                 Map nextMap = null
-                for (int i = (keyElements[0] == "items" ? 1 : 0); i < keyElements.length-1; i++) {
+                for (int i = (keyElements[0] == "items" ? 1 : 0); i < keyElements.length - 1; i++) {
                     nextMap = [:]
                     jsonbQueryStructure.put(keyElements[i], nextMap)
                 }
@@ -625,7 +641,7 @@ class PostgreSQLComponent implements Storage {
                 // Probably search in control field
                 value = mapper.writeValueAsString([[(keyElements[0]): value]])
             } else {
-                value = mapper.writeValueAsString([[(keyElements[0]): ["subfields": [[(keyElements[1]):value]]] ]])
+                value = mapper.writeValueAsString([[(keyElements[0]): ["subfields": [[(keyElements[1]): value]]]]])
 
             }
         }
@@ -733,11 +749,10 @@ class PostgreSQLComponent implements Storage {
     }
 
 
-
     Document loadBySameAsIdentifier(String identifier) {
         log.info("Using loadBySameAsIdentifier")
         //return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]]) // This one is for descriptionsbased data
-        return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]]])
+        return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1: [["sameAs": ["@id": identifier]]]])
     }
 
     List<Document> loadAllVersions(String identifier) {
@@ -776,7 +791,7 @@ class PostgreSQLComponent implements Storage {
             log.trace("Resultset didn't have created. Probably a version request.")
         }
 
-        for (altId in loadIdentifiers(doc.getShortId())) {
+        for (altId in loadIdentifiers(doc.id)) {
             doc.addRecordIdentifier(altId)
         }
         return doc
@@ -895,9 +910,7 @@ class PostgreSQLComponent implements Storage {
 
 
     protected Document createTombstone(String id) {
-        def tombstone = new Document(id, ["@type":"Tombstone"]).withContentType("application/ld+json")
-        tombstone.setDeleted(true)
-        return tombstone
+        return new Document(["@graph": [["@id": id, "@type": "Tombstone"]]])
     }
 
     public Map loadSettings(String key) {
