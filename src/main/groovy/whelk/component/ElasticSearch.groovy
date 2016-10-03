@@ -123,6 +123,7 @@ class ElasticSearch implements Index {
 
     @Override
     public void bulkIndex(List<Document> docs, String collection) {
+        assert collection
         if (docs) {
             BulkRequest bulk = new BulkRequest()
             for (doc in docs) {
