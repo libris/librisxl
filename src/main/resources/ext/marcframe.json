@@ -2852,10 +2852,10 @@
       "i1": {
         "property": "marc:searchControl",
         "tokenMap": {
-          "0": "marc:NoteNoAddedEntry",
-          "1": "marc:NoteAddedEntry",
-          "2": "marc:NoNoteNoAddedEntry",
-          "3": "marc:NoNoteAddedEntry"
+          "0": {"@id": "marc:NoteNoAddedEntry"},
+          "1": {"@id": "marc:NoteAddedEntry"},
+          "2": {"@id": "marc:NoNoteNoAddedEntry"},
+          "3": {"@id": "marc:NoNoteAddedEntry"}
         },
         "marcDefault": "1"
       },
