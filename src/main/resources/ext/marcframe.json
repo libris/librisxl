@@ -2850,11 +2850,12 @@
       "embedded": true,
       "resourceType": "VariantTitle",
       "i1": {
-        "property": "marc:searchElement",
+        "property": "marc:searchControl",
         "tokenMap": {
-          "0": false,
-          "2": {"@id": "marc:NoRemarkNoSearch"},
-          "3": {"@id": "marc:NoRemark"}
+          "0": "marc:NoteNoAddedEntry",
+          "1": "marc:NoteAddedEntry",
+          "2": "marc:NoNoteNoAddedEntry",
+          "3": "marc:NoNoteAddedEntry"
         },
         "marcDefault": "1"
       },
