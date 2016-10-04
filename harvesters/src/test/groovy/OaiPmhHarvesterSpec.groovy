@@ -37,8 +37,10 @@ class OaiPmhHarvesterSpec extends Specification {
         Storage storage = GroovyMock(Storage.class)
         whelk = new Whelk() {
             @Override
-            void bulkStore(List document) {
-                documents += document
+            void bulkStore(final List<Document> documents,
+                    String changedIn, String changedBy, String collection,
+                    boolean createOrUpdate) {
+                this.documents += documents
             }
             @Override
             void remove(String id) {
@@ -66,21 +68,21 @@ class OaiPmhHarvesterSpec extends Specification {
         given:
         currentPageSet = okPageSet
         when:
-        def result = importer.harvest(BASE, "ListRecords", "marcxml")
+        def result = importer.harvest(BASE, null, "ListRecords", "marcxml")
         then:
         whelk.documents.size() == 2
         result.numberOfDocuments == 2
         result.numberOfDocumentsDeleted == 0
         result.lastRecordDatestamp == date("2002-02-02T00:00:00Z")
-        new URL(whelk.documents.get(0).manifest.get(Document.ALTERNATE_ID_KEY).first()).getPath() == "/auth/1"
-        new URL(whelk.documents.get(1).manifest.get(Document.ALTERNATE_ID_KEY).first()).getPath() == "/auth/2"
+        new URL(whelk.documents.get(0).recordIdentifiers[1]).getPath() == "/auth/1"
+        new URL(whelk.documents.get(1).recordIdentifiers[1]).getPath() == "/auth/2"
     }
 
     def "should follow resumptionToken even from empty page"() {
         given:
         currentPageSet = emptyFirstPagePageSet
         when:
-        def result = importer.harvest(BASE, "ListRecords", "marcxml")
+        def result = importer.harvest(BASE, null, "ListRecords", "marcxml")
         then:
         result.numberOfDocuments == 1
         result.lastRecordDatestamp == date("2002-02-02T00:00:00Z")
@@ -90,7 +92,7 @@ class OaiPmhHarvesterSpec extends Specification {
         given:
         currentPageSet = brokenPageSet
         when:
-        def result = importer.harvest(BASE, "ListRecords", "marcxml")
+        def result = importer.harvest(BASE, null, "ListRecords", "marcxml")
         then:
         result.lastRecordDatestamp == date("2002-02-02T00:00:00Z")
     }
@@ -99,7 +101,7 @@ class OaiPmhHarvesterSpec extends Specification {
         given:
         currentPageSet = selfOriginPageSet
         when:
-        def result = importer.harvest(BASE, "ListRecords", "marcxml")
+        def result = importer.harvest(BASE, null, "ListRecords", "marcxml")
         then:
         result.numberOfDocuments == 0
         result.numberOfDocumentsSkipped == 1
@@ -110,7 +112,7 @@ class OaiPmhHarvesterSpec extends Specification {
         given:
         currentPageSet = suppressedPageSet
         when:
-        def result = importer.harvest(BASE, "ListRecords", "marcxml")
+        def result = importer.harvest(BASE, null, "ListRecords", "marcxml")
         then:
         result.numberOfDocuments == 0
         result.numberOfDocumentsSkipped == 1
@@ -121,7 +123,7 @@ class OaiPmhHarvesterSpec extends Specification {
         given:
         currentPageSet = badDateOrderPageSet
         when: "one is correct"
-        def result = importer.harvest(BASE, "ListRecords", "marcxml", date("2015-05-29T00:00:00Z"))
+        def result = importer.harvest(BASE, null, "ListRecords", "marcxml", date("2015-05-29T00:00:00Z"))
         then:
         result.numberOfDocuments == 1
         result.numberOfDocumentsDeleted == 0
@@ -133,7 +135,7 @@ class OaiPmhHarvesterSpec extends Specification {
         badDateOrderPageSet[(BASE+'?verb=ListRecords&metadataPrefix=marcxml&from=2015-05-29T09:00:00Z')] = badDateOrderPageSet[(BASE+'?verb=ListRecords&metadataPrefix=marcxml&from=2015-05-29T00:00:00Z')]
         currentPageSet = badDateOrderPageSet
         when: "none is correct"
-        def result = importer.harvest(BASE, "ListRecords", "marcxml", date("2015-05-29T09:00:00Z"))
+        def result = importer.harvest(BASE, null, "ListRecords", "marcxml", date("2015-05-29T09:00:00Z"))
         then:
         result.numberOfDocuments == 0
         result.numberOfDocumentsDeleted == 0
@@ -144,7 +146,7 @@ class OaiPmhHarvesterSpec extends Specification {
         given:
         currentPageSet = deleteRecord
         when:
-        def result = importer.harvest(BASE, "ListRecords", "marcxml")
+        def result = importer.harvest(BASE, null, "ListRecords", "marcxml")
         then:
         result.numberOfDocuments == 1
         result.numberOfDocumentsDeleted == 1
