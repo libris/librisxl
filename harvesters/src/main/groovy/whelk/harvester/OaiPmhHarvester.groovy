@@ -232,7 +232,7 @@ class OaiPmhHarvester {
             } else {
                 hdata.numberOfDocumentsSkipped++
             }
-            if (docs.size() % 1000 == 0) {
+            if (docs.size() > 0 && docs.size() % 1000 == 0) {
                 String sourceSystem = hdata.sourceSystem == null ? DEFAULT_SOURCE_SYSTEM : hdata.sourceSystem
                 whelk.bulkStore(docs, sourceSystem, null, collection)
                 docs = []
