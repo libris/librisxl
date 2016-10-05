@@ -197,6 +197,7 @@ class PostgresLoadfileWriter
                                     writeDocumentToLoadFile(doc, dm.collection);
                                 } catch (Throwable e)
                                 {
+                                    e.print("Convert Failed. id: ${dm.id}")
                                     e.printStackTrace()
                                     String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
                                     s_failedIds.add(voyagerId);
