@@ -47,6 +47,56 @@ class PostgresLoadfileWriter
         });
     }
 
+    public static void dumpStraight(String exportFileName, String collection, String connectionUrl)
+    {
+        s_marcFrameConverter = new MarcFrameConverter();
+        s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
+        s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName+"_identifiers"), Charset.forName("UTF-8"));
+        def loader = new MySQLLoader(connectionUrl, collection);
+
+        def counter = 0
+        def startTime = System.currentTimeMillis()
+
+        try
+        {
+            loader.run { doc, specs, createDate ->
+
+                if (isSuppressed(doc))
+                    return
+
+                String oldStyleIdentifier = "/"+collection+"/"+getControlNumber(doc)
+                String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+
+
+                Map documentMap = new HashMap(2)
+                documentMap.put("record", doc)
+                documentMap.put("collection", collection)
+                documentMap.put("id", id)
+                documentMap.put("created", createDate)
+
+                Map convertedData = s_marcFrameConverter.convert(documentMap.record, documentMap.id);
+                Document document = new Document(convertedData)
+                document.setCreated(documentMap.created)
+                writeDocumentToLoadFile(document, documentMap.collection);
+
+                if (++counter % 1000 == 0) {
+                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
+                    if (elapsedSecs > 0) {
+                        def docsPerSec = counter / elapsedSecs
+                        println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
+                    }
+                }
+            }
+        } finally {
+            s_mainTableWriter.close()
+            s_identifiersWriter.close()
+        }
+
+        def endSecs = (System.currentTimeMillis() - startTime) / 1000
+        println "Done. Processed $counter documents in $endSecs seconds."
+
+    }
+
     public static void dump(String exportFileName, String collection, String connectionUrl)
     {
         Vector<HashMap> m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
