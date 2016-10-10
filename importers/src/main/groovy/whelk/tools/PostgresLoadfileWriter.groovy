@@ -1,12 +1,12 @@
 package whelk.tools
 
+import groovy.util.logging.Slf4j as Log
+import groovyx.gpars.GParsPool
+import groovyx.gpars.dataflow.Dataflow
 import whelk.Document
-import whelk.JsonLd
-import whelk.converter.MarcJSONConverter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
 import whelk.util.LegacyIntegrationTools
-import groovy.util.logging.Slf4j as Log
 
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -16,8 +16,7 @@ import java.nio.file.Paths
  * Writes documents into a PostgreSQL load-file, which can be efficiently imported into lddb
  */
 @Log
-class PostgresLoadfileWriter
-{
+class PostgresLoadfileWriter {
     private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CONVERSIONS_PER_THREAD = 200;
 
@@ -31,15 +30,13 @@ class PostgresLoadfileWriter
     private static Thread[] s_threadPool;
     private static Vector<String> s_failedIds = new Vector<String>();
 
-
     // Abort on unhandled exceptions, including those on worker threads.
     static
     {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()
         {
             @Override
-            void uncaughtException(Thread thread, Throwable throwable)
-            {
+            void uncaughtException(Thread thread, Throwable throwable) {
                 System.out.println("PANIC ABORT, unhandled exception:\n");
                 throwable.printStackTrace();
                 System.exit(-1);
@@ -47,24 +44,23 @@ class PostgresLoadfileWriter
         });
     }
 
-    public static void dumpStraight(String exportFileName, String collection, String connectionUrl)
-    {
+    public static void dumpStraight(String exportFileName, String collection, String connectionUrl) {
         s_marcFrameConverter = new MarcFrameConverter();
         s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
-        s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName+"_identifiers"), Charset.forName("UTF-8"));
+        s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
         def loader = new MySQLLoader(connectionUrl, collection);
 
         def counter = 0
         def startTime = System.currentTimeMillis()
 
-        try
-        {
+        try {
+
             loader.run { doc, specs, createDate ->
 
                 if (isSuppressed(doc))
                     return
 
-                String oldStyleIdentifier = "/"+collection+"/"+getControlNumber(doc)
+                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
                 String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
 
 
@@ -87,6 +83,7 @@ class PostgresLoadfileWriter
                     }
                 }
             }
+
         } finally {
             s_mainTableWriter.close()
             s_identifiersWriter.close()
@@ -97,8 +94,79 @@ class PostgresLoadfileWriter
 
     }
 
-    public static void dump(String exportFileName, String collection, String connectionUrl)
-    {
+    public static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
+        GParsPool.withPool {
+            Vector<HashMap> m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
+
+            if (FAULT_TOLERANT_MODE)
+                System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
+                        "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
+
+            s_marcFrameConverter = new MarcFrameConverter();
+            s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
+            s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
+            def loader = new MySQLLoader(connectionUrl, collection);
+
+            def counter = 0
+            def startTime = System.currentTimeMillis()
+
+            try {
+                loader.run { doc, specs, createDate ->
+                    if (isSuppressed(doc))
+                        return
+
+                    String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+                    String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+
+
+                    Map documentMap = new HashMap(2)
+                    documentMap.put("record", doc)
+                    documentMap.put("collection", collection)
+                    documentMap.put("id", id)
+                    documentMap.put("created", createDate)
+                    m_outputQueue.add(documentMap);
+
+                    if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD) {
+
+                        Vector v2 = m_outputQueue.clone()
+
+                        m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
+
+                        Dataflow.task {
+                            v2.eachParallel { dm ->
+                                Map convertedData = s_marcFrameConverter.convert(dm.record, dm.id);
+                                Document document = new Document(convertedData)
+                                document.setCreated(dm.created)
+                                writeDocumentToLoadFile(document, dm.collection);
+                            }
+                        }
+                    }
+
+
+                    if (++counter % 5000 == 0) {
+                        def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
+                        if (elapsedSecs > 0) {
+                            def docsPerSec = counter / elapsedSecs
+                            println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
+                        }
+                    }
+
+
+                }
+                if (!m_outputQueue.isEmpty())
+                    println "last_one"
+
+            } finally {
+                s_mainTableWriter.close()
+                s_identifiersWriter.close()
+            }
+
+            def endSecs = (System.currentTimeMillis() - startTime) / 1000
+            println "Done. Processed $counter documents in $endSecs seconds."
+        }
+    }
+
+    public static void dump(String exportFileName, String collection, String connectionUrl) {
         Vector<HashMap> m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
 
         if (FAULT_TOLERANT_MODE)
@@ -107,7 +175,7 @@ class PostgresLoadfileWriter
 
         s_marcFrameConverter = new MarcFrameConverter();
         s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
-        s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName+"_identifiers"), Charset.forName("UTF-8"));
+        s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
         s_threadPool = new Thread[THREAD_COUNT];
 
         def loader = new MySQLLoader(connectionUrl, collection);
@@ -115,14 +183,13 @@ class PostgresLoadfileWriter
         def counter = 0
         def startTime = System.currentTimeMillis()
 
-        try
-        {
+        try {
             loader.run { doc, specs, createDate ->
 
                 if (isSuppressed(doc))
                     return
 
-                String oldStyleIdentifier = "/"+collection+"/"+getControlNumber(doc)
+                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
                 String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
 
 
@@ -133,8 +200,7 @@ class PostgresLoadfileWriter
                 documentMap.put("created", createDate)
                 m_outputQueue.add(documentMap);
 
-                if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD)
-                {
+                if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD) {
                     flushOutputQueue(m_outputQueue);
                     m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
                 }
@@ -152,8 +218,7 @@ class PostgresLoadfileWriter
                 flushOutputQueue(m_outputQueue);
 
         } finally {
-            for (int i = 0; i < THREAD_COUNT; ++i)
-            {
+            for (int i = 0; i < THREAD_COUNT; ++i) {
                 if (s_threadPool[i] != null)
                     s_threadPool[i].join();
             }
@@ -165,19 +230,14 @@ class PostgresLoadfileWriter
         println "Done. Processed $counter documents in $endSecs seconds."
     }
 
-    private static boolean isSuppressed(Map doc)
-    {
+    private static boolean isSuppressed(Map doc) {
         def fields = doc.get("fields")
-        for (def field : fields)
-        {
-            if (field.get("599") != null)
-            {
+        for (def field : fields) {
+            if (field.get("599") != null) {
                 def field599 = field.get("599")
-                if (field599.get("subfields") != null)
-                {
+                if (field599.get("subfields") != null) {
                     def subfields = field599.get("subfields")
-                    for (def subfield : subfields)
-                    {
+                    for (def subfield : subfields) {
                         if (subfield.get("a").equals("SUPPRESSRECORD"))
                             return true;
                     }
@@ -187,11 +247,9 @@ class PostgresLoadfileWriter
         return false;
     }
 
-    private static String getControlNumber(Map doc)
-    {
+    private static String getControlNumber(Map doc) {
         def fields = doc.get("fields")
-        for (def field : fields)
-        {
+        for (def field : fields) {
             if (field.get("001") != null)
                 return field.get("001");
         }
@@ -214,47 +272,36 @@ class PostgresLoadfileWriter
     }
     */
 
-    private static void flushOutputQueue(Vector<HashMap> threadWorkLoad)
-    {
+    private static void flushOutputQueue(Vector<HashMap> threadWorkLoad) {
         // Find a suitable thread from the pool to do the conversion
 
         int i = 0;
-        while(true)
-        {
+        while (true) {
             i++;
-            if (i == THREAD_COUNT)
-            {
+            if (i == THREAD_COUNT) {
                 i = 0;
                 Thread.yield();
             }
 
-            if (s_threadPool[i] == null || s_threadPool[i].state == Thread.State.TERMINATED)
-            {
+            if (s_threadPool[i] == null || s_threadPool[i].state == Thread.State.TERMINATED) {
                 s_threadPool[i] = new Thread(new Runnable()
                 {
-                    void run()
-                    {
-                        for (HashMap dm : threadWorkLoad)
-                        {
-                            if (FAULT_TOLERANT_MODE)
-                            {
-                                try
-                                {
+                    void run() {
+                        for (HashMap dm : threadWorkLoad) {
+                            if (FAULT_TOLERANT_MODE) {
+                                try {
                                     Map convertedData = s_marcFrameConverter.convert(dm.record, dm.id);
                                     Document doc = new Document(convertedData)
                                     doc.setCreated(dm.created)
 
                                     writeDocumentToLoadFile(doc, dm.collection);
-                                } catch (Throwable e)
-                                {
+                                } catch (Throwable e) {
                                     e.print("Convert Failed. id: ${dm.id}")
                                     e.printStackTrace()
                                     String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
                                     s_failedIds.add(voyagerId);
                                 }
-                            }
-                            else
-                            {
+                            } else {
                                 Map convertedData = s_marcFrameConverter.convert(dm.record, dm.id);
                                 Document doc = new Document(convertedData)
                                 doc.setCreated(dm.created)
@@ -270,8 +317,7 @@ class PostgresLoadfileWriter
         }
     }
 
-    private static synchronized void writeDocumentToLoadFile(Document doc, String collection)
-    {
+    private static synchronized void writeDocumentToLoadFile(Document doc, String collection) {
         /* columns:
 
         id text not null unique primary key,
@@ -297,17 +343,17 @@ class PostgresLoadfileWriter
 
         s_mainTableWriter.write(doc.getShortId());
         s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write( doc.getDataAsString().replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
+        s_mainTableWriter.write(doc.getDataAsString().replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString));
         s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write( collection.replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
+        s_mainTableWriter.write(collection.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString));
         s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write( "vcopy" );
+        s_mainTableWriter.write("vcopy");
         s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write( nullString );
+        s_mainTableWriter.write(nullString);
         s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write( doc.getChecksum().replace("\\", "\\\\").replace(delimiterString, "\\"+delimiterString) );
+        s_mainTableWriter.write(doc.getChecksum().replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString));
         s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write( doc.getCreated() );
+        s_mainTableWriter.write(doc.getCreated());
 
         // remaining values have sufficient defaults.
 
@@ -320,8 +366,7 @@ class PostgresLoadfileWriter
         identifier text not null -- unique
         */
 
-        for (String identifier : identifiers)
-        {
+        for (String identifier : identifiers) {
             s_identifiersWriter.write(doc.getShortId());
             s_identifiersWriter.write(delimiter);
             s_identifiersWriter.write(identifier);

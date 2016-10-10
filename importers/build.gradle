@@ -60,6 +60,7 @@ dependencies {
     // Integration
     compile 'mysql:mysql-connector-java:5.1.33'
     compile 'org.picocontainer:picocontainer:2.15'
+    compile 'org.codehaus.gpars:gpars:1.2.1'
 
     // profiling and test
     testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"
