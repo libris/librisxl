@@ -132,14 +132,14 @@ class PostgresLoadfileWriter {
 
                         m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
 
-                        Dataflow.task {
+                        //Dataflow.task {
                             v2.eachParallel { dm ->
                                 Map convertedData = s_marcFrameConverter.convert(dm.record, dm.id);
                                 Document document = new Document(convertedData)
                                 document.setCreated(dm.created)
                                 writeDocumentToLoadFile(document, dm.collection);
                             }
-                        }
+                        //}
                     }
 
 
