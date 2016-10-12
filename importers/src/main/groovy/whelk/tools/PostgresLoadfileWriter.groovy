@@ -102,7 +102,7 @@ class PostgresLoadfileWriter {
                 System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
                         "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
 
-            s_marcFrameConverter = new MarcFrameConverter();
+            //s_marcFrameConverter = new MarcFrameConverter();
             s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
             s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
             def loader = new MySQLLoader(connectionUrl, collection);
@@ -127,19 +127,14 @@ class PostgresLoadfileWriter {
                     m_outputQueue.add(documentMap);
 
                     if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD) {
-
-                        Vector v2 = m_outputQueue.clone()
-
-                        m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
-
-                        //Dataflow.task {
-                            v2.eachParallel { dm ->
-                                Map convertedData = s_marcFrameConverter.convert(dm.record, dm.id);
+                        m_outputQueue.eachParallel { dm ->
+                            def marcFrameConverter = new MarcFrameConverter();
+                                Map convertedData = marcFrameConverter.convert(dm.record, dm.id);
                                 Document document = new Document(convertedData)
                                 document.setCreated(dm.created)
                                 writeDocumentToLoadFile(document, dm.collection);
                             }
-                        //}
+                        m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
                     }
 
 
