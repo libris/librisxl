@@ -1,8 +1,7 @@
 package whelk.tools
 
 import groovy.util.logging.Slf4j as Log
-import groovyx.gpars.GParsPool
-import groovyx.gpars.dataflow.Dataflow
+import groovyx.gpars.ParallelEnhancer
 import whelk.Document
 import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
@@ -95,70 +94,87 @@ class PostgresLoadfileWriter {
     }
 
     public static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
-        GParsPool.withPool {
-            Vector<HashMap> m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
 
-            if (FAULT_TOLERANT_MODE)
-                System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
-                        "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
+        Vector<HashMap> m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
 
-            //s_marcFrameConverter = new MarcFrameConverter();
-            s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
-            s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
-            def loader = new MySQLLoader(connectionUrl, collection);
+        if (FAULT_TOLERANT_MODE)
+            System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
+                    "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
 
-            def counter = 0
-            def startTime = System.currentTimeMillis()
+        //s_marcFrameConverter = new MarcFrameConverter();
+        s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
+        s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
+        def loader = new MySQLLoader(connectionUrl, collection);
 
-            try {
-                loader.run { doc, specs, createDate ->
-                    if (isSuppressed(doc))
-                        return
+        def counter = 0
+        def startTime = System.currentTimeMillis()
 
-                    String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-                    String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+        try {
+            loader.run { doc, specs, createDate ->
+                if (isSuppressed(doc))
+                    return
+
+                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+                String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
 
 
-                    Map documentMap = new HashMap(2)
-                    documentMap.put("record", doc)
-                    documentMap.put("collection", collection)
-                    documentMap.put("id", id)
-                    documentMap.put("created", createDate)
-                    m_outputQueue.add(documentMap);
+                Map documentMap = new HashMap(2)
+                documentMap.put("record", doc)
+                documentMap.put("collection", collection)
+                documentMap.put("id", id)
+                documentMap.put("created", createDate)
+                m_outputQueue.add(documentMap);
 
-                    if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD) {
-                        m_outputQueue.eachParallel { dm ->
+                if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD) {
+
+                        ParallelEnhancer.enhanceInstance(m_outputQueue)
+                    def a = m_outputQueue.collectParallel { dm ->
+                        try {
+
                             def marcFrameConverter = new MarcFrameConverter();
-                                Map convertedData = marcFrameConverter.convert(dm.record, dm.id);
-                                Document document = new Document(convertedData)
-                                document.setCreated(dm.created)
-                                writeDocumentToLoadFile(document, dm.collection);
-                            }
-                        m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
-                    }
+                            Map convertedData = marcFrameConverter.convert(dm.record, dm.id);
+                            Document document = new Document(convertedData)
+                            document.setCreated(dm.created)
+                            [doc: document, coll: collection]
 
-
-                    if (++counter % 5000 == 0) {
-                        def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
-                        if (elapsedSecs > 0) {
-                            def docsPerSec = counter / elapsedSecs
-                            println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
+                        } catch (Throwable e) {
+                            e.print("Convert Failed. id: ${dm.id}")
+                            e.printStackTrace()
+                            String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
+                            s_failedIds.add(voyagerId);
                         }
                     }
-
-
+                    a.each { d ->
+                        writeDocumentToLoadFile(d.doc, d.coll);
+                    }
+                    m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
                 }
-                if (!m_outputQueue.isEmpty())
-                    println "last_one"
 
-            } finally {
-                s_mainTableWriter.close()
-                s_identifiersWriter.close()
+
+
+                if (++counter % 1000 == 0) {
+                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
+                    if (elapsedSecs > 0) {
+                        def docsPerSec = counter / elapsedSecs
+                        println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
+                    }
+                }
+
+
             }
+            if (!m_outputQueue.isEmpty())
+                println "last_one"
 
-            def endSecs = (System.currentTimeMillis() - startTime) / 1000
-            println "Done. Processed $counter documents in $endSecs seconds."
         }
+
+        finally {
+            s_mainTableWriter.close()
+            s_identifiersWriter.close()
+        }
+
+        def endSecs = (System.currentTimeMillis() - startTime) / 1000
+        println " Done. Processed  ${counter}  documents in  ${endSecs}  seconds. "
+
     }
 
     public static void dump(String exportFileName, String collection, String connectionUrl) {
@@ -251,21 +267,21 @@ class PostgresLoadfileWriter {
         return null
     }
 
-    /*
-    private static void addSetSpecs(Map manifest, List specs)
-    {
-        if (specs.size() == 0)
-            return
-        
-        def extradata = manifest.get("extraData", [:])
-        def setSpecs = extradata.get("oaipmhSetSpecs", [])
+/*
+private static void addSetSpecs(Map manifest, List specs)
+{
+    if (specs.size() == 0)
+        return
 
-        for (String spec : specs)
-        {
-            setSpecs.add(spec);
-        }
+    def extradata = manifest.get("extraData", [:])
+    def setSpecs = extradata.get("oaipmhSetSpecs", [])
+
+    for (String spec : specs)
+    {
+        setSpecs.add(spec);
     }
-    */
+}
+*/
 
     private static void flushOutputQueue(Vector<HashMap> threadWorkLoad) {
         // Find a suitable thread from the pool to do the conversion
@@ -315,17 +331,17 @@ class PostgresLoadfileWriter {
     private static synchronized void writeDocumentToLoadFile(Document doc, String collection) {
         /* columns:
 
-        id text not null unique primary key,
-        data jsonb not null,
-        collection text not null,
-        changedIn text not null,
-        changedBy text,
-        checksum text not null,
-        created timestamp with time zone not null default now(),
-        modified timestamp with time zone not null default now(),
-        deleted boolean default false
+           id text not null unique primary key,
+           data jsonb not null,
+           collection text not null,
+           changedIn text not null,
+           changedBy text,
+           checksum text not null,
+           created timestamp with time zone not null default now(),
+           modified timestamp with time zone not null default now(),
+           deleted boolean default false
 
-        */
+           */
 
         final char delimiter = '\t';
         final String nullString = "\\N";
@@ -369,4 +385,5 @@ class PostgresLoadfileWriter {
             s_identifiersWriter.newLine();
         }
     }
+
 }
