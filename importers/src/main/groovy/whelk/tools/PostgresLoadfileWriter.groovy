@@ -55,21 +55,21 @@ class PostgresLoadfileWriter {
         try {
 
             loader.run { doc, specs, createDate ->
+
+
+                if (isSuppressed(doc))
+                    return
+
+                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+                String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+
+
+                Map documentMap = new HashMap(2)
+                documentMap.put("record", doc)
+                documentMap.put("collection", collection)
+                documentMap.put("id", id)
+                documentMap.put("created", createDate)
                 try {
-
-                    if (isSuppressed(doc))
-                        return
-
-                    String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-                    String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-
-
-                    Map documentMap = new HashMap(2)
-                    documentMap.put("record", doc)
-                    documentMap.put("collection", collection)
-                    documentMap.put("id", id)
-                    documentMap.put("created", createDate)
-
                     Map convertedData = s_marcFrameConverter.convert(documentMap.record, documentMap.id);
                     Document document = new Document(convertedData)
                     document.setCreated(documentMap.created)
@@ -83,7 +83,7 @@ class PostgresLoadfileWriter {
                         }
                     }
                 } catch (Throwable e) {
-                    e.print("Convert Failed. id: ${dm.id}")
+                    e.print("Convert Failed. id: ${documentMap.id}")
                     e.printStackTrace()
                     String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
                     s_failedIds.add(voyagerId);
