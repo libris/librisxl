@@ -1,9 +1,12 @@
 package whelk.tools
 
 import groovy.util.logging.Slf4j as Log
-import groovyx.gpars.ParallelEnhancer
+import groovyx.gpars.GParsPool
 import whelk.Document
 import whelk.converter.marc.MarcFrameConverter
+
+//import groovyx.gpars.GParsPool
+//import groovyx.gpars.ParallelEnhancer
 import whelk.importer.MySQLLoader
 import whelk.util.LegacyIntegrationTools
 
@@ -17,7 +20,7 @@ import java.nio.file.Paths
 @Log
 class PostgresLoadfileWriter {
     private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
-    private static final int CONVERSIONS_PER_THREAD = 200;
+    private static final int CONVERSIONS_PER_THREAD = 1000;
 
     // USED FOR DEV ONLY, MUST _NEVER_ BE SET TO TRUE ONCE XL GOES INTO PRODUCTION. WITH THIS SETTING THE IMPORT WILL
     // _SKIP_ DOCUMENTS THAT FAIL CONVERSION, RESULTING IN POTENTIAL DATA LOSS IF USED WHEN IMPORTING TO A PRODUCTION XL
@@ -63,31 +66,18 @@ class PostgresLoadfileWriter {
                 String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
                 String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
 
+                Map documentMap = [record: doc, collection: collection, id: id, created: createDate]
 
-                Map documentMap = new HashMap(2)
-                documentMap.put("record", doc)
-                documentMap.put("collection", collection)
-                documentMap.put("id", id)
-                documentMap.put("created", createDate)
-                try {
-                    Map convertedData = s_marcFrameConverter.convert(documentMap.record, documentMap.id);
-                    Document document = new Document(convertedData)
-                    document.setCreated(documentMap.created)
-                    writeDocumentToLoadFile(document, documentMap.collection);
+                handleDM(documentMap, collection)
 
-                    if (++counter % 1000 == 0) {
-                        def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
-                        if (elapsedSecs > 0) {
-                            def docsPerSec = counter / elapsedSecs
-                            println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
-                        }
+                if (++counter % 2000 == 0) {
+                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
+                    if (elapsedSecs > 0) {
+                        def docsPerSec = counter / elapsedSecs
+                        println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
                     }
-                } catch (Throwable e) {
-                    e.print("Convert Failed. id: ${documentMap.id}")
-                    e.printStackTrace()
-                    String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
-                    s_failedIds.add(voyagerId);
                 }
+
             }
 
         } finally {
@@ -100,6 +90,7 @@ class PostgresLoadfileWriter {
 
     }
 
+
     public static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
 
         Vector<HashMap> m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
@@ -108,7 +99,7 @@ class PostgresLoadfileWriter {
             System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
                     "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
 
-        //s_marcFrameConverter = new MarcFrameConverter();
+        s_marcFrameConverter = new MarcFrameConverter();
         s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
         s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
         def loader = new MySQLLoader(connectionUrl, collection);
@@ -123,37 +114,16 @@ class PostgresLoadfileWriter {
 
                 String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
                 String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-
-
-                Map documentMap = new HashMap(2)
-                documentMap.put("record", doc)
-                documentMap.put("collection", collection)
-                documentMap.put("id", id)
-                documentMap.put("created", createDate)
-                m_outputQueue.add(documentMap);
-
+                Map documentMap = [record: doc, collection: collection, id: id, created: createDate]
+                m_outputQueue.add(documentMap)
                 if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD) {
-
-                    ParallelEnhancer.enhanceInstance(m_outputQueue)
-                    def a = m_outputQueue.collectParallel { dm ->
-                        try {
-
-                            def marcFrameConverter = new MarcFrameConverter();
-                            Map convertedData = marcFrameConverter.convert(dm.record, dm.id);
-                            Document document = new Document(convertedData)
-                            document.setCreated(dm.created)
-                            [doc: document, coll: collection]
-
-                        } catch (Throwable e) {
-                            e.print("Convert Failed. id: ${dm.id}")
-                            e.printStackTrace()
-                            String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
-                            s_failedIds.add(voyagerId);
+                    GParsPool.withPool {
+                        m_outputQueue.collate(125).eachParallel { coll ->
+                            def m = new MarcFrameConverter()
+                            coll.each { dm -> handleDM(dm, m) }
                         }
                     }
-                    a.each { d ->
-                        writeDocumentToLoadFile(d.doc, d.coll);
-                    }
+
                     m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
                 }
 
@@ -163,7 +133,7 @@ class PostgresLoadfileWriter {
                     def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
                     if (elapsedSecs > 0) {
                         def docsPerSec = counter / elapsedSecs
-                        println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
+                        println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
                     }
                 }
 
@@ -182,6 +152,21 @@ class PostgresLoadfileWriter {
         def endSecs = (System.currentTimeMillis() - startTime) / 1000
         println " Done. Processed  ${counter}  documents in  ${endSecs}  seconds. "
 
+    }
+
+    private static void handleDM(Map documentMap, MarcFrameConverter marcFrameConverter) {
+        try {
+            Map convertedData = marcFrameConverter.convert(documentMap.record, documentMap.id);
+            Document document = new Document(convertedData)
+            document.setCreated(documentMap.created)
+            writeDocumentToLoadFile(document, documentMap.collection)
+
+        } catch (Throwable e) {
+            e.print("Convert Failed. id: ${documentMap.id}")
+            e.printStackTrace()
+            //String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
+            //s_failedIds.add(voyagerId);
+        }
     }
 
     public static void dump(String exportFileName, String collection, String connectionUrl) {
