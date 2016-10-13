@@ -55,31 +55,38 @@ class PostgresLoadfileWriter {
         try {
 
             loader.run { doc, specs, createDate ->
+                try {
 
-                if (isSuppressed(doc))
-                    return
+                    if (isSuppressed(doc))
+                        return
 
-                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-                String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+                    String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+                    String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
 
 
-                Map documentMap = new HashMap(2)
-                documentMap.put("record", doc)
-                documentMap.put("collection", collection)
-                documentMap.put("id", id)
-                documentMap.put("created", createDate)
+                    Map documentMap = new HashMap(2)
+                    documentMap.put("record", doc)
+                    documentMap.put("collection", collection)
+                    documentMap.put("id", id)
+                    documentMap.put("created", createDate)
 
-                Map convertedData = s_marcFrameConverter.convert(documentMap.record, documentMap.id);
-                Document document = new Document(convertedData)
-                document.setCreated(documentMap.created)
-                writeDocumentToLoadFile(document, documentMap.collection);
+                    Map convertedData = s_marcFrameConverter.convert(documentMap.record, documentMap.id);
+                    Document document = new Document(convertedData)
+                    document.setCreated(documentMap.created)
+                    writeDocumentToLoadFile(document, documentMap.collection);
 
-                if (++counter % 1000 == 0) {
-                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
-                    if (elapsedSecs > 0) {
-                        def docsPerSec = counter / elapsedSecs
-                        println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
+                    if (++counter % 1000 == 0) {
+                        def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
+                        if (elapsedSecs > 0) {
+                            def docsPerSec = counter / elapsedSecs
+                            println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
+                        }
                     }
+                } catch (Throwable e) {
+                    e.print("Convert Failed. id: ${dm.id}")
+                    e.printStackTrace()
+                    String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
+                    s_failedIds.add(voyagerId);
                 }
             }
 
@@ -127,7 +134,7 @@ class PostgresLoadfileWriter {
 
                 if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD) {
 
-                        ParallelEnhancer.enhanceInstance(m_outputQueue)
+                    ParallelEnhancer.enhanceInstance(m_outputQueue)
                     def a = m_outputQueue.collectParallel { dm ->
                         try {
 

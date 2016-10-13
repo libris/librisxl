@@ -45,7 +45,7 @@ class ImporterMain {
 
     void vcopydumpCmd(String toFileName, String collection) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        PostgresLoadfileWriter.dumpGpars(toFileName, collection, connUrl)
+        PostgresLoadfileWriter.dumpStraight(toFileName, collection, connUrl)
     }
 
     void vcopyjsondumpCmd(String collection, String toFileName) {
