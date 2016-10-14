@@ -1,18 +1,22 @@
 package whelk.tools
 
+import groovy.sql.Sql
 import groovy.util.logging.Slf4j as Log
-import groovyx.gpars.GParsPool
+import se.kb.libris.util.marc.MarcRecord
+import se.kb.libris.util.marc.io.Iso2709Deserializer
 import whelk.Document
+import whelk.converter.MarcJSONConverter
 import whelk.converter.marc.MarcFrameConverter
-
-//import groovyx.gpars.GParsPool
-//import groovyx.gpars.ParallelEnhancer
 import whelk.importer.MySQLLoader
 import whelk.util.LegacyIntegrationTools
 
 import java.nio.charset.Charset
 import java.nio.file.Files
+
+//import groovyx.gpars.GParsPool
+//import groovyx.gpars.ParallelEnhancer
 import java.nio.file.Paths
+import java.sql.ResultSet
 
 /**
  * Writes documents into a PostgreSQL load-file, which can be efficiently imported into lddb
@@ -20,7 +24,7 @@ import java.nio.file.Paths
 @Log
 class PostgresLoadfileWriter {
     private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
-    private static final int CONVERSIONS_PER_THREAD = 1000;
+    private static final int CONVERSIONS_PER_THREAD = 100;
 
     // USED FOR DEV ONLY, MUST _NEVER_ BE SET TO TRUE ONCE XL GOES INTO PRODUCTION. WITH THIS SETTING THE IMPORT WILL
     // _SKIP_ DOCUMENTS THAT FAIL CONVERSION, RESULTING IN POTENTIAL DATA LOSS IF USED WHEN IMPORTING TO A PRODUCTION XL
@@ -93,7 +97,7 @@ class PostgresLoadfileWriter {
 
     public static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
 
-        Vector<HashMap> m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
+        Vector m_outputQueue = new Vector(CONVERSIONS_PER_THREAD);
 
         if (FAULT_TOLERANT_MODE)
             System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
@@ -102,43 +106,85 @@ class PostgresLoadfileWriter {
         s_marcFrameConverter = new MarcFrameConverter();
         s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
         s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
-        def loader = new MySQLLoader(connectionUrl, collection);
+        //def loader = new MySQLLoader(connectionUrl, collection);
 
         def counter = 0
         def startTime = System.currentTimeMillis()
 
         try {
-            loader.run { doc, specs, createDate ->
-                if (isSuppressed(doc))
-                    return
+            //loader.run { doc, specs, createDate ->
+            //Connection connection = DriverManager.getConnection(connectionUrl)
+            def sql = Sql.newInstance(connectionUrl)
+            sql.withStatement { stmt -> stmt.fetchSize = Integer.MIN_VALUE }
+            sql.connection.setAutoCommit(false)
+            sql.setResultSetType(ResultSet.TYPE_FORWARD_ONLY)
+            sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
 
-                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-                String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-                Map documentMap = [record: doc, collection: collection, id: id, created: createDate]
-                m_outputQueue.add(documentMap)
+            sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { row ->
+                m_outputQueue.add(row)
                 if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD) {
-                    GParsPool.withPool {
-                        m_outputQueue.collate(125).eachParallel { coll ->
-                            def m = new MarcFrameConverter()
-                            coll.each { dm -> handleDM(dm, m) }
+                    // GParsPool.withPool {
+                    List specs = null
+                    m_outputQueue.collate(25).each { coll ->
+                        def m = new MarcFrameConverter()
+
+                        coll.each { dataRow ->
+                            try{
+                            int currentRecordId = -1
+                            Map doc = null
+                            int recordId = row.getInt(1)
+                            MarcRecord record = Iso2709Deserializer.deserialize(
+                                    MySQLLoader.normalizeString(
+                                            new String(row.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
+                            if (record) {
+                                doc = MarcJSONConverter.toJSONMap(record)
+                                if (!recordId.equals(currentRecordId)) {
+                                    specs = MySQLLoader.getOaipmhSetSpecs(row, collection)
+                                    if (doc) {
+                                        if (isSuppressed(doc))
+                                            return
+
+                                        String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+                                        String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+                                        Map documentMap = [record: doc, collection: collection, id: id, created: row.getTimestamp("create_date")]
+                                        handleDM(documentMap, m)
+                                    }
+                                    currentRecordId = recordId
+                                    doc = [:]
+                                    specs = []
+                                }
+                            }
+                            specs = MySQLLoader.getOaipmhSetSpecs(row, collection)
+                            if (doc) {
+                                if (isSuppressed(doc))
+                                    return
+
+                                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+                                String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+                                Map documentMap = [record: doc, collection: collection, id: id, created: row.getTimestamp("create_date")]
+                                handleDM(documentMap, m)
+                            }
+                        }catch(all){
+                                println all.message
+                            }
                         }
                     }
+                    // }
 
                     m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
                 }
 
-
-
-                if (++counter % 1000 == 0) {
+                if (++counter % 100 == 0) {
                     def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
                     if (elapsedSecs > 0) {
                         def docsPerSec = counter / elapsedSecs
                         println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
                     }
                 }
-
-
             }
+
+
+
             if (!m_outputQueue.isEmpty())
                 println "last_one"
 

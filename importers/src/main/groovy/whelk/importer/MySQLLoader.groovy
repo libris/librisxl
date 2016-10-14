@@ -32,7 +32,7 @@ class MySQLLoader {
             SELECT bib.bib_id, bib.data, bib.create_date, auth.auth_id FROM bib_record bib
             LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id
             WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id
-            """,
+             LIMIT 10000""",
 
         hold: """
             SELECT mfhd_id, data, bib_id, shortname, create_date FROM mfhd_record
@@ -97,6 +97,23 @@ class MySQLLoader {
     }
 
     List getOaipmhSetSpecs(ResultSet resultSet) {
+        List specs = []
+        if (collection == "bib") {
+            int authId = resultSet.getInt("auth_id")
+            if (authId > 0)
+                specs.add("authority:" + authId)
+        } else if (collection == "hold") {
+            int bibId = resultSet.getInt("bib_id")
+            String sigel = resultSet.getString("shortname")
+            if (bibId > 0)
+                specs.add("bibid:" + bibId)
+            if (sigel)
+                specs.add("location:" + sigel)
+        }
+        return specs
+    }
+
+    static List getOaipmhSetSpecs(ResultSet resultSet, String collection) {
         List specs = []
         if (collection == "bib") {
             int authId = resultSet.getInt("auth_id")
