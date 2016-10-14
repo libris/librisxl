@@ -98,7 +98,7 @@ class PostgresLoadfileWriter {
                                 if (isSuppressed(doc))
                                     return
 
-                                def dm = toDocumentMap(doc, row)
+                                def dm = toDocumentMap(doc, row, collection)
                                 if (ids.contains(recordId))
                                     println "bibid: ${recordId}"
                                 else {
@@ -116,7 +116,7 @@ class PostgresLoadfileWriter {
                         if (isSuppressed(doc))
                             return
 
-                        def dm = toDocumentMap(doc, row)
+                        def dm = toDocumentMap(doc, row, collection)
                         if (ids.contains(recordId))
                             println "bibid: ${recordId}"
                         else {
@@ -144,8 +144,7 @@ class PostgresLoadfileWriter {
 
     }
 
-    private static Map toDocumentMap(Map doc, def row) {
-        String collection
+    private static Map toDocumentMap(Map doc, def row, String collection) {
         String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
         String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
         [record: doc, collection: collection, id: id, created: row.getTimestamp("create_date")]
