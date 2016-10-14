@@ -13,6 +13,7 @@ import whelk.util.LegacyIntegrationTools
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.sql.ResultSet
 
 //import groovyx.gpars.GParsPool
 //import groovyx.gpars.ParallelEnhancer
@@ -68,10 +69,10 @@ class PostgresLoadfileWriter {
         def m = new MarcFrameConverter()
         try {
             def sql = Sql.newInstance(connectionUrl, "com.mysql.jdbc.Driver")
-            //sql.withStatement { stmt -> stmt.fetchSize = Integer.MIN_VALUE }
-            /*sql.connection.setAutoCommit(false)
+            sql.withStatement { stmt -> stmt.fetchSize = Integer.MIN_VALUE }
+            sql.connection.setAutoCommit(false)
             sql.setResultSetType(ResultSet.TYPE_FORWARD_ONLY)
-            sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)*/
+            sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
             sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { row ->
 
                 if (++counter % 100 == 0) {
