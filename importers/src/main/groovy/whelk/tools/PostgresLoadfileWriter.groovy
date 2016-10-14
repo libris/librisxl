@@ -99,7 +99,7 @@ class PostgresLoadfileWriter {
                                     return
 
                                 def dm = toDocumentMap(doc, row)
-                                if (ids.contains(dm.id))
+                                if (ids.contains(recordId))
                                     println "bibid: ${recordId}"
                                 else {
                                     ids << recordId
@@ -117,7 +117,7 @@ class PostgresLoadfileWriter {
                             return
 
                         def dm = toDocumentMap(doc, row)
-                        if (ids.contains(dm.id))
+                        if (ids.contains(recordId))
                             println "bibid: ${recordId}"
                         else {
                             ids << recordId
@@ -127,6 +127,7 @@ class PostgresLoadfileWriter {
                     }
                 } catch (all) {
                     println all.message
+                    println all.stackTrace
                 }
 
             }
