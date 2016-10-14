@@ -29,7 +29,7 @@ class MySQLLoader {
             bib : """
             SELECT bib.bib_id, bib.data, bib.create_date FROM bib_record bib
             WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id
-             LIMIT 10000""",
+             """,
 
             hold: """
             SELECT mfhd_id, data, bib_id, shortname, create_date FROM mfhd_record
