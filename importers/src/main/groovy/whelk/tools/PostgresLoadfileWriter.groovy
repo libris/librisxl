@@ -2,6 +2,7 @@ package whelk.tools
 
 import groovy.sql.Sql
 import groovy.util.logging.Slf4j as Log
+import groovyx.gpars.GParsPool
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709Deserializer
 import whelk.Document
@@ -12,12 +13,10 @@ import whelk.util.LegacyIntegrationTools
 
 import java.nio.charset.Charset
 import java.nio.file.Files
+import java.nio.file.Paths
 
 //import groovyx.gpars.GParsPool
 //import groovyx.gpars.ParallelEnhancer
-import java.nio.file.Paths
-import java.sql.ResultSet
-
 /**
  * Writes documents into a PostgreSQL load-file, which can be efficiently imported into lddb
  */
@@ -50,53 +49,10 @@ class PostgresLoadfileWriter {
         });
     }
 
-    public static void dumpStraight(String exportFileName, String collection, String connectionUrl) {
-        s_marcFrameConverter = new MarcFrameConverter();
-        s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
-        s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
-        def loader = new MySQLLoader(connectionUrl, collection);
-
-        def counter = 0
-        def startTime = System.currentTimeMillis()
-
-        try {
-
-            loader.run { doc, specs, createDate ->
-
-
-                if (isSuppressed(doc))
-                    return
-
-                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-                String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-
-                Map documentMap = [record: doc, collection: collection, id: id, created: createDate]
-
-                handleDM(documentMap, collection)
-
-                if (++counter % 2000 == 0) {
-                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
-                    if (elapsedSecs > 0) {
-                        def docsPerSec = counter / elapsedSecs
-                        println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
-                    }
-                }
-
-            }
-
-        } finally {
-            s_mainTableWriter.close()
-            s_identifiersWriter.close()
-        }
-
-        def endSecs = (System.currentTimeMillis() - startTime) / 1000
-        println "Done. Processed $counter documents in $endSecs seconds."
-
-    }
-
-
     public static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
-
+        def nonUnique = { def myList ->
+            myList.clone().unique().size() != myList.size()
+        }
         Vector m_outputQueue = new Vector(CONVERSIONS_PER_THREAD);
 
         if (FAULT_TOLERANT_MODE)
@@ -112,34 +68,52 @@ class PostgresLoadfileWriter {
         def startTime = System.currentTimeMillis()
 
         try {
-            //loader.run { doc, specs, createDate ->
-            //Connection connection = DriverManager.getConnection(connectionUrl)
-            def sql = Sql.newInstance(connectionUrl,"com.mysql.jdbc.Driver")
-            sql.withStatement { stmt -> stmt.fetchSize = Integer.MIN_VALUE }
-            sql.connection.setAutoCommit(false)
+            def sql = Sql.newInstance(connectionUrl, "com.mysql.jdbc.Driver")
+            //sql.withStatement { stmt -> stmt.fetchSize = Integer.MIN_VALUE }
+            /*sql.connection.setAutoCommit(false)
             sql.setResultSetType(ResultSet.TYPE_FORWARD_ONLY)
-            sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
-
+            sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)*/
             sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { dataRow ->
                 m_outputQueue.add(dataRow)
+                if (++counter % 100 == 0) {
+                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
+                    if (elapsedSecs > 0) {
+                        def docsPerSec = counter / elapsedSecs
+                        println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
+                    }
+                }
                 if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD) {
-                    // GParsPool.withPool {
-                    List specs = null
-                    m_outputQueue.collate(25).each { coll ->
-                        def m = new MarcFrameConverter()
+                    GParsPool.withPool {
 
-                        coll.each {  row ->
-                            try{
-                            int currentRecordId = -1
-                            Map doc = null
-                            int recordId = row.getInt(1)
-                            MarcRecord record = Iso2709Deserializer.deserialize(
-                                    MySQLLoader.normalizeString(
-                                            new String(row.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
-                            if (record) {
-                                doc = MarcJSONConverter.toJSONMap(record)
-                                if (!recordId.equals(currentRecordId)) {
-                                    specs = MySQLLoader.getOaipmhSetSpecs(row, collection)
+                        m_outputQueue.collate(25).eachParallel { coll ->
+                            def m = new MarcFrameConverter()
+
+                            coll.each { row ->
+                                try {
+
+                                    int currentRecordId = -1
+                                    Map doc = null
+                                    int recordId = row.getInt(1)
+                                    MarcRecord record = Iso2709Deserializer.deserialize(
+                                            MySQLLoader.normalizeString(
+                                                    new String(row.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
+                                    if (record) {
+                                        doc = MarcJSONConverter.toJSONMap(record)
+                                        if (!recordId.equals(currentRecordId)) {
+                                            if (doc) {
+                                                if (isSuppressed(doc))
+                                                    return
+
+                                                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+                                                String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+                                                Map documentMap = [record: doc, collection: collection, id: id, created: row.getTimestamp("create_date")]
+                                                handleDM(documentMap, m)
+                                            }
+                                            currentRecordId = recordId
+                                            doc = [:]
+
+                                        }
+                                    }
                                     if (doc) {
                                         if (isSuppressed(doc))
                                             return
@@ -149,47 +123,26 @@ class PostgresLoadfileWriter {
                                         Map documentMap = [record: doc, collection: collection, id: id, created: row.getTimestamp("create_date")]
                                         handleDM(documentMap, m)
                                     }
-                                    currentRecordId = recordId
-                                    doc = [:]
-                                    specs = []
+                                } catch (all) {
+                                    println all.message
                                 }
-                            }
-                            specs = MySQLLoader.getOaipmhSetSpecs(row, collection)
-                            if (doc) {
-                                if (isSuppressed(doc))
-                                    return
 
-                                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-                                String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-                                Map documentMap = [record: doc, collection: collection, id: id, created: row.getTimestamp("create_date")]
-                                handleDM(documentMap, m)
-                            }
-                        }catch(all){
-                                println all.message
                             }
                         }
-                    }
-                    // }
 
-                    m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
-                }
-
-                if (++counter % 100 == 0) {
-                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
-                    if (elapsedSecs > 0) {
-                        def docsPerSec = counter / elapsedSecs
-                        println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
+                        m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
                     }
                 }
             }
 
 
-
             if (!m_outputQueue.isEmpty())
                 println "last_one"
 
-        }
 
+        } catch (all) {
+            println all.message
+        }
         finally {
             s_mainTableWriter.close()
             s_identifiersWriter.close()
@@ -198,6 +151,21 @@ class PostgresLoadfileWriter {
         def endSecs = (System.currentTimeMillis() - startTime) / 1000
         println " Done. Processed  ${counter}  documents in  ${endSecs}  seconds. "
 
+    }
+
+    private static String getShortId(Map documentMap, MarcFrameConverter marcFrameConverter) {
+        try {
+            Map convertedData = marcFrameConverter.convert(documentMap.record, documentMap.id);
+            Document document = new Document(convertedData)
+            document.setCreated(documentMap.created)
+            return document.getShortId()
+
+        } catch (Throwable e) {
+            e.print("Convert Failed. id: ${documentMap.id}")
+            e.printStackTrace()
+            //String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
+            //s_failedIds.add(voyagerId);
+        }
     }
 
     private static void handleDM(Map documentMap, MarcFrameConverter marcFrameConverter) {
@@ -215,69 +183,6 @@ class PostgresLoadfileWriter {
         }
     }
 
-    public static void dump(String exportFileName, String collection, String connectionUrl) {
-        Vector<HashMap> m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
-
-        if (FAULT_TOLERANT_MODE)
-            System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
-                    "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
-
-        s_marcFrameConverter = new MarcFrameConverter();
-        s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
-        s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
-        s_threadPool = new Thread[THREAD_COUNT];
-
-        def loader = new MySQLLoader(connectionUrl, collection);
-
-        def counter = 0
-        def startTime = System.currentTimeMillis()
-
-        try {
-            loader.run { doc, specs, createDate ->
-
-                if (isSuppressed(doc))
-                    return
-
-                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-                String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-
-
-                Map documentMap = new HashMap(2)
-                documentMap.put("record", doc)
-                documentMap.put("collection", collection)
-                documentMap.put("id", id)
-                documentMap.put("created", createDate)
-                m_outputQueue.add(documentMap);
-
-                if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD) {
-                    flushOutputQueue(m_outputQueue);
-                    m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
-                }
-
-                if (++counter % 1000 == 0) {
-                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
-                    if (elapsedSecs > 0) {
-                        def docsPerSec = counter / elapsedSecs
-                        println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
-                    }
-                }
-            }
-
-            if (!m_outputQueue.isEmpty())
-                flushOutputQueue(m_outputQueue);
-
-        } finally {
-            for (int i = 0; i < THREAD_COUNT; ++i) {
-                if (s_threadPool[i] != null)
-                    s_threadPool[i].join();
-            }
-            s_mainTableWriter.close()
-            s_identifiersWriter.close()
-        }
-
-        def endSecs = (System.currentTimeMillis() - startTime) / 1000
-        println "Done. Processed $counter documents in $endSecs seconds."
-    }
 
     private static boolean isSuppressed(Map doc) {
         def fields = doc.get("fields")
@@ -305,21 +210,6 @@ class PostgresLoadfileWriter {
         return null
     }
 
-/*
-private static void addSetSpecs(Map manifest, List specs)
-{
-    if (specs.size() == 0)
-        return
-
-    def extradata = manifest.get("extraData", [:])
-    def setSpecs = extradata.get("oaipmhSetSpecs", [])
-
-    for (String spec : specs)
-    {
-        setSpecs.add(spec);
-    }
-}
-*/
 
     private static void flushOutputQueue(Vector<HashMap> threadWorkLoad) {
         // Find a suitable thread from the pool to do the conversion
