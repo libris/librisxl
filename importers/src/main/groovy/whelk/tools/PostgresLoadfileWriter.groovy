@@ -114,7 +114,7 @@ class PostgresLoadfileWriter {
         try {
             //loader.run { doc, specs, createDate ->
             //Connection connection = DriverManager.getConnection(connectionUrl)
-            def sql = Sql.newInstance(connectionUrl)
+            def sql = Sql.newInstance(connectionUrl,"com.mysql.jdbc.Driver")
             sql.withStatement { stmt -> stmt.fetchSize = Integer.MIN_VALUE }
             sql.connection.setAutoCommit(false)
             sql.setResultSetType(ResultSet.TYPE_FORWARD_ONLY)
