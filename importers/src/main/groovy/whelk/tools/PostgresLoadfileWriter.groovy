@@ -121,7 +121,7 @@ class PostgresLoadfileWriter {
             sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
 
             sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { dataRow ->
-                m_outputQueue.add(row)
+                m_outputQueue.add(dataRow)
                 if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD) {
                     // GParsPool.withPool {
                     List specs = null
