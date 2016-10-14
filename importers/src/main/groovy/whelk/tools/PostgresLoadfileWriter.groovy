@@ -2,7 +2,6 @@ package whelk.tools
 
 import groovy.sql.Sql
 import groovy.util.logging.Slf4j as Log
-import groovyx.gpars.GParsPool
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709Deserializer
 import whelk.Document
@@ -63,18 +62,18 @@ class PostgresLoadfileWriter {
         s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
         s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
         //def loader = new MySQLLoader(connectionUrl, collection);
-
+        def ids = []
         def counter = 0
         def startTime = System.currentTimeMillis()
-
+        def m = new MarcFrameConverter()
         try {
             def sql = Sql.newInstance(connectionUrl, "com.mysql.jdbc.Driver")
             //sql.withStatement { stmt -> stmt.fetchSize = Integer.MIN_VALUE }
             /*sql.connection.setAutoCommit(false)
             sql.setResultSetType(ResultSet.TYPE_FORWARD_ONLY)
             sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)*/
-            sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { dataRow ->
-                m_outputQueue.add(dataRow)
+            sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { row ->
+
                 if (++counter % 100 == 0) {
                     def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
                     if (elapsedSecs > 0) {
@@ -82,64 +81,55 @@ class PostgresLoadfileWriter {
                         println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
                     }
                 }
-                if (m_outputQueue.size() >= CONVERSIONS_PER_THREAD) {
-                    GParsPool.withPool {
 
-                        m_outputQueue.collate(25).eachParallel { coll ->
-                            def m = new MarcFrameConverter()
+                try {
 
-                            coll.each { row ->
-                                try {
+                    int currentRecordId = -1
+                    Map doc = null
+                    int recordId = row.getInt(1)
 
-                                    int currentRecordId = -1
-                                    Map doc = null
-                                    int recordId = row.getInt(1)
-                                    MarcRecord record = Iso2709Deserializer.deserialize(
-                                            MySQLLoader.normalizeString(
-                                                    new String(row.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
-                                    if (record) {
-                                        doc = MarcJSONConverter.toJSONMap(record)
-                                        if (!recordId.equals(currentRecordId)) {
-                                            if (doc) {
-                                                if (isSuppressed(doc))
-                                                    return
+                    MarcRecord record = Iso2709Deserializer.deserialize(
+                            MySQLLoader.normalizeString(
+                                    new String(row.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
+                    if (record) {
+                        doc = MarcJSONConverter.toJSONMap(record)
+                        if (!recordId.equals(currentRecordId)) {
+                            if (doc) {
+                                if (isSuppressed(doc))
+                                    return
 
-                                                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-                                                String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-                                                Map documentMap = [record: doc, collection: collection, id: id, created: row.getTimestamp("create_date")]
-                                                handleDM(documentMap, m)
-                                            }
-                                            currentRecordId = recordId
-                                            doc = [:]
-
-                                        }
-                                    }
-                                    if (doc) {
-                                        if (isSuppressed(doc))
-                                            return
-
-                                        String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-                                        String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-                                        Map documentMap = [record: doc, collection: collection, id: id, created: row.getTimestamp("create_date")]
-                                        handleDM(documentMap, m)
-                                    }
-                                } catch (all) {
-                                    println all.message
+                                def dm = toDocumentMap(doc, row)
+                                if (ids.contains(dm.id))
+                                    println "bibid: ${recordId}"
+                                else {
+                                    ids << recordId
+                                    handleDM(dm, m)
                                 }
 
                             }
+                            currentRecordId = recordId
+                            doc = [:]
+
+                        }
+                    }
+                    if (doc) {
+                        if (isSuppressed(doc))
+                            return
+
+                        def dm = toDocumentMap(doc, row)
+                        if (ids.contains(dm.id))
+                            println "bibid: ${recordId}"
+                        else {
+                            ids << recordId
+                            handleDM(dm, m)
                         }
 
-                        m_outputQueue = new Vector<HashMap>(CONVERSIONS_PER_THREAD);
                     }
+                } catch (all) {
+                    println all.message
                 }
+
             }
-
-
-            if (!m_outputQueue.isEmpty())
-                println "last_one"
-
-
         } catch (all) {
             println all.message
         }
@@ -151,6 +141,13 @@ class PostgresLoadfileWriter {
         def endSecs = (System.currentTimeMillis() - startTime) / 1000
         println " Done. Processed  ${counter}  documents in  ${endSecs}  seconds. "
 
+    }
+
+    private static Map toDocumentMap(Map doc, def row) {
+        String collection
+        String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+        String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+        [record: doc, collection: collection, id: id, created: row.getTimestamp("create_date")]
     }
 
     private static String getShortId(Map documentMap, MarcFrameConverter marcFrameConverter) {
