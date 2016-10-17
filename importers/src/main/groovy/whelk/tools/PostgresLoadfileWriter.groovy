@@ -50,11 +50,6 @@ class PostgresLoadfileWriter {
     }
 
     public static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
-        def nonUnique = { def myList ->
-            myList.clone().unique().size() != myList.size()
-        }
-        Vector m_outputQueue = new Vector(CONVERSIONS_PER_THREAD);
-
         if (FAULT_TOLERANT_MODE)
             System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
                     "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
@@ -62,8 +57,6 @@ class PostgresLoadfileWriter {
         s_marcFrameConverter = new MarcFrameConverter();
         s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
         s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
-        //def loader = new MySQLLoader(connectionUrl, collection);
-        def ids = []
         def counter = 0
         def startTime = System.currentTimeMillis()
         def m = new MarcFrameConverter()
@@ -74,8 +67,7 @@ class PostgresLoadfileWriter {
             sql.setResultSetType(ResultSet.TYPE_FORWARD_ONLY)
             sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
             sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { row ->
-
-                if (++counter % 100 == 0) {
+                if (++counter % 1000 == 0) {
                     def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
                     if (elapsedSecs > 0) {
                         def docsPerSec = counter / elapsedSecs
@@ -85,46 +77,24 @@ class PostgresLoadfileWriter {
 
                 try {
 
-                    int currentRecordId = -1
                     Map doc = null
-                    int recordId = row.getInt(1)
-
                     MarcRecord record = Iso2709Deserializer.deserialize(
                             MySQLLoader.normalizeString(
                                     new String(row.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
                     if (record) {
                         doc = MarcJSONConverter.toJSONMap(record)
-                        if (!recordId.equals(currentRecordId)) {
-                            if (doc) {
-                                if (isSuppressed(doc))
-                                    return
-
-                                def dm = toDocumentMap(doc, row, collection)
-                                if (ids.contains(recordId))
-                                    println "bibid: ${recordId}"
-                                else {
-                                    ids << recordId
-                                    handleDM(dm, m)
-                                }
-
-                            }
-                            currentRecordId = recordId
-                            doc = [:]
-
+                        if (doc) {
+                            if (isSuppressed(doc))
+                                return
+                            handleDM(toDocumentMap(doc, row, collection),m)
                         }
+                        doc = [:]
+
                     }
                     if (doc) {
                         if (isSuppressed(doc))
                             return
-
-                        def dm = toDocumentMap(doc, row, collection)
-                        if (ids.contains(recordId))
-                            println "bibid: ${recordId}"
-                        else {
-                            ids << recordId
-                            handleDM(dm, m)
-                        }
-
+                        handleDM(toDocumentMap(doc, row, collection),m)
                     }
                 } catch (all) {
                     println all.message
