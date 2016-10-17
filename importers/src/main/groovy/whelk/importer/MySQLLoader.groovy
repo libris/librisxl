@@ -28,7 +28,7 @@ class MySQLLoader {
 
             bib : """
             SELECT bib.bib_id, bib.data, bib.create_date FROM bib_record bib
-            WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id
+            WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id LIMIT 10000
              """,
 
             hold: """
@@ -76,7 +76,7 @@ class MySQLLoader {
                         new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
         if (record) {
             doc = MarcJSONConverter.toJSONMap(record)
-            if (!recordId.equals(currentRecordId)) {
+            if (!recordId.equals(currentRecordId)) { //TODO: What is this construct for?
                 if (doc) {
                     handler.handle(doc, resultSet.getTimestamp("create_date"))
                 }
