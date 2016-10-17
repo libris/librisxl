@@ -59,7 +59,7 @@ class PostgresLoadfileWriter {
         s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
         def counter = 0
         def startTime = System.currentTimeMillis()
-        def m = new MarcFrameConverter()
+
         try {
             def sql = Sql.newInstance(connectionUrl, "com.mysql.jdbc.Driver")
             sql.withStatement { stmt -> stmt.fetchSize = Integer.MIN_VALUE }
@@ -67,6 +67,7 @@ class PostgresLoadfileWriter {
             sql.setResultSetType(ResultSet.TYPE_FORWARD_ONLY)
             sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
             sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { row ->
+
                 if (++counter % 1000 == 0) {
                     def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
                     if (elapsedSecs > 0) {
@@ -86,7 +87,7 @@ class PostgresLoadfileWriter {
                         if (doc) {
                             if (isSuppressed(doc))
                                 return
-                            handleDM(toDocumentMap(doc, row, collection),m)
+                            handleDM(toDocumentMap(doc, row, collection), s_marcFrameConverter)
                         }
                         doc = [:]
 
@@ -94,15 +95,16 @@ class PostgresLoadfileWriter {
                     if (doc) {
                         if (isSuppressed(doc))
                             return
-                        handleDM(toDocumentMap(doc, row, collection),m)
+                        handleDM(toDocumentMap(doc, row, collection), s_marcFrameConverter)
                     }
                 } catch (all) {
                     println all.message
                     println all.stackTrace
                 }
-
             }
-        } catch (all) {
+
+        }
+        catch (all) {
             println all.message
         }
         finally {
@@ -111,7 +113,7 @@ class PostgresLoadfileWriter {
         }
 
         def endSecs = (System.currentTimeMillis() - startTime) / 1000
-        println " Done. Processed  ${counter}  documents in  ${endSecs}  seconds. "
+        println "  Done. Processed ${counter} documents in ${endSecs} seconds."
 
     }
 
