@@ -146,10 +146,8 @@ class PostgresLoadfileWriter {
             writeDocumentToLoadFile(document, documentMap.collection)
 
         } catch (Throwable e) {
-            e.print("Convert Failed. id: ${documentMap.id}")
+            e.println("Convert Failed. id: ${documentMap.id}")
             e.printStackTrace()
-            //String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
-            //s_failedIds.add(voyagerId);
         }
     }
 
@@ -178,52 +176,6 @@ class PostgresLoadfileWriter {
                 return field.get("001");
         }
         return null
-    }
-
-
-    private static void flushOutputQueue(Vector<HashMap> threadWorkLoad) {
-        // Find a suitable thread from the pool to do the conversion
-
-        int i = 0;
-        while (true) {
-            i++;
-            if (i == THREAD_COUNT) {
-                i = 0;
-                Thread.yield();
-            }
-
-            if (s_threadPool[i] == null || s_threadPool[i].state == Thread.State.TERMINATED) {
-                s_threadPool[i] = new Thread(new Runnable()
-                {
-                    void run() {
-                        for (HashMap dm : threadWorkLoad) {
-                            if (FAULT_TOLERANT_MODE) {
-                                try {
-                                    Map convertedData = s_marcFrameConverter.convert(dm.record, dm.id);
-                                    Document doc = new Document(convertedData)
-                                    doc.setCreated(dm.created)
-
-                                    writeDocumentToLoadFile(doc, dm.collection);
-                                } catch (Throwable e) {
-                                    e.print("Convert Failed. id: ${dm.id}")
-                                    e.printStackTrace()
-                                    String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
-                                    s_failedIds.add(voyagerId);
-                                }
-                            } else {
-                                Map convertedData = s_marcFrameConverter.convert(dm.record, dm.id);
-                                Document doc = new Document(convertedData)
-                                doc.setCreated(dm.created)
-
-                                writeDocumentToLoadFile(doc, dm.collection);
-                            }
-                        }
-                    }
-                });
-                s_threadPool[i].start();
-                return;
-            }
-        }
     }
 
     private static synchronized void writeDocumentToLoadFile(Document doc, String collection) {
