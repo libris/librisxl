@@ -20,7 +20,7 @@ dependencies {
     // XL dependencies
     compile('../../whelk-core' in project.subprojects*.name?
             project(':../../whelk-core') :
-            'com.github.libris:whelk-core:b3411144d4544d043d919ef869670993ee0815d5')
+            'com.github.libris:whelk-core:2b2ebf56c92f25f59575c4ddd951ebe3bf5567d8')
 
     // Jetty
     compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
