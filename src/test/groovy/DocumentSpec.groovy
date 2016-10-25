@@ -70,4 +70,61 @@ class DocumentSpec extends Specification {
         example << examples
     }
 
+    def "should add identifier if missing"() {
+        given:
+        String id = '/foo'
+        Document doc = new Document(['@graph': []])
+        Document expected = new Document(['@graph': [['@id': id]]])
+        doc.addRecordIdentifier(id)
+        expect:
+        assert doc.data == expected.data
+    }
+
+    def "should not add identifier if already added"() {
+        given:
+        String id = '/foo'
+        Document doc = new Document(['@graph': [['@id': id]]])
+        Document expected = new Document(['@graph': [['@id': id]]])
+        doc.addRecordIdentifier(id)
+        expect:
+        assert doc.data == expected.data
+    }
+
+    def "should add sameAs identifier"() {
+        given:
+        String id = '/foo'
+        String altId = '/bar'
+        Document doc = new Document(['@graph': [['@id': id]]])
+        Document expected = new Document(['@graph': [['@id': id,
+                                                      'sameAs': [['@id': altId]]
+                                                      ]]])
+        doc.addRecordIdentifier(altId)
+        expect:
+        assert doc.data == expected.data
+    }
+
+    def "should not add sameAs identifier if already added"() {
+        given:
+        String id = '/foo'
+        String altId = '/bar'
+        Document doc = new Document(['@graph': [['@id': id,
+                                                 'sameAs': [['@id': altId]]
+                                                 ]]])
+        Document expected = new Document(['@graph': [['@id': id,
+                                                      'sameAs': [['@id': altId]]
+                                                      ]]])
+        doc.addRecordIdentifier(altId)
+        expect:
+        assert doc.data == expected.data
+    }
+
+    def "should not allow adding null identifier"() {
+        when:
+        String id = null
+        Document doc = new Document(['@graph': []])
+        doc.addRecordIdentifier(id)
+        then:
+        thrown NullPointerException
+    }
+
 }

@@ -194,6 +194,10 @@ class Document {
             return
         }
 
+        if (get(recordIdPath) == identifier) {
+            return
+        }
+
         if (preparePath(recordSameAsPath, ArrayList)) {
             Object sameAsList = get(recordSameAsPath)
             def idObject = ["@id": identifier]
