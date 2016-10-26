@@ -127,4 +127,56 @@ class DocumentSpec extends Specification {
         thrown NullPointerException
     }
 
+    def "should get external refs"() {
+        given:
+        Map input = ["@graph": [["@id": "/foo",
+                                 "bar": ["@id": "/externalBar"],
+                                 "extra": ["baz": ["@id": "/externalBaz"]],
+                                 "quux": ["@id": "/quux"]],
+                                ["@id": "/quux",
+                                 "someValue": 1],
+                                ["someOtherValue": 2]]]
+        Document doc = new Document(input)
+        List expected = ["/externalBar", "/externalBaz"]
+        expect:
+        assert doc.getExternalRefs() == expected
+
+    }
+
+    def "should embellish document"() {
+        given:
+        Map input = ["@graph": [["@id": "/foo",
+                                 "bar": ["@id": "/externalBar"],
+                                 "extra": ["baz": "/externalBaz"],
+                                 "quux": ["@id": "/quux"]],
+                                ["@id": "/quux",
+                                 "someValue": 1],
+                                ["someOtherValue": 2],
+                                "A lonely string"]]
+
+        Map extra = ["/externalBar": ["@id": "/externalBar",
+                                      "someThirdValue": 3],
+                     "/externalBaz": ["@id": "/externalBaz",
+                                      "someFourthValue": 4]]
+
+        Map expected = ["@graph": [["@id": "/foo",
+                                    "bar": ["@id": "/externalBar"],
+                                    "extra": ["baz": "/externalBaz"],
+                                    "quux": ["@id": "/quux"]],
+                                   ["@id": "/quux",
+                                    "someValue": 1],
+                                   ["someOtherValue": 2],
+                                   "A lonely string",
+                                   ["@id": "/externalBar",
+                                      "someThirdValue": 3],
+                                   ["@id": "/externalBaz",
+                                      "someFourthValue": 4]]]
+
+
+        Document doc = new Document(input)
+        when:
+        doc.embellish(extra)
+        then:
+        assert doc.data == expected
+    }
 }

@@ -207,6 +207,23 @@ class Document {
     }
 
     /**
+     * Expand the doc with the supplied extra info.
+     *
+     */
+    void embellish(Map additionalObjects) {
+        this.data = JsonLd.embellish(this.data, additionalObjects)
+        return
+    }
+
+    /**
+     * Return a list of external references in the doc.
+     *
+     */
+    List getExternalRefs() {
+        return JsonLd.getExternalReferences(this.data)
+    }
+
+    /**
      * Adds empty structure to the document so that 'path' can be traversed.
      */
     private boolean preparePath(List path, Type leafType) {

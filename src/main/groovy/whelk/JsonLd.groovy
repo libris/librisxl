@@ -84,6 +84,73 @@ public class JsonLd {
         return updated
     }
 
+    public static List getExternalReferences(Map jsonLd){
+        Set allReferences = getAllReferences(jsonLd)
+        Set localObjects = getIdMap(jsonLd).keySet()
+        return allReferences.minus(localObjects) as List
+    }
+
+    public static Set getAllReferences(Map jsonLd) {
+        List items
+        if (jsonLd.containsKey(GRAPH_KEY)) {
+            items = jsonLd.get(GRAPH_KEY)
+        } else {
+            throw new FramingException("Missing '@graph' key in input")
+        }
+        return getAllReferencesFromList(items).flatten()
+    }
+
+    private static Set getRefs(Object o) {
+        if(o instanceof Map) {
+            return getAllReferencesFromMap(o)
+        } else if (o instanceof List){
+            return getAllReferencesFromList(o)
+        } else {
+            return []
+        }
+    }
+
+    private static Set getAllReferencesFromMap(Map item) {
+        Set refs = []
+
+        if (isReference(item)) {
+            refs.add(item[ID_KEY])
+            return refs
+        } else {
+            item.each { key, value ->
+                refs << getRefs(value)
+            }
+        }
+
+        return refs
+    }
+
+    private static boolean isReference(Map map) {
+        if(map.get(ID_KEY) && map.size() == 1) {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    private static Set getAllReferencesFromList(List items) {
+        Set result = []
+        items.each { item ->
+            result << getRefs(item)
+        }
+        return result
+    }
+
+    public static Map embellish(Map jsonLd, Map additionalObjects) {
+      // FIXME handle malformed input
+      List items = jsonLd.get(GRAPH_KEY)
+      additionalObjects.each { id, object ->
+          items << object
+      }
+      jsonLd[GRAPH_KEY] = items
+      return jsonLd
+    }
+
     public static Map frame(String mainId, Map flatJsonLd) {
         return frame(mainId, null, flatJsonLd)
     }
