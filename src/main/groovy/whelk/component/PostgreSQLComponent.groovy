@@ -529,10 +529,11 @@ class PostgreSQLComponent implements whelk.component.Storage {
             Map results = new HashMap<String, Object>()
             List items = []
             while (rs.next()) {
-                def manifest = mapper.readValue(rs.getString("manifest"), Map)
-                Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
-                doc.setCreated(rs.getTimestamp("created").getTime())
-                doc.setModified(rs.getTimestamp("modified").getTime())
+                Map data = mapper.readValue(rs.getString("data"), Map)
+                Document doc = new Document(data)
+                doc.setId(rs.getString("id"))
+                doc.setCreated(rs.getTimestamp("created"))
+                doc.setModified(rs.getTimestamp("modified"))
                 log.trace("Created document with id ${doc.getShortId()}")
                 items.add(doc.data)
             }
@@ -862,11 +863,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
                     @Override
                     public Document next() {
                         Document doc
-                        if (withLinks) {
-                            doc = docFactory.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("manifest"), Map), mapper.readValue(rs.getString("meta"), Map), rs.getString("parent"))
-                        } else {
-                            doc = assembleDocument(rs)
-                        }
+                        doc = assembleDocument(rs)
                         more = rs.next()
                         if (!more) {
                             try {
