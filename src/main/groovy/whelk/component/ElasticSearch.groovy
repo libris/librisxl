@@ -181,7 +181,13 @@ class ElasticSearch implements Index {
     Map query(Map jsonDsl, String collection) {
         def idxlist = [defaultIndex] as String[]
 
-        def response = client.search(new SearchRequest(idxlist, mapper.writeValueAsBytes(jsonDsl)).searchType(SearchType.DFS_QUERY_THEN_FETCH).types([collection] as String[])).actionGet()
+        byte[] dsl = mapper.writeValueAsBytes(jsonDsl)
+        SearchRequest sr = new SearchRequest(idxlist, dsl)
+        sr.searchType(SearchType.DFS_QUERY_THEN_FETCH)
+        if (collection) {
+          sr.types([collection] as String[])
+        }
+        def response = client.search(sr).actionGet()
 
         def results = [:]
         results.numberOfHits = 0
