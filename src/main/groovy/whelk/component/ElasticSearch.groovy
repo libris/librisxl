@@ -214,18 +214,27 @@ class ElasticSearch implements Index {
         queryParameters.remove("_orderBy") // Not supported
         queryParameters.remove("_select") // Not supported
         String queryString = queryParameters.remove("q")?.first()
-        def dslQuery = ["from": (Integer.parseInt(page)-1) * (pageSize as int), "size": (pageSize as int)]
+        def dslQuery = ["from": (Integer.parseInt(page)-1) * (pageSize as int),
+                        "size": (pageSize as int)]
 
+        List musts = []
         if (queryString) {
-            if (queryString == "*") {
-                dslQuery["query"] = ["match_all": [:]]
-            } else {
-                dslQuery["query"] = ['query_string' : ['query': queryString, "default_operator": "and"]]
+            musts << ['query_string' : ['query': queryString,
+                                        'default_operator': 'and']]
+        }
+
+        String[] okParams = getWhitelistedQueryParams()
+        queryParameters.each { k, vals ->
+            if (k in okParams) {
+                // we assume vals is a String[], since that's that we get
+                // from HttpServletResponse.getParameterMap()
+                vals.each { v ->
+                    musts << ['match': ["${k}": v]]
+                }
             }
         }
-        for (values in queryParameters) {
 
-        }
+        dslQuery['query'] = ['bool': ['must': musts]]
         return dslQuery
     }
 
@@ -234,6 +243,12 @@ class ElasticSearch implements Index {
     public String getElasticCluster() { elasticcluster }
     public int getElasticPort() {
         try { new Integer(elastichost.split(",").first().split(":").last()).intValue() } catch (NumberFormatException nfe) { 9300 }
+    }
+
+    static String[] getWhitelistedQueryParams() {
+        // TODO implement this in a better way, preferrably without
+        // hardcoding anything
+        return ["@type"]
     }
 
     static String toElasticId(String id) {
