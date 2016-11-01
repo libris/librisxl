@@ -82,11 +82,9 @@ dependencies {
     def jettyVersion = "8.1.16.v20140903"
 
     if ('useLocalDeps' in System.properties.keySet()) {
-        println "Using local deps"
         compile project(':../../whelk-core')
     } else {
-        println "NOT using local deps"
-        compile 'com.github.libris:whelk-core:2b2ebf56c92f25f59575c4ddd951ebe3bf5567d8'
+        compile 'com.github.libris:whelk-core:0.2.0'
     }
 
     // Common tools
