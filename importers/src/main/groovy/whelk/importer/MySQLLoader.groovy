@@ -2,17 +2,15 @@ package whelk.importer
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
+import se.kb.libris.util.marc.MarcRecord
+import se.kb.libris.util.marc.io.Iso2709Deserializer
+import whelk.converter.MarcJSONConverter
 
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-
 import java.text.Normalizer
-
-import se.kb.libris.util.marc.MarcRecord
-import se.kb.libris.util.marc.io.Iso2709Deserializer
-import whelk.converter.MarcJSONConverter
 
 @Log
 @CompileStatic
@@ -24,18 +22,17 @@ class MySQLLoader {
 
     static Map<String, String> selectByMarcType = [
 
-        auth: """
-            SELECT auth_id, data FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id
+            auth: """
+            SELECT auth_id, data, create_date FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id
             """,
 
-        bib: """
-            SELECT bib.bib_id, bib.data, auth.auth_id FROM bib_record bib
-            LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id
+            bib : """
+            SELECT bib.bib_id, bib.data, bib.create_date FROM bib_record bib
             WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id
-            """,
+             """,
 
-        hold: """
-            SELECT mfhd_id, data, bib_id, shortname FROM mfhd_record
+            hold: """
+            SELECT mfhd_id, data, bib_id, shortname, create_date FROM mfhd_record
             WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id
             """
     ]
@@ -73,44 +70,25 @@ class MySQLLoader {
     void processNext(ResultSet resultSet, LoadHandler handler) {
         int currentRecordId = -1
         Map doc = null
-        List specs = null
         int recordId = resultSet.getInt(1)
         MarcRecord record = Iso2709Deserializer.deserialize(
                 normalizeString(
-                    new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
+                        new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
         if (record) {
             doc = MarcJSONConverter.toJSONMap(record)
-            if (!recordId.equals(currentRecordId)) {
-                specs = getOaipmhSetSpecs(resultSet)
+            if (!recordId.equals(currentRecordId)) { //TODO: What is this construct for?
                 if (doc) {
-                    handler.handle(doc, specs)
+                    handler.handle(doc, resultSet.getTimestamp("create_date"))
                 }
                 currentRecordId = recordId
                 doc = [:]
-                specs = []
+
             }
         }
-        specs = getOaipmhSetSpecs(resultSet)
-        if (doc) {
-            handler.handle(doc, specs)
-        }
-    }
 
-    List getOaipmhSetSpecs(ResultSet resultSet) {
-        List specs = []
-        if (collection == "bib") {
-            int authId = resultSet.getInt("auth_id")
-            if (authId > 0)
-                specs.add("authority:" + authId)
-        } else if (collection == "hold") {
-            int bibId = resultSet.getInt("bib_id")
-            String sigel = resultSet.getString("shortname")
-            if (bibId > 0)
-                specs.add("bibid:" + bibId)
-            if (sigel)
-                specs.add("location:" + sigel)
+        if (doc) {
+            handler.handle(doc, resultSet.getTimestamp("create_date"))
         }
-        return specs
     }
 
     static String normalizeString(String inString) {
@@ -122,7 +100,7 @@ class MySQLLoader {
     }
 
     static interface LoadHandler {
-        void handle(Map doc, List specs)
+        void handle(Map doc, Date createDate)
     }
 
 }

@@ -10,7 +10,7 @@ targetCompatibility = 1.8
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
-    maven { url "http://jitpack.io/" }
+    maven { url "https://jitpack.io/" }
 }
 
 dependencies {
@@ -20,7 +20,7 @@ dependencies {
     // XL dependencies
     compile('../../whelk-core' in project.subprojects*.name?
             project(':../../whelk-core') :
-            'com.github.libris:whelk-core:0.1.4')
+            'com.github.libris:whelk-core:0.2.0')
 
     // Jetty
     compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"

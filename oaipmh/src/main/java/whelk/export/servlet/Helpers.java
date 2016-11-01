@@ -60,18 +60,16 @@ public class Helpers
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT data, manifest, modified, deleted, " +
-                " data#>>'{@graph,1,offers,0,heldBy,0,@id}' AS sigel FROM " +
-                tableName + " WHERE manifest->>'collection' <> 'definitions' ";
+        String selectSQL = "SELECT data, collection, modified, deleted, " +
+                " data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM " +
+                tableName + " WHERE collection <> 'definitions' ";
         if (fromDateTime != null)
-            selectSQL += " AND modified > ? ";
+            selectSQL += " AND modified >= ? ";
         if (untilDateTime != null)
-            selectSQL += " AND modified < ? ";
+            selectSQL += " AND modified <= ? ";
         if (setSpec.getRootSet() != null)
-            selectSQL += " AND manifest->>'collection' = ? ";
+            selectSQL += " AND collection = ? ";
 
-        // Obviously query concatenation is dangerous business and should never be done, unfortunately JSONB fields
-        // much like table names cannot be parameterized, and so there is little choice.
         if (setSpec.getSubset() != null)
             selectSQL += " AND data @> ?";
 
@@ -90,7 +88,7 @@ public class Helpers
             preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
         if (setSpec.getSubset() != null)
         {
-            String strMap = "{\"@graph\":[{\"offers\":[{\"heldBy\":[{\"@id\": \""+
+            String strMap = "{\"@graph\":[{\"hasComponent\":[{\"heldBy\":[{\"@id\": \""+
                     LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset())+
                     "\"}]}]}]}";
 

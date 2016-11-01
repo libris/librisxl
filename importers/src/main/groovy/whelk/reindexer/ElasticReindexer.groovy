@@ -17,25 +17,28 @@ class ElasticReindexer {
     }
 
 
-    void reindex(String collection) {
+    void reindex(String suppliedCollection) {
         int counter = 0
         long startTime = System.currentTimeMillis()
+        List<String> collections = suppliedCollection ? [suppliedCollection] : whelk.storage.loadCollections()
         List<Document> documents = []
-        for (document in whelk.storage.loadAll(collection)) {
-            documents.add(document)
-            Tools.printSpinner("Elapsed time: ${(System.currentTimeMillis() - startTime)/1000} seconds. Loaded $counter documents.", counter)
-            counter++
-            if (counter % BATCH_SIZE == 0) {
-                long indexTime = System.currentTimeMillis()
-                print("Elapsed time: ${(System.currentTimeMillis() - startTime)/1000} seconds. Loaded $counter documents. Bulk indexing ${documents.size()} documents ...")
-                whelk.elastic.bulkIndex(documents)
-                println(" In ${(System.currentTimeMillis()-indexTime)} milliseconds.")
-                documents = []
+        collections.each { collection ->
+            for (document in whelk.storage.loadAll(collection)) {
+                documents.add(document)
+                Tools.printSpinner("Elapsed time: ${(System.currentTimeMillis() - startTime) / 1000} seconds. Loaded $counter documents.", counter)
+                counter++
+                if (counter % BATCH_SIZE == 0) {
+                    long indexTime = System.currentTimeMillis()
+                    print("Elapsed time: ${(System.currentTimeMillis() - startTime) / 1000} seconds. Loaded $counter documents. Bulk indexing ${documents.size()} documents ...")
+                    whelk.elastic.bulkIndex(documents, collection)
+                    println(" In ${(System.currentTimeMillis() - indexTime)} milliseconds.")
+                    documents = []
+                }
+            }
+            if (documents.size() > 0) {
+                whelk.elastic.bulkIndex(documents, collection)
             }
         }
-        if (documents.size() > 0) {
-            whelk.elastic.bulkIndex(documents)
-        }
-        println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime)/1000} seconds.")
+        println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
     }
 }

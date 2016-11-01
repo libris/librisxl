@@ -63,12 +63,9 @@ public class GetRecord
 
             ObjectMapper mapper = new ObjectMapper();
             String data = resultSet.getString("data");
-            String manifest = resultSet.getString("manifest");
-            boolean deleted = resultSet.getBoolean("deleted");
             ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
             HashMap datamap = mapper.readValue(data, HashMap.class);
-            HashMap manifestmap = mapper.readValue(manifest, HashMap.class);
-            Document document = new Document(datamap, manifestmap);
+            Document document = new Document(datamap);
 
             // Expanded format requested, we need to build trees.
             if (metadataPrefix.endsWith(OaiPmh.FORMAT_EXPANDED_POSTFIX))
@@ -108,8 +105,8 @@ public class GetRecord
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT data, manifest, modified, deleted, data#>>'{@graph,1,offers,0,heldBy,0,@id}' AS sigel FROM " +
-                tableName + " WHERE id = ? AND manifest->>'collection' <> 'definitions' ";
+        String selectSQL = "SELECT data, collection, modified, deleted, data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM " +
+                tableName + " WHERE id = ? AND collection <> 'definitions' ";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);
 

@@ -25,7 +25,7 @@ test.testLogging {
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
-    maven { url "http://jitpack.io/" }
+    maven { url "https://jitpack.io/" }
 }
 
 dependencies {
@@ -34,9 +34,11 @@ dependencies {
 
     // LIBRISXL modules
     compile project(':../harvesters')
-    compile('../../whelk-core' in project.subprojects*.name?
-            project(':../../whelk-core') :
-            'com.github.libris:whelk-core:0.1.4')
+    if ('useLocalDeps' in System.properties.keySet()) {
+        compile project(':../../whelk-core')
+    } else {
+        compile 'com.github.libris:whelk-core:0.2.0'
+    }
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
@@ -58,6 +60,7 @@ dependencies {
     // Integration
     compile 'mysql:mysql-connector-java:5.1.33'
     compile 'org.picocontainer:picocontainer:2.15'
+    compile 'org.codehaus.gpars:gpars:1.2.1'
 
     // profiling and test
     testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"

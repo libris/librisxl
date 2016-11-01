@@ -1,14 +1,16 @@
 package whelk.harvester
 
+import groovy.json.JsonBuilder
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
 import whelk.Document
 import whelk.Whelk
+import whelk.converter.MarcJSONConverter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.util.LegacyIntegrationTools
-import whelk.converter.MarcJSONConverter
 
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamReader
@@ -21,18 +23,20 @@ import java.text.Normalizer
  * Created by markus on 2016-02-03.
  */
 @Log
+@CompileStatic
 class OaiPmhHarvester {
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
+    static final String DEFAULT_SOURCE_SYSTEM = "xl"
     Whelk whelk
     MarcFrameConverter marcFrameConverter
 
     static final ObjectMapper mapper = new ObjectMapper()
 
     static final Map<Integer, String> MARCTYPE_COLLECTION = [
-            (MarcRecord.AUTHORITY) : "auth",
-            (MarcRecord.BIBLIOGRAPHIC) : "bib",
-            (MarcRecord.HOLDINGS) : "hold"
+            (MarcRecord.AUTHORITY)    : "auth",
+            (MarcRecord.BIBLIOGRAPHIC): "bib",
+            (MarcRecord.HOLDINGS)     : "hold"
     ]
 
 
@@ -108,13 +112,18 @@ class OaiPmhHarvester {
         List<Document> documentList = new ArrayList<Document>()
         InputStream xmlInputStream
         XMLStreamReader streamReader
+
+        String incomingCollection = null
+
         try {
             xmlInputStream = url.openStream()
             streamReader = XMLInputFactory.newInstance().createXMLStreamReader(xmlInputStream)
             while (streamReader.hasNext()) {
                 if (streamReader.isStartElement() && streamReader.localName == "record") {
                     OaiPmhRecord record = readRecord(streamReader)
-                    documentList = addRecord(record, hdata, documentList)
+                    String collection = addRecord(record, hdata, documentList)
+                    if (collection != null)
+                        incomingCollection = collection;
                 }
                 if (streamReader.hasNext()) {
                     streamReader.next()
@@ -134,7 +143,8 @@ class OaiPmhHarvester {
             }
         }
         // Store remaining documents
-        whelk.bulkStore(documentList)
+        String sourceSystem = hdata.sourceSystem == null ? DEFAULT_SOURCE_SYSTEM : hdata.sourceSystem
+        whelk.bulkStore(documentList, sourceSystem, null, incomingCollection)
         log.debug("Done reading stream. Documents still in documentList: ${documentList.size()}")
         log.debug("Imported ${hdata.numberOfDocuments}. Last timestamp: ${hdata.lastRecordDatestamp}. Number deleted: ${hdata.numberOfDocumentsDeleted}")
         return hdata
@@ -185,7 +195,7 @@ class OaiPmhHarvester {
         return oair
     }
 
-    final List<Document> addRecord(OaiPmhRecord record, HarvestResult hdata, List<Document> docs) {
+    final String addRecord(OaiPmhRecord record, HarvestResult hdata, List<Document> docs) {
 
         // Sanity check dates
         log.trace("Record date: ${record.datestamp}. Last record date: ${hdata.lastRecordDatestamp}")
@@ -202,32 +212,36 @@ class OaiPmhHarvester {
 
         if (!okToSave(record)) {
             hdata.numberOfDocumentsSkipped++
-            return docs
+            return null
         }
 
         log.trace("Found record with id ${record.identifier} and data: ${record.record}")
+        String collection = null
         if (record.deleted) {
-            String systemId = whelk.storage.locate(record.identifier)?.id
+            String systemId = whelk.storage.locate(record.identifier, false)?.id
             if (systemId) {
                 log.debug("Delete request for ${record.identifier}. Located in system as ${systemId}.")
                 whelk.remove(systemId)
                 hdata.numberOfDocumentsDeleted++
             }
         } else {
-            Document doc = createDocument(record)
-            if (doc) {
-                doc.manifest.put("changedIn", hdata.sourceSystem)
+            def documentAndCollection = createDocument(record)
+            if (documentAndCollection) {
+                Document doc = documentAndCollection[0] as Document
+                collection = documentAndCollection[1]
                 docs << doc
                 hdata.numberOfDocuments++
             } else {
                 hdata.numberOfDocumentsSkipped++
             }
-            if (docs.size() % 1000 == 0) {
-                whelk.bulkStore(docs)
+            if (docs.size() > 0 && docs.size() % 1000 == 0) {
+                String sourceSystem = hdata.sourceSystem == null ? DEFAULT_SOURCE_SYSTEM : hdata.sourceSystem
+                log.debug "adding ${docs.count {it}} documents to whelk"
+                whelk.bulkStore(docs, sourceSystem, null, collection)
                 docs = []
             }
         }
-        return docs
+        return collection
     }
 
     /**
@@ -239,24 +253,21 @@ class OaiPmhHarvester {
         true
     }
 
-    Document createDocument(OaiPmhRecord oaiPmhRecord) {
-        Document doc
+    List createDocument(OaiPmhRecord oaiPmhRecord) {
+
         if (oaiPmhRecord.record == null) {
             return null
         }
         if (oaiPmhRecord.format == Format.MARC) {
             MarcRecord marcRecord = MarcXmlRecordReader.fromXml(oaiPmhRecord.record)
+
             String collection = MARCTYPE_COLLECTION[marcRecord.type]
 
             String recordId = "/" + collection + "/" + marcRecord.getControlfields("001").get(0).getData()
 
-            def manifest = [(Document.ID_KEY): LegacyIntegrationTools.generateId(recordId),
-                            (Document.COLLECTION_KEY): collection,
-                            (Document.CONTENT_TYPE_KEY): "application/x-marc-json"]
-
+            String originalIdentifier = null
             log.trace("Start check for 887")
             try {
-                String originalIdentifier = null
                 long originalModified = 0
 
                 for (field in marcRecord.getDatafields("887")) {
@@ -272,11 +283,10 @@ class OaiPmhHarvester {
                 }
                 if (originalIdentifier) {
                     log.debug("Detected an original Libris XL identifier in Marc data: ${originalIdentifier}, updating manifest.")
-                    manifest.put(Document.ID_KEY, originalIdentifier)
                     long marcRecordModified = getMarcRecordModificationTime(marcRecord)?.getTime()
                     log.debug("record timestamp: $marcRecordModified")
                     log.debug("    xl timestamp: $originalModified")
-                    long diff = (marcRecordModified - originalModified) / 1000
+                    long diff = ((marcRecordModified - originalModified) / 1000) as long
                     log.debug("update time difference: $diff secs.")
                     if (diff < 30) {
                         log.debug("Record probably not edited in Voyager. Skipping ...")
@@ -288,26 +298,44 @@ class OaiPmhHarvester {
             }
             log.trace("887 check complete.")
 
+            //doc.setId(originalIdentifier)
+            String mainId;
+            if (originalIdentifier != null)
+                mainId = originalIdentifier
+            else
+                mainId = LegacyIntegrationTools.generateId(recordId)
+
             def extraData = [:]
-
             for (spec in oaiPmhRecord.setSpecs) {
-                extraData.get("oaipmhSetSpecs", []).add(spec.toString())
-            }
-            if (extraData) {
-                manifest['extraData'] = extraData
+                List setSpecs = extraData.get("oaipmhSetSpecs", [])
+                setSpecs.add(spec.toString())
             }
 
-            doc = new Document(
-                    MarcJSONConverter.toJSONMap(marcRecord),
-                    manifest
-                ).addIdentifier(Document.BASE_URI.resolve(recordId).toString())
+            Map jsonMap = MarcJSONConverter.toJSONMap(marcRecord)
+            try {
+                Map converted = marcFrameConverter.convert(jsonMap, mainId, extraData)
+                Document doc = new Document(converted)
 
-            doc = marcFrameConverter.convert(doc)
+                doc.addRecordIdentifier(Document.BASE_URI.resolve(recordId).toString())
+                log.trace("Created document with ID ${doc.id}")
+                return [doc, collection]
+
+            }
+            catch (all) {
+                println all.message
+                //println all.stackTrace
+                println "String representation of record:   ${jsonMap.inspect()}"
+                return null
+            }
+
+
+
+
         } else {
+            log.error("Non-MARC post harvested, not yet supported!")
+            return null
             // TODO: Make JSONLD document from RDF/XML
         }
-        log.trace("Created document with ID ${doc.id}")
-        return doc
     }
 
 
@@ -329,7 +357,7 @@ class OaiPmhHarvester {
     Date getMarcRecordModificationTime(MarcRecord record) {
         String datetime = record.getControlfields("005")?.get(0).getData()
         if (datetime) {
-            return Date.parse("yyyyMMddHHmmss.S",datetime)
+            return Date.parse("yyyyMMddHHmmss.S", datetime)
         }
         return null
     }
@@ -350,7 +378,6 @@ class OaiPmhHarvester {
             log.error("Exception getting authentication credentials: $ex")
         }
     }
-
 
 
     class OaiPmhRecord {
@@ -393,6 +420,7 @@ class OaiPmhHarvester {
 
     class BrokenRecordException extends XmlParsingFailedException {
         String brokenId
+
         BrokenRecordException(String identifier) {
             super("Record ${identifier} has broken metadata")
             brokenId = identifier

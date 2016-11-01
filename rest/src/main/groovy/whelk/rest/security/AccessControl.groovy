@@ -23,7 +23,7 @@ class AccessControl {
                     return false
                 }
             }
-            if (olddoc && !olddoc.deleted) {
+            if (olddoc && !olddoc.deleted && olddoc.collection == "hold") {
                 def currentSigel = JsonLd.frame(olddoc.id, olddoc.data).about.heldBy.notation
                 if (currentSigel) {
                     log.trace("Checking sigel privs for existing document.")
@@ -36,8 +36,11 @@ class AccessControl {
                 }
             }
         } else {
-            log.info("Datasets 'bib' and 'auth' are not editable right now.")
-            return false
+            privs = userPrivileges.authorization.find { it.kat == true }
+            if (!privs?.kat) {
+                log.info("User does NOT have privileges to edit bib or auth.")
+                return false
+            }
         }
 
         if (newdoc) {

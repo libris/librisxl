@@ -37,7 +37,7 @@ def assemble_records(records):
         if record is None:
             print("found nothing for", record_id, file=stderr)
             continue
-
+        print("got record for ", record_id, file=stderr)
         for spec in record.findall('{0}header/{0}setSpec'.format('{%s}' % OAI_NS)):
             if spec.text.startswith('authority:'):
                 authnum = spec.text.split(':')[1]

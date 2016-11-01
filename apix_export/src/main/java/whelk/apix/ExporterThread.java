@@ -4,6 +4,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import whelk.Document;
+import whelk.JsonLd;
 import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
@@ -21,10 +22,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * A thing to wary about is the situation where a record is saved to APIX (and thus Voyager),
- * but is deleted from Voyager before it can be synced to VCOPY. That will lead to a "dead" record in XL.
- */
 public class ExporterThread extends Thread
 {
     // This atomic boolean may be toggled from outside, causing the thread to stop exporting and return
@@ -107,11 +104,13 @@ public class ExporterThread extends Thread
                 modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
                 String id = resultSet.getString("id");
                 String data = resultSet.getString("data");
-                String manifest = resultSet.getString("manifest");
                 boolean deleted = resultSet.getBoolean("deleted");
+                String collection = resultSet.getString("collection");
+                String changedBy = resultSet.getString("changedBy");
+                String changedIn = resultSet.getString("changedIn");
                 HashMap datamap = m_mapper.readValue(data, HashMap.class);
-                HashMap manifestmap = m_mapper.readValue(manifest, HashMap.class);
-                Document document = new Document(id, datamap, manifestmap);
+                Document document = new Document(datamap);
+                document.setId(id);
                 String voyagerId = getVoyagerId(document);
 
                 ApixOp operation;
@@ -124,20 +123,20 @@ public class ExporterThread extends Thread
 
                 try
                 {
-                    String assignedVoyagerId = exportDocument(document, operation);
+                    String assignedVoyagerId = exportDocument(document, operation, collection);
 
                     // If we managed to exported a previous failure (=removal of the failure flag),
                     // or the APIX operation was NEW (=we set a Voyager ID on the post)
                     // we need to do a minor update in lddb.
                     if (batchSelection == BatchSelection.BATCH_PREVIOUSLY_FAILED || assignedVoyagerId != null)
                     {
-                        commitAtomicDocumentUpdate(id, assignedVoyagerId, false);
+                        commitAtomicDocumentUpdate(id, assignedVoyagerId, false, changedIn, changedBy, collection, deleted);
                     }
 
                     ++successfullyExportedDocumentsCount;
                 } catch (Throwable e)
                 {
-                    commitAtomicDocumentUpdate(id, null, true);
+                    commitAtomicDocumentUpdate(id, null, true, changedIn, changedBy, collection, deleted);
                     m_ui.outputText("Failed to export " + id + ", will automatically try again at a later time.");
                     s_logger.error("Failed to export " + id + ", will automatically try again at a later time.", e);
                 }
@@ -175,10 +174,9 @@ public class ExporterThread extends Thread
     /**
      * Returns the assigned voyager id if ApixOp was NEW, otherwise returns null or throws
      */
-    private String exportDocument(Document document, ApixOp operation)
+    private String exportDocument(Document document, ApixOp operation, String collection)
             throws SQLException, IOException
     {
-        String collection = document.getCollection();
         String voyagerId = getVoyagerId(document);
         String voyagerDatabase = m_properties.getProperty("apixDatabase");
 
@@ -193,8 +191,8 @@ public class ExporterThread extends Thread
             case APIX_UPDATE:
             {
                 String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + voyagerId;
-                Document convertedDoucment = m_converter.convert(document);
-                String convertedText = (String) convertedDoucment.getData().get("content");
+                Map convertedData = m_converter.convert(document.data, document.getShortId());
+                String convertedText = (String) convertedData.get(JsonLd.getNON_JSON_CONTENT_KEY());
                 apixRequest(apixDocumentUrl, "PUT", convertedText);
                 return null;
             }
@@ -207,18 +205,15 @@ public class ExporterThread extends Thread
                 // so change apixDocumentUrl here:
                 if (collection.equals("hold"))
                 {
-                    List graphList = (List) document.getData().get("@graph");
-                    Map item = (Map) graphList.get(1);
-                    Map holdingFor = (Map) item.get("holdingFor");
-                    String bibId = (String) holdingFor.get("@id");
+                    String bibId = document.getHoldingFor();
                     int charIndex = bibId.indexOf("/bib/");
                     String shortBibId = bibId.substring(charIndex + 5);
                     apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + "/bib/" + shortBibId + "/newhold";
                 }
 
-                s_logger.debug("Will now attempt JsonLD2MarcXMLConverter.convert() of manifest:\n"+document.getManifestAsJson()+"\ndata:"+document.getDataAsString());
-                Document convertedDocument = m_converter.convert(document);
-                String convertedText = (String) convertedDocument.getData().get("content");
+                s_logger.debug("Will now attempt JsonLD2MarcXMLConverter.convert() of data:\n"+document.getDataAsString());
+                Map convertedData = m_converter.convert(document.data, document.getShortId());
+                String convertedText = (String) convertedData.get(JsonLd.getNON_JSON_CONTENT_KEY());
                 String controlNumber = apixRequest(apixDocumentUrl, "PUT", convertedText);
                 return controlNumber;
             }
@@ -234,15 +229,15 @@ public class ExporterThread extends Thread
             case BATCH_NEXT_TIMESTAMP:
             {
                 // Select the 'next' timestamp after m_exportNewerThan, and then select all documents with that timestamp (as 'modified'),
-                // exlude everything in manifest->>'collection' = 'definitions' and manifest->'changedIn' = 'vcopy'.
-                String sql = "SELECT id, manifest, data, modified, deleted FROM " + m_properties.getProperty("sqlMaintable") +
-                        " WHERE manifest->>'collection' <> 'definitions' AND (manifest->>'changedIn' <> 'vcopy' or (manifest->>'changedIn')::text is null) AND modified = " +
-                        "(SELECT MIN(modified) FROM " + m_properties.getProperty("sqlMaintable") + " WHERE modified > ? AND manifest->>'collection' <> 'definitions'" +
-                        " AND (manifest->>'changedIn' <> 'vcopy' or (manifest->>'changedIn')::text is null))";
+                // exclude everything in collection 'definitions' and everything with 'changedIn' = 'vcopy'.
+                String sql = "SELECT id, data, modified, collection, changedIn, changedBy, deleted FROM " + m_properties.getProperty("sqlMaintable") +
+                        " WHERE collection <> 'definitions' AND (changedIn <> 'vcopy' or changedIn is null) AND modified = " +
+                        "(SELECT MIN(modified) FROM " + m_properties.getProperty("sqlMaintable") + " WHERE modified > ? AND collection <> 'definitions'" +
+                        " AND (changedIn <> 'vcopy' or changedIn is null))";
 
                 PreparedStatement statement = connection.prepareStatement(sql);
 
-                // Postgres uses microsecond precision, we need match or exceed this to not risk SQL timetamps slipping between
+                // Postgres uses microsecond precision, we need match or exceed this to not risk SQL timestamps slipping between
                 // truncated java timestamps
                 Timestamp timestamp = new Timestamp(m_exportNewerThan.toInstant().toEpochMilli());
                 timestamp.setNanos(m_exportNewerThan.toInstant().getNano());
@@ -252,9 +247,9 @@ public class ExporterThread extends Thread
             }
             case BATCH_PREVIOUSLY_FAILED:
             {
-                // Select any documents that _have_ a manifest->apixExportFailedAt.
-                String sql = "SELECT id, manifest, data, modified, deleted FROM " + m_properties.getProperty("sqlMaintable") +
-                        " WHERE (manifest->>'" + Document.getAPIX_FAILURE_KEY() + "')::text is not null";
+                // Select any documents that _have_ a apix export failed flag
+                String sql = "SELECT id, data, modified, collection, deleted FROM " + m_properties.getProperty("sqlMaintable") +
+                        " WHERE (data->>'" + JsonLd.getAPIX_FAILURE_KEY() + "')::text is not null";
                 PreparedStatement statement = connection.prepareStatement(sql);
                 return statement;
             }
@@ -270,7 +265,7 @@ public class ExporterThread extends Thread
     {
         final String idPrefix = "http://libris.kb.se/"; // Leave this hardcoded, as these URIs references voyager IDs, which do not change.
 
-        List<String> ids = document.getIdentifiers();
+        List<String> ids = document.getRecordIdentifiers();
         for (String id: ids)
         {
             if (id.startsWith(idPrefix))
@@ -347,19 +342,21 @@ public class ExporterThread extends Thread
      * Will also reindex the document in elastic.
      * Will not update the documents "modified" column.
      */
-    private void commitAtomicDocumentUpdate(String id, String newVoyagerId, boolean failedExport)
+    private void commitAtomicDocumentUpdate(String id, String newVoyagerId, boolean failedExport, String changedIn,
+                                            String changedBy, String collection, boolean deleted)
             throws IOException, SQLException
     {
         // Store document atomically in lddb
-        m_postgreSQLComponent.storeAtomicUpdate(id, true,
+        m_postgreSQLComponent.storeAtomicUpdate(id, true, changedIn, changedBy, collection, deleted,
                 (Document doc) ->
                 {
                     if (newVoyagerId != null)
                     {
-                        doc.addIdentifier("http://libris.kb.se/" + doc.getCollection() + "/" + newVoyagerId);
+                        doc.addRecordIdentifier("http://libris.kb.se/" + collection + "/" + newVoyagerId);
+                        doc.addThingIdentifier("http://libris.kb.se/resource/" + collection + "/" + newVoyagerId);
                         doc.setControlNumber(newVoyagerId);
                     }
-                    doc.setFailedApixExport(failedExport);
+                    doc.setApixExportFailFlag(failedExport);
                 }
         );
 
@@ -371,18 +368,17 @@ public class ExporterThread extends Thread
             if (!resultSet.next())
                 throw new SQLException("Document " + id + " must be in lddb but cannot be retrieved.");
             String data = resultSet.getString("data");
-            String manifest = resultSet.getString("manifest");
             HashMap datamap = m_mapper.readValue(data, HashMap.class);
-            HashMap manifestmap = m_mapper.readValue(manifest, HashMap.class);
-            Document document = new Document(id, datamap, manifestmap);
-            m_elasticSearchComponent.index(document);
+            Document document = new Document(datamap);
+            document.setId(id);
+            m_elasticSearchComponent.index(document, collection);
         }
     }
 
     private PreparedStatement prepareSelectStatement(Connection connection, String id)
             throws SQLException
     {
-        String sql = "SELECT manifest, data FROM " + m_properties.getProperty("sqlMaintable") +
+        String sql = "SELECT data FROM " + m_properties.getProperty("sqlMaintable") +
                 " WHERE id = ?";
         PreparedStatement statement = connection.prepareStatement(sql);
         statement.setString(1, id);

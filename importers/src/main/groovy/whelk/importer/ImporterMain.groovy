@@ -33,7 +33,6 @@ class ImporterMain {
 
         pico = Whelk.getPreparedComponentsContainer(props)
         pico.addComponent(new MarcFrameConverter())
-        pico.as(Characteristics.USE_NAMES).addComponent(MySQLImporter)
         pico.addComponent(ElasticReindexer)
         pico.addComponent(DefinitionsImporter)
         pico.addComponent(LinkFinder)
@@ -44,25 +43,9 @@ class ImporterMain {
         log.info("Started ...")
     }
 
-    void vcopyCmd(String collection) {
-        int startAtId = 0
-        boolean importComplete = false
-        while (!importComplete) {
-            importComplete = true
-            def importer = pico.getComponent(MySQLImporter)
-            importer.m_startAtId = startAtId
-            try {
-                importer.run(collection)
-            } catch (SQLRecoverableException sre) {
-                startAtId = importer.m_failedAtId
-                importComplete = false
-            }
-        }
-    }
-
     void vcopydumpCmd(String toFileName, String collection) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        PostgresLoadfileWriter.dump(toFileName, collection, connUrl)
+        PostgresLoadfileWriter.dumpGpars(toFileName, collection, connUrl)
     }
 
     void vcopyjsondumpCmd(String collection, String toFileName) {
