@@ -2,6 +2,7 @@ package whelk.converter
 
 import org.codehaus.jackson.map.ObjectMapper
 import spock.lang.Specification
+import spock.lang.Ignore
 import whelk.Document
 import whelk.Whelk
 
@@ -38,6 +39,8 @@ class JsonLDLinkCompleterFilterSpec extends Specification {
         ]]
     ]
 
+    // FIXME Not used yet
+    @Ignore
     def "convert should insert auth link into bib jsonld"() {
         given:
         def whelk = Mock(Whelk)

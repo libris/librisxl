@@ -20,24 +20,17 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
     }
 
     @Override
-    Document convert(final Document _doc) {
+    Map convert(Map data, String id) {
+        Document originalDocument = new Document(data)
 
-        assert (_doc instanceof  Document)
+        Map marcJsonData = jsonldConverter.convert(data, id)
 
-        // Perform a deep copy, so that the original document remains unchanged.
-        Document doc = new Document(_doc.getId(), _doc.getData(), _doc.getManifest())
+        MarcRecord record = JSONMarcConverter.fromJson(mapper.writeValueAsString(marcJsonData))
 
-        doc.withData(JsonLd.frame(doc.id, doc.data))
+        record = prepareRecord(record, id, originalDocument.getModified(), originalDocument.getChecksum())
 
-        Document marcJsonDocument = jsonldConverter.convert(doc)
+        Map xmlDocument = [(JsonLd.NON_JSON_CONTENT_KEY): whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record)]
 
-        MarcRecord record = JSONMarcConverter.fromJson(marcJsonDocument.getDataAsString())
-
-        record = prepareRecord(record, doc.id, doc.modified, doc.checksum)
-
-        Document xmlDocument = new Document(doc.id, [(Document.NON_JSON_CONTENT_KEY): whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record)], doc.manifest).withContentType(getResultContentType())
-
-        log.debug("Document ${xmlDocument.identifier} created successfully with entry: ${xmlDocument.manifest}")
         return xmlDocument
     }
 
@@ -61,8 +54,6 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
     }
 
     DocumentFragment convertToFragment(final Document doc) {
-        doc.withData(JsonLd.frame(doc.id, doc.data))
-
         Document marcJsonDocument = jsonldConverter.convert(doc)
 
         MarcRecord record = JSONMarcConverter.fromJson(marcJsonDocument.dataAsString)

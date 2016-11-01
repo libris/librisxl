@@ -9,20 +9,34 @@ import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.exception.FramingException
 import whelk.exception.ModelValidationException
 
-import se.kb.libris.util.marc.io.MarcXmlRecordReader;
-import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.io.MarcXmlRecordReader
+import se.kb.libris.util.marc.MarcRecord
+import whelk.util.PropertyLoader
 
 public class JsonLd {
 
     static final String GRAPH_KEY = "@graph"
     static final String ID_KEY = "@id"
-    static final String DESCRIPTIONS_KEY = "descriptions"
-    static final URI SLASH_URI = new URI("/")
+    static final String THING_KEY = "mainEntity"
+    static final String RECORD_KEY = "meta"
+    static final String TYPE_KEY = "@type"
+    static final String CREATED_KEY = "created"
+    static final String MODIFIED_KEY = "modified"
+    static final String DELETED_KEY = "deleted"
+    static final String COLLECTION_KEY = "collection"
+    static final String CONTENT_TYPE_KEY = "contentType"
+    static final String CHECKSUM_KEY = "checksum"
+    static final String NON_JSON_CONTENT_KEY = "content"
+    static final String ALTERNATE_ID_KEY = "identifiers"
+    static final String JSONLD_ALT_ID_KEY = "sameAs"
+    static final String CONTROL_NUMBER_KEY = "controlNumber"
+    static final String ABOUT_KEY = "mainEntity"
+    static final String APIX_FAILURE_KEY = "apixExportFailedAt"
+    static final String ENCODING_LEVEL_KEY = "marc:encLevel"
+    static final String HOLDING_FOR_KEY = "holdingFor"
+
     static final ObjectMapper mapper = new ObjectMapper()
-
-    static final MARCFRAMEMAP = mapper.readValue(JsonLd.getClassLoader().getResourceAsStream("ext/marcframe.json"), Map)
-
-    static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
+    static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter()
 
     private static Logger log = LoggerFactory.getLogger(JsonLd.class)
 
@@ -40,19 +54,6 @@ public class JsonLd {
 
         return [(GRAPH_KEY): flatList.reverse()]
     }
-
-    static Map flattenWithDescriptions(Map framedJsonLd) {
-        if (isFlat(framedJsonLd)) {
-            return framedJsonLd
-        }
-        def descriptionsFlatMap = ["descriptions": [:]]
-        flatten(framedJsonLd).eachWithIndex { i, item ->
-            if (i == 0) {
-                descriptionsFlatMap['descriptions']['entry'] = item
-            }
-        }
-    }
-
 
     private static storeFlattened(current, result) {
         if (current instanceof Map) {
@@ -83,28 +84,50 @@ public class JsonLd {
         return updated
     }
 
-
     public static Map frame(String mainId, Map flatJsonLd) {
+        return frame(mainId, null, flatJsonLd)
+    }
+
+    public static Map frame(String mainId, String thingLink, Map flatJsonLd) {
         if (isFramed(flatJsonLd)) {
             return flatJsonLd
         }
-        Map idMap = getIdMap(flatJsonLd)
+
+        Map flatCopy = (Map) Document.deepCopy(flatJsonLd)
+
         if (mainId) {
             mainId = Document.BASE_URI.resolve(mainId)
         }
-        Map mainItemMap = (mainId ? idMap.get(mainId) : null)
-        if (!mainItemMap) {
+
+        def idMap = getIdMap(flatCopy)
+
+        def mainItem = idMap[mainId]
+        if (mainItem) {
+            if (thingLink) {
+                def thingRef = mainItem[thingLink]
+                if (thingRef) {
+                    def thingId = thingRef[ID_KEY]
+                    def thing = idMap[thingId]
+                    thing[RECORD_KEY] = [(ID_KEY): mainId]
+                    mainId = thingId
+                    idMap[mainId] = thingRef
+                    mainItem = thing
+                    log.debug("Using think-link. Framing around ${mainId}")
+                }
+            }
+        } else {
             log.debug("No main item map found for $mainId, trying to find an identifier")
             // Try to find an identifier to frame around
-            String foundIdentifier = findIdentifier(flatJsonLd)
+            String foundIdentifier = Document.BASE_URI.resolve(findIdentifier(flatCopy))
+
             log.debug("Result of findIdentifier: $foundIdentifier")
             if (foundIdentifier) {
-                mainItemMap = idMap.get(Document.BASE_URI.resolve(foundIdentifier).toString())
+                mainItem = idMap.get(foundIdentifier)
             }
         }
         Map framedMap
         try {
-            framedMap = embed(mainId, mainItemMap, idMap, new HashSet<String>())
+            framedMap = embed(mainId, mainItem, idMap, new HashSet<String>())
             if (!framedMap) {
                 throw new FramingException("Failed to frame JSONLD ($flatJsonLd)")
             }
@@ -124,72 +147,59 @@ public class JsonLd {
      * Fills the referencedBNodes set with all "_:*" ids that are referenced anywhere in the structure/document
      * (and thus cannot be safely removed)
      */
-    public static void getReferencedBNodes(Map map, Set referencedBNodes)
-    {
+    public static void getReferencedBNodes(Map map, Set referencedBNodes) {
         // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
-        if (map.size() == 1)
-        {
+        if (map.size() == 1) {
             String key = map.keySet().getAt(0)
-            if (key.equals("@id"))
-            {
+            if (key.equals("@id")) {
                 String id = map.get(key)
                 if (id.startsWith("_:"))
                     referencedBNodes.add(id)
             }
         }
 
-        for (Object keyObj : map.keySet())
-        {
-            Object subobject = map.get(keyObj);
+        for (Object keyObj : map.keySet()) {
+            Object subobject = map.get(keyObj)
 
-            if ( subobject instanceof Map )
-                getReferencedBNodes( (Map) subobject, referencedBNodes );
-            else if ( subobject instanceof List )
-                getReferencedBNodes( (List) subobject, referencedBNodes );
+            if (subobject instanceof Map)
+                getReferencedBNodes((Map) subobject, referencedBNodes)
+            else if (subobject instanceof List)
+                getReferencedBNodes((List) subobject, referencedBNodes)
         }
     }
 
-    public static void getReferencedBNodes(List list, Set referencedBNodes)
-    {
-        for (Object item : list)
-        {
-            if ( item instanceof Map )
-                getReferencedBNodes( (Map) item, referencedBNodes );
+    public static void getReferencedBNodes(List list, Set referencedBNodes) {
+        for (Object item : list) {
+            if (item instanceof Map)
+                getReferencedBNodes((Map) item, referencedBNodes)
         }
     }
 
-    public static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes)
-    {
-        if (map.size() > 1)
-        {
-            if (map.containsKey("@id"))
-            {
+    public static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes) {
+        if (map.size() > 1) {
+            if (map.containsKey("@id")) {
                 String id = map.get("@id")
 
-                if (id.startsWith("_:") && !referencedBNodes.contains(id))
-                {
+                if (id.startsWith("_:") && !referencedBNodes.contains(id)) {
                     map.remove("@id")
                 }
             }
         }
 
-        for (Object keyObj : map.keySet())
-        {
-            Object subobject = map.get(keyObj);
+        for (Object keyObj : map.keySet()) {
+            Object subobject = map.get(keyObj)
 
-            if ( subobject instanceof Map )
-                cleanUnreferencedBNodeIDs( (Map) subobject, referencedBNodes );
-            else if ( subobject instanceof List )
-                cleanUnreferencedBNodeIDs( (List) subobject, referencedBNodes );
+            if (subobject instanceof Map)
+                cleanUnreferencedBNodeIDs((Map) subobject, referencedBNodes)
+            else if (subobject instanceof List)
+                cleanUnreferencedBNodeIDs((List) subobject, referencedBNodes)
         }
     }
 
-    public static void cleanUnreferencedBNodeIDs(List list, Set referencedBNodes)
-    {
-        for (Object item : list)
-        {
-            if ( item instanceof Map )
-                cleanUnreferencedBNodeIDs( (Map) item, referencedBNodes );
+    public static void cleanUnreferencedBNodeIDs(List list, Set referencedBNodes) {
+        for (Object item : list) {
+            if (item instanceof Map)
+                cleanUnreferencedBNodeIDs((Map) item, referencedBNodes)
         }
     }
 
@@ -259,15 +269,14 @@ public class JsonLd {
 
 
     static boolean isFlat(Map jsonLd) {
-        if ((jsonLd.containsKey(GRAPH_KEY) && jsonLd.get(GRAPH_KEY) instanceof List || jsonLd.containsKey(DESCRIPTIONS_KEY))) {
-        //if (jsonLd.size() == 1 && (jsonLd.containsKey(GRAPH_KEY) || jsonLd.containsKey(DESCRIPTIONS_KEY))) {
+        if ((jsonLd.containsKey(GRAPH_KEY) && jsonLd.get(GRAPH_KEY) instanceof List)) {
             return true
         }
         return false
     }
 
     static boolean isFramed(Map jsonLd) {
-        if (jsonLd && !jsonLd.containsKey(GRAPH_KEY) && !jsonLd.containsKey(DESCRIPTIONS_KEY)) {
+        if (jsonLd && !jsonLd.containsKey(GRAPH_KEY)) {
             return true
         }
         return false
@@ -290,19 +299,6 @@ public class JsonLd {
                     }
                 }
             }
-        } else if (flatJsonLd.containsKey(DESCRIPTIONS_KEY)) {
-            idMap.put(flatJsonLd.get(DESCRIPTIONS_KEY).get("entry").get(ID_KEY), flatJsonLd.get(DESCRIPTIONS_KEY).get("entry"))
-            for (item in flatJsonLd.get(DESCRIPTIONS_KEY).get("items")) {
-                if (item.containsKey(ID_KEY)) {
-                    idMap.put(item.get(ID_KEY), item)
-                }
-            }
-            for (item in flatJsonLd.get(DESCRIPTIONS_KEY).get("quoted")) {
-                if (item.get(GRAPH_KEY).containsKey(ID_KEY)) {
-                    idMap.put(item.get(GRAPH_KEY).get(ID_KEY), item.get(GRAPH_KEY))
-                }
-            }
-
         }
         return idMap
     }
@@ -312,37 +308,40 @@ public class JsonLd {
             throw new ModelValidationException("Document has no data to validate.")
         }
 
-        // The real test of the "Item Model" is whether or not the supplied document can be converted into
-        // some kind of correct(ish) MARC.
+        // The real test of the "Item Model" is whether or not the supplied
+        // document can be converted into some kind of correct(ish) MARC.
 
-        MarcRecord marcRecord;
+        MarcRecord marcRecord
         try {
-            Document convertedDocument = converter.convert(doc);
-            String convertedText = (String) convertedDocument.getData().get("content");
-            marcRecord = MarcXmlRecordReader.fromXml(convertedText);
+            Document convertedDocument = converter.convert(doc.data, doc.id)
+            String convertedText = (String) convertedDocument.data.get("content")
+            marcRecord = MarcXmlRecordReader.fromXml(convertedText)
         } catch (Throwable e) {
-            // Catch _everything_ that could go wrong with the convert() call, including Asserts (Errors)
-            return false;
+            // Catch _everything_ that could go wrong with the convert() call,
+            // including Asserts (Errors)
+            return false
         }
 
         // Do some basic sanity checking on the resulting MARC holdings post.
 
         // Holdings posts must have 32 positions in 008
         for (Controlfield field008 : marcRecord.getControlfields("008")) {
-            if (field008.getData().length() != 32)
-                return false;
+            if (field008.getData().length() != 32) {
+                return false
+            }
         }
 
         // Holdings posts must have (at least one) 852 $b (sigel)
-        boolean containsSigel = false;
+        boolean containsSigel = false
         for (Datafield field852 : marcRecord.getDatafields("852")) {
             if (field852.getSubfields("b").size() > 0) {
-                containsSigel = true;
-                break;
+                containsSigel = true
+                break
             }
         }
-        if (!containsSigel)
-            return false;
+        if (!containsSigel) {
+            return false
+        }
 
         return true
     }

@@ -1,217 +1,300 @@
 package whelk
 
 import groovy.util.logging.Slf4j as Log
-import org.codehaus.jackson.map.*
-import org.codehaus.jackson.annotate.JsonIgnore
+import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.PropertyLoader
 
+import java.lang.reflect.Type
+import java.security.MessageDigest
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
+/**
+ * A document is represented as a data Map (containing Maps, Lists and Value objects).
+ *
+ * This class serves as a wrapper around such a map, with access methods for specific parts of the data.
+ */
 @Log
 class Document {
-    static final String GRAPH_KEY = "@graph"
-    static final String ID_KEY = "identifier"
-    static final String TYPE_KEY = "@type"
-    static final String CREATED_KEY = "created";
-    static final String MODIFIED_KEY = "modified";
-    static final String DELETED_KEY = "deleted";
-    static final String COLLECTION_KEY = "collection";
-    static final String CONTENT_TYPE_KEY = "contentType";
-    static final String CHECKSUM_KEY = "checksum";
-    static final String NON_JSON_CONTENT_KEY = "content"
-    static final String ALTERNATE_ID_KEY = "identifiers"
-    static final String JSONLD_ALT_ID_KEY = "sameAs"
-    static final String CHANGED_IN_KEY = "changedIn" // The last system to affect a change in the document (xl by default, vcopy on imported posts)
-    static final String CONTROL_NUMBER_KEY = "controlNumber"
-    static final String ABOUT_KEY = "about"
-    static final String APIX_FAILURE_KEY = "apixExportFailedAt"
-    static final String ENCODING_LEVEL_KEY = "marc:encLevel"
-    static final String HOLDING_FOR_KEY = "holdingFor"
 
     // If we _statically_ call loadProperties("secret"), without a try/catch it means that no code with a dependency on
     // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
     // depending on whelk-core) sometimes need to do.
-    static final URI BASE_URI;
+    static final URI BASE_URI
+
     static
     {
-        try
-        {
+        try {
             BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
         }
-        catch (Exception e)
-        {
-            System.err.println(e);
+        catch (Exception e) {
+            System.err.println(e)
+            BASE_URI = new URI("https://libris.kb.se/");
         }
     }
 
-    @JsonIgnore
-    static final Map TYPE_COLLECTION = [
-            "auth": ["Person"],
-            "bib": ["Text", "Monograph"],
-            "hold": ["HeldMaterial", "Item"]
-    ]
-
-    @JsonIgnore
     static final ObjectMapper mapper = new ObjectMapper()
 
-    String id
-    private Map data = [:]
-    protected final TreeMap manifest = new TreeMap()
-    boolean deleted = false
-    Date created
-    Date modified
-    int version = 0
+    static final List thingIdPath = ["@graph", 0, "mainEntity", "@id"]
+    static final List thingIdPath2 = ["@graph", 1, "@id"]
+    static final List thingSameAsPath = ["@graph", 1, "sameAs"]
+    static final List recordIdPath = ["@graph", 0, "@id"]
+    static final List recordSameAsPath = ["@graph", 0, "sameAs"]
+    static final List failedApixExportPath = ["@graph", 0, "apixExportFailedAt"]
+    static final List controlNumberPath = ["@graph", 0, "controlNumber"]
+    static final List holdingForPath = ["@graph", 1, "holdingFor", "@id"]
+    static final List createdPath = ["@graph", 0, "created"]
+    static final List modifiedPath = ["@graph", 0, "modified"]
+    static final List encLevelPath = ["@graph", 0, "marc:encLevel", "@id"]
 
-    Document() {}
+    public Map data = [:]
 
-    Document(String id, Map data) {
-        setData(data)
-        setId(id)
+    Document(Map data) {
+        this.data = data
     }
 
-    Document(Map data, Map manifest) {
-        withManifest(manifest)
-        setData(data)
+    Document clone() {
+        Map clonedDate = deepCopy(data)
+        return new Document(clonedDate)
     }
 
-    Document(String id, Map data, Map manifest) {
-        withManifest(manifest)
-        setData(data)
-        setId(id)
+    URI getURI() {
+        return BASE_URI.resolve(getShortId())
     }
 
-    void setId(id) {
-        this.id = id
-        this.manifest[ID_KEY] = id
-        if (isFramed() && !this.data.containsKey(JsonLd.ID_KEY)) {
-            this.data[JsonLd.ID_KEY] = BASE_URI.resolve(id).toString()
-            if (this.data.containsKey(ABOUT_KEY) && !this.data[ABOUT_KEY].containsKey(JsonLd.ID_KEY)) {
-                this.data[ABOUT_KEY][JsonLd.ID_KEY] = this.data[JsonLd.ID_KEY] + "#it"
+    String getDataAsString() {
+        return mapper.writeValueAsString(data)
+    }
+
+    void setApixExportFailFlag(boolean failed) { set(failedApixExportPath, failed, LinkedHashMap) }
+
+    boolean getApixExportFailFlag() { get(failedApixExportPath) }
+
+    void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber, LinkedHashMap) }
+
+    String getControlNumber() { get(controlNumberPath) }
+
+    void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor, LinkedHashMap) }
+
+    String getHoldingFor() { get(holdingForPath) }
+
+    void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, LinkedHashMap) }
+
+    String getEncodingLevel() { get(encLevelPath) }
+
+    /**
+     * Will have base URI prepended if not already there
+     */
+    void setId(String id) {
+        if (!id.startsWith(Document.BASE_URI.toString()))
+            id = Document.BASE_URI.resolve(id)
+
+        addRecordIdentifier(id)
+    }
+
+    /**
+     * Gets the document id (short form, without base URI).
+     */
+    String getShortId() {
+        String base = Document.BASE_URI.toString()
+        for (id in getRecordIdentifiers())
+            if (id.startsWith(base))
+                return id.substring(base.length())
+        return null
+    }
+
+    /**
+     * Gets the document id (long form with base uri)
+     */
+    String getCompleteId() {
+        return get(recordIdPath)
+    }
+
+    /**
+     * Alias for getCompleteId, for backwards compatibility.
+     */
+    String getId() { return getCompleteId() }
+
+    void setCreated(Date created) {
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(created.toInstant(), ZoneId.systemDefault())
+        String formatedCreated = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
+        set(createdPath, formatedCreated, HashMap)
+    }
+
+    String getCreated() {
+        get(createdPath)
+    }
+
+    void setModified(Date modified) {
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(modified.toInstant(), ZoneId.systemDefault())
+        String formatedModified = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
+        set(modifiedPath, formatedModified, HashMap)
+    }
+
+    String getModified() { get(modifiedPath) }
+
+    /**
+     * By convention the first id in the returned list is the MAIN resource id.
+     */
+    List<String> getThingIdentifiers() {
+        List<String> ret = []
+
+        String thingId = get(thingIdPath)
+        if (thingId)
+            ret.add(thingId)
+
+        List sameAsObjects = get(thingSameAsPath)
+        for (Map object : sameAsObjects) {
+            ret.add(object.get("@id"))
+        }
+
+        return ret
+    }
+
+    void addThingIdentifier(String identifier) {
+        if (get(thingIdPath) == null) {
+            set(thingIdPath2, identifier, HashMap)
+            set(thingIdPath, identifier, HashMap)
+            return
+        }
+
+        if (preparePath(thingSameAsPath, ArrayList)) {
+            List sameAsList = get(thingSameAsPath)
+            def idObject = ["@id": identifier]
+            if (!sameAsList.contains(idObject))
+                sameAsList.add(idObject)
+        }
+    }
+
+    /**
+     * By convention the first id in the returned list is the MAIN record id.
+     */
+    List<String> getRecordIdentifiers() {
+        List<String> ret = []
+
+        ret.add(get(recordIdPath)) // must be present
+
+        List sameAsObjects = get(recordSameAsPath)
+        for (Map object : sameAsObjects) {
+            if (object.get("@id") != null)
+                ret.add(object.get("@id"))
+        }
+
+        return ret
+    }
+
+    void addRecordIdentifier(String identifier) {
+        if (identifier == null)
+            throw new NullPointerException("Attempted to add null-identifier.")
+
+        if (get(recordIdPath) == null) {
+            set(recordIdPath, identifier, HashMap)
+            return
+        }
+
+        if (preparePath(recordSameAsPath, ArrayList)) {
+            Object sameAsList = get(recordSameAsPath)
+            def idObject = ["@id": identifier]
+            if (sameAsList.every { it -> it != idObject })
+                sameAsList.add(idObject)
+        }
+    }
+
+    /**
+     * Adds empty structure to the document so that 'path' can be traversed.
+     */
+    private boolean preparePath(List path, Type leafType) {
+        // Start at root data node
+        Object node = data
+
+        for (int i = 0; i < path.size(); ++i) {
+            Object step = path.get(i)
+
+            Type nextReplacementType
+            if (i < path.size() - 1) // use the next step to determine the type of the next object
+                nextReplacementType = (path.get(i + 1) instanceof Integer) ? ArrayList : HashMap
+            else
+                nextReplacementType = leafType
+
+            // Get the next object along the path (candidate)
+            Object candidate = null
+            if (node instanceof Map)
+                candidate = node.get(step)
+            else if (node instanceof List) {
+                if (node.size() > step)
+                    candidate = node.get(step)
+            }
+
+            // If that step can't be taken in the current structure, expand the structure
+            if (candidate == null) {
+                if (node instanceof Map)
+                    node.put(step, nextReplacementType.newInstance())
+                else if (node instanceof List) {
+                    while (node.size() < step + 1)
+                        node.add(nextReplacementType.newInstance())
+                }
+            }
+            // Check path integrity, in all but the last step (which will presumably be replaced)
+            else if ((i < path.size() - 1) &&
+                    !matchingContainer(candidate.getClass(), nextReplacementType)) {
+                log.warn("Structure conflict, path: " + path + ", at token: " + (i + 1) + ", expected data to be: " + nextReplacementType + ", data was: " + candidate.getClass() + ", data:\n" + data)
+                return false
+            }
+
+            node = node.get(step)
+        }
+        return true
+    }
+
+    /**
+     * Set 'value' at 'path'. 'container' should be ArrayList or HashMap depending on if value should reside in a list or an object
+     */
+    private boolean set(List path, Object value, Type container) {
+        if (!preparePath(path, container))
+            return false
+
+        // Start at root data node
+        Object node = data
+
+        for (int i = 0; i < path.size() - 1; ++i) // follow all but last step
+        {
+            Object step = path.get(i)
+            node = node.get(step)
+        }
+
+        node.put(path.get(path.size() - 1), value)
+        return true
+    }
+
+    private boolean matchingContainer(Class c1, Class c2) {
+        if ((Map.class.isAssignableFrom(c1)) && (Map.class.isAssignableFrom(c2)))
+            return true
+        if ((List.class.isAssignableFrom(c1)) && (List.class.isAssignableFrom(c2)))
+            return true
+        return false
+    }
+
+    private Object get(List path) {
+        // Start at root data node
+        Object node = data
+
+        for (Object step : path) {
+            if ((node instanceof Map) && !(step instanceof String)) {
+                log.warn("Needed string as map key, but was given: " + step + ". (path was: " + path + ")")
+                return null
+            } else if ((node instanceof List) && !(step instanceof Integer)) {
+                log.warn("Needed integer as list index, but was given: " + step + ". (path was: " + path + ")")
+                return null
+            }
+            node = node[step]
+
+            if (node == null) {
+                return null
             }
         }
-    }
 
-    void setCreated(Date c) {
-        if (c) {
-            setCreated(c.getTime())
-        }
-    }
-
-    void setCreated(long c) {
-        this.created = new Date(c)
-        this.manifest.put(CREATED_KEY, this.created)
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(this.created.toInstant(), ZoneId.systemDefault())
-        if (isFlat()) {
-            this.data.get(GRAPH_KEY)[0].put(CREATED_KEY, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt))
-        }
-        if (isFramed()) {
-            this.data.put(CREATED_KEY, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt))
-        }
-    }
-
-    void setFailedApixExport(boolean failed) {
-        if (failed) {
-            this.manifest.put(APIX_FAILURE_KEY, new Date().toString())
-        }
-        else {
-            if (this.manifest.get(APIX_FAILURE_KEY) != null)
-                this.manifest.remove(APIX_FAILURE_KEY)
-        }
-    }
-
-    void setModified(Date m) {
-        if (m) {
-            setModified(m.getTime())
-        }
-    }
-
-    void setModified(long m) {
-        this.modified = new Date(m)
-        this.manifest.put(MODIFIED_KEY, this.modified)
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(this.modified.toInstant(), ZoneId.systemDefault())
-        if (isFlat()) {
-            this.data.get(GRAPH_KEY)[0].put(MODIFIED_KEY, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt))
-        }
-        if (isFramed()) {
-            this.data.put(MODIFIED_KEY, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt))
-        }
-
-    }
-
-    void setContentType(String contentType) {
-        withContentType(contentType)
-    }
-
-    void setData(Map d) {
-        this.data = deepCopy(d)
-        // Determine collection
-        def types = []
-        types << getThing().get(TYPE_KEY)
-        String collection = null
-        types.flatten().each { type -> TYPE_COLLECTION.find { if (it.value.contains(type)) { collection = it.key } } }
-        if (collection) {
-            log.debug("Setting document collection: $collection")
-            inCollection(collection)
-        }
-    }
-
-    void setThing(Map thing) {
-        if (id == null) {
-            throw new UnsupportedOperationException("Cannot set thing without @id")
-        }
-        Map framed = (data ? deepCopy(this.data) : [:])
-        if (isFlat()) {
-            framed = JsonLd.frame(id, data)
-        }
-        framed.put("@id", id)
-        if (!thing.containsKey("@id")) {
-            thing.put("@id", id + "#it")
-        }
-        framed.put(ABOUT_KEY, thing)
-        data = JsonLd.flatten(framed)
-    }
-
-    Map getThing() {
-        Map framed = JsonLd.frame(id, deepCopy(this.data))
-        return framed.get(ABOUT_KEY, framed)
-    }
-
-    void setDeleted(boolean d) {
-        deleted = d
-        if (deleted) {
-            manifest[DELETED_KEY] = deleted
-        } else {
-            manifest.remove(DELETED_KEY)
-        }
-    }
-
-    void setControlNumber(String controlNumber) {
-        List graph = data.get(GRAPH_KEY)
-        if (graph == null)
-            data.put(GRAPH_KEY, [])
-
-        Map first = data[GRAPH_KEY][0]
-        if (first == null)
-            ((List)(data[GRAPH_KEY])).add([:])
-
-        data[GRAPH_KEY][0][CONTROL_NUMBER_KEY] = controlNumber
-    }
-
-    void setHoldingFor(String resourceId) {
-        List graph = data.get(GRAPH_KEY)
-        if (graph == null)
-            data.put(GRAPH_KEY, [])
-
-        Map second = data[GRAPH_KEY][1]
-        while ( (second = data[GRAPH_KEY][1]) == null)
-            ((List)(data[GRAPH_KEY])).add([:])
-
-        if (second[HOLDING_FOR_KEY] == null)
-            second.put(HOLDING_FOR_KEY, [:])
-
-        second[HOLDING_FOR_KEY]["@id"] = resourceId
+        return node
     }
 
     static Object deepCopy(Object orig) {
@@ -223,235 +306,28 @@ class Document {
         return ois.readObject()
     }
 
-    URI getURI() {
-        return BASE_URI.resolve(id)
-    }
-
-    @JsonIgnore
-    String getDataAsString() {
-        return mapper.writeValueAsString(data)
-    }
-
-    Map getData() { data }
-
-    @JsonIgnore
-    String getCollection() { manifest[COLLECTION_KEY] }
-
-    @JsonIgnore
-    String getIdentifier() { id }
-
-    @JsonIgnore
-    String getContentType() { manifest[CONTENT_TYPE_KEY] }
-
-    @JsonIgnore
-    String getManifestAsJson() {
-        return mapper.writeValueAsString(manifest)
-    }
-
-    @JsonIgnore
-    List<String> getIdentifiers() {
-        if (!manifest.containsKey(ALTERNATE_ID_KEY)) {
-            findIdentifiers()
-        }
-        return manifest.get(ALTERNATE_ID_KEY) as List ?: Collections.emptyList()
-    }
-
     /**
-     * Get a list of all known identifiers for the thing described by this document
-     * (e.g. fnrglfnrglfnrgl#it, http://libris.kb.se/resource/bib/123, etc).
-     * By convention the first id in the returned list is the MAIN resource id.
+     * This function relies on the fact that the deserialized jsonld (using Jackson ObjectMapper) consists of LinkedHashMaps
+     * (which preserve order), unlike normal HashMaps which do not, so be careful not to place HashMaps into a document
+     * structure and then try to calculate a checksum. Makes the order of the inner elements not matter for the caclulation
      */
-    @JsonIgnore
-    List<String> getItIdentifiers() {
-        List<String> ret = []
-        ret.add(data[GRAPH_KEY][0][ABOUT_KEY]["@id"]) // must come first in the list.
-        if (data[GRAPH_KEY].size > 1)
-        {
-            for (Map m : data[GRAPH_KEY][1][JSONLD_ALT_ID_KEY])
-            {
-                ret.add( m.get("@id") )
-            }
-        }
-        return ret
-    }
-
-    @JsonIgnore
-    String getEncodingLevel() {
-        return data[GRAPH_KEY][0][ENCODING_LEVEL_KEY]["@id"];
-    }
-
-    void findIdentifiers() {
-        log.debug("Finding identifiers in ${data}")
-        addIdentifier(getURI().toString())
-        URI docId = JsonLd.findRecordURI(data)
-        if (docId) {
-            log.debug("Found @id ${docId} in data for ${id}")
-            addIdentifier(docId.toString())
-        }
-        if (data.containsKey(JsonLd.DESCRIPTIONS_KEY)){
-            def entry = data.get(JsonLd.DESCRIPTIONS_KEY).get("entry")
-            addAliases(entry)
-        } else {
-            for (entry in data.get(GRAPH_KEY)) {
-                log.trace("Walking graph. Current entry: $entry")
-                if (entry.containsKey(JsonLd.ID_KEY)) {
-                    URI entryURI = null
-                    try {
-                        entryURI = BASE_URI.resolve(entry[JsonLd.ID_KEY])
-                    } catch (IllegalArgumentException iae) {
-                        log.warn("Failed to resolve \"${entry[JsonLd.ID_KEY]}\" as URI.")
-                    }
-                    if (entryURI == getURI()) {
-                        addAliases(entry)
-                    }
-                }
-            }
-        }
-    }
-
-    void addAliases(Map entry) {
-        for (sameAs in asList(entry.get(JSONLD_ALT_ID_KEY))) {
-            if (sameAs instanceof Map && sameAs.containsKey(JsonLd.ID_KEY)) {
-                String identifier = sameAs.get(JsonLd.ID_KEY)
-                int pipeZ = identifier.indexOf(" |z")
-                if (pipeZ > 0) {
-                    identifier = identifier.substring(0,pipeZ)
-                }
-                identifier = identifier.trim().replaceAll(/\n|\r/, "")
-                identifier = identifier.replaceAll(/\s/, "%20")
-                addIdentifier(identifier)
-                log.debug("Added ${identifier} to ${getURI()}")
-            }
-        }
-    }
-
-
-    @JsonIgnore
     String getChecksum() {
-        manifest[CHECKSUM_KEY]
-    }
+        Document clone = clone()
 
-    Map getManifest() { manifest }
-
-    @JsonIgnore
-    List getQuoted() {
-        if (data.containsKey(JsonLd.DESCRIPTIONS_KEY)){
-            return getData().get(JsonLd.DESCRIPTIONS_KEY).get("quoted")
-        } else {
-            def quoted = []
-            for (item in data.get(GRAPH_KEY)) {
-                if (item.containsKey(GRAPH_KEY)) {
-                    quoted << item
-                }
-            }
-            return quoted
+        // timestamps not part of checksum
+        clone.set(modifiedPath, "", LinkedHashMap)
+        clone.set(createdPath, "", LinkedHashMap)
+        clone.data = clone.data["@graph"].collectEntries {
+            it ->
+                it.toSorted {a, b -> a.key <=> b.key}
         }
-        return Collections.emptyList()
+        MessageDigest m = MessageDigest.getInstance("MD5")
+        m.reset()
+        byte[] databytes = mapper.writeValueAsBytes(clone.data)
+        m.update(databytes)
+        byte[] digest = m.digest()
+        BigInteger bigInt = new BigInteger(1, digest)
+        String hashtext = bigInt.toString(16)
+        return hashtext
     }
-
-    @JsonIgnore
-    String getQuotedAsString() {
-        List quoteds = getQuoted()
-        if (quoteds) {
-            return mapper.writeValueAsString(quoteds)
-        }
-        return null
-    }
-
-    Document withData(Map data) {
-        setData(data)
-        return this
-    }
-
-    Document addIdentifier(String identifier) {
-        Set<String> ids = new HashSet<String>()
-        ids.addAll(manifest.get(ALTERNATE_ID_KEY) ?: [])
-        ids.add(identifier)
-        manifest.put(ALTERNATE_ID_KEY, ids)
-        return this
-    }
-
-    Document withIdentifier(String identifier) {
-        setId(identifier)
-        return this
-     }
-
-    Document withManifest(Map entrydata) {
-        if (entrydata?.containsKey("identifier")) {
-            this.id = entrydata["identifier"]
-        }
-        if (entrydata?.containsKey(ID_KEY)) {
-            this.id = entrydata[ID_KEY]
-        }
-        if (entrydata?.containsKey(CREATED_KEY)) {
-            setCreated(entrydata.remove(CREATED_KEY))
-        }
-        if (entrydata?.containsKey(MODIFIED_KEY)) {
-            setModified(entrydata.remove(MODIFIED_KEY))
-        }
-        if (entrydata?.containsKey(DELETED_KEY)) {
-            deleted = entrydata[DELETED_KEY]
-        }
-        if ( ! entrydata?.containsKey(CHANGED_IN_KEY) )
-        {
-            this.manifest.put(CHANGED_IN_KEY, "xl");
-        }
-        if (entrydata != null) {
-            this.manifest.putAll(entrydata)
-        }
-        return this
-    }
-
-    Document withContentType(String contentType) {
-        manifest.put(CONTENT_TYPE_KEY, contentType)
-        return this
-    }
-
-    Document inCollection(String ds) {
-        if (ds) {
-            manifest[COLLECTION_KEY] = ds
-        }
-        return this
-    }
-
-    Document withDeleted(boolean d) {
-        setDeleted(d)
-        return this
-    }
-
-    static boolean isJson(String ct) {
-        ct ==~ /application\/(\w+\+)*json/ || ct ==~ /application\/x-(\w+)-json/
-    }
-
-    boolean isJson() {
-        return isJson(getContentType())
-    }
-
-    boolean isFlat() {
-        if (isJsonLd()) {
-            return JsonLd.isFlat(this.data)
-        }
-        return false
-    }
-
-    boolean isFramed() {
-        if (isJsonLd()) {
-            return JsonLd.isFramed(this.data)
-        }
-        return false
-    }
-
-    static boolean isJsonLd(String ct) {
-        return "application/ld+json" == ct
-    }
-
-    boolean isJsonLd() {
-        return isJsonLd(getContentType())
-    }
-
-    private asList(obj) {
-        return obj instanceof List? obj : [obj]
-    }
-
-
 }

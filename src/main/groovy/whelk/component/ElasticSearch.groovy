@@ -40,7 +40,7 @@ class ElasticSearch implements Index {
     String defaultType = "record"
     String defaultIndex = null
 
-    boolean haltOnFailure = false
+    boolean haltOnFailure = true
 
     JsonLdLinkExpander expander
 
@@ -70,7 +70,7 @@ class ElasticSearch implements Index {
             if (elasticcluster) {
                 sb = sb.put("cluster.name", elasticcluster)
             }
-            Settings elasticSettings = sb.build();
+            Settings elasticSettings = sb.build()
 
             client = TransportClient.builder().settings(elasticSettings).addPlugin(DeleteByQueryPlugin.class).build()
             try {
@@ -122,29 +122,19 @@ class ElasticSearch implements Index {
     }
 
     @Override
-    public void bulkIndex(List<Document> docs) {
+    public void bulkIndex(List<Document> docs, String collection) {
+        assert collection
         if (docs) {
             BulkRequest bulk = new BulkRequest()
             for (doc in docs) {
-                if (doc.isJson()) {
-                    try {
-                        if (doc.isJsonLd()) {
-                            log.debug("Framing ${doc.id}")
-                            doc.data = JsonLd.frame(doc.id, doc.data)
-                            log.trace("Framed data: ${doc.data}")
-                            if (expander) {
-                                doc = expander.filter(doc)
-                            }
-                        }
-                        bulk.add(new IndexRequest(getIndexName(), (doc.collection ?: defaultType), toElasticId(doc.id)).source(doc.data))
-                    } catch (Throwable e) {
-                        log.error("Failed to create indexrequest for document ${doc.id}. Reason: ${e.message}")
-                        if (haltOnFailure) {
-                            throw e
-                        }
+                try {
+                    Map shapedData = getShapeForIndex(doc)
+                    bulk.add(new IndexRequest(getIndexName(), collection, toElasticId(doc.getShortId())).source(shapedData))
+                } catch (Throwable e) {
+                    log.error("Failed to create indexrequest for document ${doc.getShortId()}. Reason: ${e.message}")
+                    if (haltOnFailure) {
+                        throw e
                     }
-                } else {
-                    log.warn("Document ${doc.id} is not JSON (${doc.contentType}). Will not index.")
                 }
             }
             BulkResponse response = performExecute(bulk)
@@ -159,23 +149,11 @@ class ElasticSearch implements Index {
     }
 
     @Override
-    public void index(Document _doc) {
-        // Do not modify the passed in document!
-        Document doc = new Document(_doc.getId(), Document.deepCopy(_doc.getData()), Document.deepCopy(_doc.getManifest()))
-        if (doc.isJson()) {
-            if (doc.isJsonLd()) {
-                log.trace("Framing ${doc.id}")
-                doc.data = JsonLd.frame(doc.id, doc.data)
-                if (expander) {
-                    doc = expander.filter(doc)
-                }
-            }
-            def idxReq = new IndexRequest(getIndexName(), (doc.collection ?: defaultType), toElasticId(doc.id)).source(doc.data)
-            def response = performExecute(idxReq)
-            log.debug("Indexed the document ${doc.id} as ${indexName}/${(doc.collection ?: defaultType)}/${response.getId()} as version ${response.getVersion()}")
-        } else {
-            log.warn("Document ${doc.id} is ${doc.contentType}. Will not index.")
-        }
+    public void index(Document doc, String collection) {
+        Map shapedData = getShapeForIndex(doc)
+        def idxReq = new IndexRequest(getIndexName(), collection, toElasticId(doc.getShortId())).source(shapedData)
+        def response = performExecute(idxReq)
+        log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${response.getId()} as version ${response.getVersion()}")
     }
 
     @Override
@@ -185,8 +163,18 @@ class ElasticSearch implements Index {
                 .setIndices(defaultIndex)
                 .setSource(["query":["term":["_id":toElasticId(identifier)]]])
                 .execute()
-                .actionGet();
+                .actionGet()
         log.debug("Response: ${rsp.totalDeleted}")
+    }
+
+    Map getShapeForIndex(Document doc) {
+        log.debug("Framing ${doc.getShortId()}")
+        Map framed = JsonLd.frame(doc.getCompleteId(), JsonLd.THING_KEY, doc.data)
+        log.trace("Framed data: ${framed}")
+        /*if (expander) {
+            doc = expander.filter(doc)
+        }*/
+        return framed
     }
 
     @Override

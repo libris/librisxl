@@ -1,29 +1,21 @@
 package whelk.component
 
 import groovy.util.logging.Slf4j as Log
-
 import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
 import whelk.Document
-import whelk.JsonLd
 import whelk.Location
 import whelk.exception.StorageCreateFailedException
 
-import java.security.MessageDigest
-import java.sql.BatchUpdateException
-import java.sql.ResultSet
-import java.sql.SQLException
-import java.sql.Timestamp
-import java.sql.PreparedStatement
-import java.sql.Connection
-import java.sql.Types
+import java.sql.*
+import java.util.Date
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 @Log
-class PostgreSQLComponent implements Storage {
+class PostgreSQLComponent implements whelk.component.Storage {
 
     private BasicDataSource connectionPool
     static String driverClass = "org.postgresql.Driver"
@@ -44,19 +36,19 @@ class PostgreSQLComponent implements Storage {
     protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
 
     // Query defaults
-    static final int DEFAULT_PAGE_SIZE=50
+    static final int DEFAULT_PAGE_SIZE = 50
 
     // Query idiomatic data
     static final Map<StorageType, String> SQL_PREFIXES = [
-            (StorageType.JSONLD): "data->'@graph'",
+            (StorageType.JSONLD)                       : "data->'@graph'",
             (StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS): "data->'descriptions'",
-            (StorageType.MARC21_JSON): "data->'fields'"
+            (StorageType.MARC21_JSON)                  : "data->'fields'"
     ]
 
     String mainTableName
 
     // for testing
-    PostgreSQLComponent() { }
+    PostgreSQLComponent() {}
 
     PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
         mainTableName = sqlMaintable
@@ -65,7 +57,7 @@ class PostgreSQLComponent implements Storage {
         String settingsTableName = mainTableName + "__settings"
 
 
-        connectionPool = new BasicDataSource();
+        connectionPool = new BasicDataSource()
 
         if (sqlUrl) {
             URI connURI = new URI(sqlUrl.substring(5)) // Cut the "jdbc:"-part of the sqlUrl.
@@ -92,32 +84,29 @@ class PostgreSQLComponent implements Storage {
         }
 
         // Setting up sql-statements
-        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ? " +
-                "OR manifest @> ? RETURNING *) " +
-            "INSERT INTO $mainTableName (id, data, quoted, manifest, deleted) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
-        UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ?"
-        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,quoted,manifest,deleted) VALUES (?,?,?,?,?)"
+        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ? " +
+                "RETURNING *) " +
+                "INSERT INTO $mainTableName (id, data, collection, changedIn, changedBy, checksum, deleted) SELECT ?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
+        UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
+        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted) VALUES (?,?,?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, identifier) VALUES (?,?)"
 
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, manifest, checksum, modified) SELECT ?,?,?,?,? " +
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, modified, deleted) SELECT ?,?,?,?,?,?,?,? " +
                 "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
                 "ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"
 
-        GET_DOCUMENT = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ?"
-        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE id= ? FOR UPDATE"
-        GET_DOCUMENT_VERSION = "SELECT id,data,manifest FROM $versionsTableName WHERE id = ? AND checksum = ?"
-        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,manifest,manifest->>'created' AS created,modified,manifest->>'deleted' AS deleted " +
+        GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
+        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ? FOR UPDATE"
+        GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
+        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,data->>'created' AS created,modified" +
                 "FROM $versionsTableName WHERE id = ? ORDER BY modified"
-        //GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName " +
-        //        "WHERE data->'descriptions'->'items' @> ? OR data->'descriptions'->'entry' @> ?"
-        GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName " +
+        GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE data->'@graph' @> ?"
-        LOAD_ID_FROM_ALTERNATE = "SELECT id FROM $mainTableName WHERE manifest->'${Document.ALTERNATE_ID_KEY}' @> ?"
-        LOAD_ALL_DOCUMENTS = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
-        LOAD_COLLECTIONS = "SELECT DISTINCT manifest->>'collection' as collection FROM $mainTableName"
-        LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName " +
-                "WHERE modified >= ? AND modified <= ? AND manifest->>'collection' = ?"
+        LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
+        LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
+        LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
+                "WHERE modified >= ? AND modified <= ? AND collection = ?"
         LOAD_IDENTIFIERS = "SELECT identifier from $idTableName WHERE id = ?"
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
@@ -126,35 +115,12 @@ class PostgreSQLComponent implements Storage {
         GET_CONTEXT = "SELECT data#>>'{@graph,0}' FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE identifier = 'https://id.kb.se/vocab/context')"
 
         // Queries
-        QUERY_LD_API = "SELECT id,data,manifest,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
+        QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
 
         // SQL for settings management
         LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
         SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
                 "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
-
-        // Deprecated
-        LOAD_ALL_DOCUMENTS_WITH_LINKS = """
-            SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
-            FROM (
-                SELECT * FROM (
-                    SELECT identifier as id, identifier as link FROM $mainTableName
-                    UNION ALL
-                    SELECT identifier as id, jsonb_array_elements_text(manifest->'links') as link FROM $mainTableName
-                ) AS links GROUP by id,link
-            ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
-            """
-        LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION = """
-            SELECT l.id as parent, r.identifier as identifier, r.data as data, r.manifest as manifest, r.meta as meta
-            FROM (
-                SELECT * FROM (
-                    SELECT identifier as id, identifier as link FROM $mainTableName WHERE collection = ?
-                    UNION ALL
-                    SELECT identifier as id, jsonb_array_elements_text(manifest->'links') as link FROM $mainTableName WHERE collection = ?
-                ) AS links GROUP by id,link
-            ) l JOIN $mainTableName r ON l.link = r.identifier ORDER BY l.id
-            """
-
     }
 
 
@@ -205,17 +171,15 @@ class PostgreSQLComponent implements Storage {
     }
 
     @Override
-    Document store(Document doc, boolean upsert) {
-        return store(doc, upsert, false)
+    void store(Document doc, boolean upsert, String changedIn, String changedBy, String collection, boolean deleted) {
+        store(doc, upsert, false, changedIn, changedBy, collection, deleted)
     }
 
-    Document store(Document doc, boolean upsert, boolean minorUpdate) {
-        log.debug("Saving ${doc.id}")
+    void store(Document doc, boolean upsert, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted) {
+        log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
         Connection connection = getConnection()
         connection.setAutoCommit(false)
         try {
-            doc.findIdentifiers()
-            calculateChecksum(doc)
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement((upsert ? UPSERT_DOCUMENT : INSERT_DOCUMENT))
 
@@ -223,30 +187,34 @@ class PostgreSQLComponent implements Storage {
                 now = status(doc.getURI(), connection)['modified']
             }
             if (upsert) {
-                if (!saveVersion(doc, connection, now)) {
-                    return doc // Same document already in storage.
+                if (!saveVersion(doc, connection, now, changedIn, changedBy, collection, deleted)) {
+                    return // Same document already in storage.
                 }
-                insert = rigUpsertStatement(insert, doc, now)
+                insert = rigUpsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted)
                 insert.executeUpdate()
             } else {
-                insert = rigInsertStatement(insert, doc)
+                insert = rigInsertStatement(insert, doc, changedIn, changedBy, collection, deleted)
                 insert.executeUpdate()
-                saveVersion(doc, connection, now)
+                saveVersion(doc, connection, now, changedIn, changedBy, collection, deleted)
             }
             saveIdentifiers(doc, connection)
             connection.commit()
             def status = status(doc.getURI(), connection)
-            doc.setCreated(status['created'])
-            doc.setModified(status['modified'])
-            log.debug("Saved document ${doc.identifier} with timestamps ${doc.created} / ${doc.modified}")
-            return doc
+            if (status.exists) {
+                doc.setCreated(status['created'])
+                doc.setModified(status['modified'])
+            }
+
+
+            log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
+            return
         } catch (PSQLException psqle) {
             log.debug("SQL failed: ${psqle.message}")
             connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
                 Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
                 Matcher m = messageDetailPattern.matcher(psqle.message)
-                String duplicateId = doc.id
+                String duplicateId = doc.getShortId()
                 if (m.matches()) {
                     log.debug("Problem is that ${m.group(1)} already contains value ${m.group(2)}")
                     duplicateId = m.group(2)
@@ -263,32 +231,36 @@ class PostgreSQLComponent implements Storage {
             connection.close()
             log.debug("[store] Closed connection.")
         }
-        return null
     }
 
-    String getContext()
-    {
-        Connection connection;
-        PreparedStatement selectStatement;
-        ResultSet resultSet;
+    String getContext() {
+        Connection connection
+        PreparedStatement selectStatement
+        ResultSet resultSet
 
-        try
-        {
+        try {
             connection = getConnection()
             selectStatement = connection.prepareStatement(GET_CONTEXT)
             resultSet = selectStatement.executeQuery()
 
-            if (resultSet.next())
-            {
-                return resultSet.getString(1);
+            if (resultSet.next()) {
+                return resultSet.getString(1)
             }
-            return null;
+            return null
         }
-        finally
-        {
-            try {resultSet.close()} catch (Exception e) { /* ignore */ }
-            try {selectStatement.close()} catch (Exception e) { /* ignore */ }
-            try {connection.close()} catch (Exception e) { /* ignore */ }
+        finally {
+            try {
+                resultSet.close()
+            } catch (Exception e) { /* ignore */
+            }
+            try {
+                selectStatement.close()
+            } catch (Exception e) { /* ignore */
+            }
+            try {
+                connection.close()
+            } catch (Exception e) { /* ignore */
+            }
         }
     }
 
@@ -303,7 +275,7 @@ class PostgreSQLComponent implements Storage {
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    void storeAtomicUpdate(String id, boolean minorUpdate, UpdateAgent updateAgent) {
+    void storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, UpdateAgent updateAgent) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
@@ -321,8 +293,6 @@ class PostgreSQLComponent implements Storage {
                 throw new SQLException("There is no document with the id: " + id)
 
             Document doc = assembleDocument(resultSet)
-            doc.findIdentifiers()
-            calculateChecksum(doc)
 
             // Performs the callers updates on the document
             updateAgent.update(doc)
@@ -332,26 +302,21 @@ class PostgreSQLComponent implements Storage {
                 modTime = new Date(resultSet.getTimestamp("modified").getTime())
             }
             updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
-            rigUpdateStatement(updateStatement, doc, modTime)
+            rigUpdateStatement(updateStatement, doc, modTime, changedIn, changedBy, collection, deleted)
             updateStatement.execute()
 
             // The versions and identifiers tables are NOT under lock. Synchronization is only maintained on the main table.
-            saveVersion(doc, connection, modTime)
+            saveVersion(doc, connection, modTime, changedIn, changedBy, collection, deleted)
             saveIdentifiers(doc, connection)
             connection.commit()
-            log.debug("Saved document ${doc.identifier} with timestamps ${doc.created} / ${doc.modified}")
+            log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
             log.debug("SQL failed: ${psqle.message}")
             connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
                 Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
                 Matcher m = messageDetailPattern.matcher(psqle.message)
-                String duplicateId = doc.id
-                if (m.matches()) {
-                    log.debug("Problem is that ${m.group(1)} already contains value ${m.group(2)}")
-                    duplicateId = m.group(2)
-                }
-                throw new StorageCreateFailedException(duplicateId)
+                throw new StorageCreateFailedException()
             } else {
                 throw psqle
             }
@@ -360,105 +325,127 @@ class PostgreSQLComponent implements Storage {
             connection.rollback()
             throw e
         } finally {
-            try { resultSet.close() } catch (Exception e) {}
-            try { selectStatement.close() } catch (Exception e) {}
-            try { updateStatement.close() } catch (Exception e) {}
-            try { connection.close() } catch (Exception e) {}
+            try {
+                resultSet.close()
+            } catch (Exception e) {
+            }
+            try {
+                selectStatement.close()
+            } catch (Exception e) {
+            }
+            try {
+                updateStatement.close()
+            } catch (Exception e) {
+            }
+            try {
+                connection.close()
+            } catch (Exception e) {
+            }
             log.debug("[store] Closed connection.")
         }
     }
 
     private void saveIdentifiers(Document doc, Connection connection) {
         PreparedStatement removeIdentifiers = connection.prepareStatement(DELETE_IDENTIFIERS)
-        removeIdentifiers.setString(1, doc.id)
+        removeIdentifiers.setString(1, doc.getShortId())
         int numRemoved = removeIdentifiers.executeUpdate()
-        log.debug("Removed $numRemoved identifiers for id ${doc.id}")
+        log.debug("Removed $numRemoved identifiers for id ${doc.getShortId()}")
         PreparedStatement altIdInsert = connection.prepareStatement(INSERT_IDENTIFIERS)
-        for (altId in doc.getIdentifiers()) {
-            altIdInsert.setString(1, doc.id)
+        for (altId in doc.getRecordIdentifiers()) {
+            altIdInsert.setString(1, doc.getShortId())
             altIdInsert.setString(2, altId)
             altIdInsert.addBatch()
         }
         try {
             altIdInsert.executeBatch()
         } catch (BatchUpdateException bue) {
-            log.error("Failed saving identifiers for ${doc.id}")
+            log.error("Failed saving identifiers for ${doc.getShortId()}")
             throw bue.getNextException()
         }
     }
 
-    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc) {
-        insert.setString(1, doc.id)
+    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
+        insert.setString(1, doc.getShortId())
         insert.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
-        insert.setObject(3, doc.quotedAsString, java.sql.Types.OTHER)
-        insert.setObject(4, doc.manifestAsJson, java.sql.Types.OTHER)
-        insert.setBoolean(5, doc.isDeleted())
+        insert.setString(3, collection)
+        insert.setString(4, changedIn)
+        insert.setString(5, changedBy)
+        insert.setString(6, doc.getChecksum())
+        insert.setBoolean(7, deleted)
         return insert
     }
 
-    // UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, quoted = ?, manifest = ?, deleted = ?, modified = ? WHERE id = ?"
-    private void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime) {
+    private void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
         update.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
-        update.setObject(2, doc.quotedAsString, java.sql.Types.OTHER)
-        update.setObject(3, doc.manifestAsJson, java.sql.Types.OTHER)
-        update.setBoolean(4, doc.isDeleted())
-        update.setTimestamp(5, new Timestamp(modTime.getTime()))
-        update.setObject(6, doc.id, java.sql.Types.OTHER)
+        update.setString(2, collection)
+        update.setString(3, changedIn)
+        update.setString(4, changedBy)
+        update.setString(5, doc.getChecksum())
+        update.setBoolean(6, deleted)
+        update.setTimestamp(7, new Timestamp(modTime.getTime()))
+        update.setObject(8, doc.getShortId(), java.sql.Types.OTHER)
     }
 
-    private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime) {
+    private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
+
         insert.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
-        insert.setObject(2, doc.quotedAsString, java.sql.Types.OTHER)
-        insert.setObject(3, doc.manifestAsJson, java.sql.Types.OTHER)
-        insert.setBoolean(4, doc.isDeleted())
-        insert.setTimestamp(5, new Timestamp(modTime.getTime()))
-        insert.setString(6, doc.identifier)
-        insert.setObject(7, matchAlternateIdentifierJson(doc.id), java.sql.Types.OTHER)
-        insert.setString(8, doc.identifier)
-        insert.setObject(9, doc.dataAsString, java.sql.Types.OTHER)
-        insert.setObject(10, doc.quotedAsString, java.sql.Types.OTHER)
-        insert.setObject(11, doc.manifestAsJson, java.sql.Types.OTHER)
-        insert.setBoolean(12, doc.isDeleted())
+
+        insert.setString(2, collection)
+        insert.setString(3, changedIn)
+        insert.setString(4, changedBy)
+        insert.setString(5, doc.getChecksum())
+
+        insert.setBoolean(6, deleted)
+        insert.setTimestamp(7, new Timestamp(modTime.getTime()))
+        insert.setString(8, doc.getShortId())
+        insert.setString(9, doc.getShortId())
+        insert.setObject(10, doc.dataAsString, java.sql.Types.OTHER)
+
+        insert.setString(11, collection)
+        insert.setString(12, changedIn)
+        insert.setString(13, changedBy)
+        insert.setString(14, doc.getChecksum())
+
+        insert.setBoolean(15, deleted)
 
         return insert
     }
 
-    private static String matchAlternateIdentifierJson(String id) {
-        return mapper.writeValueAsString([(Document.ALTERNATE_ID_KEY): [id]])
-
-    }
-
-    boolean saveVersion(Document doc, Connection connection, Date modTime) {
+    boolean saveVersion(Document doc, Connection connection, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
         if (versioning) {
             PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
-                log.debug("Trying to save a version of ${doc.identifier} with checksum ${doc.checksum}. Modified: $modTime")
-                insvers = rigVersionStatement(insvers, doc, modTime)
+                log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum()}. Modified: $modTime")
+                insvers = rigVersionStatement(insvers, doc, modTime, changedIn, changedBy, collection, deleted)
                 int updated = insvers.executeUpdate()
                 log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
                 return (updated > 0)
             } catch (Exception e) {
-            log.error("Failed to save document version: ${e.message}")
-            throw e
-        }
+                log.error("Failed to save document version: ${e.message}")
+                throw e
+            }
         } else {
             return false
         }
     }
 
-    private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc, Date modTime) {
-        insvers.setString(1, doc.identifier)
+    private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc, Date modTime, String changedIn, String changedBy, String collection, deleted) {
+        insvers.setString(1, doc.getShortId())
         insvers.setObject(2, doc.dataAsString, Types.OTHER)
-        insvers.setObject(3, doc.manifestAsJson, Types.OTHER)
-        insvers.setString(4, doc.checksum)
-        insvers.setTimestamp(5, new Timestamp(modTime.getTime()))
-        insvers.setString(6, doc.identifier)
-        insvers.setString(7, doc.checksum)
+        insvers.setString(3, collection)
+        insvers.setString(4, changedIn)
+        insvers.setString(5, changedBy)
+        insvers.setString(6, doc.getChecksum())
+        insvers.setTimestamp(7, new Timestamp(modTime.getTime()))
+        insvers.setBoolean(8, deleted)
+        insvers.setString(9, doc.getShortId())
+        insvers.setString(10, doc.getChecksum())
         return insvers
     }
 
     @Override
-    boolean bulkStore(final List<Document> docs, boolean upsert) {
+    boolean bulkStore(
+            final List<Document> docs, boolean upsert, String changedIn, String changedBy, String collection) {
         if (!docs || docs.isEmpty()) {
             return true
         }
@@ -470,16 +457,14 @@ class PostgreSQLComponent implements Storage {
         try {
             docs.each { doc ->
                 Date now = new Date()
-                doc.findIdentifiers()
-                calculateChecksum(doc)
                 if (versioning) {
-                    ver_batch = rigVersionStatement(ver_batch, doc, now)
+                    ver_batch = rigVersionStatement(ver_batch, doc, now, changedIn, changedBy, collection, false)
                     ver_batch.addBatch()
                 }
                 if (upsert) {
-                    batch = rigUpsertStatement(batch, doc, now)
+                    batch = rigUpsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
                 } else {
-                    batch = rigInsertStatement(batch, doc)
+                    batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
                 }
                 batch.addBatch()
                 saveIdentifiers(doc, connection)
@@ -487,10 +472,13 @@ class PostgreSQLComponent implements Storage {
             batch.executeBatch()
             ver_batch.executeBatch()
             connection.commit()
-            log.debug("Stored ${docs.size()} documents in collection ${docs.first().collection} (versioning: ${versioning})")
+            log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
             return true
         } catch (Exception e) {
-            log.error("Failed to save batch: ${e.message}. Rolling back.", e)
+            log.error("Failed to save batch: ${e.message}. Rolling back..", e)
+            if (e instanceof SQLException) {
+                log.error("Note: next exception was: ${e.nextException.message}.", e.nextException)
+            }
             connection.rollback()
         } finally {
             connection.close()
@@ -505,7 +493,7 @@ class PostgreSQLComponent implements Storage {
         long startTime = System.currentTimeMillis()
         Connection connection = getConnection()
         // Extract LDAPI parameters
-        String pageSize = queryParameters.remove("_pageSize")?.first() ?: ""+DEFAULT_PAGE_SIZE
+        String pageSize = queryParameters.remove("_pageSize")?.first() ?: "" + DEFAULT_PAGE_SIZE
         String page = queryParameters.remove("_page")?.first() ?: "1"
         String sort = queryParameters.remove("_sort")?.first()
         queryParameters.remove("_where") // Not supported
@@ -515,9 +503,9 @@ class PostgreSQLComponent implements Storage {
         def (whereClause, values) = buildQueryString(queryParameters, collection, storageType)
 
         int limit = pageSize as int
-        int offset = (Integer.parseInt(page)-1) * limit
+        int offset = (Integer.parseInt(page) - 1) * limit
 
-        StringBuilder finalQuery = new StringBuilder("${values ? QUERY_LD_API + whereClause : (collection ? LOAD_ALL_DOCUMENTS_BY_COLLECTION : LOAD_ALL_DOCUMENTS)+ " AND deleted IS NOT true"} OFFSET $offset LIMIT $limit")
+        StringBuilder finalQuery = new StringBuilder("${values ? QUERY_LD_API + whereClause : (collection ? LOAD_ALL_DOCUMENTS_BY_COLLECTION : LOAD_ALL_DOCUMENTS) + " AND deleted IS NOT true"} OFFSET $offset LIMIT $limit")
 
         if (sort) {
             finalQuery.append(" ORDER BY ${translateSort(sort, storageType)}")
@@ -545,7 +533,7 @@ class PostgreSQLComponent implements Storage {
                 Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
                 doc.setCreated(rs.getTimestamp("created").getTime())
                 doc.setModified(rs.getTimestamp("modified").getTime())
-                log.trace("Created document with id ${doc.id}")
+                log.trace("Created document with id ${doc.getShortId()}")
                 items.add(doc.data)
             }
             results.put("startIndex", offset)
@@ -565,7 +553,7 @@ class PostgreSQLComponent implements Storage {
         StringBuilder whereClause = new StringBuilder("(")
 
         if (collection) {
-            whereClause.append("manifest->>'collection' = ?")
+            whereClause.append("collection = ?")
             values.add(collection)
             firstKey = false
         }
@@ -603,7 +591,7 @@ class PostgreSQLComponent implements Storage {
             int elementIndex = 0
             for (element in key.split("\\.")) {
                 if (elementIndex == 0) {
-                    jsonbPath.append(SQL_PREFIXES.get(storageType, "")+"->")
+                    jsonbPath.append(SQL_PREFIXES.get(storageType, "") + "->")
                 } else {
                     jsonbPath.append("->")
                 }
@@ -618,7 +606,7 @@ class PostgreSQLComponent implements Storage {
                 jsonbPath.append("'${element}'")
                 elementIndex++
             }
-            jsonbPath.append(" "+direction)
+            jsonbPath.append(" " + direction)
         }
         return jsonbPath.toString()
 
@@ -637,7 +625,7 @@ class PostgreSQLComponent implements Storage {
                 jsonbPath.append("->'items'")
                 Map jsonbQueryStructure = [:]
                 Map nextMap = null
-                for (int i = (keyElements[0] == "items" ? 1 : 0); i < keyElements.length-1; i++) {
+                for (int i = (keyElements[0] == "items" ? 1 : 0); i < keyElements.length - 1; i++) {
                     nextMap = [:]
                     jsonbQueryStructure.put(keyElements[i], nextMap)
                 }
@@ -653,7 +641,7 @@ class PostgreSQLComponent implements Storage {
                 // Probably search in control field
                 value = mapper.writeValueAsString([[(keyElements[0]): value]])
             } else {
-                value = mapper.writeValueAsString([[(keyElements[0]): ["subfields": [[(keyElements[1]):value]]] ]]);
+                value = mapper.writeValueAsString([[(keyElements[0]): ["subfields": [[(keyElements[1]): value]]]]])
 
             }
         }
@@ -661,32 +649,6 @@ class PostgreSQLComponent implements Storage {
         jsonbPath.append(" @> ?")
 
         return [jsonbPath.toString(), value]
-    }
-
-        String calculateChecksum(Document doc) {
-        log.trace("Calculating checksum with manifest: ${doc.manifest}")
-        MessageDigest m = MessageDigest.getInstance("MD5")
-        m.reset()
-        TreeMap sortedData = new TreeMap(doc.data)
-        byte[] databytes = mapper.writeValueAsBytes(sortedData)
-        // Remove created and modified from manifest in preparation for checksum calculation
-        Date created = doc.manifest.remove(Document.CREATED_KEY)
-        Date modified = doc.manifest.remove(Document.MODIFIED_KEY)
-        doc.manifest.remove(Document.CHECKSUM_KEY)
-        byte[] manifestbytes= mapper.writeValueAsBytes(doc.manifest)
-        byte[] checksumbytes = new byte[databytes.length + manifestbytes.length];
-        System.arraycopy(databytes, 0, checksumbytes, 0, databytes.length);
-        System.arraycopy(manifestbytes, 0, checksumbytes, databytes.length, manifestbytes.length);
-        m.update(checksumbytes)
-        byte[] digest = m.digest()
-        BigInteger bigInt = new BigInteger(1,digest)
-        String hashtext = bigInt.toString(16)
-        log.trace("calculated checksum: $hashtext")
-        doc.manifest[Document.CHECKSUM_KEY] = hashtext
-        // Reinsert created and modified
-        doc.setCreated(created)
-        doc.setModified(modified)
-        return hashtext
     }
 
     // TODO: Update to real locate
@@ -722,7 +684,7 @@ class PostgreSQLComponent implements Storage {
                 if (loadDoc) {
                     return new Location(doc).withResponseCode(303)
                 } else {
-                    return new Location().withId(doc.id).withURI(doc.getURI()).withResponseCode(303)
+                    return new Location().withId(doc.getShortId()).withURI(doc.getURI()).withResponseCode(303)
                 }
             }
         }
@@ -775,7 +737,7 @@ class PostgreSQLComponent implements Storage {
             if (rs.next()) {
                 log.trace("next")
                 doc = assembleDocument(rs)
-                log.trace("Created document with id ${doc.id}")
+                log.trace("Created document with id ${doc.getShortId()}")
             } else if (log.isTraceEnabled()) {
                 log.trace("No results returned for get($id)")
             }
@@ -787,11 +749,10 @@ class PostgreSQLComponent implements Storage {
     }
 
 
-
     Document loadBySameAsIdentifier(String identifier) {
         log.info("Using loadBySameAsIdentifier")
         //return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]]) // This one is for descriptionsbased data
-        return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]]])
+        return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1: [["sameAs": ["@id": identifier]]]])
     }
 
     List<Document> loadAllVersions(String identifier) {
@@ -821,26 +782,17 @@ class PostgreSQLComponent implements Storage {
     }
 
     private Document assembleDocument(ResultSet rs) {
-        /*
-        Document doc = new Document(mapper.readValue(rs.getString("data"), Map), mapper.readValue(rs.getString("manifest"), Map))
-        doc.setCreated(rs.getTimestamp("created")?.getTime())
-        doc.setModified(rs.getTimestamp("modified").getTime())
-        doc.setDeleted(rs.getBoolean("deleted") ?: false)
-        */
 
-        def manifest = mapper.readValue(rs.getString("manifest"), Map)
-        manifest.remove(Document.ALTERNATE_ID_KEY)
-        Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
-        doc.setModified(rs.getTimestamp("modified").getTime())
+        Document doc = new Document(mapper.readValue(rs.getString("data"), Map))
+        doc.setModified(new Date(rs.getTimestamp("modified").getTime()))
         try {
-            doc.setCreated(rs.getTimestamp("created")?.getTime())
-            doc.deleted = rs.getBoolean("deleted")
+            doc.setCreated(new Date(rs.getTimestamp("created")?.getTime()))
         } catch (SQLException sqle) {
-            log.trace("Resultset didn't have created or deleted. Probably a version request.")
+            log.trace("Resultset didn't have created. Probably a version request.")
         }
 
         for (altId in loadIdentifiers(doc.id)) {
-            doc.addIdentifier(altId)
+            doc.addRecordIdentifier(altId)
         }
         return doc
 
@@ -848,7 +800,7 @@ class PostgreSQLComponent implements Storage {
 
     private List<String> loadIdentifiers(String id) {
         List<String> identifiers = []
-        Connection connection = getConnection();
+        Connection connection = getConnection()
         PreparedStatement loadIds = connection.prepareStatement(LOAD_IDENTIFIERS)
         try {
             loadIds.setString(1, id)
@@ -958,9 +910,7 @@ class PostgreSQLComponent implements Storage {
 
 
     protected Document createTombstone(String id) {
-        def tombstone = new Document(id, ["@type":"Tombstone"]).withContentType("application/ld+json")
-        tombstone.setDeleted(true)
-        return tombstone
+        return new Document(["@graph": [["@id": id, "@type": "Tombstone"]]])
     }
 
     public Map loadSettings(String key) {
