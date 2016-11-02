@@ -430,7 +430,7 @@
         "statusFlagValue": "marc:ContinuingResourceCurrentlyPublished",
         "sourceProperties": ["marc:publishedYear", "marc:otherYear"],
         "matchValuePattern": "^[0-9u]{4}$",
-        "property": "temporalCoverageNote",
+        "property": "temporalCoverage",
         "separator": "-",
         "_spec": [
           {
@@ -440,7 +440,7 @@
               "marc:otherYear": "9999"
             },
             "result": {
-              "temporalCoverageNote": "1977-"
+              "temporalCoverage": "1977-"
             }
           }
         ]
@@ -451,7 +451,7 @@
         "statusFlagValue": "marc:ContinuingResourceCeasedPublication",
         "sourceProperties": ["marc:publishedYear", "marc:otherYear"],
         "matchValuePattern": "^[0-9u]{4}$",
-        "property": "temporalCoverageNote",
+        "property": "temporalCoverage",
         "separator": "-",
         "_spec": [
           {
@@ -461,7 +461,7 @@
               "marc:otherYear": "2017"
             },
             "result": {
-              "temporalCoverageNote": "1977-2017"
+              "temporalCoverage": "1977-2017"
             }
           }
         ]
@@ -2814,7 +2814,7 @@
         "aboutEntity": "?thing", "property": "responsibilityStatement",
         "NOTE": "interpunction may include data about included parts (e.g. short stories)"
       },
-      "$f": {"aboutEntity": "?thing", "property": "marc:temporalCoverageNote"},
+      "$f": {"aboutEntity": "?thing", "property": "temporalCoverage"},
       "$g": {"aboutEntity": "?thing", "property": "marc:generalTemporalCoverageNote"},
       "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "surroundingChars": "[]"},
       "$s": {"property": "version"},
