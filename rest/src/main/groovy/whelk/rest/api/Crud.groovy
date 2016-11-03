@@ -18,6 +18,8 @@ import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
+import whelk.rest.api.CrudUtils
+import whelk.rest.api.MimeTypes
 import whelk.rest.security.AccessControl
 import whelk.util.PropertyLoader
 
@@ -39,6 +41,10 @@ class Crud extends HttpServlet {
 
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
     final static String DOCBASE_URI = "http://libris.kb.se/"
+
+    enum FormattingType {
+        EMBELLISHED, RAW
+    }
 
     static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
 
@@ -124,75 +130,30 @@ class Crud extends HttpServlet {
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
-        if (request.pathInfo.endsWith("/")) {
-            if (request.pathInfo == "/") {
-                displayInfo(response)
-            } else {
-                handleQuery(request, response, request.pathInfo.replaceAll("/", ""))
-            }
+        log.debug("Handling GET request.")
+        if (request.pathInfo == "/") {
+            displayInfo(response)
+            return
+        }
+
+        if (request.pathInfo == "/find") {
+            String collection = request.getParameter("collection")
+            handleQuery(request, response, collection)
             return
         }
 
         try {
-            def (path, mode) = determineDisplayMode(request.pathInfo)
+            def path = request.pathInfo
 
-            // Tomcat incorrectly strips away double slashes from the pathinfo. Compensate here.
+            // FIXME still true/needed?
+            // Tomcat incorrectly strips away double slashes from the pathinfo.
+            // Compensate here.
             if (path ==~ "/http:/[^/].+")
             {
                 path = path.replace("http:/", "http://")
             }
 
-            String version = request.getParameter("version")
-            boolean flat = request.getParameter("flat") == "true"
-
-            Document document
-            if (version) {
-                document = whelk.storage.load(path, version)
-            } else {
-                Location location = whelk.storage.locate(path, false)
-                document = location?.document
-                if (!document && location?.uri) {
-                    log.debug("Redirecting to document location: ${location.uri}")
-                    sendRedirect(request, response, location)
-                    return
-                }
-            }
-
-            if (HttpTools.DisplayMode.DOCUMENT == mode) {
-                document = convertDocumentToAcceptedMediaType(document, path, request.getHeader("accept"), response)
-            }
-
-            if (document && (!document.isDeleted() || mode == HttpTools.DisplayMode.META)) {
-
-                if (mode == HttpTools.DisplayMode.META) {
-                    def versions = whelk.storage.loadAllVersions(document.identifier)
-                    if (versions) {
-                        document.manifest.versions = versions.collect { ["version":it.version, "modified": it.modified as String, "checksum":it.manifest.checksum] }
-                    }
-                    sendResponse(response, document.getManifestAsJson(), "application/json")
-                } else {
-                    String ctheader = contextHeaders.get(path.split("/")[1])
-                    if (ctheader) {
-                        response.setHeader("Link", "<$ctheader>; rel=\"http://www.w3.org/ns/json-ld#context\"; type=\"application/ld+json\"")
-                    }
-                }
-                response.setHeader("ETag", document.modified.getTime() as String)
-                String contentType = getMajorContentType(document.contentType)
-                if (path in contextHeaders.collect { it.value }) {
-                    log.debug("request is for context file. Must serve original content-type ($contentType).")
-                    contentType = document.contentType
-                }
-                if (document.isJsonLd()) {
-                    sendResponse(response, (flat ? JsonLd.flatten(document.data) : JsonLd.frame(document.identifier, document.data)), contentType)
-                } else if (document.isJson()) {
-                    sendResponse(response, document.data, contentType)
-                } else {
-                    sendResponse(response, document.data.get(Document.NON_JSON_CONTENT_KEY) ?: document.data, contentType) // For non json data, the convention is to keep the data in "content"
-                }
-            } else {
-                log.debug("Failed to find a document with URI $path")
-                response.sendError(response.SC_NOT_FOUND)
-            }
+            handleGetRequest(request, response, path, getFormattingType(path))
         } catch (UnsupportedContentTypeException ucte) {
             response.sendError(response.SC_NOT_ACCEPTABLE, ucte.message)
         } catch (WhelkRuntimeException wrte) {
@@ -200,15 +161,196 @@ class Crud extends HttpServlet {
         }
     }
 
-    def determineDisplayMode(path) {
-        if (path.endsWith("/meta")) {
-            return [path[0 .. -6], HttpTools.DisplayMode.META]
+    void handleGetRequest(HttpServletRequest request,
+                          HttpServletResponse response,
+                          String path, FormattingType format) {
+        String id = getIdFromPath(path)
+        String version = request.getParameter("version")
+
+        Tuple2 docAndLocation = getDocumentFromStorage(id, version)
+        Document doc = docAndLocation.first
+        Location loc = docAndLocation.second
+
+        if (!doc && !loc) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND,
+                               "Document not found.")
+            return
+        } else if (!doc && loc) {
+            log.debug("Redirecting to document location: ${loc.uri}")
+            sendRedirect(request, response, loc)
+            return
         }
-        if (path.endsWith("/_raw")) {
-            return [path[0 .. -6], HttpTools.DisplayMode.RAW]
+
+        if (format == FormattingType.EMBELLISHED) {
+            List externalRefs = doc.getExternalRefs()
+            Map referencedDocuments = getDocuments(externalRefs)
+            doc.embellish(referencedDocuments)
         }
-        return [path, HttpTools.DisplayMode.DOCUMENT]
+
+        sendGetResponse(request, response, doc, path)
     }
+
+    /**
+     * Given a resource path, return the ID part or null.
+     *
+     * E.g.:
+     * getIdFromPath("/foo") -> "foo"
+     * getIdFromPath("/foo/description.jsonld") -> "foo"
+     * getIdFromPath("/") -> null
+     *
+     */
+    static String getIdFromPath(String path) {
+        def pattern = getPathRegex()
+        def matcher = path =~ pattern
+        if (matcher.matches()) {
+            return matcher[0][1]
+        } else {
+            return null
+        }
+    }
+
+    /**
+     * Given a resource path, return the formatting type for that resource.
+     *
+     * FormattingType.EMBELLISHED is the default return value.
+     *
+     * E.g.:
+     * getFormattingType("/foo") -> FormattingType.EMBELLISHED
+     * getFormattingType("/foo/description") -> FormattingType.RAW
+     * getFormattingType("/") -> FormattingType.EMBELLISHED
+     *
+     */
+    static FormattingType getFormattingType(String path) {
+        def pattern = getPathRegex()
+        def matcher = path =~ pattern
+        if (matcher.matches() && matcher[0][2]) {
+            return FormattingType.RAW
+        } else {
+            return FormattingType.EMBELLISHED
+        }
+    }
+
+    /**
+     * Return a regex pattern representation of a CRUD path.
+     *
+     * Matches /foo, /foo/description, /foo/description.<suffix>.
+     *
+     */
+    static String getPathRegex() {
+        return ~/^\/(.+?)(\/description(\.(\w+))?)?$/
+    }
+
+    /**
+     * Get (Document, Location) from storage for specified ID and version.
+     *
+     * If version is null, we look for the latest version.
+     * Document and Location in the response may be null.
+     *
+     */
+    Tuple2 getDocumentFromStorage(String id, String version) {
+        if (version) {
+            Document doc = whelk.storage.load(id, version)
+            return new Tuple2(doc, null)
+        } else {
+            // FIXME what does this mean?
+            // We don't want to load the document here
+            Location location = whelk.storage.locate(id, false)
+            Document document = location?.document
+            if (!document && location?.uri) {
+                return new Tuple2(null, location)
+            } else if(!document) {
+                return new Tuple2(null, null)
+            } else {
+                return new Tuple2(document, location)
+            }
+        }
+    }
+
+    /**
+     * Given a list of IDs, return a map of JSON-LD found in storage.
+     *
+     * Map is of the form ID -> JSON-LD Map.
+     *
+     */
+    Map getDocuments(List ids) {
+        Map result = [:]
+        ids.each { id ->
+            if (id.startsWith(Document.BASE_URI.toString())) {
+                id = Document.BASE_URI.resolve(id).getPath().substring(1)
+            }
+            // FIXME maybe we want to do a locate rathern than a load here?
+            Document doc = whelk.storage.load(id)
+            if (doc && !doc.isDeleted()) {
+                result[id] = doc.data
+            }
+        }
+        return result
+    }
+
+    /**
+     * Format and send GET response to client.
+     *
+     * Sets the necessary headers and picks the best Content-Type to use.
+     *
+     */
+    void sendGetResponse(HttpServletRequest request,
+                         HttpServletResponse response,
+                         Document document, String path) {
+        if (document && document.isDeleted()) {
+            response.sendError(HttpServletResponse.SC_GONE,
+                               "Document has been deleted.")
+            return
+        }
+
+        if (document && !document.isDeleted()) {
+            // FIXME remove?
+            String ctheader = contextHeaders.get(path.split("/")[1])
+            if (ctheader) {
+                response.setHeader("Link",
+                                   "<$ctheader>; " +
+                                   "rel=\"http://www.w3.org/ns/json-ld#context\"; " +
+                                   "type=\"application/ld+json\"")
+            }
+
+            response.setHeader("ETag", document.getModified())
+
+            String contentType = CrudUtils.getBestContentType(request)
+
+            if (path in contextHeaders.collect { it.value }) {
+                log.debug("request is for context file. " +
+                          "Must serve original content-type ($contentType).")
+                // FIXME what should happen here?
+                // contentType = document.contentType
+            }
+
+            Object responseBody = formatDocument(document, contentType)
+            sendResponse(response, responseBody, contentType)
+        } else {
+            // FIXME move document null handling up?
+            log.debug("Failed to find a document with URI $path")
+            response.sendError(HttpServletRepsonse.SC_NOT_FOUND)
+        }
+    }
+
+    /**
+     * Format document based on Content-Type.
+     *
+     */
+    Object formatDocument(Document document, String contentType) {
+        if (contentType == MimeTypes.JSONLD) {
+            Map result = document.data
+            return result
+        } else if (contentType == MimeTypes.RDF) {
+            // FIXME convert to RDF-XML
+            throw new UnsupportedContentTypeException("Not implemented.")
+        } else if (contentType == MimeTypes.TURTLE) {
+            // FIXME convert to Turtle
+            throw new UnsupportedContentTypeException("Not implemented.")
+        } else {
+            throw new UnsupportedContentTypeException("Not implemented.")
+        }
+    }
+
 
     Document convertDocumentToAcceptedMediaType(Document document, String path, String acceptHeader, HttpServletResponse response) {
 
@@ -244,155 +386,293 @@ class Crud extends HttpServlet {
         return document
     }
 
-    void sendRedirect(HttpServletRequest request, HttpServletResponse response, Location location) {
+    /**
+     * Send 302 Found response
+     *
+     */
+    void sendRedirect(HttpServletRequest request,
+                      HttpServletResponse response, Location location) {
         if (location.getUri().getScheme() == null) {
-            def locationRef = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") + request.getContextPath()
+            def locationRef = request.getScheme() + "://" +
+                request.getServerName() +
+                (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") +
+                request.getContextPath()
             response.setHeader("Location", locationRef + location.uri.toString())
         } else {
             response.setHeader("Location", location.uri.toString())
         }
 
-        sendResponse(response, new byte[0], null, location.responseCode)
+        sendResponse(response, new byte[0], null, HttpServletResponse.SC_FOUND)
     }
 
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
-        doPostOrPut(request, response)
+        log.debug("Handling POST request.")
+
+        if(request.pathInfo != "/") {
+            log.debug("Invalid POST request URL.")
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                               "Method not allowed.")
+            return
+        }
+
+        if (!isSupportedContentType(request)) {
+            log.debug("Unsupported Content-Type for POST.")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                               "Content-Type not supported.")
+            return
+        }
+
+        Map requestBody = getRequestBody(request)
+
+        if (isEmptyInput(requestBody)) {
+            log.debug("Empty POST request.")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                               "No data received")
+            return
+        }
+
+        if (!JsonLd.isFlat(requestBody)) {
+            log.debug("POST body is not flat JSON-LD")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                               "Body is not flat JSON-LD.")
+        }
+
+        // FIXME we're assuming Content-Type application/ld+json here
+        // should we deny the others?
+        String fullDocumentId = JsonLd.findFullIdentifier(requestBody)
+        String documentId = JsonLd.findIdentifier(requestBody)
+
+        // FIXME handle this better
+        if (fullDocumentId &&
+            fullDocumentId.startsWith(Document.BASE_URI.toString())) {
+            log.debug("Invalid supplied ID in POST request.")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                               "Supplied document ID not allowed.")
+            return
+        }
+
+        Document existingDoc = whelk.storage.locate(documentId, true)?.document
+        if (existingDoc) {
+            log.debug("Tried to POST existing document.")
+            response.sendError(HttpServletResponse.SC_CONFLICT,
+                               "Document with ID ${documentId} already exists.")
+            return
+        }
+
+        Document newDoc = new Document(requestBody)
+
+        // if no identifier, create one
+        if (!documentId) {
+            newDoc.setId(mintIdentifier(requestBody))
+        } else {
+            // FIXME why does the caller need to set the ID?
+            newDoc.setId(documentId)
+        }
+
+        // verify user permissions
+        log.debug("Checking permissions for ${newDoc}")
+        try {
+            // TODO: 'collection' must also match the collection 'existingDoc'
+            // is in.
+            boolean allowed = hasPermission(request.getAttribute("user"),
+                                            newDoc, existingDoc)
+            if (!allowed) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                                   "You are not authorized to perform this " +
+                                   "operation")
+                return
+            }
+        } catch (ModelValidationException mve) {
+            // FIXME data leak
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                               mve.getMessage())
+            return
+        }
+
+        // try store document
+        // return 201 or error
+        String collection = request.getParameter("collection")
+        boolean isUpdate = false
+        Document savedDoc = saveDocument(newDoc, collection, isUpdate)
+        sendCreateResponse(response, savedDoc.getURI().toString(),
+                           savedDoc.getModified() as String)
     }
 
     @Override
     void doPut(HttpServletRequest request, HttpServletResponse response) {
-        doPostOrPut(request, response)
+        log.debug("Handling PUT request.")
+
+        if(request.pathInfo == "/") {
+            log.debug("Invalid PUT request URL.")
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                               "Method not allowed.")
+            return
+        }
+
+        if (!isSupportedContentType(request)) {
+            log.debug("Unsupported Content-Type for PUT.")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                               "Content-Type not supported.")
+            return
+        }
+
+        Map requestBody = getRequestBody(request)
+
+        if (isEmptyInput(requestBody)) {
+            log.debug("Empty PUT request.")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                               "No data received")
+            return
+        }
+
+        String documentId = JsonLd.findIdentifier(requestBody)
+        String idFromUrl = request.pathInfo.substring(1)
+
+        if (!documentId) {
+            log.debug("Missing document ID in PUT request.")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                               "Missing @id in request.")
+            return
+        } else if (idFromUrl != documentId) {
+            log.debug("Document ID does not match ID in URL.")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                               "ID in document does not match ID in URL.")
+            return
+        }
+
+        // FIXME don't use locate && handle alternate IDs
+        Location location = whelk.storage.locate(documentId, true)
+        Document existingDoc = location?.document
+        if (!existingDoc && location?.uri) {
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                               "PUT does not support alternate IDs.")
+            return
+        } else if (!existingDoc) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND,
+                               "Document not found.")
+            return
+        } else {
+            // FIXME not needed? should be handled by 303 See Other
+            log.debug("Identifier was ${documentId}. Setting to ${existingDoc.id}")
+            documentId = existingDoc.id
+        }
+
+        if (request.getHeader("If-Match") &&
+            existingDoc.modified as String != request.getHeader("If-Match")) {
+            log.debug("PUT performed on stale document.")
+            response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED,
+                               "The resource has been updated by someone " +
+                               "else. Please refetch.")
+            return
+        }
+
+        Document updatedDoc = new Document(requestBody)
+        updatedDoc.setId(documentId)
+
+        log.debug("Checking permissions for ${updatedDoc}")
+        try {
+            // TODO: 'collection' must also match the collection 'existingDoc'
+            // is in.
+            boolean allowed = hasPermission(request.getAttribute("user"),
+                                            updatedDoc, existingDoc)
+            if (!allowed) {
+              response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                                 "You are not authorized to perform this " +
+                                 "operation")
+              return
+            }
+        } catch (ModelValidationException mve) {
+            // FIXME data leak
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                               mve.getMessage())
+            return
+        }
+        log.debug("All checks passed.")
+
+        String collection = request.getParameter("collection")
+        boolean isUpdate = true
+        Document savedDoc = saveDocument(updatedDoc, collection, isUpdate)
+        sendUpdateResponse(response, savedDoc.getURI().toString(),
+                           savedDoc.getModified() as String)
+
     }
 
-    void doPostOrPut(HttpServletRequest request, HttpServletResponse response) {
-        log.debug("Executing ${request.getMethod()}-request")
-        String collection = request.getParameter("collection") //getDatasetBasedOnPath(request.pathInfo)
-        byte[] data = request.getInputStream().getBytes()
+    boolean isEmptyInput(Map inputData) {
+        if (inputData.size() == 0) {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    boolean isSupportedContentType(HttpServletRequest request) {
+        ContentType contentType = ContentType.parse(request.getContentType())
+        String mimeType = contentType.getMimeType()
+        // FIXME add additional content types?
+        if (mimeType == "application/ld+json") {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    Map getRequestBody(HttpServletRequest request) {
+        byte[] body = request.getInputStream().getBytes()
+
         try {
-            Document doc = createDocumentIfOkToSave(data, collection, request, response)
+            return mapper.readValue(body, Map)
+        } catch (EOFException) {
+            return [:]
+        }
+    }
+
+    Document saveDocument(Document doc, String collection, boolean isUpdate) {
+        try {
             if (doc) {
-                //doc.data = JsonLd.flatten(doc.data)
                 log.debug("Saving document (${doc.getShortId()})")
-                boolean newDocument = (doc.getCreated() == null)
                 log.info("Document accepted: created is: ${doc.getCreated()}")
 
-                doc = whelk.store(doc, "xl", null, collection, false, (request.getMethod() == "PUT"))
+                doc = whelk.store(doc, "xl", null, collection, false, isUpdate)
 
-                sendDocumentSavedResponse(response, doc.getURI().toString(), doc.getModified() as String, newDocument)
+                return doc
             }
         } catch (StorageCreateFailedException scfe) {
             log.warn("Already have document with id ${scfe.duplicateId}")
-            response.sendError(HttpServletResponse.SC_CONFLICT, "Document with id \"${scfe.duplicateId}\" already exists.")
+            response.sendError(HttpServletResponse.SC_CONFLICT,
+                               "Document with id \"${scfe.duplicateId}\" " +
+                               "already exists.")
         } catch (WhelkAddException wae) {
             log.warn("Whelk failed to store document: ${wae.message}")
-            response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE , wae.message)
+            // FIXME data leak
+            response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE ,
+                               wae.message)
         } catch (Exception e) {
             log.error("Operation failed", e)
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.message)
+            // FIXME data leak
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                               e.message)
         }
     }
 
-    Document createDocumentIfOkToSave(byte[] data, String collection, HttpServletRequest request, HttpServletResponse response) {
-        log.debug("collection is $collection")
-        if (data.length == 0) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No data received")
-            return null
-        }
-        String cType = ContentType.parse(request.getContentType()).getMimeType()
-        if (cType == "application/x-www-form-urlencoded") {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Content-Type application/x-www-form-urlencoded is not supported")
-            return null
-        }
-
-        Map dataMap
-        if ( cType.equals("application/ld+json")) {
-            dataMap = mapper.readValue(data, Map)
-        } else if ( cType.equals("application/x-marc-json")) {
-            dataMap = converter.convert(dataMap)
-        } else
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Content-Type not supported")
-
-        String identifier = null
-        if (request.method == "POST") {
-            int pathsize = request.pathInfo.split("/").size()
-            log.debug("pathsize: $pathsize")
-            if (pathsize != 0 && pathsize != 2) {
-                response.sendError(response.SC_BAD_REQUEST, "POST only allowed to root or collection")
-                return null
-            }
-            if ( cType.equals("application/ld+json")) {
-                identifier = JsonLd.findIdentifier(dataMap)
-                log.debug("Found identifier: $identifier")
-            }
-        }
-        if (request.method == "PUT") {
-            if (request.pathInfo == "/") {
-                response.sendError(response.SC_BAD_REQUEST, "PUT not allowed to ROOT")
-                return null
-            }
-            identifier = request.pathInfo.substring(1)
-        }
-
-        Document existingDoc
-
-        if (identifier) {
-            String foundIdentifier = JsonLd.findIdentifier(dataMap)
-            if (foundIdentifier && foundIdentifier != identifier) {
-                response.sendError(response.SC_CONFLICT, "The supplied data contains an @id ($foundIdentifier) which differs from the URI in the PUT request ($identifier)")
-                return null
-            }
-            existingDoc = whelk.storage.locate(identifier, true)?.document
-        }
-
-        if (existingDoc) {
-            if (request.method == "POST") {
-                response.sendError(HttpServletResponse.SC_CONFLICT, "Document with identifier ${identifier} already exists. Use PUT if you want to update.")
-                return null
-            }
-            // Big no-no, race condition incoming. Use postgresqlcomponent.storeAtomicUpdate() instead.
-            if (request.getHeader("If-Match") && existingDoc.modified as String != request.getHeader("If-Match")) {
-                log.debug("Document with identifier ${existingDoc.identifier} already exists.")
-                response.sendError(response.SC_PRECONDITION_FAILED, "The resource has been updated by someone else. Please refetch.")
-                return null
-            }
-            log.debug("Identifier was ${identifier}. Setting to ${existingDoc.id}")
-            identifier = existingDoc.id
-        }
-
-
-        if (!identifier) {
-            identifier = mintIdentifier(dataMap)
-        }
-
-        Document doc = new Document(dataMap)
-        doc.setId(identifier)
-
-        getAlternateIdentifiersFromLinkHeaders(request).each {
-            doc.addRecordIdentifier(it);
-        }
-
-        log.debug("Checking permissions for ${doc}")
-        // todo: 'collection' must also match the collection 'existingDoc' is in.
-        try {
-            if (!hasPermission(request.getAttribute("user"), doc, existingDoc)) {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
-                return null
-            }
-        } catch (ModelValidationException mve) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, mve.getMessage())
-            return null
-        }
-
-        log.debug("All checks passed")
-
-        return doc
+    void sendCreateResponse(HttpServletResponse response, String locationRef,
+                            String etag) {
+        sendDocumentSavedResponse(response, locationRef, etag, true)
     }
 
-    void sendDocumentSavedResponse(HttpServletResponse response, String locationRef, String etag, boolean newDocument) {
+    void sendUpdateResponse(HttpServletResponse response, String locationRef,
+                            String etag) {
+        sendDocumentSavedResponse(response, locationRef, etag, false)
+    }
+
+    void sendDocumentSavedResponse(HttpServletResponse response,
+                                   String locationRef, String etag,
+                                   boolean newDocument) {
         log.debug("Setting header Location: $locationRef")
+
         response.setHeader("Location", locationRef)
         response.setHeader("ETag", etag as String)
+
         if (newDocument) {
             response.setStatus(HttpServletResponse.SC_CREATED)
         } else {
@@ -415,17 +695,6 @@ class Crud extends HttpServlet {
     }
 
     @Deprecated
-    static String getDatasetBasedOnPath(path) {
-        String ds = ""
-        def elements = path.split("/")
-        int i = 1
-        while (elements.size() > i && ds.length() == 0) {
-            ds = elements[i++]
-        }
-        log.trace("Estimated dataset: $ds")
-        return ds
-    }
-
     List<String> getAlternateIdentifiersFromLinkHeaders(HttpServletRequest request) {
         def alts = []
         for (link in request.getHeaders("Link")) {
@@ -451,14 +720,22 @@ class Crud extends HttpServlet {
 
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
+        log.debug("Handling DELETE request.")
+        if(request.pathInfo == "/") {
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method not allowed.")
+            return
+        }
         try {
             String id = request.pathInfo.substring(1)
             def doc = whelk.storage.load(id)
-            if (doc && !hasPermission(request.getAttribute("user"), null, doc)) {
+            if(!doc) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
+            } else if (doc && !hasPermission(request.getAttribute("user"), null, doc)) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
             } else {
                 log.debug("Removing resource at ${id}")
-                whelk.remove(id)
+                // FIXME don't hardcode collection
+                whelk.remove(id, "xl", null, "xl")
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
         } catch (Exception wre) {
