@@ -1,51 +1,61 @@
 {
+  "chips": {
 
-  "CreativeWork": {
-    "instanceTitle": {},
-    "title": {"titleValue": ""},
-    "attributedTo": {},
-    "publicationYear": "",
-    "identifier": {}
+    "Resource": {
+      "@type": "",
+      "prefLabel": "",
+      "label": "",
+      "name": "",
+      "code": ""
+    },
+
+    "Work": {
+      "title": {"mainTitle": ""},
+      "contribution": {}
+    },
+
+    "Instance": {
+      "instanceOf": {},
+      "title": {"mainTitle": ""},
+      "publicationYear": "",
+      "identifiedBy": {"@type": "", "value": ""}
+    },
+
+    "Item": {
+      "itemOf": {},
+      "heldBy": {}
+    },
+
+    "Identifier": {
+      "@type": "",
+      "value": ""
+    },
+
+    "Title": {
+      "@type": "Title",
+      "mainTitle": "",
+      "subtitle": "",
+      "titleDate": "",
+      "partNumber": "",
+      "partTitle": ""
+    },
+
+    "Concept": {"prefLabel": "", "notation": "", "inScheme": {}},
+    "ConceptScheme": {"notation": ""},
+    "ConceptualWork": {"uniformTitle": "", "attributedTo": {}},
+
+    "Person": {
+      "name": "",
+      "familyName": "",
+      "givenName": "",
+      "birthYear": "",
+      "deathYear": "",
+      "notation": "",
+      "personTitle": ""
+    }
+
   },
 
-  "Identifier": {
-    "@type": "Identifier",
-    "identifierScheme": {},
-    "identifierValue": ""
-  },
-  "Title": {
-    "@type": "Title",
-    "titleValue": "",
-    "subtitle": "",
-    "titleDate": "",
-    "partNumber": "",
-    "partTitle": ""
-  },
-
-  "ObjectProperty": {"notation": ""},
-  "Language": {"notation": "", "prefLabel": ""},
-  "Nationality": {"notation": "", "prefLabel": ""},
-
-  "Concept": {"prefLabel": "", "notation": ""},
-  "ConceptScheme": {"notation": ""},
-  "ConceptualWork": {"uniformTitle": "", "attributedTo": {}},
-
-  "Country": {"name": ""},
-  "Event": {"label": ""},
-  "Family": {"name": ""},
-  "Meeting": {"name": ""},
-  "Organization": {"name": ""},
-  "Person": {
-    "name": "",
-    "familyName": "",
-    "givenName": "",
-    "birthYear": "",
-    "deathYear": "",
-    "notation": "",
-    "personTitle": ""
-  },
-  "Place": {"label": ""},
-  "PlanetaryObject": {"name": ""},
-  "Jurisdiction": {"name": ""}
-
+  "cards": {
+  }
 }
