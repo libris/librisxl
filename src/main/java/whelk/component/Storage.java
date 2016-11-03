@@ -16,7 +16,7 @@ public interface Storage {
     Document load(String id);
     List<String> loadCollections();
     Iterable<Document> loadAll(String dataset);
-    boolean remove(String id);
+    boolean remove(String id, String changedIn, String changedBy, String collection);
     void setVersioning(boolean v);
     boolean getVersioning();
     Map<String,Object> query(Map<String,String[]> queryParameters, String dataset, StorageType storageType);

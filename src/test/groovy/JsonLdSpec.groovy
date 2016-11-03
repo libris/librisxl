@@ -7,6 +7,7 @@ import spock.lang.Ignore
 import org.codehaus.jackson.map.*
 import whelk.Document
 import whelk.JsonLd
+import whelk.exception.FramingException
 import whelk.exception.ModelValidationException
 
 
@@ -23,7 +24,32 @@ class JsonLdSpec extends Specification {
         ['/some', '/other']     | [['@id': '/some'], ['@graph': ['@id': '/other']]]
     }
 
-    def "should frame flat jsonld"() {
+   def "should get all references"() {
+       given:
+       def input = ['@graph': [['@id': '/foo',
+                                'bar': ['@id': '/bar'],
+                                'extra': ['baz': ['@id': '/baz']],
+                                'aList': [['quux': ['@id': '/quux']]],
+                                'quux': ['@id': '/quux']],
+                               ['@id': '/bar',
+                                'someValue': 1],
+                               ['@id': '/baz/',
+                                'someOtherValue': 2]]]
+       Set expected = ['/bar', '/baz', '/quux']
+       expect:
+       assert JsonLd.getAllReferences(input) == expected
+   }
+
+   def "should not get references if @graph is missing"() {
+       given:
+       def input = ['@id': '/foo']
+       when:
+       JsonLd.getAllReferences(input)
+       then:
+       thrown FramingException
+   }
+
+   def "should frame flat jsonld"() {
         given:
         def id = "1234"
         def documentId = Document.BASE_URI.resolve(id).toString()

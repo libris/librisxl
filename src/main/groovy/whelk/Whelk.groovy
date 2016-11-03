@@ -76,8 +76,8 @@ class Whelk {
         }
     }
 
-    void remove(String id) {
-        if (storage.remove(id)) {
+    void remove(String id, String changedIn, String changedBy, String collection) {
+      if (storage.remove(id, changedIn, changedBy, collection)) {
             if (elastic) {
                 elastic.remove(id)
             }

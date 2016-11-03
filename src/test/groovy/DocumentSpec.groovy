@@ -70,4 +70,113 @@ class DocumentSpec extends Specification {
         example << examples
     }
 
+    def "should add identifier if missing"() {
+        given:
+        String id = '/foo'
+        Document doc = new Document(['@graph': []])
+        Document expected = new Document(['@graph': [['@id': id]]])
+        doc.addRecordIdentifier(id)
+        expect:
+        assert doc.data == expected.data
+    }
+
+    def "should not add identifier if already added"() {
+        given:
+        String id = '/foo'
+        Document doc = new Document(['@graph': [['@id': id]]])
+        Document expected = new Document(['@graph': [['@id': id]]])
+        doc.addRecordIdentifier(id)
+        expect:
+        assert doc.data == expected.data
+    }
+
+    def "should add sameAs identifier"() {
+        given:
+        String id = '/foo'
+        String altId = '/bar'
+        Document doc = new Document(['@graph': [['@id': id]]])
+        Document expected = new Document(['@graph': [['@id': id,
+                                                      'sameAs': [['@id': altId]]
+                                                      ]]])
+        doc.addRecordIdentifier(altId)
+        expect:
+        assert doc.data == expected.data
+    }
+
+    def "should not add sameAs identifier if already added"() {
+        given:
+        String id = '/foo'
+        String altId = '/bar'
+        Document doc = new Document(['@graph': [['@id': id,
+                                                 'sameAs': [['@id': altId]]
+                                                 ]]])
+        Document expected = new Document(['@graph': [['@id': id,
+                                                      'sameAs': [['@id': altId]]
+                                                      ]]])
+        doc.addRecordIdentifier(altId)
+        expect:
+        assert doc.data == expected.data
+    }
+
+    def "should not allow adding null identifier"() {
+        when:
+        String id = null
+        Document doc = new Document(['@graph': []])
+        doc.addRecordIdentifier(id)
+        then:
+        thrown NullPointerException
+    }
+
+    def "should get external refs"() {
+        given:
+        Map input = ["@graph": [["@id": "/foo",
+                                 "bar": ["@id": "/externalBar"],
+                                 "extra": ["baz": ["@id": "/externalBaz"]],
+                                 "quux": ["@id": "/quux"]],
+                                ["@id": "/quux",
+                                 "someValue": 1],
+                                ["someOtherValue": 2]]]
+        Document doc = new Document(input)
+        List expected = ["/externalBar", "/externalBaz"]
+        expect:
+        assert doc.getExternalRefs() == expected
+
+    }
+
+    def "should embellish document"() {
+        given:
+        Map input = ["@graph": [["@id": "/foo",
+                                 "bar": ["@id": "/externalBar"],
+                                 "extra": ["baz": "/externalBaz"],
+                                 "quux": ["@id": "/quux"]],
+                                ["@id": "/quux",
+                                 "someValue": 1],
+                                ["someOtherValue": 2],
+                                "A lonely string"]]
+
+        Map extra = ["/externalBar": ["@id": "/externalBar",
+                                      "someThirdValue": 3],
+                     "/externalBaz": ["@id": "/externalBaz",
+                                      "someFourthValue": 4]]
+
+        Map expected = ["@graph": [["@id": "/foo",
+                                    "bar": ["@id": "/externalBar"],
+                                    "extra": ["baz": "/externalBaz"],
+                                    "quux": ["@id": "/quux"]],
+                                   ["@id": "/quux",
+                                    "someValue": 1],
+                                   ["someOtherValue": 2],
+                                   "A lonely string",
+                                   ["@id": "/externalBar",
+                                      "someThirdValue": 3],
+                                   ["@id": "/externalBaz",
+                                      "someFourthValue": 4]]]
+
+
+        Document doc = new Document(input)
+        when:
+        doc.embellish(extra)
+        then:
+        assert doc.data == expected
+    }
 }
