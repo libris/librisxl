@@ -1,6 +1,5 @@
 package whelk.harvester
 
-import groovy.json.JsonBuilder
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
@@ -220,8 +219,18 @@ class OaiPmhHarvester {
         if (record.deleted) {
             String systemId = whelk.storage.locate(record.identifier, false)?.id
             if (systemId) {
-                log.debug("Delete request for ${record.identifier}. Located in system as ${systemId}.")
-                whelk.remove(systemId)
+                MarcRecord marcRecord = MarcXmlRecordReader.fromXml(record.record)
+                log.debug("Delete request for ${record.identifier}. " +
+                        "Located in system as ${systemId}. " +
+                        "Collection is: ${getCollection(marcRecord)}")
+                try {
+                    //TODO: Do not hard code ChangedIn parameter
+                    whelk.remove(systemId, 'voyager', null, getCollection(marcRecord))
+                } catch (all) {
+                    log.error("Could not remove record with ID ${record.identifier}. " +
+                            "Located in system as ${systemId}. " +
+                            "Collection is: ${getCollection(marcRecord)}", all)
+                }
                 hdata.numberOfDocumentsDeleted++
             }
         } else {
@@ -236,7 +245,7 @@ class OaiPmhHarvester {
             }
             if (docs.size() > 0 && docs.size() % 1000 == 0) {
                 String sourceSystem = hdata.sourceSystem == null ? DEFAULT_SOURCE_SYSTEM : hdata.sourceSystem
-                log.debug "adding ${docs.count {it}} documents to whelk"
+                log.debug "adding ${docs.count { it }} documents to whelk"
                 whelk.bulkStore(docs, sourceSystem, null, collection)
                 docs = []
             }
@@ -253,15 +262,20 @@ class OaiPmhHarvester {
         true
     }
 
+    String getCollection(MarcRecord marcRecord) {
+        return MARCTYPE_COLLECTION[marcRecord.type]
+    }
+
     List createDocument(OaiPmhRecord oaiPmhRecord) {
 
         if (oaiPmhRecord.record == null) {
             return null
         }
         if (oaiPmhRecord.format == Format.MARC) {
+
             MarcRecord marcRecord = MarcXmlRecordReader.fromXml(oaiPmhRecord.record)
 
-            String collection = MARCTYPE_COLLECTION[marcRecord.type]
+            String collection = getCollection(marcRecord)
 
             String recordId = "/" + collection + "/" + marcRecord.getControlfields("001").get(0).getData()
 
@@ -327,8 +341,6 @@ class OaiPmhHarvester {
                 println "String representation of record:   ${jsonMap.inspect()}"
                 return null
             }
-
-
 
 
         } else {
