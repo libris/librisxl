@@ -27,7 +27,8 @@ class MySQLLoader {
             """,
 
             bib : """
-            SELECT bib.bib_id, bib.data, bib.create_date FROM bib_record bib
+            SELECT bib.bib_id, bib.data, bib.create_date, auth.auth_id FROM bib_record bib
+            LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id
             WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id
              """,
 
@@ -75,6 +76,7 @@ class MySQLLoader {
                 normalizeString(
                         new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
         if (record) {
+
             doc = MarcJSONConverter.toJSONMap(record)
             if (!recordId.equals(currentRecordId)) { //TODO: What is this construct for?
                 if (doc) {

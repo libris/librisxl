@@ -22,7 +22,8 @@ import java.sql.ResultSet
  */
 @Log
 class PostgresLoadfileWriter {
-    private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
+    private static
+    final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CONVERSIONS_PER_THREAD = 100;
 
     // USED FOR DEV ONLY, MUST _NEVER_ BE SET TO TRUE ONCE XL GOES INTO PRODUCTION. WITH THIS SETTING THE IMPORT WILL
@@ -49,7 +50,8 @@ class PostgresLoadfileWriter {
         });
     }
 
-    public static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
+    public
+    static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
         if (FAULT_TOLERANT_MODE)
             System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
                     "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
@@ -66,42 +68,67 @@ class PostgresLoadfileWriter {
             sql.connection.setAutoCommit(false)
             sql.setResultSetType(ResultSet.TYPE_FORWARD_ONLY)
             sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
-            sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { row ->
 
-                if (++counter % 1000 == 0) {
-                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
-                    if (elapsedSecs > 0) {
-                        def docsPerSec = counter / elapsedSecs
-                        println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
-                    }
-                }
+            int previousRecordId = -1
+            List previousSpecs = []
+            Map previousBibResultSet = null
 
+
+
+            sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { ResultSet currentRow ->
+
+                /* if (++counter % 1000 == 0) {
+                     def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
+                     if (elapsedSecs > 0) {
+                         def docsPerSec = counter / elapsedSecs
+                         println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
+                     }
+                 }*/
+                //bib.bib_id, bib.data, bib.create_date, auth.auth_id
                 try {
+                    int currentRecordId = currentRow.getInt(1)
 
-                    Map doc = null
-                    MarcRecord record = Iso2709Deserializer.deserialize(
-                            MySQLLoader.normalizeString(
-                                    new String(row.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
-                    if (record) {
-                        doc = MarcJSONConverter.toJSONMap(record)
-                        if (doc) {
-                            if (isSuppressed(doc))
-                                return
-                            handleDM(toDocumentMap(doc, row, collection), s_marcFrameConverter)
-                        }
-                        doc = [:]
 
+                    if (collection == 'bib' && (previousBibResultSet.bib_id == -1)) {
+                        println "1"
+                        //Första varvet
+                        previousBibResultSet = [bib_id: currentRow.bib_id, data: currentRow.data, create_date: currentRow.create_date, auth_id: currentRow.auth_id]
+                        //TODO: make closure out of this
+                        previousRecordId = currentRecordId
+                    } else if (collection == 'bib' && previousBibResultSet.bib_id == currentRecordId) {
+                        print "."
+                        //Flera poster med samma ID
+                        previousSpecs.addAll(getOaipmhSetSpecs(previousBibResultSet, collection))
+
+                        previousBibResultSet = [bib_id: currentRow.bib_id, data: currentRow.data, create_date: currentRow.create_date, auth_id: currentRow.auth_id]
+                    } else {
+                        //Poster med olika id. Antingen sista av flera eller en ny post
+                        print "|"
+                        previousSpecs.addAll(getOaipmhSetSpecs(previousBibResultSet, collection))
+
+                        //handleRow(previousRow,collection)
+
+                        //Reset stuff for next record Id
+                        def authposts = previousSpecs.findAll { String it ->
+                            it.startsWith("auth")
+                        }.count { it }
+                        if (authposts > 1)
+                            print "${authposts}"
+                        previousBibResultSet = [bib_id: currentRow.bib_id, data: currentRow.data, create_date: currentRow.create_date, auth_id: currentRow.auth_id]
+                        previousSpecs = getOaipmhSetSpecs(currentRow, collection)
                     }
-                    if (doc) {
-                        if (isSuppressed(doc))
-                            return
-                        handleDM(toDocumentMap(doc, row, collection), s_marcFrameConverter)
-                    }
-                } catch (all) {
+
+                    //TODO: what about other collections!
+
+                } catch (any) {
                     println all.message
                     println all.stackTrace
                 }
+
             }
+            //Last row
+            previousSpecs << getOaipmhSetSpecs(previousBibResultSet, collection)
+            handleRow(previousBibResultSet, collection)
 
         }
         catch (all) {
@@ -117,13 +144,47 @@ class PostgresLoadfileWriter {
 
     }
 
+    private static void handleRow(def row, String collection) {
+        MarcRecord record = Iso2709Deserializer.deserialize(
+                MySQLLoader.normalizeString(
+                        new String(row.getBytes("data"), "UTF-8"))
+                        .getBytes("UTF-8"))
+        if (record) {
+            Map doc = MarcJSONConverter.toJSONMap(record)
+            if (doc) {
+                if (!isSuppressed(doc))
+                    handleDM(toDocumentMap(doc, row, collection), s_marcFrameConverter)
+            }
+        }
+    }
+
     private static Map toDocumentMap(Map doc, def row, String collection) {
         String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
         String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
         [record: doc, collection: collection, id: id, created: row.getTimestamp("create_date")]
     }
 
-    private static String getShortId(Map documentMap, MarcFrameConverter marcFrameConverter) {
+    static List getOaipmhSetSpecs(def resultSet, String collection) {
+        List specs = []
+        if (collection == "bib") {
+            int authId = resultSet.auth_id
+            if (authId > 0)
+                specs.add("authority:" + authId + "DEBUG: ${resultSet.bib_id}")
+
+        } else if (collection == "hold") {
+            int bibId = resultSet.getInt("bib_id")
+            String sigel = resultSet.getString("shortname")
+            if (bibId > 0)
+                specs.add("bibid:" + bibId)
+            if (sigel)
+                specs.add("location:" + sigel)
+        }
+        return specs
+    }
+
+
+    private
+    static String getShortId(Map documentMap, MarcFrameConverter marcFrameConverter) {
         try {
             Map convertedData = marcFrameConverter.convert(documentMap.record, documentMap.id);
             Document document = new Document(convertedData)
@@ -138,7 +199,8 @@ class PostgresLoadfileWriter {
         }
     }
 
-    private static void handleDM(Map documentMap, MarcFrameConverter marcFrameConverter) {
+    private
+    static void handleDM(Map documentMap, MarcFrameConverter marcFrameConverter) {
         try {
             Map convertedData = marcFrameConverter.convert(documentMap.record, documentMap.id);
             Document document = new Document(convertedData)
@@ -178,7 +240,8 @@ class PostgresLoadfileWriter {
         return null
     }
 
-    private static synchronized void writeDocumentToLoadFile(Document doc, String collection) {
+    private static
+    synchronized void writeDocumentToLoadFile(Document doc, String collection) {
         /* columns:
 
            id text not null unique primary key,
