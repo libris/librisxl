@@ -66,7 +66,7 @@ class ConverterAPISpec extends Specification {
         'application/ld+json'               | INPUT | 'text/html'  | SC_NOT_ACCEPTABLE
     }
 
-    static XMARCJSON = 'application/x-marcjson'
+    static XMARCJSON = 'application/x-marc-json'
     static INPUT = """
         {
           "@graph": [
