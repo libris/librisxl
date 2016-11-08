@@ -81,34 +81,34 @@
       "statusFlag": "marc:status",
       "statusFlagNewValue": "marc:New",
       "statusFlagUpdatedValue": "marc:CorrectedOrRevised",
-      "dateProperty": "creationDate",
-      "updatedProperty": "changeDate",
+      "dateProperty": "created",
+      "updatedProperty": "modified",
       "_spec": [
         {
           "source": {
-            "creationDate": "2015-02-18T00:00:00Z",
-            "changeDate": "2015-02-18T00:00:00Z",
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:00Z",
             "marc:status": {"@id": "marc:New"}
           },
           "result": {
-            "creationDate": "2015-02-18T00:00:00Z",
-            "changeDate": "2015-02-18T00:00:00Z"
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:00Z"
           },
           "back": true
         },
         {
           "source": {
-            "creationDate": "2015-02-18T00:00:00Z",
-            "changeDate": "2015-02-18T00:00:01Z",
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:01Z",
             "marc:status": {"@id": "marc:New"}
           },
           "result": {
-            "creationDate": "2015-02-18T00:00:00Z",
-            "changeDate": "2015-02-18T00:00:01Z"
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:01Z"
           },
           "back": {
-            "creationDate": "2015-02-18T00:00:00Z",
-            "changeDate": "2015-02-18T00:00:01Z",
+            "created": "2015-02-18T00:00:00Z",
+            "modified": "2015-02-18T00:00:01Z",
             "marc:status": {"@id": "marc:CorrectedOrRevised"}
           }
         },
@@ -561,12 +561,12 @@
 
     "003": {"aboutEntity": "?record", "property": "systemName"},
     "005": {
-      "aboutEntity": "?record", "property": "changeDate",
+      "aboutEntity": "?record", "property": "modified",
       "parseDateTime": "yyyyMMddHHmmss.S", "timeZone": "CET",
       "_spec": [
         {
           "source": {"005": "20130814170612.0"},
-          "result": {"changeDate": "2013-08-14T17:06:12.0+02:00"}
+          "result": {"modified": "2013-08-14T17:06:12.0+02:00"}
         }
       ]
     },
@@ -1584,7 +1584,7 @@
       "TODO:repeatedBy": "006",
       "[0:6]": {
         "aboutEntity": "?record",
-        "property": "creationDate",
+        "property": "created",
         "parseDateTime": "yyMMdd", "timeZone": "CET"
       },
       "[6:7]": {
@@ -2086,7 +2086,7 @@
             {"008": "900101s1977    sw |||||||||||000 0aswe| "}
           ],
           "result": {
-            "creationDate": "1990-01-01T00:00:00.0+01:00",
+            "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
               "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
               "marc:publishedYear":  "1977",
@@ -3991,7 +3991,7 @@
     "008": {
       "[0:6]": {
         "aboutEntity": "?record",
-        "property": "creationDate",
+        "property": "created",
         "parseDateTime": "yyMMdd", "timeZone": "CET"
       },
       "[6:7]": {
@@ -4762,7 +4762,7 @@
     "008": {
       "[0:6]": {
         "aboutEntity": "?record",
-        "property": "creationDate",
+        "property": "created",
         "parseDateTime": "yyMMdd", "timeZone": "CET"
       },
       "[6:7]": {
@@ -4844,7 +4844,7 @@
         {
           "source": {"008": "900101||    |   ||||||swe|000000"},
           "result": {
-            "creationDate": "1990-01-01T00:00:00.0+01:00",
+            "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
               "language": [{"@id": "https://id.kb.se/language/swe"}]
             }
@@ -4854,14 +4854,14 @@
           "name": "keep broken date values verbatim",
           "source": {"008": "900101||    |   ||||||und|000000"},
           "result": {
-            "creationDate": "1990-01-01T00:00:00.0+01:00"
+            "created": "1990-01-01T00:00:00.0+01:00"
           }
         },
         {
           "name": "parse zero padded inventoryLevel",
           "source": {"008": "900101||    |   |001||und|000000"},
           "result": {
-            "creationDate": "1990-01-01T00:00:00.0+01:00",
+            "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
               "inventoryLevel": 1
             }
@@ -4872,7 +4872,7 @@
           "source": {"008": "900101||    |   |NaN||und|000000"},
           "normalized": {"008": "900101||    |   ||||||und|000000"},
           "result": {
-            "creationDate": "1990-01-01T00:00:00.0+01:00",
+            "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
               "inventoryLevel": "NaN"
             }
@@ -4883,7 +4883,7 @@
           "source": {"008": "121102||0   |||||1  b ||| 0     "},
           "normalized": {"008": "121102||    |   |001b|und|000000"},
           "result": {
-            "creationDate": "2012-11-02T00:00:00.0+01:00",
+            "created": "2012-11-02T00:00:00.0+01:00",
             "mainEntity": {
               "inventoryLevel": 1,
               "marc:lendingPolicy": {"@id": "marc:WillNotLend"}
