@@ -69,7 +69,6 @@ class PostgresLoadfileWriter {
             sql.setResultSetType(ResultSet.TYPE_FORWARD_ONLY)
             sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
 
-            int previousRecordId = -1
             List previousSpecs = []
             Map previousBibResultSet = null
 
@@ -77,52 +76,56 @@ class PostgresLoadfileWriter {
 
             sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { ResultSet currentRow ->
 
-                /* if (++counter % 1000 == 0) {
-                     def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
-                     if (elapsedSecs > 0) {
-                         def docsPerSec = counter / elapsedSecs
-                         println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
-                     }
-                 }*/
-                //bib.bib_id, bib.data, bib.create_date, auth.auth_id
+                if (++counter % 1000 == 0) {
+                   // s_mainTableWriter.flush()
+                   // s_identifiersWriter.flush()
+                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
+                    if (elapsedSecs > 0) {
+                        def docsPerSec = counter / elapsedSecs
+                        println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
+                    }
+                }
+
+
                 try {
-                    int currentRecordId = currentRow.getInt(1)
-
-
-                    if (collection == 'bib' && (previousBibResultSet.bib_id == -1)) {
-                        println "1"
-                        //Första varvet
-                        previousBibResultSet = [bib_id: currentRow.bib_id, data: currentRow.data, create_date: currentRow.create_date, auth_id: currentRow.auth_id]
-                        //TODO: make closure out of this
-                        previousRecordId = currentRecordId
-                    } else if (collection == 'bib' && previousBibResultSet.bib_id == currentRecordId) {
-                        print "."
-                        //Flera poster med samma ID
-                        previousSpecs.addAll(getOaipmhSetSpecs(previousBibResultSet, collection))
-
-                        previousBibResultSet = [bib_id: currentRow.bib_id, data: currentRow.data, create_date: currentRow.create_date, auth_id: currentRow.auth_id]
+                    if (collection != 'bib') {
+                        Map rowMap = [data       : currentRow.getBytes('data'),
+                                      create_date: currentRow.getTimestamp('create_date')]
+                        handleRow(rowMap, collection)
                     } else {
-                        //Poster med olika id. Antingen sista av flera eller en ny post
-                        print "|"
-                        previousSpecs.addAll(getOaipmhSetSpecs(previousBibResultSet, collection))
+                        int currentRecordId = currentRow.getInt(1)
+                        boolean firstRun = previousBibResultSet == null
+                        def resultSetToMap = { ResultSet r ->
+                            return [
+                                    id         : r.getInt('bib_id'),
+                                    data       : r.getBytes('data'),
+                                    create_date: r.getTimestamp('create_date'),
+                                    auth_id    : r.getInt('auth_id')]
 
-                        //handleRow(previousRow,collection)
+                        }
+                        if (firstRun) {
+                            print '1'
+                            previousBibResultSet = resultSetToMap(currentRow)
+                            previousSpecs.addAll(getOaipmhSetSpecs(previousBibResultSet, collection))
+                        } else if (previousBibResultSet.id == currentRecordId) {
+                            //Flera auth-poster
+                            print ". "
+                            previousBibResultSet = resultSetToMap(currentRow)
+                            previousSpecs.addAll(getOaipmhSetSpecs(previousBibResultSet, collection))
 
-                        //Reset stuff for next record Id
-                        def authposts = previousSpecs.findAll { String it ->
-                            it.startsWith("auth")
-                        }.count { it }
-                        if (authposts > 1)
-                            print "${authposts}"
-                        previousBibResultSet = [bib_id: currentRow.bib_id, data: currentRow.data, create_date: currentRow.create_date, auth_id: currentRow.auth_id]
-                        previousSpecs = getOaipmhSetSpecs(currentRow, collection)
+                        } else {
+                            //Poster med olika id. Antingen sista av flera eller en ny post
+                            print "| "
+                            previousBibResultSet = resultSetToMap(currentRow)
+                            previousSpecs.addAll(getOaipmhSetSpecs(previousBibResultSet, collection))
+                            handleRow(previousBibResultSet,collection)
+                            previousSpecs = []
+                        }
                     }
 
-                    //TODO: what about other collections!
-
                 } catch (any) {
-                    println all.message
-                    println all.stackTrace
+                    println any.message
+                    println any.stackTrace
                 }
 
             }
@@ -131,8 +134,8 @@ class PostgresLoadfileWriter {
             handleRow(previousBibResultSet, collection)
 
         }
-        catch (all) {
-            println all.message
+        catch (any) {
+            println any.message
         }
         finally {
             s_mainTableWriter.close()
@@ -144,32 +147,31 @@ class PostgresLoadfileWriter {
 
     }
 
-    private static void handleRow(def row, String collection) {
+    private static void handleRow(Map rowMap, String collection) {
+        //TODO: make sure record id from resultset is not in use
         MarcRecord record = Iso2709Deserializer.deserialize(
                 MySQLLoader.normalizeString(
-                        new String(row.getBytes("data"), "UTF-8"))
+                        new String(rowMap.data as byte[], "UTF-8"))
                         .getBytes("UTF-8"))
         if (record) {
             Map doc = MarcJSONConverter.toJSONMap(record)
             if (doc) {
-                if (!isSuppressed(doc))
-                    handleDM(toDocumentMap(doc, row, collection), s_marcFrameConverter)
+                if (!isSuppressed(doc)) {
+                    String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+                    String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+                    Map dm = [record: doc, collection: collection, id: id, created: rowMap.create_date]
+                    handleDM(dm, s_marcFrameConverter)
+                }
             }
         }
-    }
-
-    private static Map toDocumentMap(Map doc, def row, String collection) {
-        String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-        String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-        [record: doc, collection: collection, id: id, created: row.getTimestamp("create_date")]
     }
 
     static List getOaipmhSetSpecs(def resultSet, String collection) {
         List specs = []
         if (collection == "bib") {
-            int authId = resultSet.auth_id
+            int authId = resultSet.auth_id ?: 0
             if (authId > 0)
-                specs.add("authority:" + authId + "DEBUG: ${resultSet.bib_id}")
+                specs.add("authority:" + authId + "DEBUG: ${resultSet.id}")
 
         } else if (collection == "hold") {
             int bibId = resultSet.getInt("bib_id")
@@ -205,7 +207,7 @@ class PostgresLoadfileWriter {
             Map convertedData = marcFrameConverter.convert(documentMap.record, documentMap.id);
             Document document = new Document(convertedData)
             document.setCreated(documentMap.created)
-            writeDocumentToLoadFile(document, documentMap.collection)
+            writeDocumentToLoadFile(document, documentMap.collection as String)
 
         } catch (Throwable e) {
             e.println("Convert Failed. id: ${documentMap.id}")
