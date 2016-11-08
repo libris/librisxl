@@ -242,8 +242,8 @@ $ for source in auth bib hold; do
 Where `<username>` and `<password>` are the credentials used for
 communicating with the OAIPMH server.
 
-    **NOTE:**
-    On Windows, instead of installing modules through the `requirements.txt`-file, install the modules listed in it separately (apart from psycopg2). Download the psycopg2.whl-file that matches your OS from http://www.lfd.uci.edu/~gohlke/pythonlibs/#psycopg and pip install it.
+**NOTE:**
+On Windows, instead of installing modules through the `requirements.txt`-file, install the modules listed in it separately (apart from psycopg2). Download the psycopg2.whl-file that matches your OS from http://www.lfd.uci.edu/~gohlke/pythonlibs/#psycopg and pip install it.
 
 ## Maintenance
 
