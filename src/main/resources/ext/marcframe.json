@@ -324,6 +324,13 @@
     "termbase": {
       "include": ["termbase_noid", "termid"]
     },
+    "uri_from_i2": {
+      "match-i2": {
+        "0": {
+          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
+        }
+      }
+    },
     "relation_from_w": {
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
     }
@@ -3410,7 +3417,7 @@
       }
     },
     "610": {
-      "include": "subjectbase",
+      "include": ["subjectbase", "uri_from_i2"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "OrganizationTerm",
@@ -3429,11 +3436,6 @@
         },
         "2": {
           "$a": {"property": "name", "required": true}
-        }
-      },
-      "match-i2": {
-        "0": {
-          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
         }
       },
       "match-code": {
@@ -3489,13 +3491,13 @@
       "addLink": "subject", "resourceType": "UniformWork"
     },
     "648": {
-      "include": ["subjectbase", "termbase"],
+      "include": ["subjectbase", "termbase", "uri_from_i2"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "ChronologicalTerm"
     },
     "650": {
-      "include": ["subjectbase", "termbase"],
+      "include": ["subjectbase", "termbase", "uri_from_i2"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
@@ -3506,11 +3508,6 @@
         "0": "unspecified",
         "1": "primary",
         "2": "secondary"
-      },
-      "match-i2": {
-        "0": {
-          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
-        }
       },
       "_spec": [
         {
@@ -3570,7 +3567,7 @@
       ]
     },
     "651": {
-      "include": ["subjectbase", "termbase"],
+      "include": ["subjectbase", "termbase", "uri_from_i2"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "GeographicalTerm",
@@ -4535,7 +4532,7 @@
     },
 
     "750" : {
-      "include": ["subjectbase", "termbase"],
+      "include": ["subjectbase", "termbase", "uri_from_i2"],
       "i1": null,
       "aboutEntity": "?record",
       "addLink": "closeMatch",
