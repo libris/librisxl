@@ -171,11 +171,11 @@ class PostgreSQLComponent implements whelk.component.Storage {
     }
 
     @Override
-    void store(Document doc, boolean upsert, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean store(Document doc, boolean upsert, String changedIn, String changedBy, String collection, boolean deleted) {
         store(doc, upsert, false, changedIn, changedBy, collection, deleted)
     }
 
-    void store(Document doc, boolean upsert, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean store(Document doc, boolean upsert, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
         Connection connection = getConnection()
         connection.setAutoCommit(false)
@@ -207,7 +207,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
 
 
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
-            return
+            return true
         } catch (PSQLException psqle) {
             log.debug("SQL failed: ${psqle.message}")
             connection.rollback()
@@ -231,6 +231,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
             connection.close()
             log.debug("[store] Closed connection.")
         }
+        return false
     }
 
     String getContext() {
