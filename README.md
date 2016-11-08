@@ -54,6 +54,11 @@ Related external repositories:
     $ sdk install gradle
     ```
 
+    For Windows, install https://chocolatey.org/, then:
+    ```
+    $ choco install gradle
+    ```
+
     **NOTE:** Check `gradle -version` and make sure that Groovy version matches
     `groovyVersion` in `build.gradle`.
 
@@ -70,6 +75,9 @@ Related external repositories:
     ```
     apt-get install elasticsearch
     ```
+
+    For Windows, download and install:
+    https://www.elastic.co/downloads/past-releases/elasticsearch-2-4-1
 
     **NOTE:** You will also need to set `cluster.name` in
     `/etc/elasticsearch/elasticsearch.yml` to something unique on the
@@ -94,6 +102,8 @@ Related external repositories:
     # Debian
     $ apt-get install postgresql postgresql-client
     ```
+    Windows:
+    Download and install https://www.postgresql.org/download/windows/
 
 ## Setup
 
@@ -157,13 +167,26 @@ $ cd $LIBRISXL
 $ curl -XPOST http://localhost:9200/whelk_dev -d@librisxl-tools/elasticsearch/libris_config.json
 ```
 
+**NOTE:** Windows users can install curl by:
+```
+$ choco install curl
+```
+
 ### Running
 
 To start the whelk, run the following commands:
 
+*NIX-systems:
 ```
 $ cd $LIBRISXL/rest
 $ export JAVA_OPTS="-Dfile.encoding=utf-8"
+$ gradle -Dxl.secret.properties=../secret.properties jettyRun
+```
+
+Windows:
+```
+$ cd $LIBRISXL/rest
+$ setx JAVA_OPTS "-Dfile.encoding=utf-8"
 $ gradle -Dxl.secret.properties=../secret.properties jettyRun
 ```
 
@@ -199,6 +222,7 @@ $ gradle -Dxl.secret.properties=../secret.properties \
 
 Create a local OAI-PMH dump of examples and run a full import:
 
+For *NIX:
 ```bash
 $ cd $LIBRISXL
 $ virtualenv .venv && source .venv/bin/activate
@@ -217,6 +241,9 @@ $ for source in auth bib hold; do
 
 Where `<username>` and `<password>` are the credentials used for
 communicating with the OAIPMH server.
+
+    **NOTE:**
+    On Windows, instead of installing modules through the `requirements.txt`-file, install the modules listed in it separately (apart from psycopg2). Download the psycopg2.whl-file that matches your OS from http://www.lfd.uci.edu/~gohlke/pythonlibs/#psycopg and pip install it.
 
 ## Maintenance
 
