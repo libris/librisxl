@@ -3,7 +3,7 @@ package whelk.rest.api
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import static whelk.Document.ABOUT_KEY
+import static whelk.JsonLd.ABOUT_KEY
 
 import javax.servlet.ServletInputStream
 import javax.servlet.ServletOutputStream
@@ -66,7 +66,7 @@ class ConverterAPISpec extends Specification {
         'application/ld+json'               | INPUT | 'text/html'  | SC_NOT_ACCEPTABLE
     }
 
-    static XMARCJSON = 'application/x-marcjson'
+    static XMARCJSON = 'application/x-marc-json'
     static INPUT = """
         {
           "@graph": [
