@@ -25,12 +25,18 @@ class PostgreSQLComponent implements whelk.component.Storage {
     boolean versioning = true
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, UPDATE_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION,
-                     GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
-                     LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE,
-                     INSERT_IDENTIFIERS, LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS, GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT
+    protected String UPSERT_DOCUMENT, UPDATE_DOCUMENT, INSERT_DOCUMENT,
+                     INSERT_DOCUMENT_VERSION, GET_DOCUMENT,
+                     GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS,
+                     GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
+                     LOAD_ALL_DOCUMENTS_BY_COLLECTION,
+                     DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
+                     LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
+                     LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
+                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
+    protected String FIND_BY_RELATION
 
     // Deprecated
     protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
@@ -121,6 +127,12 @@ class PostgreSQLComponent implements whelk.component.Storage {
         LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
         SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
                 "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
+
+        FIND_BY_RELATION = "SELECT id, data, created, modified, deleted " +
+                           "FROM $mainTableName " +
+                           "WHERE data->'@graph' @> ? " +
+                           "OR data->'@graph' @> ? " +
+                           "LIMIT ? OFFSET ?"
     }
 
 
@@ -959,4 +971,45 @@ class PostgreSQLComponent implements whelk.component.Storage {
         return connectionPool.getConnection()
     }
 
+    @Override
+    List<Document> findByRelation(String relation, String reference,
+                                  int limit, int offset) {
+        PreparedStatement find = connection.prepareStatement(FIND_BY_RELATION)
+
+        find = rigFindByRelationStatement(find, relation, reference,
+                                          limit, offset)
+
+        ResultSet rs = find.executeQuery()
+        List<Document> docs = []
+        while (rs.next()) {
+            docs << assembleDocument(rs)
+        }
+        return docs
+    }
+
+    List<Document> findByRelation(String relation, String reference) {
+        int limit = DEFAULT_PAGE_SIZE
+        int offset = 0
+        findByRelation(relation, reference, limit, offset)
+    }
+
+    private PreparedStatement rigFindByRelationStatement(PreparedStatement find,
+                                                         String relation,
+                                                         String reference,
+                                                         int limit,
+                                                         int offset) {
+      // FIXME ObjectMapper insisted on using the word "relation"
+      // rather than the contents of the variable and I have no idea
+      // why :'(
+      List refQuery = [["${relation}": ["@id": reference]]]
+      List refsQuery = [["${relation}": [["@id": reference]]]]
+
+      find.setObject(1, mapper.writeValueAsString(refQuery),
+                     java.sql.Types.OTHER)
+      find.setObject(2, mapper.writeValueAsString(refsQuery),
+                     java.sql.Types.OTHER)
+      find.setInt(3, limit)
+      find.setInt(4, offset)
+      return find
+    }
 }

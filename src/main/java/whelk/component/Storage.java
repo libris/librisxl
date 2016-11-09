@@ -22,4 +22,6 @@ public interface Storage {
     Map<String,Object> query(Map<String,String[]> queryParameters, String dataset, StorageType storageType);
     Map<String,Object> loadSettings(String key);
     void saveSettings(String key, Map<String,Object> settings);
+    List<Document> findByRelation(String relation, String reference,
+                                  int limit, int offset);
 }
