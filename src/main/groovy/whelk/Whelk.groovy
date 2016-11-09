@@ -60,7 +60,7 @@ class Whelk {
     Document store(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean createOrUpdate = true) {
         if (storage.store(document, createOrUpdate, changedIn, changedBy, collection, deleted)) {
             if (elastic) {
-                elastic.index(document)
+                elastic.index(document, collection)
             }
         }
         return document
