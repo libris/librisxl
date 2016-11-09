@@ -100,7 +100,22 @@ class Crud extends HttpServlet {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String callback = queryParameters.remove("callback")
         Map results = null
-        if (queryParameters.containsKey("q")) {
+        if (queryParameters.containsKey("p") &&
+            queryParameters.containsKey("o")) {
+          // TODO does it make sense to allow multiple relations/references?
+          String relation = queryParameters.get("p")[0]
+          String reference = queryParameters.get("o")[0]
+          List<Document> docs = whelk.storage.findByRelation(relation, reference)
+          if (docs) {
+              // FIXME assemble a sensible result
+              results = [:]
+              results["items"] = []
+              results["hits"] = docs.size()
+              docs.each { doc ->
+                  results["items"] << doc.data
+              }
+          }
+        } else if (queryParameters.containsKey("q")) {
             // If general q-parameter chosen, use elastic for query
             def dslQuery = ElasticSearch.createJsonDsl(queryParameters)
             if (whelk.elastic) {
