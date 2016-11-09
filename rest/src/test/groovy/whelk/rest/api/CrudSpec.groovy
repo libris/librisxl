@@ -403,7 +403,7 @@ class CrudSpec extends Specification {
         then:
         assert response.getStatus() == HttpServletResponse.SC_CREATED
         // FIXME use BASE_URI instead of hardcoding
-        assert response.getHeader("Location") =~ /^http:\/\/127.0.0.1:8180\/[0-9a-z]{16}$/
+        assert response.getHeader("Location") =~ /^http:\/\/127.0.0.1:5000\/[0-9a-z]{16}$/
     }
 
     def "POST to / should create document with supplied @id unless it begins with BASE_URI"() {
@@ -444,7 +444,7 @@ class CrudSpec extends Specification {
         crud.doPost(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_CREATED
-        response.getHeader("Location") == "http://127.0.0.1:8180/dataset/identifier"
+        response.getHeader("Location") == "http://127.0.0.1:5000/dataset/identifier"
     }
 
     def "POST to / should return 400 Bad Request if supplied @id begins with BASE_URI"() {
