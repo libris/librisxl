@@ -295,7 +295,7 @@ class Crud extends HttpServlet {
             }
             // FIXME maybe we want to do a locate rathern than a load here?
             Document doc = whelk.storage.load(id)
-            if (doc && !doc.isDeleted()) {
+            if (doc && !doc.deleted) {
                 result[id] = doc.data
             }
         }
@@ -311,13 +311,13 @@ class Crud extends HttpServlet {
     void sendGetResponse(HttpServletRequest request,
                          HttpServletResponse response,
                          Document document, String path) {
-        if (document && document.isDeleted()) {
+        if (document && document.deleted) {
             response.sendError(HttpServletResponse.SC_GONE,
                                "Document has been deleted.")
             return
         }
 
-        if (document && !document.isDeleted()) {
+        if (document && !document.deleted) {
             // FIXME remove?
             String ctheader = contextHeaders.get(path.split("/")[1])
             if (ctheader) {
