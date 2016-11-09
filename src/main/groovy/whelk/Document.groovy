@@ -49,7 +49,7 @@ class Document {
     static final List encLevelPath = ["@graph", 0, "marc:encLevel", "@id"]
 
     public Map data = [:]
-    boolean deleted
+    public boolean deleted = false
 
     Document(Map data) {
         this.data = data
@@ -134,6 +134,14 @@ class Document {
     }
 
     String getModified() { get(modifiedPath) }
+
+    void setDeleted(boolean newValue) {
+        deleted = newValue
+    }
+
+    boolean getDeleted() {
+        return deleted
+    }
 
     /**
      * By convention the first id in the returned list is the MAIN resource id.
