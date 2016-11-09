@@ -22,7 +22,6 @@ class PostgreSQLComponentSpec extends Specification {
 
     static private final ObjectMapper mapper = new ObjectMapper()
 
-    static String documentManifest = mapper.writeValueAsString(["identifier": "testid", "collection": "test"])
     static String documentData = mapper.writeValueAsString("@graph": [["@id": "testid", "name": "foobar", "sameAs": [["@id": "https://libris.kb.se/testid"]]]])
     static Object identifiers = "http://example.org/record"
 
@@ -74,9 +73,6 @@ class PostgreSQLComponentSpec extends Specification {
         result.getString(_) >> {
             if (it.first() == "id") {
                 return "testid"
-            }
-            if (it.first() == "manifest") {
-                return documentManifest
             }
             if (it.first() == "data") {
                 return documentData

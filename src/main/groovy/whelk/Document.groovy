@@ -49,6 +49,7 @@ class Document {
     static final List encLevelPath = ["@graph", 0, "marc:encLevel", "@id"]
 
     public Map data = [:]
+    boolean deleted
 
     Document(Map data) {
         this.data = data
@@ -193,12 +194,33 @@ class Document {
             return
         }
 
+        if (get(recordIdPath) == identifier) {
+            return
+        }
+
         if (preparePath(recordSameAsPath, ArrayList)) {
             Object sameAsList = get(recordSameAsPath)
             def idObject = ["@id": identifier]
             if (sameAsList.every { it -> it != idObject })
                 sameAsList.add(idObject)
         }
+    }
+
+    /**
+     * Expand the doc with the supplied extra info.
+     *
+     */
+    void embellish(Map additionalObjects) {
+        this.data = JsonLd.embellish(this.data, additionalObjects)
+        return
+    }
+
+    /**
+     * Return a list of external references in the doc.
+     *
+     */
+    List getExternalRefs() {
+        return JsonLd.getExternalReferences(this.data)
     }
 
     /**

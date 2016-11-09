@@ -171,11 +171,11 @@ class PostgreSQLComponent implements whelk.component.Storage {
     }
 
     @Override
-    void store(Document doc, boolean upsert, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean store(Document doc, boolean upsert, String changedIn, String changedBy, String collection, boolean deleted) {
         store(doc, upsert, false, changedIn, changedBy, collection, deleted)
     }
 
-    void store(Document doc, boolean upsert, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean store(Document doc, boolean upsert, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
         Connection connection = getConnection()
         connection.setAutoCommit(false)
@@ -207,7 +207,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
 
 
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
-            return
+            return true
         } catch (PSQLException psqle) {
             log.debug("SQL failed: ${psqle.message}")
             connection.rollback()
@@ -231,6 +231,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
             connection.close()
             log.debug("[store] Closed connection.")
         }
+        return false
     }
 
     String getContext() {
@@ -529,10 +530,11 @@ class PostgreSQLComponent implements whelk.component.Storage {
             Map results = new HashMap<String, Object>()
             List items = []
             while (rs.next()) {
-                def manifest = mapper.readValue(rs.getString("manifest"), Map)
-                Document doc = new Document(rs.getString("id"), mapper.readValue(rs.getString("data"), Map), manifest)
-                doc.setCreated(rs.getTimestamp("created").getTime())
-                doc.setModified(rs.getTimestamp("modified").getTime())
+                Map data = mapper.readValue(rs.getString("data"), Map)
+                Document doc = new Document(data)
+                doc.setId(rs.getString("id"))
+                doc.setCreated(rs.getTimestamp("created"))
+                doc.setModified(rs.getTimestamp("modified"))
                 log.trace("Created document with id ${doc.getShortId()}")
                 items.add(doc.data)
             }
@@ -785,6 +787,9 @@ class PostgreSQLComponent implements whelk.component.Storage {
 
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map))
         doc.setModified(new Date(rs.getTimestamp("modified").getTime()))
+
+        doc.setDeleted(rs.getBoolean("deleted"))
+
         try {
             doc.setCreated(new Date(rs.getTimestamp("created")?.getTime()))
         } catch (SQLException sqle) {
@@ -859,11 +864,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
                     @Override
                     public Document next() {
                         Document doc
-                        if (withLinks) {
-                            doc = docFactory.createDocument(rs.getBytes("data"), mapper.readValue(rs.getString("manifest"), Map), mapper.readValue(rs.getString("meta"), Map), rs.getString("parent"))
-                        } else {
-                            doc = assembleDocument(rs)
-                        }
+                        doc = assembleDocument(rs)
                         more = rs.next()
                         if (!more) {
                             try {
@@ -886,10 +887,11 @@ class PostgreSQLComponent implements whelk.component.Storage {
     }
 
     @Override
-    boolean remove(String identifier) {
+    boolean remove(String identifier, String changedIn, String changedBy, String collection) {
         if (versioning) {
             log.debug("Creating tombstone record with id ${identifier}")
-            return store(createTombstone(identifier), true)
+            Document tombstone = createTombstone(identifier)
+            return store(tombstone, true, changedIn, changedBy, collection, true)
         } else {
             Connection connection = getConnection()
             PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
@@ -910,7 +912,9 @@ class PostgreSQLComponent implements whelk.component.Storage {
 
 
     protected Document createTombstone(String id) {
-        return new Document(["@graph": [["@id": id, "@type": "Tombstone"]]])
+        // FIXME verify that this is correct behavior
+        String fullId = Document.BASE_URI.resolve(id).toString()
+        return new Document(["@graph": [["@id": fullId, "@type": "Tombstone"]]])
     }
 
     public Map loadSettings(String key) {
