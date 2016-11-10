@@ -96,25 +96,42 @@ class Crud extends HttpServlet {
         return probablyMarcQuery ? StorageType.MARC21_JSON : StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS
     }
 
-    void handleQuery(HttpServletRequest request, HttpServletResponse response, String dataset) {
+    void handleQuery(HttpServletRequest request, HttpServletResponse response,
+                     String dataset) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String callback = queryParameters.remove("callback")
         Map results = null
         if (queryParameters.containsKey("p") &&
             queryParameters.containsKey("o")) {
-          // TODO does it make sense to allow multiple relations/references?
-          String relation = queryParameters.get("p")[0]
-          String reference = queryParameters.get("o")[0]
-          List<Document> docs = whelk.storage.findByRelation(relation, reference)
-          if (docs) {
-              // FIXME assemble a sensible result
-              results = [:]
-              results["items"] = []
-              results["hits"] = docs.size()
-              docs.each { doc ->
-                  results["items"] << doc.data
-              }
-          }
+            // TODO does it make sense to allow multiple relations/references?
+            String relation = queryParameters.get("p")[0]
+            String reference = queryParameters.get("o")[0]
+
+            log.debug("Calling findByRelation with p: ${relation} and " +
+                      "o: ${reference}")
+
+            List<Document> docs = whelk.storage.findByRelation(relation,
+                                                               reference)
+
+            results = assembleSearchResults(docs)
+        } else if (queryParameters.containsKey("p") &&
+                   queryParameters.containsKey("value")) {
+            String relation = queryParameters.get("p")[0]
+            String value = queryParameters.get("value")[0]
+
+            log.debug("Calling findByValue with p: ${relation} and value: ${value}")
+
+            List<Document> docs = whelk.storage.findByValue(relation, value)
+
+            results = assembleSearchResults(docs)
+        } else if (queryParameters.containsKey("o")) {
+            String identifier = queryParameters.get("o")[0]
+
+            log.debug("Calling findByQuotation with o: ${identifier}")
+
+            List<Document> docs = whelk.storage.findByQuotation(identifier)
+
+            results = assembleSearchResults(docs)
         } else if (queryParameters.containsKey("q")) {
             // If general q-parameter chosen, use elastic for query
             def dslQuery = ElasticSearch.createJsonDsl(queryParameters)
@@ -132,6 +149,21 @@ class Crud extends HttpServlet {
         def jsonResult = (callback ? callback + "(" : "") + mapper.writeValueAsString(results) + (callback ? ");" : "")
 
         sendResponse(response, jsonResult, "application/json")
+    }
+
+    private Map assembleSearchResults(List<Document> docs) {
+        Map result = [:]
+        List items = []
+
+        docs.each { doc ->
+            // FIXME we want to do clean up/niceify data here
+            items << doc.data
+        }
+
+        result["items"] = items
+        result["hits"] = items.size()
+
+        return result
     }
 
     void displayInfo(response) {
