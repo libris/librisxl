@@ -134,19 +134,36 @@ class Crud extends HttpServlet {
             results = assembleSearchResults(docs)
         } else if (queryParameters.containsKey("q")) {
             // If general q-parameter chosen, use elastic for query
+            log.debug("Querying ElasticSearch")
+
             def dslQuery = ElasticSearch.createJsonDsl(queryParameters)
+
             if (whelk.elastic) {
                 results = whelk.elastic.query(dslQuery, dataset)
             } else {
-                log.error("Attempted elastic query, but whelk has no elastic component configured.")
-                response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "Attempted to use elastic for query, but no elastic component is configured.")
+                log.error("Attempted elastic query, but whelk has no " +
+                          "elastic component configured.")
+                response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,
+                                   "Attempted to use elastic for query, but " +
+                                   "no elastic component is configured.")
                 return
             }
         } else {
-            results = whelk.storage.query(queryParameters, dataset, autoDetectQueryMode(queryParameters))
+            // If none of the special query parameters were specified,
+            // we query PostgreSQL
+            log.debug("Querying PostgreSQL")
+
+            results = whelk.storage.query(queryParameters, dataset,
+                                          autoDetectQueryMode(queryParameters))
         }
 
-        def jsonResult = (callback ? callback + "(" : "") + mapper.writeValueAsString(results) + (callback ? ");" : "")
+        def jsonResult
+
+        if (callback) {
+            jsonResult = callback + "(" + mapper.writeValueAsString(results) + ");"
+        } else {
+            jsonResult = mapper.writeValueAsString(results)
+        }
 
         sendResponse(response, jsonResult, "application/json")
     }
