@@ -14,16 +14,15 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.sql.ResultSet
+import java.sql.Statement
 
-//import groovyx.gpars.GParsPool
-//import groovyx.gpars.ParallelEnhancer
 /**
  * Writes documents into a PostgreSQL load-file, which can be efficiently imported into lddb
  */
 @Log
 class PostgresLoadfileWriter {
     private static
-    final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
+    final int THREAD_COUNT = Runtime.runtime.availableProcessors();
     private static final int CONVERSIONS_PER_THREAD = 100;
 
     // USED FOR DEV ONLY, MUST _NEVER_ BE SET TO TRUE ONCE XL GOES INTO PRODUCTION. WITH THIS SETTING THE IMPORT WILL
@@ -64,78 +63,66 @@ class PostgresLoadfileWriter {
 
         try {
             def sql = Sql.newInstance(connectionUrl, "com.mysql.jdbc.Driver")
-            sql.withStatement { stmt -> stmt.fetchSize = Integer.MIN_VALUE }
-            sql.connection.setAutoCommit(false)
-            sql.setResultSetType(ResultSet.TYPE_FORWARD_ONLY)
-            sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
+            sql.withStatement { Statement stmt -> stmt.fetchSize = Integer.MIN_VALUE }
+            sql.connection.autoCommit = false
+            sql.resultSetType = ResultSet.TYPE_FORWARD_ONLY
+            sql.resultSetConcurrency = ResultSet.CONCUR_READ_ONLY
 
             List previousSpecs = []
             Map previousBibResultSet = null
 
-
-
             sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { ResultSet currentRow ->
+                Map rowMap = [data      : currentRow.getBytes('data'),
+                              created   : currentRow.getTimestamp('create_date'),
+                              collection: collection]
+
 
                 if (++counter % 1000 == 0) {
-                   // s_mainTableWriter.flush()
-                   // s_identifiersWriter.flush()
                     def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
                     if (elapsedSecs > 0) {
                         def docsPerSec = counter / elapsedSecs
                         println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
                     }
                 }
-
-
-                try {
-                    if (collection != 'bib') {
-                        Map rowMap = [data       : currentRow.getBytes('data'),
-                                      create_date: currentRow.getTimestamp('create_date')]
-                        handleRow(rowMap, collection)
-                    } else {
-                        int currentRecordId = currentRow.getInt(1)
-                        boolean firstRun = previousBibResultSet == null
-                        def resultSetToMap = { ResultSet r ->
-                            return [
-                                    id         : r.getInt('bib_id'),
-                                    data       : r.getBytes('data'),
-                                    create_date: r.getTimestamp('create_date'),
-                                    auth_id    : r.getInt('auth_id')]
-
-                        }
-                        if (firstRun) {
-                            print '1'
-                            previousBibResultSet = resultSetToMap(currentRow)
-                            previousSpecs.addAll(getOaipmhSetSpecs(previousBibResultSet, collection))
-                        } else if (previousBibResultSet.id == currentRecordId) {
-                            //Flera auth-poster
-                            print ". "
-                            previousBibResultSet = resultSetToMap(currentRow)
-                            previousSpecs.addAll(getOaipmhSetSpecs(previousBibResultSet, collection))
-
-                        } else {
-                            //Poster med olika id. Antingen sista av flera eller en ny post
-                            print "| "
-                            previousBibResultSet = resultSetToMap(currentRow)
-                            previousSpecs.addAll(getOaipmhSetSpecs(previousBibResultSet, collection))
-                            handleRow(previousBibResultSet,collection)
-                            previousSpecs = []
-                        }
-                    }
-
-                } catch (any) {
-                    println any.message
-                    println any.stackTrace
+                if(collection == 'hold'){
+                    rowMap.put('sigel',currentRow.getString("shortname"))
                 }
 
+
+                if (collection != 'bib') {
+                    def setSpces = getOaipmhSetSpecs(rowMap, collection)
+                    handleRow(rowMap, collection, setSpces)
+                } else {
+                    rowMap.put('bib_id', currentRow.getInt('bib_id'))
+                    rowMap.put('auth_id', currentRow.getInt('auth_id'))
+
+                    int currentRecordId = currentRow.getInt(1)
+
+                    switch (previousBibResultSet) {
+                        case null: //first run
+                            previousBibResultSet = rowMap
+                            previousSpecs.addAll(getOaipmhSetSpecs(currentRow, collection))
+                            break
+                        case { it.bib_id == currentRecordId }: //Same bib record
+                            print "."
+                            previousSpecs.addAll(getOaipmhSetSpecs(currentRow, collection))
+                            break
+
+                        default:  //New record
+                            print "| "
+                            handleRow(previousBibResultSet, collection, previousSpecs)
+                            previousBibResultSet = rowMap
+                            previousSpecs = getOaipmhSetSpecs(currentRow, collection)
+                    }
+                }
             }
             //Last row
-            previousSpecs << getOaipmhSetSpecs(previousBibResultSet, collection)
-            handleRow(previousBibResultSet, collection)
+            handleRow(previousBibResultSet, collection, previousSpecs)
 
         }
         catch (any) {
             println any.message
+            throw any
         }
         finally {
             s_mainTableWriter.close()
@@ -147,20 +134,25 @@ class PostgresLoadfileWriter {
 
     }
 
-    private static void handleRow(Map rowMap, String collection) {
-        //TODO: make sure record id from resultset is not in use
-        MarcRecord record = Iso2709Deserializer.deserialize(
-                MySQLLoader.normalizeString(
-                        new String(rowMap.data as byte[], "UTF-8"))
-                        .getBytes("UTF-8"))
+    private
+    static void handleRow(Map rowMap, String collection, List setSpecs) {
+
+        byte[] dataBytes = MySQLLoader.normalizeString(
+                new String(rowMap.data as byte[], "UTF-8"))
+                .getBytes("UTF-8")
+
+        MarcRecord record = Iso2709Deserializer.deserialize(dataBytes)
         if (record) {
             Map doc = MarcJSONConverter.toJSONMap(record)
             if (doc) {
                 if (!isSuppressed(doc)) {
                     String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-                    String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-                    Map dm = [record: doc, collection: collection, id: id, created: rowMap.create_date]
-                    handleDM(dm, s_marcFrameConverter)
+                    Map convertedData = s_marcFrameConverter.convert(doc,
+                            LegacyIntegrationTools.generateId(oldStyleIdentifier),
+                            [oaipmhSetSpecs: setSpecs]);
+                    Document document = new Document(convertedData)
+                    document.created = rowMap.created
+                    writeDocumentToLoadFile(document, collection)
                 }
             }
         }
@@ -170,51 +162,17 @@ class PostgresLoadfileWriter {
         List specs = []
         if (collection == "bib") {
             int authId = resultSet.auth_id ?: 0
-            if (authId > 0)
-                specs.add("authority:" + authId + "DEBUG: ${resultSet.id}")
-
+            if (authId > 0) {
+                specs.add("authority:${authId}")
+            }
         } else if (collection == "hold") {
-            int bibId = resultSet.getInt("bib_id")
-            String sigel = resultSet.getString("shortname")
-            if (bibId > 0)
-                specs.add("bibid:" + bibId)
-            if (sigel)
-                specs.add("location:" + sigel)
+            if (resultSet.bib_id > 0)
+                specs.add("bibid:${resultSet.bib_id}")
+            if (resultSet.sigel)
+                specs.add("location:${resultSet.sigel}")
         }
         return specs
     }
-
-
-    private
-    static String getShortId(Map documentMap, MarcFrameConverter marcFrameConverter) {
-        try {
-            Map convertedData = marcFrameConverter.convert(documentMap.record, documentMap.id);
-            Document document = new Document(convertedData)
-            document.setCreated(documentMap.created)
-            return document.getShortId()
-
-        } catch (Throwable e) {
-            e.print("Convert Failed. id: ${documentMap.id}")
-            e.printStackTrace()
-            //String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
-            //s_failedIds.add(voyagerId);
-        }
-    }
-
-    private
-    static void handleDM(Map documentMap, MarcFrameConverter marcFrameConverter) {
-        try {
-            Map convertedData = marcFrameConverter.convert(documentMap.record, documentMap.id);
-            Document document = new Document(convertedData)
-            document.setCreated(documentMap.created)
-            writeDocumentToLoadFile(document, documentMap.collection as String)
-
-        } catch (Throwable e) {
-            e.println("Convert Failed. id: ${documentMap.id}")
-            e.printStackTrace()
-        }
-    }
-
 
     private static boolean isSuppressed(Map doc) {
         def fields = doc.get("fields")
@@ -263,13 +221,13 @@ class PostgresLoadfileWriter {
 
         final delimiterString = new String(delimiter);
 
-        List<String> identifiers = doc.getRecordIdentifiers();
+        List<String> identifiers = doc.recordIdentifiers;
 
         // Write to main table file
 
-        s_mainTableWriter.write(doc.getShortId());
+        s_mainTableWriter.write(doc.shortId);
         s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write(doc.getDataAsString().replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString));
+        s_mainTableWriter.write(doc.dataAsString.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString));
         s_mainTableWriter.write(delimiter);
         s_mainTableWriter.write(collection.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString));
         s_mainTableWriter.write(delimiter);
@@ -277,9 +235,9 @@ class PostgresLoadfileWriter {
         s_mainTableWriter.write(delimiter);
         s_mainTableWriter.write(nullString);
         s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write(doc.getChecksum().replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString));
+        s_mainTableWriter.write(doc.checksum.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString));
         s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write(doc.getCreated());
+        s_mainTableWriter.write(doc.created);
 
         // remaining values have sufficient defaults.
 
@@ -293,7 +251,7 @@ class PostgresLoadfileWriter {
         */
 
         for (String identifier : identifiers) {
-            s_identifiersWriter.write(doc.getShortId());
+            s_identifiersWriter.write(doc.shortId);
             s_identifiersWriter.write(delimiter);
             s_identifiersWriter.write(identifier);
 
