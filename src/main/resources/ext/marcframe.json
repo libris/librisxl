@@ -2505,13 +2505,13 @@
 
     "040": {
       "aboutEntity": "?record",
-      "$a": {"link": "marc:originalCatalogingAgency", "resourceType": "Organization", "property": "name"},
+      "$a": {"link": "assigner", "resourceType": "Organization", "property": "name"},
       "$b": {
         "addLink": "descriptionLanguage",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
       },
-      "$c": {"link": "transcribingAgency", "resourceType": "Organization", "property": "name"},
-      "$d": {"link": "modifyingAgency", "resourceType": "Organization", "property": "name"},
+      "$c": {"link": "marc:transcribingAgency", "resourceType": "Organization", "property": "name"},
+      "$d": {"link": "descriptionModifier", "resourceType": "Organization", "property": "name"},
       "$e": {"property": "descriptionRules"},
       "$9": {"property": "license"}
     },
