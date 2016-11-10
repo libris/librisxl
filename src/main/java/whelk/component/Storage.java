@@ -24,4 +24,7 @@ public interface Storage {
     void saveSettings(String key, Map<String,Object> settings);
     List<Document> findByRelation(String relation, String reference,
                                   int limit, int offset);
+    List<Document> findByQuotation(String identifier, int limit, int offset);
+    List<Document> findByValue(String relation, String value,
+                               int limit, int offset);
 }

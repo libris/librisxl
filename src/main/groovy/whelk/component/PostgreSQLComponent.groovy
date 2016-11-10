@@ -36,7 +36,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
                      GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
-    protected String FIND_BY_RELATION
+    protected String FIND_BY
 
     // Deprecated
     protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
@@ -128,11 +128,11 @@ class PostgreSQLComponent implements whelk.component.Storage {
         SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
                 "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
 
-        FIND_BY_RELATION = "SELECT id, data, created, modified, deleted " +
-                           "FROM $mainTableName " +
-                           "WHERE data->'@graph' @> ? " +
-                           "OR data->'@graph' @> ? " +
-                           "LIMIT ? OFFSET ?"
+        FIND_BY = "SELECT id, data, created, modified, deleted " +
+                  "FROM $mainTableName " +
+                  "WHERE data->'@graph' @> ? " +
+                  "OR data->'@graph' @> ? " +
+                  "LIMIT ? OFFSET ?"
     }
 
 
@@ -974,23 +974,81 @@ class PostgreSQLComponent implements whelk.component.Storage {
     @Override
     List<Document> findByRelation(String relation, String reference,
                                   int limit, int offset) {
-        PreparedStatement find = connection.prepareStatement(FIND_BY_RELATION)
+        Connection connection = getConnection()
+        PreparedStatement find = connection.prepareStatement(FIND_BY)
 
-        find = rigFindByRelationStatement(find, relation, reference,
-                                          limit, offset)
+        find = rigFindByRelationStatement(find, relation, reference, limit, offset)
 
-        ResultSet rs = find.executeQuery()
-        List<Document> docs = []
-        while (rs.next()) {
-            docs << assembleDocument(rs)
+        try {
+            return executeFindByQuery(find)
+        } finally {
+            connection.close()
         }
-        return docs
     }
 
     List<Document> findByRelation(String relation, String reference) {
         int limit = DEFAULT_PAGE_SIZE
         int offset = 0
+
         findByRelation(relation, reference, limit, offset)
+    }
+
+    @Override
+    List<Document> findByQuotation(String identifier, int limit, int offset) {
+        Connection connection = getConnection()
+        PreparedStatement find = connection.prepareStatement(FIND_BY)
+
+        find = rigFindByQuotationStatement(find, identifier, limit, offset)
+
+        try {
+            return executeFindByQuery(find)
+        } finally {
+            connection.close()
+        }
+
+    }
+
+    List<Document> findByQuotation(String identifier) {
+        int limit = DEFAULT_PAGE_SIZE
+        int offset = 0
+
+        findByQuotation(identifier, limit, offset)
+    }
+
+    @Override
+    List<Document> findByValue(String relation, String value, int limit,
+                               int offset) {
+        Connection connection = getConnection()
+        PreparedStatement find = connection.prepareStatement(FIND_BY)
+
+        find = rigFindByValueStatement(find, relation, value, limit, offset)
+
+        try {
+            return executeFindByQuery(find)
+        } finally {
+            connection.close()
+        }
+    }
+
+    List<Document> findByValue(String relation, String value) {
+        int limit = DEFAULT_PAGE_SIZE
+        int offset = 0
+
+        findByValue(relation, value, limit, offset)
+    }
+
+    private List<Document> executeFindByQuery(PreparedStatement query) {
+        log.debug("Executing find query: ${query}")
+
+        ResultSet rs = query.executeQuery()
+
+        List<Document> docs = []
+
+        while (rs.next()) {
+            docs << assembleDocument(rs)
+        }
+
+        return docs
     }
 
     private PreparedStatement rigFindByRelationStatement(PreparedStatement find,
@@ -998,15 +1056,44 @@ class PostgreSQLComponent implements whelk.component.Storage {
                                                          String reference,
                                                          int limit,
                                                          int offset) {
-      // FIXME ObjectMapper insisted on using the word "relation"
-      // rather than the contents of the variable and I have no idea
-      // why :'(
-      List refQuery = [["${relation}": ["@id": reference]]]
-      List refsQuery = [["${relation}": [["@id": reference]]]]
+        // FIXME ObjectMapper insisted on using the word "relation"
+        // rather than the contents of the variable and I have no idea
+        // why :'(
+        List refQuery = [["${relation}": ["@id": reference]]]
+        List refsQuery = [["${relation}": [["@id": reference]]]]
 
-      find.setObject(1, mapper.writeValueAsString(refQuery),
+        return rigFindByStatement(find, refQuery, refsQuery, limit, offset)
+    }
+
+    private PreparedStatement rigFindByQuotationStatement(PreparedStatement find,
+                                                          String identifier,
+                                                          int limit,
+                                                          int offset) {
+        List refQuery = [["@graph": ["@id": identifier]]]
+        List sameAsQuery = [["@graph": [["@sameAs": [["@id": identifier]]]]]]
+
+        return rigFindByStatement(find, refQuery, sameAsQuery, limit, offset)
+    }
+
+    private PreparedStatement rigFindByValueStatement(PreparedStatement find,
+                                                      String relation,
+                                                      String value,
+                                                      int limit,
+                                                      int offset) {
+        List valueQuery = [["${relation}": value]]
+        List valuesQuery = [["${relation}": [value]]]
+
+        return rigFindByStatement(find, valueQuery, valuesQuery, limit, offset)
+    }
+
+    private PreparedStatement rigFindByStatement(PreparedStatement find,
+                                                 List firstCondition,
+                                                 List secondCondition,
+                                                 int limit,
+                                                 int offset) {
+      find.setObject(1, mapper.writeValueAsString(firstCondition),
                      java.sql.Types.OTHER)
-      find.setObject(2, mapper.writeValueAsString(refsQuery),
+      find.setObject(2, mapper.writeValueAsString(secondCondition),
                      java.sql.Types.OTHER)
       find.setInt(3, limit)
       find.setInt(4, offset)
