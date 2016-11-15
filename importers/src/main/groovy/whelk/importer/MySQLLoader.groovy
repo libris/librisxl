@@ -27,8 +27,9 @@ class MySQLLoader {
             """,
 
             bib : """
-            SELECT bib.bib_id, bib.data, bib.create_date, auth.auth_id FROM bib_record bib
+            SELECT bib.bib_id, bib.data, bib.create_date, auth.auth_id, auth_data.data as auth_data FROM bib_record bib
             LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id
+            LEFT JOIN auth_record auth_data on auth.auth_id = auth_data.auth_id
             WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id
              """,
 
@@ -60,6 +61,9 @@ class MySQLLoader {
             while (resultSet.next()) {
                 processNext(resultSet, handler)
             }
+        }
+        catch(any){
+            log.error("",any)
         }
         finally {
             resultSet.close()

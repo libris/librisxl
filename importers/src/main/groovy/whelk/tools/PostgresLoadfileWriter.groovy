@@ -16,6 +16,8 @@ import java.nio.file.Paths
 import java.sql.ResultSet
 import java.sql.Statement
 
+//import static groovyx.gpars.dataflow.Dataflow.task
+//import static groovyx.gpars.GParsPool.withPool
 /**
  * Writes documents into a PostgreSQL load-file, which can be efficiently imported into lddb
  */
@@ -27,7 +29,7 @@ class PostgresLoadfileWriter {
 
     // USED FOR DEV ONLY, MUST _NEVER_ BE SET TO TRUE ONCE XL GOES INTO PRODUCTION. WITH THIS SETTING THE IMPORT WILL
     // _SKIP_ DOCUMENTS THAT FAIL CONVERSION, RESULTING IN POTENTIAL DATA LOSS IF USED WHEN IMPORTING TO A PRODUCTION XL
-    private static final boolean FAULT_TOLERANT_MODE = true;
+    private static final boolean FAULT_TOLERANT_MODE = false;
 
     private static MarcFrameConverter s_marcFrameConverter;
     private static BufferedWriter s_mainTableWriter;
@@ -60,7 +62,7 @@ class PostgresLoadfileWriter {
         s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
         def counter = 0
         def startTime = System.currentTimeMillis()
-
+        //withPool {
         try {
             def sql = Sql.newInstance(connectionUrl, "com.mysql.jdbc.Driver")
             sql.withStatement { Statement stmt -> stmt.fetchSize = Integer.MIN_VALUE }
@@ -68,7 +70,7 @@ class PostgresLoadfileWriter {
             sql.resultSetType = ResultSet.TYPE_FORWARD_ONLY
             sql.resultSetConcurrency = ResultSet.CONCUR_READ_ONLY
 
-            List previousSpecs = []
+            List<Map> previousAuthData = []
             Map previousBibResultSet = null
 
             sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { ResultSet currentRow ->
@@ -84,42 +86,57 @@ class PostgresLoadfileWriter {
                         println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
                     }
                 }
-                if(collection == 'hold'){
-                    rowMap.put('sigel',currentRow.getString("shortname"))
-                }
 
 
-                if (collection != 'bib') {
-                    def setSpces = getOaipmhSetSpecs(rowMap, collection)
-                    handleRow(rowMap, collection, setSpces)
-                } else {
-                    rowMap.put('bib_id', currentRow.getInt('bib_id'))
-                    rowMap.put('auth_id', currentRow.getInt('auth_id'))
+                switch (collection) {
+                    case 'auth':
+                        handleRow(rowMap, collection, null)
+                        break
+                    case 'hold':
+                        rowMap.put('sigel', currentRow.getString("shortname"))
+                        handleRow(rowMap, collection, getHoldOaipmhSetSpecs(rowMap))
+                        break
+                    case 'bib':
+                        int currentRecordId = currentRow.getInt('bib_id')
+                        rowMap.put('bib_id', currentRecordId)
+                        rowMap.put('auth_id', currentRow.getInt('auth_id'))
+                        Map currentAuthData = rowMap.auth_id > 0 ?
+                                [bibid: rowMap.bib_id,
+                                 id   : rowMap.auth_id,
+                                 data : getMarcDocMap(currentRow.getBytes('auth_data'))] : null
+                        if (rowMap.auth_id > 0 && currentAuthData.data.fields != null) {
+                            currentAuthData << composeAuthData(currentAuthData)
+                        }
 
-                    int currentRecordId = currentRow.getInt(1)
-
-                    switch (previousBibResultSet) {
-                        case null: //first run
-                            previousBibResultSet = rowMap
-                            previousSpecs.addAll(getOaipmhSetSpecs(currentRow, collection))
-                            break
-                        case { it.bib_id == currentRecordId }: //Same bib record
-                            print "."
-                            previousSpecs.addAll(getOaipmhSetSpecs(currentRow, collection))
-                            break
-
-                        default:  //New record
-                            print "| "
-                            handleRow(previousBibResultSet, collection, previousSpecs)
-                            previousBibResultSet = rowMap
-                            previousSpecs = getOaipmhSetSpecs(currentRow, collection)
-                    }
+                        switch (previousBibResultSet) {
+                        //first run
+                            case null:
+                                previousBibResultSet = rowMap
+                                previousAuthData << currentAuthData
+                                break
+                        //Same bib record
+                            case { it.bib_id == currentRecordId }:
+                                print "."
+                                previousAuthData << currentAuthData
+                                break
+                        //New record
+                            default:
+                                print "| "
+                                // task {
+                                handleRow(previousBibResultSet, collection, previousAuthData)
+                                //}
+                                previousBibResultSet = rowMap
+                                previousAuthData = []
+                                previousAuthData << [currentAuthData]
+                        }
+                        break
                 }
             }
             //Last row
-            handleRow(previousBibResultSet, collection, previousSpecs)
+            handleRow(previousBibResultSet, collection, previousAuthData)
 
         }
+
         catch (any) {
             println any.message
             throw any
@@ -128,49 +145,112 @@ class PostgresLoadfileWriter {
             s_mainTableWriter.close()
             s_identifiersWriter.close()
         }
+        //}
 
         def endSecs = (System.currentTimeMillis() - startTime) / 1000
-        println "  Done. Processed ${counter} documents in ${endSecs} seconds."
+        println "Done. Processed  ${counter} documents in ${endSecs} seconds."
 
+    }
+
+    static Map composeAuthData(LinkedHashMap<String, Object> map) {
+        def fields = map.data.fields
+        if (fields."100" != null && fields."100".subfields.t.any { it -> it.any { tit -> tit } }) {
+            [type: 'title', value: fields."100".subfields.t.first().first()]
+        } else if (fields."100" != null && fields."100".subfields.a.any { it -> it.any { tit -> tit } }) {
+            [field: 'personalName', value: fields."100".subfields.a.first().first()]
+        } else {
+            print 'Unhandled authority record'
+            throw new Exception("Unhandled authority record")
+            [type: 'unknown', value: null]
+        }
+
+
+    }
+
+    static Map getMarcDocMap(byte[] data) {
+        byte[] dataBytes = MySQLLoader.normalizeString(
+                new String(data as byte[], "UTF-8"))
+                .getBytes("UTF-8")
+
+        MarcRecord record = Iso2709Deserializer.deserialize(dataBytes)
+
+        if (record) {
+            return MarcJSONConverter.toJSONMap(record)
+        } else {
+            return null
+        }
     }
 
     private
     static void handleRow(Map rowMap, String collection, List setSpecs) {
 
-        byte[] dataBytes = MySQLLoader.normalizeString(
-                new String(rowMap.data as byte[], "UTF-8"))
-                .getBytes("UTF-8")
+        Map doc = getMarcDocMap(rowMap.data as byte[])
+        List
+        if (doc) {
 
-        MarcRecord record = Iso2709Deserializer.deserialize(dataBytes)
-        if (record) {
-            Map doc = MarcJSONConverter.toJSONMap(record)
-            if (doc) {
-                if (!isSuppressed(doc)) {
-                    String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-                    Map convertedData = s_marcFrameConverter.convert(doc,
-                            LegacyIntegrationTools.generateId(oldStyleIdentifier),
-                            [oaipmhSetSpecs: setSpecs]);
-                    Document document = new Document(convertedData)
-                    document.created = rowMap.created
-                    writeDocumentToLoadFile(document, collection)
+            if (collection == 'bib' && setSpecs.count { it } > 0) {
+
+                doc.fields.each { bibField ->
+                    String key = bibField.keySet()[0]
+                    switch (key) {
+                        case { a -> ['100', '700'].contains(a) }:
+                            def authRecord = setSpecs.find { it -> it.field == 'personalName' && getSubfieldValue(bibField[key], "a") == it.value }
+                            println authRecord ? "Match! on ${authRecord.id}" : "_"
+                            break
+                        default:
+                            break
+                    }
                 }
+
+                /* setSpecs.each { it ->
+                     println it.value
+                     if (it.type == "personalName") {
+                         if (doc.fields.'100'.subfields.a.first().first() == it.value) {
+                             println "match!"
+                         }
+                         if(doc.fields.'700'.subfields.a.first().first() == it.value){
+                             println "match!"
+                         }
+                     }
+                 }*/
+            }
+            if (!isSuppressed(doc)) {
+                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+                def id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+                Map convertedData = setSpecs && setSpecs.size() > 1 && collection != 'bib' ?
+                        s_marcFrameConverter.convert(doc, id, [oaipmhSetSpecs: setSpecs]) :
+                        s_marcFrameConverter.convert(doc, id)
+                Document document = new Document(convertedData)
+                document.created = rowMap.created
+                writeDocumentToLoadFile(document, collection)
             }
         }
     }
 
-    static List getOaipmhSetSpecs(def resultSet, String collection) {
-        List specs = []
-        if (collection == "bib") {
-            int authId = resultSet.auth_id ?: 0
-            if (authId > 0) {
-                specs.add("authority:${authId}")
+    static String getSubfieldValue(Map p, String s) {
+
+        for (subfield in p.subfields) {
+            String key = subfield.keySet()[0];
+            if (key == s) {
+                return subfield[key]
             }
-        } else if (collection == "hold") {
-            if (resultSet.bib_id > 0)
-                specs.add("bibid:${resultSet.bib_id}")
-            if (resultSet.sigel)
-                specs.add("location:${resultSet.sigel}")
         }
+        return null
+    }
+
+    static List getHoldOaipmhSetSpecs(def resultSet) {
+        List specs = []
+        /* if (collection == "bib") {
+             int authId = resultSet.auth_id ?: 0
+             if (authId > 0) {
+                 specs.add("authority:${authId}")
+             }
+         } else if (collection == "hold") {*/
+        if (resultSet.bib_id > 0)
+            specs.add("bibid:${resultSet.bib_id}")
+        if (resultSet.sigel)
+            specs.add("location:${resultSet.sigel}")
+        // }
         return specs
     }
 
@@ -222,7 +302,7 @@ class PostgresLoadfileWriter {
         final delimiterString = new String(delimiter);
 
         List<String> identifiers = doc.recordIdentifiers;
-
+        print "w"
         // Write to main table file
 
         s_mainTableWriter.write(doc.shortId);
