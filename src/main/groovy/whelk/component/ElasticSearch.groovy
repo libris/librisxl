@@ -200,18 +200,13 @@ class ElasticSearch implements Index {
         return results
     }
 
-
-    static Map createJsonDsl(Map queryParameters) {
-        // Extract LDAPI parameters
-        String pageSize = queryParameters.remove("_pageSize")?.first() ?: ""+DEFAULT_PAGE_SIZE
-        String page = queryParameters.remove("_page")?.first() ?: "1"
-        String sort = queryParameters.remove("_sort")?.first()
-        queryParameters.remove("_where") // Not supported
-        queryParameters.remove("_orderBy") // Not supported
-        queryParameters.remove("_select") // Not supported
-        String queryString = queryParameters.remove("q")?.first()
-        def dslQuery = ["from": (Integer.parseInt(page)-1) * (pageSize as int),
-                        "size": (pageSize as int)]
+    // TODO merge with logic in whelk.rest.api.SearchUtils
+    // See Jira ticket LXL-122.
+    static Map createJsonDsl(Map queryParameters, int limit=DEFAULT_PAGE_SIZE,
+                             int offset=0) {
+        String queryString = queryParameters.remove('q')?.first()
+        def dslQuery = ['from': offset,
+                        'size': limit]
 
         List musts = []
         if (queryString) {
@@ -219,14 +214,17 @@ class ElasticSearch implements Index {
                                         'default_operator': 'and']]
         }
 
-        String[] okParams = getWhitelistedQueryParams()
+        List reservedParameters = ['q', 'p', 'o', 'value', '_limit', '_offset']
+
         queryParameters.each { k, vals ->
-            if (k in okParams) {
-                // we assume vals is a String[], since that's that we get
-                // from HttpServletResponse.getParameterMap()
-                vals.each { v ->
-                    musts << ['match': ["${k}": v]]
-                }
+            if (k.startsWith('_') || k in reservedParameters) {
+                return
+            }
+
+            // we assume vals is a String[], since that's that we get
+            // from HttpServletResponse.getParameterMap()
+            vals.each { v ->
+                musts << ['match': ["${k}": v]]
             }
         }
 
@@ -239,12 +237,6 @@ class ElasticSearch implements Index {
     public String getElasticCluster() { elasticcluster }
     public int getElasticPort() {
         try { new Integer(elastichost.split(",").first().split(":").last()).intValue() } catch (NumberFormatException nfe) { 9300 }
-    }
-
-    static String[] getWhitelistedQueryParams() {
-        // TODO implement this in a better way, preferrably without
-        // hardcoding anything
-        return ["@type"]
     }
 
     static String toElasticId(String id) {
