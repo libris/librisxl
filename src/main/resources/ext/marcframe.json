@@ -2926,12 +2926,40 @@
 
     "250": {
       "aboutEntity": "?thing",
-      "TODO:match-repeated?": {
+      "TODO:useWhenImplemented:match-repeated": {
+        "addLink": "otherEdition",
+        "embedded": true
       },
-      "addLink": "hasVersion", "resourceType": "Instance",
       "$a": {"property": "editionEnumeration"},
       "$b": {"property": "editionStatement"},
-      "$3": {"property": "part"}
+      "$3": {"property": "part"},
+      "_spec": [
+        {
+          "source": {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "VI", "b": "Sixth edition"}]}},
+          "result": {"mainEntity": {
+            "editionEnumeration": "VI",
+            "editionStatement": "Sixth edition"
+          }}
+        },
+        {
+          "source": [
+            {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "VI"}]}},
+            {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "VII"}]}}
+          ],
+          "TODO:result": {"mainEntity": {
+            "otherEdition": [
+              {
+                "editionEnumeration": "VI"
+              }, {
+                "editionEnumeration": "VII"
+              }
+            ]
+          }},
+          "result": {"mainEntity": {
+            "editionEnumeration": ["VI", "VII"]
+          }}
+        }
+      ]
     },
 
     "254": {},
@@ -3093,7 +3121,7 @@
 
     "300": {
       "aboutEntity": "?thing",
-      "TODO:implement:match-repeated": {
+      "TODO:useWhenImplemented:match-repeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
         "embedded": true
