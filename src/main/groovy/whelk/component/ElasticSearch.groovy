@@ -190,17 +190,13 @@ class ElasticSearch implements Index {
         def response = client.search(sr).actionGet()
 
         def results = [:]
-        results.numberOfHits = 0
-        results.resultSize = 0
+
         results.startIndex = jsonDsl.from
         results.searchCompletedInISO8601duration = "PT" + response.took.secondsFrac + "S"
-        results.items = []
+        results.totalHits = response.hits.totalHits
+        results.items = response.hits.hits.collect { it.source }
+        results.aggregations = response.aggregations
 
-        if (response) {
-            results.resultSize = response.hits.hits.size()
-            results.numberOfHits = response.hits.totalHits
-            results.items = response.hits.hits.collect { it.source }
-        }
         return results
     }
 
