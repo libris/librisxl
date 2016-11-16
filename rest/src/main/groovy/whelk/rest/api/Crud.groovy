@@ -18,8 +18,10 @@ import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
+import whelk.exception.WhelkStorageException
 import whelk.rest.api.CrudUtils
 import whelk.rest.api.MimeTypes
+import whelk.rest.api.SearchUtils
 import whelk.rest.security.AccessControl
 import whelk.util.PropertyLoader
 
@@ -97,90 +99,31 @@ class Crud extends HttpServlet {
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
-                     String dataset) {
+                     String dataset, String siteBaseUri=null) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String callback = queryParameters.remove("callback")
-        Map results = null
-        if (queryParameters.containsKey("p") &&
-            queryParameters.containsKey("o")) {
-            // TODO does it make sense to allow multiple relations/references?
-            String relation = queryParameters.get("p")[0]
-            String reference = queryParameters.get("o")[0]
 
-            log.debug("Calling findByRelation with p: ${relation} and " +
-                      "o: ${reference}")
+        try {
+            Map results = SearchUtils.doSearch(whelk, queryParameters, dataset,
+                                               siteBaseUri)
+            def jsonResult
 
-            List<Document> docs = whelk.storage.findByRelation(relation,
-                                                               reference)
-
-            results = assembleSearchResults(docs)
-        } else if (queryParameters.containsKey("p") &&
-                   queryParameters.containsKey("value")) {
-            String relation = queryParameters.get("p")[0]
-            String value = queryParameters.get("value")[0]
-
-            log.debug("Calling findByValue with p: ${relation} and value: ${value}")
-
-            List<Document> docs = whelk.storage.findByValue(relation, value)
-
-            results = assembleSearchResults(docs)
-        } else if (queryParameters.containsKey("o")) {
-            String identifier = queryParameters.get("o")[0]
-
-            log.debug("Calling findByQuotation with o: ${identifier}")
-
-            List<Document> docs = whelk.storage.findByQuotation(identifier)
-
-            results = assembleSearchResults(docs)
-        } else if (queryParameters.containsKey("q")) {
-            // If general q-parameter chosen, use elastic for query
-            log.debug("Querying ElasticSearch")
-
-            def dslQuery = ElasticSearch.createJsonDsl(queryParameters)
-
-            if (whelk.elastic) {
-                results = whelk.elastic.query(dslQuery, dataset)
+            if (callback) {
+                jsonResult = callback + "(" +
+                             mapper.writeValueAsString(results) + ");"
             } else {
-                log.error("Attempted elastic query, but whelk has no " +
-                          "elastic component configured.")
-                response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,
-                                   "Attempted to use elastic for query, but " +
-                                   "no elastic component is configured.")
-                return
+                jsonResult = mapper.writeValueAsString(results)
             }
-        } else {
-            // If none of the special query parameters were specified,
-            // we query PostgreSQL
-            log.debug("Querying PostgreSQL")
 
-            results = whelk.storage.query(queryParameters, dataset,
-                                          autoDetectQueryMode(queryParameters))
+            sendResponse(response, jsonResult, "application/json")
+        } catch (WhelkRuntimeException wse) {
+            log.error("Attempted elastic query, but whelk has no " +
+                      "elastic component configured.")
+            response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,
+                               "Attempted to use elastic for query, but " +
+                               "no elastic component is configured.")
+            return
         }
-
-        def jsonResult
-
-        if (callback) {
-            jsonResult = callback + "(" + mapper.writeValueAsString(results) + ");"
-        } else {
-            jsonResult = mapper.writeValueAsString(results)
-        }
-
-        sendResponse(response, jsonResult, "application/json")
-    }
-
-    private Map assembleSearchResults(List<Document> docs) {
-        Map result = [:]
-        List items = []
-
-        docs.each { doc ->
-            // FIXME we want to do clean up/niceify data here
-            items << doc.data
-        }
-
-        result["items"] = items
-        result["hits"] = items.size()
-
-        return result
     }
 
     void displayInfo(response) {
