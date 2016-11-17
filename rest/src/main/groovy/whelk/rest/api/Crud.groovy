@@ -324,7 +324,8 @@ class Crud extends HttpServlet {
             jsonMap.each {key, value ->
                 if (key.toString() in propertiesToKeep || key.toString().startsWith("@")) {
                     if (goRecursive) {
-                        itemsToKeep[key] = walkThroughData(value, lensGroups)
+                        itemsToKeep[key] = walkThroughData(value, lensGroups,
+                                                           goRecursive)
                     } else {
                         itemsToKeep[key] = value
                     }
