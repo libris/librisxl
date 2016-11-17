@@ -64,6 +64,7 @@ class SearchUtilsSpec extends Specification {
         [:]                                           | new Tuple2(SearchUtils.DEFAULT_LIMIT, SearchUtils.DEFAULT_OFFSET)
         ['_limit': '5']                               | new Tuple2(5, SearchUtils.DEFAULT_OFFSET)
         ['_limit': ['5']]                             | new Tuple2(5, SearchUtils.DEFAULT_OFFSET)
+        ['_limit': ['5'] as String[]]                 | new Tuple2(5, SearchUtils.DEFAULT_OFFSET)
         ['_limit': '100000000']                       | new Tuple2(SearchUtils.DEFAULT_LIMIT, SearchUtils.DEFAULT_OFFSET)
         ['_offset': '5']                              | new Tuple2(SearchUtils.DEFAULT_LIMIT, 5)
         ['_limit': '5', 'foo': 'bar', '_offset': '5'] | new Tuple2(5, 5)
