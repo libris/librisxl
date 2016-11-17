@@ -367,7 +367,7 @@ class SearchUtils {
 
             // if someone supplies multiple values, we just pick the
             // first one and discard the rest.
-            if (value instanceof List) {
+            if (value instanceof List || value instanceof String[]) {
                 value = value[0]
             }
 
