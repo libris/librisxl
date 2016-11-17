@@ -515,8 +515,9 @@
       },
       "[18:19]": {
         "aboutEntity": "?record",
-        "TODO:deriveFrom": "bibliography/bibliographyCode",
-        "link": "marc:catForm",
+        "addLink": "descriptionConventions",
+        "NOTE:repeatable": false,
+        "TODO": "merge with 040.e",
         "uriTemplate": "{_}",
         "tokenMap": "CatFormType",
         "fixedDefault": " "
@@ -542,7 +543,30 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
             "marc:status": {"@id": "marc:CorrectedOrRevised"},
-            "marc:catForm": {"@id": "marc:Aacr2"},
+            "descriptionConventions": [{"@id": "marc:Aacr2"}],
+            "controlNumber": "0000000",
+            "mainEntity": {
+              "@type": "Instance",
+              "issuanceType": "Monograph",
+              "@id": "http://libris.kb.se/resource/bib/0000000",
+              "instanceOf": {"@type": "Text"}
+            }
+          }
+        },
+        {
+          "originalLeader": "00887cam a2200277 i 4500",
+          "source": {
+            "leader": "     cam a        i 4500",
+            "fields": [{"001": "0000000"}, {"040": {"subfields": [{"e": "rda"}]}}]
+          },
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/bib/0000000",
+            "marc:status": {"@id": "marc:CorrectedOrRevised"},
+            "descriptionConventions": [
+              {"@id": "marc:Isbd"},
+              {"@type": "DescriptionConventions", "notation": "rda"}
+            ],
             "controlNumber": "0000000",
             "mainEntity": {
               "@type": "Instance",
@@ -2512,7 +2536,7 @@
       },
       "$c": {"link": "marc:transcribingAgency", "resourceType": "Organization", "property": "name"},
       "$d": {"link": "descriptionModifier", "resourceType": "Organization", "property": "name"},
-      "$e": {"property": "descriptionRules"},
+      "$e": {"addLink": "descriptionConventions", "NOTE:repeatable": false, "resourceType": "DescriptionConventions", "property": "notation"},
       "$9": {"property": "license"}
     },
     "041": {
@@ -4045,7 +4069,7 @@
       },
       "[10:11]": {
         "aboutEntity": "?record",
-        "link": "marc:catalogingRules",
+        "link": "descriptionConventions",
         "uriTemplate": "{_}",
         "tokenMap": "CatalogingRulesType"
       },
