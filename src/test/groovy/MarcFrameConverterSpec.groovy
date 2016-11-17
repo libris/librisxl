@@ -35,11 +35,11 @@ class MarcFrameConverterSpec extends Specification {
 
         ['bib', 'auth', 'hold'].each { marcType ->
             def ruleSets = converter.conversion.marcRuleSets
-            converter.config[marcType].each { code, dfn ->
+            converter.config[marcType].each { tag, dfn ->
                 def ruleSet = ruleSets[marcType]
                 def thingLink = ruleSet.thingLink
 
-                if (code == 'postProcessing') {
+                if (tag == 'postProcessing') {
                     ruleSet.postProcSteps.eachWithIndex { step, i ->
                         dfn[i]._spec.each {
                             postProcStepSpecs << [step: step, spec: it, thingLink: thingLink]
@@ -48,7 +48,7 @@ class MarcFrameConverterSpec extends Specification {
                     return
                 }
 
-                if (code == '000') {
+                if (tag == '000') {
                     marcSkeletons[marcType] = dfn._spec[0].source
                     marcResults[marcType] = dfn._spec[0].result
                 }
@@ -59,7 +59,7 @@ class MarcFrameConverterSpec extends Specification {
                                            normalized: it.normalized,
                                            result: it.result,
                                            name: it.name ?: "",
-                                           marcType: marcType, code: code,
+                                           marcType: marcType, tag: tag,
                                            thingLink: thingLink]
                         }
                     }
@@ -109,7 +109,7 @@ class MarcFrameConverterSpec extends Specification {
         value << ["Text", ["@id": "/link"]]
     }
 
-    def "should convert field spec for #fieldSpec.marcType #fieldSpec.code (#fieldSpec.name)"() {
+    def "should convert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name)"() {
         given:
         def marcType = fieldSpec.marcType
         def marc = deepcopy(marcSkeletons[marcType])
@@ -138,7 +138,7 @@ class MarcFrameConverterSpec extends Specification {
     }
 
     @Requires({ env.mfspec == 'all' })
-    def "should revert field spec for #fieldSpec.marcType #fieldSpec.code (#fieldSpec.name)"() {
+    def "should revert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name)"() {
         given:
         def marcType = fieldSpec.marcType
         def jsonld = deepcopy(marcResults[marcType])
