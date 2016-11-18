@@ -17,8 +17,9 @@ class SearchUtilsSpec extends Specification {
         Map expected = ['should': [['prefix': ['@id': url]],
                                    ['prefix': ['sameAs.@id': url]]],
                         'minimum_should_match': 1]
+        SearchUtils search = new SearchUtils(null)
         then:
-        assert SearchUtils.makeSiteFilter(url) == expected
+        assert search.makeSiteFilter(url) == expected
     }
 
     def "Should build aggregation query"() {
@@ -27,13 +28,16 @@ class SearchUtilsSpec extends Specification {
         Map expected = ['@type': ['terms': ['field': '@type',
                                             'size': 1000],
                                   'aggs': [:]]]
+        SearchUtils search = new SearchUtils(null)
         then:
-        assert SearchUtils.buildAggQuery(tree) == expected
+        assert search.buildAggQuery(tree) == expected
     }
 
     def "Should make find URL"() {
-        expect:
-        assert SearchUtils.makeFindUrl(params) == result
+        when:
+        SearchUtils search = new SearchUtils(null)
+        then:
+        assert search.makeFindUrl(params) == result
         where:
         params                   | result
         [:]                      | '/find?q=*'
@@ -48,8 +52,10 @@ class SearchUtilsSpec extends Specification {
     }
 
     def "Should make find URL with offset"() {
-        expect:
-        assert SearchUtils.makeFindUrl(params, offset) == result
+        when:
+        SearchUtils search = new SearchUtils(null)
+        then:
+        assert search.makeFindUrl(params, offset) == result
         where:
         params | offset | result
         [:]    | 0      | '/find?q=*'
@@ -57,8 +63,10 @@ class SearchUtilsSpec extends Specification {
     }
 
     def "Should get limit and offset"() {
-        expect:
-        assert SearchUtils.getLimitAndOffset(params) == result
+        when:
+        SearchUtils search = new SearchUtils(null)
+        then:
+        assert search.getLimitAndOffset(params) == result
         where:
         params                                        | result
         [:]                                           | new Tuple2(SearchUtils.DEFAULT_LIMIT, SearchUtils.DEFAULT_OFFSET)

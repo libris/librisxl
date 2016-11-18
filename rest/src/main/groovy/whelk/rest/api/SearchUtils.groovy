@@ -18,8 +18,13 @@ class SearchUtils {
     final static int MAX_LIMIT = 4000
     final static int DEFAULT_OFFSET = 0
 
-    static Map doSearch(Whelk whelk, Map queryParameters, String dataset,
-                        String siteBaseUri) {
+    Whelk whelk
+
+    SearchUtils(Whelk whelk) {
+        this.whelk = whelk
+    }
+
+    Map doSearch(Map queryParameters, String dataset, String siteBaseUri) {
         String relation = getReservedQueryParameter('p', queryParameters)
         String reference = getReservedQueryParameter('o', queryParameters)
         String value = getReservedQueryParameter('value', queryParameters)
@@ -38,15 +43,15 @@ class SearchUtils {
         Map results = null
 
         if (relation && reference) {
-            results = findByRelation(whelk, relation, reference, limit, offset)
+            results = findByRelation(relation, reference, limit, offset)
         } else if (relation && value) {
-            results = findByValue(whelk, relation, value, limit, offset)
+            results = findByValue(relation, value, limit, offset)
         } else if (reference) {
-            results = findByQuotation(whelk, reference, limit, offset)
+            results = findByQuotation(reference, limit, offset)
         } else if (query) {
             // If general q-parameter chosen, use elastic for query
             if (whelk.elastic) {
-                results = queryElasticSearch(whelk, queryParameters,
+                results = queryElasticSearch(queryParameters,
                                              pageParams,
                                              dataset, siteBaseUri,
                                              limit, offset)
@@ -56,16 +61,16 @@ class SearchUtils {
         } else {
             // If none of the special query parameters were specified,
             // we query PostgreSQL
-            results = queryPostgreSQL(whelk, queryParameters, dataset,
+            results = queryPostgreSQL(queryParameters, dataset,
                                       limit, offset)
         }
 
         return results
     }
 
-    private static Map findByRelation(Whelk whelk, String relation,
-                                      String reference,
-                                      int limit, int offset) {
+    private Map findByRelation(String relation,
+                               String reference,
+                               int limit, int offset) {
         log.debug("Calling findByRelation with p: ${relation} and " +
                   "o: ${reference}")
 
@@ -76,8 +81,8 @@ class SearchUtils {
         return assembleSearchResults(docs)
     }
 
-    private static Map findByValue(Whelk whelk, String relation, String value,
-                                   int limit, int offset) {
+    private Map findByValue(String relation, String value,
+                            int limit, int offset) {
         log.debug("Calling findByValue with p: ${relation} and value: ${value}")
 
         List<Document> docs = whelk.storage.findByValue(relation, value,
@@ -86,8 +91,7 @@ class SearchUtils {
         return assembleSearchResults(docs)
     }
 
-    private static Map findByQuotation(Whelk whelk, String identifier,
-                                       int limit, int offset) {
+    private Map findByQuotation(String identifier, int limit, int offset) {
         log.debug("Calling findByQuotation with o: ${identifier}")
 
         List<Document> docs = whelk.storage.findByQuotation(identifier,
@@ -96,10 +100,10 @@ class SearchUtils {
         return assembleSearchResults(docs)
     }
 
-    private static Map queryElasticSearch(Whelk whelk, Map queryParameters,
-                                          Map pageParams,
-                                          String dataset, String siteBaseUri,
-                                          int limit, int offset) {
+    private Map queryElasticSearch(Map queryParameters,
+                                   Map pageParams,
+                                   String dataset, String siteBaseUri,
+                                   int limit, int offset) {
         String query = getReservedQueryParameter('q', queryParameters)
         log.debug("Querying ElasticSearch")
 
@@ -139,7 +143,7 @@ class SearchUtils {
         }
 
         if (statsTree) {
-            stats = buildStats(whelk, esResult['aggregations'].asMap,
+            stats = buildStats(esResult['aggregations'].asMap,
                                makeFindUrl(pageParams))
         }
 
@@ -187,9 +191,8 @@ class SearchUtils {
         return result
     }
 
-    private static Map queryPostgreSQL(Whelk whelk, Map queryParameters,
-                                       String dataset,
-                                       int limit, int offset) {
+    private Map queryPostgreSQL(Map queryParameters, String dataset,
+                                int limit, int offset) {
         log.debug("Querying PostgreSQL")
 
         return whelk.storage.query(queryParameters, dataset,
@@ -200,7 +203,7 @@ class SearchUtils {
      * Create ES filter for specified siteBaseUri.
      *
      */
-    static Map makeSiteFilter(String siteBaseUri) {
+    Map makeSiteFilter(String siteBaseUri) {
         return ['should': [
                    ['prefix': ['@id': siteBaseUri]],
                    ['prefix': ['sameAs.@id': siteBaseUri]]
@@ -212,7 +215,7 @@ class SearchUtils {
      * Build the term aggregation part of an ES query.
      *
      */
-    static Map buildAggQuery(def tree, int size=1000) {
+    Map buildAggQuery(def tree, int size=1000) {
         Map query = [:]
         List keys = []
 
@@ -238,15 +241,13 @@ class SearchUtils {
      * Build aggregation statistics for ES result.
      *
      */
-    private static Map buildStats(Whelk whelk, Map aggregations,
-                                  String baseUrl) {
+    private Map buildStats(Map aggregations, String baseUrl) {
         Map result = [:]
-        result = addSlices(whelk, [:], aggregations, baseUrl)
+        result = addSlices([:], aggregations, baseUrl)
         return result
     }
 
-    private static Map addSlices(Whelk whelk, Map stats, Map aggregations,
-                                 String baseUrl) {
+    private Map addSlices(Map stats, Map aggregations, String baseUrl) {
         Map sliceMap = aggregations.inject([:]) { acc, key, aggregation ->
             List observations = []
             Map sliceNode = ['dimension': key.replace('.@id', '')]
@@ -257,12 +258,11 @@ class SearchUtils {
 
                 Map observation = ['totalItems': bucket.getAt('docCount'),
                                    'view': ['@id': searchPageUrl],
-                                   'object': toChip(lookup(whelk, itemId))]
+                                   'object': toChip(lookup(itemId))]
 
                 Map bucketAggs = bucket.getAggregations().asMap
 
-                observation = addSlices(whelk, observation, bucketAggs,
-                                        searchPageUrl)
+                observation = addSlices(observation, bucketAggs, searchPageUrl)
                 observations << observation
             }
 
@@ -285,7 +285,7 @@ class SearchUtils {
      * Default to dummy value if not found.
      *
      */
-    private static Map lookup(Whelk whelk, String itemId) {
+    private Map lookup(String itemId) {
         String fullId = VOCAB_BASE_URI.resolve(itemId).toString()
         Location loc = whelk.storage.locate(fullId, true)
         Document doc = loc?.document
@@ -297,7 +297,7 @@ class SearchUtils {
     }
 
     // FIXME move to Document or JsonLd
-    private static Map getEntry(Map jsonLd) {
+    private Map getEntry(Map jsonLd) {
         // FIXME make this less brittle
         return jsonLd['@graph'][0]
     }
@@ -306,7 +306,7 @@ class SearchUtils {
      * Create a URL for '/find' with the specified query parameters.
      *
      */
-    static String makeFindUrl(Map queryParameters0, int offset=0) {
+    String makeFindUrl(Map queryParameters0, int offset=0) {
         Map queryParameters = queryParameters0.clone()
         if (!('q' in queryParameters)) {
             queryParameters['q'] = '*'
@@ -341,7 +341,7 @@ class SearchUtils {
      * Use default values if not in query.
      *
      */
-    static Tuple2 getLimitAndOffset(Map queryParams) {
+    Tuple2 getLimitAndOffset(Map queryParams) {
         int limit = parseIntFromQueryParams("_limit", queryParams,
                                             DEFAULT_LIMIT)
         // don't let users get carried away.
@@ -360,8 +360,8 @@ class SearchUtils {
      * Use default value if key not found.
      *
      */
-    private static int parseIntFromQueryParams(String key, Map queryParams,
-                                               int defaultValue) {
+    private int parseIntFromQueryParams(String key, Map queryParams,
+                                        int defaultValue) {
         if (queryParams.containsKey(key)) {
             def value = queryParams.get(key)
 
@@ -381,7 +381,7 @@ class SearchUtils {
         }
     }
 
-    private static Map getTermChip(termKey) {
+    private Map getTermChip(termKey) {
         // FIXME get definition from vocab
         Map termDefinition = [:]
         String id = termDefinition.get('@id')
@@ -393,17 +393,17 @@ class SearchUtils {
     }
 
     // FIXME move to separate module?
-    private static List toCards(List things) {
+    private List toCards(List things) {
         // FIXME implement
         return things
     }
 
-    private static List toChips(List things) {
+    private List toChips(List things) {
         // FIXME implement
         return things
     }
 
-    private static Map toChip(Map thing) {
+    private Map toChip(Map thing) {
         // FIXME implement
         return thing
     }
@@ -415,7 +415,7 @@ class SearchUtils {
      * filtered out.
      *
      */
-    private static Tuple2 mapParams(Map params) {
+    private Tuple2 mapParams(Map params) {
         List result = []
         Map pageParams = [:]
         List reservedParams = getReservedParameters()
@@ -453,7 +453,7 @@ class SearchUtils {
         return new Tuple2(result, pageParams)
     }
 
-    private static List getReservedParameters() {
+    private List getReservedParameters() {
         return ['q', 'p', 'o', 'value', '_limit', '_offset']
     }
 
@@ -462,7 +462,7 @@ class SearchUtils {
      * Assemble PostgreSQL search results.
      *
      */
-    private static Map assembleSearchResults(List<Document> docs) {
+    private Map assembleSearchResults(List<Document> docs) {
         Map result = [:]
         List items = []
 
@@ -484,8 +484,7 @@ class SearchUtils {
      * the String[] if found, null otherwise.
      *
      */
-    private static String getReservedQueryParameter(String name,
-                                                    Map queryParameters) {
+    private String getReservedQueryParameter(String name, Map queryParameters) {
         if (name in queryParameters) {
             // For reserved parameters, we assume only one value
             return queryParameters.get(name)[0]
@@ -494,7 +493,7 @@ class SearchUtils {
         }
     }
 
-    private static String urlEncode(String input) {
+    private String urlEncode(String input) {
         return java.net.URLEncoder.encode(input, "UTF-8")
     }
 }

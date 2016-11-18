@@ -58,6 +58,7 @@ class Crud extends HttpServlet {
             "hold": "/sys/context/lib.jsonld"
     ]
     Whelk whelk
+    SearchUtils search
     PicoContainer pico
     static final ObjectMapper mapper = new ObjectMapper()
     AccessControl accessControl = new AccessControl()
@@ -84,6 +85,7 @@ class Crud extends HttpServlet {
     @Override
     void init() {
         whelk = pico.getComponent(Whelk.class)
+        search = new SearchUtils(whelk)
     }
 
     StorageType autoDetectQueryMode(Map queries) {
@@ -104,8 +106,7 @@ class Crud extends HttpServlet {
         String callback = queryParameters.remove("callback")
 
         try {
-            Map results = SearchUtils.doSearch(whelk, queryParameters, dataset,
-                                               siteBaseUri)
+            Map results = search.doSearch(queryParameters, dataset, siteBaseUri)
             def jsonResult
 
             if (callback) {
