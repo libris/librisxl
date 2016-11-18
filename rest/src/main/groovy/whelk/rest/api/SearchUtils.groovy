@@ -416,9 +416,13 @@ class SearchUtils {
     Map toCard(Map thing) {
         Map lensGroups = displayData.get("lensGroups")
         Map cardLensGroup = lensGroups.get("cards")
+        Map result = [:]
 
-        Map json = removeProperties(thing, cardLensGroup)
-        return toChip(json)
+        Map card = removeProperties(thing, cardLensGroup)
+        card.each {key, value ->
+            result[key] = toChip(value)
+        }
+        return result
     }
 
     /**
@@ -433,60 +437,52 @@ class SearchUtils {
      * Convert a post to chip.
      *
      */
-    Map toChip(Map json) {
+    Object toChip(Object object) {
         Map lensGroups = displayData.get("lensGroups")
         Map chipLensGroup = lensGroups.get("chips")
         Map itemsToKeep = [:]
+        Map result = [:]
 
-        json.each { key, value ->
-            itemsToKeep[key] = walkThroughData(value, chipLensGroup, true)
+        if (object instanceof List){
+            return toChips(object)
+        } else if ((object instanceof Map)) {
+            itemsToKeep = removeProperties(object, chipLensGroup)
+            itemsToKeep.each {key, value ->
+                result[key] = toChip(value)
+            }
+            return result
+        } else {
+            return object
         }
-        return itemsToKeep
     }
 
-    private Map removeProperties(Map jsonMap, Map lensGroups,
-                                 boolean goRecursive=false) {
+    private Map removeProperties(Map jsonMap, Map lensGroups) {
         Map itemsToKeep = [:]
         Map types = lensGroups.get("lenses")
-        Map showPropertiesField = types.get(jsonMap.get("@type"))
-        if (jsonMap.get("@type") && types.get(jsonMap.get("@type").toString())) {
-            def propertiesToKeep = showPropertiesField.get("showProperties")
+        String type = jsonMap.get("@type")
+
+        if (!type) {
+            return jsonMap
+        }
+
+        Map showPropertiesField = types.get(type)
+
+        if (showPropertiesField) {
+            List propertiesToKeep = showPropertiesField.get("showProperties")
+
             jsonMap.each {key, value ->
-                if (key.toString() in propertiesToKeep ||
-                    key.toString().startsWith("@")) {
-                    if (goRecursive) {
-                        itemsToKeep[key] = walkThroughData(value, lensGroups,
-                                                           goRecursive)
-                    } else {
-                        itemsToKeep[key] = value
-                    }
+                if (shouldKeep(key, propertiesToKeep)) {
+                    itemsToKeep[key] = value
                 }
             }
             return itemsToKeep
         } else {
             return jsonMap
         }
-
     }
 
-    private Object walkThroughData(Object o, Map displayData, boolean goRecursive) {
-        if(o instanceof Map) {
-            return removeProperties(o, displayData, goRecursive)
-        } else if (o instanceof List){
-            return walkThroughDataFromList(o, displayData, goRecursive)
-        } else {
-            return o
-        }
-    }
-
-
-    private List walkThroughDataFromList(List items, Map displayData,
-                                         boolean goRecursive) {
-        List result = []
-        items.each { item ->
-            result << walkThroughData(item, displayData, goRecursive)
-        }
-        return result
+    private boolean shouldKeep(String key, List propertiesToKeep) {
+        return (key in propertiesToKeep || key.startsWith("@"))
     }
 
     /*

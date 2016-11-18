@@ -164,6 +164,8 @@ class SearchUtilsSpec extends Specification {
                                                  "noValidKey": "shouldBeRemoved",
                                                  "@id": "foo"]],
                      "@aKey": "external-foobar",
+                     "hasTitle": ["value1", "value2", "value3", ["someKey": "theValue",
+                                                                 "@type": "Work"]],
                      "foo": "bar"]
 
         Map displayData = ["lensGroups":
@@ -191,7 +193,8 @@ class SearchUtilsSpec extends Specification {
                                      "hasTitle": ["@type": "ProvisionActivity",
                                                   "date": "2000-01-01",
                                                   "@id": "foo"]],
-                      "@aKey": "external-foobar"]
+                      "@aKey": "external-foobar",
+                      "hasTitle": ["value1", "value2", "value3", ["@type": "Work"]]]
 
         SearchUtils search = new SearchUtils(null)
         search.displayData = displayData
