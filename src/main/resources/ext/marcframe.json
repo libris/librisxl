@@ -2576,7 +2576,12 @@
     "042": {
       "aboutEntity": "?thing",
       "$a": {"property": "authenticationCode"},
-      "$9": {"addLink": "bibliography", "resourceType": "Organization", "property": "notation"}
+      "$9": {
+        "addLink": "bibliography",
+        "resourceType": "Organization",
+        "uriTemplate": "http://libris.kb.se/library/{_}",
+        "property": "notation"
+      }
     },
     "043": {"ignored": true},
 
