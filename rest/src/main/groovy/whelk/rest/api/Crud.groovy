@@ -86,6 +86,7 @@ class Crud extends HttpServlet {
     void init() {
         whelk = pico.getComponent(Whelk.class)
         search = new SearchUtils(whelk)
+        search.readDisplayData()
     }
 
     StorageType autoDetectQueryMode(Map queries) {
@@ -273,91 +274,6 @@ class Crud extends HttpServlet {
             }
         }
     }
-
-    /**
-     *
-     * for each entry in search results
-     *      for each part of entry
-     *          get fields to include for @type
-     *          strip out everything else
-     *          try to expand things ((using cache first), then ES)
-     */
-    Map toCard(Map framedResults, Map displayData){
-        def cleanedList = []
-        Map result = framedResults
-
-        //Used for the defintions of the cards and chips
-        Map lensGroups = displayData.get("lensGroups")
-        Map cards = lensGroups.get("cards")
-        Map chips = lensGroups.get("chips")
-
-        //only for framed data
-        if (framedResults.containsKey("items")) {
-
-            framedResults.get("items").each {item ->
-                Map json = removeProperties(item, cards)
-                Map json2 = toChip(json, chips)
-                cleanedList << json2
-            }
-            result["items"] = cleanedList
-        } else {
-            throw new Exception("Missing 'items' key in input")
-        }
-
-        return result
-    }
-
-    private Map toChip(Map json, Map lensGroupsChips) {
-        Map itemsToKeep = [:]
-        json.each { key, value ->
-            itemsToKeep[key] = walkThroughData(value, lensGroupsChips, true)
-        }
-        return itemsToKeep
-    }
-
-
-    private Map removeProperties(Map jsonMap, Map lensGroups, boolean goRecursive=false) {
-        Map itemsToKeep = [:]
-        Map types = lensGroups.get("lenses")
-        Map showPropertiesField = types.get(jsonMap.get("@type"))
-        if (jsonMap.get("@type") && types.get(jsonMap.get("@type").toString())) {
-            def propertiesToKeep = showPropertiesField.get("showProperties")
-            jsonMap.each {key, value ->
-                if (key.toString() in propertiesToKeep || key.toString().startsWith("@")) {
-                    if (goRecursive) {
-                        itemsToKeep[key] = walkThroughData(value, lensGroups,
-                                                           goRecursive)
-                    } else {
-                        itemsToKeep[key] = value
-                    }
-                }
-            }
-            return itemsToKeep
-        } else {
-            return jsonMap
-        }
-
-    }
-
-    private Object walkThroughData(Object o, Map displayData, boolean goRecursive) {
-        if(o instanceof Map) {
-            return removeProperties(o, displayData, goRecursive)
-        } else if (o instanceof List){
-            return walkThroughDataFromList(o, displayData, goRecursive)
-        } else {
-            return o
-        }
-    }
-
-
-    private List walkThroughDataFromList(List items, Map displayData, boolean goRecursive) {
-        List result = []
-        items.each { item ->
-            result << walkThroughData(item, displayData, goRecursive)
-        }
-        return result
-    }
-
 
     /**
      * Given a list of IDs, return a map of JSON-LD found in storage.

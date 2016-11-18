@@ -19,9 +19,18 @@ class SearchUtils {
     final static int DEFAULT_OFFSET = 0
 
     Whelk whelk
+    Map displayData
 
     SearchUtils(Whelk whelk) {
         this.whelk = whelk
+    }
+
+    void readDisplayData() {
+        //Read the display file - should propably not do this here.
+        String vocabDisplayUri = "https://id.kb.se/vocab/display"
+        Document displayDoc = whelk.storage.locate(vocabDisplayUri,
+                                                   true).document
+        displayData = displayDoc.data
     }
 
     Map doSearch(Map queryParameters, String dataset, String siteBaseUri) {
@@ -392,20 +401,92 @@ class SearchUtils {
         return ['@id': id, 'label': '']
     }
 
-    // FIXME move to separate module?
-    private List toCards(List things) {
-        // FIXME implement
-        return things
+    /**
+     * Convert a list of posts to cards.
+     *
+     */
+    List toCards(List things){
+        return things.collect { toCard(it) }
     }
 
-    private List toChips(List things) {
-        // FIXME implement
-        return things
+    /**
+     * Convert a post to card.
+     *
+     */
+    Map toCard(Map thing) {
+        Map lensGroups = displayData.get("lensGroups")
+        Map cardLensGroup = lensGroups.get("cards")
+
+        Map json = removeProperties(thing, cardLensGroup)
+        return toChip(json)
     }
 
-    private Map toChip(Map thing) {
-        // FIXME implement
-        return thing
+    /**
+     * Convert a list of posts to chips.
+     *
+     */
+    List toChips(List things) {
+        return things.collect { toChip(it) }
+    }
+
+    /**
+     * Convert a post to chip.
+     *
+     */
+    Map toChip(Map json) {
+        Map lensGroups = displayData.get("lensGroups")
+        Map chipLensGroup = lensGroups.get("chips")
+        Map itemsToKeep = [:]
+
+        json.each { key, value ->
+            itemsToKeep[key] = walkThroughData(value, chipLensGroup, true)
+        }
+        return itemsToKeep
+    }
+
+    private Map removeProperties(Map jsonMap, Map lensGroups,
+                                 boolean goRecursive=false) {
+        Map itemsToKeep = [:]
+        Map types = lensGroups.get("lenses")
+        Map showPropertiesField = types.get(jsonMap.get("@type"))
+        if (jsonMap.get("@type") && types.get(jsonMap.get("@type").toString())) {
+            def propertiesToKeep = showPropertiesField.get("showProperties")
+            jsonMap.each {key, value ->
+                if (key.toString() in propertiesToKeep ||
+                    key.toString().startsWith("@")) {
+                    if (goRecursive) {
+                        itemsToKeep[key] = walkThroughData(value, lensGroups,
+                                                           goRecursive)
+                    } else {
+                        itemsToKeep[key] = value
+                    }
+                }
+            }
+            return itemsToKeep
+        } else {
+            return jsonMap
+        }
+
+    }
+
+    private Object walkThroughData(Object o, Map displayData, boolean goRecursive) {
+        if(o instanceof Map) {
+            return removeProperties(o, displayData, goRecursive)
+        } else if (o instanceof List){
+            return walkThroughDataFromList(o, displayData, goRecursive)
+        } else {
+            return o
+        }
+    }
+
+
+    private List walkThroughDataFromList(List items, Map displayData,
+                                         boolean goRecursive) {
+        List result = []
+        items.each { item ->
+            result << walkThroughData(item, displayData, goRecursive)
+        }
+        return result
     }
 
     /*

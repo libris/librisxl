@@ -151,4 +151,51 @@ class SearchUtilsSpec extends Specification {
         assert offsets.next == null
         assert offsets.last == 40
     }
+
+    def "should convert to cards and chips"() {
+        given:
+        Map input = ["@type": "Instance",
+                     "mediaType": "foobar",
+                     "instanceOf": ["@type": "Work",
+                                    "contribution": ["@type": "Text",
+                                                     "foo": ["mediaType": "bar"]],
+                                    "hasTitle": ["@type": "ProvisionActivity",
+                                                 "date": "2000-01-01",
+                                                 "noValidKey": "shouldBeRemoved",
+                                                 "@id": "foo"]],
+                     "@aKey": "external-foobar",
+                     "foo": "bar"]
+
+        Map displayData = ["lensGroups":
+                           ["chips":
+                            ["lenses":
+                             ["Work": ["showProperties": ["hasTitle",
+                                                          "contribution",
+                                                          "language"]],
+                              "ProvisionActivity": ["showProperties": ["date",
+                                                                       "agent",
+                                                                       "place"]]]],
+                            "cards":
+                            ["lenses":
+                             ["Instance":
+                              ["showProperties": ["mediaType",
+                                                  "hasTitle",
+                                                  "instanceOf"]]]]]]
+
+
+        Map output = ["@type": "Instance",
+                      "mediaType": "foobar",
+                      "instanceOf": ["@type": "Work",
+                                     "contribution": ["@type": "Text",
+                                                      "foo": ["mediaType": "bar"]],
+                                     "hasTitle": ["@type": "ProvisionActivity",
+                                                  "date": "2000-01-01",
+                                                  "@id": "foo"]],
+                      "@aKey": "external-foobar"]
+
+        SearchUtils search = new SearchUtils(null)
+        search.displayData = displayData
+        expect:
+        assert search.toCard(input) == output
+    }
 }
