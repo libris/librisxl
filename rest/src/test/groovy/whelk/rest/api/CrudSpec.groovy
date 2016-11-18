@@ -1205,4 +1205,39 @@ class CrudSpec extends Specification {
         "/https://example.com/some/id"             | Crud.FormattingType.EMBELLISHED
         "/https://example.com/some/id/description" | Crud.FormattingType.RAW
     }
+
+    def "should convert to cards and chips"() {
+        given:
+        Map input = ["items": [["@type": "Instance",
+                               "mediaType": "foobar",
+                               "instanceOf": ["@type": "Work",
+                                              "contribution": ["@type": "Text",
+                                                               "foo": ["mediaType": "bar"]],
+                                              "hasTitle": ["@type": "ProvisionActivity",
+                                                                          "date": "2000-01-01",
+                                                                          "noValidKey": "shouldBeRemoved",
+                                                                          "@id": "foo"]],
+                               "@aKey": "external-foobar",
+                               "foo": "bar"]]]
+
+        Map displayData = ["lensGroups":["chips":["lenses":["Work": ["showProperties": [ "hasTitle", "contribution", "language" ]],
+                                                            "ProvisionActivity":  ["showProperties": [ "date", "agent", "place"]]]],
+                                         "cards":["lenses":["Instance": ["showProperties": ["mediaType", "hasTitle", "instanceOf"]]]]]]
+
+
+        Map output = ["items": [["@type": "Instance",
+                                "mediaType": "foobar",
+                                "instanceOf": ["@type": "Work",
+                                               "contribution": ["@type": "Text",
+                                                                "foo": ["mediaType": "bar"]],
+                                               "hasTitle": ["@type": "ProvisionActivity",
+                                                                           "date": "2000-01-01",
+                                                                           "@id": "foo"]],
+                                "@aKey": "external-foobar"]]]
+
+        expect:
+        assert crud.toCard(input, displayData) == output
+        //assert Crud.toCard(input, displayData) == output
+
+    }
 }
