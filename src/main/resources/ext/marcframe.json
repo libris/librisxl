@@ -160,9 +160,9 @@
       "$k": {"addProperty": "qualifyingNote"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$m": {"addProperty": "musicPerformanceMedium"},
-      "$n": {"addProperty": "partNumber"},
+      "$n": {"addProperty": "partNumber", "interpunctionChars": ","},
       "$o": {"property": "musicArrangement"},
-      "$p": {"addProperty": "partTitle"},
+      "$p": {"addProperty": "partTitle", "interpunctionChars": "/"},
       "$r": {"property": "musicKey"},
       "$s": {"property": "version"},
       "$0": {
@@ -174,7 +174,7 @@
     "structuredtitle": {
       "$a": {
         "property": "mainTitle",
-        "interpunctionChars": ":/",
+        "interpunctionChars": ":/.",
         "TODO:interpunctionRules": {
           " :": {"$b": {"property": "subtitle"}},
           " =": {"$b": {"property": "parallelTitle"}},
@@ -182,14 +182,14 @@
         }
       },
       "$b": {"property": "titleRemainder", "interpunctionChars": "/"},
-      "$n": {"addProperty": "partNumber"},
-      "$p": {"addProperty": "partTitle"}
+      "$n": {"addProperty": "partNumber", "interpunctionChars": ","},
+      "$p": {"addProperty": "partTitle", "interpunctionChars": "/"}
     },
 
     "agentdata": {
       "match-i1": {
         "0": {
-          "$a": {"about": "_:agent", "property": "name", "required": true}
+          "$a": {"about": "_:agent", "property": "name", "required": true, "interpunctionChars": ")"}
         },
         "1": {
           "$a": {
@@ -3030,10 +3030,10 @@
       "TODO:groupByRepetitionAndInterpunctionPattern": "$3 $a $b $c $e $f $g",
       "TODO:i1": {"property": "latest", "tokenMap": {"2": false, "3": true}},
       "$a": {"about": "?publication", "link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
-      "$b": {"about": "?publication", "link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;"},
+      "$b": {"about": "?publication", "link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;)"},
       "$c": {"about": "?publication", "property": "date", "interpunctionChars": ",;"},
       "$e": {"about": "?manufacture", "link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
-      "$f": {"about": "?manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;"},
+      "$f": {"about": "?manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;)"},
       "$g": {"about": "?manufacture", "property": "date", "interpunctionChars": ",;"},
       "$3": {"about": "?publication", "property": "part", "position": 0, "TODO": "put in first out-split entity"},
       "_spec": [
@@ -3122,7 +3122,7 @@
       "embedded": true,
       "resourceType": "ProvisionActivity",
       "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
-      "$b": {"link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;"},
+      "$b": {"link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;)"},
       "$c": {"property": "date", "interpunctionChars": ",;"},
       "_spec": [
         {
