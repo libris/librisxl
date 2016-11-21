@@ -119,7 +119,7 @@ class SearchUtils {
         Map stats = null
         List mappings = []
         mappings << ['variable': 'q',
-                     'predicate': getTermChip('textQuery'),
+                     'predicate': toChip(getVocabEntry('textQuery')),
                      'value': query]
         def dslQuery = ElasticSearch.createJsonDsl(queryParameters,
                                                    limit, offset)
@@ -295,19 +295,36 @@ class SearchUtils {
      *
      */
     private Map lookup(String itemId) {
-        String fullId = VOCAB_BASE_URI.resolve(itemId).toString()
-        Location loc = whelk.storage.locate(fullId, true)
-        Document doc = loc?.document
-        if (doc) {
-            return getEntry(doc.data)
+        Map entry = getVocabEntry(itemId)
+
+        if (entry) {
+            return entry
         } else {
             return ['@id': itemId, 'label': itemId]
         }
     }
 
+    /*
+     * Read vocab term data from storage.
+     *
+     * Returns null if not found.
+     *
+     */
+    private Map getVocabEntry(String id) {
+        String fullId = VOCAB_BASE_URI.resolve(id).toString()
+        Location loc = whelk.storage.locate(fullId, true)
+        Document doc = loc?.document
+
+        if (doc) {
+            return getEntry(doc.data)
+        } else {
+            return null
+        }
+    }
+
     // FIXME move to Document or JsonLd
     private Map getEntry(Map jsonLd) {
-        // FIXME make this less brittle
+        // we rely on this convention for the time being.
         return jsonLd['@graph'][0]
     }
 
@@ -388,17 +405,6 @@ class SearchUtils {
         } else {
             return defaultValue
         }
-    }
-
-    private Map getTermChip(termKey) {
-        // FIXME get definition from vocab
-        Map termDefinition = [:]
-        String id = termDefinition.get('@id')
-        if (!id) {
-            id = termKey
-        }
-        // FIXME get label from termDefinition
-        return ['@id': id, 'label': '']
     }
 
     /**
@@ -516,7 +522,11 @@ class SearchUtils {
                     value = val
                 }
 
-                Map termChip = getTermChip(termKey)
+                Map termChip
+                Map termDef = getVocabEntry(termKey)
+                if (termDef) {
+                  termChip = toChip(termDef)
+                }
 
                 result << ['variable': param, 'predicate': termChip,
                            (valueProp): value]
