@@ -3,7 +3,7 @@ package whelk.rest.api
 import spock.lang.Specification
 
 import whelk.rest.api.SearchUtils
-
+import whelk.rest.api.SearchUtils.SearchType
 
 class SearchUtilsSpec extends Specification {
 
@@ -37,29 +37,33 @@ class SearchUtilsSpec extends Specification {
         when:
         SearchUtils search = new SearchUtils(null)
         then:
-        assert search.makeFindUrl(params) == result
+        assert search.makeFindUrl(type, params) == result
         where:
-        params                   | result
-        [:]                      | '/find?q=*'
+        params                       | type                         | result
+        [:]                          | SearchType.ELASTIC           | '/find?q=*'
         // 'q' is special in that it's never ever a list
         // (which is the caller's responsibility)
-        ['q': 'Tove']            | '/find?q=Tove'
-        ['a': ['1']]             | '/find?q=*&a=1'
-        ['a': '1']               | '/find?q=*&a=1'
-        ['a': ['1', '2']]        | '/find?q=*&a=1&a=2'
-        ['a': ['1'], 'b': ['2']] | '/find?q=*&a=1&b=2'
-        ['a': null, 'b': ['2']]  | '/find?q=*&b=2'
+        ['q': 'Tove']                | SearchType.ELASTIC           | '/find?q=Tove'
+        ['a': ['1']]                 | SearchType.ELASTIC           | '/find?q=*&a=1'
+        ['a': '1']                   | SearchType.ELASTIC           | '/find?q=*&a=1'
+        ['a': ['1', '2']]            | SearchType.ELASTIC           | '/find?q=*&a=1&a=2'
+        ['a': ['1'], 'b': ['2']]     | SearchType.ELASTIC           | '/find?q=*&a=1&b=2'
+        ['a': null, 'b': ['2']]      | SearchType.ELASTIC           | '/find?q=*&b=2'
+        // as are 'p', 'o', and 'value'
+        ['p': 'foo', 'o': 'bar']     | SearchType.FIND_BY_RELATION  | '/find?p=foo&o=bar'
+        ['p': 'foo', 'value': 'bar'] | SearchType.FIND_BY_VALUE     | '/find?p=foo&value=bar'
+        ['o': 'bar']                 | SearchType.FIND_BY_QUOTATION | '/find?o=bar'
     }
 
     def "Should make find URL with offset"() {
         when:
         SearchUtils search = new SearchUtils(null)
         then:
-        assert search.makeFindUrl(params, offset) == result
+        assert search.makeFindUrl(type, params, offset) == result
         where:
-        params | offset | result
-        [:]    | 0      | '/find?q=*'
-        [:]    | 10     | '/find?q=*&_offset=10'
+        params | offset | type               | result
+        [:]    | 0      | SearchType.ELASTIC | '/find?q=*'
+        [:]    | 10     | SearchType.ELASTIC | '/find?q=*&_offset=10'
     }
 
     def "Should get limit and offset"() {

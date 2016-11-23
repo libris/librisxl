@@ -18,6 +18,14 @@ class SearchUtils {
     final static int MAX_LIMIT = 4000
     final static int DEFAULT_OFFSET = 0
 
+    enum SearchType {
+        FIND_BY_RELATION,
+        FIND_BY_VALUE,
+        FIND_BY_QUOTATION,
+        ELASTIC,
+        POSTGRES
+    }
+
     Whelk whelk
     Map displayData
 
@@ -86,8 +94,24 @@ class SearchUtils {
         List<Document> docs = whelk.storage.findByRelation(relation,
                                                            reference,
                                                            limit, offset)
+        List mappings = []
+        mappings << ['variable': 'p',
+                     'predicate': toChip(getVocabEntry('predicate')),
+                     'value': relation]
+        mappings << ['variable': 'o',
+                     'predicate': toChip(getVocabEntry('object')),
+                     'value': reference]
 
-        return assembleSearchResults(docs)
+        Map pageParams = ['p': relation, 'o': reference,
+                          '_limit': limit]
+
+        int total = whelk.storage.countByRelation(relation, reference)
+
+        List items = toCards(docs.collect { it.data })
+
+        return assembleSearchResults(SearchType.FIND_BY_RELATION,
+                                     items, mappings, pageParams,
+                                     limit, offset, total)
     }
 
     private Map findByValue(String relation, String value,
@@ -97,7 +121,24 @@ class SearchUtils {
         List<Document> docs = whelk.storage.findByValue(relation, value,
                                                         limit, offset)
 
-        return assembleSearchResults(docs)
+        List mappings = []
+        mappings << ['variable': 'p',
+                     'predicate': toChip(getVocabEntry('predicate')),
+                     'value': relation]
+        mappings << ['variable': 'value',
+                     'predicate': toChip(getVocabEntry('object')),
+                     'value': value]
+
+        Map pageParams = ['p': relation, 'value': value,
+                          '_limit': limit]
+
+        int total = whelk.storage.countByValue(relation, value)
+
+        List items = toCards(docs.collect { it.data })
+
+        return assembleSearchResults(SearchType.FIND_BY_VALUE,
+                                     items, mappings, pageParams,
+                                     limit, offset, total)
     }
 
     private Map findByQuotation(String identifier, int limit, int offset) {
@@ -106,7 +147,20 @@ class SearchUtils {
         List<Document> docs = whelk.storage.findByQuotation(identifier,
                                                             limit, offset)
 
-        return assembleSearchResults(docs)
+        List mappings = []
+        mappings << ['variable': 'o',
+                     'predicate': toChip(getVocabEntry('object')),
+                     'value': identifier]
+
+        Map pageParams = ['o': identifier, '_limit': limit]
+
+        int total = whelk.storage.countByQuotation(identifier)
+
+        List items = toCards(docs.collect { it.data })
+
+        return assembleSearchResults(SearchType.FIND_BY_QUOTATION,
+                                     items, mappings, pageParams,
+                                     limit, offset, total)
     }
 
     private Map queryElasticSearch(Map queryParameters,
@@ -153,49 +207,42 @@ class SearchUtils {
 
         if (statsTree) {
             stats = buildStats(esResult['aggregations'].asMap,
-                               makeFindUrl(pageParams))
+                               makeFindUrl(SearchType.ELASTIC, pageParams))
         }
-
-        Map result = ['@type': 'PartialCollectionView']
-        result['@id'] = makeFindUrl(pageParams, offset)
-        result['itemOffset'] = offset
-        result['totalItems'] = total
 
         mappings.tail().each { mapping ->
             Map params = pageParams.clone()
             params.remove(mapping['variable'])
-            mapping['up'] = ['@id': makeFindUrl(params, offset)]
-        }
-        result['search'] = ['mapping': mappings]
-
-        String value = getReservedQueryParameter('value', queryParameters)
-        if (value) {
-            result['value'] = value
+            mapping['up'] = ['@id': makeFindUrl(SearchType.ELASTIC, params,
+                                                offset)]
         }
 
-        Offsets offsets = new Offsets(total, limit, offset)
-
-        result['first'] = ['@id': makeFindUrl(pageParams)]
-        result['last'] = ['@id': makeFindUrl(pageParams, offsets.last)]
-
-        if (offsets.prev) {
-            if (offsets.prev == 0) {
-                result['previous'] = result['first']
-            } else {
-                result['previous'] = ['@id': makeFindUrl(pageParams,
-                                                         offsets.prev)]
-            }
-        }
-
-        if (offsets.next) {
-            result['next'] = ['@id': makeFindUrl(pageParams, offsets.next)]
-        }
-
-        result['items'] = items
+        Map result = assembleSearchResults(SearchType.ELASTIC,
+                                           items, mappings, pageParams,
+                                           limit, offset, total)
 
         if (stats) {
             result['stats'] = stats
         }
+
+        return result
+    }
+
+    private Map assembleSearchResults(SearchType st, List items,
+                                      List mappings, Map pageParams,
+                                      int limit, int offset, int total) {
+        Map result = ['@type': 'PartialCollectionView']
+        result['@id'] = makeFindUrl(st, pageParams, offset)
+        result['itemOffset'] = offset
+        result['totalItems'] = total
+
+        result['search'] = ['mapping': mappings]
+
+        Map paginationLinks = makePaginationLinks(st, pageParams, limit,
+                                                  offset, total)
+        result << paginationLinks
+
+        result['items'] = items
 
         return result
     }
@@ -332,15 +379,10 @@ class SearchUtils {
      * Create a URL for '/find' with the specified query parameters.
      *
      */
-    String makeFindUrl(Map queryParameters0, int offset=0) {
-        Map queryParameters = queryParameters0.clone()
-        if (!('q' in queryParameters)) {
-            queryParameters['q'] = '*'
-        }
-        // q was added as a single value manually
-        String query = queryParameters.remove('q')
-        List params = ["q=${query}"]
-        List keys = (queryParameters.keySet() as List).sort()
+    String makeFindUrl(SearchType st, Map queryParameters, int offset=0) {
+        Tuple2 initial = getInitialParamsAndKeys(st, queryParameters)
+        List params = initial.first
+        List keys = initial.second
         keys.each { k ->
             def v = queryParameters[k]
             if (!v) {
@@ -360,6 +402,89 @@ class SearchUtils {
         }
         return "/find?${params.join('&')}"
     }
+
+    private Tuple2 getInitialParamsAndKeys(SearchType st,
+                                           Map queryParameters0) {
+        Map queryParameters = queryParameters0.clone()
+        Tuple2 result
+        switch (st) {
+            case SearchType.FIND_BY_RELATION:
+                result = getRelationParams(queryParameters)
+                break
+            case SearchType.FIND_BY_VALUE:
+                result = getValueParams(queryParameters)
+                break
+            case SearchType.FIND_BY_QUOTATION:
+                result = getQuotationParams(queryParameters)
+                break
+            case SearchType.ELASTIC:
+                result = getElasticParams(queryParameters)
+                break
+        }
+        return result
+    }
+
+    private Tuple2 getRelationParams(Map queryParameters) {
+        String relation = queryParameters.remove('p')
+        String reference = queryParameters.remove('o')
+        List initialParams = ["p=${relation}", "o=${reference}"]
+        List keys = (queryParameters.keySet() as List).sort()
+
+        return new Tuple2(initialParams, keys)
+    }
+
+    private Tuple2 getValueParams(Map queryParameters) {
+        String relation = queryParameters.remove('p')
+        String value = queryParameters.remove('value')
+        List initialParams = ["p=${relation}", "value=${value}"]
+        List keys = (queryParameters.keySet() as List).sort()
+
+        return new Tuple2(initialParams, keys)
+    }
+
+    private Tuple2 getQuotationParams(Map queryParameters) {
+        String reference = queryParameters.remove('o')
+        List initialParams = ["o=${reference}"]
+        List keys = (queryParameters.keySet() as List).sort()
+
+        return new Tuple2(initialParams, keys)
+    }
+
+    private Tuple2 getElasticParams(Map queryParameters) {
+        if (!('q' in queryParameters)) {
+            queryParameters['q'] = '*'
+        }
+
+        String query = queryParameters.remove('q')
+        List initialParams = ["q=${query}"]
+        List keys = (queryParameters.keySet() as List).sort()
+
+        return new Tuple2(initialParams, keys)
+    }
+
+    Map makePaginationLinks(SearchType st, Map pageParams,
+                            int limit, int offset, int total) {
+        Map result = [:]
+        Offsets offsets = new Offsets(total, limit, offset)
+
+        result['first'] = ['@id': makeFindUrl(st, pageParams)]
+        result['last'] = ['@id': makeFindUrl(st, pageParams, offsets.last)]
+
+        if (offsets.prev) {
+            if (offsets.prev == 0) {
+                result['previous'] = result['first']
+            } else {
+                result['previous'] = ['@id': makeFindUrl(st, pageParams,
+                                                         offsets.prev)]
+            }
+        }
+
+        if (offsets.next) {
+            result['next'] = ['@id': makeFindUrl(st, pageParams, offsets.next)]
+        }
+
+        return result
+  }
 
     /**
      * Get limit and offset from query parameters.
