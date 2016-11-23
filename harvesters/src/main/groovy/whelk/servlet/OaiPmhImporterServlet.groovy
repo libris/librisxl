@@ -329,6 +329,7 @@ class ScheduledJob implements Runnable {
                 whelkState.put("status", "ERROR")
             } catch (Exception e) {
                 log.error("Something failed: ${e.message}", e)
+                whelkState.put("status", "ERROR")
             } finally {
                 log.debug("Saving state $whelkState")
                 storage.saveSettings(collection, whelkState)
