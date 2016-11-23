@@ -9,7 +9,6 @@ import whelk.Document
 import whelk.converter.MarcJSONConverter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
-import whelk.util.LegacyIntegrationTools
 
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -31,7 +30,6 @@ class PostgresLoadfileWriter {
     // USED FOR DEV ONLY, MUST _NEVER_ BE SET TO TRUE ONCE XL GOES INTO PRODUCTION. WITH THIS SETTING THE IMPORT WILL
     // _SKIP_ DOCUMENTS THAT FAIL CONVERSION, RESULTING IN POTENTIAL DATA LOSS IF USED WHEN IMPORTING TO A PRODUCTION XL
     private static final boolean FAULT_TOLERANT_MODE = false;
-
     private static MarcFrameConverter s_marcFrameConverter;
     private static BufferedWriter s_mainTableWriter;
     private static BufferedWriter s_identifiersWriter;
@@ -52,8 +50,10 @@ class PostgresLoadfileWriter {
         });
     }
 
-    public
+
     static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
+        Map specGroupsResult = [SolidMatches: 0, MisMatchesOnA: 0, MisMatchesOnB:0, bibInAukt: 0, auktInBib: 0,doubleDiff:0, possibleMatches:0]
+
         if (FAULT_TOLERANT_MODE)
             System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
                     "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
@@ -87,7 +87,7 @@ class PostgresLoadfileWriter {
                         if (elapsedSecs > 0) {
                             def docsPerSec = counter / elapsedSecs
                             println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
-                            println "Matches: ${successfulMatches}/${totallMatches}"
+                            println "Possible matches: ${specGroupsResult.possibleMatches}\tSolid matches: ${specGroupsResult.SolidMatches} \tMisMatchesOnA: ${specGroupsResult.MisMatchesOnA}\tMisMatchesOnB: ${specGroupsResult.MisMatchesOnB} \tbibInAukt: ${specGroupsResult.bibInAukt} \t auktInBib:${specGroupsResult.auktInBib} \tdoublediff: ${specGroupsResult.doubleDiff}"
                         }
                     }
 
@@ -126,9 +126,17 @@ class PostgresLoadfileWriter {
                             //New record
                                 default:
                                     //print "| "
-                                    // task {
-                                    handleRow(previousBibResultSet, collection, previousAuthData)
-                                    //}
+                                    //task {
+                                    def m = handleRow(previousBibResultSet, collection, previousAuthData)
+                                    specGroupsResult.SolidMatches += m.SolidMatches
+                                    specGroupsResult.MisMatchesOnA += m.MisMatchesOnA
+                                    specGroupsResult.MisMatchesOnB += m.MisMatchesOnB
+                                    specGroupsResult.bibInAukt += m.bibInAukt
+                                    specGroupsResult.auktInBib += m.auktInBib
+                                    specGroupsResult.doubleDiff += m.doubleDiff
+                                    specGroupsResult.possibleMatches +=m.possibleMatches
+
+                                   // }
                                     previousBibResultSet = rowMap
                                     previousAuthData = []
                                     previousAuthData.add(currentAuthData)
@@ -137,9 +145,9 @@ class PostgresLoadfileWriter {
                     }
                 }
                 catch (any) {
-                    print any.message
+                    println any.message
                     print any.stackTrace
-                    throw any
+                    //throw any
                 }
             }
 
@@ -150,7 +158,7 @@ class PostgresLoadfileWriter {
 
         catch (any) {
             println any.message
-            throw any
+            //throw any
         }
         finally {
             s_mainTableWriter.close()
@@ -163,12 +171,6 @@ class PostgresLoadfileWriter {
 
     }
 
-    static def normaliseSubfields(def subfields) {
-        subfields.collect {
-            it.collect { k, v -> [(k): (v as String).replaceAll(/(^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+\u0024)|(\s)/, "").toLowerCase()] }[0]
-        }
-
-    }
 
     static Map composeAuthData(LinkedHashMap<String, Object> map) {
         //TODO: how common is it with repeated subfields, ie "a"?
@@ -257,148 +259,43 @@ class PostgresLoadfileWriter {
     }
 
     private
-    static void handleRow(Map rowMap, String collection, List setSpecs) {
-
+    static Map handleRow(Map rowMap, String collection, List setSpecs) {
+        Map specGroupsResult = [SolidMatches: 0, MisMatchesOnA: 0,MisMatchesOnB: 0, bibInAukt: 0, auktInBib: 0, doubleDiff:0, possibleMatches:0]
         Map doc = getMarcDocMap(rowMap.data as byte[])
-        List auhtLinkableFieldNames = ['100', '600', '700', '800', '110', '610', '710', '810', '130', '630', '730', '830', '650', '651', '655']
-        List ignoredAuthFields = ['180', '181', '182', '185', '162']
-        //TODO: franska diakriter
 
-        Map fieldRules = [
-                '100': [subFieldsToIgnore:
-                                [bib : ['0', '4'],
-                                 auth: ['6']],
-                        bibFields        : ['100', '600', '700', '800']],
-                '110': [subFieldsToIgnore:
-                                [bib : ['0', '4'],
-                                 auth: ['6']],
-                        bibFields        : ['110', '610', '710']],
-                '111': [subFieldsToIgnore:
-                                [bib : ['0', '4'],
-                                 auth: ['6']],
-                        bibFields        : ['111', '611', '711']],
-                '130': [subFieldsToIgnore:
-                                [bib : ['0', '4'],
-                                 auth: ['6']],
-                        bibFields        : ['130', '630', '730', '830']],
-                '150': [subFieldsToIgnore:
-                                [bib : ['0', '2', '4'],
-                                 auth: ['6']],
-                        bibFields        : ['650']],
-                '151': [subFieldsToIgnore:
-                                [bib : ['0', '2', '4'],
-                                 auth: ['6']],
-                        bibFields        : ['651']],
-                '155': [subFieldsToIgnore:
-                                [bib : ['0', '2', '4'],
-                                 auth: ['6']],
-                        bibFields        : ['655']]
-        ]
         if (doc) {
 
             if (collection == 'bib' && setSpecs.count { it } > 0) {
-
-                List matchedFields = []
-                List misMatchedFields = []
-                //Iterate over the auth records. All should match
-                setSpecs.findAll { it -> !ignoredAuthFields.contains(it.field) }.each { authField ->
-                    def fieldRule = fieldRules[authField.field]
-                    if (!fieldRule)
-                        throw new Exception("Missing rule for authority field ${authField.field} bibid: ${authField.bibid}  auth: ${authField.id}")
-                    def bibFields = doc.fields.findAll { bibField ->
-                        fieldRule.bibFields.contains(bibField.keySet()[0])
-                    }
-                    def authSubFields = normaliseSubfields(authField.subfields)
-                            .findAll { it -> !fieldRule.subFieldsToIgnore.auth.contains(it.keySet()[0]) }
-                            .collect { it -> it }
-
-                    bibFields.each { bibField ->
-                        //def allSub = bibField[bibField.keySet()[0]].subfields
-                        //if (allSub.any { it -> it.keySet()[0] == '0' }) {
-                            def bibSubFields = normaliseSubfields(bibField[bibField.keySet()[0]].subfields)
-                                    .findAll { it -> !fieldRule.subFieldsToIgnore.bib.contains(it.keySet()[0]) }
-                                    .collect { it -> it }
-
-                            def diff = bibSubFields.toSet() - authSubFields.toSet()
-                            def diffKeys = diff.collect { it -> it.keySet().first() }
-                            if (diff.count { it } > 0) {
-
-                                misMatchedFields.add([bib: bibField.keySet()[0], authField: authField.field, diff: diff, auth: authSubFields, bib: bibSubFields])
-                            }
-
-                            if (diff.count { it } > 0 &&
-                                    !diffKeys.contains('a') &&
-                                    !(diffKeys.contains('b') && authField.field == '110') &&
-                                    !(diffKeys.contains('p') && authField.field == '130') &&
-                                    !(diffKeys.contains('z') && authField.field == '151') &&
-                                    !(diffKeys.contains('x') && authField.field == '150') &&
-                                    !(diffKeys.contains('y') && authField.field == '150') &&
-                                    !(diffKeys.contains('t') && authField.field == '100') &&
-                                    !(diffKeys.contains('0') && authField.field == '100')
-                            )
-                                println "Diff! Field: ${authField.field}/${bibField.keySet()[0]} ${diff} auth: ${authSubFields} bib: ${bibSubFields} bibid: https://libris.kb.se/bib/${authField.bibid} authid:https://libris.kb.se/auth/${authField.id}"
-
-                            if (diff.count { it } == 0) {
-                                authField.put('matched', 'matched')
-                                matchedFields.add([diff: diff, bib: bibField.keySet()[0], auth: authField.field])
-                                //bibField[bibField.keySet()[0]].subfields.add([0: "https://libris.kb.se/auth/${authField.id}"])
-                            }
-                        }
-                    //}
-
+                def matchResult = SetSpecMatcher.matchAuthToBib(doc, setSpecs)
+                if (matchResult) {
+                    specGroupsResult.SolidMatches += matchResult.SolidMatches
+                    specGroupsResult.MisMatchesOnA += matchResult.MisMatchesOnA
+                    specGroupsResult.MisMatchesOnB += matchResult.MisMatchesOnB
+                    specGroupsResult.bibInAukt += matchResult.bibInAukt
+                    specGroupsResult.auktInBib += matchResult.auktInBib
+                    specGroupsResult.doubleDiff += matchResult.doubleDiff
+                    specGroupsResult.possibleMatches += matchResult.possibleMatches
                 }
-                if (matchedFields.count {it} > setSpecs.count { it -> !ignoredAuthFields.contains(it.field) }) {
-                    println "Matches: ${matchedFields.count { it }}/${setSpecs.count { it -> !ignoredAuthFields.contains(it.field) }}"
+                else{
+                    println "no matchresult. Why?"
                 }
-                if (matchedFields.count {it} < setSpecs.count { it -> !ignoredAuthFields.contains(it.field) }) {
-                    println "Matches: ${matchedFields.count { it }}/${setSpecs.count { it -> !ignoredAuthFields.contains(it.field) }}"
-                    setSpecs.findAll { it -> !it.matched }.each {
-                        println "Unmatched Spec: ${normaliseSubfields(it.subfields)}"
-                    }
-                    matchedFields.each { it ->
-                        println "\t${it}"
-                    }
-                    println "misMatches:"
-                    misMatchedFields.each { it ->
-                        println "\t${it}"
-                    }
-                }
-
-                /* setSpecs.each { it ->
-                     println it.value
-                     if (it.type == "personalName") {
-                         if (doc.fields.'100'.subfields.a.first().first() == it.value) {
-                             println "match!"
-                         }
-                         if(doc.fields.'700'.subfields.a.first().first() == it.value){
-                             println "match!"
-                         }
-                     }
-                 }*/
             }
-            if (!isSuppressed(doc)) {
-                String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-                def id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-                Map convertedData = setSpecs && setSpecs.size() > 1 && collection != 'bib' ?
-                        s_marcFrameConverter.convert(doc, id, [oaipmhSetSpecs: setSpecs]) :
-                        s_marcFrameConverter.convert(doc, id)
-                Document document = new Document(convertedData)
-                document.created = rowMap.created
-                writeDocumentToLoadFile(document, collection)
-            }
+
+            //TODO: enable the below code once the auth-bib matching is finished
+            /* if (!isSuppressed(doc)) {
+                 String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+                 def id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+                 Map convertedData = setSpecs && setSpecs.size() > 1 && collection != 'bib' ?
+                         s_marcFrameConverter.convert(doc, id, [oaipmhSetSpecs: setSpecs]) :
+                         s_marcFrameConverter.convert(doc, id)
+                 Document document = new Document(convertedData)
+                 document.created = rowMap.created
+                 writeDocumentToLoadFile(document, collection)
+             }*/
         }
+        return specGroupsResult
     }
 
-    static String getSubfieldValue(Map p, String s) {
-
-        for (subfield in p.subfields) {
-            String key = subfield.keySet()[0];
-            if (key == s) {
-                return subfield[key]
-            }
-        }
-        return ""
-    }
 
     static List getHoldOaipmhSetSpecs(def resultSet) {
         List specs = []
