@@ -1056,11 +1056,8 @@ class PostgreSQLComponent implements whelk.component.Storage {
                                                          String reference,
                                                          int limit,
                                                          int offset) {
-        // FIXME ObjectMapper insisted on using the word "relation"
-        // rather than the contents of the variable and I have no idea
-        // why :'(
-        List refQuery = [["${relation}": ["@id": reference]]]
-        List refsQuery = [["${relation}": [["@id": reference]]]]
+        List refQuery = [[(relation): ["@id": reference]]]
+        List refsQuery = [[(relation): [["@id": reference]]]]
 
         return rigFindByStatement(find, refQuery, refsQuery, limit, offset)
     }
@@ -1080,8 +1077,8 @@ class PostgreSQLComponent implements whelk.component.Storage {
                                                       String value,
                                                       int limit,
                                                       int offset) {
-        List valueQuery = [["${relation}": value]]
-        List valuesQuery = [["${relation}": [value]]]
+        List valueQuery = [[(relation): value]]
+        List valuesQuery = [[(relation): [value]]]
 
         return rigFindByStatement(find, valueQuery, valuesQuery, limit, offset)
     }
