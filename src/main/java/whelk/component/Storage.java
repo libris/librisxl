@@ -27,4 +27,7 @@ public interface Storage {
     List<Document> findByQuotation(String identifier, int limit, int offset);
     List<Document> findByValue(String relation, String value,
                                int limit, int offset);
+    int countByRelation(String relation, String reference);
+    int countByQuotation(String identifier);
+    int countByValue(String relation, String value);
 }

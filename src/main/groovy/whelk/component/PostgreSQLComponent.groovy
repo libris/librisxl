@@ -36,7 +36,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
                      GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
-    protected String FIND_BY
+    protected String FIND_BY, COUNT_BY
 
     // Deprecated
     protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
@@ -133,7 +133,12 @@ class PostgreSQLComponent implements whelk.component.Storage {
                   "WHERE data->'@graph' @> ? " +
                   "OR data->'@graph' @> ? " +
                   "LIMIT ? OFFSET ?"
-    }
+
+        COUNT_BY = "SELECT count(*) " +
+                   "FROM $mainTableName " +
+                   "WHERE data->'@graph' @> ? " +
+                   "OR data->'@graph' @> ?"
+     }
 
 
     public Map status(URI uri, Connection connection = null) {
@@ -994,6 +999,20 @@ class PostgreSQLComponent implements whelk.component.Storage {
     }
 
     @Override
+    int countByRelation(String relation, String reference) {
+        Connection connection = getConnection()
+        PreparedStatement count = connection.prepareStatement(COUNT_BY)
+
+        count = rigCountByRelationStatement(count, relation, reference)
+
+        try {
+            return executeCountByQuery(count)
+        } finally {
+            connection.close()
+        }
+    }
+
+    @Override
     List<Document> findByQuotation(String identifier, int limit, int offset) {
         Connection connection = getConnection()
         PreparedStatement find = connection.prepareStatement(FIND_BY)
@@ -1013,6 +1032,21 @@ class PostgreSQLComponent implements whelk.component.Storage {
         int offset = 0
 
         findByQuotation(identifier, limit, offset)
+    }
+
+    @Override
+    int countByQuotation(String identifier) {
+        Connection connection = getConnection()
+        PreparedStatement count = connection.prepareStatement(COUNT_BY)
+
+        count = rigCountByQuotationStatement(count, identifier)
+
+        try {
+            return executeCountByQuery(count)
+        } finally {
+            connection.close()
+        }
+
     }
 
     @Override
@@ -1037,6 +1071,20 @@ class PostgreSQLComponent implements whelk.component.Storage {
         findByValue(relation, value, limit, offset)
     }
 
+    @Override
+    int countByValue(String relation, String value) {
+        Connection connection = getConnection()
+        PreparedStatement count = connection.prepareStatement(COUNT_BY)
+
+        count = rigCountByValueStatement(count, relation, value)
+
+        try {
+            return executeCountByQuery(count)
+        } finally {
+            connection.close()
+        }
+    }
+
     private List<Document> executeFindByQuery(PreparedStatement query) {
         log.debug("Executing find query: ${query}")
 
@@ -1051,6 +1099,20 @@ class PostgreSQLComponent implements whelk.component.Storage {
         return docs
     }
 
+    private int executeCountByQuery(PreparedStatement query) {
+        log.debug("Executing count query: ${query}")
+
+        ResultSet rs = query.executeQuery()
+
+        int result = 0
+
+        if (rs.next()) {
+            result = rs.getInt('count')
+        }
+
+        return result
+    }
+
     private PreparedStatement rigFindByRelationStatement(PreparedStatement find,
                                                          String relation,
                                                          String reference,
@@ -1062,6 +1124,15 @@ class PostgreSQLComponent implements whelk.component.Storage {
         return rigFindByStatement(find, refQuery, refsQuery, limit, offset)
     }
 
+    private PreparedStatement rigCountByRelationStatement(PreparedStatement find,
+                                                          String relation,
+                                                          String reference) {
+        List refQuery = [[(relation): ["@id": reference]]]
+        List refsQuery = [[(relation): [["@id": reference]]]]
+
+        return rigCountByStatement(find, refQuery, refsQuery)
+    }
+
     private PreparedStatement rigFindByQuotationStatement(PreparedStatement find,
                                                           String identifier,
                                                           int limit,
@@ -1070,6 +1141,14 @@ class PostgreSQLComponent implements whelk.component.Storage {
         List sameAsQuery = [["@graph": [["@sameAs": [["@id": identifier]]]]]]
 
         return rigFindByStatement(find, refQuery, sameAsQuery, limit, offset)
+    }
+
+    private PreparedStatement rigCountByQuotationStatement(PreparedStatement find,
+                                                           String identifier) {
+        List refQuery = [["@graph": ["@id": identifier]]]
+        List sameAsQuery = [["@graph": [["@sameAs": [["@id": identifier]]]]]]
+
+        return rigCountByStatement(find, refQuery, sameAsQuery)
     }
 
     private PreparedStatement rigFindByValueStatement(PreparedStatement find,
@@ -1083,6 +1162,15 @@ class PostgreSQLComponent implements whelk.component.Storage {
         return rigFindByStatement(find, valueQuery, valuesQuery, limit, offset)
     }
 
+    private PreparedStatement rigCountByValueStatement(PreparedStatement find,
+                                                       String relation,
+                                                       String value) {
+        List valueQuery = [[(relation): value]]
+        List valuesQuery = [[(relation): [value]]]
+
+        return rigCountByStatement(find, valueQuery, valuesQuery)
+    }
+
     private PreparedStatement rigFindByStatement(PreparedStatement find,
                                                  List firstCondition,
                                                  List secondCondition,
@@ -1094,6 +1182,16 @@ class PostgreSQLComponent implements whelk.component.Storage {
                      java.sql.Types.OTHER)
       find.setInt(3, limit)
       find.setInt(4, offset)
+      return find
+    }
+
+    private PreparedStatement rigCountByStatement(PreparedStatement find,
+                                                  List firstCondition,
+                                                  List secondCondition) {
+      find.setObject(1, mapper.writeValueAsString(firstCondition),
+                     java.sql.Types.OTHER)
+      find.setObject(2, mapper.writeValueAsString(secondCondition),
+                     java.sql.Types.OTHER)
       return find
     }
 }
