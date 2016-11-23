@@ -58,7 +58,7 @@ class OaiPmhHarvester {
         URL url = constructRequestUrl(serviceURL, verb, metadataPrefix, null, harvestResult.fromDate, harvestResult.untilDate)
 
         try {
-            while (harvesting) {
+            while (harvesting == true) {
                 harvestResult = readUrl(url, harvestResult)
                 if (harvestResult.resumptionToken) {
                     log.debug("Found resumption token ${harvestResult.resumptionToken}")
@@ -69,7 +69,7 @@ class OaiPmhHarvester {
                     harvesting = false
                 }
             }
-        } catch (RecordFromThePastException rftpe) {
+        /*} catch (RecordFromThePastException rftpe) {
             log.warn("Record ${rftpe.badRecord.identifier} has datestamp (${rftpe.badRecord.datestamp}) before requested (${harvestResult.fromDate}). URL used to retrieve results: ${url.toString()}")
         } catch (RecordFromTheFutureException rftfe) {
             log.warn("Record ${rftfe.badRecord.identifier} has datestamp (${rftfe.badRecord.datestamp}) after requested (${harvestResult.untilDate}).")
@@ -79,9 +79,9 @@ class OaiPmhHarvester {
         } catch (BrokenRecordException bre) {
             log.error(bre.message)
             throw bre
-        } catch (Exception e) {
-            log.error("Some other error: ${e.message}", e)
-            throw e
+        */} catch (any) {
+            log.error("Some other error:", any)
+            throw any
         }
         return harvestResult
     }
@@ -131,7 +131,12 @@ class OaiPmhHarvester {
                     hdata.resumptionToken = streamReader.elementText
                 }
             }
-        } finally {
+        }
+        catch (any) {
+            log.debug("Error!",any)
+            throw any
+        }
+        finally {
             log.trace("Closing streams")
             try {
                 streamReader.close()
@@ -143,7 +148,8 @@ class OaiPmhHarvester {
         }
         // Store remaining documents
         String sourceSystem = hdata.sourceSystem == null ? DEFAULT_SOURCE_SYSTEM : hdata.sourceSystem
-        whelk.bulkStore(documentList, sourceSystem, null, incomingCollection)
+        //not in use?
+        //whelk.bulkStore(documentList, sourceSystem, null, incomingCollection)
         log.debug("Done reading stream. Documents still in documentList: ${documentList.size()}")
         log.debug("Imported ${hdata.numberOfDocuments}. Last timestamp: ${hdata.lastRecordDatestamp}. Number deleted: ${hdata.numberOfDocumentsDeleted}")
         return hdata
