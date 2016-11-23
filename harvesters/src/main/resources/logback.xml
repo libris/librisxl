@@ -18,13 +18,16 @@
       <level value="warn"/>
    </logger>
 
-  <logger name="whelk.servlet.ScheduledJob" level="info"/>
-  <logger name="whelk.component.PostgreSQLComponent" level="info"/>
-  <logger name="whelk.component.ElasticSearch" level="info"/>
-  <logger name="whelk.servlet.OaiPmhImporterServlet" level="info"/>
-  <logger name="whelk.harvester.LibrisOaiPmhHarvester" level="debug"/>
+    <logger name="whelk.JsonLd" level="info"/>
+    <logger name="whelk.servlet.ScheduledJob" level="info"/>
+    <logger name="whelk.component.PostgreSQLComponent" level="info"/>
+    <logger name="whelk.component.ElasticSearch" level="info"/>
+    <logger name="whelk.servlet.OaiPmhImporterServlet" level="info"/>
+    <logger name="whelk.harvester.LibrisOaiPmhHarvester" level="info"/>
+    <logger name="whelk.harvester.OaiPmhHarvester" level="info"/>
 
-  <root level="info">
+
+    <root level="info">
     <appender-ref ref="STDOUT" />
       <appender-ref ref="FILE-WHELK" />
   </root>
