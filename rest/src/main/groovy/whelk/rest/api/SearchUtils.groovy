@@ -669,25 +669,6 @@ class SearchUtils {
         return ['q', 'p', 'o', 'value', '_limit', '_offset']
     }
 
-    // TODO implement
-    /*
-     * Assemble PostgreSQL search results.
-     *
-     */
-    private Map assembleSearchResults(List<Document> docs) {
-        Map result = [:]
-        List items = []
-
-        docs.each { doc ->
-            items << toCard(doc.data)
-        }
-
-        result["items"] = items
-        result["hits"] = items.size()
-
-        return result
-    }
-
     /*
      * Get value for reserved parameter from query.
      *
