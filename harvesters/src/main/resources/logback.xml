@@ -1,35 +1,37 @@
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <!-- encoders are assigned the type
-         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
-    <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-    </encoder>
-  </appender>
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
     <appender name="FILE-WHELK" class="ch.qos.logback.core.FileAppender">
         <file>${catalina.base}/logs/whelk.log</file>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+            </pattern>
         </encoder>
     </appender>
 
 
     <logger name="org.elasticsearch">
-      <level value="warn"/>
-   </logger>
+        <level value="warn"/>
+    </logger>
 
     <logger name="whelk.JsonLd" level="info"/>
-    <logger name="whelk.servlet.ScheduledJob" level="info"/>
+    <logger name="whelk.servlet.ScheduledJob" level="debug"/>
     <logger name="whelk.component.PostgreSQLComponent" level="info"/>
     <logger name="whelk.component.ElasticSearch" level="info"/>
-    <logger name="whelk.servlet.OaiPmhImporterServlet" level="info"/>
-    <logger name="whelk.harvester.LibrisOaiPmhHarvester" level="info"/>
-    <logger name="whelk.harvester.OaiPmhHarvester" level="info"/>
+    <logger name="whelk.servlet.OaiPmhImporterServlet" level="debug"/>
+    <logger name="whelk.harvester.LibrisOaiPmhHarvester" level="debug"/>
+    <logger name="whelk.harvester.OaiPmhHarvester" level="debug"/>
 
 
     <root level="info">
-    <appender-ref ref="STDOUT" />
-      <appender-ref ref="FILE-WHELK" />
-  </root>
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE-WHELK"/>
+    </root>
 </configuration>
 

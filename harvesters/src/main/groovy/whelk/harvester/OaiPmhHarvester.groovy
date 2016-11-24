@@ -69,7 +69,8 @@ class OaiPmhHarvester {
                     harvesting = false
                 }
             }
-        /*} catch (RecordFromThePastException rftpe) {
+            log.debug "harvesting finished"
+        } catch (RecordFromThePastException rftpe) {
             log.warn("Record ${rftpe.badRecord.identifier} has datestamp (${rftpe.badRecord.datestamp}) before requested (${harvestResult.fromDate}). URL used to retrieve results: ${url.toString()}")
         } catch (RecordFromTheFutureException rftfe) {
             log.warn("Record ${rftfe.badRecord.identifier} has datestamp (${rftfe.badRecord.datestamp}) after requested (${harvestResult.untilDate}).")
@@ -79,9 +80,9 @@ class OaiPmhHarvester {
         } catch (BrokenRecordException bre) {
             log.error(bre.message)
             throw bre
-        */} catch (any) {
-            log.error("Some other error:", any)
-            throw any
+        } catch (Exception e) {
+            log.error("Some other error:", e)
+            throw e
         }
         return harvestResult
     }
@@ -132,10 +133,6 @@ class OaiPmhHarvester {
                 }
             }
         }
-        catch (any) {
-            log.debug("Error!",any)
-            throw any
-        }
         finally {
             log.trace("Closing streams")
             try {
@@ -148,8 +145,16 @@ class OaiPmhHarvester {
         }
         // Store remaining documents
         String sourceSystem = hdata.sourceSystem == null ? DEFAULT_SOURCE_SYSTEM : hdata.sourceSystem
-        //not in use?
-        //whelk.bulkStore(documentList, sourceSystem, null, incomingCollection)
+        try {
+
+            if (documentList.count { it } > 0)
+                whelk.bulkStore(documentList, sourceSystem, null, incomingCollection)
+            else
+                log.debug("documentList contains no records")
+
+        } catch (any) {
+            log.error("bulkstorfel", any)
+        }
         log.debug("Done reading stream. Documents still in documentList: ${documentList.size()}")
         log.debug("Imported ${hdata.numberOfDocuments}. Last timestamp: ${hdata.lastRecordDatestamp}. Number deleted: ${hdata.numberOfDocumentsDeleted}")
         return hdata
@@ -162,6 +167,9 @@ class OaiPmhHarvester {
 
         // Advance to header
         reader.nextTag()
+        String status = reader.getAttributeValue(null, "status")
+        log.trace "Status: ${status}"
+        oair.deleted = (status == "deleted")
 
         while (!endElement("header", reader)) {
             if (reader.isStartElement()) {
@@ -175,9 +183,7 @@ class OaiPmhHarvester {
                     case "setSpec":
                         oair.setSpecs << reader.elementText
                         break;
-                    case "status":
-                        oair.deleted = (reader.elementText == "deleted")
-                        break;
+
                 }
             }
             reader.next()
