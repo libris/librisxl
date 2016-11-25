@@ -7,6 +7,7 @@ import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
 import whelk.component.ElasticSearch
+import whelk.component.StorageType
 import whelk.exception.WhelkRuntimeException
 
 @Log
@@ -253,6 +254,23 @@ class SearchUtils {
 
         return whelk.storage.query(queryParameters, dataset,
                                    autoDetectQueryMode(queryParameters))
+    }
+
+    StorageType autoDetectQueryMode(Map queries) {
+        boolean probablyMarcQuery = false
+        for (entry in queries) {
+            if (entry.key ==~ /\d{3}\.{0,1}\w{0,1}/) {
+                probablyMarcQuery = true
+            } else if (!entry.key.startsWith("_")) {
+                probablyMarcQuery = false
+            }
+        }
+
+        if (probablyMarcQuery) {
+            return StorageType.MARC21_JSON
+        } else {
+            return StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS
+        }
     }
 
     /**

@@ -10,7 +10,6 @@ import whelk.Location
 import whelk.Whelk
 import whelk.IdGenerator
 import whelk.component.ElasticSearch
-import whelk.component.StorageType
 import whelk.converter.FormatConverter
 import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.JsonLD2MarcXMLConverter
@@ -87,18 +86,6 @@ class Crud extends HttpServlet {
         whelk = pico.getComponent(Whelk.class)
         search = new SearchUtils(whelk)
         search.readDisplayData()
-    }
-
-    StorageType autoDetectQueryMode(Map queries) {
-        boolean probablyMarcQuery = false
-        for (entry in queries) {
-            if (entry.key ==~ /\d{3}\.{0,1}\w{0,1}/) {
-                probablyMarcQuery = true
-            } else if (!entry.key.startsWith("_")) {
-                probablyMarcQuery = false
-            }
-        }
-        return probablyMarcQuery ? StorageType.MARC21_JSON : StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
