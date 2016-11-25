@@ -13,6 +13,7 @@ import whelk.component.ElasticSearch
 import whelk.converter.FormatConverter
 import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.JsonLD2MarcXMLConverter
+import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkAddException
@@ -111,6 +112,11 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,
                                "Attempted to use elastic for query, but " +
                                "no elastic component is configured.")
+            return
+        } catch (InvalidQueryException iqe) {
+            log.error("Invalid query: ${queryParameters}")
+            response.sendError(HttpServletResponse.BAD_REQUEST,
+                               "Invalid query, please check the documentation.")
             return
         }
     }

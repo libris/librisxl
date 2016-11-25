@@ -9,6 +9,7 @@ import whelk.Whelk
 import whelk.component.ElasticSearch
 import whelk.component.StorageType
 import whelk.exception.WhelkRuntimeException
+import whelk.exception.InvalidQueryException
 
 @Log
 class SearchUtils {
@@ -77,10 +78,7 @@ class SearchUtils {
                 throw new WhelkRuntimeException("ElasticSearch not configured.")
             }
         } else {
-            // If none of the special query parameters were specified,
-            // we query PostgreSQL
-            results = queryPostgreSQL(queryParameters, dataset,
-                                      limit, offset)
+            throw new InvalidQueryException('Could not determine search type.')
         }
 
         return results
@@ -246,31 +244,6 @@ class SearchUtils {
         result['items'] = items
 
         return result
-    }
-
-    private Map queryPostgreSQL(Map queryParameters, String dataset,
-                                int limit, int offset) {
-        log.debug("Querying PostgreSQL")
-
-        return whelk.storage.query(queryParameters, dataset,
-                                   autoDetectQueryMode(queryParameters))
-    }
-
-    StorageType autoDetectQueryMode(Map queries) {
-        boolean probablyMarcQuery = false
-        for (entry in queries) {
-            if (entry.key ==~ /\d{3}\.{0,1}\w{0,1}/) {
-                probablyMarcQuery = true
-            } else if (!entry.key.startsWith("_")) {
-                probablyMarcQuery = false
-            }
-        }
-
-        if (probablyMarcQuery) {
-            return StorageType.MARC21_JSON
-        } else {
-            return StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS
-        }
     }
 
     /**
