@@ -186,7 +186,7 @@ class SearchUtils {
         }
 
         // TODO: statsTree may depend on site ({id,libris}.kb.se)
-        Map statsTree = ['@type': []]
+        Map statsTree = [(JsonLd.TYPE_KEY): []]
 
         if (statsTree) {
             dslQuery['aggs'] = buildAggQuery(statsTree)
@@ -212,8 +212,8 @@ class SearchUtils {
         mappings.tail().each { mapping ->
             Map params = pageParams.clone()
             params.remove(mapping['variable'])
-            mapping['up'] = ['@id': makeFindUrl(SearchType.ELASTIC, params,
-                                                offset)]
+            mapping['up'] = [(JsonLd.ID_KEY): makeFindUrl(SearchType.ELASTIC,
+                                                          params, offset)]
         }
 
         Map result = assembleSearchResults(SearchType.ELASTIC,
@@ -230,8 +230,8 @@ class SearchUtils {
     private Map assembleSearchResults(SearchType st, List items,
                                       List mappings, Map pageParams,
                                       int limit, int offset, int total) {
-        Map result = ['@type': 'PartialCollectionView']
-        result['@id'] = makeFindUrl(st, pageParams, offset)
+        Map result = [(JsonLd.TYPE_KEY): 'PartialCollectionView']
+        result[(JsonLd.ID_KEY)] = makeFindUrl(st, pageParams, offset)
         result['itemOffset'] = offset
         result['totalItems'] = total
 
@@ -252,7 +252,9 @@ class SearchUtils {
      */
     Map makeSiteFilter(String siteBaseUri) {
         return ['should': [
-                   ['prefix': ['@id': siteBaseUri]],
+                   ['prefix': [(JsonLd.ID_KEY): siteBaseUri]],
+                   // ideally, we'd use ID_KEY here too, but that
+                   // breaks the test case :/
                    ['prefix': ['sameAs.@id': siteBaseUri]]
                 ],
                 'minimum_should_match': 1]
@@ -297,14 +299,14 @@ class SearchUtils {
     private Map addSlices(Map stats, Map aggregations, String baseUrl) {
         Map sliceMap = aggregations.inject([:]) { acc, key, aggregation ->
             List observations = []
-            Map sliceNode = ['dimension': key.replace('.@id', '')]
+            Map sliceNode = ['dimension': key.replace(".${JsonLd.ID_KEY}", '')]
 
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
                 String searchPageUrl = "${baseUrl}&${key}=${urlEncode(itemId)}"
 
                 Map observation = ['totalItems': bucket.getAt('docCount'),
-                                   'view': ['@id': searchPageUrl],
+                                   'view': [(JsonLd.ID_KEY): searchPageUrl],
                                    'object': toChip(lookup(itemId))]
 
                 Map bucketAggs = bucket.getAggregations().asMap
@@ -338,7 +340,7 @@ class SearchUtils {
         if (entry) {
             return entry
         } else {
-            return ['@id': itemId, 'label': itemId]
+            return [(JsonLd.ID_KEY): itemId, 'label': itemId]
         }
     }
 
@@ -363,7 +365,7 @@ class SearchUtils {
     // FIXME move to Document or JsonLd
     private Map getEntry(Map jsonLd) {
         // we rely on this convention for the time being.
-        return jsonLd['@graph'][0]
+        return jsonLd[(JsonLd.GRAPH_KEY)][0]
     }
 
     /**
@@ -458,20 +460,21 @@ class SearchUtils {
         Map result = [:]
         Offsets offsets = new Offsets(total, limit, offset)
 
-        result['first'] = ['@id': makeFindUrl(st, pageParams)]
-        result['last'] = ['@id': makeFindUrl(st, pageParams, offsets.last)]
+        result['first'] = [(JsonLd.ID_KEY): makeFindUrl(st, pageParams)]
+        result['last'] = [(JsonLd.ID_KEY): makeFindUrl(st, pageParams, offsets.last)]
 
         if (offsets.prev) {
             if (offsets.prev == 0) {
                 result['previous'] = result['first']
             } else {
-                result['previous'] = ['@id': makeFindUrl(st, pageParams,
-                                                         offsets.prev)]
+                result['previous'] = [(JsonLd.ID_KEY): makeFindUrl(st, pageParams,
+                                                                   offsets.prev)]
             }
         }
 
         if (offsets.next) {
-            result['next'] = ['@id': makeFindUrl(st, pageParams, offsets.next)]
+            result['next'] = [(JsonLd.ID_KEY): makeFindUrl(st, pageParams,
+                                                           offsets.next)]
         }
 
         return result
@@ -581,7 +584,7 @@ class SearchUtils {
     private Map removeProperties(Map jsonMap, Map lensGroups) {
         Map itemsToKeep = [:]
         Map types = lensGroups.get("lenses")
-        String type = jsonMap.get("@type")
+        String type = jsonMap.get(JsonLd.TYPE_KEY)
 
         if (!type) {
             return jsonMap
