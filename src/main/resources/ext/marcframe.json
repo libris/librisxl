@@ -2417,7 +2417,7 @@
 
     "033": {
       "NOTE:record-count": 852,
-      "TODO": "should be used more?",
+      "TODO": "should be used more? See also free text form in 518",
       "aboutEntity": "?work",
       "addProperty": "eventContent",
       "resourceType": "Event",
@@ -2540,7 +2540,7 @@
       "$9": {"property": "license"}
     },
     "041": {
-      "TODO:match-repeated": {
+      "TODO:useWhenImplemented?:match-repeated": {
         "addLink": "hasPart",
         "embedded": true
       },
@@ -2901,6 +2901,7 @@
       },
       "i2": {
         "property": "@type",
+        "TODO:if _": "use $i",
         "tokenMap": {
           "0": "marc:TitlePart",
           "1": "ParallelTitle",
@@ -2916,11 +2917,6 @@
       "$f": {"property": "qualifyingNote"},
       "$g": {"property": "comment"},
       "$h": {"property": "marc:mediaTerm", "surroundingChars": "[]"},
-      "$i": {"property": "typeNote"},
-      "i2": {
-        "property": "typeNote",
-        "TODO:tokenMap": {}, "TODO:if _": "use $i"
-      },
       "$i": {"property": "typeNote"},
       "$f": {"property": "coverage"},
       "$g": {"property": "note"},
@@ -3683,7 +3679,12 @@
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
         }
       },
-      "TOOO:i2": {},
+      "TODO:match-i2": {
+        "2": {
+          "NOTE": "analytiskt bidrag",
+          "TODO:addLink": "hasPart"
+        }
+      },
       "_spec": [
         {
           "source": {"700":
