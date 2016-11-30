@@ -223,13 +223,30 @@ class ElasticSearch implements Index {
 
             // we assume vals is a String[], since that's that we get
             // from HttpServletResponse.getParameterMap()
-            vals.each { v ->
-                musts << ['match': ["${k}": v]]
-            }
+            musts << buildESShouldClause(k, vals)
         }
 
         dslQuery['query'] = ['bool': ['must': musts]]
         return dslQuery
+    }
+
+    /*
+     * Create a 'bool' query for matching at least one of the values.
+     *
+     * E.g. k=v1 OR k=v2 OR ..., with minimum_should_match set to 1.
+     *
+     */
+    private static Map buildESShouldClause(String key, String[] values) {
+        Map result = [:]
+        List shoulds = []
+
+        values.each { v ->
+            shoulds << ['match': [(key): v]]
+        }
+
+        result['should'] = shoulds
+        result['minimum_should_match'] = 1
+        return ['bool': result]
     }
 
     public String getIndexName() { defaultIndex }
