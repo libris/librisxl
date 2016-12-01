@@ -88,10 +88,10 @@ class SearchUtils {
                                                            limit, offset)
         List mappings = []
         mappings << ['variable': 'p',
-                     'predicate': toChip(getVocabEntry('predicate')),
+                     'predicate': JsonLd.toChip(getVocabEntry('predicate'), displayData),
                      'value': relation]
         mappings << ['variable': 'o',
-                     'predicate': toChip(getVocabEntry('object')),
+                     'predicate': JsonLd.toChip(getVocabEntry('object'), displayData),
                      'value': reference]
 
         Map pageParams = ['p': relation, 'o': reference,
@@ -99,7 +99,7 @@ class SearchUtils {
 
         int total = whelk.storage.countByRelation(relation, reference)
 
-        List items = toCards(docs.collect { it.data })
+        List items = JsonLd.toCards(docs.collect { it.data }, displayData)
 
         return assembleSearchResults(SearchType.FIND_BY_RELATION,
                                      items, mappings, pageParams,
@@ -115,10 +115,10 @@ class SearchUtils {
 
         List mappings = []
         mappings << ['variable': 'p',
-                     'predicate': toChip(getVocabEntry('predicate')),
+                     'predicate': JsonLd.toChip(getVocabEntry('predicate'), displayData),
                      'value': relation]
         mappings << ['variable': 'value',
-                     'predicate': toChip(getVocabEntry('object')),
+                     'predicate': JsonLd.toChip(getVocabEntry('object'), displayData),
                      'value': value]
 
         Map pageParams = ['p': relation, 'value': value,
@@ -126,7 +126,7 @@ class SearchUtils {
 
         int total = whelk.storage.countByValue(relation, value)
 
-        List items = toCards(docs.collect { it.data })
+        List items = JsonLd.toCards(docs.collect { it.data }, displayData)
 
         return assembleSearchResults(SearchType.FIND_BY_VALUE,
                                      items, mappings, pageParams,
@@ -141,14 +141,14 @@ class SearchUtils {
 
         List mappings = []
         mappings << ['variable': 'o',
-                     'predicate': toChip(getVocabEntry('object')),
+                     'predicate': JsonLd.toChip(getVocabEntry('object'), displayData),
                      'value': identifier]
 
         Map pageParams = ['o': identifier, '_limit': limit]
 
         int total = whelk.storage.countByQuotation(identifier)
 
-        List items = toCards(docs.collect { it.data })
+        List items = JsonLd.toCards(docs.collect { it.data }, displayData)
 
         return assembleSearchResults(SearchType.FIND_BY_QUOTATION,
                                      items, mappings, pageParams,
