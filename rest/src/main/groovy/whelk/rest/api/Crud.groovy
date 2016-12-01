@@ -623,7 +623,7 @@ class Crud extends HttpServlet {
     }
 
     boolean isEmptyInput(Map inputData) {
-        if (inputData.size() == 0) {
+        if (!inputData || inputData.size() == 0) {
             return true
         } else {
             return false
