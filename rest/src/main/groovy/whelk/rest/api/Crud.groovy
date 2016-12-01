@@ -58,6 +58,7 @@ class Crud extends HttpServlet {
             "hold": "/sys/context/lib.jsonld"
     ]
     Whelk whelk
+    Map displayData
     SearchUtils search
     PicoContainer pico
     static final ObjectMapper mapper = new ObjectMapper()
@@ -82,15 +83,23 @@ class Crud extends HttpServlet {
         pico.start()
     }
 
+    void readDisplayData() {
+        String vocabDisplayUri = "https://id.kb.se/vocab/display"
+        Document displayDoc = whelk.storage.locate(vocabDisplayUri,
+                true).document
+        displayData = displayDoc.data
+    }
+
     @Override
     void init() {
         whelk = pico.getComponent(Whelk.class)
-        search = new SearchUtils(whelk)
-        search.readDisplayData()
+        readDisplayData()
+        search = new SearchUtils(whelk, displayData)
+
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
-                     String dataset, String siteBaseUri=null) {
+                     String dataset, String siteBaseUri = null) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String callback = queryParameters.remove("callback")
 
@@ -150,8 +159,7 @@ class Crud extends HttpServlet {
             // FIXME still true/needed?
             // Tomcat incorrectly strips away double slashes from the pathinfo.
             // Compensate here.
-            if (path ==~ "/http:/[^/].+")
-            {
+            if (path ==~ "/http:/[^/].+") {
                 path = path.replace("http:/", "http://")
             }
 
@@ -185,11 +193,24 @@ class Crud extends HttpServlet {
 
         if (format == FormattingType.EMBELLISHED) {
             List externalRefs = doc.getExternalRefs()
-            Map referencedDocuments = getDocuments(externalRefs)
-            doc.embellish(referencedDocuments)
+            List convertedExternalLinks = convertMarcLinks(externalRefs)
+            Map referencedDocuments = getDocuments(convertedExternalLinks)
+            doc.embellish(referencedDocuments, displayData)
         }
 
         sendGetResponse(request, response, doc, path)
+    }
+
+    private List convertMarcLinks(List refs) {
+        List result = []
+        refs.each { ref ->
+            if (ref.toString().startsWith("marc:")) {
+                result << ref.toString().replace("marc:", "https://id.kb.se/marc/")
+            } else {
+                result << ref
+            }
+        }
+        return result
     }
 
     /**
@@ -254,13 +275,11 @@ class Crud extends HttpServlet {
             Document doc = whelk.storage.load(id, version)
             return new Tuple2(doc, null)
         } else {
-            // FIXME what does this mean?
-            // We don't want to load the document here
             Location location = whelk.storage.locate(id, false)
             Document document = location?.document
             if (!document && location?.uri) {
                 return new Tuple2(null, location)
-            } else if(!document) {
+            } else if (!document) {
                 return new Tuple2(null, null)
             } else {
                 return new Tuple2(document, location)
@@ -276,12 +295,15 @@ class Crud extends HttpServlet {
      */
     Map getDocuments(List ids) {
         Map result = [:]
+        Document doc
         ids.each { id ->
             if (id.startsWith(Document.BASE_URI.toString())) {
                 id = Document.BASE_URI.resolve(id).getPath().substring(1)
+                doc = whelk.storage.load(id)
+            } else {
+                doc = whelk.storage.locate(id, true)?.document
             }
-            // FIXME maybe we want to do a locate rathern than a load here?
-            Document doc = whelk.storage.load(id)
+
             if (doc && !doc.deleted) {
                 result[id] = doc.data
             }
@@ -358,7 +380,7 @@ class Crud extends HttpServlet {
 
         List<String> accepting = acceptHeader?.split(",").collect {
             int last = (it.indexOf(';') == -1 ? it.length() : it.indexOf(';'))
-            it.substring(0,last)
+            it.substring(0, last)
         }
         log.debug("Accepting $accepting")
 
@@ -411,7 +433,7 @@ class Crud extends HttpServlet {
     void doPost(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Handling POST request.")
 
-        if(request.pathInfo != "/") {
+        if (request.pathInfo != "/") {
             log.debug("Invalid POST request URL.")
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
                                "Method not allowed.")
@@ -505,7 +527,7 @@ class Crud extends HttpServlet {
     void doPut(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Handling PUT request.")
 
-        if(request.pathInfo == "/") {
+        if (request.pathInfo == "/") {
             log.debug("Invalid PUT request URL.")
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
                                "Method not allowed.")
@@ -579,10 +601,10 @@ class Crud extends HttpServlet {
             boolean allowed = hasPermission(request.getAttribute("user"),
                                             updatedDoc, existingDoc)
             if (!allowed) {
-              response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                                 "You are not authorized to perform this " +
-                                 "operation")
-              return
+                response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                                   "You are not authorized to perform this " +
+                                   "operation")
+                return
             }
         } catch (ModelValidationException mve) {
             // FIXME data leak
@@ -647,7 +669,7 @@ class Crud extends HttpServlet {
         } catch (WhelkAddException wae) {
             log.warn("Whelk failed to store document: ${wae.message}")
             // FIXME data leak
-            response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE ,
+            response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
                                wae.message)
         } catch (Exception e) {
             log.error("Operation failed", e)
@@ -723,14 +745,14 @@ class Crud extends HttpServlet {
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Handling DELETE request.")
-        if(request.pathInfo == "/") {
+        if (request.pathInfo == "/") {
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method not allowed.")
             return
         }
         try {
             String id = request.pathInfo.substring(1)
             def doc = whelk.storage.load(id)
-            if(!doc) {
+            if (!doc) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
             } else if (doc && !hasPermission(request.getAttribute("user"), null, doc)) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
@@ -746,7 +768,6 @@ class Crud extends HttpServlet {
         }
 
     }
-
 
 
 }

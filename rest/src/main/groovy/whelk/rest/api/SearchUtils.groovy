@@ -31,16 +31,9 @@ class SearchUtils {
     Whelk whelk
     Map displayData
 
-    SearchUtils(Whelk whelk) {
+    SearchUtils(Whelk whelk, Map displayData) {
         this.whelk = whelk
-    }
-
-    void readDisplayData() {
-        //Read the display file - should propably not do this here.
-        String vocabDisplayUri = "https://id.kb.se/vocab/display"
-        Document displayDoc = whelk.storage.locate(vocabDisplayUri,
-                                                   true).document
-        displayData = displayDoc.data
+        this.displayData = displayData
     }
 
     Map doSearch(Map queryParameters, String dataset, String siteBaseUri) {
@@ -172,7 +165,7 @@ class SearchUtils {
         Map stats = null
         List mappings = []
         mappings << ['variable': 'q',
-                     'predicate': toChip(getVocabEntry('textQuery')),
+                     'predicate': JsonLd.toChip(getVocabEntry('textQuery'), displayData),
                      'value': query]
         def dslQuery = ElasticSearch.createJsonDsl(queryParameters,
                                                    limit, offset)
@@ -201,7 +194,7 @@ class SearchUtils {
 
         List items = []
         if (esResult['items']) {
-            items = toCards(esResult['items'])
+            items = JsonLd.toCards(esResult['items'], displayData)
         }
 
         if (statsTree) {
@@ -253,8 +246,8 @@ class SearchUtils {
     Map makeSiteFilter(String siteBaseUri) {
         return ['should': [
                    ['prefix': [(JsonLd.ID_KEY): siteBaseUri]],
-                   // ideally, we'd use ID_KEY here too, but that
-                   // breaks the test case :/
+                    // ideally, we'd use ID_KEY here too, but that
+                    // breaks the test case :/
                    ['prefix': ['sameAs.@id': siteBaseUri]]
                 ],
                 'minimum_should_match': 1]
@@ -278,10 +271,10 @@ class SearchUtils {
         }
 
         keys.each { key ->
-          query[key] = ['terms': ['field': key, 'size': size]]
-          if (tree instanceof Map) {
-              query[key]['aggs'] = buildAggQuery(tree[key], size)
-          }
+            query[key] = ['terms': ['field': key, 'size': size]]
+            if (tree instanceof Map) {
+                query[key]['aggs'] = buildAggQuery(tree[key], size)
+            }
         }
         return query
     }
@@ -307,7 +300,7 @@ class SearchUtils {
 
                 Map observation = ['totalItems': bucket.getAt('docCount'),
                                    'view': [(JsonLd.ID_KEY): searchPageUrl],
-                                   'object': toChip(lookup(itemId))]
+                                   'object': JsonLd.toChip(lookup(itemId), displayData)]
 
                 Map bucketAggs = bucket.getAggregations().asMap
 
@@ -322,7 +315,7 @@ class SearchUtils {
         }
 
         if (sliceMap) {
-          stats['sliceByDimension'] = sliceMap
+            stats['sliceByDimension'] = sliceMap
         }
 
         return stats
@@ -478,7 +471,7 @@ class SearchUtils {
         }
 
         return result
-  }
+    }
 
     /**
      * Get limit and offset from query parameters.
@@ -526,89 +519,6 @@ class SearchUtils {
         }
     }
 
-    /**
-     * Convert a list of posts to cards.
-     *
-     */
-    List toCards(List things){
-        return things.collect { toCard(it) }
-    }
-
-    /**
-     * Convert a post to card.
-     *
-     */
-    Map toCard(Map thing) {
-        Map lensGroups = displayData.get("lensGroups")
-        Map cardLensGroup = lensGroups.get("cards")
-        Map result = [:]
-
-        Map card = removeProperties(thing, cardLensGroup)
-        card.each {key, value ->
-            result[key] = toChip(value)
-        }
-        return result
-    }
-
-    /**
-     * Convert a list of posts to chips.
-     *
-     */
-    List toChips(List things) {
-        return things.collect { toChip(it) }
-    }
-
-    /**
-     * Convert a post to chip.
-     *
-     */
-    Object toChip(Object object) {
-        Map lensGroups = displayData.get("lensGroups")
-        Map chipLensGroup = lensGroups.get("chips")
-        Map itemsToKeep = [:]
-        Map result = [:]
-
-        if (object instanceof List){
-            return toChips(object)
-        } else if ((object instanceof Map)) {
-            itemsToKeep = removeProperties(object, chipLensGroup)
-            itemsToKeep.each {key, value ->
-                result[key] = toChip(value)
-            }
-            return result
-        } else {
-            return object
-        }
-    }
-
-    private Map removeProperties(Map jsonMap, Map lensGroups) {
-        Map itemsToKeep = [:]
-        Map types = lensGroups.get("lenses")
-        String type = jsonMap.get(JsonLd.TYPE_KEY)
-
-        if (!type) {
-            return jsonMap
-        }
-
-        Map showPropertiesField = types.get(type)
-
-        if (showPropertiesField) {
-            List propertiesToKeep = showPropertiesField.get("showProperties")
-
-            jsonMap.each {key, value ->
-                if (shouldKeep(key, propertiesToKeep)) {
-                    itemsToKeep[key] = value
-                }
-            }
-            return itemsToKeep
-        } else {
-            return jsonMap
-        }
-    }
-
-    private boolean shouldKeep(String key, List propertiesToKeep) {
-        return (key in propertiesToKeep || key.startsWith("@"))
-    }
 
     /*
      * Get mappings and page params for specified query.
@@ -644,7 +554,7 @@ class SearchUtils {
                 Map termChip
                 Map termDef = getVocabEntry(termKey)
                 if (termDef) {
-                  termChip = toChip(termDef)
+                    termChip = JsonLd.toChip(termDef, displayData)
                 }
 
                 result << ['variable': param, 'predicate': termChip,
@@ -684,7 +594,6 @@ class SearchUtils {
         return java.net.URLEncoder.encode(input, "UTF-8")
     }
 }
-
 
 class Offsets {
     Integer prev
