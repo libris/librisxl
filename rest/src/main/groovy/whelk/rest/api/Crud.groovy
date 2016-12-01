@@ -10,16 +10,18 @@ import whelk.Location
 import whelk.Whelk
 import whelk.IdGenerator
 import whelk.component.ElasticSearch
-import whelk.component.StorageType
 import whelk.converter.FormatConverter
 import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.JsonLD2MarcXMLConverter
+import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
+import whelk.exception.WhelkStorageException
 import whelk.rest.api.CrudUtils
 import whelk.rest.api.MimeTypes
+import whelk.rest.api.SearchUtils
 import whelk.rest.security.AccessControl
 import whelk.util.PropertyLoader
 
@@ -56,6 +58,8 @@ class Crud extends HttpServlet {
             "hold": "/sys/context/lib.jsonld"
     ]
     Whelk whelk
+    Map displayData
+    SearchUtils search
     PicoContainer pico
     static final ObjectMapper mapper = new ObjectMapper()
     AccessControl accessControl = new AccessControl()
@@ -79,108 +83,51 @@ class Crud extends HttpServlet {
         pico.start()
     }
 
+    void readDisplayData() {
+        String vocabDisplayUri = "https://id.kb.se/vocab/display"
+        Document displayDoc = whelk.storage.locate(vocabDisplayUri,
+                true).document
+        displayData = displayDoc.data
+    }
+
     @Override
     void init() {
         whelk = pico.getComponent(Whelk.class)
-    }
+        readDisplayData()
+        search = new SearchUtils(whelk, displayData)
 
-    StorageType autoDetectQueryMode(Map queries) {
-        boolean probablyMarcQuery = false
-        for (entry in queries) {
-            if (entry.key ==~ /\d{3}\.{0,1}\w{0,1}/) {
-                probablyMarcQuery = true
-            } else if (!entry.key.startsWith("_")) {
-                probablyMarcQuery = false
-            }
-        }
-        return probablyMarcQuery ? StorageType.MARC21_JSON : StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
-                     String dataset) {
+                     String dataset, String siteBaseUri = null) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String callback = queryParameters.remove("callback")
-        Map results = null
-        if (queryParameters.containsKey("p") &&
-            queryParameters.containsKey("o")) {
-            // TODO does it make sense to allow multiple relations/references?
-            String relation = queryParameters.get("p")[0]
-            String reference = queryParameters.get("o")[0]
 
-            log.debug("Calling findByRelation with p: ${relation} and " +
-                      "o: ${reference}")
+        try {
+            Map results = search.doSearch(queryParameters, dataset, siteBaseUri)
+            def jsonResult
 
-            List<Document> docs = whelk.storage.findByRelation(relation,
-                                                               reference)
-
-            results = assembleSearchResults(docs)
-        } else if (queryParameters.containsKey("p") &&
-                   queryParameters.containsKey("value")) {
-            String relation = queryParameters.get("p")[0]
-            String value = queryParameters.get("value")[0]
-
-            log.debug("Calling findByValue with p: ${relation} and value: ${value}")
-
-            List<Document> docs = whelk.storage.findByValue(relation, value)
-
-            results = assembleSearchResults(docs)
-        } else if (queryParameters.containsKey("o")) {
-            String identifier = queryParameters.get("o")[0]
-
-            log.debug("Calling findByQuotation with o: ${identifier}")
-
-            List<Document> docs = whelk.storage.findByQuotation(identifier)
-
-            results = assembleSearchResults(docs)
-        } else if (queryParameters.containsKey("q")) {
-            // If general q-parameter chosen, use elastic for query
-            log.debug("Querying ElasticSearch")
-
-            def dslQuery = ElasticSearch.createJsonDsl(queryParameters)
-
-            if (whelk.elastic) {
-                results = whelk.elastic.query(dslQuery, dataset)
+            if (callback) {
+                jsonResult = callback + "(" +
+                             mapper.writeValueAsString(results) + ");"
             } else {
-                log.error("Attempted elastic query, but whelk has no " +
-                          "elastic component configured.")
-                response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,
-                                   "Attempted to use elastic for query, but " +
-                                   "no elastic component is configured.")
-                return
+                jsonResult = mapper.writeValueAsString(results)
             }
-        } else {
-            // If none of the special query parameters were specified,
-            // we query PostgreSQL
-            log.debug("Querying PostgreSQL")
 
-            results = whelk.storage.query(queryParameters, dataset,
-                                          autoDetectQueryMode(queryParameters))
+            sendResponse(response, jsonResult, "application/json")
+        } catch (WhelkRuntimeException wse) {
+            log.error("Attempted elastic query, but whelk has no " +
+                      "elastic component configured.")
+            response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,
+                               "Attempted to use elastic for query, but " +
+                               "no elastic component is configured.")
+            return
+        } catch (InvalidQueryException iqe) {
+            log.error("Invalid query: ${queryParameters}")
+            response.sendError(HttpServletResponse.BAD_REQUEST,
+                               "Invalid query, please check the documentation.")
+            return
         }
-
-        def jsonResult
-
-        if (callback) {
-            jsonResult = callback + "(" + mapper.writeValueAsString(results) + ");"
-        } else {
-            jsonResult = mapper.writeValueAsString(results)
-        }
-
-        sendResponse(response, jsonResult, "application/json")
-    }
-
-    private Map assembleSearchResults(List<Document> docs) {
-        Map result = [:]
-        List items = []
-
-        docs.each { doc ->
-            // FIXME we want to do clean up/niceify data here
-            items << doc.data
-        }
-
-        result["items"] = items
-        result["hits"] = items.size()
-
-        return result
     }
 
     void displayInfo(response) {
@@ -212,8 +159,7 @@ class Crud extends HttpServlet {
             // FIXME still true/needed?
             // Tomcat incorrectly strips away double slashes from the pathinfo.
             // Compensate here.
-            if (path ==~ "/http:/[^/].+")
-            {
+            if (path ==~ "/http:/[^/].+") {
                 path = path.replace("http:/", "http://")
             }
 
@@ -247,11 +193,24 @@ class Crud extends HttpServlet {
 
         if (format == FormattingType.EMBELLISHED) {
             List externalRefs = doc.getExternalRefs()
-            Map referencedDocuments = getDocuments(externalRefs)
-            doc.embellish(referencedDocuments)
+            List convertedExternalLinks = convertMarcLinks(externalRefs)
+            Map referencedDocuments = getDocuments(convertedExternalLinks)
+            doc.embellish(referencedDocuments, displayData)
         }
 
         sendGetResponse(request, response, doc, path)
+    }
+
+    private List convertMarcLinks(List refs) {
+        List result = []
+        refs.each { ref ->
+            if (ref.toString().startsWith("marc:")) {
+                result << ref.toString().replace("marc:", "https://id.kb.se/marc/")
+            } else {
+                result << ref
+            }
+        }
+        return result
     }
 
     /**
@@ -316,13 +275,11 @@ class Crud extends HttpServlet {
             Document doc = whelk.storage.load(id, version)
             return new Tuple2(doc, null)
         } else {
-            // FIXME what does this mean?
-            // We don't want to load the document here
             Location location = whelk.storage.locate(id, false)
             Document document = location?.document
             if (!document && location?.uri) {
                 return new Tuple2(null, location)
-            } else if(!document) {
+            } else if (!document) {
                 return new Tuple2(null, null)
             } else {
                 return new Tuple2(document, location)
@@ -338,12 +295,15 @@ class Crud extends HttpServlet {
      */
     Map getDocuments(List ids) {
         Map result = [:]
+        Document doc
         ids.each { id ->
             if (id.startsWith(Document.BASE_URI.toString())) {
                 id = Document.BASE_URI.resolve(id).getPath().substring(1)
+                doc = whelk.storage.load(id)
+            } else {
+                doc = whelk.storage.locate(id, true)?.document
             }
-            // FIXME maybe we want to do a locate rathern than a load here?
-            Document doc = whelk.storage.load(id)
+
             if (doc && !doc.deleted) {
                 result[id] = doc.data
             }
@@ -420,7 +380,7 @@ class Crud extends HttpServlet {
 
         List<String> accepting = acceptHeader?.split(",").collect {
             int last = (it.indexOf(';') == -1 ? it.length() : it.indexOf(';'))
-            it.substring(0,last)
+            it.substring(0, last)
         }
         log.debug("Accepting $accepting")
 
@@ -473,7 +433,7 @@ class Crud extends HttpServlet {
     void doPost(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Handling POST request.")
 
-        if(request.pathInfo != "/") {
+        if (request.pathInfo != "/") {
             log.debug("Invalid POST request URL.")
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
                                "Method not allowed.")
@@ -567,7 +527,7 @@ class Crud extends HttpServlet {
     void doPut(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Handling PUT request.")
 
-        if(request.pathInfo == "/") {
+        if (request.pathInfo == "/") {
             log.debug("Invalid PUT request URL.")
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
                                "Method not allowed.")
@@ -641,10 +601,10 @@ class Crud extends HttpServlet {
             boolean allowed = hasPermission(request.getAttribute("user"),
                                             updatedDoc, existingDoc)
             if (!allowed) {
-              response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                                 "You are not authorized to perform this " +
-                                 "operation")
-              return
+                response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                                   "You are not authorized to perform this " +
+                                   "operation")
+                return
             }
         } catch (ModelValidationException mve) {
             // FIXME data leak
@@ -663,7 +623,7 @@ class Crud extends HttpServlet {
     }
 
     boolean isEmptyInput(Map inputData) {
-        if (inputData.size() == 0) {
+        if (!inputData || inputData.size() == 0) {
             return true
         } else {
             return false
@@ -709,7 +669,7 @@ class Crud extends HttpServlet {
         } catch (WhelkAddException wae) {
             log.warn("Whelk failed to store document: ${wae.message}")
             // FIXME data leak
-            response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE ,
+            response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
                                wae.message)
         } catch (Exception e) {
             log.error("Operation failed", e)
@@ -785,14 +745,14 @@ class Crud extends HttpServlet {
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Handling DELETE request.")
-        if(request.pathInfo == "/") {
+        if (request.pathInfo == "/") {
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method not allowed.")
             return
         }
         try {
             String id = request.pathInfo.substring(1)
             def doc = whelk.storage.load(id)
-            if(!doc) {
+            if (!doc) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
             } else if (doc && !hasPermission(request.getAttribute("user"), null, doc)) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
@@ -808,7 +768,6 @@ class Crud extends HttpServlet {
         }
 
     }
-
 
 
 }
