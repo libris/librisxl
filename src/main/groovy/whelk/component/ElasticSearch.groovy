@@ -190,32 +190,31 @@ class ElasticSearch implements Index {
         def response = client.search(sr).actionGet()
 
         def results = [:]
-        results.numberOfHits = 0
-        results.resultSize = 0
+
         results.startIndex = jsonDsl.from
         results.searchCompletedInISO8601duration = "PT" + response.took.secondsFrac + "S"
-        results.items = []
+        results.totalHits = response.hits.totalHits
+        results.items = response.hits.hits.collect { it.source }
+        results.aggregations = response.aggregations
 
-        if (response) {
-            results.resultSize = response.hits.hits.size()
-            results.numberOfHits = response.hits.totalHits
-            results.items = response.hits.hits.collect { it.source }
-        }
         return results
     }
 
-
-    static Map createJsonDsl(Map queryParameters) {
-        // Extract LDAPI parameters
-        String pageSize = queryParameters.remove("_pageSize")?.first() ?: ""+DEFAULT_PAGE_SIZE
-        String page = queryParameters.remove("_page")?.first() ?: "1"
-        String sort = queryParameters.remove("_sort")?.first()
-        queryParameters.remove("_where") // Not supported
-        queryParameters.remove("_orderBy") // Not supported
-        queryParameters.remove("_select") // Not supported
-        String queryString = queryParameters.remove("q")?.first()
-        def dslQuery = ["from": (Integer.parseInt(page)-1) * (pageSize as int),
-                        "size": (pageSize as int)]
+    // TODO merge with logic in whelk.rest.api.SearchUtils
+    // See Jira ticket LXL-122.
+    /**
+     * Create a DSL query from queryParameters.
+     *
+     * We treat multiple values for one key as an OR clause, which are
+     * then joined with AND.
+     *
+     * E.g. k1=v1&k1=v2&k2=v3 -> (k1=v1 OR k1=v2) AND (k2=v3)
+     */
+    static Map createJsonDsl(Map queryParameters, int limit=DEFAULT_PAGE_SIZE,
+                             int offset=0) {
+        String queryString = queryParameters.remove('q')?.first()
+        def dslQuery = ['from': offset,
+                        'size': limit]
 
         List musts = []
         if (queryString) {
@@ -223,19 +222,39 @@ class ElasticSearch implements Index {
                                         'default_operator': 'and']]
         }
 
-        String[] okParams = getWhitelistedQueryParams()
+        List reservedParameters = ['q', 'p', 'o', 'value', '_limit', '_offset']
+
         queryParameters.each { k, vals ->
-            if (k in okParams) {
-                // we assume vals is a String[], since that's that we get
-                // from HttpServletResponse.getParameterMap()
-                vals.each { v ->
-                    musts << ['match': ["${k}": v]]
-                }
+            if (k.startsWith('_') || k in reservedParameters) {
+                return
             }
+
+            // we assume vals is a String[], since that's that we get
+            // from HttpServletResponse.getParameterMap()
+            musts << buildESShouldClause(k, vals)
         }
 
         dslQuery['query'] = ['bool': ['must': musts]]
         return dslQuery
+    }
+
+    /*
+     * Create a 'bool' query for matching at least one of the values.
+     *
+     * E.g. k=v1 OR k=v2 OR ..., with minimum_should_match set to 1.
+     *
+     */
+    private static Map buildESShouldClause(String key, String[] values) {
+        Map result = [:]
+        List shoulds = []
+
+        values.each { v ->
+            shoulds << ['match': [(key): v]]
+        }
+
+        result['should'] = shoulds
+        result['minimum_should_match'] = 1
+        return ['bool': result]
     }
 
     public String getIndexName() { defaultIndex }
@@ -243,12 +262,6 @@ class ElasticSearch implements Index {
     public String getElasticCluster() { elasticcluster }
     public int getElasticPort() {
         try { new Integer(elastichost.split(",").first().split(":").last()).intValue() } catch (NumberFormatException nfe) { 9300 }
-    }
-
-    static String[] getWhitelistedQueryParams() {
-        // TODO implement this in a better way, preferrably without
-        // hardcoding anything
-        return ["@type"]
     }
 
     static String toElasticId(String id) {
