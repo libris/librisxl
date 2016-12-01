@@ -141,15 +141,107 @@ public class JsonLd {
         return result
     }
 
-    public static Map embellish(Map jsonLd, Map additionalObjects) {
-      // FIXME handle malformed input
-      List items = jsonLd.get(GRAPH_KEY)
-      additionalObjects.each { id, object ->
-          items << object
-      }
-      jsonLd[GRAPH_KEY] = items
-      return jsonLd
+    public static Map embellish(Map jsonLd, Map additionalObjects, Map displayData) {
+        if (!jsonLd.get(GRAPH_KEY)) {
+            return jsonLd
+        }
+
+        List graphItems = jsonLd.get(GRAPH_KEY)
+
+        additionalObjects.each { id, object ->
+            Map chip = toChip(object, displayData)
+            graphItems << ["@graph": chip]
+        }
+        jsonLd[GRAPH_KEY] = graphItems
+
+        return jsonLd
     }
+
+
+    /**
+     * Convert a list of posts to cards.
+     *
+     */
+    public static List toCards(List things, Map displayData) {
+        return things.collect { toCard(it, displayData) }
+    }
+
+    /**
+     * Convert a post to card.
+     *
+     */
+    public static Map toCard(Map thing, Map displayData) {
+        Map lensGroups = displayData.get("lensGroups")
+        Map cardLensGroup = lensGroups.get("cards")
+        Map result = [:]
+
+        Map card = removeProperties(thing, cardLensGroup)
+        card.each {key, value ->
+            result[key] = toChip(value, displayData)
+        }
+        return result
+    }
+
+    /**
+     * Convert a list of posts to chips.
+     *
+     */
+    public static List toChips(List things, Map displayData) {
+        return things.collect { toChip(it, displayData) }
+    }
+
+    /**
+     * Convert a post to chip.
+     *
+     */
+    public static Object toChip(Object object, Map displayData) {
+        Map lensGroups = displayData.get("lensGroups")
+        Map chipLensGroup = lensGroups.get("chips")
+        Map itemsToKeep = [:]
+        Map result = [:]
+
+        if (object instanceof List){
+            return toChips(object, displayData)
+        } else if ((object instanceof Map)) {
+            itemsToKeep = removeProperties(object, chipLensGroup)
+            itemsToKeep.each {key, value ->
+                result[key] = toChip(value, displayData)
+            }
+            return result
+        } else {
+            return object
+        }
+    }
+
+    private static Map removeProperties(Map jsonMap, Map lensGroups) {
+        Map itemsToKeep = [:]
+        Map types = lensGroups.get("lenses")
+        String type = jsonMap.get("@type")
+
+        if (!type) {
+            return jsonMap
+        }
+
+        Map showPropertiesField = types.get(type)
+
+        if (showPropertiesField) {
+            List propertiesToKeep = showPropertiesField.get("showProperties")
+
+            jsonMap.each {key, value ->
+                if (shouldKeep(key, propertiesToKeep)) {
+                    itemsToKeep[key] = value
+                }
+            }
+            return itemsToKeep
+        } else {
+            return jsonMap
+        }
+    }
+
+    private static boolean shouldKeep(String key, List propertiesToKeep) {
+        return (key in propertiesToKeep || key.startsWith("@"))
+    }
+
 
     public static Map frame(String mainId, Map flatJsonLd) {
         return frame(mainId, null, flatJsonLd)
