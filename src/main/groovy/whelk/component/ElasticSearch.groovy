@@ -202,6 +202,14 @@ class ElasticSearch implements Index {
 
     // TODO merge with logic in whelk.rest.api.SearchUtils
     // See Jira ticket LXL-122.
+    /**
+     * Create a DSL query from queryParameters.
+     *
+     * We treat multiple values for one key as an OR clause, which are
+     * then joined with AND.
+     *
+     * E.g. k1=v1&k1=v2&k2=v3 -> (k1=v1 OR k1=v2) AND (k2=v3)
+     */
     static Map createJsonDsl(Map queryParameters, int limit=DEFAULT_PAGE_SIZE,
                              int offset=0) {
         String queryString = queryParameters.remove('q')?.first()
