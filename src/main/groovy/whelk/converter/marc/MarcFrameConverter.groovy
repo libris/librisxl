@@ -1711,24 +1711,28 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                             }
                         }
                         def about = parent ? parent[link] : null
-                        // TODO: if multiple, spread according to repeated subfield groups(?)...
-                        if (about instanceof List) {
-                            about = about[0]
-                        }
-                        if (about && (!resourceType || about['@type'] == resourceType)) {
-                            aboutMap[key] = about
+                        Util.asList(about).each {
+                            if (it && (!resourceType || it['@type'] == resourceType)) {
+                                aboutMap.get(key, []).add(it)
+                            }
                         }
                     }
                 }
             }
 
-            useEntities.each {
-                def field = revertOne(data, it, null, aboutMap, matchCandidate)
-                if (field) {
-                    if (useLink.subfield) {
-                        field.subfields << useLink.subfield
+            aboutMap[null] = [null] // dummy to always enter loop... (refactor time...)
+            aboutMap.each { key, abouts ->
+                abouts.each { about ->
+                    def oneAboutMap = key ? [(key): about] : [:]
+                    useEntities.each {
+                        def field = revertOne(data, it, null, oneAboutMap, matchCandidate)
+                        if (field) {
+                            if (useLink.subfield) {
+                                field.subfields << useLink.subfield
+                            }
+                            results << field
+                        }
                     }
-                    results << field
                 }
             }
         }
