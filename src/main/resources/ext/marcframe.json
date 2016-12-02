@@ -3305,7 +3305,10 @@
       "$a": {"aboutEntity": "?thing", "addProperty": "listOfContents", "TODO": "$t, $r"}
     },
 
-    "506": {},
+    "506": {
+      "$a": {"addProperty": "acquisitionTerms"}
+    },
+
     "507": {},
     "508": {"$a": {"aboutEntity": "?thing", "addProperty": "creditsNote"}},
 
@@ -4964,6 +4967,10 @@
     },
 
     "084": {"inherit": "bib", "addLink": "callno"},
+
+    "506": {
+      "inherit": "bib"
+    },
 
     "541": {
       "TODO:linkedEntity": "?example-$i",
