@@ -2321,7 +2321,8 @@
           "2": "ISMN",
           "3": "EAN",
           "4": "SICI",
-          "7": "Identifier"
+          "7": "Identifier",
+          "8": "Identifier"
         }
       },
       "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
