@@ -546,7 +546,7 @@ class SearchUtils {
                     param.endsWith(JsonLd.ID_KEY)) {
                     valueProp = 'object'
                     termKey = param[0..-5]
-                    value = [ID: val]
+                    value = [(JsonLd.ID_KEY): val]
                 } else {
                     valueProp = 'value'
                     termKey = param
