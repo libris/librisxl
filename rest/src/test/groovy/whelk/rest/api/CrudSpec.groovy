@@ -263,12 +263,12 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NOT_FOUND
     }
 
-    def "GET /<id>/description should return raw representation"() {
+    def "GET /<id>/data should return raw representation"() {
         // We don't allow this for now
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "#{id}/description".toString()
+            "#{id}/data".toString()
         }
         request.getHeader("Accept") >> {
             "application/ld+json"
@@ -285,11 +285,11 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/ld+json"
     }
 
-    def "GET /<id>/description.jsonld should display document in JSON-LD format"() {
+    def "GET /<id>/data.jsonld should display document in JSON-LD format"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "#{id}/description.jsonld".toString()
+            "#{id}/data.jsonld".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -306,11 +306,11 @@ class CrudSpec extends Specification {
     }
 
     // FIXME we should use another status code here
-    def "GET /<id>/description.json should return 406 Not Acceptable"() {
+    def "GET /<id>/data.json should return 406 Not Acceptable"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "#{id}/description.json".toString()
+            "#{id}/data.json".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -325,11 +325,11 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NOT_ACCEPTABLE
     }
 
-    def "GET /<id>/description.ttl should return 406 Not Acceptable"() {
+    def "GET /<id>/data.ttl should return 406 Not Acceptable"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "#{id}/description.ttl".toString()
+            "#{id}/data.ttl".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -344,11 +344,11 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NOT_ACCEPTABLE
     }
 
-    def "GET /<id>/description.rdf should return 406 Not Acceptable"() {
+    def "GET /<id>/data.rdf should return 406 Not Acceptable"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "#{id}/description.rdf".toString()
+            "#{id}/data.rdf".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -1182,27 +1182,27 @@ class CrudSpec extends Specification {
         expect:
         Crud.getIdFromPath(path) == id
         where:
-        path                                       | id
-        ""                                         | null
-        "/"                                        | null
-        "/foo"                                     | "foo"
-        "/foo/description"                         | "foo"
-        "/foo/description.jsonld"                  | "foo"
-        "/https://example.com/some/id"             | "https://example.com/some/id"
-        "/https://example.com/some/id/description" | "https://example.com/some/id"
+        path                                | id
+        ""                                  | null
+        "/"                                 | null
+        "/foo"                              | "foo"
+        "/foo/data"                         | "foo"
+        "/foo/data.jsonld"                  | "foo"
+        "/https://example.com/some/id"      | "https://example.com/some/id"
+        "/https://example.com/some/id/data" | "https://example.com/some/id"
     }
 
     def "should get formatting type"() {
         expect:
         Crud.getFormattingType(path) == type
         where:
-        path | type
-        ""                                         | Crud.FormattingType.EMBELLISHED
-        "/"                                        | Crud.FormattingType.EMBELLISHED
-        "/foo"                                     | Crud.FormattingType.EMBELLISHED
-        "/foo/description"                         | Crud.FormattingType.RAW
-        "/foo/description.jsonld"                  | Crud.FormattingType.RAW
-        "/https://example.com/some/id"             | Crud.FormattingType.EMBELLISHED
-        "/https://example.com/some/id/description" | Crud.FormattingType.RAW
+        path                                | type
+        ""                                  | Crud.FormattingType.EMBELLISHED
+        "/"                                 | Crud.FormattingType.EMBELLISHED
+        "/foo"                              | Crud.FormattingType.EMBELLISHED
+        "/foo/data"                         | Crud.FormattingType.RAW
+        "/foo/data.jsonld"                  | Crud.FormattingType.RAW
+        "/https://example.com/some/id"      | Crud.FormattingType.EMBELLISHED
+        "/https://example.com/some/id/data" | Crud.FormattingType.RAW
     }
 }

@@ -218,7 +218,7 @@ class Crud extends HttpServlet {
      *
      * E.g.:
      * getIdFromPath("/foo") -> "foo"
-     * getIdFromPath("/foo/description.jsonld") -> "foo"
+     * getIdFromPath("/foo/data.jsonld") -> "foo"
      * getIdFromPath("/") -> null
      *
      */
@@ -239,7 +239,7 @@ class Crud extends HttpServlet {
      *
      * E.g.:
      * getFormattingType("/foo") -> FormattingType.EMBELLISHED
-     * getFormattingType("/foo/description") -> FormattingType.RAW
+     * getFormattingType("/foo/data") -> FormattingType.RAW
      * getFormattingType("/") -> FormattingType.EMBELLISHED
      *
      */
@@ -256,11 +256,11 @@ class Crud extends HttpServlet {
     /**
      * Return a regex pattern representation of a CRUD path.
      *
-     * Matches /foo, /foo/description, /foo/description.<suffix>.
+     * Matches /foo, /foo/data, /foo/data.<suffix>.
      *
      */
     static String getPathRegex() {
-        return ~/^\/(.+?)(\/description(\.(\w+))?)?$/
+        return ~/^\/(.+?)(\/data(\.(\w+))?)?$/
     }
 
     /**
