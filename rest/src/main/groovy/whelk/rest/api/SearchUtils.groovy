@@ -312,6 +312,8 @@ class SearchUtils {
                 sliceNode['observation'] = observations
                 acc[key] = sliceNode
             }
+
+            return acc
         }
 
         if (sliceMap) {
