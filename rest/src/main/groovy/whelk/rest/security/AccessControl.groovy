@@ -10,6 +10,7 @@ class AccessControl {
 
     boolean checkDocument(Document newdoc, Document olddoc, Map userPrivileges) {
         def privs = null
+
         if (isHolding(newdoc)) {
             if (newdoc) {
                 JsonLd.validateItemModel(newdoc)
@@ -52,7 +53,35 @@ class AccessControl {
     }
 
     boolean isHolding(Document doc) {
-      // FIXME this needs to be implemented in whelk-core
-      return false
+      // FIXME remove this and use the implementation in whelk-core for POST and PUT instead
+        return false
+    }
+
+
+    boolean checkDocumentDelete(Document oldDoc, Map userPrivileges) {
+        boolean result = false
+        def currentSigel
+
+        List graphItems = oldDoc.data.get("@graph")
+        graphItems.each { item ->
+            if (item instanceof Map && item.heldBy?.notation) {
+                currentSigel = item.heldBy.notation
+            }
+        }
+        if (!currentSigel){
+            log.warn("No sigel found in document, denying request.")
+            return result
+        }
+
+        userPrivileges.authorization.each { item ->
+            if (item.get("sigel") == currentSigel) {
+                if (item.get("xlreg")) {
+                    result = oldDoc.isHolding()
+                } else if (item.get("kat")) {
+                    result = true
+                }
+            }
+        }
+        return result
     }
 }

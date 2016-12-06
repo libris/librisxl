@@ -824,10 +824,31 @@ class Crud extends HttpServlet {
                 log.warn("User is SYSTEM. Allowing access to all.")
                 return true
             }
+
             return accessControl.checkDocument(newdoc, olddoc, userInfo)
         }
         log.info("No user information received, denying request.")
         return false
+    }
+
+    boolean hasDeletePermission(Document oldDoc, Map userInfo) {
+        if (userInfo) {
+            log.debug("User is: $userInfo")
+            if (isSystemUser(userInfo)) {
+                return true
+            } else {
+                return accessControl.checkDocumentDelete(oldDoc, userInfo)
+            }
+        }
+        log.info("No user information received, denying request.")
+        return false
+    }
+
+    boolean isSystemUser(Map userInfo) {
+        if (userInfo.user == "SYSTEM") {
+            log.warn("User is SYSTEM. Allowing access to all.")
+            return true
+        }
     }
 
     @Deprecated
@@ -866,7 +887,7 @@ class Crud extends HttpServlet {
             def doc = whelk.storage.load(id)
             if (!doc) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
-            } else if (doc && !hasPermission(request.getAttribute("user"), null, doc)) {
+            } else if (doc && !hasDeletePermission(doc, request.getAttribute("user"))) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
             } else {
                 log.debug("Removing resource at ${id}")

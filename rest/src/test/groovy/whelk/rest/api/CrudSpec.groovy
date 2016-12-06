@@ -58,7 +58,8 @@ class CrudSpec extends Specification {
             }
         }
         storage = GroovyMock(Storage.class)
-        accessControl = GroovyMock(AccessControl.class)
+        // We want to pass through calls in some cases
+        accessControl = GroovySpy(AccessControl.class)
         whelk = new Whelk("version", storage)
         crud = new Crud()
         crud.whelk = whelk
@@ -367,7 +368,6 @@ class CrudSpec extends Specification {
 
 
     // Tests for create
-
     def "POST to / should create document with generated @id if not supplied"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
@@ -391,6 +391,51 @@ class CrudSpec extends Specification {
             if (it.first() == "user") {
                 return ["user": "SYSTEM"]
             }
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.store(_, _) >> {
+            Document doc = it.first()
+            doc.setModified(new Date())
+            return doc
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_CREATED
+        // FIXME use BASE_URI instead of hardcoding
+        assert response.getHeader("Location") =~ /^http:\/\/127.0.0.1:5000\/[0-9a-z]{16}$/
+    }
+
+    def "POST to / should create Record document when correct priviligies are given"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(["@type": "Record",
+                                      "contains": "some new data",
+                                      "heldBy":
+                                              ["notation": "S"]])
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": true,
+                                       "kat": true]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -591,7 +636,9 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
-                                    "contains": "some data"]]]
+                                    "contains": "some data",
+                                    "heldBy":
+                                            ["notation": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -608,9 +655,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            if (it.first() == "user") {
-                return ["user": "forbidden_user"]
-            }
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1123,7 +1173,7 @@ class CrudSpec extends Specification {
 
     // Tests for delete
 
-    def "DETETE to /<id> should delete document if it exists"() {
+    def "DETETE to /<id> should delete document if it exists when user set to SYSTEM"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def data = ["@graph": [["@id": id,
@@ -1174,6 +1224,307 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NOT_FOUND
     }
 
+    def "DELETE to /<id> should return 403 Forbidden if user has insufficient privilege"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                ["@id": itemId,
+                                 "@type": "Item",
+                                 "contains": "some new data",
+                                 "heldBy":
+                                         ["notation": "Ting"]]]
+        ]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "DELETE to /<id> should return 403 Forbidden if document not is a holding "() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def workId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": workId,
+                                "@type": "Work",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "DELETE to /<id> should return 403 Forbidden if no user information "() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Item",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getAttribute(_) >> {
+            return null
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "DELETE to /<id> should return 403 Forbidden if no sigel found in document "() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Item",
+                                "contains": "some new data"]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "DELETE to /<id> should delete the document of type Item"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Item",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "DELETE to /<id> should delete the document with conflicting privileges"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def instanceId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": instanceId,
+                                "@type": "Instance",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "S"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "DELETE to /<id> should delete the document of type Work"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def workId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": workId,
+                                "@type": "Work",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "S"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "DELETE to /<id> should return 500 indicating an error inside HTTP server"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def workId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": workId,
+                                "@type": "Work",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "S"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        accessControl.checkDocumentDelete(_, _) >> {
+            throw new ModelValidationException("Could not validate model.")
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+    }
 
     /*
      * Utilities tests
