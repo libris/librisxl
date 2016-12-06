@@ -144,6 +144,14 @@ class Document {
         return deleted
     }
 
+    boolean isHolding() {
+        List graphList = this.data.get("@graph")
+        return graphList.any { it ->
+            it.get('@type').equalsIgnoreCase('Item')
+        }
+    }
+
+
     /**
      * By convention the first id in the returned list is the MAIN resource id.
      */
