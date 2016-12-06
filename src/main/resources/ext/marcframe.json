@@ -2889,7 +2889,7 @@
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
       "embedded": true,
-      "resourceType": "VariantTitle",
+      "NOTE:default:resourceType": "VariantTitle",
       "i1": {
         "property": "marc:searchControl",
         "tokenMap": {
