@@ -153,6 +153,11 @@ class Crud extends HttpServlet {
             return
         }
 
+        if (request.pathInfo == '/vocab/display') {
+            sendResponse(response, mapper.writeValueAsString(displayData), 'application/json')
+            return
+        }
+
         try {
             def path = request.pathInfo
 
