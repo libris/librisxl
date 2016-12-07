@@ -17,12 +17,12 @@ class SetSpecMatcher {
             '111': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['111', '611', '711']],
             '130': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
-                    bibFields        : ['130', '630', '730', '830']],
-            '150': [subFieldsToIgnore: [bib: ['0', '2', '4'], auth: ['6']],
+                    bibFields        : ['130','240', '630', '730', '830']],
+            '150': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['650']],
-            '151': [subFieldsToIgnore: [bib: ['0', '2', '4'], auth: ['6']],
+            '151': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['651']],
-            '155': [subFieldsToIgnore: [bib: ['0', '2', '4'], auth: ['6']],
+            '155': [subFieldsToIgnore: [bib: ['0',  '4'], auth: ['6']],
                     bibFields        : ['655']]
     ]
 
