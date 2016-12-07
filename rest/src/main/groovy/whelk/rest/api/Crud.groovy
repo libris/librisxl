@@ -885,8 +885,16 @@ class Crud extends HttpServlet {
         try {
             String id = request.pathInfo.substring(1)
             def doc = whelk.storage.load(id)
+            Location loc
+
             if (!doc) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
+                loc = whelk.storage.locate(id, true)
+                if (loc) {
+                    log.debug("Redirecting to document location: ${loc.uri}")
+                    sendRedirect(request, response, loc)
+                } else {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
+                }
             } else if (doc && !hasDeletePermission(doc, request.getAttribute("user"))) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
             } else {
@@ -895,12 +903,15 @@ class Crud extends HttpServlet {
                 whelk.remove(id, "xl", null, "xl")
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
+        } catch (ModelValidationException mve) {
+            // FIXME data leak
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    mve.getMessage())
         } catch (Exception wre) {
             log.error("Something went wrong", wre)
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
         }
 
     }
-
 
 }

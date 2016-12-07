@@ -408,51 +408,6 @@ class CrudSpec extends Specification {
         assert response.getHeader("Location") =~ /^http:\/\/127.0.0.1:5000\/[0-9a-z]{16}$/
     }
 
-    def "POST to / should create Record document when correct priviligies are given"() {
-        given:
-        def is = GroovyMock(ServletInputStream.class)
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(["@type": "Record",
-                                      "contains": "some new data",
-                                      "heldBy":
-                                              ["notation": "S"]])
-        }
-        request.getInputStream() >> {
-            is
-        }
-        request.getPathInfo() >> {
-            "/"
-        }
-        request.getMethod() >> {
-            "POST"
-        }
-        request.getContentType() >> {
-            "application/ld+json"
-        }
-        request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": true,
-                                       "kat": true]]]
-        }
-        request.getRequestURL() >> {
-            return new StringBuffer(BASE_URI.toString())
-        }
-        storage.store(_, _) >> {
-            Document doc = it.first()
-            doc.setModified(new Date())
-            return doc
-        }
-        when:
-        crud.doPost(request, response)
-        then:
-        assert response.getStatus() == HttpServletResponse.SC_CREATED
-        // FIXME use BASE_URI instead of hardcoding
-        assert response.getHeader("Location") =~ /^http:\/\/127.0.0.1:5000\/[0-9a-z]{16}$/
-    }
-
     def "POST to / should create document with supplied @id unless it begins with BASE_URI"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
@@ -1463,7 +1418,7 @@ class CrudSpec extends Specification {
                                 "heldBy":
                                         ["notation": "S"]]]]
         request.getPathInfo() >> {
-            "/1234"
+            "/1234#it"
         }
         request.getMethod() >> {
             "DELETE"
@@ -1488,7 +1443,47 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NO_CONTENT
     }
 
-    def "DELETE to /<id> should return 500 indicating an error inside HTTP server"() {
+    def "DELETE to /<id> should redirect if legacy id"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def workId = BASE_URI.resolve("/1234#it").toString()
+        def redirectId = BASE_URI.resolve("/5678").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00",
+                                "sameAs": redirectId],
+                               ["@id": workId,
+                                "@type": "Work",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "S"]]]]
+        request.getPathInfo() >> {
+            "/5678"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        storage.load(_) >> {
+            return null
+        }
+        storage.locate(_, _) >> {
+            return new Location().withURI(redirectId)
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FOUND
+    }
+
+    def "DELETE to /<id> should return 400 indicating a bad request"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def workId = BASE_URI.resolve("/1234#it").toString()
@@ -1523,7 +1518,7 @@ class CrudSpec extends Specification {
         when:
         crud.doDelete(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+        response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
 
     /*
