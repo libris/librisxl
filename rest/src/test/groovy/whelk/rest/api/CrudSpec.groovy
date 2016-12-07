@@ -9,6 +9,7 @@ import whelk.Whelk
 import whelk.component.Storage
 import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
+import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
 
 import javax.servlet.ServletInputStream
@@ -306,7 +307,7 @@ class CrudSpec extends Specification {
     }
 
     // FIXME we should use another status code here
-    def "GET /<id>/data.json should return 406 Not Acceptable"() {
+    def "GET /<id>/data.json should display document in JSON format"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
@@ -322,7 +323,8 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_NOT_ACCEPTABLE
+        response.getStatus() == HttpServletResponse.SC_OK
+        response.getContentType() == "application/json"
     }
 
     def "GET /<id>/data.ttl should return 406 Not Acceptable"() {
@@ -1188,21 +1190,50 @@ class CrudSpec extends Specification {
         "/foo"                              | "foo"
         "/foo/data"                         | "foo"
         "/foo/data.jsonld"                  | "foo"
+        "/foo/data.json"                    | "foo"
+        "/foo/data-view.jsonld"             | "foo"
+        "/foo/data-view.json"               | "foo"
         "/https://example.com/some/id"      | "https://example.com/some/id"
         "/https://example.com/some/id/data" | "https://example.com/some/id"
     }
 
     def "should get formatting type"() {
         expect:
-        Crud.getFormattingType(path) == type
+        Crud.getFormattingType(path, contentType) == type
         where:
-        path                                | type
-        ""                                  | Crud.FormattingType.EMBELLISHED
-        "/"                                 | Crud.FormattingType.EMBELLISHED
-        "/foo"                              | Crud.FormattingType.EMBELLISHED
-        "/foo/data"                         | Crud.FormattingType.RAW
-        "/foo/data.jsonld"                  | Crud.FormattingType.RAW
-        "/https://example.com/some/id"      | Crud.FormattingType.EMBELLISHED
-        "/https://example.com/some/id/data" | Crud.FormattingType.RAW
+        path                                | contentType | type
+        ""                                  | "application/ld+json" | Crud.FormattingType.EMBELLISHED
+        "/"                                 | "application/ld+json" | Crud.FormattingType.EMBELLISHED
+        "/foo"                              | "application/ld+json" | Crud.FormattingType.EMBELLISHED
+        "/foo"                              | "application/json"    | Crud.FormattingType.FRAMED_AND_EMBELLISHED
+        "/foo/data"                         | "application/ld+json" | Crud.FormattingType.RAW
+        "/foo/data"                         | "application/json"    | Crud.FormattingType.FRAMED
+        "/foo/data.jsonld"                  | "application/ld+json" | Crud.FormattingType.RAW
+        "/foo/data.json"                    | "application/ld+json" | Crud.FormattingType.FRAMED
+        "/foo/data-view"                    | "application/ld+json" | Crud.FormattingType.EMBELLISHED
+        "/foo/data-view"                    | "application/json"    | Crud.FormattingType.FRAMED_AND_EMBELLISHED
+        "/foo/data-view.jsonld"             | "application/ld+json" | Crud.FormattingType.EMBELLISHED
+        "/foo/data-view.json"               | "application/ld+json" | Crud.FormattingType.FRAMED_AND_EMBELLISHED
+        "/https://example.com/some/id"      | "application/ld+json" | Crud.FormattingType.EMBELLISHED
+        "/https://example.com/some/id/data" | "application/ld+json" | Crud.FormattingType.RAW
+        "/https://example.com/some/id/data" | "application/json"    | Crud.FormattingType.FRAMED
+        "/foo/data"                         | "text/turtle"         | Crud.FormattingType.RAW
+        "/foo/data"                         | "application/rdf+xml" | Crud.FormattingType.RAW
+        "/foo/data-view"                    | "text/turtle"         | Crud.FormattingType.EMBELLISHED
+        "/foo/data-view"                    | "application/rdf+xml" | Crud.FormattingType.EMBELLISHED
+    }
+
+    def "should throw exception when getting formatting type for invalid file ending, I"() {
+        when:
+        Crud.getFormattingType('/foo/data.invalid', 'application/ld+json')
+        then:
+        thrown WhelkRuntimeException
+    }
+
+    def "should throw exception when getting formatting type for invalid file ending, II"() {
+        when:
+        Crud.getFormattingType('/foo/data-view.invalid', 'application/ld+json')
+        then:
+        thrown WhelkRuntimeException
     }
 }

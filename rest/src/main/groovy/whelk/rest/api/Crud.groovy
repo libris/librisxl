@@ -45,7 +45,7 @@ class Crud extends HttpServlet {
     final static String DOCBASE_URI = "http://libris.kb.se/"
 
     enum FormattingType {
-        EMBELLISHED, RAW
+        FRAMED, EMBELLISHED, FRAMED_AND_EMBELLISHED, RAW
     }
 
     static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
@@ -168,7 +168,7 @@ class Crud extends HttpServlet {
                 path = path.replace("http:/", "http://")
             }
 
-            handleGetRequest(request, response, path, getFormattingType(path))
+            handleGetRequest(request, response, path)
         } catch (UnsupportedContentTypeException ucte) {
             response.sendError(response.SC_NOT_ACCEPTABLE, ucte.message)
         } catch (WhelkRuntimeException wrte) {
@@ -178,7 +178,7 @@ class Crud extends HttpServlet {
 
     void handleGetRequest(HttpServletRequest request,
                           HttpServletResponse response,
-                          String path, FormattingType format) {
+                          String path) {
         String id = getIdFromPath(path)
         String version = request.getParameter("version")
 
@@ -194,16 +194,75 @@ class Crud extends HttpServlet {
             log.debug("Redirecting to document location: ${loc.uri}")
             sendRedirect(request, response, loc)
             return
+        } else if (doc && doc.deleted) {
+            response.sendError(HttpServletResponse.SC_GONE,
+                               "Document has been deleted.")
+            return
+        } else {
+            String contentType = CrudUtils.getBestContentType(request)
+            def responseBody = getFormattedResponseBody(doc, path, contentType)
+            String modified = doc.getModified()
+            sendGetResponse(request, response, responseBody, modified,
+                            path, contentType)
+            return
+        }
+    }
+
+    private Object getFormattedResponseBody(Document doc, String path,
+                                            String contentType) {
+        FormattingType format = getFormattingType(path, contentType)
+        log.debug("Formatting document ${doc.getCompleteId()} with format " +
+                  "${format} and content type ${contentType}")
+        def result
+        switch (format) {
+            case FormattingType.RAW:
+                result = doc.data
+                break
+            case FormattingType.EMBELLISHED:
+                doc = getEmbellishedDocument(doc)
+                result = doc.data
+                break
+            case FormattingType.FRAMED:
+                result = JsonLd.frame(doc.getCompleteId(), doc.data)
+                break
+            case FormattingType.FRAMED_AND_EMBELLISHED:
+                doc = getEmbellishedDocument(doc)
+                result = JsonLd.frame(doc.getCompleteId(), doc.data)
+                break
+            default:
+                throw new WhelkRuntimeException("Invalid formatting type: ${format}")
         }
 
-        if (format == FormattingType.EMBELLISHED) {
-            List externalRefs = doc.getExternalRefs()
-            List convertedExternalLinks = convertMarcLinks(externalRefs)
-            Map referencedDocuments = getDocuments(convertedExternalLinks)
-            doc.embellish(referencedDocuments, displayData)
-        }
+        return formatResponseBody(result, contentType)
+    }
 
-        sendGetResponse(request, response, doc, path)
+    private Document getEmbellishedDocument(Document doc) {
+        List externalRefs = doc.getExternalRefs()
+        List convertedExternalLinks = convertMarcLinks(externalRefs)
+        Map referencedDocuments = getDocuments(convertedExternalLinks)
+        doc.embellish(referencedDocuments, displayData)
+
+        return doc
+    }
+
+    /**
+     * Format response body based on Content-Type.
+     *
+     */
+    Object formatResponseBody(Object responseBody, String contentType) {
+        if (contentType == MimeTypes.JSONLD) {
+            return responseBody
+        } else if (contentType == MimeTypes.JSON) {
+            return responseBody
+        } else if (contentType == MimeTypes.RDF) {
+            // FIXME convert to RDF-XML
+            throw new UnsupportedContentTypeException("Not implemented.")
+        } else if (contentType == MimeTypes.TURTLE) {
+            // FIXME convert to Turtle
+            throw new UnsupportedContentTypeException("Not implemented.")
+        } else {
+            throw new UnsupportedContentTypeException("Not implemented.")
+        }
     }
 
     private List convertMarcLinks(List refs) {
@@ -238,24 +297,106 @@ class Crud extends HttpServlet {
     }
 
     /**
-     * Given a resource path, return the formatting type for that resource.
+     * Given a resource path and a content type, return the formatting
+     * type for that resource.
      *
      * FormattingType.EMBELLISHED is the default return value.
      *
-     * E.g.:
-     * getFormattingType("/foo") -> FormattingType.EMBELLISHED
-     * getFormattingType("/foo/data") -> FormattingType.RAW
-     * getFormattingType("/") -> FormattingType.EMBELLISHED
-     *
      */
-    static FormattingType getFormattingType(String path) {
+    static FormattingType getFormattingType(String path, String contentType) {
+        log.debug("Getting formatting type for path ${path}")
+        int viewGroup = 3
+        int fileEndingGroup = 5
         def pattern = getPathRegex()
         def matcher = path =~ pattern
-        if (matcher.matches() && matcher[0][2]) {
-            return FormattingType.RAW
+        if (matcher.matches()) {
+            String view = matcher.group(viewGroup)
+            String fileEnding = matcher.group(fileEndingGroup)
+            return getFormattingTypeForView(view, fileEnding, contentType)
         } else {
             return FormattingType.EMBELLISHED
         }
+    }
+
+    private static FormattingType getFormattingTypeForView(String view,
+                                                           String fileEnding,
+                                                           String contentType) {
+        FormattingType result
+
+        if (!view) {
+            result = getFormattingTypeForFancyView(contentType)
+        } else if (view == 'data') {
+            switch (fileEnding) {
+                case 'jsonld':
+                    result = FormattingType.RAW
+                    break
+                case 'json':
+                    result = FormattingType.FRAMED
+                    break
+                case null:
+                    result = getFormattingTypeForSimpleView(contentType)
+                    break
+                default:
+                    // TODO support more file types
+                    throw new WhelkRuntimeException("Bad file ending: " +
+                                                    "${fileEnding}")
+            }
+        } else if (view == 'data-view') {
+            switch (fileEnding) {
+                case 'jsonld':
+                    result = FormattingType.EMBELLISHED
+                    break
+                case 'json':
+                    result = FormattingType.FRAMED_AND_EMBELLISHED
+                    break
+                case null:
+                    result = getFormattingTypeForFancyView(contentType)
+                    break
+                default:
+                    // TODO support more file types
+                    throw new WhelkRuntimeException("Bad file ending: ${fileEnding}")
+            }
+        } else {
+            return FormattingType.EMBELLISHED
+        }
+
+        return result
+    }
+
+    private static FormattingType getFormattingTypeForFancyView(String contentType) {
+        FormattingType result
+
+        switch (contentType) {
+            case MimeTypes.JSONLD:
+                result = FormattingType.EMBELLISHED
+                break
+            case MimeTypes.JSON:
+                result = FormattingType.FRAMED_AND_EMBELLISHED
+                break
+            default:
+                result = FormattingType.EMBELLISHED
+                break
+        }
+
+        return result
+    }
+
+    private static FormattingType getFormattingTypeForSimpleView(String contentType) {
+        FormattingType result
+
+        switch (contentType) {
+            case MimeTypes.JSONLD:
+                result = FormattingType.RAW
+                break
+            case MimeTypes.JSON:
+                result = FormattingType.FRAMED
+                break
+            default:
+                result = FormattingType.RAW
+                break
+        }
+
+        return result
     }
 
     /**
@@ -265,7 +406,7 @@ class Crud extends HttpServlet {
      *
      */
     static String getPathRegex() {
-        return ~/^\/(.+?)(\/data(\.(\w+))?)?$/
+        return ~/^\/(.+?)(\/(data|data-view)(\.(\w+))?)?$/
     }
 
     /**
@@ -324,62 +465,28 @@ class Crud extends HttpServlet {
      */
     void sendGetResponse(HttpServletRequest request,
                          HttpServletResponse response,
-                         Document document, String path) {
-        if (document && document.deleted) {
-            response.sendError(HttpServletResponse.SC_GONE,
-                               "Document has been deleted.")
-            return
+                         Object responseBody, String modified, String path,
+                         String contentType) {
+        // FIXME remove?
+        String ctheader = contextHeaders.get(path.split("/")[1])
+        if (ctheader) {
+            response.setHeader("Link",
+                               "<$ctheader>; " +
+                               "rel=\"http://www.w3.org/ns/json-ld#context\"; " +
+                               "type=\"application/ld+json\"")
         }
 
-        if (document && !document.deleted) {
-            // FIXME remove?
-            String ctheader = contextHeaders.get(path.split("/")[1])
-            if (ctheader) {
-                response.setHeader("Link",
-                                   "<$ctheader>; " +
-                                   "rel=\"http://www.w3.org/ns/json-ld#context\"; " +
-                                   "type=\"application/ld+json\"")
-            }
+        response.setHeader("ETag", modified)
 
-            response.setHeader("ETag", document.getModified())
-
-            String contentType = CrudUtils.getBestContentType(request)
-
-            if (path in contextHeaders.collect { it.value }) {
-                log.debug("request is for context file. " +
-                          "Must serve original content-type ($contentType).")
-                // FIXME what should happen here?
-                // contentType = document.contentType
-            }
-
-            Object responseBody = formatDocument(document, contentType)
-            sendResponse(response, responseBody, contentType)
-        } else {
-            // FIXME move document null handling up?
-            log.debug("Failed to find a document with URI $path")
-            response.sendError(HttpServletRepsonse.SC_NOT_FOUND)
+        if (path in contextHeaders.collect { it.value }) {
+            log.debug("request is for context file. " +
+                      "Must serve original content-type ($contentType).")
+            // FIXME what should happen here?
+            // contentType = document.contentType
         }
+
+        sendResponse(response, responseBody, contentType)
     }
-
-    /**
-     * Format document based on Content-Type.
-     *
-     */
-    Object formatDocument(Document document, String contentType) {
-        if (contentType == MimeTypes.JSONLD) {
-            Map result = document.data
-            return result
-        } else if (contentType == MimeTypes.RDF) {
-            // FIXME convert to RDF-XML
-            throw new UnsupportedContentTypeException("Not implemented.")
-        } else if (contentType == MimeTypes.TURTLE) {
-            // FIXME convert to Turtle
-            throw new UnsupportedContentTypeException("Not implemented.")
-        } else {
-            throw new UnsupportedContentTypeException("Not implemented.")
-        }
-    }
-
 
     Document convertDocumentToAcceptedMediaType(Document document, String path, String acceptHeader, HttpServletResponse response) {
 
