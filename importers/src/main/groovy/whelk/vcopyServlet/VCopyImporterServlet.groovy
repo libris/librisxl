@@ -1,18 +1,16 @@
-package whelk.servlet
+package whelk.vcopyServlet
 
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
-import org.picocontainer.Characteristics
 import org.picocontainer.PicoContainer
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.component.Storage
 import whelk.converter.marc.MarcFrameConverter
-import whelk.harvester.CullingOaiPmhHarvester
-import whelk.harvester.HarvestResult
-import whelk.harvester.LibrisOaiPmhHarvester
-import whelk.harvester.OaiPmhHarvester
-import whelk.harvester.OaiPmhHarvester.BrokenRecordException
+import whelk.importer.BrokenRecordException
+import whelk.importer.ImportResult
+import whelk.importer.Importer
+import whelk.importer.VCopyImporter
 import whelk.util.PropertyLoader
 
 import javax.servlet.http.HttpServlet
@@ -24,34 +22,33 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 /**
- * Created by markus on 15-09-03.
+ * Created by Theodor on 17-01-09
+ * Copy of OAIPMH Harvester servlet, but data source is vcopy
  */
 @Log
-class OaiPmhImporterServlet extends HttpServlet {
+class VCopyImporterServlet extends HttpServlet {
 
     PicoContainer pico
     int scheduleDelaySeconds = 5
     Properties props = new Properties()
-    private Map<String,ScheduledJob> jobs = [:]
+    private Map<String, ScheduledJob> jobs = [:]
 
     static String SETTINGS_PFX = "harvester:"
-    static String DEFAULT_HARVESTER = "whelk.harvester.OaiPmhHarvester"
+    static String DEFAULT_IMPORTER = "whelk.importer.VCopyImporter"
     static int DEFAULT_INTERVAL = 3600
     static String DEFAULT_SYSTEM = "XL"
 
     static final ObjectMapper mapper = new ObjectMapper()
 
 
-    public OaiPmhImporterServlet() {
-        log.info("Starting oaipmhimporter.")
+    public VCopyImporterServlet() {
+        log.info("Starting vcopyImporter.")
 
-        props = PropertyLoader.loadProperties("secret", "mysql")
+        props = PropertyLoader.loadProperties("secret", "mysql", 'importer')
 
         pico = Whelk.getPreparedComponentsContainer(props)
 
-        pico.addComponent(OaiPmhHarvester.class)
-        pico.addComponent(CullingOaiPmhHarvester.class)
-        pico.addComponent(LibrisOaiPmhHarvester.class)
+        pico.addComponent(VCopyImporter.class)
         pico.addComponent(new MarcFrameConverter())
 
         pico.start()
@@ -64,16 +61,16 @@ class OaiPmhImporterServlet extends HttpServlet {
         def storage = pico.getComponent(PostgreSQLComponent)
         String html, json
         if (jobs) {
-            List services = props.scheduledServices.split(",")
-            def state = [:]
+            List<String> services = props.scheduledServices.split(",")
+            Map state = [:]
             StringBuilder table = new StringBuilder("<table cellspacing=\"10\"><tr><th>&nbsp;</th>")
             table.append("<form method=\"post\">")
 
             Set catSet = new TreeSet<String>()
 
             for (service in services) {
-                state[service] = storage.loadSettings(SETTINGS_PFX+service)
-                state[service]["harvesterClass"] = props.getProperty(service + ".harvesterClass", DEFAULT_HARVESTER)
+                state[service] = storage.loadSettings(SETTINGS_PFX + service)
+                state[service]["harvesterClass"] = DEFAULT_IMPORTER
                 state[service]["serviceUrl"] = props.getProperty(service + ".serviceUrl")
                 state[service]["interval"] = props.getProperty(service + ".interval", "" + DEFAULT_INTERVAL)
                 catSet.add("harvesterClass")
@@ -86,7 +83,6 @@ class OaiPmhImporterServlet extends HttpServlet {
             table.append("</tr>")
             List categories = catSet.toList()
 
-            int i = 0
             for (cat in categories) {
                 table.append("<tr><td align=\"right\"><b>$cat</b></td>")
                 for (collection in services) {
@@ -124,7 +120,7 @@ class OaiPmhImporterServlet extends HttpServlet {
                 HARVESTER DISABLED<br/>
                 System version ${props.version} is incompatible with data version ${loadDataVersion()}.
                 """
-            json = mapper.writeValueAsString(["state":"disabled", "system.version":props.version, "data.version":loadDataVersion()])
+            json = mapper.writeValueAsString(["state": "disabled", "system.version": props.version, "data.version": loadDataVersion()])
         }
         PrintWriter out = response.getWriter();
 
@@ -161,30 +157,27 @@ class OaiPmhImporterServlet extends HttpServlet {
         response.sendRedirect(request.getRequestURL().toString())
     }
 
-    Map loadOaiPmhSettings() {
-        Map settings = pico.getComponent(PostgreSQLComponent.class).loadSettings("oaipmh")
-
-    }
-
     void init() {
+
+        println props
         if (props.getProperty("version").startsWith(loadDataVersion())) {
-            log.info("Initializing OAIPMH harvester. System version: ${pico.getComponent(Whelk.class).version}")
+            log.info("Initializing vcopy importer. System version: ${pico.getComponent(Whelk.class).version}")
             Storage storage = pico.getComponent(PostgreSQLComponent.class)
-            List services = props.scheduledServices.split(",")
+            List<String> services = props.scheduledServices.split(",")
 
             ScheduledExecutorService ses = Executors.newScheduledThreadPool(services.size())
 
             for (service in services) {
-
                 log.info("Setting up schedule for $service")
+                String vcopyConnectionString = props.getProperty("mysqlConnectionUrl")
                 int scheduleIntervalSeconds = props.getProperty(service + ".interval", "" + DEFAULT_INTERVAL) as int
-                String harvesterClass = props.getProperty(service + ".harvesterClass", DEFAULT_HARVESTER)
+                String harvesterClass = props.getProperty(service + ".harvesterClass", DEFAULT_IMPORTER)
                 String serviceUrl = props.getProperty(service + ".serviceUrl")
                 String username = props.getProperty(service + ".username")
                 String password = props.getProperty(service + ".password")
                 String sourceSystem = props.getProperty(service + ".sourceSystem", DEFAULT_SYSTEM)
-                def job = new ScheduledJob(pico.getComponent(Class.forName(harvesterClass)), "${SETTINGS_PFX}${service}",
-                        serviceUrl, username, password, sourceSystem, storage)
+                def job = new ScheduledJob(pico.getComponent(Whelk.class) as Whelk, pico.getComponent(Class.forName(harvesterClass)) as VCopyImporter, "${service}",
+                        serviceUrl, username, password, sourceSystem, storage, vcopyConnectionString)
                 jobs[service] = job
 
                 try {
@@ -211,19 +204,23 @@ class ScheduledJob implements Runnable {
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
 
     String collection, serviceUrl, username, password, sourceSystem
-    OaiPmhHarvester harvester
+    Whelk whelk
+    VCopyImporter importer
+    String vcopyConnectionString
     PostgreSQLComponent storage
     Map whelkState = null
     boolean active = true
     final static long WEEK_MILLIS = 604800000
 
-    ScheduledJob(OaiPmhHarvester imp, String coll, String url, String uname, String pword, String sSystem, PostgreSQLComponent pg) {
-        this.harvester = imp
+    ScheduledJob(Whelk whelk, VCopyImporter importer, String coll, String url, String username, String password, String sSystem, PostgreSQLComponent pg, String conStr) {
+        this.vcopyConnectionString = conStr
+        this.importer = importer
+        this.whelk = whelk
         this.collection = coll
         this.storage = pg
         this.serviceUrl = url
-        this.username = uname
-        this.password = pword
+        this.username = username
+        this.password = password
         this.sourceSystem = sSystem
         assert storage
         assert collection
@@ -279,6 +276,7 @@ class ScheduledJob implements Runnable {
     void run() {
         if (active) {
             loadWhelkState()
+
             log.debug("Current whelkstate: $whelkState")
             try {
                 String lastImport = whelkState.get("lastImport")
@@ -303,8 +301,7 @@ class ScheduledJob implements Runnable {
                 whelkState.put("status", "RUNNING")
 
                 storage.saveSettings(collection, whelkState)
-                //def result = harvester.doImport(collection, null, -1, true, true, nextSince)
-                HarvestResult result = harvester.harvest(serviceUrl, username, password, sourceSystem, "ListRecords", "marcxml", nextSince)
+                ImportResult result = importer.doImport(whelk, collection, sourceSystem, vcopyConnectionString, nextSince)
                 log.trace("Import completed, result: $result")
                 if (result && (result.numberOfDocuments > 0 || result.numberOfDocumentsDeleted > 0 || result.numberOfDocumentsSkipped > 0)) {
                     log.debug("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDocumentsDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
@@ -329,7 +326,6 @@ class ScheduledJob implements Runnable {
                 whelkState.put("status", "ERROR")
             } catch (Exception e) {
                 log.error("Something failed: ${e.message}", e)
-                whelkState.put("status", "ERROR")
             } finally {
                 log.debug("Saving state $whelkState")
                 storage.saveSettings(collection, whelkState)

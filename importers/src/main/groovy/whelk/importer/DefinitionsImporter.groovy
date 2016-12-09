@@ -1,6 +1,7 @@
 package whelk.importer
 
 import org.codehaus.jackson.map.ObjectMapper
+import sun.reflect.generics.reflectiveObjects.NotImplementedException
 import whelk.Document
 import whelk.IdGenerator
 import whelk.Whelk
@@ -31,8 +32,13 @@ class DefinitionsImporter extends Importer {
             documentList.add(doc)
             counter++
         }
-        println("Created $counter documents from $definitionsFilename in ${(System.currentTimeMillis()-startTime)/1000} seconds. Now storing to system.")
+        println("Created $counter documents from $definitionsFilename in ${(System.currentTimeMillis() - startTime) / 1000} seconds. Now storing to system.")
         whelk.bulkStore(documentList, "xl", null, collection)
-        println("Operation complete. Time elapsed: ${(System.currentTimeMillis() - startTime)/1000} seconds.")
+        println("Operation complete. Time elapsed: ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
+    }
+
+    @Override
+    ImportResult doImport(String collection, String sourceSystem, Date from) {
+        throw new NotImplementedException()
     }
 }

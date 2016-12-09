@@ -20,23 +20,59 @@ class MySQLLoader {
     final String collection
     final String connectionUrl
 
+    static  Map<String,String> selectExampleDataByMarcType = [
+            auth: """
+            SELECT auth_id, data, create_date, deleted, update_date FROM auth_record WHERE auth_id IN (?) ORDER BY auth_id
+            """,
+            bib : """
+            SELECT bib.bib_id, bib.data, bib.create_date, auth.auth_id, auth_data.data as auth_data, bib.deleted as deleted, bib.update_date as update_date FROM bib_record bib
+            LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id
+            LEFT JOIN auth_record auth_data on auth.auth_id = auth_data.auth_id
+            WHERE bib.bib_id IN (?) ORDER BY bib.bib_id
+             """,
+            hold: """
+            SELECT mfhd_id, data, bib_id, shortname, create_date, deleted, update_date FROM mfhd_record
+            WHERE mfhd_id IN (?) ORDER BY mfhd_id
+            """]
+
     static Map<String, String> selectByMarcType = [
 
             auth: """
-            SELECT auth_id, data, create_date FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id
+            SELECT auth_id, data, create_date, deleted, update_date FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id
             """,
 
             bib : """
-            SELECT bib.bib_id, bib.data, bib.create_date, auth.auth_id, auth_data.data as auth_data FROM bib_record bib
+            SELECT bib.bib_id, bib.data, bib.create_date, auth.auth_id, auth_data.data as auth_data, bib.deleted as deleted, bib.update_date as update_date FROM bib_record bib
             LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id
             LEFT JOIN auth_record auth_data on auth.auth_id = auth_data.auth_id
             WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id
              """,
 
             hold: """
-            SELECT mfhd_id, data, bib_id, shortname, create_date FROM mfhd_record
+            SELECT mfhd_id, data, bib_id, shortname, create_date, deleted, update_date FROM mfhd_record
             WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id
             """
+
+    ]
+
+    static Map<String, String> selectHarvestByMarcType = [
+
+            auth: """
+            SELECT auth_id, data, create_date, deleted, update_date FROM auth_record WHERE auth_id > ? AND (update_date > ? OR create_date > ?) ORDER BY update_date,create_date
+            """,
+
+            bib : """
+            SELECT bib.bib_id, bib.data, bib.create_date, auth.auth_id, auth_data.data AS auth_data, bib.deleted AS deleted, bib.update_date AS update_date FROM bib_record bib
+            LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id
+            LEFT JOIN auth_record auth_data ON auth.auth_id = auth_data.auth_id
+            WHERE bib.bib_id > ? AND (bib.update_date > ? OR bib.create_date > ? ) ORDER BY bib.update_date,bib.create_date
+             """,
+
+            hold: """
+            SELECT mfhd_id, data, bib_id, shortname, create_date, deleted, update_date FROM mfhd_record
+            WHERE mfhd_id > ? AND (update_date > ? OR create_date > ?)  ORDER BY update_date,create_date
+            """
+
     ]
 
     MySQLLoader(String connectionUrl, String collection) {
@@ -62,8 +98,8 @@ class MySQLLoader {
                 processNext(resultSet, handler)
             }
         }
-        catch(any){
-            log.error("",any)
+        catch (any) {
+            log.error("", any)
         }
         finally {
             resultSet.close()
