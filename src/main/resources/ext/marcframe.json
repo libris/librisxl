@@ -141,7 +141,7 @@
         "splitValueProperties": ["value", "note"]
       },
       "$q": {"property": "note"},
-      "$z": {"addProperty": "hiddenValue"}
+      "$z": {"addProperty": "marc:hiddenValue"}
     },
 
     "titlesearchelem": {
@@ -1266,7 +1266,10 @@
           "uriTemplate": "{_}",
           "tokenMap": "MicroformRangeType"
         },
-        "[6:9]": {"property": "reductionRatioExactRightJustifiedWithLeadingZero"},
+        "[6:9]": {
+          "property": "reductionRatio",
+          "parseZeroPaddedNumber": true
+        },
         "[9:10]": {
           "link": "marc:color",
           "uriTemplate": "{_}",
@@ -1635,7 +1638,7 @@
         "TODO:linkedEntity": {
           "link": "place",
           "linkedEntity": {
-            "link": "containedIn",
+            "link": "isPartOf",
             "resourceType": "Country",
             "uriTemplate": "https://id.kb.se/country/{_}"
           }
@@ -2146,7 +2149,7 @@
       "include": ["idbase"],
       "resourceType": "NBN",
       "$a": {"addProperty": "value"},
-      "$z": {"addProperty": "hiddenValue"},
+      "$z": {"addProperty": "marc:hiddenValue"},
       "$2": {
         "link": "source",
         "property": "code",
@@ -2163,7 +2166,7 @@
       "embedded": true,
       "resourceType": "Identifier",
       "$a": {"addProperty": "value"},
-      "$z": {"addProperty": "hiddenValue"},
+      "$z": {"addProperty": "marc:hiddenValue"},
       "i2": {"marcDefault": " "},
       "$2": {
         "link": "source",
@@ -2224,7 +2227,7 @@
             "identifiedBy": [
               {
                 "@type": "ISBN",
-                "hiddenValue": ["9780230274396 (print)"],
+                "marc:hiddenValue": ["9780230274396 (print)"],
                 "note": "e-book",
                 "value": "9781137368331"
               }
@@ -2240,7 +2243,7 @@
             "identifiedBy": [
               {
                 "@type": "ISBN",
-                "hiddenValue": ["9780240811444 (pbk. : alk. paper)"]
+                "marc:hiddenValue": ["9780240811444 (pbk. : alk. paper)"]
               }
             ]
           }}
@@ -2781,9 +2784,9 @@
     "130": {
       "aboutEntity": "?work",
       "link": "expressionOf",
-      "resourceType": "CanonicalWork",
+      "resourceType": "UniformWork",
       "TODO": "Similar to 240. Could use link:expressionOf if 130 XOR 240",
-      "$a": {"property": "workTitle"},
+      "$a": {"property": "uniformTitle"},
       "$d": {"property": "date"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"}
     },
@@ -2816,8 +2819,8 @@
       "include": ["titledetails", "titlesearchelem"],
       "TODO": "See also 100$t and 130.",
       "link": "expressionOf",
-      "resourceType": "Work",
-      "$a": {"property": "title"}
+      "resourceType": "UniformWork",
+      "$a": {"property": "uniformTitle"}
     },
 
     "242": {
@@ -3011,7 +3014,7 @@
 
     "256": {
       "aboutEntity": "?thing",
-      "$a": {"property": "fileType"}
+      "$a": {"link": "digitalCharacteristic", "resourceType": "FileType", "property": "label"}
     },
 
     "257": {},
@@ -3025,7 +3028,7 @@
         "?manufacture": {"resourceType": "Manufacture", "addLink": "manufacture", "embedded": true}
       },
       "TODO:groupByRepetitionAndInterpunctionPattern": "$3 $a $b $c $e $f $g",
-      "TODO:i1": {"property": "latest", "tokenMap": {"2": false, "3": true}},
+      "TODO:i1": {"property": "marc:isLatest", "tokenMap": {"2": false, "3": true}},
       "$a": {"about": "?publication", "link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
       "$b": {"about": "?publication", "link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;)"},
       "$c": {"about": "?publication", "property": "date", "interpunctionChars": ",;"},
@@ -3157,7 +3160,11 @@
         "resourceType": "Instance",
         "embedded": true
       },
-      "$a": {"property": "extent", "interpunctionChars": "+:;"},
+      "$a": {
+        "property": "extent",
+        "TODO:bf2": {"link": "extent", "resourceType": "Extent", "property": "label"},
+        "interpunctionChars": "+:;"
+      },
       "$b": {"property": "marc:otherPhysicalDetails", "interpunctionChars": ";+"},
       "$c": {"property": "dimensions", "interpunctionChars": ":;+"},
       "$e": {
@@ -3175,14 +3182,20 @@
 
     "310": {
       "aboutEntity": "?thing",
-      "$a": {"property": "frequency"}
+      "$a": {
+        "TODO:bf2": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
+        "property": "frequency"
+      }
     },
 
     "321": {
       "addLink": "replaces",
       "embedded": true,
       "resourceType": "Serial",
-      "$a": {"property": "frequency"},
+      "$a": {
+        "TODO:bf2": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
+        "property": "frequency"
+      },
       "$b": {"property": "date"}
     },
 
@@ -3276,7 +3289,7 @@
       "$n": {"addProperty": "numberOfPartOfAWork"},
       "$p": {"addProperty": "nameOfPartOfAWork", "interpunctionChars": ".,=;"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
-      "$v": {"property": "volumeNumberSequentialDesignation"},
+      "$v": {"property": "seriesEnumeration"},
       "$x": {"property": "issn", "interpunctionChars": ".,=;"}
     },
     "490": {
@@ -3290,7 +3303,7 @@
     "500": {"$a": {"aboutEntity": "?thing", "addProperty": "comment"}},
     "501": {},
     "502": {
-      "addLink": "hasAnnotation", "resourceType": "DissertationAnnotation",
+      "addLink": "dissertation", "resourceType": "Dissertation",
       "embedded": true,
       "$a": {"property": "note"},
       "$b": {"property": "degree"},
@@ -3564,12 +3577,14 @@
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "resourceType": "TopicalTerm",
-      "TOOO:i1": {
-        "property": "level",
-        "marcDefault": "_",
-        "0": "unspecified",
-        "1": "primary",
-        "2": "secondary"
+      "i1": {
+        "property": "marc:subjectLevel",
+        "marcDefault": " ",
+        "tokenMap": {
+          "0": {"@id": "marc:Unspecified"},
+          "1": {"@id": "marc:Primary"},
+          "2": {"@id": "marc:Secondary"}
+        }
       },
       "_spec": [
         {
@@ -3788,7 +3803,7 @@
         "addProperty": "identifier"
       },
       "$r": {"addProperty": "reportNumber", "TODO:targetMatch": "088"},
-      "$s": {"property": "workTitle", "TODO:targetMatch": "240"},
+      "$s": {"property": "uniformTitle", "TODO:targetMatch": "240"},
       "$t": {"property": "title", "TODO:targetMatch": "222, 245"},
       "$u": {"property": "standardTechnicalReportNumber", "TODO:targetMatch": "027"},
       "$w": {
@@ -3816,7 +3831,7 @@
             "isPartOf": [
               {
                 "@type": "CreativeWork",
-                "workTitle": "Main Thing",
+                "uniformTitle": "Main Thing",
                 "isbn": ["00-0-000000-0"]
               }
             ]
@@ -3881,11 +3896,11 @@
     "810": {},
     "811": {},
     "830": {
-      "addLink": "isPartOf", "resourceType": "PublicationVolume",
+      "addLink": "isPartOf", "resourceType": "Serial",
       "TODO:i2": {},
-      "$a": {"property": "workTitle"},
+      "$a": {"property": "uniformTitle"},
       "$d": {"addProperty": "date"},
-      "$v": {"property": "volumeNumber"},
+      "$v": {"property": "seriesEnumeration"},
       "$x": {"property": "issn", "interpunctionChars": ".,=;"}
     },
     "841": {},
@@ -5050,7 +5065,7 @@
       "$k": {"addProperty": "callNumberPrefix"},
       "$l": {"property": "shelfLabel"},
       "$m": {"addProperty": "callNumberSuffix"},
-      "$n": {"property": "countryCode"},
+      "$n": {"link": "country", "resourceType": "Country", "property": "code"},
       "$p": {"property": "pieceDesignation"},
       "$q": {"property": "itemCondition"},
       "$s": {"addProperty": "copyrightArticleFeeCode"},
