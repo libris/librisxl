@@ -151,6 +151,25 @@ class Document {
         }
     }
 
+    String getSigel() {
+        if (this.isHolding()) {
+            List graphItems = this.data.get("@graph")
+
+            Map item = graphItems.find { element ->
+                element[JsonLd.TYPE_KEY] == 'Item'
+            }
+
+            if (item.heldBy?.notation) {
+                return item.heldBy.notation
+            } else {
+                return null
+            }
+        } else {
+            // TODO undefined for non-holding posts for now
+            return null
+        }
+    }
+
 
     /**
      * By convention the first id in the returned list is the MAIN resource id.
