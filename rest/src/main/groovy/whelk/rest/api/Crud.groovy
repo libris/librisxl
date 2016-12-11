@@ -611,8 +611,7 @@ class Crud extends HttpServlet {
         try {
             // TODO: 'collection' must also match the collection 'existingDoc'
             // is in.
-            boolean allowed = hasPermission(request.getAttribute("user"),
-                                            newDoc, existingDoc)
+            boolean allowed = hasPostPermission(newDoc, request.getAttribute("user"))
             if (!allowed) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
                                    "You are not authorized to perform this " +
@@ -710,8 +709,8 @@ class Crud extends HttpServlet {
         try {
             // TODO: 'collection' must also match the collection 'existingDoc'
             // is in.
-            boolean allowed = hasPermission(request.getAttribute("user"),
-                                            updatedDoc, existingDoc)
+            boolean allowed = hasPutPermission(updatedDoc, existingDoc,
+                                               request.getAttribute("user"))
             if (!allowed) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
                                    "You are not authorized to perform this " +
@@ -816,7 +815,8 @@ class Crud extends HttpServlet {
         }
     }
 
-
+    //FIXME remove this
+    /*
     boolean hasPermission(userInfo, newdoc, olddoc) {
         if (userInfo) {
             log.debug("User is: $userInfo")
@@ -829,6 +829,32 @@ class Crud extends HttpServlet {
         }
         log.info("No user information received, denying request.")
         return false
+    }*/
+
+    boolean hasPostPermission(Document newDoc, Map userInfo) {
+        if (userInfo) {
+            log.debug("User is: $userInfo")
+            if (isSystemUser(userInfo)) {
+                return true
+            } else {
+                return accessControl.checkDocumentToPost(newDoc, userInfo)
+            }
+        }
+        log.info("No user information received, denying request.")
+        return false
+    }
+
+    boolean hasPutPermission(Document newDoc, Document oldDoc, Map userInfo) {
+        if (userInfo) {
+            log.debug("User is: $userInfo")
+            if (isSystemUser(userInfo)) {
+                return true
+            } else {
+                return accessControl.checkDocumentToPut(newDoc, oldDoc, userInfo)
+            }
+        }
+        log.info("No user information received, denying request.")
+        return false
     }
 
     boolean hasDeletePermission(Document oldDoc, Map userInfo) {
@@ -837,7 +863,7 @@ class Crud extends HttpServlet {
             if (isSystemUser(userInfo)) {
                 return true
             } else {
-                return accessControl.checkDocumentDelete(oldDoc, userInfo)
+                return accessControl.checkDocumentToDelete(oldDoc, userInfo)
             }
         }
         log.info("No user information received, denying request.")
