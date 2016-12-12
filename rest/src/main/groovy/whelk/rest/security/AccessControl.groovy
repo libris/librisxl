@@ -44,7 +44,8 @@ class AccessControl {
         }
 
         if (newdoc) {
-            newdoc.manifest.lastChangeBy = userPrivileges.username
+            // FIXME what should we do here?
+            // newdoc.manifest.lastChangeBy = userPrivileges.username
         }
         log.debug("User is authorized to make the change.")
         return true

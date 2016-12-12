@@ -9,6 +9,7 @@ import whelk.Whelk
 import whelk.component.Storage
 import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
+import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
 
 import javax.servlet.ServletInputStream
@@ -263,12 +264,12 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NOT_FOUND
     }
 
-    def "GET /<id>/description should return raw representation"() {
+    def "GET /<id>/data should return raw representation"() {
         // We don't allow this for now
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "#{id}/description".toString()
+            "#{id}/data".toString()
         }
         request.getHeader("Accept") >> {
             "application/ld+json"
@@ -285,11 +286,11 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/ld+json"
     }
 
-    def "GET /<id>/description.jsonld should display document in JSON-LD format"() {
+    def "GET /<id>/data.jsonld should display document in JSON-LD format"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "#{id}/description.jsonld".toString()
+            "#{id}/data.jsonld".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -306,11 +307,31 @@ class CrudSpec extends Specification {
     }
 
     // FIXME we should use another status code here
-    def "GET /<id>/description.json should return 406 Not Acceptable"() {
+    def "GET /<id>/data.json should display document in JSON format"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "#{id}/description.json".toString()
+            "#{id}/data.json".toString()
+        }
+        request.getHeader("Accept") >> {
+            "*/*"
+        }
+        storage.locate(_, _) >> {
+            new Location(
+                new Document(["@graph": [["@id": id, "foo": "bar"]]]))
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_OK
+        response.getContentType() == "application/json"
+    }
+
+    def "GET /<id>/data.ttl should return 406 Not Acceptable"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "#{id}/data.ttl".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -325,30 +346,11 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NOT_ACCEPTABLE
     }
 
-    def "GET /<id>/description.ttl should return 406 Not Acceptable"() {
+    def "GET /<id>/data.rdf should return 406 Not Acceptable"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "#{id}/description.ttl".toString()
-        }
-        request.getHeader("Accept") >> {
-            "*/*"
-        }
-        storage.locate(_, _) >> {
-            new Location(
-                new Document(["@graph": [["@id": id, "foo": "bar"]]]))
-        }
-        when:
-        crud.doGet(request, response)
-        then:
-        response.getStatus() == HttpServletResponse.SC_NOT_ACCEPTABLE
-    }
-
-    def "GET /<id>/description.rdf should return 406 Not Acceptable"() {
-        given:
-        def id = BASE_URI.resolve("/1234").toString()
-        request.getPathInfo() >> {
-            "#{id}/description.rdf".toString()
+            "#{id}/data.rdf".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -1182,27 +1184,56 @@ class CrudSpec extends Specification {
         expect:
         Crud.getIdFromPath(path) == id
         where:
-        path                                       | id
-        ""                                         | null
-        "/"                                        | null
-        "/foo"                                     | "foo"
-        "/foo/description"                         | "foo"
-        "/foo/description.jsonld"                  | "foo"
-        "/https://example.com/some/id"             | "https://example.com/some/id"
-        "/https://example.com/some/id/description" | "https://example.com/some/id"
+        path                                | id
+        ""                                  | null
+        "/"                                 | null
+        "/foo"                              | "foo"
+        "/foo/data"                         | "foo"
+        "/foo/data.jsonld"                  | "foo"
+        "/foo/data.json"                    | "foo"
+        "/foo/data-view.jsonld"             | "foo"
+        "/foo/data-view.json"               | "foo"
+        "/https://example.com/some/id"      | "https://example.com/some/id"
+        "/https://example.com/some/id/data" | "https://example.com/some/id"
     }
 
     def "should get formatting type"() {
         expect:
-        Crud.getFormattingType(path) == type
+        Crud.getFormattingType(path, contentType) == type
         where:
-        path | type
-        ""                                         | Crud.FormattingType.EMBELLISHED
-        "/"                                        | Crud.FormattingType.EMBELLISHED
-        "/foo"                                     | Crud.FormattingType.EMBELLISHED
-        "/foo/description"                         | Crud.FormattingType.RAW
-        "/foo/description.jsonld"                  | Crud.FormattingType.RAW
-        "/https://example.com/some/id"             | Crud.FormattingType.EMBELLISHED
-        "/https://example.com/some/id/description" | Crud.FormattingType.RAW
+        path                                | contentType | type
+        ""                                  | "application/ld+json" | Crud.FormattingType.EMBELLISHED
+        "/"                                 | "application/ld+json" | Crud.FormattingType.EMBELLISHED
+        "/foo"                              | "application/ld+json" | Crud.FormattingType.EMBELLISHED
+        "/foo"                              | "application/json"    | Crud.FormattingType.FRAMED_AND_EMBELLISHED
+        "/foo/data"                         | "application/ld+json" | Crud.FormattingType.RAW
+        "/foo/data"                         | "application/json"    | Crud.FormattingType.FRAMED
+        "/foo/data.jsonld"                  | "application/ld+json" | Crud.FormattingType.RAW
+        "/foo/data.json"                    | "application/ld+json" | Crud.FormattingType.FRAMED
+        "/foo/data-view"                    | "application/ld+json" | Crud.FormattingType.EMBELLISHED
+        "/foo/data-view"                    | "application/json"    | Crud.FormattingType.FRAMED_AND_EMBELLISHED
+        "/foo/data-view.jsonld"             | "application/ld+json" | Crud.FormattingType.EMBELLISHED
+        "/foo/data-view.json"               | "application/ld+json" | Crud.FormattingType.FRAMED_AND_EMBELLISHED
+        "/https://example.com/some/id"      | "application/ld+json" | Crud.FormattingType.EMBELLISHED
+        "/https://example.com/some/id/data" | "application/ld+json" | Crud.FormattingType.RAW
+        "/https://example.com/some/id/data" | "application/json"    | Crud.FormattingType.FRAMED
+        "/foo/data"                         | "text/turtle"         | Crud.FormattingType.RAW
+        "/foo/data"                         | "application/rdf+xml" | Crud.FormattingType.RAW
+        "/foo/data-view"                    | "text/turtle"         | Crud.FormattingType.EMBELLISHED
+        "/foo/data-view"                    | "application/rdf+xml" | Crud.FormattingType.EMBELLISHED
+    }
+
+    def "should throw exception when getting formatting type for invalid file ending, I"() {
+        when:
+        Crud.getFormattingType('/foo/data.invalid', 'application/ld+json')
+        then:
+        thrown WhelkRuntimeException
+    }
+
+    def "should throw exception when getting formatting type for invalid file ending, II"() {
+        when:
+        Crud.getFormattingType('/foo/data-view.invalid', 'application/ld+json')
+        then:
+        thrown WhelkRuntimeException
     }
 }
