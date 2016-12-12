@@ -805,6 +805,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     String link
     boolean repeatable = false
     String resourceType
+    Map linkRepeated = null
 
     static final ConvertResult OK = new ConvertResult(true)
     static final ConvertResult FAIL = new ConvertResult(false)
@@ -825,11 +826,37 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         }
         resourceType = fieldDfn.resourceType
         embedded = fieldDfn.embedded == true
+
+        Map dfn = (Map) fieldDfn['linkRepeated']
+        if (dfn) {
+            linkRepeated = [
+                    link        : dfn.addLink ?: dfn.link,
+                    repeatable  : dfn.containsKey('addLink'),
+                    resourceType: dfn.resourceType,
+                    embedded    : dfn.embedded
+            ]
+
+        }
     }
 
     abstract ConvertResult convert(Map state, value)
 
     abstract def revert(Map data, Map result)
+
+    Map getLinkRule(Map state, value) {
+        if (linkRepeated) {
+            Collection tagValues = (Collection) state.sourceMap[tag]
+            if (tagValues.size() > 1 && !value.is(tagValues[0][tag])) {
+                return linkRepeated
+            }
+        }
+        return [
+                link        : this.link,
+                repeatable  : this.repeatable,
+                resourceType: this.resourceType,
+                embedded    : this.embedded
+        ]
+    }
 
 }
 
@@ -995,15 +1022,11 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
     MarcFixedFieldHandler baseConverter
     Map<String, MarcFixedFieldHandler> handlerMap = [:]
     boolean useRecTypeBibLevel = false
-    Map matchRepeated = null
     Map tokenNames = [:]
 
     TokenSwitchFieldHandler(ruleSet, tag, Map fieldDfn, tokenMapKey = 'tokenTypeMap') {
         super(ruleSet, tag, fieldDfn)
         assert !link || repeatable // this kind should always be repeatable if linked
-        if (fieldDfn['match-repeated']) {
-            matchRepeated = fieldDfn['match-repeated']
-        }
         this.baseConverter = new MarcFixedFieldHandler(ruleSet, tag, fieldDfn)
         def tokenMap = fieldDfn[tokenMapKey]
         if (tokenMapKey == 'recTypeBibLevelMap') {
@@ -1069,24 +1092,13 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         if (converter == null)
             return FAIL
 
-        // TODO: generalize matchRepeated to use in at least MarcFieldHandler as well
-        // .. Also, make it work with revert
-        def use = [
-                addLink     : this.link,
-                resourceType: this.resourceType,
-                embedded    : this.embedded
-        ]
-        if (matchRepeated) {
-            def tagValues = state.sourceMap[tag]
-            if (tagValues.size() > 1 && !value.is(tagValues[0][tag])) {
-                use = matchRepeated
-            }
-        }
+        def linkRule = getLinkRule(state, value)
+
         def entityMap = state.entityMap
-        if (use.addLink) {
+        if (linkRule.link) {
             def ent = entityMap[aboutEntityName]
-            def newEnt = newEntity(state, use.resourceType, null, use.embedded)
-            addValue(ent, use.addLink, newEnt, true)
+            def newEnt = newEntity(state, linkRule.resourceType, null, linkRule.embedded)
+            addValue(ent, linkRule.link, newEnt, linkRule.repeatable)
             state = state.clone()
             state.entityMap = entityMap.clone()
             state.entityMap['?thing'] = newEnt
@@ -1106,10 +1118,10 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         if (link) {
             entities = rootEntity.get(link) ?: []
         }
-        if (matchRepeated) {
-            def entitiesFromRepeated = rootEntity.get(matchRepeated.addLink)
+        if (linkRepeated) {
+            def entitiesFromRepeated = rootEntity.get(linkRepeated.link)
             if (entitiesFromRepeated) {
-                entities += entitiesFromRepeated
+                entities += Util.asList(entitiesFromRepeated)
             }
         }
         def values = []
@@ -1551,8 +1563,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     @CompileStatic(SKIP)
     Map computeLinkage(Map state, Map entity, Map value, Set handled) {
+        def linkRule = getLinkRule(state, value)
         def newEnt = null
-        if (link || resourceType) {
+        if (linkRule.link || linkRule.resourceType) {
             def useLinks = Collections.emptyList()
             if (computeLinks) {
                 def use = computeLinks.use
@@ -1581,25 +1594,24 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
 
-            newEnt = newEntity(state, resourceType)
-
-            def lRepeatLink = repeatable
             if (useLinks) {
-                lRepeatLink = true
+                linkRule.repeatable = true
             }
+
+            newEnt = newEntity(state, linkRule.resourceType, null, linkRule.embedded)
 
             // TODO: use @id (existing or added bnode-id) instead of duplicating newEnt
             def entRef = newEnt
-            if (useLinks && link) {
+            if (useLinks && linkRule.link) {
                 if (!newEnt['@id'])
                     newEnt['@id'] = "_:b-${state.bnodeCounter++}" as String
                 entRef = ['@id': newEnt['@id']]
             }
-            if (link) {
-                addValue(entity, link, newEnt, repeatable)
+            if (linkRule.link) {
+                addValue(entity, linkRule.link, newEnt, linkRule.repeatable)
             }
             useLinks.each {
-                addValue(entity, it, entRef, lRepeatLink)
+                addValue(entity, it, entRef, linkRule.repeatable)
             }
         }
         return [ // TODO: just returning the entity would be enough
@@ -1677,7 +1689,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
         } else {
-            useLinks << [link: link, subfield: null]
+            useLinks << [link: link, resourceType: resourceType]
+        }
+
+        if (linkRepeated) {
+            useLinks << [link: linkRepeated.link, resourceType: linkRepeated.resourceType]
         }
 
         for (useLink in useLinks) {
@@ -1686,12 +1702,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 useEntities = entity[useLink.link]
                 if (!(useEntities instanceof List)) // should be if repeat == true
                     useEntities = useEntities ? [useEntities] : []
-                if (resourceType) {
+                if (useLink.resourceType) {
                     useEntities = useEntities.findAll {
                         if (!it) return false
                         def type = it['@type']
                         return (type instanceof List) ?
-                                resourceType in type : type == resourceType
+                                useLink.resourceType in type : type == useLink.resourceType
                     }
                 }
             }

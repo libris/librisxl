@@ -1012,7 +1012,7 @@
     },
 
     "007": {
-      "match-repeated": {
+      "linkRepeated": {
         "addLink": "hasPart",
         "embedded": true
       },
@@ -2544,7 +2544,7 @@
       "$9": {"property": "license"}
     },
     "041": {
-      "TODO:useWhenImplemented?:match-repeated": {
+      "linkRepeated": {
         "addLink": "hasPart",
         "embedded": true
       },
@@ -2582,9 +2582,9 @@
       "$a": {"property": "authenticationCode"},
       "$9": {
         "addLink": "bibliography",
-        "resourceType": "Organization",
+        "resourceType": "Library",
         "uriTemplate": "http://libris.kb.se/library/{_}",
-        "property": "notation"
+        "property": "sigel"
       }
     },
     "043": {"ignored": true},
@@ -2955,7 +2955,7 @@
 
     "250": {
       "aboutEntity": "?thing",
-      "TODO:useWhenImplemented:match-repeated": {
+      "linkRepeated": {
         "addLink": "otherEdition",
         "embedded": true
       },
@@ -2980,17 +2980,11 @@
             {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "New"}]}},
             {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Newer"}]}}
           ],
-          "TODO:result": {"mainEntity": {
-            "otherEdition": [
-              {
-                "editionStatement": "New"
-              }, {
-                "editionStatement": "Newer"
-              }
-            ]
-          }},
           "result": {"mainEntity": {
-            "editionStatement": ["New", "Newer"]
+            "editionStatement": "New",
+            "otherEdition": [
+              {"editionStatement": "Newer"}
+            ]
           }}
         }
       ]
@@ -3155,7 +3149,7 @@
 
     "300": {
       "aboutEntity": "?thing",
-      "TODO:useWhenImplemented:match-repeated": {
+      "linkRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
         "embedded": true
@@ -3200,10 +3194,15 @@
     },
 
     "336": {
-      "addLink": "hasPart",
-      "resourceType": "CreativeWork",
+      "aboutEntity": "?work",
+      "linkRepeated": {
+        "addLink": "hasPart",
+        "resourceType": "Work",
+        "embedded": true,
+        "TODO:implement:mergeWithExistingLinkedAtPosition": true
+      },
       "pendingResources": {
-        "_:contentType": {"link": "contentType", "resourceType": "Class"}
+        "_:contentType": {"addLink": "contentType", "resourceType": "Class"}
       },
       "$a": {"about": "_:contentType", "property": "label"},
       "$b": {"about": "_:contentType", "property": "notation"},
@@ -3211,21 +3210,28 @@
       "$8": {"about": "_:contentType", "property": "_groupID"}
     },
     "337": {
-      "pendingResources": {
-        "_:mediaType": {"link": "mediaType", "resourceType": "MediaType"}
+      "linkRepeated": {
+        "addLink": "hasPart",
+        "resourceType": "Instance",
+        "embedded": true
       },
-      "addLink": "hasInstance",
-      "resourceType": "Instance",
+      "pendingResources": {
+        "_:mediaType": {"addLink": "mediaType", "resourceType": "MediaType"}
+      },
+      "aboutEntity": "?thing",
       "$a": {"about": "_:mediaType", "property": "label"},
       "$b": {"about": "_:mediaType", "property": "notation"},
       "$2": {"about": "_:mediaType", "property": "termGroup"},
       "$8": {"about": "_:mediaType", "property": "_groupID"}
     },
     "338": {
-      "pendingResources": {
-        "_:carrierType": {"link": "carrierType", "resourceType": "CarrierType"}
+      "linkRepeated": {
+        "addLink": "hasPart",
+        "embedded": true
       },
-      "addLink": "hasInstance", "resourceType": "Instance",
+      "pendingResources": {
+        "_:carrierType": {"addLink": "carrierType", "resourceType": "CarrierType"}
+      },
       "$a": {"about": "_:carrierType", "property": "label"},
       "$b": {"about": "_:carrierType", "property": "notation"},
       "$2": {"about": "_:carrierType", "property": "termGroup"},
@@ -3237,10 +3243,14 @@
           },
           "result": {
             "mainEntity": {
-              "hasInstance": [{
-                "@type": "Instance",
-                "carrierType": {"@type": "CarrierType", "notation": "nc", "label": "volume", "termGroup": "rdacarrier"}
-              }]
+                "carrierType": [
+                  {
+                    "@type": "CarrierType",
+                    "notation": "nc",
+                    "label": "volume",
+                    "termGroup": "rdacarrier"
+                  }
+                ]
             }
           }
         }
