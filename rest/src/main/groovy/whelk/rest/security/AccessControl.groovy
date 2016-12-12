@@ -8,36 +8,26 @@ import whelk.exception.ModelValidationException
 
 @Log
 class AccessControl {
+    private static final XLREG_KEY = 'xlreg'
+    private static final KAT_KEY = 'kat'
+
     boolean checkDocumentToPost(Document newDoc, Map userPrivileges) {
         return checkDocument(newDoc, userPrivileges)
     }
 
-    boolean checkDocumentToPut(Document newDoc, Document oldDoc, Map userPrivileges) {
-        boolean result = false
+    boolean checkDocumentToPut(Document newDoc, Document oldDoc,
+                               Map userPrivileges) {
         def newDocSigel = newDoc.getSigel()
         def oldDocSigel = oldDoc.getSigel()
 
-        if (!newDocSigel || !oldDocSigel){
-            log.warn("No sigel found in document, denying request.")
-            return false
-        }
-
         if (!(newDocSigel == oldDocSigel)) {
-            log.warn("Trying to update content with an another sigel, denying request.")
+            log.warn("Trying to update content with an another sigel, " +
+                     "denying request.")
             return false
         }
 
-        userPrivileges.authorization.each { item ->
-            if (item.get("sigel") == newDocSigel) {
-                if (item.get("xlreg")) {
-                    result = (newDoc.isHolding() && oldDoc.isHolding())
-                } else if (item.get("kat")) {
-                    result = true
-                }
-            }
-        }
-
-        return result
+        return checkDocument(newDoc, userPrivileges) &&
+                    checkDocument(oldDoc, userPrivileges)
     }
 
     boolean checkDocumentToDelete(Document oldDoc, Map userPrivileges) {
@@ -45,23 +35,31 @@ class AccessControl {
     }
 
     boolean checkDocument(Document document, Map userPrivileges) {
-        boolean result = false
-        def currentSigel = document.getSigel()
+        String id = document.getShortId()
+        String sigel = document.getSigel()
 
-        if (!currentSigel){
-            log.warn("No sigel found in document, denying request.")
+        boolean result = false
+
+        log.debug("Checking permissions for document ${id}")
+
+        if (!sigel){
+            log.warn("No sigel found in document ${id}, denying request.")
             return result
         }
 
         userPrivileges.authorization.each { item ->
-            if (item.get("sigel") == currentSigel) {
-                if (item.get("xlreg")) {
+            if (item.get("sigel") == sigel) {
+                boolean xlreg_permission = item.get(XLREG_KEY)
+                boolean kat_permission = item.get(KAT_KEY)
+
+                if (xlreg_permission) {
                     result = document.isHolding()
-                } else if (item.get("kat")) {
+                } else if (kat_permission) {
                     result = true
                 }
             }
         }
+
         return result
     }
 
