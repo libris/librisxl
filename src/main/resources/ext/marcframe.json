@@ -2711,7 +2711,7 @@
     "100": {
       "aboutEntity": "?work",
       "include": "attribution",
-      "resourceType": "marc:MainEntry",
+      "resourceType": "Principal",
       "_spec": [
         {
           "source": {
@@ -2729,7 +2729,7 @@
               "@type": "Text",
               "qualifiedAttribution": [
                 {
-                  "@type": "marc:MainEntry",
+                  "@type": "Principal",
                   "agent": {"@type": "Person",
                     "familyName":  "Jansson",
                     "givenName":  "Tove",
@@ -3686,7 +3686,7 @@
     "700": {
       "aboutEntity": "?work",
       "include": "attribution",
-      "resourceType": "marc:AddedEntry",
+      "resourceType": "Additional",
       "TODO:if-resourceType-ignoreOnRevertInFavourOf": "100",
       "match-code": {
         "t": {
@@ -3716,7 +3716,7 @@
               "@type": "Text",
               "qualifiedAttribution": [
                 {
-                  "@type": "marc:AddedEntry",
+                  "@type": "Additional",
                   "agent": {"@type": "Person",
                     "familyName":  "Pietilä",
                     "givenName":  "Tuulikki",
@@ -3737,7 +3737,7 @@
               "@type": "Text",
               "qualifiedAttribution": [
                 {
-                  "@type": "marc:AddedEntry",
+                  "@type": "Additional",
                   "agent": {
                     "@type": "UniformWork",
                     "title": "Anteckningar från en ö",
