@@ -897,6 +897,8 @@ class Crud extends HttpServlet {
             def doc = whelk.storage.load(id)
             Location loc
 
+            log.debug("Checking permissions for ${doc}")
+
             if (!doc) {
                 loc = whelk.storage.locate(id, true)
                 if (loc) {
