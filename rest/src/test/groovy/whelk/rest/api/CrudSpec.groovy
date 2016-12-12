@@ -397,7 +397,6 @@ class CrudSpec extends Specification {
         }
         storage.store(_, _) >> {
             Document doc = it.first()
-            // FIXME should it not be setCreated() instead of setModified()?
             doc.setModified(new Date())
             return doc
         }
@@ -440,7 +439,6 @@ class CrudSpec extends Specification {
         }
         storage.store(_, _) >> {
             Document doc = it.first()
-            // FIXME should it not be setCreated() instead of setModified()?
             doc.setModified(new Date())
             return doc
         }
@@ -483,7 +481,6 @@ class CrudSpec extends Specification {
         }
         storage.store(_, _) >> {
             Document doc = it.first()
-            // FIXME should it not be setCreated() instead of setModified()?
             doc.setModified(new Date())
             return doc
         }
