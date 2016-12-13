@@ -619,7 +619,7 @@ class CrudSpec extends Specification {
                                        "kat": false],
                                       ["sigel": "S",
                                        "xlreg": false,
-                                       "kat": true]]]
+                                       "kat": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -912,7 +912,7 @@ class CrudSpec extends Specification {
         request.getAttribute(_) >> {
             return ["authorization": [["sigel": "Ting",
                                        "xlreg": true,
-                                       "kat": true],
+                                       "kat": false],
                                       ["sigel": "S",
                                        "xlreg": true,
                                        "kat": false]]]
@@ -985,6 +985,204 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
 
+    def "POST to / should create non-holding if user has kat permission"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/work_id",
+                                    "@type": "Work",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_CREATED
+    }
+
+    def "POST to / should return 403 Forbidden if missing kat permission"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/work_id",
+                                    "@type": "Work",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "POST to / should create holding if user has kat permission for sigel"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/work_id",
+                                    "@type": "Item",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_CREATED
+    }
+
+    def "POST to / should return 403 Forbidden if missing kat permission for sigel"() {
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/work_id",
+                                    "@type": "Item",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
 
     // Tests for update
 
@@ -1503,7 +1701,7 @@ class CrudSpec extends Specification {
                                        "kat": false],
                                       ["sigel": "S",
                                        "xlreg": false,
-                                       "kat": true]]]
+                                       "kat": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1570,7 +1768,7 @@ class CrudSpec extends Specification {
                                        "kat": false],
                                       ["sigel": "S",
                                        "xlreg": false,
-                                       "kat": true]]]
+                                       "kat": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -2052,6 +2250,194 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
 
+    def "PUT to /<id> should return 403 Forbidden if missing kat permission"() {
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/workId",
+                                      "@type": "Work",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/workId",
+                                      "@type": "Work",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "S",
+                                       "xlreg": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "PUT to /<id> should update holding if user has kat permission for sigel"() {
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/workId",
+                                      "@type": "Work",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/workId",
+                                      "@type": "Work",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "PUT to /<id> should return 403 Forbidden if missing kat permission for sigel"() {
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/workId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/workId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
 
     // Tests for delete
 
@@ -2167,7 +2553,7 @@ class CrudSpec extends Specification {
                                        "kat": false],
                                       ["sigel": "S",
                                        "xlreg": false,
-                                       "kat": true]]]
+                                       "kat": false]]]
         }
         request.getMethod() >> {
             "DELETE"
@@ -2447,6 +2833,159 @@ class CrudSpec extends Specification {
         then:
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
+
+    def "DELETE to /<id> should delete non-holding if user has kat permission"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Instance",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "DELETE to /<id> should return 403 Forbidden if missing kat permission"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Instance",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "DELETE to /<id> should delete holding if user has kat permission for sigel"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Item",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "DELETE to /<id> should return 403 Forbidden if missing kat permission for sigel"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Item",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
 
     /*
      * Utilities tests
