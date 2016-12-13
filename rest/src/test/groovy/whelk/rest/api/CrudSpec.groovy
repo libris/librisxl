@@ -736,7 +736,7 @@ class CrudSpec extends Specification {
         assert response.getStatus() == HttpServletResponse.SC_CREATED
     }
 
-    def "POST to / should create the document with conflicting privileges"() {
+    def "POST to / should create the document if at least one privilege is valid"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
@@ -1435,8 +1435,8 @@ class CrudSpec extends Specification {
                                        "xlreg": true,
                                        "kat": false],
                                       ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+                                       "xlreg": true,
+                                       "kat": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1471,7 +1471,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["notation": "Ting"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2291,7 +2291,7 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NO_CONTENT
     }
 
-    def "DELETE to /<id> should delete the document with conflicting privileges"() {
+    def "DELETE to /<id> should delete the document if at least one privilege is valid"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def instanceId = BASE_URI.resolve("/1234#it").toString()
@@ -2410,7 +2410,7 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_FOUND
     }
 
-    def "DELETE to /<id> should return 400 indicating a bad request"() {
+    def "DELETE to /<id> should return 400 Bad Request if unable to check permissions"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def workId = BASE_URI.resolve("/1234#it").toString()
