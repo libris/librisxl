@@ -789,7 +789,7 @@ class CrudSpec extends Specification {
         assert response.getStatus() == HttpServletResponse.SC_CREATED
     }
 
-    def "POST to / should return 403 Forbidden if no sigel found in document"() {
+    def "POST to / should return 400 Bad Request if no sigel found in document"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
@@ -834,7 +834,7 @@ class CrudSpec extends Specification {
         when:
         crud.doPost(request, response)
         then:
-        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+        assert response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
 
     def "POST to / should return 403 Forbidden if no user information"() {
@@ -1721,7 +1721,7 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
 
-    def "PUT to /<id> should return 403 Forbidden if missing sigel in new document"() {
+    def "PUT to /<id> should return 400 Bad Request if missing sigel in new document"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
@@ -1783,7 +1783,7 @@ class CrudSpec extends Specification {
         when:
         crud.doPut(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+        response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
 
     def "PUT to /<id> should return 403 Forbidden if no user information"() {
@@ -2214,7 +2214,7 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
 
-    def "DELETE to /<id> should return 403 Forbidden if no sigel found in document"() {
+    def "DELETE to /<id> should return 400 Bad Request if no sigel found in document"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def itemId = BASE_URI.resolve("/1234#it").toString()
@@ -2247,7 +2247,7 @@ class CrudSpec extends Specification {
         when:
         crud.doDelete(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+        response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
 
     def "DELETE to /<id> should delete the document of type Item"() {

@@ -20,6 +20,11 @@ class AccessControl {
         def newDocSigel = newDoc.getSigel()
         def oldDocSigel = oldDoc.getSigel()
 
+		// we bail out early if sigel is missing in the new doc
+		if (!newDocSigel) {
+			throw new ModelValidationException('Missing sigel in document.')
+		}
+
         if (!(newDocSigel == oldDocSigel)) {
             log.warn("Trying to update content with an another sigel, " +
                      "denying request.")
@@ -44,7 +49,7 @@ class AccessControl {
 
         if (!sigel){
             log.warn("No sigel found in document ${id}, denying request.")
-            return result
+            throw new ModelValidationException('Missing sigel in document.')
         }
 
         userPrivileges.authorization.each { item ->
