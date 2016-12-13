@@ -895,12 +895,11 @@ class Crud extends HttpServlet {
         try {
             String id = request.pathInfo.substring(1)
             def doc = whelk.storage.load(id)
-            Location loc
 
             log.debug("Checking permissions for ${doc}")
 
             if (!doc) {
-                loc = whelk.storage.locate(id, true)
+                Location loc = whelk.storage.locate(id, true)
                 if (loc) {
                     log.debug("Redirecting to document location: ${loc.uri}")
                     sendRedirect(request, response, loc)
