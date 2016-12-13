@@ -1981,7 +1981,7 @@ class CrudSpec extends Specification {
         // FIXME assert created/modified
         assert response.getStatus() == HttpServletResponse.SC_NO_CONTENT
     }
-    /*
+
     def "PUT to /<id> should return 400 Bad Request if unable to check access"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
@@ -2025,9 +2025,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            if (it.first() == "user") {
-                return ["user": "SYSTEM"]
-            }
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -2047,7 +2050,7 @@ class CrudSpec extends Specification {
         crud.doPut(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
-    } */
+    }
 
 
     // Tests for delete
