@@ -259,4 +259,118 @@ class DocumentSpec extends Specification {
         assert doc.data == output
     }
 
+    def "should return true for holding"() {
+        given:
+        def id = "/1234"
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def content = ["@graph": [["@id": id,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        Document doc = new Document(content)
+        expect:
+        assert doc.isHolding() == true
+    }
+
+    def "should return false for non-holding"() {
+        given:
+        def id = "/1234"
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def content = ["@graph": [["@id": id,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Work",
+                                      "contains": "some new other data"]]]
+        Document doc = new Document(content)
+        expect:
+        assert doc.isHolding() == false
+    }
+
+    def "should get sigel for holding"() {
+        given:
+        def id = "/1234"
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def content = ["@graph": [["@id": id,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        Document doc = new Document(content)
+        expect:
+        assert doc.getSigel() == 'S'
+    }
+
+    def "should return null for holding without sigel, I"() {
+        given:
+        def id = "/1234"
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def content = ["@graph": [["@id": id,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy": []]]]
+        Document doc = new Document(content)
+        expect:
+        assert doc.getSigel() == null
+    }
+
+    def "should return null for holding without sigel, II"() {
+        given:
+        def id = "/1234"
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def content = ["@graph": [["@id": id,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data"]]]
+        Document doc = new Document(content)
+        expect:
+        assert doc.getSigel() == null
+    }
+
+    def "should return null sigel for non-holding"() {
+        given:
+        def id = "/1234"
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def content = ["@graph": [["@id": id,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Work",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        Document doc = new Document(content)
+        expect:
+        assert doc.getSigel() == null
+    }
 }
