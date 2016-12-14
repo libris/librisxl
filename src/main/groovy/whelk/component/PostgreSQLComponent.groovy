@@ -118,7 +118,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
                 "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.identifier = ?"
-        GET_CONTEXT = "SELECT data#>>'{@graph,0}' FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE identifier = 'https://id.kb.se/vocab/context')"
+        GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE identifier = 'https://id.kb.se/vocab/context')"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
