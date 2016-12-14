@@ -58,7 +58,8 @@ class CrudSpec extends Specification {
             }
         }
         storage = GroovyMock(Storage.class)
-        accessControl = GroovyMock(AccessControl.class)
+        // We want to pass through calls in some cases
+        accessControl = GroovySpy(AccessControl.class)
         whelk = new Whelk("version", storage)
         crud = new Crud()
         crud.whelk = whelk
@@ -367,7 +368,6 @@ class CrudSpec extends Specification {
 
 
     // Tests for create
-
     def "POST to / should create document with generated @id if not supplied"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
@@ -591,7 +591,13 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
-                                    "contains": "some data"]]]
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/work_id",
+                                    "@type": "Work",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -608,9 +614,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            if (it.first() == "user") {
-                return ["user": "forbidden_user"]
-            }
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -620,9 +629,6 @@ class CrudSpec extends Specification {
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
-        }
-        accessControl.checkDocument(_, _, _) >> {
-            return false
         }
         when:
         crud.doPost(request, response)
@@ -630,12 +636,18 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
 
-    def "POST to / should return 400 Bad Request if unable to check access"() {
+    def "POST to / should create document of type Item"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
-                                    "contains": "some data"]]]
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/item_id",
+                                    "@type": "Item",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -652,9 +664,308 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            if (it.first() == "user") {
-                return ["user": "forbidden_user"]
-            }
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": true,
+                                       "kat": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_CREATED
+    }
+
+    def "POST to / should create document of type Work"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/work_id",
+                                    "@type": "Work",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_CREATED
+    }
+
+    def "POST to / should create the document if at least one privilege is valid"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/instance_id",
+                                    "@type": "Instance",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_CREATED
+    }
+
+    def "POST to / should return 400 Bad Request if no sigel found in document"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/item_id",
+                                    "@type": "Item",
+                                    "contains": "some new data"]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": true,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
+    }
+
+    def "POST to / should return 403 Forbidden if no user information"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/item_id",
+                                    "@type": "Item",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return null
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "POST to / should return 403 Forbidden if document not is a holding"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/instance_id",
+                                    "@type": "Instance",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": true,
+                                       "kat": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "POST to / should return 400 Bad Request if unable to check access"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/item_id",
+                                    "@type": "Item",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "Ting"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -665,7 +976,7 @@ class CrudSpec extends Specification {
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
-        accessControl.checkDocument(_, _, _) >> {
+        accessControl.checkDocumentToPost(_, _) >> {
             throw new ModelValidationException("Could not validate model.")
         }
         when:
@@ -674,6 +985,204 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
 
+    def "POST to / should create non-holding if user has kat permission"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/work_id",
+                                    "@type": "Work",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_CREATED
+    }
+
+    def "POST to / should return 403 Forbidden if missing kat permission"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/work_id",
+                                    "@type": "Work",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "POST to / should create holding if user has kat permission for sigel"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/work_id",
+                                    "@type": "Item",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_CREATED
+    }
+
+    def "POST to / should return 403 Forbidden if missing kat permission for sigel"() {
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/work_id",
+                                    "@type": "Item",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            return null
+        }
+        storage.store(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
 
     // Tests for update
 
@@ -1020,11 +1529,23 @@ class CrudSpec extends Specification {
         def fullId = BASE_URI.resolve(id).toString()
         def oldContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
-                                      "contains": "some data"]]]
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "Ting"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
-                                      "contains": "some updated data"]]]
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -1041,9 +1562,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            if (it.first() == "user") {
-                return ["user": "forbidden_user"]
-            }
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1056,13 +1580,604 @@ class CrudSpec extends Specification {
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
-        accessControl.checkDocument(_, _, _) >> {
-            return false
+        when:
+        crud.doPut(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "PUT to /<id> should return 403 Forbidden if it is mismatch between sigel in the documents"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "Ting"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": true,
+                                       "kat": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
         }
         when:
         crud.doPut(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "PUT to /<id> should return 403 Forbidden if new content is not a holding"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "Ting"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/workId",
+                                      "@type": "Work",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "Ting"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "PUT to /<id> should return 403 Forbidden if old content is not a holding"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/instanceId",
+                                      "@type": "Instance",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "Ting"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/ItemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "Ting"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "PUT to /<id> should return 403 Forbidden if no match on sigel in user privileges"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "Foo"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "Foo"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": true,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "PUT to /<id> should return 403 Forbidden if missing sigel in old document"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data"]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "Ting"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "PUT to /<id> should return 400 Bad Request if missing sigel in new document"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data"]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
+    }
+
+    def "PUT to /<id> should return 403 Forbidden if no user information"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data"]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return null
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "PUT to /<id> should update content of type holding"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "Ting"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "Ting"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        // FIXME assert created/modified
+        assert response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "PUT to /<id> should update content of type Work"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/workId",
+                                      "@type": "Work",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/workId",
+                                      "@type": "Work",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        // FIXME assert created/modified
+        assert response.getStatus() == HttpServletResponse.SC_NO_CONTENT
     }
 
     def "PUT to /<id> should return 400 Bad Request if unable to check access"() {
@@ -1075,11 +2190,23 @@ class CrudSpec extends Specification {
         def fullId = BASE_URI.resolve(id).toString()
         def oldContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
-                                      "contains": "some data"]]]
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
-                                      "contains": "some updated data"]]]
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -1096,9 +2223,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            if (it.first() == "user") {
-                return ["user": "some_user"]
-            }
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1111,7 +2241,7 @@ class CrudSpec extends Specification {
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
-        accessControl.checkDocument(_, _, _) >> {
+        accessControl.checkDocumentToPut(_, _, _) >> {
             throw new ModelValidationException("Could not validate model.")
         }
         when:
@@ -1120,10 +2250,198 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
 
+    def "PUT to /<id> should return 403 Forbidden if missing kat permission"() {
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/workId",
+                                      "@type": "Work",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/workId",
+                                      "@type": "Work",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "S",
+                                       "xlreg": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "PUT to /<id> should update holding if user has kat permission for sigel"() {
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/workId",
+                                      "@type": "Work",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/workId",
+                                      "@type": "Work",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "PUT to /<id> should return 403 Forbidden if missing kat permission for sigel"() {
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/workId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/workId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["notation": "S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.locate(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return new Location(doc)
+        }
+        storage.store(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
 
     // Tests for delete
 
-    def "DETETE to /<id> should delete document if it exists"() {
+    def "DETETE to /<id> should delete document if it exists when user set to SYSTEM"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def data = ["@graph": [["@id": id,
@@ -1172,6 +2490,500 @@ class CrudSpec extends Specification {
         crud.doDelete(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_NOT_FOUND
+    }
+
+    def "DELETE to /<id> should return 403 Forbidden if user has insufficient privilege"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                ["@id": itemId,
+                                 "@type": "Item",
+                                 "contains": "some new data",
+                                 "heldBy":
+                                         ["notation": "Ting"]]]
+        ]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "DELETE to /<id> should return 403 Forbidden if document not is a holding "() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def workId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": workId,
+                                "@type": "Work",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "DELETE to /<id> should return 403 Forbidden if no user information"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Item",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getAttribute(_) >> {
+            return null
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "DELETE to /<id> should return 400 Bad Request if no sigel found in document"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Item",
+                                "contains": "some new data"]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
+    }
+
+    def "DELETE to /<id> should delete the document of type Item"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Item",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "DELETE to /<id> should delete the document if at least one privilege is valid"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def instanceId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": instanceId,
+                                "@type": "Instance",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "S"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "DELETE to /<id> should delete the document of type Work"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def workId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": workId,
+                                "@type": "Work",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "S"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "DELETE to /<id> should redirect if legacy id"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def workId = BASE_URI.resolve("/1234#it").toString()
+        def redirectId = BASE_URI.resolve("/5678").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00",
+                                "sameAs": redirectId],
+                               ["@id": workId,
+                                "@type": "Work",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "S"]]]]
+        request.getPathInfo() >> {
+            "/5678"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        storage.load(_) >> {
+            return null
+        }
+        storage.locate(_, _) >> {
+            return new Location().withURI(redirectId)
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FOUND
+    }
+
+    def "DELETE to /<id> should return 400 Bad Request if unable to check permissions"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def workId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": workId,
+                                "@type": "Work",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "S"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": true,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        accessControl.checkDocumentToDelete(_, _) >> {
+            throw new ModelValidationException("Could not validate model.")
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
+    }
+
+    def "DELETE to /<id> should delete non-holding if user has kat permission"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Instance",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "DELETE to /<id> should return 403 Forbidden if missing kat permission"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Instance",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "DELETE to /<id> should delete holding if user has kat permission for sigel"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Item",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": true],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": false]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "DELETE to /<id> should return 403 Forbidden if missing kat permission for sigel"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def itemId = BASE_URI.resolve("/1234#it").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                               ["@id": itemId,
+                                "@type": "Item",
+                                "contains": "some new data",
+                                "heldBy":
+                                        ["notation": "Ting"]]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            return ["authorization": [["sigel": "Ting",
+                                       "xlreg": false,
+                                       "kat": false],
+                                      ["sigel": "S",
+                                       "xlreg": false,
+                                       "kat": true]]]
+        }
+        storage.load(_) >> {
+            new Document(data)
+        }
+        storage.remove(_, _) >> {
+            return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
 
 

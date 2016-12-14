@@ -611,8 +611,7 @@ class Crud extends HttpServlet {
         try {
             // TODO: 'collection' must also match the collection 'existingDoc'
             // is in.
-            boolean allowed = hasPermission(request.getAttribute("user"),
-                                            newDoc, existingDoc)
+            boolean allowed = hasPostPermission(newDoc, request.getAttribute("user"))
             if (!allowed) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
                                    "You are not authorized to perform this " +
@@ -710,8 +709,8 @@ class Crud extends HttpServlet {
         try {
             // TODO: 'collection' must also match the collection 'existingDoc'
             // is in.
-            boolean allowed = hasPermission(request.getAttribute("user"),
-                                            updatedDoc, existingDoc)
+            boolean allowed = hasPutPermission(updatedDoc, existingDoc,
+                                               request.getAttribute("user"))
             if (!allowed) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
                                    "You are not authorized to perform this " +
@@ -816,18 +815,50 @@ class Crud extends HttpServlet {
         }
     }
 
-
-    boolean hasPermission(userInfo, newdoc, olddoc) {
+    boolean hasPostPermission(Document newDoc, Map userInfo) {
         if (userInfo) {
             log.debug("User is: $userInfo")
-            if (userInfo.user == "SYSTEM") {
-                log.warn("User is SYSTEM. Allowing access to all.")
+            if (isSystemUser(userInfo)) {
                 return true
+            } else {
+                return accessControl.checkDocumentToPost(newDoc, userInfo)
             }
-            return accessControl.checkDocument(newdoc, olddoc, userInfo)
         }
         log.info("No user information received, denying request.")
         return false
+    }
+
+    boolean hasPutPermission(Document newDoc, Document oldDoc, Map userInfo) {
+        if (userInfo) {
+            log.debug("User is: $userInfo")
+            if (isSystemUser(userInfo)) {
+                return true
+            } else {
+                return accessControl.checkDocumentToPut(newDoc, oldDoc, userInfo)
+            }
+        }
+        log.info("No user information received, denying request.")
+        return false
+    }
+
+    boolean hasDeletePermission(Document oldDoc, Map userInfo) {
+        if (userInfo) {
+            log.debug("User is: $userInfo")
+            if (isSystemUser(userInfo)) {
+                return true
+            } else {
+                return accessControl.checkDocumentToDelete(oldDoc, userInfo)
+            }
+        }
+        log.info("No user information received, denying request.")
+        return false
+    }
+
+    boolean isSystemUser(Map userInfo) {
+        if (userInfo.user == "SYSTEM") {
+            log.warn("User is SYSTEM. Allowing access to all.")
+            return true
+        }
     }
 
     @Deprecated
@@ -864,9 +895,18 @@ class Crud extends HttpServlet {
         try {
             String id = request.pathInfo.substring(1)
             def doc = whelk.storage.load(id)
+
+            log.debug("Checking permissions for ${doc}")
+
             if (!doc) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
-            } else if (doc && !hasPermission(request.getAttribute("user"), null, doc)) {
+                Location loc = whelk.storage.locate(id, true)
+                if (loc) {
+                    log.debug("Redirecting to document location: ${loc.uri}")
+                    sendRedirect(request, response, loc)
+                } else {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
+                }
+            } else if (doc && !hasDeletePermission(doc, request.getAttribute("user"))) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
             } else {
                 log.debug("Removing resource at ${id}")
@@ -874,12 +914,15 @@ class Crud extends HttpServlet {
                 whelk.remove(id, "xl", null, "xl")
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
+        } catch (ModelValidationException mve) {
+            // FIXME data leak
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    mve.getMessage())
         } catch (Exception wre) {
             log.error("Something went wrong", wre)
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
         }
 
     }
-
 
 }
