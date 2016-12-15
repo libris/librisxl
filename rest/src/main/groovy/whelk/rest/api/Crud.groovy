@@ -147,7 +147,7 @@ class Crud extends HttpServlet {
             return
         }
 
-        if (request.pathInfo == "/find") {
+        if (request.pathInfo == "/find" || request.pathInfo == "/find.json") {
             String collection = request.getParameter("collection")
             handleQuery(request, response, collection)
             return
