@@ -191,7 +191,6 @@ class Crud extends HttpServlet {
                                "Document not found.")
             return
         } else if (!doc && loc) {
-            log.debug("Redirecting to document location: ${loc.uri}")
             sendRedirect(request, response, loc)
             return
         } else if (doc && doc.deleted) {
@@ -528,16 +527,16 @@ class Crud extends HttpServlet {
      */
     void sendRedirect(HttpServletRequest request,
                       HttpServletResponse response, Location location) {
+        String redirUrl = location.uri.toString()
         if (location.getUri().getScheme() == null) {
             def locationRef = request.getScheme() + "://" +
                 request.getServerName() +
                 (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") +
                 request.getContextPath()
-            response.setHeader("Location", locationRef + location.uri.toString())
-        } else {
-            response.setHeader("Location", location.uri.toString())
+            redirUrl = locationRef + location.uri.toString()
         }
-
+        response.setHeader("Location", redirUrl)
+        log.debug("Redirecting to document location: ${redirUrl}")
         sendResponse(response, new byte[0], null, HttpServletResponse.SC_FOUND)
     }
 
@@ -901,7 +900,6 @@ class Crud extends HttpServlet {
             if (!doc) {
                 Location loc = whelk.storage.locate(id, true)
                 if (loc) {
-                    log.debug("Redirecting to document location: ${loc.uri}")
                     sendRedirect(request, response, loc)
                 } else {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
