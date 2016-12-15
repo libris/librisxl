@@ -124,7 +124,7 @@ class Crud extends HttpServlet {
             return
         } catch (InvalidQueryException iqe) {
             log.error("Invalid query: ${queryParameters}")
-            response.sendError(HttpServletResponse.BAD_REQUEST,
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                                "Invalid query, please check the documentation.")
             return
         }
