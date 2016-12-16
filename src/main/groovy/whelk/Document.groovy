@@ -147,7 +147,7 @@ class Document {
     boolean isHolding() {
         List graphList = this.data.get("@graph")
         return graphList.any { it ->
-            it.get('@type').equalsIgnoreCase('Item')
+            it.get('@type')?.equalsIgnoreCase('Item')
         }
     }
 
