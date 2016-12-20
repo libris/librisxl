@@ -420,7 +420,7 @@ class Crud extends HttpServlet {
             Document doc = whelk.storage.load(id, version)
             return new Tuple2(doc, null)
         } else {
-            Location location = whelk.storage.locate(id, false)
+            Location location = whelk.storage.locate(id, true)
             Document document = location?.document
             if (!document && location?.uri) {
                 return new Tuple2(null, location)
