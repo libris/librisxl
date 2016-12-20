@@ -179,7 +179,9 @@ class SearchUtils {
         }
 
         // TODO: statsTree may depend on site ({id,libris}.kb.se)
-        Map statsTree = [(JsonLd.TYPE_KEY): []]
+        String[] statsRepr = queryParameters.get('_statsrepr')
+        Map statsTree = statsRepr ? JsonLd.mapper.readValue(statsRepr[0], Map)
+                        : [(JsonLd.TYPE_KEY): []]
 
         if (statsTree) {
             dslQuery['aggs'] = buildAggQuery(statsTree)
