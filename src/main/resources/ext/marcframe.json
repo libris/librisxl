@@ -219,9 +219,9 @@
       "$q": {"about": "_:agent", "property": "label"}
     },
 
-    "attribution": {
+    "contribution": {
       "include": "agentdata",
-      "addLink": "qualifiedAttribution",
+      "addLink": "contribution",
       "embedded": true,
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Person"}
@@ -236,7 +236,7 @@
         "t": {
           "pendingResources": {
             "_:work": {"addLink": "subject", "resourceType": "UniformWork", "embedded": false},
-            "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
+            "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
           },
           "$t": {"about": "_:work", "property": "title"},
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
@@ -2710,7 +2710,7 @@
 
     "100": {
       "aboutEntity": "?work",
-      "include": "attribution",
+      "include": "contribution",
       "resourceType": "Principal",
       "_spec": [
         {
@@ -2727,7 +2727,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "qualifiedAttribution": [
+              "contribution": [
                 {
                   "@type": "Principal",
                   "agent": {"@type": "Person",
@@ -2746,7 +2746,7 @@
     "110": {
       "aboutEntity": "?work",
       "resourceType": "Organization",
-      "link": "attributedTo",
+      "link": "contributor",
       "TODO": [
         "change splitValueProperties to work on result, to handle match combo",
         "groupByRepetitionAndInterpunctionPattern ($n $d ...)?"
@@ -3695,14 +3695,25 @@
 
     "700": {
       "aboutEntity": "?work",
-      "include": "attribution",
+      "include": "contribution",
       "resourceType": "Additional",
       "TODO:if-resourceType-ignoreOnRevertInFavourOf": "100",
       "match-code": {
         "t": {
+          "addLink": "composition",
+          "resourceType": "Composition",
           "pendingResources": {
-            "_:work": {"link": "agent", "resourceType": "UniformWork", "embedded": false},
-            "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
+            "_:work": {
+              "link": "entity",
+              "resourceType": "UniformWork",
+              "embedded": false
+            },
+            "_:agent": {
+              "about": "_:work",
+              "link": "contributor",
+              "resourceType": "Person",
+              "embedded": false
+            }
           },
           "$t": {"about": "_:work", "property": "title"},
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
@@ -3724,7 +3735,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "qualifiedAttribution": [
+              "contribution": [
                 {
                   "@type": "Additional",
                   "agent": {"@type": "Person",
@@ -3745,13 +3756,13 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "qualifiedAttribution": [
+              "contribution": [
                 {
                   "@type": "Additional",
                   "agent": {
                     "@type": "UniformWork",
                     "title": "Anteckningar från en ö",
-                    "attributedTo": {"@type": "Person",
+                    "contributor": {"@type": "Person",
                       "familyName":  "Jansson", "givenName":  "Tove"}
                   }
                 }
@@ -4292,7 +4303,7 @@
           "aboutType": "WorkTerm",
           "pendingResources": {
             "_:work": {"link": "focus", "resourceType": "UniformWork", "embedded": true},
-            "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
+            "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
           },
           "$t": {"about": "_:work", "property": "title"},
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
@@ -4323,7 +4334,7 @@
             "focus": {
               "@type": "UniformWork",
               "title": "Anteckningar från en ö",
-              "attributedTo": {"@type": "Person",
+              "contributor": {"@type": "Person",
                 "familyName":  "Jansson", "givenName":  "Tove"}
             }
           }
@@ -4474,13 +4485,13 @@
       "include": ["agentdata"],
       "aboutEntity": "?record",
       "pendingResources": {
-        "_:agent": {"link": "attributedTo", "resourceType": "Person"}
+        "_:agent": {"link": "contributor", "resourceType": "Person"}
       },
       "match-code": {
         "t": {
           "pendingResources": {
             "_:work": {"addLink": "hasVersion", "resourceType": "UniformWork", "embedded": false},
-            "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
+            "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
           },
           "$t": {"about": "_:work", "property": "title"},
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
