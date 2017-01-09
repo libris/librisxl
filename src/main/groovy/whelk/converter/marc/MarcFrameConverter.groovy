@@ -688,6 +688,7 @@ class MarcRuleSet {
                             existing[k] = v
                         }
                     }
+                    entityMap[key] = existing
                 } else {
                     about[dfn.link] = entity
                 }
