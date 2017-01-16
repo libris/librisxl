@@ -173,7 +173,7 @@ class PostgresLoadfileWriter {
             List<Map> previousRowsInGroup = []
             Map previousRow = null
             Map currentRow
-            GParsPool.withPool { pool ->
+            //GParsPool.withPool { pool ->
 
                 sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
 
@@ -198,12 +198,12 @@ class PostgresLoadfileWriter {
                             break
                         default:                                //new record
                             currentChunk.add(previousRowsInGroup)
-                            if (currentChunk.size() > 500) {
-                                currentChunk.eachParallel { c ->
+                            if (currentChunk.count{it} > 500) {
+                                currentChunk.each { c ->
                                     try {
                                         Map a = handleRowGroup(c, converter)
                                         if (a && !a.isSuppressed) {
-                                            suppliedActor<< a
+                                            suppliedActor.sendAndWait(a)
                                         }
                                     }
                                     catch (any) {
@@ -223,12 +223,12 @@ class PostgresLoadfileWriter {
                     }
                     statsPrintingActor << [type: 'rowProcessed']
                 }
-                println "Last ones. Sequential to be able to get hold of importresult"
-                currentChunk.eachParallel { c ->
+                println "Last ones."
+                currentChunk.each{ c ->
                     try {
                         Map a = handleRowGroup(c, converter)
                         if (a && !a.isSuppressed) {
-                            suppliedActor << a
+                            suppliedActor.sendAndWait(a)
                         }
                     }
                     catch (any) {
@@ -239,7 +239,7 @@ class PostgresLoadfileWriter {
                     }
 
                 }
-            } //With pool
+            //} //With pool
         }
         catch (any) {
             println any.message

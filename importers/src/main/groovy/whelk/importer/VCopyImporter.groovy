@@ -44,6 +44,7 @@ class WhelkSaver extends DefaultActor {
     ImportResult importResult
     String sourceSystem
     Whelk whelk
+    int numrecs = 0
 
     WhelkSaver(Whelk w, String sourceSystem) {
         this.importResult = new ImportResult()
@@ -76,6 +77,7 @@ class WhelkSaver extends DefaultActor {
                         whelk.store(doc, sourceSystem, null, argument.collection as String, false)
                     }
                     importResult.numberOfDocuments++
+                    reply true
                 }
                 catch (any) {
                     println any.message

@@ -8,6 +8,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 import groovy.util.logging.Slf4j as Log
+import groovy.sql.Sql
 
 import org.picocontainer.Characteristics
 import org.picocontainer.PicoContainer
@@ -143,11 +144,24 @@ class ImporterMain {
         .groupBy { it -> it.collection }
                 .collect { k, v -> [key: k, value: v.collect { it -> it.id }] }
 
+        def bibIds = idgroups.find{it->it.key == 'bib'}.value
+        def extraAuthIds = getExtraAuthIds(connUrl,bibIds)
+        println "Hittade ${extraAuthIds.count {it}} extra auktoritetsposter"
+
         idgroups.each { group ->
             ImportResult importResult = importer.doImport(whelk, group.key, 'vcopy', connUrl, group.value as String[])
-            println "Importerade ${importResult.numberOfDocuments} dokument från  ${group.key} "
+            println "Importerade ${importResult?.numberOfDocuments} dokument från  ${group.key} ${importResult?.numberOfDocumentsDeleted} poster är deleted i Vcopy"
         }
-        println "done."
+        ImportResult importResult = importer.doImport(whelk, 'auth', 'vcopy', connUrl, extraAuthIds as String[])
+        println "Importerade ${importResult?.numberOfDocuments} dokument från  länkade authposter ${importResult?.numberOfDocumentsDeleted} poster är deleted i Vcopy"
+        println "All done importing example data."
+    }
+
+    static List<String> getExtraAuthIds(String connUrl, List<String> bibIds){
+        String sqlQuery = 'SELECT bib_id, auth_id FROM auth_bib WHERE bib_id IN (?)'.replace('?',bibIds.collect{it->'?'}.join(','))
+        def sql = Sql.newInstance(connUrl, "com.mysql.jdbc.Driver")
+        def rows = sql.rows(sqlQuery,bibIds)
+        return rows.collect {it->it.auth_id}
     }
 
     @Command(args='COLLECTION')
