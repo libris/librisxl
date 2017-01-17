@@ -146,14 +146,14 @@ class ImporterMain {
 
         def bibIds = idgroups.find{it->it.key == 'bib'}.value
         def extraAuthIds = getExtraAuthIds(connUrl,bibIds)
-        println "Hittade ${extraAuthIds.count {it}} extra auktoritetsposter"
+        println "Found ${extraAuthIds.count {it}} linked authority records from bibliographic records"
 
         idgroups.each { group ->
             ImportResult importResult = importer.doImport(whelk, group.key, 'vcopy', connUrl, group.value as String[])
-            println "Importerade ${importResult?.numberOfDocuments} dokument från  ${group.key} ${importResult?.numberOfDocumentsDeleted} poster är deleted i Vcopy"
+            println "Created ${importResult?.numberOfDocuments} documents från  ${group.key}."
         }
         ImportResult importResult = importer.doImport(whelk, 'auth', 'vcopy', connUrl, extraAuthIds as String[])
-        println "Importerade ${importResult?.numberOfDocuments} dokument från  länkade authposter ${importResult?.numberOfDocumentsDeleted} poster är deleted i Vcopy"
+        println "Created ${importResult?.numberOfDocuments} documents från  linked authority records"
         println "All done importing example data."
     }
 
