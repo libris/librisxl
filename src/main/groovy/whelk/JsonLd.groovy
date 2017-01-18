@@ -16,6 +16,7 @@ import whelk.util.PropertyLoader
 public class JsonLd {
 
     static final String GRAPH_KEY = "@graph"
+    static final String CONTEXT_KEY = "@context"
     static final String ID_KEY = "@id"
     static final String THING_KEY = "mainEntity"
     static final String RECORD_KEY = "meta"
