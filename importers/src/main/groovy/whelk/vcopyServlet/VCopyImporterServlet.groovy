@@ -35,24 +35,21 @@ class VCopyImporterServlet extends HttpServlet {
 
     static String SETTINGS_PFX = "harvester:"
     static String DEFAULT_IMPORTER = "whelk.importer.VCopyImporter"
-    static int DEFAULT_INTERVAL = 3600
-    static String DEFAULT_SYSTEM = "XL"
+    static int DEFAULT_INTERVAL = 30
+    static String DEFAULT_SYSTEM = "vcopy"
+    static List<String> DEFAULT_SERVICES = [SETTINGS_PFX + 'auth', SETTINGS_PFX + 'bib', SETTINGS_PFX + 'hold']
 
     static final ObjectMapper mapper = new ObjectMapper()
 
 
-    public VCopyImporterServlet() {
+    VCopyImporterServlet() {
         log.info("Starting vcopyImporter.")
 
-        props = PropertyLoader.loadProperties("secret", "mysql", 'importer')
-
+        props = PropertyLoader.loadProperties('secret','mysql')
         pico = Whelk.getPreparedComponentsContainer(props)
-
         pico.addComponent(VCopyImporter.class)
         pico.addComponent(new MarcFrameConverter())
-
         pico.start()
-
         log.info("Started ...")
     }
 
@@ -61,7 +58,7 @@ class VCopyImporterServlet extends HttpServlet {
         def storage = pico.getComponent(PostgreSQLComponent)
         String html, json
         if (jobs) {
-            List<String> services = props.scheduledServices.split(",")
+            List<String> services = DEFAULT_SERVICES
             Map state = [:]
             StringBuilder table = new StringBuilder("<table cellspacing=\"10\"><tr><th>&nbsp;</th>")
             table.append("<form method=\"post\">")
@@ -69,12 +66,10 @@ class VCopyImporterServlet extends HttpServlet {
             Set catSet = new TreeSet<String>()
 
             for (service in services) {
-                state[service] = storage.loadSettings(SETTINGS_PFX + service)
+                state[service] = storage.loadSettings(service)
                 state[service]["harvesterClass"] = DEFAULT_IMPORTER
-                state[service]["serviceUrl"] = props.getProperty(service + ".serviceUrl")
-                state[service]["interval"] = props.getProperty(service + ".interval", "" + DEFAULT_INTERVAL)
+                state[service]["interval"] = DEFAULT_INTERVAL
                 catSet.add("harvesterClass")
-                catSet.add("serviceUrl")
                 catSet.add("interval")
                 catSet.addAll(state[service].keySet())
                 table.append("<th>$service</th>")
@@ -163,21 +158,23 @@ class VCopyImporterServlet extends HttpServlet {
         if (props.getProperty("version").startsWith(loadDataVersion())) {
             log.info("Initializing vcopy importer. System version: ${pico.getComponent(Whelk.class).version}")
             Storage storage = pico.getComponent(PostgreSQLComponent.class)
-            List<String> services = props.scheduledServices.split(",")
+            List<String> services = DEFAULT_SERVICES
 
             ScheduledExecutorService ses = Executors.newScheduledThreadPool(services.size())
 
             for (service in services) {
                 log.info("Setting up schedule for $service")
                 String vcopyConnectionString = props.getProperty("mysqlConnectionUrl")
-                int scheduleIntervalSeconds = props.getProperty(service + ".interval", "" + DEFAULT_INTERVAL) as int
-                String harvesterClass = props.getProperty(service + ".harvesterClass", DEFAULT_IMPORTER)
-                String serviceUrl = props.getProperty(service + ".serviceUrl")
-                String username = props.getProperty(service + ".username")
-                String password = props.getProperty(service + ".password")
-                String sourceSystem = props.getProperty(service + ".sourceSystem", DEFAULT_SYSTEM)
-                def job = new ScheduledJob(pico.getComponent(Whelk.class) as Whelk, pico.getComponent(Class.forName(harvesterClass)) as VCopyImporter, "${service}",
-                        serviceUrl, username, password, sourceSystem, storage, vcopyConnectionString)
+                int scheduleIntervalSeconds = DEFAULT_INTERVAL as int
+                String harvesterClass = DEFAULT_IMPORTER
+                String sourceSystem = DEFAULT_SYSTEM
+                def job = new ScheduledJob(
+                        pico.getComponent(Whelk.class) as Whelk,
+                        pico.getComponent(Class.forName(harvesterClass)) as VCopyImporter,
+                        "${service}",
+                        sourceSystem,
+                        storage,
+                        vcopyConnectionString)
                 jobs[service] = job
 
                 try {
@@ -203,7 +200,7 @@ class ScheduledJob implements Runnable {
 
     static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
 
-    String collection, serviceUrl, username, password, sourceSystem
+    String collection, sourceSystem
     Whelk whelk
     VCopyImporter importer
     String vcopyConnectionString
@@ -212,15 +209,12 @@ class ScheduledJob implements Runnable {
     boolean active = true
     final static long WEEK_MILLIS = 604800000
 
-    ScheduledJob(Whelk whelk, VCopyImporter importer, String coll, String url, String username, String password, String sSystem, PostgreSQLComponent pg, String conStr) {
+    ScheduledJob(Whelk whelk, VCopyImporter importer, String coll, String sSystem, PostgreSQLComponent pg, String conStr) {
         this.vcopyConnectionString = conStr
         this.importer = importer
         this.whelk = whelk
         this.collection = coll
         this.storage = pg
-        this.serviceUrl = url
-        this.username = username
-        this.password = password
         this.sourceSystem = sSystem
         assert storage
         assert collection
@@ -297,11 +291,11 @@ class ScheduledJob implements Runnable {
                     log.warn("Since is slipping ... Is now ${nextSince}. Resetting to one second ago.")
                     nextSince = new Date(new Date().getTime() - 1000)
                 }
-                log.debug("Executing OAIPMH import for $collection since $nextSince from ${serviceUrl}")
+                log.debug "Executing vcopy harvest import for ${collection} since ${nextSince}"
                 whelkState.put("status", "RUNNING")
 
                 storage.saveSettings(collection, whelkState)
-                ImportResult result = importer.doImport(whelk, collection, sourceSystem, vcopyConnectionString, nextSince)
+                ImportResult result = importer.doImport(whelk, collection.replace(VCopyImporterServlet.SETTINGS_PFX,''), sourceSystem, vcopyConnectionString, nextSince)
                 log.trace("Import completed, result: $result")
                 if (result && (result.numberOfDocuments > 0 || result.numberOfDocumentsDeleted > 0 || result.numberOfDocumentsSkipped > 0)) {
                     log.debug("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDocumentsDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
@@ -321,7 +315,7 @@ class ScheduledJob implements Runnable {
                 whelkState.get("badRecords", []).add(bre.brokenId)
                 whelkState.put("status", "ERROR")
             } catch (IOException ioe) {
-                whelkState.put("lastError", new String("Failed to connect to ${serviceUrl.toString()}. Reason: ${ioe.message} (${ioe.getClass().getName()})"))
+                whelkState.put("lastError", new String("Failed to connect. Reason: ${ioe.message} (${ioe.getClass().getName()})"))
                 whelkState.put("lastErrorDate", new Date().toString())
                 whelkState.put("status", "ERROR")
             } catch (Exception e) {
