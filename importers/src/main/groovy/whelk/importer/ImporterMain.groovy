@@ -1,12 +1,20 @@
 package whelk.importer
 
+import java.lang.annotation.*
+
+import java.sql.SQLRecoverableException
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+
+import groovy.util.logging.Slf4j as Log
+
 import org.picocontainer.Characteristics
 import org.picocontainer.PicoContainer
+
 import whelk.Document
 import whelk.Whelk
 import whelk.converter.marc.MarcFrameConverter
-
-import groovy.util.logging.Slf4j as Log
 import whelk.filter.LinkFinder
 import whelk.reindexer.ElasticReindexer
 import whelk.harvester.OaiPmhHarvester
@@ -14,11 +22,6 @@ import whelk.tools.MySQLToMarcJSONDumper
 import whelk.tools.PostgresLoadfileWriter
 import whelk.util.PropertyLoader
 import whelk.util.Tools
-
-import java.sql.SQLRecoverableException
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 @Log
 class ImporterMain {
@@ -43,34 +46,40 @@ class ImporterMain {
         log.info("Started ...")
     }
 
-    void vcopydumpCmd(String toFileName, String collection) {
+    @Command(args='TO_FILE_NAME COLLECTION')
+    void vcopydump(String toFileName, String collection) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
         PostgresLoadfileWriter.dumpGpars(toFileName, collection, connUrl)
     }
 
-    void vcopyjsondumpCmd(String collection, String toFileName) {
+    @Command(args='COLLECTION [TO_FILE_NAME]')
+    void vcopyjsondump(String collection, String toFileName=null) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
         MySQLToMarcJSONDumper.dump(connUrl, collection, toFileName)
     }
 
-    void defsCmd(String fname) {
+    @Command(args='FNAME')
+    void defs(String fname) {
         def defsimport = pico.getComponent(DefinitionsImporter)
         defsimport.definitionsFilename = fname
         defsimport.run("definitions")
     }
 
-    void harvestCmd(String serviceUrl, username=null, password=null, sourceSystem=null) {
+    @Command(args='SERVICE_URL [USERNAME] [PASSWORD] [SOURCE_SYSTEM]')
+    void harvest(String serviceUrl, username=null, password=null, sourceSystem=null) {
         def harvester = pico.getComponent(OaiPmhHarvester)
         harvester.harvest(serviceUrl, username, password, sourceSystem,
                 "ListRecords", "marcxml")
     }
 
-    void reindexCmd(String collection=null) {
+    @Command(args='[COLLECTION]')
+    void reindex(String collection=null) {
         def reindex = pico.getComponent(ElasticReindexer)
         reindex.reindex(collection)
     }
 
-    void benchmarkCmd(String collection) {
+    @Command(args='COLLECTION')
+    void benchmark(String collection) {
         log.info("Starting benchmark for collection ${collection ?: 'all'}")
         def whelk = pico.getComponent(Whelk)
 
@@ -112,7 +121,8 @@ class ImporterMain {
         doclist = []
     }
 
-    void linkfindCmd(String collection) {
+    @Command(args='COLLECTION')
+    void linkfind(String collection) {
         log.info("Starting linkfinder for collection ${collection ?: 'all'}")
         def whelk = pico.getComponent(Whelk)
         whelk.storage.versioning = false
@@ -150,33 +160,64 @@ class ImporterMain {
 
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
-        println("Linkfinding completed. Elapsed time: ${System.currentTimeMillis()-startTime}")
+        println "Linkfinding completed. Elapsed time: ${System.currentTimeMillis()-startTime}"
 
     }
 
-    void setversionCmd() {
+    @Command
+    void setversion() {
         def importer = pico.getComponent(MockImporter)
         importer.run(null)
     }
 
+    static COMMANDS = getMethods().findAll { it.getAnnotation(Command)
+                                    }.collectEntries { [it.name, it]}
+
+    static void help() {
+        System.err.println "Usage: <program> COMMAND ARGS..."
+        System.err.println()
+        System.err.println("Available commands:")
+        COMMANDS.values().sort().each {
+            System.err.println "\t${it.name} ${it.getAnnotation(Command).args()}"
+        }
+    }
+
     static void main(String... args) {
         if (args.length == 0) {
-            println("Usage: <progam> [action] [collection]")
+            help()
             System.exit(1)
         }
-        def cmd = args[0] + 'Cmd'
-        if (!ImporterMain.methods*.name.any { it == cmd}) {
-            println("Unknown action ${args[0]}")
+
+        def cmd = args[0]
+        def arglist = args.length > 1? args[1..-1] : []
+
+        def method = COMMANDS[cmd]
+        if (!method) {
+            System.err.println "Unknown command: ${cmd}"
+            help()
             System.exit(1)
         }
+
         def main
         if (cmd.startsWith("vcopy")) {
             main = new ImporterMain("secret", "mysql")
         } else {
             main = new ImporterMain("secret")
         }
-        def arglist = args.length > 1? args[1..-1] : []
-        main."${cmd}"(*arglist)
+
+        try {
+            main."${method.name}"(*arglist)
+        } catch (IllegalArgumentException e) {
+            System.err.println "Missing arguments. Expected:"
+            System.err.println "\t${method.name} ${method.getAnnotation(Command).args()}"
+            System.exit(1)
+        }
     }
 
+}
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface Command {
+    String args() default ''
 }
