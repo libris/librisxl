@@ -88,7 +88,16 @@ public class JsonLd {
     public static List getExternalReferences(Map jsonLd){
         Set allReferences = getAllReferences(jsonLd)
         Set localObjects = getIdMap(jsonLd).keySet()
-        return allReferences.minus(localObjects) as List
+        List externalRefs = allReferences.minus(localObjects) as List
+        // NOTE: this is necessary because some documents contain references to
+        // bnodes that don't exist (in that document).
+        return filterOutDanglingBnodes(externalRefs)
+    }
+
+    private static List filterOutDanglingBnodes(List refs) {
+        return refs.findAll {
+            !it.startsWith('_:')
+        }
     }
 
     public static Set getAllReferences(Map jsonLd) {
