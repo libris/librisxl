@@ -24,6 +24,17 @@ class JsonLdSpec extends Specification {
         ['/some', '/other']     | [['@id': '/some'], ['@graph': ['@id': '/other']]]
     }
 
+    def "should get id map with bnode"() {
+        given:
+        def bnode_graph = ['@graph': [['@id': '/some',
+                                       'foo': ['@id': '_:foo']],
+                                      ['@graph': ['@id': '/other']],
+                                      ['@graph': ['@id': '_:bar']]]]
+        def expected = ['/some', '/other', '_:bar']
+        expect:
+        assert JsonLd.getIdMap(bnode_graph).keySet() == expected as Set
+    }
+
    def "should get all references"() {
        given:
        def input = ['@graph': [['@id': '/foo',
