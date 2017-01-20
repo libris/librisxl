@@ -64,6 +64,10 @@ class CrudSpec extends Specification {
         crud = new Crud()
         crud.whelk = whelk
         crud.accessControl = accessControl
+        crud.displayData = ['@context':
+                            ['examplevocab': 'http://example.com',
+                             'some_term': 'some_value'],
+                            'lensGroups': ['chips': [:]]]
     }
 
 
@@ -319,7 +323,17 @@ class CrudSpec extends Specification {
         }
         storage.locate(_, _) >> {
             new Location(
-                new Document(["@graph": [["@id": id, "foo": "bar"]]]))
+                new Document(["@graph": [["@id": id,
+                                          "foo": "bar",
+                                          "baz": [
+                                            "@id": "examplevocab:"
+                                          ],
+                                          "quux": [
+                                            "@id": "some_term"
+                                          ],
+                                          "bad_ref": [
+                                            "@id": "invalid:ref"
+                                          ]]]]))
         }
         when:
         crud.doGet(request, response)

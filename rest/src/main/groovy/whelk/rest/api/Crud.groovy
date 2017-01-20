@@ -237,7 +237,7 @@ class Crud extends HttpServlet {
 
     private Document getEmbellishedDocument(Document doc) {
         List externalRefs = doc.getExternalRefs()
-        List convertedExternalLinks = convertMarcLinks(externalRefs)
+        List convertedExternalLinks = convertExternalLinks(externalRefs)
         Map referencedDocuments = getDocuments(convertedExternalLinks)
         doc.embellish(referencedDocuments, displayData)
 
@@ -264,11 +264,16 @@ class Crud extends HttpServlet {
         }
     }
 
-    private List convertMarcLinks(List refs) {
+    private List convertExternalLinks(List refs) {
         List result = []
         refs.each { ref ->
-            if (ref.toString().startsWith("marc:")) {
-                result << ref.toString().replace("marc:", "https://id.kb.se/marc/")
+            def match
+            if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
+                def resolved = this.displayData['@context'][match[0][1]]
+                if (resolved) {
+                    URI base = new URI(resolved)
+                    result << base.resolve(match[0][2]).toString()
+                }
             } else {
                 result << ref
             }
