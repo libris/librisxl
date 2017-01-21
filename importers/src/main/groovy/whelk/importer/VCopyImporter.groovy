@@ -44,13 +44,11 @@ class WhelkSaver extends DefaultActor {
     ImportResult importResult
     String sourceSystem
     Whelk whelk
-    int numrecs = 0
 
     WhelkSaver(Whelk w, String sourceSystem) {
         this.importResult = new ImportResult()
         this.whelk = w
         this.sourceSystem = sourceSystem
-
     }
 
     void setLastRecordTimeStamp(Timestamp timestamp) {

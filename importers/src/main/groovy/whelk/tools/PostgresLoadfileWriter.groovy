@@ -1,6 +1,7 @@
 package whelk.tools
 
 import groovy.json.JsonBuilder
+import groovy.sql.GroovyResultSet
 import groovy.sql.Sql
 import groovy.util.logging.Slf4j as Log
 import groovyx.gpars.GParsPool
@@ -100,12 +101,12 @@ class PostgresLoadfileWriter {
         String dateString = date.toTimestamp().toString()
         List<Object> queryParameters = [0, dateString, dateString]
 
-            dump(actor, collection, connectionUrl, sqlQuery, queryParameters)
+        dump(actor, collection, connectionUrl, sqlQuery, queryParameters)
     }
 
 
     static void "import"(DefaultActor actor, String collection, String connectionUrl, String[] vcopyIdsToImport) {
-        String sqlQuery = MySQLLoader.selectExampleDataByMarcType[collection].replace('?',vcopyIdsToImport.collect{it->'?'}.join(','))
+        String sqlQuery = MySQLLoader.selectExampleDataByMarcType[collection].replace('?', vcopyIdsToImport.collect { it -> '?' }.join(','))
         dump(actor, collection, connectionUrl, sqlQuery, vcopyIdsToImport.toList())
     }
 
@@ -149,96 +150,68 @@ class PostgresLoadfileWriter {
         statsPrintingActor.start()
 
         try {
-            def converter = Actors.actor {
-                MarcFrameConverter marcFrameConverter = new MarcFrameConverter()
-                loop {
-                    react { argument ->
-                        try {
-                            def doc = argument.spec == null ? marcFrameConverter.convert(argument.doc as Map, argument.id as String) :
-                                    marcFrameConverter.convert(argument.doc as Map, argument.id as String, argument.spec as Map)
-                            if (!doc) {
-                                throw new Exception()
-                            }
-                            reply doc
-                        }
-                        catch (any) {
-                            println any.message
-                            println argument.inspect()
-                            reply null
-                        }
-                    }
-                }
-            }
+            def converter = new MarcFrameConvertingActor()
+            converter.start()
             def currentChunk = []
             List<Map> previousRowsInGroup = []
             Map previousRow = null
             Map currentRow
             //GParsPool.withPool { pool ->
 
-                sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
+            sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
+                currentRow = new VCopyDataRow(resultSet, collection)
 
-
-                    currentRow = [data      : resultSet.getBytes('data'),
-                                  isDeleted   : resultSet.getBoolean('deleted'),
-                                  created   : resultSet.getTimestamp('create_date'),
-                                  updated   : resultSet.getTimestamp('update_date'),
-                                  collection: collection,
-                                  bib_id    : collection == 'bib' ? resultSet.getInt('bib_id'):0,
-                                  auth_id   : collection == 'bib' ? resultSet.getInt('auth_id') : 0,
-                                  authdata  : collection == 'bib' ? resultSet.getBytes('auth_data') : null,
-                                  sigel     : collection == "hold" ? resultSet.getString("shortname") : null]
-
-                    switch (previousRow) {
-                        case null:                              //first run
-                            previousRow = currentRow
-                            previousRowsInGroup.add(currentRow)
-                            break
-                        case { collection == 'bib' && it.bib_id == currentRow.bib_id }://Same bib record
-                            previousRowsInGroup.add(currentRow)
-                            break
-                        default:                                //new record
-                            currentChunk.add(previousRowsInGroup)
-                            if (currentChunk.count{it} > 500) {
-                                currentChunk.each { c ->
-                                    try {
-                                        Map a = handleRowGroup(c, converter)
-                                        if (a && !a.isSuppressed) {
-                                            suppliedActor.sendAndWait(a)
-                                        }
-                                    }
-                                    catch (any) {
-                                        println any.message
-                                        println any.stackTrace
-                                        println collection
-                                        println c?.first()?.bib_id
-                                        throw any // dont want to miss any records
+                switch (previousRow) {
+                    case null:                              //first run
+                        previousRow = currentRow
+                        previousRowsInGroup.add(currentRow)
+                        break
+                    case { collection == 'bib' && it.bib_id == currentRow.bib_id }://Same bib record
+                        previousRowsInGroup.add(currentRow)
+                        break
+                    default:                                //new record
+                        currentChunk.add(previousRowsInGroup)
+                        if (currentChunk.count { it } > 500) {
+                            currentChunk.each { c ->
+                                try {
+                                    Map a = handleRowGroup(c, converter)
+                                    if (a && !a.isSuppressed) {
+                                        suppliedActor.sendAndWait(a)
                                     }
                                 }
-                                currentChunk = []
+                                catch (any) {
+                                    println any.message
+                                    println any.stackTrace
+                                    println collection
+                                    println c?.first()?.bib_id
+                                    throw any // dont want to miss any records
+                                }
                             }
-                            previousRow = currentRow
-                            previousRowsInGroup = []
-                            previousRowsInGroup.add(currentRow)
-                            break
-                    }
-                    statsPrintingActor << [type: 'rowProcessed']
-                }
-                println "Last ones."
-                currentChunk.each{ c ->
-                    try {
-                        Map a = handleRowGroup(c, converter)
-                        if (a && !a.isSuppressed) {
-                            suppliedActor.sendAndWait(a)
+                            currentChunk = []
                         }
+                        previousRow = currentRow
+                        previousRowsInGroup = []
+                        previousRowsInGroup.add(currentRow)
+                        break
+                }
+                statsPrintingActor << [type: 'rowProcessed']
+            }
+            println "Last ones."
+            currentChunk.each { c ->
+                try {
+                    Map a = handleRowGroup(c, converter)
+                    if (a && !a.isSuppressed) {
+                        suppliedActor.sendAndWait(a)
                     }
-                    catch (any) {
-                        println any.message
-                        println any.stackTrace
-                        throw any // dont want to miss any records
-
-                    }
+                }
+                catch (any) {
+                    println any.message
+                    println any.stackTrace
+                    throw any // dont want to miss any records
 
                 }
+
+            }
             //} //With pool
         }
         catch (any) {
@@ -249,7 +222,7 @@ class PostgresLoadfileWriter {
         println "Done."
     }
 
-    static getAuthDocsFromRows(List<Map> rows) {
+    static getAuthDocsFromRows(List<VCopyDataRow> rows) {
         rows.collect { it ->
             if (it.auth_id > 0) {
                 def authDoc = getMarcDocMap(it.authdata as byte[])
@@ -258,28 +231,28 @@ class PostgresLoadfileWriter {
         }
     }
 
-    static Map handleRowGroup(List<Map> rows, marcFrameConverter) {
-        def row = rows.last()
+    static Map handleRowGroup(List<VCopyDataRow> rows, marcFrameConverter) {
+        VCopyDataRow row = rows.last()
         def authRecords = getAuthDocsFromRows(rows)
         def document = null
         Timestamp timestamp = row.updated >= row.created ? row.updated : row.created
-        Map doc = getMarcDocMap(row.data as byte[])
+        Map doc = getMarcDocMap(row.data)
         if (!isSuppressed(doc)) {
             switch (row.collection) {
                 case 'auth':
                     document = convertDocument(marcFrameConverter, doc, row.collection, row.created)
                     break
                 case 'hold':
-                    document = convertDocument(marcFrameConverter, doc, row.collection as String, row.created as Timestamp, getOaipmhSetSpecs(row))
+                    document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
                     break
                 case 'bib':
-                    SetSpecMatcher.matchAuthToBib(row, authRecords)
-                    document = convertDocument(marcFrameConverter, doc, row.collection as String, row.created as Timestamp, getOaipmhSetSpecs(row))
+                    SetSpecMatcher.matchAuthToBib(doc, authRecords)
+                    document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
                     break
             }
-            return [collection: row.collection, document: document, isSuppressed: false,isDeleted: row.isDeleted, timestamp: timestamp ]
+            return [collection: row.collection, document: document, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp]
         } else
-            return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp ]
+            return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp]
 
     }
 
@@ -299,6 +272,7 @@ class PostgresLoadfileWriter {
             if (key.startsWith('1')) {
                 map.field = key
                 map.subfields = bibField[key].subfields
+                //TODO: compose authdata here with other fields.
                 return map
             }
         }
@@ -355,7 +329,7 @@ class PostgresLoadfileWriter {
         return specs
     }
 
-    private static boolean isSuppressed(Map doc) {
+    private static isSuppressed(Map doc) {
         def fields = doc.get("fields")
         for (def field : fields) {
             if (field.get("599") != null) {
@@ -382,6 +356,31 @@ class PostgresLoadfileWriter {
     }
 
 
+}
+
+class VCopyDataRow {
+    byte[] data
+    boolean isDeleted
+    Timestamp created
+    Timestamp updated
+    String collection
+    int bib_id
+    int auth_id
+    byte[] authdata
+    String sigel
+
+
+    VCopyDataRow(ResultSet resultSet, String collection) {
+        data = resultSet.getBytes('data')
+        isDeleted = resultSet.getBoolean('deleted')
+        created = resultSet.getTimestamp('create_date')
+        updated = resultSet.getTimestamp('update_date')
+        this.collection = collection
+        bib_id = collection == 'bib' ? resultSet.getInt('bib_id') : 0
+        auth_id = collection == 'bib' ? resultSet.getInt('auth_id') : 0
+        authdata = collection == 'bib' ? resultSet.getBytes('auth_data') : null
+        sigel = collection == "hold" ? resultSet.getString("shortname") : null
+    }
 }
 
 
