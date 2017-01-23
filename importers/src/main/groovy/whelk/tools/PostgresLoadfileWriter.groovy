@@ -184,7 +184,7 @@ class PostgresLoadfileWriter {
                                     println any.stackTrace
                                     println collection
                                     println c?.first()?.bib_id
-                                    throw any // dont want to miss any records
+                                    throw any // don't want to miss any records
                                 }
                             }
                             currentChunk = []
@@ -207,7 +207,7 @@ class PostgresLoadfileWriter {
                 catch (any) {
                     println any.message
                     println any.stackTrace
-                    throw any // dont want to miss any records
+                    throw any // don't want to miss any records
 
                 }
 
@@ -225,8 +225,9 @@ class PostgresLoadfileWriter {
     static getAuthDocsFromRows(List<VCopyDataRow> rows) {
         rows.collect { it ->
             if (it.auth_id > 0) {
-                def authDoc = getMarcDocMap(it.authdata as byte[])
-                return composeAuthData([bibid: it.bib_id, id: it.auth_id, data: authDoc])
+                return [bibid: it.bib_id,
+                        id   : it.auth_id,
+                        data : getMarcDocMap(it.authdata as byte[])]
             } else return null
         }
     }
@@ -263,21 +264,6 @@ class PostgresLoadfileWriter {
         sql.resultSetType = ResultSet.TYPE_FORWARD_ONLY
         sql.resultSetConcurrency = ResultSet.CONCUR_READ_ONLY
         sql
-    }
-
-
-    static Map composeAuthData(LinkedHashMap<String, Object> map) {
-        for (Map bibField in map.data.fields) {
-            String key = bibField.keySet()[0]
-            if (key.startsWith('1')) {
-                map.field = key
-                map.subfields = bibField[key].subfields
-                //TODO: compose authdata here with other fields.
-                return map
-            }
-        }
-        def builder = new JsonBuilder(map)
-        throw new Exception("Unhandled authority record ${builder.toPrettyString()} q")
     }
 
     static Map getMarcDocMap(byte[] data) {

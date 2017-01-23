@@ -1,11 +1,10 @@
 /**
  * Created by theodortolstoy on 2016-12-12.
+ * Tests for asserting that bib-auth linking works. TODO: remove database dependencies.
  */
 
-import groovy.sql.GroovyResultSet
+
 import spock.lang.Specification
-import spock.lang.Unroll
-import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
 import whelk.tools.MarcFrameConvertingActor
 import whelk.tools.PostgresLoadfileWriter
@@ -16,9 +15,9 @@ import java.sql.ResultSet
 
 class SetSpecMatcher extends Specification {
 
-    Map getDataRowsFromBibId(int bibId){
-        def conv = new MarcFrameConvertingActor()
-        conv.start()
+    Map getDataRowsFromBibId(int bibId) {
+        def convertingActor = new MarcFrameConvertingActor()
+        convertingActor.start()
         def collection = "bib"
         def sqlTemplate = MySQLLoader.selectByMarcType[collection]
         def query = sqlTemplate.replace('bib.bib_id > ?', "bib.bib_id = ${bibId}")
@@ -26,10 +25,10 @@ class SetSpecMatcher extends Specification {
         def connectionUrl = props.getProperty("mysqlConnectionUrl")
         def sql = PostgresLoadfileWriter.prepareSql(connectionUrl)
         def rows = []
-        sql.eachRow(query){ResultSet it ->
+        sql.eachRow(query) { ResultSet it ->
             rows.add(new VCopyDataRow(it, collection))
         }
-        PostgresLoadfileWriter.handleRowGroup(rows,conv)
+        PostgresLoadfileWriter.handleRowGroup(rows, convertingActor)
 
     }
 
@@ -39,13 +38,19 @@ class SetSpecMatcher extends Specification {
         def docAndSpecs = getDataRowsFromBibId(bibId)
         expect:
         //Interim assertion. Final assert should point to actual auth record and contain three auth records
-        docAndSpecs.document.data.'@graph'[0].'_marcUncompleted'.findAll{it-> it.'_unhandled'.any{it == '0'}}.size() == 2
+        docAndSpecs.document.data.'@graph'[0].'_marcUncompleted'.findAll { it ->
+            it.'_unhandled'.any {
+                it == '0'
+            }
+        }.size() == 2
     }
+
     def "11525453 should match 1 spec"() {
         given:
         def bibId = 11525453
         def docAndSpecs = getDataRowsFromBibId(bibId)
         expect:
-        docAndSpecs.document.data.'@graph'[0].'_marcUncompleted'.findAll{it-> it.'_unhandled'.any{it == '0'}}.size() == 1
+        //TODO: make this assertion less brutal...
+        docAndSpecs.document.data.inspect().contains('http://libris.kb.se/resource/auth/347764')
     }
 }

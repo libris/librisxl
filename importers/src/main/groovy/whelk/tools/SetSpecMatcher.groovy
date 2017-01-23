@@ -1,5 +1,6 @@
 package whelk.tools
 
+import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j as Log
 
 /**
@@ -11,6 +12,7 @@ class SetSpecMatcher {
 
     static List ignoredAuthFields = ['180', '181', '182', '185', '162', '148']
 
+    //TODO: These rules should be put somewhere else and be made configurable outside of compiled code.
     static Map fieldRules = [
             '100': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['100', '600', '700', '800']],
@@ -123,16 +125,16 @@ class SetSpecMatcher {
      */
     static def prepareAuthRecords(List authRecords) {
 
-        authRecords.each { Map spec ->
+        authRecords.each { Map authRecord ->
+            authRecord = composeAuthData(authRecord)
+            if (!fieldRules[authRecord.field])
+                throw new Exception("No rules for field ${authRecord.field}")
+            if (!fieldRules[authRecord.field].subFieldsToIgnore)
+                throw new Exception("No subFieldsToIgnore for field ${authRecord.field}")
 
-            if (!fieldRules[spec.field])
-                throw new Exception("No rules for field ${spec.field}")
-            if (!fieldRules[spec.field].subFieldsToIgnore)
-                throw new Exception("No subFieldsToIgnore for field ${spec.field}")
-
-            spec.put("normalizedSubfields",
-                    normaliseSubfields(spec.subfields)
-                            .findAll { it -> !fieldRules[spec.field].subFieldsToIgnore.auth.contains(it.keySet()[0]) }
+            authRecord.put("normalizedSubfields",
+                    normaliseSubfields(authRecord.subfields)
+                            .findAll { it -> !fieldRules[authRecord.field].subFieldsToIgnore.auth.contains(it.keySet()[0]) }
                             .collect { it -> it })
         }
         return authRecords.groupBy { it.field }
@@ -215,8 +217,8 @@ class SetSpecMatcher {
     static boolean getPartialMatchOnSubfieldD(Set diff, Set reverseDiff, specField) {
         boolean partialD = false
         try {
-            String bibD = reverseDiff.find{it.d != null &&  it?.d.length() >3}?.d
-            String authorityD = diff.find{it.d != null &&  it?.d.length() >3}?.d
+            String bibD = reverseDiff.find { it.d != null && it?.d.length() > 3 }?.d
+            String authorityD = diff.find { it.d != null && it?.d.length() > 3 }?.d
             if (specField == '100' && bibD && authorityD) {
                 partialD = (bibD.substring(0, 4) == authorityD.substring(0, 4))
             }
@@ -225,6 +227,29 @@ class SetSpecMatcher {
             println "error: ${any.message} 100 \$d "
         }
         return partialD
+    }
+
+    static Map composeAuthData(LinkedHashMap<String, Object> map) {
+        for (Map bibField in map.data.fields) {
+            String key = bibField.keySet()[0]
+            if (key.startsWith('1')) {
+                map.field = key
+                map.subfields = bibField[key].subfields
+                //Stub for manipulating matching of records. TODO: Make these rules configurable and put them together with similar stuff.
+                if (key == '155') {
+                    def system = getSubfield(map.data, '040', 'f')
+                    if (system) {
+                        system.each { s ->
+                            map.subfields << ['2': s]
+                        }
+                    }
+                }
+
+                return map
+            }
+        }
+        def builder = new JsonBuilder(map)
+        throw new Exception("Unhandled authority record ${builder.toPrettyString()} q")
     }
 
     static boolean getHas035a(p) {
@@ -237,6 +262,15 @@ class SetSpecMatcher {
             println any.message
             throw any
         }
+    }
+
+    private static String[] getSubfield(Map doc, String field, String subfield) {
+        def fields = doc.get("fields")
+        for (def f : fields) {
+            if (f.get(field) != null && f.get(field).subfields.any { it -> it.get('f') })
+                return f.get(field).subfields.findAll { it -> it.get('f') }.collect { it.find().value }
+        }
+        return null
     }
 
 
