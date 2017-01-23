@@ -335,6 +335,9 @@ class MarcFrameConverterSpec extends Specification {
         def result = converter.convert(data.doc, data.id)
 
         then:
+        // TODO: https://jira.kb.se/browse/LXL-218
+        // once this is fixed, result should be non-null and the "thrown"
+        // clause below should be removed.
         thrown IndexOutOfBoundsException
         data.spec == null
         data.id == 'fxqp0f0r1nfrgss'
