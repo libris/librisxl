@@ -1,6 +1,7 @@
 apply plugin: 'groovy'
 apply plugin: 'application'
 apply plugin: 'java'
+apply plugin: 'jetty'
 apply plugin: 'war'
 
 loadConfiguration()
@@ -180,3 +181,12 @@ task(console, dependsOn: 'classes', type: JavaExec) {
     main = 'groovy.ui.Console'
 }
 
+task jettyRun(type: JettyRun, overwrite: true) {
+    jettyRun.contextPath = '/'
+    jettyRun.httpPort = 8181
+    jettyRun.description = "Starts a jetty instance."
+
+    def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
+    System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
+    System.setProperty('whelk.mode', System.getProperty("whelk.mode", "ops"))
+}
