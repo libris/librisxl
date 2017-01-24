@@ -119,6 +119,7 @@ class PostgresLoadfileWriter {
 
             loop {
                 react { argument ->
+                    try{
                     Document doc = argument.document
                     String coll = argument.collection
                     final String delimiter = '\t'
@@ -132,6 +133,11 @@ class PostgresLoadfileWriter {
 
                     for (String identifier : identifiers) {
                         identifiersWriter.write("${doc.shortId}\t${identifier}\n")
+                    }
+                    reply true}
+                    catch (any){
+                        log.error any
+                        return false
                     }
                 }
             }
@@ -153,9 +159,9 @@ class PostgresLoadfileWriter {
             def converter = new MarcFrameConvertingActor()
             converter.start()
             def currentChunk = []
-            List<Map> previousRowsInGroup = []
-            Map previousRow = null
-            Map currentRow
+            List<VCopyDataRow> previousRowsInGroup = []
+            VCopyDataRow previousRow = null
+            VCopyDataRow currentRow
             //GParsPool.withPool { pool ->
 
             sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
@@ -171,7 +177,7 @@ class PostgresLoadfileWriter {
                         break
                     default:                                //new record
                         currentChunk.add(previousRowsInGroup)
-                        if (currentChunk.count { it } > 500) {
+                        if (currentChunk.count { it } == 500) {
                             currentChunk.each { c ->
                                 try {
                                     Map a = handleRowGroup(c, converter)
@@ -233,27 +239,32 @@ class PostgresLoadfileWriter {
     }
 
     static Map handleRowGroup(List<VCopyDataRow> rows, marcFrameConverter) {
-        VCopyDataRow row = rows.last()
-        def authRecords = getAuthDocsFromRows(rows)
-        def document = null
-        Timestamp timestamp = row.updated >= row.created ? row.updated : row.created
-        Map doc = getMarcDocMap(row.data)
-        if (!isSuppressed(doc)) {
-            switch (row.collection) {
-                case 'auth':
-                    document = convertDocument(marcFrameConverter, doc, row.collection, row.created)
-                    break
-                case 'hold':
-                    document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
-                    break
-                case 'bib':
-                    SetSpecMatcher.matchAuthToBib(doc, authRecords)
-                    document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
-                    break
-            }
-            return [collection: row.collection, document: document, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp]
-        } else
-            return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp]
+        try {
+            VCopyDataRow row = rows.last()
+            def authRecords = getAuthDocsFromRows(rows)
+            def document = null
+            Timestamp timestamp = row.updated >= row.created ? row.updated : row.created
+            Map doc = getMarcDocMap(row.data)
+            if (!isSuppressed(doc)) {
+                switch (row.collection) {
+                    case 'auth':
+                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created)
+                        break
+                    case 'hold':
+                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
+                        break
+                    case 'bib':
+                        SetSpecMatcher.matchAuthToBib(doc, authRecords)
+                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
+                        break
+                }
+                return [collection: row.collection, document: document, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp]
+            } else
+                return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp]
+        }
+        catch (any){
+            prinln any.message
+        }
 
     }
 

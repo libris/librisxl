@@ -15,7 +15,7 @@ class StatsPrinter extends DefaultActor {
         loop {
             react { argument ->
 
-                if (++counter % 5000 == 0) {
+                if (++counter % 10000 == 0) {
                     def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
                     if (elapsedSecs > 0) {
                         def docsPerSec = counter / elapsedSecs

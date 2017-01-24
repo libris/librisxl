@@ -31,7 +31,7 @@ try {
 // Version is set on deploy, but to maintain semblance of control, update default value appropriately when releasing.
 def versionNumber = versionprops.get("releaseTag", "0.9.0.x")
 
-sourceSets {
+/*sourceSets {
     main {
         java { srcDirs = [] }
         groovy { srcDir 'src/main/' }
@@ -39,7 +39,7 @@ sourceSets {
     test {
         groovy { srcDir 'src/test/groovy/' }
     }
-}
+}*/
 
 
 
@@ -109,16 +109,10 @@ jar {
         attributes "Main-Class": "whelk.importer.ImporterMain"
     }
 
-    /*
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    */
-
     from {
         configurations.compile.collect {
             it.isDirectory() ? it : project.zipTree(it).matching {
-                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA','build','.gradle/**','build.gradle','gradle','gradlew','gradlew.bat','test'
             }
         }
     }
