@@ -129,7 +129,13 @@ class PostgresLoadfileWriter {
 
                     List<String> identifiers = doc.recordIdentifiers
 
-                    mainTableWriter.write("${doc.shortId}\t${delimiter}\t${doc.dataAsString.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t${coll.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t${"vcopy"}\t${nullString}\t${doc.checksum.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}${delimiter}\t${doc.created}\n")
+                    mainTableWriter.write("${doc.shortId}\t" +
+                            "${doc.dataAsString.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
+                            "${coll.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
+                            "${"vcopy"}\t" +
+                            "${nullString}\t" +
+                            "${doc.checksum.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
+                            "${doc.created}\n")
 
                     for (String identifier : identifiers) {
                         identifiersWriter.write("${doc.shortId}\t${identifier}\n")
