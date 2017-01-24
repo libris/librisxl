@@ -269,7 +269,7 @@ class PostgresLoadfileWriter {
                 return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp]
         }
         catch (any){
-            prinln any.message
+            println any.message
         }
 
     }
