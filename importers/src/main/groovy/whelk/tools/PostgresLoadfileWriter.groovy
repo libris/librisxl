@@ -113,43 +113,13 @@ class PostgresLoadfileWriter {
     static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
         String sqlQuery = MySQLLoader.selectByMarcType[collection]
         List<Object> queryParameters = [0]
-        def writeAct = Actors.actor {
-            BufferedWriter mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"))
-            BufferedWriter identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"))
 
-            loop {
-                react { argument ->
-                    try{
-                    Document doc = argument.document
-                    String coll = argument.collection
-                    final String delimiter = '\t'
-                    final String nullString = "\\N"
+        def fileDumper = new FileDumper(exportFileName)
+        fileDumper.start()
 
-                    final delimiterString = new String(delimiter)
 
-                    List<String> identifiers = doc.recordIdentifiers
-
-                    mainTableWriter.write("${doc.shortId}\t" +
-                            "${doc.dataAsString.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
-                            "${coll.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
-                            "${"vcopy"}\t" +
-                            "${nullString}\t" +
-                            "${doc.checksum.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
-                            "${doc.created}\n")
-
-                    for (String identifier : identifiers) {
-                        identifiersWriter.write("${doc.shortId}\t${identifier}\n")
-                    }
-                    reply true}
-                    catch (any){
-                        log.error any
-                        return false
-                    }
-                }
-            }
-        }
-
-        dump(writeAct, collection, connectionUrl, sqlQuery, queryParameters)
+        dump(fileDumper, collection, connectionUrl, sqlQuery, queryParameters)
+        fileDumper.stop()
 
     }
 
@@ -268,7 +238,7 @@ class PostgresLoadfileWriter {
             } else
                 return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp]
         }
-        catch (any){
+        catch (any) {
             println any.message
         }
 
