@@ -1,11 +1,38 @@
 apply plugin: 'groovy'
 apply plugin: 'application'
 apply plugin: 'java'
+apply plugin: 'jetty'
+apply plugin: 'war'
+
+loadConfiguration()
+def loadConfiguration() {
+    ext {
+        try {
+            environment = env
+        } catch (MissingPropertyException mpe) {
+            environment = "dev"
+        }
+    }
+    def encoding = hasProperty('file.encoding') ? file.encoding : 'UTF-8'
+    System.setProperty 'file.encoding', encoding
+    System.setProperty 'whelk.environment', environment
+}
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-sourceSets {
+def versionprops = new Properties()
+try {
+    file("src/main/resources/version.properties").withInputStream { stream ->
+        versionprops.load(stream)
+    }
+} catch (Exception e) {
+}
+
+// Version is set on deploy, but to maintain semblance of control, update default value appropriately when releasing.
+def versionNumber = versionprops.get("releaseTag", "0.9.0.x")
+
+/*sourceSets {
     main {
         java { srcDirs = [] }
         groovy { srcDir 'src/main/' }
@@ -13,9 +40,9 @@ sourceSets {
     test {
         groovy { srcDir 'src/test/groovy/' }
     }
-}
+}*/
 
-mainClassName = "whelk.importer.ImporterMain"
+
 
 test.testLogging {
     showStandardStreams true
@@ -30,10 +57,10 @@ repositories {
 
 dependencies {
     def activeMQVersion = "5.11.1"
-    def groovyVersion= GroovySystem.getVersion()
+    def groovyVersion = GroovySystem.getVersion()
 
     // LIBRISXL modules
-    compile project(':../harvesters')
+  //  compile project(':../harvesters')
     if ('useLocalDeps' in System.properties.keySet()) {
         compile project(':../../whelk-core')
     } else {
@@ -41,6 +68,7 @@ dependencies {
     }
 
     // Common tools
+    providedCompile 'javax.servlet:servlet-api:2.5'
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
     compile 'commons-cli:commons-cli:1.2'
@@ -66,44 +94,75 @@ dependencies {
     testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"
     testCompile 'cglib:cglib-nodep:3.1'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
+
+    //executableWarDeps "org.eclipse.jetty:jetty-server:${jettyVersion}"
+    //executableWarDeps "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
+
+    /*executableWarDeps "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    executableWarDeps 'commons-cli:commons-cli:1.2'*/
 }
 
-
 // Include dependent libraries in archive.
-mainClassName = "whelk.importer.ImporterMain"
+
 
 jar {
     manifest {
-        attributes "Main-Class": "$mainClassName"
+        attributes "Main-Class": "whelk.importer.ImporterMain"
     }
-
-    /*
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    */
 
     from {
         configurations.compile.collect {
             it.isDirectory() ? it : project.zipTree(it).matching {
-                exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA','build','.gradle/**','build.gradle','gradle','gradlew','gradlew.bat','test'
             }
         }
     }
 
 }
 
+
+
 configurations {
     all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
+
+    executableWarDeps
+
+}
+war {
+    //mainClassName = "whelk.vcopyServlet.vcopyImporterServlet"
+    archivesBaseName = "vcopyImporter"
+
+    // Prevent circular log redirection; use slf4j
+    from {
+        configurations.executableWarDeps.collect {
+            //it.isDirectory() ? it : project.zipTree(it)
+            it.isDirectory() ? it : project.zipTree(it).matching {
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+            }
+        }
+    }
+    //from "$buildDir/classes/main"
+
+    def manifestClasspath = configurations.compile.collect {
+         "/WEB-INF/lib/${it.getName()}"
+     }.join(',')
+
+    manifest {
+         attributes 'Implementation-Title': 'Standalone Whelk',
+                 'Implementation-Version': versionNumber,
+                 'Class-Path': manifestClasspath
+     }
+
+
 }
 
 task(doRun, dependsOn: "classes", type: JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     main = "whelk.importer.ImporterMain"
-    systemProperties( [
-        'xl.secret.properties': System.getProperty("xl.secret.properties"),
-        'xl.mysql.properties': System.getProperty("xl.mysql.properties")
-    ] )
+    systemProperties([
+            'xl.secret.properties': System.getProperty("xl.secret.properties"),
+            'xl.mysql.properties' : System.getProperty("xl.mysql.properties")
+    ])
     minHeapSize = "1g"
     maxHeapSize = "4g"
     args(System.getProperty("args", "").split() as String[])
@@ -117,8 +176,17 @@ task(groovy, dependsOn: "classes", type: JavaExec) {
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {
-  description "Launch a Groovy Console"
-  classpath = sourceSets.main.runtimeClasspath
-  main = 'groovy.ui.Console'
+    description "Launch a Groovy Console"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'groovy.ui.Console'
 }
 
+task jettyRun(type: JettyRun, overwrite: true) {
+    jettyRun.contextPath = '/'
+    jettyRun.httpPort = 8181
+    jettyRun.description = "Starts a jetty instance."
+
+    def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
+    System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
+    System.setProperty('whelk.mode', System.getProperty("whelk.mode", "ops"))
+}

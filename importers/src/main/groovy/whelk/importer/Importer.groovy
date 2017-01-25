@@ -26,4 +26,15 @@ abstract class Importer {
     }
 
     abstract void doImport(String collection)
+
+    abstract ImportResult doImport(String collection, String sourceSystem, Date from)
+}
+
+class BrokenRecordException extends Exception {
+    String brokenId
+
+    BrokenRecordException(String identifier) {
+        super("Record ${identifier} has broken metadata")
+        brokenId = identifier
+    }
 }

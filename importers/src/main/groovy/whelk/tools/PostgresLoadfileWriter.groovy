@@ -1,7 +1,11 @@
 package whelk.tools
 
+import groovy.json.JsonBuilder
+import groovy.sql.GroovyResultSet
 import groovy.sql.Sql
 import groovy.util.logging.Slf4j as Log
+import groovyx.gpars.GParsPool
+import groovyx.gpars.actor.Actors
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709Deserializer
 import whelk.Document
@@ -14,145 +18,291 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.sql.ResultSet
+import java.sql.Statement
+import groovyx.gpars.actor.DefaultActor
+import java.sql.Timestamp
 
-//import groovyx.gpars.GParsPool
-//import groovyx.gpars.ParallelEnhancer
+
 /**
  * Writes documents into a PostgreSQL load-file, which can be efficiently imported into lddb
  */
 @Log
 class PostgresLoadfileWriter {
-    private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
-    private static final int CONVERSIONS_PER_THREAD = 100;
 
-    // USED FOR DEV ONLY, MUST _NEVER_ BE SET TO TRUE ONCE XL GOES INTO PRODUCTION. WITH THIS SETTING THE IMPORT WILL
-    // _SKIP_ DOCUMENTS THAT FAIL CONVERSION, RESULTING IN POTENTIAL DATA LOSS IF USED WHEN IMPORTING TO A PRODUCTION XL
-    private static final boolean FAULT_TOLERANT_MODE = true;
+    static void dumpAuthStats(String folderName, String connectionUrl) {
+        StatsMaker statsMaker = new StatsMaker()
+        statsMaker.start()
+        StatsPrinter statsPrintingActor = new StatsPrinter()
+        statsPrintingActor.start()
 
-    private static MarcFrameConverter s_marcFrameConverter;
-    private static BufferedWriter s_mainTableWriter;
-    private static BufferedWriter s_identifiersWriter;
-    private static Thread[] s_threadPool;
-    private static Vector<String> s_failedIds = new Vector<String>();
+        Sql sql = prepareSql(connectionUrl)
+        def currentChunk = []
+        List<Map> previousRowsInGroup = []
+        Map previousRow = null
+        Map currentRow
+        def collection = 'bib'
 
-    // Abort on unhandled exceptions, including those on worker threads.
-    static
-    {
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()
-        {
-            @Override
-            void uncaughtException(Thread thread, Throwable throwable) {
-                System.out.println("PANIC ABORT, unhandled exception:\n");
-                throwable.printStackTrace();
-                System.exit(-1);
-            }
-        });
-    }
+        //GParsPool.withPool { pool ->
+        sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { ResultSet resultSet ->
+            try {
+                currentRow = [data      : resultSet.getBytes('data'),
+                              created   : resultSet.getTimestamp('create_date'),
+                              collection: collection,
+                              bib_id    : resultSet.getInt('bib_id'),
+                              auth_id   : collection == 'bib' ? resultSet.getInt('auth_id') : 0,
+                              authdata  : collection == 'bib' ? resultSet.getBytes('auth_data') : null,
+                              sigel     : collection == "hold" ? resultSet.getString("shortname") : null]
 
-    public static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
-        if (FAULT_TOLERANT_MODE)
-            System.out.println("\t**** RUNNING IN FAULT TOLERANT MODE, DOCUMENTS THAT FAIL CONVERSION WILL BE SKIPPED.\n" +
-                    "\tIF YOU ARE IMPORTING TO A PRODUCTION XL, ABORT NOW!! AND RECOMPILE WITH FAULT_TOLERANT_MODE=false");
+                switch (previousRow) {
+                    case null:                              //first run
+                        previousRow = currentRow
+                        previousRowsInGroup.add(currentRow)
+                        break
+                    case { it.bib_id == currentRow.bib_id }://Same bib record
+                        previousRowsInGroup.add(currentRow)
+                        break
+                    default:
+                        statsPrintingActor << [type: 'rowProcessed']
+                        //new record
+                        currentChunk.add(previousRowsInGroup)
+                        if (currentChunk.size() >= 500) {
+                            currentChunk.each { c ->
+                                Map m = [doc     : getMarcDocMap(c.last().data as byte[]),
+                                         authData: getAuthDocsFromRows(c as ArrayList)]
+                                statsMaker.sendAndWait(m)
 
-        s_marcFrameConverter = new MarcFrameConverter();
-        s_mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"));
-        s_identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"));
-        def counter = 0
-        def startTime = System.currentTimeMillis()
-
-        try {
-            def sql = Sql.newInstance(connectionUrl, "com.mysql.jdbc.Driver")
-            sql.withStatement { stmt -> stmt.fetchSize = Integer.MIN_VALUE }
-            sql.connection.setAutoCommit(false)
-            sql.setResultSetType(ResultSet.TYPE_FORWARD_ONLY)
-            sql.setResultSetConcurrency(ResultSet.CONCUR_READ_ONLY)
-            sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { row ->
-
-                if (++counter % 1000 == 0) {
-                    def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
-                    if (elapsedSecs > 0) {
-                        def docsPerSec = counter / elapsedSecs
-                        println "Working. Currently ${counter} documents saved. Crunching ${docsPerSec} docs / s"
-                    }
-                }
-
-                try {
-
-                    Map doc = null
-                    MarcRecord record = Iso2709Deserializer.deserialize(
-                            MySQLLoader.normalizeString(
-                                    new String(row.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
-                    if (record) {
-                        doc = MarcJSONConverter.toJSONMap(record)
-                        if (doc) {
-                            if (isSuppressed(doc))
-                                return
-                            handleDM(toDocumentMap(doc, row, collection), s_marcFrameConverter)
+                            }
+                            currentChunk = []
                         }
-                        doc = [:]
-
-                    }
-                    if (doc) {
-                        if (isSuppressed(doc))
-                            return
-                        handleDM(toDocumentMap(doc, row, collection), s_marcFrameConverter)
-                    }
-                } catch (all) {
-                    println all.message
-                    println all.stackTrace
+                        previousRow = currentRow
+                        previousRowsInGroup = []
+                        previousRowsInGroup.add(currentRow)
+                        break
                 }
+
             }
+            catch (any) {
+                println any.message
+            }
+        }
+        //last ones
+        currentChunk.each { c ->
+            Map m = [doc     : getMarcDocMap(c.last().data as byte[]),
+                     authData: getAuthDocsFromRows(c as ArrayList)]
+            statsMaker.sendAndWait(m)
+        }
+        // }
 
-        }
-        catch (all) {
-            println all.message
-        }
-        finally {
-            s_mainTableWriter.close()
-            s_identifiersWriter.close()
-        }
-
-        def endSecs = (System.currentTimeMillis() - startTime) / 1000
-        println "  Done. Processed ${counter} documents in ${endSecs} seconds."
 
     }
 
-    private static Map toDocumentMap(Map doc, def row, String collection) {
-        String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-        String id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-        [record: doc, collection: collection, id: id, created: row.getTimestamp("create_date")]
+    static void "import"(DefaultActor actor, String collection, String connectionUrl, Date date) {
+        String sqlQuery = MySQLLoader.selectHarvestByMarcType[collection]
+        String dateString = date.toTimestamp().toString()
+        List<Object> queryParameters = [0, dateString, dateString]
+
+        dump(actor, collection, connectionUrl, sqlQuery, queryParameters)
     }
 
-    private static String getShortId(Map documentMap, MarcFrameConverter marcFrameConverter) {
+
+    static void "import"(DefaultActor actor, String collection, String connectionUrl, String[] vcopyIdsToImport) {
+        String sqlQuery = MySQLLoader.selectExampleDataByMarcType[collection].replace('?', vcopyIdsToImport.collect { it -> '?' }.join(','))
+        dump(actor, collection, connectionUrl, sqlQuery, vcopyIdsToImport.toList())
+    }
+
+    static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
+        String sqlQuery = MySQLLoader.selectByMarcType[collection]
+        List<Object> queryParameters = [0]
+
+        def fileDumper = new FileDumper(exportFileName)
+        fileDumper.start()
+
+
+        dump(fileDumper, collection, connectionUrl, sqlQuery, queryParameters)
+        fileDumper.stop()
+
+    }
+
+
+    static void dump(DefaultActor suppliedActor, String collection, String connectionUrl, String sqlQuery, List<Object> queryParameters) {
+
+        Sql sql = prepareSql(connectionUrl)
+
+        StatsPrinter statsPrintingActor = new StatsPrinter()
+        statsPrintingActor.start()
+
         try {
-            Map convertedData = marcFrameConverter.convert(documentMap.record, documentMap.id);
-            Document document = new Document(convertedData)
-            document.setCreated(documentMap.created)
-            return document.getShortId()
+            def converter = new MarcFrameConvertingActor()
+            converter.start()
+            def currentChunk = []
+            List<VCopyDataRow> previousRowsInGroup = []
+            VCopyDataRow previousRow = null
+            VCopyDataRow currentRow
+            //GParsPool.withPool { pool ->
 
-        } catch (Throwable e) {
-            e.print("Convert Failed. id: ${documentMap.id}")
-            e.printStackTrace()
-            //String voyagerId = dm.collection + "/" + getControlNumber(dm.record);
-            //s_failedIds.add(voyagerId);
+            sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
+                currentRow = new VCopyDataRow(resultSet, collection)
+
+                switch (previousRow) {
+                    case null:                              //first run
+                        previousRow = currentRow
+                        previousRowsInGroup.add(currentRow)
+                        break
+                    case { collection == 'bib' && it.bib_id == currentRow.bib_id }://Same bib record
+                        previousRowsInGroup.add(currentRow)
+                        break
+                    default:                                //new record
+                        currentChunk.add(previousRowsInGroup)
+                        if (currentChunk.count { it } == 500) {
+                            currentChunk.each { c ->
+                                try {
+                                    Map a = handleRowGroup(c, converter)
+                                    if (a && !a.isSuppressed) {
+                                        suppliedActor.sendAndWait(a)
+                                    }
+                                }
+                                catch (any) {
+                                    println any.message
+                                    println any.stackTrace
+                                    println collection
+                                    println c?.first()?.bib_id
+                                    throw any // don't want to miss any records
+                                }
+                            }
+                            currentChunk = []
+                        }
+                        previousRow = currentRow
+                        previousRowsInGroup = []
+                        previousRowsInGroup.add(currentRow)
+                        break
+                }
+                statsPrintingActor << [type: 'rowProcessed']
+            }
+            println "Last ones."
+            currentChunk.each { c ->
+                try {
+                    Map a = handleRowGroup(c, converter)
+                    if (a && !a.isSuppressed) {
+                        suppliedActor.sendAndWait(a)
+                    }
+                }
+                catch (any) {
+                    println any.message
+                    println any.stackTrace
+                    throw any // don't want to miss any records
+
+                }
+
+            }
+            //} //With pool
+        }
+        catch (any) {
+            println any.message
+            println any.stackTrace
+            throw any // dont want to miss any records
+        }
+        println "Done."
+    }
+
+    static getAuthDocsFromRows(List<VCopyDataRow> rows) {
+        rows.collect { it ->
+            if (it.auth_id > 0) {
+                return [bibid: it.bib_id,
+                        id   : it.auth_id,
+                        data : getMarcDocMap(it.authdata as byte[])]
+            } else return null
         }
     }
 
-    private static void handleDM(Map documentMap, MarcFrameConverter marcFrameConverter) {
+    static Map handleRowGroup(List<VCopyDataRow> rows, marcFrameConverter) {
         try {
-            Map convertedData = marcFrameConverter.convert(documentMap.record, documentMap.id);
-            Document document = new Document(convertedData)
-            document.setCreated(documentMap.created)
-            writeDocumentToLoadFile(document, documentMap.collection)
+            VCopyDataRow row = rows.last()
+            def authRecords = getAuthDocsFromRows(rows)
+            def document = null
+            Timestamp timestamp = row.updated >= row.created ? row.updated : row.created
+            Map doc = getMarcDocMap(row.data)
+            if (!isSuppressed(doc)) {
+                switch (row.collection) {
+                    case 'auth':
+                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created)
+                        break
+                    case 'hold':
+                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
+                        break
+                    case 'bib':
+                        SetSpecMatcher.matchAuthToBib(doc, authRecords)
+                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
+                        break
+                }
+                return [collection: row.collection, document: document, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp]
+            } else
+                return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp]
+        }
+        catch (any) {
+            println any.message
+        }
 
-        } catch (Throwable e) {
-            e.println("Convert Failed. id: ${documentMap.id}")
-            e.printStackTrace()
+    }
+
+    static Sql prepareSql(String connectionUrl) {
+        def sql = Sql.newInstance(connectionUrl, "com.mysql.jdbc.Driver")
+        sql.withStatement { Statement stmt -> stmt.fetchSize = Integer.MIN_VALUE }
+        sql.connection.autoCommit = false
+        sql.resultSetType = ResultSet.TYPE_FORWARD_ONLY
+        sql.resultSetConcurrency = ResultSet.CONCUR_READ_ONLY
+        sql
+    }
+
+    static Map getMarcDocMap(byte[] data) {
+        byte[] dataBytes = MySQLLoader.normalizeString(
+                new String(data as byte[], "UTF-8"))
+                .getBytes("UTF-8")
+
+        MarcRecord record = Iso2709Deserializer.deserialize(dataBytes)
+
+        if (record) {
+            return MarcJSONConverter.toJSONMap(record)
+        } else {
+            return null
+        }
+    }
+
+    static Document convertDocument(converter, Map doc, String collection, Date created, List authData = null) {
+        if (doc && !isSuppressed(doc)) {
+            String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+
+            def id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+
+            Map convertedData = authData && authData.size() > 1 && collection != 'bib' ?
+                    converter.sendAndWait([doc: doc, id: id, spec: [oaipmhSetSpecs: authData]]) :
+                    converter.sendAndWait([doc: doc, id: id, spec: null])
+            Document document = new Document(convertedData)
+            document.created = created
+            return document
+        } else {
+            println "is suppresse: ${isSuppressed(doc)}"
+            return null
         }
     }
 
 
-    private static boolean isSuppressed(Map doc) {
+    static List getOaipmhSetSpecs(resultSet) {
+        List specs = []
+        if (resultSet.collection == "bib") {
+            int authId = resultSet.auth_id ?: 0
+            if (authId > 0) {
+                specs.add("authority:${authId}")
+            }
+        } else if (resultSet.collection == "hold") {
+            if (resultSet.bib_id > 0)
+                specs.add("bibid:${resultSet.bib_id}")
+            if (resultSet.sigel)
+                specs.add("location:${resultSet.sigel}")
+        }
+        return specs
+    }
+
+    private static isSuppressed(Map doc) {
         def fields = doc.get("fields")
         for (def field : fields) {
             if (field.get("599") != null) {
@@ -161,79 +311,51 @@ class PostgresLoadfileWriter {
                     def subfields = field599.get("subfields")
                     for (def subfield : subfields) {
                         if (subfield.get("a").equals("SUPPRESSRECORD"))
-                            return true;
+                            return true
                     }
                 }
             }
         }
-        return false;
+        return false
     }
 
     private static String getControlNumber(Map doc) {
         def fields = doc.get("fields")
         for (def field : fields) {
             if (field.get("001") != null)
-                return field.get("001");
+                return field.get("001")
         }
         return null
     }
 
-    private static synchronized void writeDocumentToLoadFile(Document doc, String collection) {
-        /* columns:
-
-           id text not null unique primary key,
-           data jsonb not null,
-           collection text not null,
-           changedIn text not null,
-           changedBy text,
-           checksum text not null,
-           created timestamp with time zone not null default now(),
-           modified timestamp with time zone not null default now(),
-           deleted boolean default false
-
-           */
-
-        final char delimiter = '\t';
-        final String nullString = "\\N";
-
-        final delimiterString = new String(delimiter);
-
-        List<String> identifiers = doc.getRecordIdentifiers();
-
-        // Write to main table file
-
-        s_mainTableWriter.write(doc.getShortId());
-        s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write(doc.getDataAsString().replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString));
-        s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write(collection.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString));
-        s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write("vcopy");
-        s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write(nullString);
-        s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write(doc.getChecksum().replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString));
-        s_mainTableWriter.write(delimiter);
-        s_mainTableWriter.write(doc.getCreated());
-
-        // remaining values have sufficient defaults.
-
-        s_mainTableWriter.newLine();
-
-        // Write to identifiers table file
-
-        /* columns:
-        id text not null,
-        identifier text not null -- unique
-        */
-
-        for (String identifier : identifiers) {
-            s_identifiersWriter.write(doc.getShortId());
-            s_identifiersWriter.write(delimiter);
-            s_identifiersWriter.write(identifier);
-
-            s_identifiersWriter.newLine();
-        }
-    }
 
 }
+
+class VCopyDataRow {
+    byte[] data
+    boolean isDeleted
+    Timestamp created
+    Timestamp updated
+    String collection
+    int bib_id
+    int auth_id
+    byte[] authdata
+    String sigel
+
+
+    VCopyDataRow(ResultSet resultSet, String collection) {
+        data = resultSet.getBytes('data')
+        isDeleted = resultSet.getBoolean('deleted')
+        created = resultSet.getTimestamp('create_date')
+        updated = resultSet.getTimestamp('update_date')
+        this.collection = collection
+        bib_id = collection == 'bib' ? resultSet.getInt('bib_id') : 0
+        auth_id = collection == 'bib' ? resultSet.getInt('auth_id') : 0
+        authdata = collection == 'bib' ? resultSet.getBytes('auth_data') : null
+        sigel = collection == "hold" ? resultSet.getString("shortname") : null
+    }
+}
+
+
+
+

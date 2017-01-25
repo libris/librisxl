@@ -8,6 +8,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 import groovy.util.logging.Slf4j as Log
+import groovy.sql.Sql
 
 import org.picocontainer.Characteristics
 import org.picocontainer.PicoContainer
@@ -17,7 +18,7 @@ import whelk.Whelk
 import whelk.converter.marc.MarcFrameConverter
 import whelk.filter.LinkFinder
 import whelk.reindexer.ElasticReindexer
-import whelk.harvester.OaiPmhHarvester
+
 import whelk.tools.MySQLToMarcJSONDumper
 import whelk.tools.PostgresLoadfileWriter
 import whelk.util.PropertyLoader
@@ -40,7 +41,6 @@ class ImporterMain {
         pico.addComponent(DefinitionsImporter)
         pico.addComponent(LinkFinder)
         pico.addComponent(MockImporter)
-        pico.addComponent(OaiPmhHarvester)
         pico.start()
 
         log.info("Started ...")
@@ -50,6 +50,12 @@ class ImporterMain {
     void vcopydump(String toFileName, String collection) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
         PostgresLoadfileWriter.dumpGpars(toFileName, collection, connUrl)
+    }
+
+    @Command(args='TO_FOLDER_NAME')
+    void vcopystats(String toFolderName) {
+        def connUrl = props.getProperty("mysqlConnectionUrl")
+        PostgresLoadfileWriter.dumpAuthStats(toFolderName, connUrl)
     }
 
     @Command(args='COLLECTION [TO_FILE_NAME]')
@@ -65,11 +71,15 @@ class ImporterMain {
         defsimport.run("definitions")
     }
 
-    @Command(args='SERVICE_URL [USERNAME] [PASSWORD] [SOURCE_SYSTEM]')
-    void harvest(String serviceUrl, username=null, password=null, sourceSystem=null) {
-        def harvester = pico.getComponent(OaiPmhHarvester)
-        harvester.harvest(serviceUrl, username, password, sourceSystem,
-                "ListRecords", "marcxml")
+    @Command(args='COLLECTION [SOURCE_SYSTEM]')
+    void vcopyharvest(String collection, String sourceSystem = 'vcopy') {
+        println collection
+        println sourceSystem
+        def connUrl = props.getProperty("mysqlConnectionUrl")
+        def whelk = pico.getComponent(Whelk.class)
+        println whelk.version
+        VCopyImporter importer = new VCopyImporter()
+        importer.doImport(whelk, collection, sourceSystem, connUrl)
     }
 
     @Command(args='[COLLECTION]')
@@ -89,19 +99,18 @@ class ImporterMain {
         for (doc in whelk.storage.loadAll(collection)) {
             if (++counter % 1000 == 0) {
                 long currTime = System.currentTimeMillis()
-                int secs = (currTime - lastTime) / 1000
-                log.info("Now read 1000 (total ${counter++}) documents in ${(currTime - lastTime)} milliseconds. Velocity: ${(1000 /((currTime - lastTime)/1000))} docs/sec.")
+                log.info("Now read 1000 (total ${counter++}) documents in ${(currTime - lastTime)} milliseconds. Velocity: ${(1000 / ((currTime - lastTime) / 1000))} docs/sec.")
                 lastTime = currTime
             }
         }
         log.info("Done!")
     }
 
-    void sendToQueue(Whelk whelk, List doclist, LinkFinder lf, ExecutorService queue, Map counters) {
+    static void sendToQueue(Whelk whelk, List doclist, LinkFinder lf, ExecutorService queue, Map counters) {
         Document[] workList = new Document[doclist.size()]
         System.arraycopy(doclist.toArray(), 0, workList, 0, doclist.size())
         queue.execute({
-            List storeList = []
+            List<Document> storeList = []
             for (Document wdoc in Arrays.asList(workList)) {
                 Document fdoc = lf.findLinks(wdoc)
                 if (fdoc) {
@@ -118,7 +127,41 @@ class ImporterMain {
             log.info("Saving ${storeList.size()} documents ...")
             whelk.storage.bulkStore(storeList, true)
         } as Runnable)
-        doclist = []
+    }
+
+    void vcopyloadexampledataCmd(String file) {
+        def connUrl = props.getProperty("mysqlConnectionUrl")
+        def whelk = pico.getComponent(Whelk.class)
+        println whelk.version
+        VCopyImporter importer = new VCopyImporter()
+
+        def idgroups = new File(file).readLines()
+                .findAll { String line -> ['\t', '/'].every { it -> line.contains(it) } }
+                .collect { line ->
+            def split = line.substring(0, line.indexOf("\t")).split('/')
+            [collection: split[0], id: split[1]]
+        }
+        .groupBy { it -> it.collection }
+                .collect { k, v -> [key: k, value: v.collect { it -> it.id }] }
+
+        def bibIds = idgroups.find{it->it.key == 'bib'}.value
+        def extraAuthIds = getExtraAuthIds(connUrl,bibIds)
+        println "Found ${extraAuthIds.count {it}} linked authority records from bibliographic records"
+
+        idgroups.each { group ->
+            ImportResult importResult = importer.doImport(whelk, group.key, 'vcopy', connUrl, group.value as String[])
+            println "Created ${importResult?.numberOfDocuments} documents från  ${group.key}."
+        }
+        ImportResult importResult = importer.doImport(whelk, 'auth', 'vcopy', connUrl, extraAuthIds as String[])
+        println "Created ${importResult?.numberOfDocuments} documents från  linked authority records"
+        println "All done importing example data."
+    }
+
+    static List<String> getExtraAuthIds(String connUrl, List<String> bibIds){
+        String sqlQuery = 'SELECT bib_id, auth_id FROM auth_bib WHERE bib_id IN (?)'.replace('?',bibIds.collect{it->'?'}.join(','))
+        def sql = Sql.newInstance(connUrl, "com.mysql.jdbc.Driver")
+        def rows = sql.rows(sqlQuery,bibIds)
+        return rows.collect {it->it.auth_id}
     }
 
     @Command(args='COLLECTION')
@@ -133,8 +176,8 @@ class ImporterMain {
         long startTime = System.currentTimeMillis()
         def doclist = []
         Map counters = [
-                "read": 0,
-                "found": 0,
+                "read"   : 0,
+                "found"  : 0,
                 "changed": 0
         ]
 
@@ -160,8 +203,7 @@ class ImporterMain {
 
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
-        println "Linkfinding completed. Elapsed time: ${System.currentTimeMillis()-startTime}"
-
+        println "Linkfinding completed. Elapsed time: ${System.currentTimeMillis() - startTime}"
     }
 
     @Command

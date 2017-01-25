@@ -220,27 +220,19 @@ $ gradle -Dxl.secret.properties=../secret.properties \
 
 ### Import MARC test data
 
-Create a local OAI-PMH dump of examples and run a full import:
+Fetches example records directly from the vcopy database
 
 For *NIX:
 ```bash
 $ cd $LIBRISXL
-$ virtualenv .venv && source .venv/bin/activate
-$ pip install -r librisxl-tools/scripts/requirements.txt
-$ python librisxl-tools/scripts/assemble_oaipmh_records.py "<username>:<password>" \
-    librisxl-tools/scripts/example_records.tsv /tmp/oaipmh
-$ cd $LIBRISXL/importers
-$ gradle jar
-$ java -Dxl.secret.properties=../secret.properties -jar build/libs/importers.jar \
-    defs ../../definitions/build/definitions.jsonld.lines
-$ for source in auth bib hold; do
-    java -Dxl.secret.properties=../secret.properties -jar build/libs/importers.jar \
-        harvest file:///tmp/oaipmh/$source/oaipmh
-  done
-```
+$ java -Dxl.secret.properties=../secret.properties -jar $JAR \
+     defs ../$DEFS_FILE
 
-Where `<username>` and `<password>` are the credentials used for
-communicating with the OAIPMH server.
+$ java -Dxl.secret.properties=../secret.properties \
+    -Dxl.mysql.properties=../mysql.properties \
+     -jar build/libs/vcopyImporter.jar \
+     vcopyloadexampledata ../librisxl-tools/scripts/example_records.tsv
+```
 
 **NOTE:**
 On Windows, instead of installing modules through the `requirements.txt`-file, install the modules listed in it separately (apart from psycopg2). Download the psycopg2.whl-file that matches your OS from http://www.lfd.uci.edu/~gohlke/pythonlibs/#psycopg and pip install it.
@@ -254,7 +246,6 @@ For convenience, there is a script that automates the above steps
 
 ```
 $ ./librisxl-tools/scripts/setup-dev-whelk.sh -n <database name> \
-    -O "<oaiphm-user>:<oaipmh-password>" \
     [-C <createdb user>] [-D <database user>] [-F]
 ```
 
@@ -268,7 +259,7 @@ E.g.:
 
 ```
 $ ./librisxl-tools/scripts/setup-dev-whelk.sh -n whelk_dev \
-    -O "foo:bar" -C postgres -D whelk -F
+     -C postgres -D whelk -F
 ```
 
 ### Clearing out existing definitions
