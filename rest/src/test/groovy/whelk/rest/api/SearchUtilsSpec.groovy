@@ -4,6 +4,7 @@ import spock.lang.Specification
 
 import whelk.rest.api.SearchUtils
 import whelk.rest.api.SearchUtils.SearchType
+import whelk.exception.InvalidQueryException
 
 class SearchUtilsSpec extends Specification {
 
@@ -84,6 +85,28 @@ class SearchUtilsSpec extends Specification {
 
     }
 
+    def "Should throw on negative limit"() {
+        given:
+        SearchUtils search = new SearchUtils(null, null)
+
+        when:
+        search.getLimitAndOffset(['_limit': '-1'])
+
+        then:
+        thrown InvalidQueryException
+    }
+
+    def "Should throw on negative offset"() {
+        given:
+        SearchUtils search = new SearchUtils(null, null)
+
+        when:
+        search.getLimitAndOffset(['_offset': '-1'])
+
+        then:
+        thrown InvalidQueryException
+    }
+
     def "Should compute offsets, I"() {
         when:
         int total = 10
@@ -156,4 +179,33 @@ class SearchUtilsSpec extends Specification {
         assert offsets.last == 40
     }
 
+    def "Should throw when computing offsets with negative limit"() {
+        when:
+        int total = 50
+        int limit = -1
+        int offset = 5
+        def offsets = new Offsets(total, limit, offset)
+        then:
+        thrown InvalidQueryException
+    }
+
+    def "should throw when computing offsets with limit=0"() {
+        when:
+        int total = 50
+        int limit = 0
+        int offset = 5
+        def offsets = new Offsets(total, limit, offset)
+        then:
+        thrown InvalidQueryException
+    }
+
+    def "should throw when computing offsets with negative offset"() {
+        when:
+        int total = 50
+        int limit = 5
+        int offset = -1
+        def offsets = new Offsets(total, limit, offset)
+        then:
+        thrown InvalidQueryException
+    }
 }

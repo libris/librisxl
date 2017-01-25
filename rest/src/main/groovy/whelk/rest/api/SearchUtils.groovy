@@ -454,7 +454,13 @@ class SearchUtils {
 
     Map makePaginationLinks(SearchType st, Map pageParams,
                             int limit, int offset, int total) {
+        if (limit == 0) {
+            // we don't have anything to paginate over
+            return [:]
+        }
+
         Map result = [:]
+
         Offsets offsets = new Offsets(total, limit, offset)
 
         result['first'] = [(JsonLd.ID_KEY): makeFindUrl(st, pageParams)]
@@ -490,8 +496,21 @@ class SearchUtils {
         if (limit > MAX_LIMIT) {
             limit = DEFAULT_LIMIT
         }
+
+        if (limit < 0) {
+            throw new InvalidQueryException(
+                "\"_limit\" query parameter can't be negative."
+            )
+        }
+
         int offset = parseIntFromQueryParams("_offset", queryParams,
                                              DEFAULT_OFFSET)
+
+        if (offset < 0) {
+            throw new InvalidQueryException(
+                "\"_offset\" query parameter can't be negative."
+            )
+        }
 
         return new Tuple2(limit, offset)
     }
@@ -605,6 +624,16 @@ class Offsets {
     Integer last
 
     Offsets(Integer total, Integer limit, Integer offset) {
+        if (limit <= 0) {
+            throw new InvalidQueryException(
+                "\"limit\" must be greater than 0."
+            )
+        }
+
+        if (offset < 0) {
+            throw new InvalidQueryException("\"offset\" can't be negative.")
+        }
+
         this.prev = offset - limit
         if (this.prev < 0) {
             this.prev = null
