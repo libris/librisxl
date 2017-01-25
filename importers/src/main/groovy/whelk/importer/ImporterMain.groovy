@@ -129,7 +129,8 @@ class ImporterMain {
         } as Runnable)
     }
 
-    void vcopyloadexampledataCmd(String file) {
+    @Command(args='FILE')
+    void vcopyloadexampledata(String file) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
         def whelk = pico.getComponent(Whelk.class)
         println whelk.version
