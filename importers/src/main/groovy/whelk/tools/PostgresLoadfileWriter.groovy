@@ -32,8 +32,8 @@ class PostgresLoadfileWriter {
     static void dumpAuthStats(String folderName, String connectionUrl) {
         StatsMaker statsMaker = new StatsMaker()
         statsMaker.start()
-        StatsPrinter statsPrintingActor = new StatsPrinter()
-        statsPrintingActor.start()
+        StatsPrinter statsPrinter = new StatsPrinter()
+        statsPrinter.start()
 
         Sql sql = prepareSql(connectionUrl)
         def currentChunk = []
@@ -45,6 +45,7 @@ class PostgresLoadfileWriter {
         //GParsPool.withPool { pool ->
         sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { ResultSet resultSet ->
             try {
+                statsPrinter << [type: 'row']
                 currentRow = [data      : resultSet.getBytes('data'),
                               created   : resultSet.getTimestamp('create_date'),
                               collection: collection,
@@ -62,14 +63,15 @@ class PostgresLoadfileWriter {
                         previousRowsInGroup.add(currentRow)
                         break
                     default:
-                        statsPrintingActor << [type: 'rowProcessed']
                         //new record
                         currentChunk.add(previousRowsInGroup)
                         if (currentChunk.size() >= 500) {
                             currentChunk.each { c ->
+
                                 Map m = [doc     : getMarcDocMap(c.last().data as byte[]),
                                          authData: getAuthDocsFromRows(c as ArrayList)]
                                 statsMaker.sendAndWait(m)
+                                statsPrinter << [type: 'record']
 
                             }
                             currentChunk = []
@@ -90,7 +92,9 @@ class PostgresLoadfileWriter {
             Map m = [doc     : getMarcDocMap(c.last().data as byte[]),
                      authData: getAuthDocsFromRows(c as ArrayList)]
             statsMaker.sendAndWait(m)
+            statsPrinter << [type: 'record']
         }
+        statsPrinter << [type: 'record']
         // }
 
 
@@ -128,8 +132,8 @@ class PostgresLoadfileWriter {
 
         Sql sql = prepareSql(connectionUrl)
 
-        StatsPrinter statsPrintingActor = new StatsPrinter()
-        statsPrintingActor.start()
+        StatsPrinter statsPrinter = new StatsPrinter()
+        statsPrinter.start()
 
         try {
             def converter = new MarcFrameConvertingActor()
@@ -141,8 +145,8 @@ class PostgresLoadfileWriter {
             //GParsPool.withPool { pool ->
 
             sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
+                statsPrinter.sendAndWait([type: 'row'])
                 currentRow = new VCopyDataRow(resultSet, collection)
-
                 switch (previousRow) {
                     case null:                              //first run
                         previousRow = currentRow
@@ -155,11 +159,15 @@ class PostgresLoadfileWriter {
                         currentChunk.add(previousRowsInGroup)
                         if (currentChunk.count { it } == 500) {
                             currentChunk.each { c ->
+
                                 try {
                                     Map a = handleRowGroup(c, converter)
                                     if (a && !a.isSuppressed) {
                                         suppliedActor.sendAndWait(a)
+                                        statsPrinter.sendAndWait([type: 'record'])
                                     }
+                                    else
+                                        statsPrinter.sendAndWait([type: 'suppressed'])
                                 }
                                 catch (any) {
                                     println any.message
@@ -176,15 +184,18 @@ class PostgresLoadfileWriter {
                         previousRowsInGroup.add(currentRow)
                         break
                 }
-                statsPrintingActor << [type: 'rowProcessed']
             }
             println "Last ones."
             currentChunk.each { c ->
+
                 try {
                     Map a = handleRowGroup(c, converter)
                     if (a && !a.isSuppressed) {
                         suppliedActor.sendAndWait(a)
+                        statsPrinter.sendAndWait([type: 'record'])
                     }
+                    else
+                        statsPrinter.sendAndWait([type: 'suppressed'])
                 }
                 catch (any) {
                     println any.message
@@ -201,6 +212,7 @@ class PostgresLoadfileWriter {
             println any.stackTrace
             throw any // dont want to miss any records
         }
+        statsPrinter.sendAndWait([type: 'report'])
         println "Done."
     }
 
