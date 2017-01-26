@@ -18,9 +18,10 @@ public class JsonLd {
     static final String GRAPH_KEY = "@graph"
     static final String CONTEXT_KEY = "@context"
     static final String ID_KEY = "@id"
+    static final String TYPE_KEY = "@type"
+    static final String REVERSE_KEY = "@reverse"
     static final String THING_KEY = "mainEntity"
     static final String RECORD_KEY = "meta"
-    static final String TYPE_KEY = "@type"
     static final String CREATED_KEY = "created"
     static final String MODIFIED_KEY = "modified"
     static final String DELETED_KEY = "deleted"
@@ -88,7 +89,16 @@ public class JsonLd {
     public static List getExternalReferences(Map jsonLd){
         Set allReferences = getAllReferences(jsonLd)
         Set localObjects = getIdMap(jsonLd).keySet()
-        return allReferences.minus(localObjects) as List
+        List externalRefs = allReferences.minus(localObjects) as List
+        // NOTE: this is necessary because some documents contain references to
+        // bnodes that don't exist (in that document).
+        return filterOutDanglingBnodes(externalRefs)
+    }
+
+    private static List filterOutDanglingBnodes(List refs) {
+        return refs.findAll {
+            !it.startsWith('_:')
+        }
     }
 
     public static Set getAllReferences(Map jsonLd) {
