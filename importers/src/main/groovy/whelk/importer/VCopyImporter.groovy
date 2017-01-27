@@ -1,14 +1,9 @@
 package whelk.importer
 
 import groovy.json.JsonBuilder
-import groovyx.gpars.actor.Actors
-import groovyx.gpars.actor.DefaultActor
-import sun.reflect.generics.reflectiveObjects.NotImplementedException
-import whelk.Document
 import whelk.Whelk
-import whelk.tools.PostgresLoadfileWriter
-
-import java.sql.Timestamp
+import whelk.actors.WhelkSaver
+import whelk.PostgresLoadfileWriter
 
 /**
  * Created by Theodor on 2017-01-05.
@@ -40,49 +35,3 @@ class VCopyImporter {
 
 }
 
-class WhelkSaver extends DefaultActor {
-    ImportResult importResult
-    String sourceSystem
-    Whelk whelk
-
-    WhelkSaver(Whelk w, String sourceSystem) {
-        this.importResult = new ImportResult()
-        this.whelk = w
-        this.sourceSystem = sourceSystem
-    }
-
-    void setLastRecordTimeStamp(Timestamp timestamp) {
-        if (timestamp > importResult.lastRecordDatestamp)
-            importResult.lastRecordDatestamp = timestamp
-    }
-
-    @Override
-    protected void act() {
-        loop {
-            react { argument ->
-                try {
-                    setLastRecordTimeStamp(argument.timestamp as Timestamp)
-                    Document doc = argument.document
-                    if (argument.isDeleted) {
-                        String systemId = whelk.storage.locate(argument.id as String, false)?.id
-                        if (systemId) {
-                            whelk.remove(systemId, sourceSystem, null, argument.collection as String)
-                            importResult.numberOfDocumentsDeleted++
-                        }
-                    } else if (argument.isSuppressed) {
-                        importResult.numberOfDocumentsSkipped++
-                    } else {
-                        whelk.store(doc, sourceSystem, null, argument.collection as String, false)
-                    }
-                    importResult.numberOfDocuments++
-                    reply true
-                }
-                catch (any) {
-                    println any.message
-                    println argument.inspect()
-                    throw any
-                }
-            }
-        }
-    }
-}

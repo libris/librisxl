@@ -9,7 +9,6 @@ import whelk.component.Storage
 import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.BrokenRecordException
 import whelk.importer.ImportResult
-import whelk.importer.Importer
 import whelk.importer.VCopyImporter
 import whelk.util.PropertyLoader
 

@@ -1,4 +1,4 @@
-package whelk.tools
+package whelk.actors
 
 import groovy.util.logging.Slf4j
 import groovyx.gpars.actor.DefaultActor

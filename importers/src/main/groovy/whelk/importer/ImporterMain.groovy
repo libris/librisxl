@@ -1,16 +1,12 @@
 package whelk.importer
 
 import java.lang.annotation.*
-
-import java.sql.SQLRecoverableException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 import groovy.util.logging.Slf4j as Log
 import groovy.sql.Sql
-
-import org.picocontainer.Characteristics
 import org.picocontainer.PicoContainer
 
 import whelk.Document
@@ -19,8 +15,8 @@ import whelk.converter.marc.MarcFrameConverter
 import whelk.filter.LinkFinder
 import whelk.reindexer.ElasticReindexer
 
-import whelk.tools.MySQLToMarcJSONDumper
-import whelk.tools.PostgresLoadfileWriter
+import whelk.MySQLToMarcJSONDumper
+import whelk.PostgresLoadfileWriter
 import whelk.util.PropertyLoader
 import whelk.util.Tools
 

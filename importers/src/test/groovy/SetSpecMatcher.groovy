@@ -6,9 +6,9 @@
 
 import spock.lang.Specification
 import whelk.importer.MySQLLoader
-import whelk.tools.MarcFrameConvertingActor
-import whelk.tools.PostgresLoadfileWriter
-import whelk.tools.VCopyDataRow
+import whelk.actors.MarcFrameConvertingActor
+import whelk.PostgresLoadfileWriter
+import whelk.VCopyDataRow
 import whelk.util.PropertyLoader
 
 import java.sql.ResultSet

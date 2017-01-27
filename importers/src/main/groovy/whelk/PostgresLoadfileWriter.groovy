@@ -1,4 +1,4 @@
-package whelk.tools
+package whelk
 
 import groovy.sql.Sql
 import groovy.util.logging.Slf4j as Log
@@ -6,6 +6,11 @@ import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709Deserializer
 import whelk.converter.MarcJSONConverter
 import whelk.importer.MySQLLoader
+import whelk.actors.FileDumper
+import whelk.actors.StatsMaker
+import whelk.actors.StatsPrinter
+import whelk.util.LegacyIntegrationTools
+
 import java.sql.ResultSet
 import java.sql.Statement
 import groovyx.gpars.actor.DefaultActor
@@ -134,7 +139,7 @@ class PostgresLoadfileWriter {
             if (it.auth_id > 0) {
                 return [bibid: it.bib_id,
                         id   : it.auth_id,
-                        data : PostgresLoadfileWriter.getMarcDocMap(it.authdata as byte[])]
+                        data : getMarcDocMap(it.authdata as byte[])]
             } else return null
         }
     }
@@ -180,6 +185,50 @@ class PostgresLoadfileWriter {
                 return field.get("001")
         }
         return null
+    }
+
+    static Map handleRowGroup(List<VCopyDataRow> rows, marcFrameConverter) {
+        VCopyDataRow row = rows.last()
+
+        def authRecords = getAuthDocsFromRows(rows)
+        def document = null
+        Timestamp timestamp = row.updated >= row.created ? row.updated : row.created
+        Map doc = getMarcDocMap(row.data)
+        def controlNumber = getControlNumber(doc)
+        if (!isSuppressed(doc)) {
+            switch (row.collection) {
+                case 'auth':
+                    document = convertDocument(marcFrameConverter, doc, row.collection, row.created)
+                    break
+                case 'hold':
+                    document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
+                    break
+                case 'bib':
+                    SetSpecMatcher.matchAuthToBib(doc, authRecords)
+                    document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
+                    break
+            }
+            return [collection: row.collection, document: document, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber]
+        } else
+            return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber]
+    }
+
+    static Document convertDocument(converter, Map doc, String collection, Date created, List authData = null) {
+        if (doc && !isSuppressed(doc)) {
+            String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
+
+            def id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
+
+            Map convertedData = authData && authData.size() > 1 && collection != 'bib' ?
+                    converter.sendAndWait([doc: doc, id: id, spec: [oaipmhSetSpecs: authData]]) :
+                    converter.sendAndWait([doc: doc, id: id, spec: null])
+            Document document = new Document(convertedData)
+            document.created = created
+            return document
+        } else {
+            println "is suppresse: ${isSuppressed(doc)}"
+            return null
+        }
     }
 
 

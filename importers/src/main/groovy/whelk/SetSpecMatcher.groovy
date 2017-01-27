@@ -1,4 +1,4 @@
-package whelk.tools
+package whelk
 
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j as Log

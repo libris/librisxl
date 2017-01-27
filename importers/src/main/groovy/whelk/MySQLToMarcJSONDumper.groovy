@@ -1,4 +1,4 @@
-package whelk.tools
+package whelk
 
 import groovy.transform.CompileStatic
 

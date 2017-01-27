@@ -1,7 +1,6 @@
-package whelk.tools
+package whelk.actors
 
 import groovyx.gpars.actor.DefaultActor
-import whelk.util.Tools
 
 /**
  * Created by theodortolstoy on 2017-01-11.

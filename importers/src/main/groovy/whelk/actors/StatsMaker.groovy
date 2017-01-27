@@ -1,10 +1,12 @@
-package whelk.tools
+package whelk.actors
 
 import groovy.util.logging.Slf4j
 import groovyx.gpars.actor.DefaultActor
+import whelk.SetSpecMatcher
+import whelk.PostgresLoadfileWriter
+import whelk.VCopyDataRow
 
 import java.nio.file.Paths
-import java.sql.Timestamp
 
 /**
  * Created by theodortolstoy on 2017-01-11.
