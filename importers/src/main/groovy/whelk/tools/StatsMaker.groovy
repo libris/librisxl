@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j
 import groovyx.gpars.actor.DefaultActor
 
 import java.nio.file.Paths
+import java.sql.Timestamp
 
 /**
  * Created by theodortolstoy on 2017-01-11.
@@ -62,100 +63,70 @@ class StatsMaker extends DefaultActor {
     @Override
     protected void act() {
         loop {
-            react { argument ->
-                def doc = argument?.doc
-                List allAuthRecords = argument?.authData
+            react { List<VCopyDataRow> argument ->
+
+                VCopyDataRow row = argument.last()
+                def allAuthRecords = PostgresLoadfileWriter.getAuthDocsFromRows(argument)
+                Map doc = PostgresLoadfileWriter.getMarcDocMap(row.data)
                 if (doc == null)
                     docIsNull++
+
                 if (!SetSpecMatcher.hasValidAuthRecords(allAuthRecords))
                     lacksValidAuthRecords++
+
                 if (doc != null && SetSpecMatcher.hasValidAuthRecords(allAuthRecords)) {
+
+                    def matchResults = SetSpecMatcher.matchAuthToBib(doc, allAuthRecords, true)
+
                     List authRecords = allAuthRecords.findAll { authRecord ->
                         !SetSpecMatcher.ignoredAuthFields.contains(authRecord.field)
                     }
 
-                    //int ignoredAuthRecords = allAuthRecords.findAll { authRecord -> SetSpecMatcher.ignoredAuthFields.contains(authRecord.field) }.size()
+                    def uncertainMatches = matchResults.findAll { match ->
+                        ((match.hasOnlyDiff || match.hasOnlyReverseDiff || match.hasDoubleDiff)
+                                && !match.hasMisMatchOnA && !match.isMatch)
+                    }
 
-                    def groupedAuthRecords = SetSpecMatcher.prepareAuthRecords(authRecords)
-                    def groupedBibFields = SetSpecMatcher.prepareBibRecords(doc, SetSpecMatcher.fieldRules)
-
-                    /*
-                    Saved for later use
-                    def possibleBibFieldsFromSetSpec =
-                            SetSpecMatcher.authLinkableFields.findAll { f ->
-                                authRecords.collect { a -> a.field }.contains(f.authfield)
-                            }.collect { a -> a.bibField }
-
-                    def linkableBibFields =
-                            groupedBibFields.collectMany { c ->
-                                c.value.collect { it.keySet()[0] }
-                            }
-
-                    //def bibFieldsWithoutAuthField = linkableBibFields.findAll { f -> !possibleBibFieldsFromSetSpec.contains(f) }
-                    */
-                    groupedAuthRecords.each { authorityGroup ->
-                        def bibFieldGroup = groupedBibFields.find { field ->
-                            field.key == authorityGroup.key
-                        }
-                        if (!bibFieldGroup?.value) {
-                            missingBibFields++
-                            // def file = new File("/missingBibFields.tsv")
-                            // file << "${authorityGroup?.key}\t ${bibFieldsWithoutAuthField} \t${setSpecs.first()?.bibid} \t${setSpecs.first()?.id} \t  http://libris.kb.se/bib/${setSpecs.first()?.bibid}?vw=full&tab3=marc \t http://libris.kb.se/auth/${setSpecs.first()?.id}\n"
-                        } else {
-                            //println "authority Group: ${authorityGroup?.key}, AuthFields: ${groupedAuthRecords.count { it.value }} against  ${bibFieldGroup?.key}, Bib Fields: ${bibFieldGroup?.value.count { it }} "
-                            authorityGroup.value.each { spec ->
-                                // println spec.normalizedSubfields
-
-                                def diffs = SetSpecMatcher.getSetDiffs(spec, bibFieldGroup.value, SetSpecMatcher.fieldRules, doc)
-
-                                def completeMatches = diffs.findAll { match -> match.isMatch }
-
-                                def misMatchesOnA = diffs.findAll { match -> match.hasMisMatchOnA }
-
-                                def uncertainMatches = diffs.findAll { match ->
-                                    ((match.hasOnlyDiff || match.hasOnlyReverseDiff || match.hasDoubleDiff)
-                                            && !match.hasMisMatchOnA && !match.isMatch)
-                                }
-
-                                diffs.findAll { match ->
-                                    !match.hasOnlyDiff &&
-                                            !match.hasOnlyReverseDiff &&
-                                            !match.hasDoubleDiff &&
-                                            !match.hasMisMatchOnA &&
-                                            !match.isMatch
-                                }.each { diff ->
-                                    println "miss! Diff: ${diff.inspect()}"
-                                }
+                    matchResults.findAll { match ->
+                        !match.hasOnlyDiff &&
+                                !match.hasOnlyReverseDiff &&
+                                !match.hasDoubleDiff &&
+                                !match.hasMisMatchOnA &&
+                                !match.isMatch
+                    }.each { diff ->
+                        println "miss! Diff: ${diff.inspect()}"
+                    }
 
 
-                                resultMap.possibleMatches += 1
+                    def completeMatches = matchResults.findAll { match -> match.isMatch }
 
-                                resultMap.matches += completeMatches.size()
-                                resultMap.MisMatchesOnA += misMatchesOnA.size()
-                                resultMap.bibInAukt += uncertainMatches.count { match ->
-                                    match.hasOnlyDiff
-                                }
-                                resultMap.auktInBib += uncertainMatches.count { match ->
-                                    match.hasOnlyReverseDiff
-                                }
-                                resultMap.doubleDiff += uncertainMatches.count { match ->
-                                    match.hasDoubleDiff
-                                }
+                    def misMatchesOnA = matchResults.findAll { match -> match.hasMisMatchOnA }
 
-                                resultMap.specAndDoc++
-                                resultMap.allAuth = allAuthRecords.size()
-                                resultMap.ignoredSetSpecs = allAuthRecords.size() - authRecords.size()
-                                resultMap.MissingBibFields = missingBibFields
 
-                                if (uncertainMatches.any()) {
-                                    printDiffResultsToFile(uncertainFileWriter, uncertainMatches, doc, authRecords)
-                                }
-                                if (completeMatches.any()) {
-                                    printDiffResultsToFile(completeFileWriter, completeMatches, doc, authRecords)
+                    resultMap.possibleMatches += matchResults.count { it }
 
-                                }
-                            }
-                        }
+                    resultMap.matches += completeMatches.size()
+                    resultMap.MisMatchesOnA += misMatchesOnA.size()
+                    resultMap.bibInAukt += uncertainMatches.count { match ->
+                        match.hasOnlyDiff
+                    }
+                    resultMap.auktInBib += uncertainMatches.count { match ->
+                        match.hasOnlyReverseDiff
+                    }
+                    resultMap.doubleDiff += uncertainMatches.count { match ->
+                        match.hasDoubleDiff
+                    }
+
+                    resultMap.specAndDoc++
+                    resultMap.allAuth = allAuthRecords.size()
+                    resultMap.ignoredSetSpecs = allAuthRecords.size() - authRecords.size()
+                    resultMap.MissingBibFields = missingBibFields
+
+                    if (uncertainMatches.any()) {
+                        printDiffResultsToFile(uncertainFileWriter, uncertainMatches, doc, authRecords)
+                    }
+                    if (completeMatches.any()) {
+                        printDiffResultsToFile(completeFileWriter, completeMatches, doc, authRecords)
                     }
 
                     if (++counter % 10000 == 0) {

@@ -43,8 +43,8 @@ class StatsPrinter extends DefaultActor {
         def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
         if (elapsedSecs > 0) {
             def docsPerSec = records / elapsedSecs
-            def message = "Working. Currently ${rows} rows recieved and ${records} records sent. ${suppressed} suppressed. Crunching ${docsPerSec} records / s."
-            println message
+            def message = "Working. Currently ${rows} rows recieved and ${records} records sent. Crunching ${docsPerSec} records / s."
+                println message
 
 
         }

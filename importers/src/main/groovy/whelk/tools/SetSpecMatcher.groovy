@@ -44,7 +44,8 @@ class SetSpecMatcher {
         })
     }
 
-    static void matchAuthToBib(Map doc, List allAuthRecords) {
+    static matchAuthToBib(Map doc, List allAuthRecords,boolean generateStats = false) {
+        List statsResults = []
         if (doc != null && hasValidAuthRecords(allAuthRecords)) {
             List authRecords = allAuthRecords.findAll { it -> !ignoredAuthFields.contains(it.field) }
 
@@ -56,14 +57,20 @@ class SetSpecMatcher {
                 def bibFieldGroup = groupedBibFields.find { it.key == specGroup.key }
                 if (bibFieldGroup?.value) {
                     specGroup.value.each { spec ->
-                        doMatch(spec, bibFieldGroup.value, fieldRules, doc)
+                        if(generateStats)
+                            statsResults.addAll(doMatch(spec, bibFieldGroup.value, fieldRules, doc,true))
+                        else
+                            doMatch(spec, bibFieldGroup.value, fieldRules, doc)
+
                     }
                 }
             }
         }
+        return statsResults
     }
 
-    static void doMatch(setSpec, bibFieldGroup, Map fieldRules, Map doc) {
+    static doMatch(setSpec, bibFieldGroup, Map fieldRules, Map doc, boolean generateStats = false) {
+        List<Map> statsResults = []
         bibFieldGroup.each { field ->
             Map rule = fieldRules[setSpec.field] as Map
             if (rule) {
@@ -80,19 +87,22 @@ class SetSpecMatcher {
                 } == bibSet.count { it })
                 if (isMatch) {
                     Map matchedField = doc.fields.find { it -> it == field } as Map
+                    log.trace "Matched! bib:${setSpec.bibid} auth: ${setSpec.id} ${matchedField}"
                     def hasLinkedAuthId = matchedField[matchedField.keySet()[0]].subfields.any { it -> it.keySet().first() == '0' }
                     if (hasLinkedAuthId) {
                         def linkedAuthIds = matchedField[matchedField.keySet()[0]].subfields.findAll { it -> it.keySet().first() == '0' }.collect { Map it -> it[it.keySet()[0]] }
                         if (!linkedAuthIds.contains(setSpec.id))
-                            log.info "Bib ${setSpec.bibid} has different subfield 0 (${linkedAuthIds}) than matched auth id (${setSpec.id}) ${matchedField}"
-                    } else {
-                        matchedField[matchedField.keySet()[0]].subfields.add(['0': setSpec.id])
-                        log.trace "Matched! bib:${setSpec.bibid} auth: ${setSpec.id} ${matchedField}"
+                            log.info "Bib ${setSpec.bibid} already has a different subfield 0 (${linkedAuthIds}) than matched auth id. Another subfield 0 will be added (${setSpec.id}) ${matchedField}"
                     }
-                }
-            }
+                    matchedField[matchedField.keySet()[0]].subfields.add(['0': setSpec.id])
+                    log.trace "Addded ${setSpec.id} as subfield 0 to  bib:${setSpec.bibid} on field ${matchedField}"
 
+                }
+                if (generateStats)
+                    statsResults.add(composeStatsResult(diff, reverseDiff, overlap, setSpec, bibSet, authSet, isMatch, doc, field))
+            }
         }
+        return statsResults
     }
 
     /**
@@ -143,67 +153,44 @@ class SetSpecMatcher {
         }
     }
 
-    /**
-     * Calculates different set differences between an authorityRecord and a group of bibliographic fields.
-     * @param setSpec
-     * @param bibFieldGroup
-     * @param fieldRules
-     * @param doc
-     * @return a list of all set differences and some data around that
-     */
-    static List<Map> getSetDiffs(Map setSpec, List<Map> bibFieldGroup, Map fieldRules, Map doc) {
-        bibFieldGroup.collect { Map field ->
+    static Map composeStatsResult(diff, reverseDiff, overlap, setSpec, bibSet, authSet, isMatch, doc, field) {
+        try {
+            boolean hasMisMatchOnA = reverseDiff.find { it -> it.a } != null && diff.find { it -> it.a } != null
+            boolean hasOnlyDiff = diff.count { it } > 0 && reverseDiff.count { it } == 0
+            boolean hasOnlyReverseDiff = diff.count { it } == 0 && reverseDiff.count { it } > 0
+            boolean hasDoubleDiff = diff.count { it } > 0 && reverseDiff.count { it } > 0
 
-            Map rule = fieldRules[setSpec.field] as Map
-            if (rule) {
-                List<Map> bibSubFields = normaliseSubfields(field[field.keySet()[0]].subfields).findAll {
-                    !rule.subFieldsToIgnore.bib.contains(it.keySet()[0])
-                }
-                Set bibSet = bibSubFields.toSet()
-                Set authSet = setSpec.normalizedSubfields.toSet()
-                Set diff = authSet - bibSet
-                Set reverseDiff = bibSet - authSet
-                Set overlap = bibSet.intersect(authSet)
-                boolean isMatch = (diff.count { it } == 0 &&
-                        reverseDiff.count { it } == 0)
-                boolean hasMisMatchOnA = reverseDiff.find { it -> it.a } != null && diff.find { it -> it.a } != null
-                boolean hasOnlyDiff = diff.count { it } > 0 && reverseDiff.count { it } == 0
-                boolean hasOnlyReverseDiff = diff.count {
-                    it
-                } == 0 && reverseDiff.count { it } > 0
-                boolean hasDoubleDiff = diff.count {
-                    it
-                } > 0 && reverseDiff.count { it } > 0
+            boolean partialMatchOnSubfieldD = getPartialMatchOnSubfieldD(diff, reverseDiff, setSpec.field)
 
-                boolean partialMatchOnSubfieldD = getPartialMatchOnSubfieldD(diff, reverseDiff, setSpec.field)
-                Map returnMap = [
-                        diff                  : diff,
-                        reverseDiff           : reverseDiff,
-                        bibField              : field.keySet().first(),
-                        spec                  : setSpec,
-                        errorMessage          : "",
-                        overlap               : overlap,
-                        numBibFields          : bibSet.count { it },
-                        numAuthFields         : authSet.count { it },
-                        subfieldsInOverlap    : overlap.collect { it -> it.keySet().first() }.toSorted().join(''),
-                        subfieldsInDiff       : diff.collect { it -> it.keySet().first() }.toSorted().join(''),
-                        subfieldsInReversediff: reverseDiff.collect { it -> it.keySet().first() }.toSorted().join(''),
-                        isMatch               : isMatch,
-                        hasMisMatchOnA        : hasMisMatchOnA,
-                        hasOnlyDiff           : hasOnlyDiff,
-                        hasOnlyReverseDiff    : hasOnlyReverseDiff,
-                        hasDoubleDiff         : hasDoubleDiff,
-                        bibHas035a            : getHas035a(doc),
-                        bibHas240a            : getHas240a(doc),
-                        partialD              : partialMatchOnSubfieldD,
-                        bibSet                : bibSet,
-                        authSet               : authSet
-
-
-                ]
-                returnMap.type = getMatchType(returnMap)
-                return returnMap
-            } else return null
+            def result = [
+                    diff                  : diff,
+                    reverseDiff           : reverseDiff,
+                    bibField              : field.keySet().first(),
+                    spec                  : setSpec,
+                    errorMessage          : "",
+                    overlap               : overlap,
+                    numBibFields          : bibSet.count { it },
+                    numAuthFields         : authSet.count { it },
+                    subfieldsInOverlap    : overlap.collect { it -> it.keySet().first() }.toSorted().join(''),
+                    subfieldsInDiff       : diff.collect { it -> it.keySet().first() }.toSorted().join(''),
+                    subfieldsInReversediff: reverseDiff.collect { it -> it.keySet().first() }.toSorted().join(''),
+                    isMatch               : isMatch,
+                    hasMisMatchOnA        : hasMisMatchOnA,
+                    hasOnlyDiff           : hasOnlyDiff,
+                    hasOnlyReverseDiff    : hasOnlyReverseDiff,
+                    hasDoubleDiff         : hasDoubleDiff,
+                    bibHas035a            : getHas035a(doc),
+                    bibHas240a            : getHas240a(doc),
+                    partialD              : partialMatchOnSubfieldD,
+                    bibSet                : bibSet,
+                    authSet               : authSet
+            ]
+            result.type = getMatchType(result)
+            return result
+        }
+        catch (any) {
+            println "Could not generate stats Map"
+            return null
         }
     }
 

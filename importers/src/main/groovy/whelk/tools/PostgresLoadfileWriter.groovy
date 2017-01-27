@@ -1,22 +1,11 @@
 package whelk.tools
 
-import groovy.json.JsonBuilder
-import groovy.sql.GroovyResultSet
 import groovy.sql.Sql
 import groovy.util.logging.Slf4j as Log
-import groovyx.gpars.GParsPool
-import groovyx.gpars.actor.Actors
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709Deserializer
-import whelk.Document
 import whelk.converter.MarcJSONConverter
-import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
-import whelk.util.LegacyIntegrationTools
-
-import java.nio.charset.Charset
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.sql.ResultSet
 import java.sql.Statement
 import groovyx.gpars.actor.DefaultActor
@@ -30,81 +19,19 @@ import java.sql.Timestamp
 class PostgresLoadfileWriter {
 
     static void dumpAuthStats(String folderName, String connectionUrl) {
+        def collection = 'bib'
         StatsMaker statsMaker = new StatsMaker()
         statsMaker.start()
-        StatsPrinter statsPrinter = new StatsPrinter()
-        statsPrinter.start()
-
-        Sql sql = prepareSql(connectionUrl)
-        def currentChunk = []
-        List<Map> previousRowsInGroup = []
-        Map previousRow = null
-        Map currentRow
-        def collection = 'bib'
-
-        //GParsPool.withPool { pool ->
-        sql.eachRow(MySQLLoader.selectByMarcType[collection], [0]) { ResultSet resultSet ->
-            try {
-                statsPrinter << [type: 'row']
-                currentRow = [data      : resultSet.getBytes('data'),
-                              created   : resultSet.getTimestamp('create_date'),
-                              collection: collection,
-                              bib_id    : resultSet.getInt('bib_id'),
-                              auth_id   : collection == 'bib' ? resultSet.getInt('auth_id') : 0,
-                              authdata  : collection == 'bib' ? resultSet.getBytes('auth_data') : null,
-                              sigel     : collection == "hold" ? resultSet.getString("shortname") : null]
-
-                switch (previousRow) {
-                    case null:                              //first run
-                        previousRow = currentRow
-                        previousRowsInGroup.add(currentRow)
-                        break
-                    case { it.bib_id == currentRow.bib_id }://Same bib record
-                        previousRowsInGroup.add(currentRow)
-                        break
-                    default:
-                        //new record
-                        currentChunk.add(previousRowsInGroup)
-                        if (currentChunk.size() >= 500) {
-                            currentChunk.each { c ->
-
-                                Map m = [doc     : getMarcDocMap(c.last().data as byte[]),
-                                         authData: getAuthDocsFromRows(c as ArrayList)]
-                                statsMaker.sendAndWait(m)
-                                statsPrinter << [type: 'record']
-
-                            }
-                            currentChunk = []
-                        }
-                        previousRow = currentRow
-                        previousRowsInGroup = []
-                        previousRowsInGroup.add(currentRow)
-                        break
-                }
-
-            }
-            catch (any) {
-                println any.message
-            }
-        }
-        //last ones
-        currentChunk.each { c ->
-            Map m = [doc     : getMarcDocMap(c.last().data as byte[]),
-                     authData: getAuthDocsFromRows(c as ArrayList)]
-            statsMaker.sendAndWait(m)
-            statsPrinter << [type: 'record']
-        }
-        statsPrinter << [type: 'record']
-        // }
-
-
+        String sqlQuery = MySQLLoader.selectByMarcType[collection]
+        List<Object> queryParameters = [0]
+        dump(statsMaker, collection, connectionUrl, sqlQuery, queryParameters)
+        statsMaker.stop()
     }
 
     static void "import"(DefaultActor actor, String collection, String connectionUrl, Date date) {
         String sqlQuery = MySQLLoader.selectHarvestByMarcType[collection]
         String dateString = date.toTimestamp().toString()
         List<Object> queryParameters = [0, dateString, dateString]
-
         dump(actor, collection, connectionUrl, sqlQuery, queryParameters)
     }
 
@@ -117,14 +44,10 @@ class PostgresLoadfileWriter {
     static void dumpGpars(String exportFileName, String collection, String connectionUrl) {
         String sqlQuery = MySQLLoader.selectByMarcType[collection]
         List<Object> queryParameters = [0]
-
         def fileDumper = new FileDumper(exportFileName)
         fileDumper.start()
-
-
         dump(fileDumper, collection, connectionUrl, sqlQuery, queryParameters)
         fileDumper.stop()
-
     }
 
 
@@ -136,13 +59,10 @@ class PostgresLoadfileWriter {
         statsPrinter.start()
 
         try {
-            def converter = new MarcFrameConvertingActor()
-            converter.start()
             def currentChunk = []
             List<VCopyDataRow> previousRowsInGroup = []
             VCopyDataRow previousRow = null
             VCopyDataRow currentRow
-            //GParsPool.withPool { pool ->
 
             sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
                 statsPrinter.sendAndWait([type: 'row'])
@@ -159,23 +79,8 @@ class PostgresLoadfileWriter {
                         currentChunk.add(previousRowsInGroup)
                         if (currentChunk.count { it } == 500) {
                             currentChunk.each { c ->
-
-                                try {
-                                    Map a = handleRowGroup(c, converter)
-                                    if (a && !a.isSuppressed) {
-                                        suppliedActor.sendAndWait(a)
-                                        statsPrinter.sendAndWait([type: 'record'])
-                                    }
-                                    else
-                                        statsPrinter.sendAndWait([type: 'suppressed'])
-                                }
-                                catch (any) {
-                                    println any.message
-                                    println any.stackTrace
-                                    println collection
-                                    println c?.first()?.bib_id
-                                    throw any // don't want to miss any records
-                                }
+                                suppliedActor.sendAndWait(c)
+                                statsPrinter.sendAndWait([type: 'record'])
                             }
                             currentChunk = []
                         }
@@ -185,27 +90,11 @@ class PostgresLoadfileWriter {
                         break
                 }
             }
-            println "Last ones."
+            println "Done reading from DB. Processing last ${currentChunk.count { it }} ones."
             currentChunk.each { c ->
-
-                try {
-                    Map a = handleRowGroup(c, converter)
-                    if (a && !a.isSuppressed) {
-                        suppliedActor.sendAndWait(a)
-                        statsPrinter.sendAndWait([type: 'record'])
-                    }
-                    else
-                        statsPrinter.sendAndWait([type: 'suppressed'])
-                }
-                catch (any) {
-                    println any.message
-                    println any.stackTrace
-                    throw any // don't want to miss any records
-
-                }
-
+                suppliedActor.sendAndWait(c)
+                statsPrinter.sendAndWait([type: 'record'])
             }
-            //} //With pool
         }
         catch (any) {
             println any.message
@@ -216,45 +105,6 @@ class PostgresLoadfileWriter {
         println "Done."
     }
 
-    static getAuthDocsFromRows(List<VCopyDataRow> rows) {
-        rows.collect { it ->
-            if (it.auth_id > 0) {
-                return [bibid: it.bib_id,
-                        id   : it.auth_id,
-                        data : getMarcDocMap(it.authdata as byte[])]
-            } else return null
-        }
-    }
-
-    static Map handleRowGroup(List<VCopyDataRow> rows, marcFrameConverter) {
-        try {
-            VCopyDataRow row = rows.last()
-            def authRecords = getAuthDocsFromRows(rows)
-            def document = null
-            Timestamp timestamp = row.updated >= row.created ? row.updated : row.created
-            Map doc = getMarcDocMap(row.data)
-            if (!isSuppressed(doc)) {
-                switch (row.collection) {
-                    case 'auth':
-                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created)
-                        break
-                    case 'hold':
-                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
-                        break
-                    case 'bib':
-                        SetSpecMatcher.matchAuthToBib(doc, authRecords)
-                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
-                        break
-                }
-                return [collection: row.collection, document: document, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp]
-            } else
-                return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp]
-        }
-        catch (any) {
-            println any.message
-        }
-
-    }
 
     static Sql prepareSql(String connectionUrl) {
         def sql = Sql.newInstance(connectionUrl, "com.mysql.jdbc.Driver")
@@ -279,21 +129,13 @@ class PostgresLoadfileWriter {
         }
     }
 
-    static Document convertDocument(converter, Map doc, String collection, Date created, List authData = null) {
-        if (doc && !isSuppressed(doc)) {
-            String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
-
-            def id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
-
-            Map convertedData = authData && authData.size() > 1 && collection != 'bib' ?
-                    converter.sendAndWait([doc: doc, id: id, spec: [oaipmhSetSpecs: authData]]) :
-                    converter.sendAndWait([doc: doc, id: id, spec: null])
-            Document document = new Document(convertedData)
-            document.created = created
-            return document
-        } else {
-            println "is suppresse: ${isSuppressed(doc)}"
-            return null
+    static getAuthDocsFromRows(List<VCopyDataRow> rows) {
+        rows.collect { it ->
+            if (it.auth_id > 0) {
+                return [bibid: it.bib_id,
+                        id   : it.auth_id,
+                        data : PostgresLoadfileWriter.getMarcDocMap(it.authdata as byte[])]
+            } else return null
         }
     }
 
@@ -314,7 +156,7 @@ class PostgresLoadfileWriter {
         return specs
     }
 
-    private static isSuppressed(Map doc) {
+    static isSuppressed(Map doc) {
         def fields = doc.get("fields")
         for (def field : fields) {
             if (field.get("599") != null) {
@@ -331,7 +173,7 @@ class PostgresLoadfileWriter {
         return false
     }
 
-    private static String getControlNumber(Map doc) {
+    static String getControlNumber(Map doc) {
         def fields = doc.get("fields")
         for (def field : fields) {
             if (field.get("001") != null)

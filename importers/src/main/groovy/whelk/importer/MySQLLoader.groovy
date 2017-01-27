@@ -118,7 +118,7 @@ class MySQLLoader {
         if (record) {
 
             doc = MarcJSONConverter.toJSONMap(record)
-            if (!recordId.equals(currentRecordId)) { //TODO: What is this construct for?
+            if (!recordId.equals(currentRecordId)) {
                 if (doc) {
                     handler.handle(doc, resultSet.getTimestamp("create_date"))
                 }
