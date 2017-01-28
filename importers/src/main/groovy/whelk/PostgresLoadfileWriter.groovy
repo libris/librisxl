@@ -196,19 +196,27 @@ class PostgresLoadfileWriter {
         Map doc = getMarcDocMap(row.data)
         def controlNumber = getControlNumber(doc)
         if (!isSuppressed(doc)) {
-            switch (row.collection) {
-                case 'auth':
-                    document = convertDocument(marcFrameConverter, doc, row.collection, row.created)
-                    break
-                case 'hold':
-                    document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
-                    break
-                case 'bib':
-                    SetSpecMatcher.matchAuthToBib(doc, authRecords)
-                    document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
-                    break
+            try {
+                switch (row.collection) {
+                    case 'auth':
+                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created)
+                        break
+                    case 'hold':
+                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
+                        break
+                    case 'bib':
+                        SetSpecMatcher.matchAuthToBib(doc, authRecords)
+                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
+                        break
+                }
+                return [collection: row.collection, document: document, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber]
             }
-            return [collection: row.collection, document: document, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber]
+            catch (any){
+                println "ALLVARLIGT FEL! ${any.message}"
+                println " ${any.stackTrace}"
+                println "Bibid: ${row.bib_id}"
+            }
+
         } else
             return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber]
     }
