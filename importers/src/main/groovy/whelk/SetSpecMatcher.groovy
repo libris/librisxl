@@ -44,7 +44,7 @@ class SetSpecMatcher {
         })
     }
 
-    static matchAuthToBib(Map doc, List allAuthRecords,boolean generateStats = false) {
+    static matchAuthToBib(Map doc, List allAuthRecords, boolean generateStats = false) {
         List statsResults = []
         if (doc != null && hasValidAuthRecords(allAuthRecords)) {
             List authRecords = allAuthRecords.findAll { it -> !ignoredAuthFields.contains(it.field) }
@@ -57,8 +57,8 @@ class SetSpecMatcher {
                 def bibFieldGroup = groupedBibFields.find { it.key == specGroup.key }
                 if (bibFieldGroup?.value) {
                     specGroup.value.each { spec ->
-                        if(generateStats)
-                            statsResults.addAll(doMatch(spec, bibFieldGroup.value, fieldRules, doc,true))
+                        if (generateStats)
+                            statsResults.addAll(doMatch(spec, bibFieldGroup.value, fieldRules, doc, true))
                         else
                             doMatch(spec, bibFieldGroup.value, fieldRules, doc)
 
@@ -137,18 +137,20 @@ class SetSpecMatcher {
 
         authRecords.each { Map authRecord ->
             authRecord = composeAuthData(authRecord)
-            if (!fieldRules[authRecord.field])
-                throw new Exception("No rules for field ${authRecord.field}")
-            if (!fieldRules[authRecord.field].subFieldsToIgnore)
-                throw new Exception("No subFieldsToIgnore for field ${authRecord.field}")
-
-            authRecord.put("normalizedSubfields",
-                    normaliseSubfields(authRecord.subfields)
-                            .findAll { it -> !fieldRules[authRecord.field].subFieldsToIgnore.auth.contains(it.keySet()[0]) }
-                            .collect { it -> it })
+            if (!ignoredAuthFields.contains(authRecord.field) &&
+                    fieldRules[authRecord.field] != null &&
+                    fieldRules[authRecord.field].subFieldsToIgnore != null) {
+                authRecord.put("normalizedSubfields",
+                        normaliseSubfields(authRecord.subfields)
+                                .findAll { it -> !fieldRules[authRecord.field].subFieldsToIgnore.auth.contains(it.keySet()[0]) }
+                                .collect { it -> it })
+            }
         }
-        return authRecords.groupBy { it.field }
-                .toSorted {
+
+        return authRecords.groupBy {
+            it.field
+        }
+        .toSorted {
             -(it.hasProperty('normalizedSubfields') ? it.normalizedSubfields.count { it } : 0)
         }
     }
@@ -194,13 +196,13 @@ class SetSpecMatcher {
         }
     }
 
-    /**
-     * Finds out if there is a mismatch in 100 $d but if the first four digits are the same (death date is missing)
-     * @param diff
-     * @param reverseDiff
-     * @param specField
-     * @return
-     */
+/**
+ * Finds out if there is a mismatch in 100 $d but if the first four digits are the same (death date is missing)
+ * @param diff
+ * @param reverseDiff
+ * @param specField
+ * @return
+ */
     static boolean getPartialMatchOnSubfieldD(Set diff, Set reverseDiff, specField) {
         boolean partialD = false
         try {
