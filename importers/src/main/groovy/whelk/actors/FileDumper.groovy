@@ -21,7 +21,7 @@ class FileDumper extends DefaultActor {
     BufferedWriter identifiersWriter
     MarcFrameConvertingActor converter
 
-    FileDumper(String exportFileName){
+    FileDumper(String exportFileName) {
         mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"))
         identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"))
         converter = new MarcFrameConvertingActor()
@@ -30,7 +30,7 @@ class FileDumper extends DefaultActor {
 
 
     void afterStart() {
-       println "FileDumper started."
+        println "FileDumper started."
     }
 
     void afterStop() {
@@ -45,41 +45,40 @@ class FileDumper extends DefaultActor {
         loop {
             react { List<VCopyDataRow> argument ->
                 try {
-                        Map record = PostgresLoadfileWriter.handleRowGroup(argument, converter)
-                       if(record && !record.isSuppressed) {
+                    Map record = PostgresLoadfileWriter.handleRowGroup(argument, converter)
+                    if (record && !record.isSuppressed) {
 
-                           Document doc = record.document
-                           String coll = record.collection
-                           final String delimiter = '\t'
-                           final String nullString = "\\N"
+                        Document doc = record.document
+                        String coll = record.collection
+                        final String delimiter = '\t'
+                        final String nullString = "\\N"
 
-                           final delimiterString = new String(delimiter)
+                        final delimiterString = new String(delimiter)
 
-                           List<String> identifiers = doc.recordIdentifiers
+                        List<String> identifiers = doc.recordIdentifiers
 
-                           mainTableWriter.write("${doc.shortId}\t" +
-                                   "${doc.dataAsString.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
-                                   "${coll.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
-                                   "${"vcopy"}\t" +
-                                   "${nullString}\t" +
-                                   "${doc.checksum.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
-                                   "${doc.created}\n")
+                        mainTableWriter.write("${doc.shortId}\t" +
+                                "${doc.dataAsString.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
+                                "${coll.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
+                                "${"vcopy"}\t" +
+                                "${nullString}\t" +
+                                "${doc.checksum.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
+                                "${doc.created}\n")
 
-                           for (String identifier : identifiers) {
-                               identifiersWriter.write("${doc.shortId}\t${identifier}\n")
-                           }
-                           reply true
-                       }
-                        else {
-                           println "Suppressed record"
-                           return true
-                       }
+                        for (String identifier : identifiers) {
+                            identifiersWriter.write("${doc.shortId}\t${identifier}\n")
+                        }
+                        reply true
+                    } else {
+                        println "Suppressed record"
+                        reply true
+                    }
                 }
                 catch (Exception any) {
-                    log.error("Error in FileDumper",any)
+                    log.error("Error in FileDumper", any)
                     return false
                 }
-                 }
+            }
         }
     }
 
