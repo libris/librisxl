@@ -70,8 +70,10 @@ class FileDumper extends DefaultActor {
                            }
                            reply true
                        }
-                        else
+                        else {
                            println "Suppressed record"
+                           return true
+                       }
                 }
                 catch (Exception any) {
                     log.error("Error in FileDumper",any)
