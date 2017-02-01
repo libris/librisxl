@@ -15,7 +15,7 @@ import java.nio.file.Paths
  * Created by theodortolstoy on 2017-01-24.
  */
 @Slf4j
-class FileDumper extends DefaultActor {
+    class FileDumper extends DefaultActor {
 
     BufferedWriter mainTableWriter
     BufferedWriter identifiersWriter
@@ -71,12 +71,12 @@ class FileDumper extends DefaultActor {
                         reply true
                     } else {
                         println "Suppressed record"
-                        reply true
+                        reply false
                     }
                 }
                 catch (Exception any) {
                     log.error("Error in FileDumper", any)
-                    return false
+                    reply false
                 }
             }
         }

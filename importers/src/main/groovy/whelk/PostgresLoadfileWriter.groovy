@@ -63,13 +63,14 @@ class PostgresLoadfileWriter {
         StatsPrinter statsPrinter = new StatsPrinter()
         statsPrinter.start()
 
-        try {
-            def currentChunk = []
-            List<VCopyDataRow> previousRowsInGroup = []
-            VCopyDataRow previousRow = null
-            VCopyDataRow currentRow
 
-            sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
+        def currentChunk = []
+        List<VCopyDataRow> previousRowsInGroup = []
+        VCopyDataRow previousRow = null
+        VCopyDataRow currentRow
+
+        sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
+            try {
                 statsPrinter.sendAndWait([type: 'row'])
                 currentRow = new VCopyDataRow(resultSet, collection)
                 switch (previousRow) {
@@ -95,17 +96,18 @@ class PostgresLoadfileWriter {
                         break
                 }
             }
-            println "Done reading from DB. Processing last ${currentChunk.count { it }} ones."
-            currentChunk.each { c ->
-                suppliedActor.sendAndWait(c)
-                statsPrinter.sendAndWait([type: 'record'])
+            catch (any) {
+                println any.message
+                println any.stackTrace
+                //throw any // dont want to miss any records
             }
         }
-        catch (any) {
-            println any.message
-            println any.stackTrace
-            throw any // dont want to miss any records
+        println "Done reading from DB. Processing last ${currentChunk.count { it }} ones."
+        currentChunk.each { c ->
+            suppliedActor.sendAndWait(c)
+            statsPrinter.sendAndWait([type: 'record'])
         }
+
         statsPrinter.sendAndWait([type: 'report'])
         println "Done."
     }
@@ -211,10 +213,11 @@ class PostgresLoadfileWriter {
                 }
                 return [collection: row.collection, document: document, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber]
             }
-            catch (any){
+            catch (any) {
                 println "ALLVARLIGT FEL! ${any.message}"
                 println " ${any.stackTrace}"
                 println "Bibid: ${row.bib_id}"
+                return [collection: row.collection, document: null, isSuppressed: true, isDeleted: false, timestamp: timestamp, controlNumber: "0"]
             }
 
         } else
@@ -242,30 +245,6 @@ class PostgresLoadfileWriter {
 
 }
 
-class VCopyDataRow {
-    byte[] data
-    boolean isDeleted
-    Timestamp created
-    Timestamp updated
-    String collection
-    int bib_id
-    int auth_id
-    byte[] authdata
-    String sigel
-
-
-    VCopyDataRow(ResultSet resultSet, String collection) {
-        data = resultSet.getBytes('data')
-        isDeleted = resultSet.getBoolean('deleted')
-        created = resultSet.getTimestamp('create_date')
-        updated = resultSet.getTimestamp('update_date')
-        this.collection = collection
-        bib_id = collection == 'bib' ? resultSet.getInt('bib_id') : 0
-        auth_id = collection == 'bib' ? resultSet.getInt('auth_id') : 0
-        authdata = collection == 'bib' ? resultSet.getBytes('auth_data') : null
-        sigel = collection == "hold" ? resultSet.getString("shortname") : null
-    }
-}
 
 
 

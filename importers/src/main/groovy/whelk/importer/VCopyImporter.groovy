@@ -30,6 +30,7 @@ class VCopyImporter {
         whelkSaver.start()
 
         PostgresLoadfileWriter.import(whelkSaver, collection, connectionUrl, vcopyIdsToImport)
+        whelkSaver.stop()
         return whelkSaver.importResult
     }
 
