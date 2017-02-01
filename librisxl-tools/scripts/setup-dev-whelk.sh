@@ -6,7 +6,7 @@ WORKDIR=$(pwd)/work
 
 usage () {
     cat <<EOF
-Usage: ./setup-dev-whelk.sh -n <NAME> -O <OAIPMH CREDENTIALS> [-D <DATABASE USER>] [-C <CREATEDB USER>]
+Usage: ./setup-dev-whelk.sh -n <NAME> [-D <DATABASE USER>] [-C <CREATEDB USER>]
 
     -n, --whelk-name
         Instance name. Used as database name and ElasticSearch index.
