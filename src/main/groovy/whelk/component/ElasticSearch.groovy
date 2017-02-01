@@ -218,8 +218,8 @@ class ElasticSearch implements Index {
 
         List musts = []
         if (queryString) {
-            musts << ['query_string' : ['query': queryString,
-                                        'default_operator': 'and']]
+            musts << ['simple_query_string' : ['query': queryString,
+                                               'default_operator': 'and']]
         }
 
         List reservedParameters = ['q', 'p', 'o', 'value', '_limit', '_offset']
