@@ -1,5 +1,7 @@
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/vcopyImporterServlet.log</file>
+        <append>true</append>
         <!-- encoders are assigned the type
              ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
         <encoder>
@@ -7,24 +9,8 @@
         </encoder>
     </appender>
 
-    <logger name="org.elasticsearch" level="warn"/>
-    <logger name="org.apache.camel" level="info"/>
-    <logger name="org.apache.jena.fuseki" level="warn"/>
-    <logger name="org.apache.camel.component.http4" level="warn"/>
-    <logger name="org.apache.camel.component.elasticsearch" level="warn"/>
-    <logger name="org.apache.activemq.camel.component" level="info"/>
-    <logger name="org.apache.activemq" level="warn"/>
-    <logger name="whelk.Document" level="info"/>
-    <logger name="whelk.component.PostgreSQLComponent" level="info"/>
-    <logger name="whelk.component.ElasticSearch" level="info"/>
-    <logger name="whelk.filter.JsonLDLinkExpander" level="info"/>
-    <logger name="whelk.importer.MySQLImporter" level="info"/>
-    <logger name="whelk.importer.ImporterMain" level="info"/>
-    <logger name="whelk.filter.LinkFinder" level="info"/>
-    <logger name="whelk.JsonLd" level="trace"/>
-
-    <root level=" info">
-        <appender-ref ref="STDOUT" />
+    <logger name="whelk" level="trace" />
+    <root level="trace">
+        <appender-ref ref="FILE" />
     </root>
 </configuration>
-
