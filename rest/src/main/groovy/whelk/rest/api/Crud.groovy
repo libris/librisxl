@@ -35,14 +35,12 @@ import static whelk.rest.api.HttpTools.getMajorContentType
 
 /**
  * Handles all GET/PUT/POST/DELETE requests against the backend.
- *
- * Created by markus on 2015-10-09.
  */
 @Log
 class Crud extends HttpServlet {
 
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
-    final static String DOCBASE_URI = "http://libris.kb.se/"
+    final static String DOCBASE_URI = "http://libris.kb.se/" // TODO: encapsulate and configure (LXL-260)
 
     enum FormattingType {
         FRAMED, EMBELLISHED, FRAMED_AND_EMBELLISHED, RAW
@@ -58,7 +56,12 @@ class Crud extends HttpServlet {
             "hold": "/sys/context/lib.jsonld"
     ]
     Whelk whelk
+
+    String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
+    Map vocabData
+    String vocabDisplayUri = "https://id.kb.se/vocab/display" // TODO: encapsulate and configure (LXL-260)
     Map displayData
+
     SearchUtils search
     PicoContainer pico
     static final ObjectMapper mapper = new ObjectMapper()
@@ -83,18 +86,12 @@ class Crud extends HttpServlet {
         pico.start()
     }
 
-    void readDisplayData() {
-        String vocabDisplayUri = "https://id.kb.se/vocab/display"
-        Document displayDoc = whelk.storage.locate(vocabDisplayUri,
-                true).document
-        displayData = displayDoc.data
-    }
-
     @Override
     void init() {
         whelk = pico.getComponent(Whelk.class)
-        readDisplayData()
-        search = new SearchUtils(whelk, displayData)
+        displayData = whelk.storage.locate(vocabDisplayUri, true).document.data
+        vocabData = whelk.storage.locate(vocabUri, true).document.data
+        search = new SearchUtils(whelk, displayData, vocabData)
 
     }
 
@@ -153,11 +150,6 @@ class Crud extends HttpServlet {
             return
         }
 
-        if (request.pathInfo == '/vocab/display') {
-            sendResponse(response, mapper.writeValueAsString(displayData), 'application/json')
-            return
-        }
-
         try {
             def path = request.pathInfo
 
@@ -182,6 +174,7 @@ class Crud extends HttpServlet {
         String id = getIdFromPath(path)
         String version = request.getParameter("version")
 
+        // TODO: return already loaded displayData and vocabData (cached on modified)? (LXL-260)
         Tuple2 docAndLocation = getDocumentFromStorage(id, version)
         Document doc = docAndLocation.first
         Location loc = docAndLocation.second
@@ -420,7 +413,7 @@ class Crud extends HttpServlet {
      * Document and Location in the response may be null.
      *
      */
-    Tuple2 getDocumentFromStorage(String id, String version) {
+    Tuple2 getDocumentFromStorage(String id, String version=null) {
         if (version) {
             Document doc = whelk.storage.load(id, version)
             return new Tuple2(doc, null)

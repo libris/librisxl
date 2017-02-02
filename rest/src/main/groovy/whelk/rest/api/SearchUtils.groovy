@@ -14,7 +14,7 @@ import whelk.exception.InvalidQueryException
 @Log
 class SearchUtils {
 
-    final static URI VOCAB_BASE_URI = new URI("https://id.kb.se/vocab/")
+    final static URI VOCAB_BASE_URI = new URI("https://id.kb.se/vocab/") // TODO: encapsulate and configure (LXL-260)
 
     final static int DEFAULT_LIMIT = 200
     final static int MAX_LIMIT = 4000
@@ -30,10 +30,12 @@ class SearchUtils {
 
     Whelk whelk
     Map displayData
+    Map vocabIndex
 
-    SearchUtils(Whelk whelk, Map displayData) {
+    SearchUtils(Whelk whelk, Map displayData, Map vocabData) {
         this.whelk = whelk
         this.displayData = displayData
+        this.vocabIndex = vocabData[JsonLd.GRAPH_KEY].collectEntries { [it[JsonLd.ID_KEY], it] }
     }
 
     Map doSearch(Map queryParameters, String dataset, String siteBaseUri) {
@@ -348,6 +350,9 @@ class SearchUtils {
      *
      */
     private Map getVocabEntry(String id) {
+        if (id in vocabIndex) {
+            return vocabIndex[id]
+        }
         String fullId = VOCAB_BASE_URI.resolve(id).toString()
         Location loc = whelk.storage.locate(fullId, true)
         Document doc = loc?.document
