@@ -60,13 +60,13 @@ class WhelkSaver extends DefaultActor {
                             Location l = whelk.storage.locate(record.controlNumber as String, false)
                             String systemId = l?.id
                             if (systemId) {
-                                whelk.remove(systemId, sourceSystem, null, argument.collection as String)
+                                whelk.remove(systemId, sourceSystem, null, record.collection as String)
                                 importResult.numberOfDocumentsDeleted++
                             }
                         } else if (record.isSuppressed) {
                             importResult.numberOfDocumentsSkipped++
                         } else {
-                            whelk.store(doc, sourceSystem, null, argument.collection as String, false)
+                            whelk.store(doc, sourceSystem, null, record.collection as String, false)
                         }
                         importResult.numberOfDocuments++
 
