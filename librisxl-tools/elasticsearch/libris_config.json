@@ -1,13 +1,15 @@
 {
     "settings": {
-        "index" : {
-            "max_result_window" : 100000
+        "index": {
+            "max_result_window": 100000
         },
         "analysis": {
             "char_filter": {
-                "hyphen_mapping" : {
+                "hyphen_mapping": {
                     "type": "mapping",
-                    "mappings": ["-"]
+                    "mappings": [
+                        "-=>"
+                    ]
                 }
             },
             "analyzer": {
@@ -18,8 +20,12 @@
                 },
                 "isbn_analyzer": {
                     "tokenizer": "standard",
-                    "char_filter": ["hyphen_mapping"],
-                    "filter": ["lowercase"]
+                    "char_filter": [
+                        "hyphen_mapping"
+                    ],
+                    "filter": [
+                        "lowercase"
+                    ]
                 },
                 "default": {
                     "filter": [
@@ -58,7 +64,6 @@
                         "mapping": {
                             "type": "object",
                             "enabled": false
-
                         },
                         "match": "@context"
                     }
@@ -342,19 +347,23 @@
                                     "type": "multi_field"
                                 }
                             }
-                        },
-                        "identifiedBy": {
-                            "type": "nested",
-                            "include_in_parent": true,
-                            "properties": {
-                                "@type": {"type": "string"},
-                                "value": {
-                                    "type": "string",
-                                    "analyzer": "isbn_analyzer"
-                                }
-                            }
                         }
                     }
+                },
+                "identifiedBy": {
+                     "type": "nested",
+                    "include_in_parent": true,
+                    "properties": {
+                        "@type": {
+                            "type": "string"
+                        },
+                        "value": {
+                            "type": "string",
+                            "analyzer": "isbn_analyzer"
+                        }
+                    }
+                    
+                   
                 }
             }
         },
