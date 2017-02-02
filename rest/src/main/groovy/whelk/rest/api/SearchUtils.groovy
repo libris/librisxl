@@ -35,7 +35,9 @@ class SearchUtils {
     SearchUtils(Whelk whelk, Map displayData, Map vocabData) {
         this.whelk = whelk
         this.displayData = displayData
-        this.vocabIndex = vocabData[JsonLd.GRAPH_KEY].collectEntries { [it[JsonLd.ID_KEY], it] }
+        this.vocabIndex = vocabData ?
+            vocabData[JsonLd.GRAPH_KEY].collectEntries { [it[JsonLd.ID_KEY], it] }
+            : [:]
     }
 
     Map doSearch(Map queryParameters, String dataset, String siteBaseUri) {

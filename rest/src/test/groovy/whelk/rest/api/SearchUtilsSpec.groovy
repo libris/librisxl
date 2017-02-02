@@ -18,7 +18,7 @@ class SearchUtilsSpec extends Specification {
         Map expected = ['should': [['prefix': ['@id': url]],
                                    ['prefix': ['sameAs.@id': url]]],
                         'minimum_should_match': 1]
-        SearchUtils search = new SearchUtils(null, null)
+        SearchUtils search = new SearchUtils(null, null, null)
         then:
         assert search.makeSiteFilter(url) == expected
     }
@@ -29,14 +29,14 @@ class SearchUtilsSpec extends Specification {
         Map expected = ['@type': ['terms': ['field': '@type',
                                             'size': 1000],
                                   'aggs': [:]]]
-        SearchUtils search = new SearchUtils(null, null)
+        SearchUtils search = new SearchUtils(null, null, null)
         then:
         assert search.buildAggQuery(tree) == expected
     }
 
     def "Should make find URL"() {
         when:
-        SearchUtils search = new SearchUtils(null, null)
+        SearchUtils search = new SearchUtils(null, null, null)
         then:
         assert search.makeFindUrl(type, params) == result
         where:
@@ -58,7 +58,7 @@ class SearchUtilsSpec extends Specification {
 
     def "Should make find URL with offset"() {
         when:
-        SearchUtils search = new SearchUtils(null, null)
+        SearchUtils search = new SearchUtils(null, null, null)
         then:
         assert search.makeFindUrl(type, params, offset) == result
         where:
@@ -69,7 +69,7 @@ class SearchUtilsSpec extends Specification {
 
     def "Should get limit and offset"() {
         when:
-        SearchUtils search = new SearchUtils(null, null)
+        SearchUtils search = new SearchUtils(null, null, null)
         then:
         assert search.getLimitAndOffset(params) == result
         where:
@@ -87,7 +87,7 @@ class SearchUtilsSpec extends Specification {
 
     def "Should throw on negative limit"() {
         given:
-        SearchUtils search = new SearchUtils(null, null)
+        SearchUtils search = new SearchUtils(null, null, null)
 
         when:
         search.getLimitAndOffset(['_limit': '-1'])
@@ -98,7 +98,7 @@ class SearchUtilsSpec extends Specification {
 
     def "Should throw on negative offset"() {
         given:
-        SearchUtils search = new SearchUtils(null, null)
+        SearchUtils search = new SearchUtils(null, null, null)
 
         when:
         search.getLimitAndOffset(['_offset': '-1'])
