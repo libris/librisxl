@@ -150,6 +150,13 @@ class Crud extends HttpServlet {
             return
         }
 
+        def marcframePath = "/sys/marcframe.json"
+        if (request.pathInfo == marcframePath) {
+            def responseBody = getClass().classLoader.getResourceAsStream("ext/marcframe.json").getText("utf-8")
+            sendGetResponse(request, response, responseBody, "1970/1/1", marcframePath, "application/json")
+            return
+        }
+
         try {
             def path = request.pathInfo
 
