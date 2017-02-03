@@ -160,11 +160,12 @@ class Crud extends HttpServlet {
         try {
             def path = request.pathInfo
 
-            // FIXME still true/needed?
             // Tomcat incorrectly strips away double slashes from the pathinfo.
             // Compensate here.
             if (path ==~ "/http:/[^/].+") {
                 path = path.replace("http:/", "http://")
+            } else if (path ==~ "/https:/[^/].+") {
+                path = path.replace("https:/", "https://")
             }
 
             handleGetRequest(request, response, path)
