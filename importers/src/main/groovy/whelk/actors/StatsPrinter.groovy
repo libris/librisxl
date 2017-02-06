@@ -1,11 +1,12 @@
 package whelk.actors
 
 import groovyx.gpars.actor.DefaultActor
-
+import groovy.util.logging.Slf4j as Log
 /**
  * Created by theodortolstoy on 2017-01-11.
  * Actor from printing to stdout. Perhaps unnecessary.
  */
+@Log
 class StatsPrinter extends DefaultActor {
     def rows = 0
     def records = 0
@@ -41,9 +42,10 @@ class StatsPrinter extends DefaultActor {
     void printReport() {
         def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
         if (elapsedSecs > 0) {
-            def docsPerSec = records / elapsedSecs
+            def docsPerSec = records > 0 ? records / elapsedSecs : 0
             def message = "Working. Currently ${rows} rows recieved and ${records} records sent. Crunching ${docsPerSec} records / s."
-                println message
+            println message
+            log.info message
 
 
         }

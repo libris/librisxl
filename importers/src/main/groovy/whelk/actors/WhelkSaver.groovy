@@ -52,20 +52,26 @@ class WhelkSaver extends DefaultActor {
         loop {
             react { List<VCopyDataRow> argument ->
                 try {
+                    log.trace "Got message (${argument.size()} rows). Reacting."
                     Map record = PostgresLoadfileWriter.handleRowGroup(argument, converter)
                     if (record && !record.isSuppressed) {
+                        log.trace "record is not suppressed. Record: ${record.inspect()}"
                         setLastRecordTimeStamp(record.timestamp as Timestamp)
                         Document doc = record.document
                         if (record.isDeleted) {
+                            log.trace "Record is deleted"
                             Location l = whelk.storage.locate(record.controlNumber as String, false)
                             String systemId = l?.id
                             if (systemId) {
+                                log.trace "Removing record with systemID: ${systemId}"
                                 whelk.remove(systemId, sourceSystem, null, record.collection as String)
                                 importResult.numberOfDocumentsDeleted++
                             }
                         } else if (record.isSuppressed) {
+                            log.trace "Record is suppressed"
                             importResult.numberOfDocumentsSkipped++
                         } else {
+                            log.trace "Storing record "
                             whelk.store(doc, sourceSystem, null, record.collection as String, false)
                         }
                         importResult.numberOfDocuments++

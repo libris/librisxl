@@ -9,7 +9,11 @@
         </encoder>
     </appender>
 
-    <logger name="whelk" level="trace" />
+    <logger name="whelk" level="info" />
+    <logger name="whelk.actors" level="info" />
+    <logger name="whelk.importer" level="info" />
+    <logger name="whelk.vcopyServlet" level="info" />
+    <logger name="whelk.converter" level="info" />
     <root level="trace">
         <appender-ref ref="FILE" />
     </root>

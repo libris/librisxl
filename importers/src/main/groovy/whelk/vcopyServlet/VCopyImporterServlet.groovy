@@ -34,7 +34,7 @@ class VCopyImporterServlet extends HttpServlet {
 
     static String SETTINGS_PFX = "harvester:"
     static String DEFAULT_IMPORTER = "whelk.importer.VCopyImporter"
-    static int DEFAULT_INTERVAL = 30
+    static int DEFAULT_INTERVAL = 600
     static String DEFAULT_SYSTEM = "vcopy"
     static List<String> DEFAULT_SERVICES = [SETTINGS_PFX + 'auth', SETTINGS_PFX + 'bib', SETTINGS_PFX + 'hold']
 
@@ -153,7 +153,7 @@ class VCopyImporterServlet extends HttpServlet {
 
     void init() {
 
-        println props
+        log.debug "Props: ${props.inspect()}"
         if (props.getProperty("version").startsWith(loadDataVersion())) {
             log.info("Initializing vcopy importer. System version: ${pico.getComponent(Whelk.class).version}")
             Storage storage = pico.getComponent(PostgreSQLComponent.class)
