@@ -24,6 +24,25 @@ class ElasticSearchSpec extends Specification {
         assert ElasticSearch.createJsonDsl(queryParameters, 0, 0) == expected
     }
 
+    def "Should make a nested and a simple query request to ElasticSearch"() {
+        when:
+        Map queryParameters = ['identifiedBy.@type': ['ISBN'], 'identifiedBy.value': ['9781412980319'], 'q':['tona ner reggaeprofilen']]
+        Map expected = [from:0,
+                        size:0,
+                        'query':
+                                ['bool':
+                                         ['must':
+                                                  [
+                                                          [simple_query_string:[query:'tona ner reggaeprofilen', default_operator:'and']],
+                                                          ['nested':['path': 'identifiedBy',
+                                                              'query':['bool':['must':[['match':['identifiedBy.@type': 'ISBN']],
+                                                                                       ['match':['identifiedBy.value': '9781412980319']]]]]]]]]]
+        ]
+
+        then:
+        assert ElasticSearch.createJsonDsl(queryParameters, 0, 0) == expected
+    }
+
     def "Should make both a nested and a should request to ElasticSearch"() {
         when:
         Map queryParameters = ['identifiedBy.@type': ['ISBN'] as String[],
