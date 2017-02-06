@@ -215,31 +215,47 @@ class ElasticSearch implements Index {
         String queryString = queryParameters.remove('q')?.first()
         def dslQuery = ['from': offset,
                         'size': limit]
+        Map filteredQueryParams = [:]
+        Map nested = [:]
 
         List musts = []
-        if (queryString) {
-            if (queryString == '*') {
-                musts << ['match_all': [:]]
-            } else {
-                musts << ['simple_query_string' : ['query': queryString,
+        if (queryString == '*') {
+            musts << ['match_all': [:]]
+        } else if(queryString) {
+            musts << ['simple_query_string' : ['query': queryString,
                                                    'default_operator': 'and']]
-            }
         }
 
         List reservedParameters = ['q', 'p', 'o', 'value', '_limit', '_offset']
 
-        queryParameters.each { k, vals ->
+        def groups = queryParameters.groupBy {p -> getPrefixIfExist(p.key)}
+        nested = groups.findAll{g -> g.value.size() == 2}
+        filteredQueryParams = groups - nested
+
+        nested.each { key, vals ->
+            musts << buildESNestedClause(key, vals)
+        }
+
+        filteredQueryParams.each { k, vals ->
             if (k.startsWith('_') || k in reservedParameters) {
                 return
             }
 
             // we assume vals is a String[], since that's that we get
             // from HttpServletResponse.getParameterMap()
-            musts << buildESShouldClause(k, vals)
+            musts << buildESShouldClause(k, vals.collect {it->it.value})
         }
 
         dslQuery['query'] = ['bool': ['must': musts]]
         return dslQuery
+    }
+
+    static getPrefixIfExist(String key) {
+        if (key.contains('.')) {
+            return key.substring(0, key.indexOf('.'))
+        } else {
+            return key
+        }
     }
 
     /*
@@ -248,7 +264,7 @@ class ElasticSearch implements Index {
      * E.g. k=v1 OR k=v2 OR ..., with minimum_should_match set to 1.
      *
      */
-    private static Map buildESShouldClause(String key, String[] values) {
+    private static Map buildESShouldClause(String key, List<String> values) {
         Map result = [:]
         List shoulds = []
 
@@ -260,6 +276,19 @@ class ElasticSearch implements Index {
         result['minimum_should_match'] = 1
         return ['bool': result]
     }
+
+
+    private static Map buildESNestedClause(String prefix, Map nestedQuery) {
+        Map result = [:]
+
+        def musts = ['must': nestedQuery.collect {q -> ['match': [(q.key):q.value.first()]] } ]
+
+        result << [['nested':['path': prefix,
+                                     'query':['bool':musts]]]]
+
+        return result
+    }
+
 
     public String getIndexName() { defaultIndex }
     public String getElasticHost() { elastichost.split(":").first() }
