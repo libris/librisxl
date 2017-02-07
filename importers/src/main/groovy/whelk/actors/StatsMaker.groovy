@@ -1,6 +1,6 @@
 package whelk.actors
 
-import groovy.util.logging.Slf4j
+import groovy.util.logging.Slf4j as Log
 import groovyx.gpars.actor.DefaultActor
 import whelk.SetSpecMatcher
 import whelk.PostgresLoadfileWriter
@@ -11,7 +11,7 @@ import java.nio.file.Paths
 /**
  * Created by theodortolstoy on 2017-01-11.
  */
-@Slf4j
+@Log
 class StatsMaker extends DefaultActor {
     def counter = 0
     def startTime = System.currentTimeMillis()
@@ -134,9 +134,8 @@ class StatsMaker extends DefaultActor {
                     if (++counter % 10000 == 0) {
                         def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
                         if (elapsedSecs > 0) {
-                            def docsPerSec = counter / elapsedSecs
-                            log.info "${counter} ${resultMap}"
-                            "Working. Currently ${counter} documents recieved. Crunching ${docsPerSec} docs / s. "
+                            def docsPerSec = counter > 0 ? counter / elapsedSecs : 0
+                            log.info "Working. Currently ${counter} documents recieved. Crunching ${docsPerSec} docs / s. "
 
                         }
                     }

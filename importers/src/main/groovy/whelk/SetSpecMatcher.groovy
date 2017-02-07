@@ -225,7 +225,7 @@ class SetSpecMatcher {
                 map.field = key
                 map.subfields = bibField[key].subfields
                 //Stub for manipulating matching of records. TODO: Make these rules configurable and put them together with similar stuff.
-                if (key == '155') {
+                if (['155','150'].contains(key)) {
                     def system = getSubfield(map.data, '040', 'f')
                     if (system) {
                         system.each { s ->

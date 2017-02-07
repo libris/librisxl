@@ -31,7 +31,7 @@ class MySQLToMarcJSONDumper {
                 if (++counter % 1000 == 0) {
                     def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
                     if (elapsedSecs > 0) {
-                        def docsPerSec = counter / elapsedSecs
+                        def docsPerSec = counter > 0 ? counter / elapsedSecs : 0
                         System.err.println "Working. Currently $counter documents saved. Crunching $docsPerSec docs / s"
                     }
                 }
