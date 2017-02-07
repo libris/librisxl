@@ -34,7 +34,7 @@ class VCopyImporterServlet extends HttpServlet {
 
     static String SETTINGS_PFX = "harvester:"
     static String DEFAULT_IMPORTER = "whelk.importer.VCopyImporter"
-    static int DEFAULT_INTERVAL = 600
+    static int DEFAULT_INTERVAL = 60
     static String DEFAULT_SYSTEM = "vcopy"
     static List<String> DEFAULT_SERVICES = [SETTINGS_PFX + 'auth', SETTINGS_PFX + 'bib', SETTINGS_PFX + 'hold']
 
@@ -281,7 +281,7 @@ class ScheduledJob implements Runnable {
                     nextSince = new Date(currentSince.getTime() + 1000)
                     log.trace("Next since (upped by 1 second): $nextSince")
                 } else {
-                    def lastWeeksDate = nextSince[Calendar.DATE] - 7
+                    def lastWeeksDate = nextSince[Calendar.DATE] - 2//7
                     nextSince.set(date: lastWeeksDate)
                     currentSince = nextSince
                     log.info("Importer has no state for last import from $collection. Setting last week (${nextSince})")
