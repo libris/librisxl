@@ -215,8 +215,6 @@ class ElasticSearch implements Index {
         String queryString = queryParameters.remove('q')?.first()
         def dslQuery = ['from': offset,
                         'size': limit]
-        Map filteredQueryParams = [:]
-        Map nested = [:]
 
         List musts = []
         if (queryString == '*') {
@@ -229,21 +227,24 @@ class ElasticSearch implements Index {
         List reservedParameters = ['q', 'p', 'o', 'value', '_limit', '_offset']
 
         def groups = queryParameters.groupBy {p -> getPrefixIfExist(p.key)}
-        nested = groups.findAll{g -> g.value.size() == 2}
-        filteredQueryParams = groups - nested
+        Map nested = groups.findAll{g -> g.value.size() == 2}
+        List filteredQueryParams = (groups - nested).collect{it.value}
 
         nested.each { key, vals ->
             musts << buildESNestedClause(key, vals)
         }
 
-        filteredQueryParams.each { k, vals ->
-            if (k.startsWith('_') || k in reservedParameters) {
-                return
-            }
+        filteredQueryParams.each { Map m ->
+            m.each { k, vals ->
+                if (k.startsWith('_') || k in reservedParameters) {
+                    return
 
-            // we assume vals is a String[], since that's that we get
-            // from HttpServletResponse.getParameterMap()
-            musts << buildESShouldClause(k, vals.collect {it->it.value})
+
+                }
+                // we assume vals is a String[], since that's that we get
+                // from HttpServletResponse.getParameterMap()
+                musts << buildESShouldClause(k, vals)
+            }
         }
 
         dslQuery['query'] = ['bool': ['must': musts]]
@@ -264,7 +265,7 @@ class ElasticSearch implements Index {
      * E.g. k=v1 OR k=v2 OR ..., with minimum_should_match set to 1.
      *
      */
-    private static Map buildESShouldClause(String key, List<String> values) {
+    private static Map buildESShouldClause(String key, String[] values) {
         Map result = [:]
         List shoulds = []
 
