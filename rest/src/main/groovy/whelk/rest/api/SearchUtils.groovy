@@ -64,7 +64,7 @@ class SearchUtils {
             results = findByValue(relation, value, limit, offset)
         } else if (reference) {
             results = findByQuotation(reference, limit, offset)
-        } else if (query) {
+        } else { //assumes elastic query
             // If general q-parameter chosen, use elastic for query
             if (whelk.elastic) {
                 results = queryElasticSearch(queryParameters,
@@ -74,8 +74,6 @@ class SearchUtils {
             } else {
                 throw new WhelkRuntimeException("ElasticSearch not configured.")
             }
-        } else {
-            throw new InvalidQueryException('Could not determine search type.')
         }
 
         return results
