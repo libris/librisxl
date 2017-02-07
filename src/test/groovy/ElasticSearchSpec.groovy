@@ -46,7 +46,9 @@ class ElasticSearchSpec extends Specification {
     def "Should make both a nested and a Should request to ElasticSearch"() {
         when:
         Map queryParameters = ['identifiedBy.@type': ['ISBN'] as String[],
-                               'identifiedBy.value': ['1234'] as String[], 'foo.type': ['Foo'] as String[]]
+                               'identifiedBy.value': ['1234'] as String[],
+                               'foo.type': ['Foo'] as String[],
+                               'bar': ['Bar'] as String[]]
         Map expected = [from:0,
                         size:0,
                         'query':
@@ -55,7 +57,8 @@ class ElasticSearchSpec extends Specification {
                                                   [['nested':['path': 'identifiedBy',
                                                               'query':['bool':['must':[['match':['identifiedBy.@type': 'ISBN']],
                                                                                        ['match':['identifiedBy.value': '1234']]]]]]],
-                                                   [bool:[should:[[match:['foo.type':'Foo']]], minimum_should_match:1]]]]]
+                                                   [bool:[should:[[match:['foo.type':'Foo']]], minimum_should_match:1]],
+                                                   [bool:[should:[[match:['bar':'Bar']]], minimum_should_match:1]]]]]
         ]
 
         then:
