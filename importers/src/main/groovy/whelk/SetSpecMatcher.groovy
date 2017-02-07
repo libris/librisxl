@@ -23,11 +23,13 @@ class SetSpecMatcher {
             '130': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['130', '630', '730', '830']],
             '150': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
-                    bibFields        : ['650']],
+                    bibFields        : ['650'],
+                    authFieldsToAdd : [[field:'040',subfield:'f', targetField:'2']]],
             '151': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['651']],
             '155': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
-                    bibFields        : ['655']]
+                    bibFields        : ['655'],
+                    authFieldsToAdd : [[field:'040',subfield:'f', targetField:'2']]]
     ]
 
     private static ArrayList getAuthLinkableFields() {
@@ -188,7 +190,6 @@ class SetSpecMatcher {
                     authSet               : authSet
             ]
             result.type = getMatchType(result)
-            println result.type
             return result
         }
         catch (any) {
@@ -225,16 +226,16 @@ class SetSpecMatcher {
             if (key.startsWith('1')) {
                 map.field = key
                 map.subfields = bibField[key].subfields
-                //Stub for manipulating matching of records. TODO: Make these rules configurable and put them together with similar stuff.
-                if (['155','150'].contains(key)) {
-                    def system = getSubfield(map.data, '040', 'f')
-                    if (system) {
-                        system.each { s ->
-                            map.subfields << ['2': s]
+                if(fieldRules[key].authFieldsToAdd != null){
+                    fieldRules[key].authFieldsToAdd.each{ add->
+                        log.trace "adding field ${add.field} \$${add.subfield} to ${key} \$${add.targetField} "
+                        def extrafields = getSubfield(map.data, add.field, add.subfield)
+                        extrafields.each{ extrafield ->
+                            map.subfields << [(add.targetField):extrafield]
                         }
+                        log.trace "${map.subfields}"
                     }
                 }
-
                 return map
             }
         }
