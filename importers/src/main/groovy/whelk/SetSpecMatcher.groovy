@@ -188,6 +188,7 @@ class SetSpecMatcher {
                     authSet               : authSet
             ]
             result.type = getMatchType(result)
+            println result.type
             return result
         }
         catch (any) {
@@ -277,21 +278,16 @@ class SetSpecMatcher {
 
     static String getMatchType(Map map) {
         switch (map) {
-            case map.isMatch:
+            case {it.isMatch}:
                 return "match"
-                break
-            case map.hasOnlyDiff:
+            case {it.hasOnlyDiff}:
                 return "hasOnlyDiff"
-                break
-            case map.hasOnlyReverseDiff:
+            case {it.hasOnlyReverseDiff}:
                 return "hasOnlyReverseDiff"
-                break
-            case map.hasDoubleDiff:
+            case {it.hasDoubleDiff}:
                 return "hasDoubleDiff"
-                break
-            case map.hasMisMatchOnA:
+            case {it.hasMisMatchOnA}:
                 return "hasMisMatchOnA"
-                break
             default:
                 "other"
         }
