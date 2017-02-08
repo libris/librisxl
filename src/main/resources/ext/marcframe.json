@@ -283,7 +283,7 @@
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Person"}
       },
-      "$4": {"link": "role", "property": "notation", "uriTemplate": "{notation}", "TODO:mapping": "relatorCode"},
+      "$4": {"addLink": "role", "property": "notation", "uriTemplate": "{notation}", "TODO:mapping": "relatorCode"},
       "$e": {"addProperty": "roleNote"}
     },
 
@@ -3809,31 +3809,43 @@
       "include": "contribution",
       "resourceType": "Additional",
       "TODO:if-resourceType-ignoreOnRevertInFavourOf": "100",
+      "TODO:match-i2-for-person-too": {
+        "2": {"TODO:addLink": "analytiskt-bidrag"}
+      },
       "match-code": {
         "t": {
-          "addLink": "composition",
-          "resourceType": "Composition",
+          "addLink": "qualifiedInfluence",
+          "resourceType": "Influence",
+          "match-i2": {
+            "2": {
+              "addLink": "qualifiedPart",
+              "resourceType": "Part"
+            }
+          },
           "pendingResources": {
             "_:work": {
               "link": "entity",
               "resourceType": "UniformWork",
               "embedded": false
             },
-            "_:agent": {
+            "_:contribution": {
               "about": "_:work",
-              "link": "contributor",
+              "link": "contribution",
+              "resourceType": "Principal",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
               "resourceType": "Person",
               "embedded": false
             }
           },
+          "$i": {"addProperty": "note"},
           "$t": {"about": "_:work", "property": "title"},
-          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
-        }
-      },
-      "TODO:match-i2": {
-        "2": {
-          "NOTE": "analytiskt bidrag",
-          "TODO:addLink": "hasPart"
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
+          "$e": {"about": "_:contribution", "addProperty": "roleNote"},
+          "$4": {"about": "_:contribution", "addLink": "role", "property": "notation", "uriTemplate": "{notation}", "TODO:mapping": "relatorCode"}
         }
       },
       "_spec": [
@@ -3862,19 +3874,23 @@
           "source": {
             "700": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Jansson, Tove"},
-              {"t": "Anteckningar från en ö"}
+              {"t": "Anteckningar från en ö"},
+              {"e": "Skapad av"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "contribution": [
+              "qualifiedInfluence": [
                 {
-                  "@type": "Additional",
-                  "agent": {
+                  "@type": "Influence",
+                  "entity": {
                     "@type": "UniformWork",
                     "title": "Anteckningar från en ö",
-                    "contributor": {"@type": "Person",
-                      "familyName":  "Jansson", "givenName":  "Tove"}
+                    "contribution": {
+                      "@type": "Principal",
+                      "roleNote": ["Skapad av"],
+                      "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                    }
                   }
                 }
               ]
