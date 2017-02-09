@@ -25,7 +25,7 @@ class StatsMaker extends DefaultActor {
     static void printDiffResultsToFile(FileWriter fileWriter, matches, doc, setSpecs) {
         matches.each { match ->
             fileWriter << "${match.type}" +
-                    "\t${match.diff.count { it }}" +
+                    "'\t${match.diff.count { it }}" +
                     "\t${match.spec.field}" +
                     "\t${match.bibField}" +
                     "\t${match.subfieldsInOverlap}" +
@@ -33,28 +33,28 @@ class StatsMaker extends DefaultActor {
                     "\t${match.subfieldsInReversediff}" +
                     "\t${match.reverseDiff.count { it }}" +
                     "\t${match.overlap.count { it }}" +
-                    "\t${doc.leader?.substring(5, 6) ?: ''}" +
-                    "\t${doc.leader?.substring(6, 7) ?: ''}" +
-                    "\t${doc.leader?.substring(7, 8) ?: ''}" +
-                    "\t${doc.leader?.substring(17, 18) ?: ''}" +
-                    "\t${doc.fields?."008"?.find { it -> it }?.take(2) ?: ''}" +
-                    "\t _" +
-                    "\t${doc.fields?."040"?.find { it -> it }?.subfields?."a"?.find { it -> it } ?: ''}" +
-                    "\t${doc.fields?."040"?.find { it -> it }?.subfields?."d"?.find { it -> it } ?: ''}" +
-                    "\t${match.spec.data?.leader?.substring(5, 6) ?: ''}" +
-                    "\t${match.spec.data?.leader?.substring(6, 7) ?: ''}" +
-                    "\t${match.spec.data?.fields?."008"?.find { it -> it }?.take(2) ?: ''}" +
-                    "\t${match.spec.data?.fields?."008"?.find { it -> it }?.substring(9, 10) ?: ''}" +
-                    "\t${match.spec.data?.fields?."008"?.find { it -> it }?.substring(33, 34) ?: ''}" +
-                    "\t${match.spec.data?.fields?."008"?.find { it -> it }?.substring(39, 40) ?: ''}" +
+                    //"\t${doc.leader?.substring(5, 6) ?: ''}" +
+                    //"\t${doc.leader?.substring(6, 7) ?: ''}" +
+                    //"\t${doc.leader?.substring(7, 8) ?: ''}" +
+                    //"\t${doc.leader?.substring(17, 18) ?: ''}" +
+                    //"\t${doc.fields?."008"?.find { it -> it }?.take(2) ?: ''}" +
+                    //"\t _" +
+                    //"\t${doc.fields?."040"?.find { it -> it }?.subfields?."a"?.find { it -> it } ?: ''}" +
+                    //"\t${doc.fields?."040"?.find { it -> it }?.subfields?."d"?.find { it -> it } ?: ''}" +
+                    //"\t${match.spec.data?.leader?.substring(5, 6) ?: ''}" +
+                    //"\t${match.spec.data?.leader?.substring(6, 7) ?: ''}" +
+                    //"\t${match.spec.data?.fields?."008"?.find { it -> it }?.take(2) ?: ''}" +
+                    //"\t${match.spec.data?.fields?."008"?.find { it -> it }?.substring(9, 10) ?: ''}" +
+                    //"\t${match.spec.data?.fields?."008"?.find { it -> it }?.substring(33, 34) ?: ''}" +
+                    //"\t${match.spec.data?.fields?."008"?.find { it -> it }?.substring(39, 40) ?: ''}" +
                     "\t${match.numBibFields}" +
                     "\t${match.numAuthFields}" +
                     "\t${match.partialD}" +
-                    "\t${match.bibHas035a}" +
+                    //"\t${match.bibHas035a}" +
                     "\t${match.bibSet} " +
                     "\t${match.authSet} " +
-                    "\t${setSpecs.first()?.bibid} " +
-                    "\t${setSpecs.first()?.id} " +
+                    "\t${match.bibField} " +
+                    "\t${match.authField} " +
                     "\t${match.bibHas240a}" +
                     "\n"
 

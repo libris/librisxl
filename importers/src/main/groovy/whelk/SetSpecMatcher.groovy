@@ -24,12 +24,12 @@ class SetSpecMatcher {
                     bibFields        : ['130', '630', '730', '830']],
             '150': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['650'],
-                    authFieldsToAdd : [[field:'040',subfield:'f', targetField:'2']]],
+                    authFieldsToAdd  : [[field: '040', subfield: 'f', targetField: '2']]],
             '151': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['651']],
             '155': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['655'],
-                    authFieldsToAdd : [[field:'040',subfield:'f', targetField:'2']]]
+                    authFieldsToAdd  : [[field: '040', subfield: 'f', targetField: '2']]]
     ]
 
     private static ArrayList getAuthLinkableFields() {
@@ -170,6 +170,7 @@ class SetSpecMatcher {
                     diff                  : diff,
                     reverseDiff           : reverseDiff,
                     bibField              : field.keySet().first(),
+                    authField             : setSpec.field,
                     spec                  : setSpec,
                     errorMessage          : "",
                     overlap               : overlap,
@@ -226,16 +227,17 @@ class SetSpecMatcher {
             if (key.startsWith('1')) {
                 map.field = key
                 map.subfields = bibField[key].subfields
-                if(fieldRules[key].authFieldsToAdd != null){
-                    fieldRules[key].authFieldsToAdd.each{ add->
+                if (fieldRules.containsKey(key) && fieldRules[key].authFieldsToAdd != null) {
+                    fieldRules[key].authFieldsToAdd.each { add ->
                         log.trace "adding field ${add.field} \$${add.subfield} to ${key} \$${add.targetField} "
                         def extrafields = getSubfield(map.data, add.field, add.subfield)
-                        extrafields.each{ extrafield ->
-                            map.subfields << [(add.targetField):extrafield]
+                        extrafields.each { extrafield ->
+                            map.subfields << [(add.targetField): extrafield]
                         }
                         log.trace "${map.subfields}"
                     }
                 }
+
                 return map
             }
         }
@@ -279,15 +281,15 @@ class SetSpecMatcher {
 
     static String getMatchType(Map map) {
         switch (map) {
-            case {it.isMatch}:
+            case { it.isMatch }:
                 return "match"
-            case {it.hasOnlyDiff}:
+            case { it.hasOnlyDiff }:
                 return "hasOnlyDiff"
-            case {it.hasOnlyReverseDiff}:
+            case { it.hasOnlyReverseDiff }:
                 return "hasOnlyReverseDiff"
-            case {it.hasDoubleDiff}:
+            case { it.hasDoubleDiff }:
                 return "hasDoubleDiff"
-            case {it.hasMisMatchOnA}:
+            case { it.hasMisMatchOnA }:
                 return "hasMisMatchOnA"
             default:
                 "other"
