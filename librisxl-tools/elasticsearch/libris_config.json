@@ -1,14 +1,31 @@
 {
     "settings": {
-        "index" : {
-            "max_result_window" : 100000
+        "index": {
+            "max_result_window": 100000
         },
         "analysis": {
+            "char_filter": {
+                "hyphen_mapping": {
+                    "type": "mapping",
+                    "mappings": [
+                        "-=>"
+                    ]
+                }
+            },
             "analyzer": {
                 "completer": {
                     "filter": "custom_edge_ngram",
                     "tokenizer": "lowercase",
                     "type": "custom"
+                },
+                "isbn_analyzer": {
+                    "tokenizer": "standard",
+                    "char_filter": [
+                        "hyphen_mapping"
+                    ],
+                    "filter": [
+                        "lowercase"
+                    ]
                 },
                 "default": {
                     "filter": [
@@ -47,7 +64,6 @@
                         "mapping": {
                             "type": "object",
                             "enabled": false
-
                         },
                         "match": "@context"
                     }
@@ -333,6 +349,21 @@
                             }
                         }
                     }
+                },
+                "identifiedBy": {
+                     "type": "nested",
+                    "include_in_parent": true,
+                    "properties": {
+                        "@type": {
+                            "type": "string"
+                        },
+                        "value": {
+                            "type": "string",
+                            "analyzer": "isbn_analyzer"
+                        }
+                    }
+                    
+                   
                 }
             }
         },
