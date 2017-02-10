@@ -102,7 +102,7 @@ class ImporterMain {
         log.info("Done!")
     }
 
-    static void sendToQueue(Whelk whelk, List doclist, LinkFinder lf, ExecutorService queue, Map counters) {
+    static void sendToQueue(Whelk whelk, List doclist, LinkFinder lf, ExecutorService queue, Map counters, String collection) {
         Document[] workList = new Document[doclist.size()]
         System.arraycopy(doclist.toArray(), 0, workList, 0, doclist.size())
         queue.execute({
@@ -121,7 +121,7 @@ class ImporterMain {
                 }
             }
             log.info("Saving ${storeList.size()} documents ...")
-            whelk.storage.bulkStore(storeList, true)
+            whelk.storage.bulkStore(storeList, true, "whelk?", "?", collection)
         } as Runnable)
     }
 
@@ -183,7 +183,7 @@ class ImporterMain {
             doclist << doc
             if (doclist.size() % 2000 == 0) {
                 log.info("Sending off a batch for processing ...")
-                sendToQueue(whelk, doclist, lf, queue, counters)
+                sendToQueue(whelk, doclist, lf, queue, counters,collection)
                 doclist = []
             }
             if (!log.isDebugEnabled()) {
@@ -195,7 +195,7 @@ class ImporterMain {
 
 
         if (doclist.size() > 0) {
-            sendToQueue(whelk, doclist, lf, queue, counters)
+            sendToQueue(whelk, doclist, lf, queue, counters, collection)
         }
 
         queue.shutdown()
