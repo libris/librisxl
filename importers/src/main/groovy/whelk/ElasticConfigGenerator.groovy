@@ -9,7 +9,7 @@ import org.codehaus.jackson.map.ObjectMapper
 class ElasticConfigGenerator {
 
     private final static mapper = new ObjectMapper()
-    private final static int cardBoost = 500 // Arbitrary number, intended to set card boosts higher than all other boosts.
+    private final static int cardBoostBase = 500 // Arbitrary number, intended to set card boosts higher than all other boosts.
 
     /**
      * Generates an ES config (mapping).
@@ -17,7 +17,9 @@ class ElasticConfigGenerator {
      * @param displayInfoString The json TEXT contents of the display info
      */
     public static String generate(String templateString, String displayInfoString) {
-        Set cardProperties = parseCardProperties(displayInfoString)
+
+        LinkedHashSet orderedCardProperties = parseCardProperties(displayInfoString)
+        Map propertyValues = generatePropertyValues(orderedCardProperties)
 
         Map templateMap = mapper.readValue(templateString, Map)
 
@@ -31,14 +33,28 @@ class ElasticConfigGenerator {
 
             Map properties = category.getValue()["properties"]["about"]["properties"]
             for (property in properties) {
-                if (property.getKey() in cardProperties)
-                {
-                    boostProperty( property )
+                if (property.getKey() in orderedCardProperties) {
+                    boostProperty( property, propertyValues )
                 }
             }
         }
 
         return mapper.writeValueAsString(templateMap)
+    }
+
+    /**
+     * Generate a Map, from property names, to the values with which they should be boosted.
+     * @param orderedCardProperties The ordered set of card properties. item N should have priority over item N+1.
+     * @return A map where each property name is mapped to an integer boost value for said property.
+     */
+    private static Map generatePropertyValues(LinkedHashSet orderedCardProperties) {
+        int boost = cardBoostBase + orderedCardProperties.size()
+        Map propertyValues = [:]
+
+        for (property in orderedCardProperties) {
+            propertyValues[property] = boost--
+        }
+        return propertyValues
     }
 
     /**
@@ -50,10 +66,10 @@ class ElasticConfigGenerator {
      *                          "type": "string"
      *                      },
      */
-    private static void boostProperty(property) {
+    private static void boostProperty(property, propertyValues) {
         Map propertyMap = property.getValue()
         def existingBoost = propertyMap["boost"]
-        int boost = cardBoost
+        Integer boost = propertyValues[property.getKey()]
         if (existingBoost)
             boost += existingBoost
         propertyMap["boost"] = boost
@@ -62,16 +78,18 @@ class ElasticConfigGenerator {
     /**
      * Parse the display info and extract a set of all properties that are "card properties".
      * @param displayInfoString The json TEXT contents of the display info
-     * @return Set of card properties
+     * @return Ordered set of card properties
      */
-    private static Set parseCardProperties(String displayInfoString) {
+    private static LinkedHashSet parseCardProperties(String displayInfoString) {
         Map displayMap = mapper.readValue(displayInfoString, Map)
-        Set cardProperties = []
+        Set cardProperties = new LinkedHashSet() // A LinkedHashSet is used instead of a set, to preserve item order.
 
         Map categories = displayMap["lensGroups"]["cards"]["lenses"]
         for (category in categories) {
             Map categoryBody = category.getValue()
-            cardProperties.addAll( categoryBody["showProperties"] )
+            for (property in categoryBody["showProperties"]){
+                cardProperties.add( property.toString() )
+            }
         }
 
         return cardProperties
