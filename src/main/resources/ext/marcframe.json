@@ -2818,9 +2818,10 @@
       "TODO:i2": {},
       "include": ["titledetails", "titlesearchelem"],
       "TODO": "See also 100$t and 130.",
-      "link": "expressionOf",
-      "resourceType": "UniformWork",
-      "$a": {"property": "uniformTitle"}
+      "embedded": true,
+      "link": "hasTitle",
+      "resourceType": "WorkTitle",
+      "$a": {"property": "mainTitle"}
     },
 
     "242": {
@@ -3974,6 +3975,16 @@
           "result": {"mainEntity": {
             "associatedMedia": [{"@type": "MediaObject", "sameAs": [{"@id": "http://example.com/doc.pdf"}]}],
             "isPrimaryTopicOf": [{"@type": "Document", "sameAs": [{"@id": "http://example.org/page"}]}]
+          }}
+        },
+        {
+          "note": "Should handle dollar signs in URI value",
+          "source": {
+            "856": {"ind1": "4", "ind2": "0", "subfields": [
+              {"u": "http://www.framtidsstudier.se/filebank/files/20051201$133251$fil$048Ti3PL2UIwRJQEBbDG.pdf"}
+            ]}},
+          "result": {"mainEntity": {
+            "associatedMedia": [{"@type": "MediaObject", "sameAs": [{"@id": "http://www.framtidsstudier.se/filebank/files/20051201$133251$fil$048Ti3PL2UIwRJQEBbDG.pdf"}]}]
           }}
         }
       ]

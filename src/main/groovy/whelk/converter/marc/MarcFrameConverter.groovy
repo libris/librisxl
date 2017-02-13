@@ -634,7 +634,9 @@ class MarcRuleSet {
                 target[dfn.property] = value
             }
             if (dfn.uriTemplate) {
-                def uri = conversion.resolve(fromTemplate(
+                def uri = dfn.uriTemplate == '{+_}' ?
+                    value
+                    : conversion.resolve(fromTemplate(
                         dfn.uriTemplate).set('_', value).set(target).expand())
                 target["@id"] = uri
             }
@@ -1934,10 +1936,11 @@ class MarcSubFieldHandler extends ConversionPart {
             String entId = null
             if (subUriTemplate) {
                 try {
-                    entId = fromTemplate(subUriTemplate).expand(["_": subVal])
-                } catch (IllegalArgumentException e) {
-                    // TODO: improve?
-                    // bad characters in what should have been a proper URI path ({+_} expansion)
+                    entId = subUriTemplate == '{+_}' ?
+                        subVal : fromTemplate(subUriTemplate).expand(["_": subVal])
+                } catch (IllegalArgumentException|IndexOutOfBoundsException e) {
+                    // Bad characters in what should have been a proper URI path ('+' expansion).
+                    ; // TODO: We just drop the attempt here if the uriTemplate fails...
                 }
             }
             def newEnt = newEntity(state, resourceType, entId)
