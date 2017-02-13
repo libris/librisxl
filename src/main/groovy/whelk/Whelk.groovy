@@ -49,7 +49,7 @@ class Whelk {
         Properties componentProperties = PropertyLoader.loadProperties("component")
         for (comProp in componentProperties) {
             if (comProp.key.endsWith("Class") && comProp.value && comProp.value != "null") {
-                println("Adding pico component ${comProp.key} = ${comProp.value}")
+                log.info("Adding pico component ${comProp.key} = ${comProp.value}")
                 pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(Class.forName(comProp.value))
             }
         }

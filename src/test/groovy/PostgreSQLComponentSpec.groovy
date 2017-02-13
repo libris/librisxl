@@ -31,7 +31,7 @@ class PostgreSQLComponentSpec extends Specification {
         storage = new PostgreSQLComponent(null, "lddb") {
             @Override
             Connection getConnection() {
-                println("Getting connection ...")
+                log.info("Getting connection ...")
                 conn
             }
         }
