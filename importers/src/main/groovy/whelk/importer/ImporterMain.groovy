@@ -52,16 +52,15 @@ class ImporterMain {
 
     /**
      * Typical invocation:
-     * java -jar build/libs/vcopyImporter.jar generateEsConfig ../librisxl-tools/elasticsearch/libris_config.json ../../definitions/source/vocab/display.jsonld
+     * java -jar build/libs/vcopyImporter.jar generateEsConfig ../librisxl-tools/elasticsearch/libris_config.json ../../definitions/source/vocab/display.jsonld generated_es_config.json
      */
-    @Command(args='TEMPLATE_FILE_NAME DISPLAY_INFO_FILE_NAME')
-    void generateEsConfig(String templateFileName, String displayInfoFileName) {
+    @Command(args='TEMPLATE_FILE_NAME DISPLAY_INFO_FILE_NAME TO_FILE_NAME')
+    void generateEsConfig(String templateFileName, String displayInfoFileName, String toFileName) {
         String templateString = new File(templateFileName).text
         String displayInfoString = new File(displayInfoFileName).text
         String generatedConfig = ElasticConfigGenerator.generate(templateString, displayInfoString)
 
-        // Output generated ES config to stdout.
-        println(generatedConfig)
+        new File(toFileName).write(generatedConfig)
     }
 
     @Command(args='TO_FOLDER_NAME')
