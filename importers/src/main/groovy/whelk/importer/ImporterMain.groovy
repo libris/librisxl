@@ -55,7 +55,7 @@ class ImporterMain {
      * java -jar build/libs/vcopyImporter.jar generateEsConfig ../librisxl-tools/elasticsearch/libris_config.json ../../definitions/source/vocab/display.jsonld generated_es_config.json
      */
     @Command(args='TEMPLATE_FILE_NAME DISPLAY_INFO_FILE_NAME TO_FILE_NAME')
-    void generateEsConfig(String templateFileName, String displayInfoFileName, String toFileName) {
+    static void generateEsConfig(String templateFileName, String displayInfoFileName, String toFileName) {
         String templateString = new File(templateFileName).text
         String displayInfoString = new File(displayInfoFileName).text
         String generatedConfig = ElasticConfigGenerator.generate(templateString, displayInfoString)
@@ -255,6 +255,9 @@ class ImporterMain {
         def main
         if (cmd.startsWith("vcopy")) {
             main = new ImporterMain("secret", "mysql")
+        } else if (cmd.startsWith("generateEsConfig")) { // No need for secret.properties to generate es config.
+            generateEsConfig(args[1], args[2], args[3])
+            return
         } else {
             main = new ImporterMain("secret")
         }
