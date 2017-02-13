@@ -57,9 +57,7 @@ class Crud extends HttpServlet {
     ]
     Whelk whelk
 
-    String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
     Map vocabData
-    String vocabDisplayUri = "https://id.kb.se/vocab/display" // TODO: encapsulate and configure (LXL-260)
     Map displayData
 
     SearchUtils search
@@ -89,8 +87,8 @@ class Crud extends HttpServlet {
     @Override
     void init() {
         whelk = pico.getComponent(Whelk.class)
-        displayData = whelk.storage.locate(vocabDisplayUri, true).document.data
-        vocabData = whelk.storage.locate(vocabUri, true).document.data
+        displayData = whelk.displayData
+        vocabData = whelk.vocabData
         search = new SearchUtils(whelk, displayData, vocabData)
 
     }
