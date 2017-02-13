@@ -58,7 +58,7 @@ class ImporterMain {
     static void generateEsConfig(String templateFileName, String displayInfoFileName, String toFileName) {
         String templateString = new File(templateFileName).text
         String displayInfoString = new File(displayInfoFileName).text
-        String generatedConfig = ElasticConfigGenerator.generate(templateString, displayInfoString)
+        String generatedConfig = whelk.ElasticConfigGenerator.generate(templateString, displayInfoString)
 
         new File(toFileName).write(generatedConfig)
     }
