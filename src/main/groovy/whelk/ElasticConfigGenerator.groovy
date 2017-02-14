@@ -35,7 +35,7 @@ class ElasticConfigGenerator {
      */
     public static Map generate(Map configTemplate, Map displayInfo, Map vocab) {
 
-        Map propertyValues = generatePropertyValues(displayInfo)
+        Map propertyValues = generatePropertyValues(displayInfo, vocab)
 
         Map categories = configTemplate["mappings"]
         for (category in categories) {
@@ -76,7 +76,7 @@ class ElasticConfigGenerator {
      * @param displayInfo The json contents of the display info as a Map
      * @return A map where each property name is mapped to an integer boost value for said property.
      */
-    private static Map<String, Integer> generatePropertyValues(Map displayInfo) {
+    private static Map<String, Integer> generatePropertyValues(Map displayInfo, Map vocab) {
 
         Map<String, Integer> propertyValues = [:]
 
@@ -91,8 +91,12 @@ class ElasticConfigGenerator {
 
                 String propertyName = property.toString()
 
+                // Only leaf properties may be boosted (not links to other properties)
+                if ( !isLeafProperty(propertyName, vocab) )
+                    continue
+
                 // Has this property already been assigned a boost value, from another category?
-                // If so, use the higher one.
+                // If so, use whichever is higher.
                 Integer previousBoost = propertyValues[propertyName]
                 if (previousBoost == null || previousBoost < boost)
                     propertyValues.put(propertyName, boost--)
@@ -100,5 +104,24 @@ class ElasticConfigGenerator {
         }
 
         return propertyValues
+    }
+
+    private static boolean isLeafProperty(String propertyName, Map vocab) {
+        String presumedId = "https://id.kb.se/vocab/" + propertyName
+        List graphList = vocab["@graph"]
+        for (property in graphList) {
+            if (property["@id"] == presumedId) {
+                if (property["@type"] == "ObjectProperty") {
+                    List rangeList = property["range"]
+                    for (rangeEntry in rangeList) {
+                        if (rangeEntry["@id"] == "https://id.kb.se/vocab/Identifier") {
+                            return false
+                        }
+                    }
+                }
+            }
+        }
+
+        return true
     }
 }
