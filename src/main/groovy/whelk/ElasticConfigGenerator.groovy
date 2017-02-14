@@ -43,7 +43,7 @@ class ElasticConfigGenerator {
             if (key != "auth" && key != "bib" && key != "hold")
                 continue
 
-            Map properties = category.getValue()["properties"]["about"]["properties"]
+            Map properties = category.getValue()["properties"]
             for (property in properties) {
                 if (property.getKey() in propertyValues.keySet()) {
                     boostProperty( property, propertyValues )
