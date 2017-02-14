@@ -17,11 +17,13 @@ class ElasticConfigGenerator {
      * @param displayInfoString The json TEXT contents of the display info
      */
     public static String generateConfigString(String templateString,
-                                              String displayInfoString) {
+                                              String displayInfoString,
+                                              String vocabString) {
         Map displayInfo = mapper.readValue(displayInfoString, Map)
         Map configTemplate = mapper.readValue(templateString, Map)
+        Map vocab = mapper.readValue(vocabString, Map)
 
-        Map config = generate(configTemplate, displayInfo)
+        Map config = generate(configTemplate, displayInfo, vocab)
 
         return mapper.writeValueAsString(config)
     }
@@ -31,7 +33,7 @@ class ElasticConfigGenerator {
      * @param configTemplate The json contents of the template as a Map
      * @param displayInfo The json contents of the display info as a Map
      */
-    public static Map generate(Map configTemplate, Map displayInfo) {
+    public static Map generate(Map configTemplate, Map displayInfo, Map vocab) {
 
         Map propertyValues = generatePropertyValues(displayInfo)
 
