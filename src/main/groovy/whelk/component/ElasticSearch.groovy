@@ -93,6 +93,34 @@ class ElasticSearch implements Index {
         }
     }
 
+    /**
+     * Get configured mappings.
+     *
+     */
+    Map getMappings() {
+        def indexClient = client.admin().indices()
+        def mappingRequest = indexClient.prepareGetMappings(this.defaultIndex)
+        def mappings = mappingRequest.get().mappings()
+
+        Map result = [:]
+
+        mappings.keys().toArray().each { key ->
+            def mapping = mappings.get(key)
+            result[key.toString()] = convertMapping(mapping)
+        }
+
+        return result
+    }
+
+    private Map convertMapping(def mapping) {
+        Map result = [:]
+        mapping.keys().toArray().each { key ->
+            result[key] = mapping.get(key).getSourceAsMap()
+        }
+
+        return result
+    }
+
     public ActionResponse performExecute(ActionRequest request) {
         int failcount = 0
         ActionResponse response = null

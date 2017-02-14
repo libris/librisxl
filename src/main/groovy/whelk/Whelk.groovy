@@ -19,12 +19,18 @@ class Whelk {
     Index elastic
     JsonLdLinkExpander expander
     String version
+    Map displayData
+    Map vocabData
+
+    String vocabDisplayUri = "https://id.kb.se/vocab/display" // TODO: encapsulate and configure (LXL-260)
+    String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
 
     public Whelk(String version, Storage pg, Index es, JsonLdLinkExpander ex) {
         this.storage = pg
         this.elastic = es
         this.expander = ex
         this.version = version
+        loadCoreData()
         log.info("Whelk started with storage ${storage}, index $elastic and expander.")
     }
 
@@ -32,12 +38,14 @@ class Whelk {
         this.storage = pg
         this.elastic = es
         this.version = version
+        loadCoreData()
         log.info("Whelk started with storage $storage and index $elastic")
     }
 
     public Whelk(String version, Storage pg) {
         this.storage = pg
         this.version = version
+        loadCoreData()
         log.info("Whelk started with storage $storage")
     }
 
@@ -55,6 +63,19 @@ class Whelk {
         }
         pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(Whelk.class)
         return pico
+    }
+
+    void loadCoreData() {
+        loadDisplayData()
+        loadVocabData()
+    }
+
+    void loadDisplayData() {
+        this.displayData = this.storage.locate(vocabDisplayUri, true).document.data
+    }
+
+    void loadVocabData() {
+        this.vocabData = this.storage.locate(vocabUri, true).document.data
     }
 
     Document store(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean createOrUpdate = true) {
