@@ -339,8 +339,6 @@
 
   "NOTE:baseUri:fromSystem": "https://libris.kb.se/",
 
-  "someUriTemplate": "/some{?data*}",
-
   "pendingResources": {
     "?record": {
       "about": "?thing",

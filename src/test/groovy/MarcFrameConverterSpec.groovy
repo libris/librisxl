@@ -326,18 +326,6 @@ class MarcFrameConverterSpec extends Specification {
         resultWithoutDollars != null
     }
 
-    def "should make some id"() {
-        given:
-        def conv = converter.conversion
-        expect:
-        conv.makeSomeId(entity) == '/some?' + params
-        where:
-        params                      | entity
-        'type=Thing&name=someone'   | ['@type': 'Thing', name: 'someone']
-        'type=Thing&name=other'     | ['@type': 'Thing', name: ['some', 'other']]
-        'type=Thing&real=true'      | ['@type': 'Thing', real: true]
-    }
-
     def "should get as list"() {
         expect:
         Util.asList('1') == ['1']
