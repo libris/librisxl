@@ -39,12 +39,15 @@ class LinkFinder {
         PreparedStatement stmt = connection.prepareStatement(paramsQuery)
 
         def foundLinks = entities.collect { entity ->
+            log.trace "Trying to match entity ${entity.inspect()}"
+
             int i = 1
             stmt.setObject(i, mapper.writeValueAsString([entity]), java.sql.Types.OTHER)
             recordIds.each { recordId ->
                 stmt.setObject(++i, recordId)
             }
             def id
+            log.trace stmt.toString()
             ResultSet rs = stmt.executeQuery()
             if (rs.next()) {
                 id = rs.getString("id")
