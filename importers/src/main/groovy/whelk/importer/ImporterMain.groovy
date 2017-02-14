@@ -52,14 +52,17 @@ class ImporterMain {
 
     /**
      * Typical invocation:
-     * java -jar build/libs/vcopyImporter.jar generateEsConfig ../librisxl-tools/elasticsearch/libris_config.json ../../definitions/source/vocab/display.jsonld generated_es_config.json
+     * java -jar build/libs/vcopyImporter.jar generateEsConfig ../librisxl-tools/elasticsearch/libris_config.json ../../definitions/source/vocab/display.jsonld ../../definitions/build/vocab.jsonld generated_es_config.json
      */
-    @Command(args='TEMPLATE_FILE_NAME DISPLAY_INFO_FILE_NAME TO_FILE_NAME')
-    static void generateEsConfig(String templateFileName, String displayInfoFileName, String toFileName) {
+    @Command(args='TEMPLATE_FILE_NAME DISPLAY_INFO_FILE_NAME VOCAB_FILE_NAME TO_FILE_NAME')
+    static void generateEsConfig(String templateFileName, String displayInfoFileName, String vocabFileName, String toFileName) {
         String templateString = new File(templateFileName).text
         String displayInfoString = new File(displayInfoFileName).text
-        String generatedConfig = whelk.ElasticConfigGenerator.generateConfigString(templateString,
-                                                                                   displayInfoString)
+        String vocabString = new File(vocabFileName).text
+        String generatedConfig = whelk.ElasticConfigGenerator.generateConfigString(
+                templateString,
+                displayInfoString,
+                vocabString)
 
         new File(toFileName).write(generatedConfig)
     }
@@ -257,7 +260,7 @@ class ImporterMain {
         if (cmd.startsWith("vcopy")) {
             main = new ImporterMain("secret", "mysql")
         } else if (cmd.startsWith("generateEsConfig")) { // No need for secret.properties to generate es config.
-            generateEsConfig(args[1], args[2], args[3])
+            generateEsConfig(args[1], args[2], args[3], args[4])
             return
         } else {
             main = new ImporterMain("secret")
