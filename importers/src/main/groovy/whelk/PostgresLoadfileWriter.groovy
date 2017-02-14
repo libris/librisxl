@@ -230,7 +230,7 @@ class PostgresLoadfileWriter {
 
             def id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
 
-            Map convertedData = authData && authData.size() > 1 && collection != 'bib' ?
+            Map convertedData = authData && authData.size() > 1 ?
                     converter.sendAndWait([doc: doc, id: id, spec: [oaipmhSetSpecs: authData]]) :
                     converter.sendAndWait([doc: doc, id: id, spec: null])
             Document document = new Document(convertedData)
