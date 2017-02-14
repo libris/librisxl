@@ -2,11 +2,11 @@ package whelk
 
 import spock.lang.Ignore
 import spock.lang.Specification
-import whelk.filter.AuthFinder
+import whelk.filter.LinkFinder
 import whelk.util.PropertyLoader
 
 
-class AuthLinkerSpec extends Specification {
+class LinkFinderSpec extends Specification {
 
 
     @Ignore
@@ -15,7 +15,7 @@ class AuthLinkerSpec extends Specification {
         def props = PropertyLoader.loadProperties('secret')
         def pico = Whelk.getPreparedComponentsContainer(props)
         def whelk = pico.getComponent(Whelk.class)
-        AuthFinder authFinder = new AuthFinder(whelk.storage)
+        LinkFinder authFinder = new LinkFinder(whelk.storage)
 
         def entities = [[
                                 "@type": "Person", "birthYear": "1914", "deathYear": "2001", "familyName": "Jansson", "givenName": "Tove"
@@ -44,7 +44,7 @@ class AuthLinkerSpec extends Specification {
         def props = PropertyLoader.loadProperties('secret')
         def pico = Whelk.getPreparedComponentsContainer(props)
         def whelk = pico.getComponent(Whelk.class)
-        AuthFinder authFinder = new AuthFinder(whelk.storage)
+        LinkFinder authFinder = new LinkFinder(whelk.storage)
 
         def entities = [[
                                 "@type": "Person", "birthYear": "1914", "deathYear": "2001", "familyName": "Jansson", "givenName": "Tove"
@@ -69,8 +69,9 @@ class AuthLinkerSpec extends Specification {
         def results = authFinder.findLinks(entities, authIds)
 
         then:
-        results.count { authUri -> authUri != null } == 2
-        results.count { authUri -> authUri == null } == 1
+        results[0] != null
+        results[1] != null
+        results[2] == null
         results.size() == entities.size()
         results.size() == authIds.size() + 1
 
