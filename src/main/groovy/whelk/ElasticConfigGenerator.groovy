@@ -33,9 +33,7 @@ class ElasticConfigGenerator {
      */
     public static Map generate(Map configTemplate, Map displayInfo) {
 
-        LinkedHashSet orderedCardProperties = parseCardProperties(displayInfo)
-        Map propertyValues = generatePropertyValues(orderedCardProperties)
-
+        Map propertyValues = generatePropertyValues(displayInfo)
 
         Map categories = configTemplate["mappings"]
         for (category in categories) {
@@ -47,28 +45,13 @@ class ElasticConfigGenerator {
 
             Map properties = category.getValue()["properties"]["about"]["properties"]
             for (property in properties) {
-                if (property.getKey() in orderedCardProperties) {
+                if (property.getKey() in propertyValues.keySet()) {
                     boostProperty( property, propertyValues )
                 }
             }
         }
 
         return configTemplate
-    }
-
-    /**
-     * Generate a Map, from property names, to the values with which they should be boosted.
-     * @param orderedCardProperties The ordered set of card properties. item N should have priority over item N+1.
-     * @return A map where each property name is mapped to an integer boost value for said property.
-     */
-    private static Map generatePropertyValues(LinkedHashSet orderedCardProperties) {
-        int boost = cardBoostBase + orderedCardProperties.size()
-        Map propertyValues = [:]
-
-        for (property in orderedCardProperties) {
-            propertyValues[property] = boost--
-        }
-        return propertyValues
     }
 
     /**
@@ -82,29 +65,38 @@ class ElasticConfigGenerator {
      */
     private static void boostProperty(property, propertyValues) {
         Map propertyMap = property.getValue()
-        def existingBoost = propertyMap["boost"]
         Integer boost = propertyValues[property.getKey()]
-        if (existingBoost)
-            boost += existingBoost
         propertyMap["boost"] = boost
     }
 
     /**
-     * Parse the display info and extract a set of all properties that are "card properties".
-     * @param displayInfoString The json TEXT contents of the display info
-     * @return Ordered set of card properties
+     * Generate a Map, from property names, to the values with which they should be boosted.
+     * @param displayInfo The json contents of the display info as a Map
+     * @return A map where each property name is mapped to an integer boost value for said property.
      */
-    private static LinkedHashSet parseCardProperties(Map displayInfo) {
-        Set cardProperties = new LinkedHashSet() // A LinkedHashSet is used instead of a set, to preserve item order.
+    private static Map<String, Integer> generatePropertyValues(Map displayInfo) {
+
+        Map<String, Integer> propertyValues = [:]
 
         Map categories = displayInfo["lensGroups"]["cards"]["lenses"]
         for (category in categories) {
             Map categoryBody = category.getValue()
-            for (property in categoryBody["showProperties"]){
-                cardProperties.add( property.toString() )
+
+            // The boost is decremented by one for each property and RESET for each category.
+            int boost = cardBoostBase
+
+            for (property in categoryBody["showProperties"]) {
+
+                String propertyName = property.toString()
+
+                // Has this property already been assigned a boost value, from another category?
+                // If so, use the higher one.
+                Integer previousBoost = propertyValues[propertyName]
+                if (previousBoost == null || previousBoost < boost)
+                    propertyValues.put(propertyName, boost--)
             }
         }
 
-        return cardProperties
+        return propertyValues
     }
 }
