@@ -9,7 +9,7 @@ import whelk.util.PropertyLoader
 class LinkFinderSpec extends Specification {
 
 
-    //@Ignore
+    @Ignore
     def "All exists"() {
         setup:
         def props = PropertyLoader.loadProperties('secret')
@@ -38,7 +38,7 @@ class LinkFinderSpec extends Specification {
 
 
     }
-    //@Ignore
+    @Ignore
     def "S1ome extra entities"() {
         setup:
         def props = PropertyLoader.loadProperties('secret')
