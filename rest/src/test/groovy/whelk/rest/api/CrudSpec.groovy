@@ -60,14 +60,18 @@ class CrudSpec extends Specification {
         storage = GroovyMock(Storage.class)
         // We want to pass through calls in some cases
         accessControl = GroovySpy(AccessControl.class)
-        whelk = new Whelk("version", storage)
+        whelk = new Whelk()
+        whelk.version = "version"
+        whelk.storage = storage
+        whelk.displayData = ['@context': [
+                                 'examplevocab': 'http://example.com',
+                                 'some_term': 'some_value'
+                             ],
+                             'lensGroups': ['chips': [:]]]
         crud = new Crud()
         crud.whelk = whelk
+        crud.displayData = whelk.displayData
         crud.accessControl = accessControl
-        crud.displayData = ['@context':
-                            ['examplevocab': 'http://example.com',
-                             'some_term': 'some_value'],
-                            'lensGroups': ['chips': [:]]]
     }
 
 
