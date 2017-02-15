@@ -80,6 +80,18 @@ class DocumentSpec extends Specification {
         assert doc.data == expected.data
     }
 
+    def "deepcopy should not fail for map"() {
+        given:
+        LinkedHashMap map = ['@graph':[['marc:encLevel':['@id':'marc:MinimalLevel'], '@type':'Record', 'controlNumber':'5067018', 'created':'1986-12-05T00:00:00.0+01:00', 'marc:catalogingSource':['@id':'marc:CooperativeCatalogingProgram'], 'modified':'2010-04-29T17:00:41.0+02:00', 'librisIIINumber':['0582348854'], 'assigner':['@type':'Organization', 'name':'Uh'], '@id':'http://localhost/8rkbh8ll0d17ptf', 'sameAs':[['@id':'http://libris.kb.se/bib/5067018']], 'mainEntity':['@id':'http://localhost/8rkbh8ll0d17ptf#it']], ['issuanceType':'Monograph', 'marc:publicationStatus':['@id':'marc:ReprintReissueDateAndOriginalDate'], 'marc:publishedYear':'1985', 'marc:otherYear':'1966', 'publicationCountry':[['@id':'https://id.kb.se/country/xxk']], 'identifiedBy':[['@type':'ISBN', 'value':'0-582-34885-4']], 'hasTitle':[['@type':'InstanceTitle', 'marc:searchElement':false, 'mainTitle':'Billy Liar']], 'responsibilityStatement':'Keith Waterhouse. The loneliness of the long-distance runner / Alan Sillitoe', 'publication':[['@type':'Publication', 'place':['@type':'Place', 'label':'Harlow, Essex'], 'agent':['@type':'Agent', 'label':'Longman'], 'date':'1985']], 'extent':'263 s.', 'hasSeries':[['@type':'Serial', 'title':'Heritage of literature']], 'influentialRelation':[['@type':'UniformWork', 'title':'The loneliness of the long-distance runner']], '@type':'Instance', '@id':'http://localhost/8rkbh8ll0d17ptf#it', 'sameAs':[['@id':'http://libris.kb.se/resource/bib/5067018']], 'instanceOf':['@id':'http://localhost/8rkbh8ll0d17ptf#work']], ['@type':'Text', 'language':[['@id':'https://id.kb.se/language/eng']], 'marc:literaryForm':['@id':'marc:NotFictionNotFurtherSpecified'], 'qualifiedAttribution':[['@type':'Principal', 'agent':['@type':'Person', 'familyName':'Waterhouse', 'givenName':'Keith']], ['@type':'Additional', 'agent':['@type':'Person', 'familyName':'Sillitoe', 'givenName':'Alan', 'birthYear':'1928', 'deathYear':'2010']]], '@id':'http://localhost/8rkbh8ll0d17ptf#work']]]
+
+        when:
+        def copy = Document.deepCopy(map)
+        then:
+
+        copy.inspect() == map.inspect()
+
+    }
+
     def "should not add identifier if already added"() {
         given:
         String id = '/foo'

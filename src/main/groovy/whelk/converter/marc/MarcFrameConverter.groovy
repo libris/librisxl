@@ -3,9 +3,15 @@ package whelk.converter.marc
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
+import org.picocontainer.PicoBuilder
 import whelk.Document
 import whelk.JsonLd
+import whelk.Whelk
+import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
+import whelk.filter.LinkFinder
+import org.picocontainer.PicoContainer
+import whelk.util.PropertyLoader
 
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -21,6 +27,8 @@ class MarcFrameConverter implements FormatConverter {
 
     ObjectMapper mapper = new ObjectMapper()
     String cfgBase = "ext"
+    LinkFinder linkFinder
+    PicoContainer pico
 
     protected MarcConversion conversion
 
@@ -28,10 +36,24 @@ class MarcFrameConverter implements FormatConverter {
         def config = readConfig("$cfgBase/marcframe.json") {
             mapper.readValue(it, Map)
         }
+        Properties props = PropertyLoader.loadProperties("secret")
+
+        // Get a properties pico container, pre-wired with components according to components.properties
+        pico = Whelk.getPreparedComponentsContainer(props)
+
+        this.linkFinder = new LinkFinder(pico.getComponent(PostgreSQLComponent))
+
         initialize(config)
     }
 
     MarcFrameConverter(Map config) {
+        Properties props = PropertyLoader.loadProperties("secret")
+
+        // Get a properties pico container, pre-wired with components according to components.properties
+        pico = Whelk.getPreparedComponentsContainer(props)
+
+        this.linkFinder = pico.getComponent(LinkFinder.class)
+        linkFinder.postgres =  pico.getComponent(PostgreSQLComponent)
         initialize(config)
     }
 
@@ -41,7 +63,7 @@ class MarcFrameConverter implements FormatConverter {
 
     void initialize(Map config) {
         def tokenMaps = loadTokenMaps(config.tokenMaps)
-        conversion = new MarcConversion(config, tokenMaps)
+        conversion = new MarcConversion(this, config, tokenMaps)
     }
 
     Map loadTokenMaps(tokenMaps) {
@@ -116,6 +138,7 @@ class MarcFrameConverter implements FormatConverter {
             fpaths = args[0..-1]
         }
         def converter = new MarcFrameConverter()
+        def extraData = [:]
 
         for (fpath in fpaths) {
             def source = converter.mapper.readValue(new File(fpath), Map)
@@ -123,7 +146,7 @@ class MarcFrameConverter implements FormatConverter {
             if (cmd == "revert") {
                 result = converter.runRevert(source)
             } else {
-                result = converter.runConvert(source, fpath)
+                result = converter.runConvert(source, fpath, extraData)
             }
             if (fpaths.size() > 1)
                 println "SOURCE: ${fpath}"
@@ -133,30 +156,26 @@ class MarcFrameConverter implements FormatConverter {
 
 }
 
-
+@Log
 class MarcConversion {
 
     static MARC_CATEGORIES = ['bib', 'auth', 'hold']
 
+    MarcFrameConverter converter
     List<MarcFramePostProcStep> sharedPostProcSteps
     Map<String, MarcRuleSet> marcRuleSets = [:]
     boolean doPostProcessing = true
-    boolean flatQuotedForm = true
+    boolean flatLinkedForm = true
     Map marcTypeMap = [:]
     Map tokenMaps
 
     URI baseUri = Document.BASE_URI
-    String someUriTemplate
-    Set someUriVars
 
-    MarcConversion(Map config, Map tokenMaps) {
+    MarcConversion(MarcFrameConverter converter, Map config, Map tokenMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord
         this.tokenMaps = tokenMaps
+        this.converter = converter
         //this.baseUri = new URI(config.baseUri ?: '/')
-        if (config.someUriTemplate) {
-            someUriTemplate = config.someUriTemplate
-            someUriVars = fromTemplate(someUriTemplate).getVariables() as Set
-        }
 
         this.sharedPostProcSteps = config.postProcessing.collect {
             parsePostProcStep(it)
@@ -284,14 +303,14 @@ class MarcConversion {
             record[marcRuleSet.thingLink] = thing
         }
 
-        if (flatQuotedForm) {
-            return toFlatQuotedForm(state, marcRuleSet)
+        if (flatLinkedForm) {
+            return toFlatLinkedForm(state, marcRuleSet, extraData)
         } else {
             return record
         }
     }
 
-    def toFlatQuotedForm(state, marcRuleSet) {
+    def toFlatLinkedForm(state, marcRuleSet, extraData) {
         marcRuleSet.topPendingResources.each { key, dfn ->
             if (dfn.about && dfn.link) {
                 def ent = state.entityMap[dfn.about]
@@ -305,46 +324,33 @@ class MarcConversion {
             }
         }
 
-        def quotedEntities = []
         def quotedIds = new HashSet()
 
-        state.quotedEntities.each { ent ->
-            // TODO: move to quoted-processing step in storage loading?
-            def entId = ent['@id']
-            ?: ent['sameAs']?.getAt(0)?.get('@id')
-            ?: makeSomeId(ent)
-            if (entId) {
-                def copy = ent.clone()
-                ent.clear()
-                ent['@id'] = copy['@id'] = entId
-                if (copy.size() > 1 && !quotedIds.contains(entId)) {
-                    quotedIds << entId
-                    quotedEntities << ['@graph': copy]
+        if  (converter.linkFinder) {
+            def recordCandidates = extraData?.get("oaipmhSetSpecs")?.findResults {
+                def (spec, authId) = it.split(':')
+                if (spec != 'authority')
+                    return
+                fromTemplate(marcRuleSet.topPendingResources['?record'].uriTemplate).expand(
+                        marcType: 'auth', controlNumber: authId)
+            }
+            def newUris = converter.linkFinder.findLinks(state.quotedEntities, recordCandidates)
+            state.quotedEntities.eachWithIndex { ent, i ->
+                def newUri = newUris[i]
+                if (newUri) {
+                    ent.clear()
+                    ent['@id'] = newUri.toString()
                 }
             }
+        }
+        else {
+            log.debug "No linkfinder present"
         }
 
         def entities = state.entityMap.values()
         return [
-                '@graph': entities + quotedEntities
+                '@graph': entities
         ]
-    }
-
-    String someUriValuesVar = 'q'
-    String someUriDataVar = 'data'
-
-    String makeSomeId(Map ent) {
-        def data = [:]
-        collectUriData(ent, data)
-        if (someUriValuesVar in someUriVars) {
-            data[someUriValuesVar] = data.findResults { k, v ->
-                k in someUriVars ? null : v
-            }
-        }
-        if (someUriDataVar in someUriVars) {
-            data[someUriDataVar] = data.clone()
-        }
-        return resolve(fromTemplate(someUriTemplate).expand(data))
     }
 
     void collectUriData(Map obj, Map acc, String path = '') {

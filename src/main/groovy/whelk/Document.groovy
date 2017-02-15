@@ -391,12 +391,24 @@ class Document {
     }
 
     static Object deepCopy(Object orig) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream()
-        ObjectOutputStream oos = new ObjectOutputStream(bos)
-        oos.writeObject(orig); oos.flush()
-        ByteArrayInputStream bin = new ByteArrayInputStream(bos.toByteArray())
-        ObjectInputStream ois = new ObjectInputStream(bin)
-        return ois.readObject()
+        //TODO: see https://jira.kb.se/browse/LXL-270
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream()
+            ObjectOutputStream oos = new ObjectOutputStream(bos)
+            oos.writeObject(orig); oos.flush()
+            ByteArrayInputStream bin = new ByteArrayInputStream(bos.toByteArray())
+            ObjectInputStream ois = new ObjectInputStream(bin)
+            return ois.readObject()
+        } catch (any) {
+            //§println "ERROR! ${any.message} in deepCopy. Cloning using other approach"
+            def o = orig.inspect()
+            ByteArrayOutputStream bos = new ByteArrayOutputStream()
+            ObjectOutputStream oos = new ObjectOutputStream(bos)
+            oos.writeObject(o); oos.flush()
+            ByteArrayInputStream bin = new ByteArrayInputStream(bos.toByteArray())
+            ObjectInputStream ois = new ObjectInputStream(bin)
+            return Eval.me(ois.readObject())
+        }
     }
 
     /**
@@ -412,7 +424,7 @@ class Document {
         clone.set(createdPath, "", LinkedHashMap)
         clone.data = clone.data["@graph"].collectEntries {
             it ->
-                it.toSorted {a, b -> a.key <=> b.key}
+                it.toSorted { a, b -> a.key <=> b.key }
         }
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()
