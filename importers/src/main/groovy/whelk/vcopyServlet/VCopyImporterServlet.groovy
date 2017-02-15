@@ -297,7 +297,7 @@ class ScheduledJob implements Runnable {
                 whelkState.put("status", "RUNNING")
 
                 storage.saveSettings(collection, whelkState)
-                ImportResult result = importer.doImport(whelk, collection.replace(VCopyImporterServlet.SETTINGS_PFX,''), sourceSystem, vcopyConnectionString, nextSince)
+                ImportResult result = importer.doImport(collection.replace(VCopyImporterServlet.SETTINGS_PFX,''), sourceSystem, vcopyConnectionString, nextSince)
                 log.trace("Import completed, result: $result")
                 if (result && (result.numberOfDocuments > 0 || result.numberOfDocumentsDeleted > 0 || result.numberOfDocumentsSkipped > 0)) {
                     log.debug("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDocumentsDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
