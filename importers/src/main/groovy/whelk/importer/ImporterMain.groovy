@@ -34,10 +34,11 @@ class ImporterMain {
         props = PropertyLoader.loadProperties(propNames)
 
         pico = Whelk.getPreparedComponentsContainer(props)
-        pico.addComponent(new MarcFrameConverter())
+        pico.addComponent(LinkFinder)
+        pico.addComponent(MarcFrameConverter)
         pico.addComponent(ElasticReindexer)
         pico.addComponent(DefinitionsImporter)
-        pico.addComponent(LinkFinder)
+
         pico.addComponent(MockImporter)
         pico.start()
 
@@ -163,13 +164,14 @@ class ImporterMain {
         def bibIds = idgroups.find{it->it.key == 'bib'}.value
         def extraAuthIds = getExtraAuthIds(connUrl,bibIds)
         println "Found ${extraAuthIds.count {it}} linked authority records from bibliographic records"
-
-        idgroups.each { group ->
-            ImportResult importResult = importer.doImport(whelk, group.key, 'vcopy', connUrl, group.value as String[])
-            println "Created ${importResult?.numberOfDocuments} documents från  ${group.key}."
-        }
         ImportResult importResult = importer.doImport(whelk, 'auth', 'vcopy', connUrl, extraAuthIds as String[])
         println "Created ${importResult?.numberOfDocuments} documents från  linked authority records"
+        idgroups.each { group ->
+            importResult = importer.doImport(whelk, group.key, 'vcopy', connUrl, group.value as String[])
+            println "Created ${importResult?.numberOfDocuments} documents from  ${group.key}."
+        }
+
+
         println "All done importing example data."
     }
 
