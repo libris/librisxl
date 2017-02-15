@@ -15,10 +15,10 @@ class MarcFrameConverterLinkFinderIntegrationSpec extends Specification {
     @Requires({ env.testsuite == 'integration' })
     def "should linkfind when given extraData"() {
         given:
-        // TODO: parameterize (at least properties, should use pico via Whelk)
-        def converter = new MarcFrameConverter()
+        // TODO: put properties in test/integration properties.
+        // This also depends on example data being loaded.
         def storage = new PostgreSQLComponent('jdbc:postgresql:whelk', 'lddb')
-        converter.linkFinder = new LinkFinder(storage)
+        def converter = new MarcFrameConverter(new LinkFinder(storage))
 
         and:
             def source = [
