@@ -3,10 +3,15 @@ package whelk.converter.marc
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
+import org.picocontainer.PicoBuilder
 import whelk.Document
 import whelk.JsonLd
+import whelk.Whelk
+import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
 import whelk.filter.LinkFinder
+import org.picocontainer.PicoContainer
+import whelk.util.PropertyLoader
 
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -23,19 +28,32 @@ class MarcFrameConverter implements FormatConverter {
     ObjectMapper mapper = new ObjectMapper()
     String cfgBase = "ext"
     LinkFinder linkFinder
+    PicoContainer pico
 
     protected MarcConversion conversion
 
-    MarcFrameConverter(LinkFinder linkFinder = null) {
+    MarcFrameConverter() {
         def config = readConfig("$cfgBase/marcframe.json") {
             mapper.readValue(it, Map)
         }
-        this.linkFinder = linkFinder
+        Properties props = PropertyLoader.loadProperties("secret")
+
+        // Get a properties pico container, pre-wired with components according to components.properties
+        pico = Whelk.getPreparedComponentsContainer(props)
+
+        this.linkFinder = new LinkFinder(pico.getComponent(PostgreSQLComponent))
+
         initialize(config)
     }
 
-    MarcFrameConverter(Map config, LinkFinder linkFinder = null) {
-        this.linkFinder = linkFinder
+    MarcFrameConverter(Map config) {
+        Properties props = PropertyLoader.loadProperties("secret")
+
+        // Get a properties pico container, pre-wired with components according to components.properties
+        pico = Whelk.getPreparedComponentsContainer(props)
+
+        this.linkFinder = pico.getComponent(LinkFinder.class)
+        linkFinder.postgres =  pico.getComponent(PostgreSQLComponent)
         initialize(config)
     }
 
@@ -138,7 +156,7 @@ class MarcFrameConverter implements FormatConverter {
 
 }
 
-
+@Log
 class MarcConversion {
 
     static MARC_CATEGORIES = ['bib', 'auth', 'hold']
@@ -324,6 +342,9 @@ class MarcConversion {
                     ent['@id'] = newUri.toString()
                 }
             }
+        }
+        else {
+            log.debug "No linkfinder present"
         }
 
         def entities = state.entityMap.values()
