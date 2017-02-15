@@ -33,9 +33,7 @@ class MarcFrameConverter implements FormatConverter {
     protected MarcConversion conversion
 
     MarcFrameConverter() {
-        def config = readConfig("$cfgBase/marcframe.json") {
-            mapper.readValue(it, Map)
-        }
+        def config = readConfig("$cfgBase/marcframe.json")
         Properties props = PropertyLoader.loadProperties("secret")
 
         // Get a properties pico container, pre-wired with components according to components.properties
@@ -57,8 +55,10 @@ class MarcFrameConverter implements FormatConverter {
         initialize(config)
     }
 
-    def readConfig(String path, Closure picker) {
-        return getClass().classLoader.getResourceAsStream(path).withStream(picker)
+    Map readConfig(String path) {
+        return getClass().classLoader.getResourceAsStream(path).withStream {
+            mapper.readValue(it, Map)
+        }
     }
 
     void initialize(Map config) {
@@ -75,9 +75,7 @@ class MarcFrameConverter implements FormatConverter {
         if (tokenMaps instanceof List) {
             tokenMaps.each {
                 if (it instanceof String) {
-                    maps += readConfig("$cfgBase/$it") {
-                        mapper.readValue(it, Map)
-                    }
+                    maps += readConfig("$cfgBase/$it")
                 } else {
                     maps += it
                 }
@@ -87,9 +85,7 @@ class MarcFrameConverter implements FormatConverter {
         }
         maps.each { key, src ->
             if (src instanceof String) {
-                result[key] = readConfig("$cfgBase/$src") {
-                    mapper.readValue(it, Map)
-                }
+                result[key] = readConfig("$cfgBase/$src")
             } else {
                 result[key] = src
             }
