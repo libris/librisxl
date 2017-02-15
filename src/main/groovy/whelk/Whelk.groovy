@@ -30,7 +30,6 @@ class Whelk {
         this.elastic = es
         this.expander = ex
         this.version = version
-        loadCoreData()
         log.info("Whelk started with storage ${storage}, index $elastic and expander.")
     }
 
@@ -38,14 +37,12 @@ class Whelk {
         this.storage = pg
         this.elastic = es
         this.version = version
-        loadCoreData()
         log.info("Whelk started with storage $storage and index $elastic")
     }
 
     public Whelk(String version, Storage pg) {
         this.storage = pg
         this.version = version
-        loadCoreData()
         log.info("Whelk started with storage $storage")
     }
 
