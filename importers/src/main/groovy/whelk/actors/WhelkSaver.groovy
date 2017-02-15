@@ -82,6 +82,7 @@ class WhelkSaver extends DefaultActor {
                 catch (any) {
                     exceptionsThrown++
                     log.error "Error saving to Whelk", any
+                    println any.message
                     reply true
 
                 }

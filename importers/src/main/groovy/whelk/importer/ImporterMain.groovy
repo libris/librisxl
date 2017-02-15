@@ -34,10 +34,11 @@ class ImporterMain {
         props = PropertyLoader.loadProperties(propNames)
 
         pico = Whelk.getPreparedComponentsContainer(props)
-        pico.addComponent(new MarcFrameConverter())
+        pico.addComponent(LinkFinder)
+        pico.addComponent(MarcFrameConverter)
         pico.addComponent(ElasticReindexer)
         pico.addComponent(DefinitionsImporter)
-        pico.addComponent(LinkFinder)
+
         pico.addComponent(MockImporter)
         pico.start()
 

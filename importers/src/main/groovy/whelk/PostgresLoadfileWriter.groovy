@@ -2,6 +2,7 @@ package whelk
 
 import groovy.sql.Sql
 import groovy.util.logging.Slf4j as Log
+import groovyx.gpars.GParsPool
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709Deserializer
 import whelk.converter.MarcJSONConverter
@@ -57,7 +58,6 @@ class PostgresLoadfileWriter {
 
 
     static void dump(DefaultActor suppliedActor, String collection, String connectionUrl, String sqlQuery, List<Object> queryParameters) {
-
         Sql sql = prepareSql(connectionUrl)
 
         StatsPrinter statsPrinter = new StatsPrinter()
@@ -83,7 +83,7 @@ class PostgresLoadfileWriter {
                         break
                     default:                                //new record
                         currentChunk.add(previousRowsInGroup)
-                        if (currentChunk.count { it } == 500) {
+                        if (currentChunk.count { it } == 5000) {
                             currentChunk.each { c ->
                                 suppliedActor.sendAndWait(c)
                                 statsPrinter.sendAndWait([type: 'record'])
@@ -110,6 +110,7 @@ class PostgresLoadfileWriter {
 
         statsPrinter.sendAndWait([type: 'report'])
         println "Done."
+
     }
 
 
@@ -147,18 +148,20 @@ class PostgresLoadfileWriter {
     }
 
 
-    static List getOaipmhSetSpecs(resultSet) {
+    static List getOaipmhSetSpecs(result) {
         List specs = []
-        if (resultSet.collection == "bib") {
-            int authId = resultSet.auth_id ?: 0
-            if (authId > 0) {
-                specs.add("authority:${authId}")
+        result.each { resultSet ->
+            if (resultSet.collection == "bib") {
+                int authId = resultSet.auth_id ?: 0
+                if (authId > 0) {
+                    specs.add("authority:${authId}")
+                }
+            } else if (resultSet.collection == "hold") {
+                if (resultSet.bib_id > 0)
+                    specs.add("bibid:${resultSet.bib_id}")
+                if (resultSet.sigel)
+                    specs.add("location:${resultSet.sigel}")
             }
-        } else if (resultSet.collection == "hold") {
-            if (resultSet.bib_id > 0)
-                specs.add("bibid:${resultSet.bib_id}")
-            if (resultSet.sigel)
-                specs.add("location:${resultSet.sigel}")
         }
         return specs
     }
@@ -204,11 +207,10 @@ class PostgresLoadfileWriter {
                         document = convertDocument(marcFrameConverter, doc, row.collection, row.created)
                         break
                     case 'hold':
-                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
+                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
                         break
                     case 'bib':
-                        SetSpecMatcher.matchAuthToBib(doc, authRecords)
-                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(row))
+                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
                         break
                 }
                 return [collection: row.collection, document: document, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber]
@@ -230,7 +232,7 @@ class PostgresLoadfileWriter {
 
             def id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
 
-            Map convertedData = authData && authData.size() > 1 ?
+            Map convertedData = authData && authData.size() > 0 ?
                     converter.sendAndWait([doc: doc, id: id, spec: [oaipmhSetSpecs: authData]]) :
                     converter.sendAndWait([doc: doc, id: id, spec: null])
             Document document = new Document(convertedData)
