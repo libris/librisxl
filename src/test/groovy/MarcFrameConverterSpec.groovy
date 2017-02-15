@@ -13,7 +13,7 @@ class MarcFrameConverterSpec extends Specification {
             super.initialize(config)
             this.config = config
             super.conversion.doPostProcessing = false
-            super.conversion.flatQuotedForm = false
+            super.conversion.flatLinkedForm = false
             super.conversion.baseUri = new URI("/")
         }
     }
