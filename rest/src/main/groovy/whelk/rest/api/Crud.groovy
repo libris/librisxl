@@ -87,6 +87,7 @@ class Crud extends HttpServlet {
     @Override
     void init() {
         whelk = pico.getComponent(Whelk.class)
+        whelk.loadCoreData()
         displayData = whelk.displayData
         vocabData = whelk.vocabData
         search = new SearchUtils(whelk, displayData, vocabData)
