@@ -3,7 +3,6 @@ package whelk.converter.marc
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
-import org.picocontainer.PicoBuilder
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
@@ -28,30 +27,16 @@ class MarcFrameConverter implements FormatConverter {
     ObjectMapper mapper = new ObjectMapper()
     String cfgBase = "ext"
     LinkFinder linkFinder
-    PicoContainer pico
 
     protected MarcConversion conversion
 
-    MarcFrameConverter() {
+    MarcFrameConverter(LinkFinder linkFinder = null) {
+        this.linkFinder = linkFinder
         def config = readConfig("$cfgBase/marcframe.json")
-        Properties props = PropertyLoader.loadProperties("secret")
-
-        // Get a properties pico container, pre-wired with components according to components.properties
-        pico = Whelk.getPreparedComponentsContainer(props)
-
-        this.linkFinder = new LinkFinder(pico.getComponent(PostgreSQLComponent))
-
         initialize(config)
     }
 
-    MarcFrameConverter(Map config) {
-        Properties props = PropertyLoader.loadProperties("secret")
-
-        // Get a properties pico container, pre-wired with components according to components.properties
-        pico = Whelk.getPreparedComponentsContainer(props)
-
-        this.linkFinder = pico.getComponent(LinkFinder.class)
-        linkFinder.postgres =  pico.getComponent(PostgreSQLComponent)
+    private MarcFrameConverter(Map config) {
         initialize(config)
     }
 
@@ -322,7 +307,7 @@ class MarcConversion {
 
         def quotedIds = new HashSet()
 
-        if  (converter.linkFinder) {
+        if (converter.linkFinder) {
             def recordCandidates = extraData?.get("oaipmhSetSpecs")?.findResults {
                 def (spec, authId) = it.split(':')
                 if (spec != 'authority')
