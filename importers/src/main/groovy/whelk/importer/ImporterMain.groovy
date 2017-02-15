@@ -32,13 +32,12 @@ class ImporterMain {
         log.info("Setting up import program.")
 
         props = PropertyLoader.loadProperties(propNames)
-
         pico = Whelk.getPreparedComponentsContainer(props)
         pico.addComponent(LinkFinder)
         pico.addComponent(MarcFrameConverter)
         pico.addComponent(ElasticReindexer)
         pico.addComponent(DefinitionsImporter)
-
+        pico.addComponent(VCopyImporter)
         pico.addComponent(MockImporter)
         pico.start()
 
@@ -92,10 +91,10 @@ class ImporterMain {
         println collection
         println sourceSystem
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        def whelk = pico.getComponent(Whelk.class)
+        def whelk = pico.getComponent(Whelk)
         println whelk.version
-        VCopyImporter importer = new VCopyImporter()
-        importer.doImport(whelk, collection, sourceSystem, connUrl)
+        def importer = pico.getComponent(VCopyImporter)
+        importer.doImport(collection, sourceSystem, connUrl)
     }
 
     @Command(args='[COLLECTION]')
@@ -148,9 +147,7 @@ class ImporterMain {
     @Command(args='FILE')
     void vcopyloadexampledata(String file) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        def whelk = pico.getComponent(Whelk.class)
-        println whelk.version
-        VCopyImporter importer = new VCopyImporter()
+        def importer = pico.getComponent(VCopyImporter)
 
         def idgroups = new File(file).readLines()
                 .findAll { String line -> ['\t', '/'].every { it -> line.contains(it) } }
@@ -164,10 +161,10 @@ class ImporterMain {
         def bibIds = idgroups.find{it->it.key == 'bib'}.value
         def extraAuthIds = getExtraAuthIds(connUrl,bibIds)
         println "Found ${extraAuthIds.count {it}} linked authority records from bibliographic records"
-        ImportResult importResult = importer.doImport(whelk, 'auth', 'vcopy', connUrl, extraAuthIds as String[])
+        ImportResult importResult = importer.doImport('auth', 'vcopy', connUrl, extraAuthIds as String[])
         println "Created ${importResult?.numberOfDocuments} documents från  linked authority records"
         idgroups.each { group ->
-            importResult = importer.doImport(whelk, group.key, 'vcopy', connUrl, group.value as String[])
+            importResult = importer.doImport(group.key, 'vcopy', connUrl, group.value as String[])
             println "Created ${importResult?.numberOfDocuments} documents from  ${group.key}."
         }
 

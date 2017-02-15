@@ -12,8 +12,8 @@ import whelk.converter.marc.MarcFrameConverter
 class MarcFrameConvertingActor extends DefaultActor {
     MarcFrameConverter marcFrameConverter
 
-    MarcFrameConvertingActor() {
-        marcFrameConverter = new MarcFrameConverter()
+    MarcFrameConvertingActor(MarcFrameConverter marcFrameConverter) {
+        this.marcFrameConverter = marcFrameConverter
     }
 
     @Override

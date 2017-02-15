@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import whelk.Whelk
 import whelk.actors.WhelkSaver
 import whelk.PostgresLoadfileWriter
+import whelk.converter.marc.MarcFrameConverter
 
 /**
  * Created by Theodor on 2017-01-05.
@@ -12,9 +13,17 @@ import whelk.PostgresLoadfileWriter
 @Log
 class VCopyImporter {
 
-    static ImportResult doImport(Whelk whelk, String collection, String sourceSystem, String connectionUrl, Date from) {
+    Whelk whelk
+    MarcFrameConverter converter
 
-        def whelkSaver = new WhelkSaver(whelk, sourceSystem)
+    VCopyImporter(Whelk whelk, MarcFrameConverter converter) {
+        this.whelk = whelk
+        this.converter = converter
+    }
+
+    ImportResult doImport(String collection, String sourceSystem, String connectionUrl, Date from) {
+
+        def whelkSaver = new WhelkSaver(whelk, converter, sourceSystem)
         whelkSaver.importResult.sourceSystem = sourceSystem
         whelkSaver.importResult.fromDate = from
         whelkSaver.start()
@@ -26,9 +35,9 @@ class VCopyImporter {
         return result
     }
 
-    static ImportResult doImport(Whelk whelk, String collection, String sourceSystem, String connectionUrl, String[] vcopyIdsToImport) {
+    ImportResult doImport(String collection, String sourceSystem, String connectionUrl, String[] vcopyIdsToImport) {
 
-        def whelkSaver = new WhelkSaver(whelk, sourceSystem)
+        def whelkSaver = new WhelkSaver(whelk, converter, sourceSystem)
         whelkSaver.importResult.sourceSystem = sourceSystem
 
         whelkSaver.start()

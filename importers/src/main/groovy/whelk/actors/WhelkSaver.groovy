@@ -9,6 +9,7 @@ import whelk.Whelk
 import whelk.importer.ImportResult
 import whelk.VCopyDataRow
 import whelk.PostgresLoadfileWriter
+import whelk.converter.marc.MarcFrameConverter
 
 import java.sql.Timestamp
 
@@ -21,15 +22,15 @@ class WhelkSaver extends DefaultActor {
     int exceptionsThrown
     String sourceSystem
     Whelk whelk
-    MarcFrameConvertingActor converter
+    MarcFrameConvertingActor convertActor
 
-    WhelkSaver(Whelk w, String sourceSystem) {
+    WhelkSaver(Whelk w, MarcFrameConverter converter, String sourceSystem) {
         exceptionsThrown = 0
         this.importResult = new ImportResult()
         this.whelk = w
         this.sourceSystem = sourceSystem
-        converter = new MarcFrameConvertingActor()
-        converter.start()
+        convertActor = new MarcFrameConvertingActor(converter)
+        convertActor.start()
     }
 
     void afterStart() {
@@ -53,7 +54,7 @@ class WhelkSaver extends DefaultActor {
             react { List<VCopyDataRow> argument ->
                 try {
                     log.trace "Got message (${argument.size()} rows). Reacting."
-                    Map record = PostgresLoadfileWriter.handleRowGroup(argument, converter)
+                    Map record = PostgresLoadfileWriter.handleRowGroup(argument, convertActor)
                     if (record && !record.isSuppressed) {
                         log.trace "record is not suppressed. Record: ${record.inspect()}"
                         setLastRecordTimeStamp(record.timestamp as Timestamp)

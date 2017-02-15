@@ -3,14 +3,6 @@ package whelk.vcopyServlet
 import groovy.util.logging.Slf4j as Log
 import org.codehaus.jackson.map.ObjectMapper
 import org.picocontainer.PicoContainer
-import whelk.Whelk
-import whelk.component.PostgreSQLComponent
-import whelk.component.Storage
-import whelk.converter.marc.MarcFrameConverter
-import whelk.importer.BrokenRecordException
-import whelk.importer.ImportResult
-import whelk.importer.VCopyImporter
-import whelk.util.PropertyLoader
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -19,6 +11,16 @@ import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
+
+import whelk.Whelk
+import whelk.component.PostgreSQLComponent
+import whelk.component.Storage
+import whelk.converter.marc.MarcFrameConverter
+import whelk.filter.LinkFinder
+import whelk.importer.BrokenRecordException
+import whelk.importer.ImportResult
+import whelk.importer.VCopyImporter
+import whelk.util.PropertyLoader
 
 /**
  * Created by Theodor on 17-01-09
@@ -46,8 +48,9 @@ class VCopyImporterServlet extends HttpServlet {
 
         props = PropertyLoader.loadProperties('secret','mysql')
         pico = Whelk.getPreparedComponentsContainer(props)
-        pico.addComponent(VCopyImporter.class)
-        pico.addComponent(new MarcFrameConverter())
+        pico.addComponent(VCopyImporter)
+        pico.addComponent(LinkFinder)
+        pico.addComponent(MarcFrameConverter)
         pico.start()
         log.info("Started ...")
     }
