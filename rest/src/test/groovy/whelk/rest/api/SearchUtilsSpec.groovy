@@ -12,6 +12,19 @@ class SearchUtilsSpec extends Specification {
 
     }
 
+
+    def "aa"(){
+        when:
+        def uri =  "http://localhost/3ld03n3f023w1gd#it"
+        def uris =  "https://localhost/3ld03n3f023w1gd#it"
+        def urir =  "httpr://localhost/3ld03n3f023w1gd#it"
+        def pattern = $/^https?:///$
+        then:
+        assert uri =~ pattern
+        assert uris =~ pattern
+        assert !(urir =~ pattern)
+    }
+
     def "Should make site filter"() {
         when:
         String url = "http://example.com"

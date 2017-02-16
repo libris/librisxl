@@ -105,7 +105,7 @@ class Crud extends HttpServlet {
 
             if (callback) {
                 jsonResult = callback + "(" +
-                             mapper.writeValueAsString(results) + ");"
+                        mapper.writeValueAsString(results) + ");"
             } else {
                 jsonResult = mapper.writeValueAsString(results)
             }
@@ -113,15 +113,15 @@ class Crud extends HttpServlet {
             sendResponse(response, jsonResult, "application/json")
         } catch (WhelkRuntimeException wse) {
             log.error("Attempted elastic query, but whelk has no " +
-                      "elastic component configured.")
+                    "elastic component configured.")
             response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,
-                               "Attempted to use elastic for query, but " +
-                               "no elastic component is configured.")
+                    "Attempted to use elastic for query, but " +
+                            "no elastic component is configured.")
             return
         } catch (InvalidQueryException iqe) {
             log.error("Invalid query: ${queryParameters}")
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                               "Invalid query, please check the documentation.")
+                    "Invalid query, please check the documentation.")
             return
         }
     }
@@ -188,21 +188,21 @@ class Crud extends HttpServlet {
 
         if (!doc && !loc) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND,
-                               "Document not found.")
+                    "Document not found.")
             return
         } else if (!doc && loc) {
             sendRedirect(request, response, loc)
             return
         } else if (doc && doc.deleted) {
             response.sendError(HttpServletResponse.SC_GONE,
-                               "Document has been deleted.")
+                    "Document has been deleted.")
             return
         } else {
             String contentType = CrudUtils.getBestContentType(request)
             def responseBody = getFormattedResponseBody(doc, path, contentType)
             String modified = doc.getModified()
             sendGetResponse(request, response, responseBody, modified,
-                            path, contentType)
+                    path, contentType)
             return
         }
     }
@@ -211,7 +211,7 @@ class Crud extends HttpServlet {
                                             String contentType) {
         FormattingType format = getFormattingType(path, contentType)
         log.debug("Formatting document ${doc.getCompleteId()} with format " +
-                  "${format} and content type ${contentType}")
+                "${format} and content type ${contentType}")
         def result
         switch (format) {
             case FormattingType.RAW:
@@ -268,7 +268,9 @@ class Crud extends HttpServlet {
         List result = []
         refs.each { ref ->
             def match
-            if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
+            if (ref =~ $/^https?:///$) {
+                result << ref
+            } else if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
                 def resolved = this.displayData['@context'][match[0][1]]
                 if (resolved) {
                     URI base = new URI(resolved)
@@ -278,6 +280,7 @@ class Crud extends HttpServlet {
                 result << ref
             }
         }
+
         return result
     }
 
@@ -343,7 +346,7 @@ class Crud extends HttpServlet {
                 default:
                     // TODO support more file types
                     throw new WhelkRuntimeException("Bad file ending: " +
-                                                    "${fileEnding}")
+                            "${fileEnding}")
             }
         } else if (view == 'data-view') {
             switch (fileEnding) {
@@ -420,7 +423,7 @@ class Crud extends HttpServlet {
      * Document and Location in the response may be null.
      *
      */
-    Tuple2 getDocumentFromStorage(String id, String version=null) {
+    Tuple2 getDocumentFromStorage(String id, String version = null) {
         if (version) {
             Document doc = whelk.storage.load(id, version)
             return new Tuple2(doc, null)
@@ -475,16 +478,16 @@ class Crud extends HttpServlet {
         String ctheader = contextHeaders.get(path.split("/")[1])
         if (ctheader) {
             response.setHeader("Link",
-                               "<$ctheader>; " +
-                               "rel=\"http://www.w3.org/ns/json-ld#context\"; " +
-                               "type=\"application/ld+json\"")
+                    "<$ctheader>; " +
+                            "rel=\"http://www.w3.org/ns/json-ld#context\"; " +
+                            "type=\"application/ld+json\"")
         }
 
         response.setHeader("ETag", modified)
 
         if (path in contextHeaders.collect { it.value }) {
             log.debug("request is for context file. " +
-                      "Must serve original content-type ($contentType).")
+                    "Must serve original content-type ($contentType).")
             // FIXME what should happen here?
             // contentType = document.contentType
         }
@@ -511,7 +514,9 @@ class Crud extends HttpServlet {
         }
 
         if (document && accepting && !accepting.contains("*/*") && !accepting.contains(document.contentType) && !accepting.contains(getMajorContentType(document.contentType))) {
-            FormatConverter fc = pico.getComponents(FormatConverter.class).find { accepting.contains(it.resultContentType) && it.requiredContentType == document.contentType }
+            FormatConverter fc = pico.getComponents(FormatConverter.class).find {
+                accepting.contains(it.resultContentType) && it.requiredContentType == document.contentType
+            }
             if (fc) {
                 log.debug("Found formatconverter for ${fc.resultContentType}")
                 document = fc.convert(document)
@@ -535,9 +540,9 @@ class Crud extends HttpServlet {
         String redirUrl = location.uri.toString()
         if (location.getUri().getScheme() == null) {
             def locationRef = request.getScheme() + "://" +
-                request.getServerName() +
-                (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") +
-                request.getContextPath()
+                    request.getServerName() +
+                    (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") +
+                    request.getContextPath()
             redirUrl = locationRef + location.uri.toString()
         }
         response.setHeader("Location", redirUrl)
@@ -552,14 +557,14 @@ class Crud extends HttpServlet {
         if (request.pathInfo != "/") {
             log.debug("Invalid POST request URL.")
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                               "Method not allowed.")
+                    "Method not allowed.")
             return
         }
 
         if (!isSupportedContentType(request)) {
             log.debug("Unsupported Content-Type for POST.")
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                               "Content-Type not supported.")
+                    "Content-Type not supported.")
             return
         }
 
@@ -568,14 +573,14 @@ class Crud extends HttpServlet {
         if (isEmptyInput(requestBody)) {
             log.debug("Empty POST request.")
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                               "No data received")
+                    "No data received")
             return
         }
 
         if (!JsonLd.isFlat(requestBody)) {
             log.debug("POST body is not flat JSON-LD")
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                               "Body is not flat JSON-LD.")
+                    "Body is not flat JSON-LD.")
         }
 
         // FIXME we're assuming Content-Type application/ld+json here
@@ -585,10 +590,10 @@ class Crud extends HttpServlet {
 
         // FIXME handle this better
         if (fullDocumentId &&
-            fullDocumentId.startsWith(Document.BASE_URI.toString())) {
+                fullDocumentId.startsWith(Document.BASE_URI.toString())) {
             log.debug("Invalid supplied ID in POST request.")
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                               "Supplied document ID not allowed.")
+                    "Supplied document ID not allowed.")
             return
         }
 
@@ -596,7 +601,7 @@ class Crud extends HttpServlet {
         if (existingDoc) {
             log.debug("Tried to POST existing document.")
             response.sendError(HttpServletResponse.SC_CONFLICT,
-                               "Document with ID ${documentId} already exists.")
+                    "Document with ID ${documentId} already exists.")
             return
         }
 
@@ -618,14 +623,14 @@ class Crud extends HttpServlet {
             boolean allowed = hasPostPermission(newDoc, request.getAttribute("user"))
             if (!allowed) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                                   "You are not authorized to perform this " +
-                                   "operation")
+                        "You are not authorized to perform this " +
+                                "operation")
                 return
             }
         } catch (ModelValidationException mve) {
             // FIXME data leak
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                               mve.getMessage())
+                    mve.getMessage())
             return
         }
 
@@ -635,7 +640,7 @@ class Crud extends HttpServlet {
         boolean isUpdate = false
         Document savedDoc = saveDocument(newDoc, collection, isUpdate)
         sendCreateResponse(response, savedDoc.getURI().toString(),
-                           savedDoc.getModified() as String)
+                savedDoc.getModified() as String)
     }
 
     @Override
@@ -645,14 +650,14 @@ class Crud extends HttpServlet {
         if (request.pathInfo == "/") {
             log.debug("Invalid PUT request URL.")
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                               "Method not allowed.")
+                    "Method not allowed.")
             return
         }
 
         if (!isSupportedContentType(request)) {
             log.debug("Unsupported Content-Type for PUT.")
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                               "Content-Type not supported.")
+                    "Content-Type not supported.")
             return
         }
 
@@ -661,7 +666,7 @@ class Crud extends HttpServlet {
         if (isEmptyInput(requestBody)) {
             log.debug("Empty PUT request.")
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                               "No data received")
+                    "No data received")
             return
         }
 
@@ -671,12 +676,12 @@ class Crud extends HttpServlet {
         if (!documentId) {
             log.debug("Missing document ID in PUT request.")
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                               "Missing @id in request.")
+                    "Missing @id in request.")
             return
         } else if (idFromUrl != documentId) {
             log.debug("Document ID does not match ID in URL.")
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                               "ID in document does not match ID in URL.")
+                    "ID in document does not match ID in URL.")
             return
         }
 
@@ -685,11 +690,11 @@ class Crud extends HttpServlet {
         Document existingDoc = location?.document
         if (!existingDoc && location?.uri) {
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                               "PUT does not support alternate IDs.")
+                    "PUT does not support alternate IDs.")
             return
         } else if (!existingDoc) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND,
-                               "Document not found.")
+                    "Document not found.")
             return
         } else {
             // FIXME not needed? should be handled by 303 See Other
@@ -698,11 +703,11 @@ class Crud extends HttpServlet {
         }
 
         if (request.getHeader("If-Match") &&
-            existingDoc.modified as String != request.getHeader("If-Match")) {
+                existingDoc.modified as String != request.getHeader("If-Match")) {
             log.debug("PUT performed on stale document.")
             response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED,
-                               "The resource has been updated by someone " +
-                               "else. Please refetch.")
+                    "The resource has been updated by someone " +
+                            "else. Please refetch.")
             return
         }
 
@@ -714,17 +719,17 @@ class Crud extends HttpServlet {
             // TODO: 'collection' must also match the collection 'existingDoc'
             // is in.
             boolean allowed = hasPutPermission(updatedDoc, existingDoc,
-                                               request.getAttribute("user"))
+                    request.getAttribute("user"))
             if (!allowed) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                                   "You are not authorized to perform this " +
-                                   "operation")
+                        "You are not authorized to perform this " +
+                                "operation")
                 return
             }
         } catch (ModelValidationException mve) {
             // FIXME data leak
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                               mve.getMessage())
+                    mve.getMessage())
             return
         }
         log.debug("All checks passed.")
@@ -733,7 +738,7 @@ class Crud extends HttpServlet {
         boolean isUpdate = true
         Document savedDoc = saveDocument(updatedDoc, collection, isUpdate)
         sendUpdateResponse(response, savedDoc.getURI().toString(),
-                           savedDoc.getModified() as String)
+                savedDoc.getModified() as String)
 
     }
 
@@ -779,18 +784,18 @@ class Crud extends HttpServlet {
         } catch (StorageCreateFailedException scfe) {
             log.warn("Already have document with id ${scfe.duplicateId}")
             response.sendError(HttpServletResponse.SC_CONFLICT,
-                               "Document with id \"${scfe.duplicateId}\" " +
-                               "already exists.")
+                    "Document with id \"${scfe.duplicateId}\" " +
+                            "already exists.")
         } catch (WhelkAddException wae) {
             log.warn("Whelk failed to store document: ${wae.message}")
             // FIXME data leak
             response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
-                               wae.message)
+                    wae.message)
         } catch (Exception e) {
             log.error("Operation failed", e)
             // FIXME data leak
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                               e.message)
+                    e.message)
         }
     }
 
