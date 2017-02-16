@@ -22,7 +22,7 @@ class LinkFinder {
 
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql
-        ENTITY_QUERY = """SELECT id
+        ENTITY_QUERY = """SELECT data -> '@graph' -> 1 ->> '@id' as thingUri
                         FROM lddb
                         WHERE data -> '@graph' @> ?
                         AND id IN (SELECT id
@@ -52,7 +52,7 @@ class LinkFinder {
                 log.trace stmt.toString()
                 ResultSet rs = stmt.executeQuery()
                 if (rs.next()) {
-                    id = rs.getString("id")
+                    id = rs.getString("thingUri")
                 }
 
                 return id ? Document.BASE_URI.resolve(id) : null
