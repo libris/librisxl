@@ -88,11 +88,41 @@ public class JsonLd {
 
     public static List getExternalReferences(Map jsonLd){
         Set allReferences = getAllReferences(jsonLd)
-        Set localObjects = getIdMap(jsonLd).keySet()
+        Set localObjects = getLocalObjects(jsonLd)
         List externalRefs = allReferences.minus(localObjects) as List
         // NOTE: this is necessary because some documents contain references to
         // bnodes that don't exist (in that document).
         return filterOutDanglingBnodes(externalRefs)
+    }
+
+    private static Set getLocalObjects(Map jsonLd) {
+        List result = []
+        if (jsonLd.get(GRAPH_KEY)) {
+            for (item in jsonLd.get(GRAPH_KEY)) {
+                if (item.containsKey(GRAPH_KEY)) {
+                    result.addAll(getLocalObjects(item))
+                }
+                if (item.containsKey(ID_KEY)) {
+                    def id = item.get(ID_KEY)
+                    if (!result.contains(id)) {
+                        result << id
+                    }
+                }
+                if (item.containsKey(JSONLD_ALT_ID_KEY)) {
+                    item.get(JSONLD_ALT_ID_KEY).each {
+                        if (!it.containsKey(ID_KEY)) {
+                            return
+                        }
+
+                        def id = it.get(ID_KEY)
+                        if (!result.contains(id)) {
+                            result << id
+                        }
+                    }
+                }
+            }
+        }
+        return result
     }
 
     private static List filterOutDanglingBnodes(List refs) {

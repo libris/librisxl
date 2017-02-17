@@ -35,6 +35,51 @@ class JsonLdSpec extends Specification {
         assert JsonLd.getIdMap(bnode_graph).keySet() == expected as Set
     }
 
+    def "should find external references"() {
+        given:
+        def graph = ['@graph': [['@id': '/foo',
+                                 'sameAs': [['@id': '/bar'], ['@id': '/baz']],
+                                 'third': ['@id': '/third']
+                                ],
+                                ['@id': '/second',
+                                 'foo': '/foo',
+                                 'some': 'value'],
+                                ['@id': '/third',
+                                 'external': ['@id': '/external']]
+                               ],
+                     '@context': 'base.jsonld']
+        def expected = ['/external']
+
+        expect:
+        assert JsonLd.getExternalReferences(graph) == expected
+    }
+
+    def "should get local objects"() {
+        given:
+        def input = ['@graph': [['@id': '/foo',
+                                'sameAs': [['@id': '/baz']],
+                                'bar': ['@id': '/bar']],
+                                ['@graph': [['@id': '/quux',
+                                             'some': 'value']]]]]
+        Set expected = ['/foo', '/baz', '/quux']
+
+        expect:
+        assert JsonLd.getLocalObjects(input) == expected
+    }
+
+    def "should handle malformed sameAs when getting local objects"() {
+        given:
+        def input = ['@graph': [['@id': '/foo',
+                                'sameAs': [['bad_key': '/baz']],
+                                'bar': ['@id': '/bar']],
+                                ['@graph': [['@id': '/quux',
+                                             'some': 'value']]]]]
+        Set expected = ['/foo', '/quux']
+
+        expect:
+        assert JsonLd.getLocalObjects(input) == expected
+    }
+
    def "should get all references"() {
        given:
        def input = ['@graph': [['@id': '/foo',
