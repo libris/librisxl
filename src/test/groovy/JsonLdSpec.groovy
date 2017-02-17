@@ -24,6 +24,17 @@ class JsonLdSpec extends Specification {
         ['/some', '/other']     | [['@id': '/some'], ['@graph': ['@id': '/other']]]
     }
 
+    def "should get nested id map"() {
+        given:
+        def graph = ['@graph': [['@id': '/foo', 'some': 'value'],
+                                ['@graph': ['@id': '/bar']]],
+                     '@context': 'base.jsonln']
+        def expected = ['/foo', '/bar']
+        expect:
+        assert JsonLd.getIdMap(graph).keySet() == expected as Set
+
+    }
+
     def "should get id map with bnode"() {
         given:
         def bnode_graph = ['@graph': [['@id': '/some',
