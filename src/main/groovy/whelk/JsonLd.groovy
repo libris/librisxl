@@ -191,7 +191,15 @@ public class JsonLd {
 
         additionalObjects.each { id, object ->
             Map chip = toChip(object, displayData)
-            graphItems << ["@graph": chip]
+            if (chip.containsKey('@graph')) {
+                if (!chip.containsKey('@id')) {
+                    chip['@id'] = id
+                }
+                graphItems << chip
+            } else {
+                graphItems << ['@graph': chip,
+                               '@id': id]
+            }
         }
         jsonLd[GRAPH_KEY] = graphItems
 
