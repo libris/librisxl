@@ -131,9 +131,32 @@ if [ "$RECREATE_DB" = true ]; then
     echo "(Re)creating ElasticSearch database..."
     echo ""
 
+
+    # Assert that we have definitions data built.
+    DEFS_FILE=../definitions/build/definitions.jsonld.lines
+    if [ ! -f $DEFS_FILE ]; then
+	echo "Please use setup-dev-whelk.sh or build definitions manually before proceeding."
+	exit 1
+    fi
+
+    # Build ES config generator.
+    pushd importers
+    JAR=build/libs/vcopyImporter.jar
+    if [ "$FORCE_REBUILD" = true ] || [ ! -f $JAR ]; then
+	gradle jar
+    fi
+
+    # Generate the ES config
+    java -jar $JAR generateEsConfig \
+	 ../librisxl-tools/elasticsearch/libris_config.json \
+	 ../../definitions/source/vocab/display.jsonld \
+	 ../../definitions/build/vocab.jsonld \
+	 ../generated_es_config.json
+    popd
+
     curl -XDELETE http://$ESHOST:9200/$WHELKNAME
     curl -XPOST http://$ESHOST:9200/$WHELKNAME \
-         -d@$TOOLDIR/elasticsearch/libris_config.json
+         -d@generated_es_config.json
 
     echo ""
     echo ""
