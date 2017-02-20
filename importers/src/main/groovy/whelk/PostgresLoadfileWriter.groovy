@@ -217,8 +217,9 @@ class PostgresLoadfileWriter {
             }
             catch (any) {
                 println "ALLVARLIGT FEL! ${any.message}"
-                println " ${any.stackTrace}"
+                //println " ${any.stackTrace}"
                 println "Bibid: ${row.bib_id}"
+                any.printStackTrace()
                 return [collection: row.collection, document: null, isSuppressed: true, isDeleted: false, timestamp: timestamp, controlNumber: "0"]
             }
 

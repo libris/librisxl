@@ -6,6 +6,7 @@ import groovyx.gpars.actor.DefaultActor
 import whelk.Document
 import whelk.PostgresLoadfileWriter
 import whelk.VCopyDataRow
+import whelk.converter.marc.MarcFrameConverter
 
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -24,7 +25,7 @@ import java.nio.file.Paths
     FileDumper(String exportFileName) {
         mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"))
         identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"))
-        converter = new MarcFrameConvertingActor()
+        converter = new MarcFrameConvertingActor(new MarcFrameConverter())
         converter.start()
     }
 
