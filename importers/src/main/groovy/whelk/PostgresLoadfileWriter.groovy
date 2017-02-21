@@ -62,7 +62,7 @@ class PostgresLoadfileWriter {
         dump(collection, exportFileName, connectionUrl, sqlQuery, queryParameters)
     }
 
-    private static synchronized void dump(String collection, String exportFileName, String connectionUrl, String sqlQuery, List<Object> queryParameters) {
+    private static void dump(String collection, String exportFileName, String connectionUrl, String sqlQuery, List<Object> queryParameters) {
 
         final Sql sql = prepareSql(connectionUrl)
         FileDumper fileDumper = new FileDumper(exportFileName)

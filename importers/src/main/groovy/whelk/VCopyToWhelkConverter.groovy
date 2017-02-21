@@ -2,8 +2,10 @@ package whelk
 
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709Deserializer
+import whelk.component.PostgreSQLComponent
 import whelk.converter.MarcJSONConverter
 import whelk.converter.marc.MarcFrameConverter
+import whelk.filter.LinkFinder
 import whelk.importer.MySQLLoader
 import whelk.util.LegacyIntegrationTools
 
@@ -11,7 +13,7 @@ import java.sql.Timestamp
 
 class VCopyToWhelkConverter
 {
-    private static MarcFrameConverter marcFrameConverter = new MarcFrameConverter()
+    private static MarcFrameConverter marcFrameConverter = new MarcFrameConverter(new LinkFinder(new PostgreSQLComponent()))
 
     public static Map convert(List<VCopyDataRow> rows) {
         VCopyDataRow row = rows.last()

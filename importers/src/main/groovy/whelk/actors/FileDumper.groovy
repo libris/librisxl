@@ -31,8 +31,8 @@ import java.nio.file.Paths
     FileDumper(String exportFileName) {
         mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"))
         identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"))
-        //threadPool = new ThreadPool(4 * Runtime.getRuntime().availableProcessors())
-        threadPool = new ThreadPool(1)
+        threadPool = new ThreadPool(4 * Runtime.getRuntime().availableProcessors())
+        //threadPool = new ThreadPool(2)
     }
 
     public void close() {
@@ -44,19 +44,37 @@ import java.nio.file.Paths
     public void convertAndWrite(List<List<VCopyDataRow>> batch) {
         threadPool.executeOnThread( batch, { _batch ->
             for ( List<VCopyDataRow> rowList in _batch) {
+
+                long startAt = System.currentTimeMillis()
+
                 Map recordMap = VCopyToWhelkConverter.convert(rowList)
+
+                long convertDoneAt = System.currentTimeMillis()
+
                 append(recordMap)
+
+                long writeDoneAt = System.currentTimeMillis()
+
+                long convTime = convertDoneAt - startAt
+                long writeTime = writeDoneAt - convertDoneAt
+                long totalTime = writeDoneAt - startAt
+                println(Thread.currentThread().getName() + " is done in " + totalTime + " ms. " + convTime + " of which spent converting and " + writeTime + " spent writing.")
             }
         })
     }
 
     private synchronized void append(Map recordMap) {
+
+        long startAt = System.currentTimeMillis()
+
         if (recordMap && !recordMap.isSuppressed) {
 
             Document doc = recordMap.document
             String coll = recordMap.collection
+
             final String delimiterString = '\t'
             final String nullString = "\\N"
+
 
             List<String> identifiers = doc.recordIdentifiers
 
@@ -72,5 +90,9 @@ import java.nio.file.Paths
                 identifiersWriter.write("${doc.shortId}\t${identifier}\n")
             }
         }
+
+        long writeDoneAt = System.currentTimeMillis()
+        long totalTime = writeDoneAt - startAt
+        println("spent actually writing: " + totalTime)
     }
 }
