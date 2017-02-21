@@ -75,6 +75,24 @@ class Whelk {
         this.vocabData = this.storage.locate(vocabUri, true).document.data
     }
 
+    Map<String, Document> bulkLoad(List ids) {
+        Map result = [:]
+        ids.each { id ->
+            Document doc
+            if (id.startsWith(Document.BASE_URI.toString())) {
+                id = Document.BASE_URI.resolve(id).getPath().substring(1)
+                doc = storage.load(id)
+            } else {
+                doc = storage.locate(id, true)?.document
+            }
+
+            if (doc && !doc.deleted) {
+                result[id] = doc
+            }
+        }
+        return result
+    }
+
     Document store(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean createOrUpdate = true) {
         if (storage.store(document, createOrUpdate, changedIn, changedBy, collection, deleted)) {
             if (elastic) {
