@@ -507,8 +507,7 @@ public class JsonLd {
             for (item in flatJsonLd.get(GRAPH_KEY)) {
                 if (item.containsKey(GRAPH_KEY)) {
                     idMap = idMap + getIdMap(item)
-                }
-                if (item.containsKey(ID_KEY)) {
+                } else if (item.containsKey(ID_KEY)) {
                     def id = item.get(ID_KEY)
                     if (idMap.containsKey(id)) {
                         Map existing = idMap.get(id)
