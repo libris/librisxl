@@ -53,15 +53,18 @@ class PostgresLoadfileWriter {
         fileDumper.stop()
     }
 */
+
+    private final static int BATCH_SIZE = 200
+
     public static void dumpToFile(String exportFileName, String collection, String connectionUrl) {
         String sqlQuery = MySQLLoader.selectByMarcType[collection]
         List<Object> queryParameters = [0]
         dump(collection, exportFileName, connectionUrl, sqlQuery, queryParameters)
     }
 
-    private static void dump(String collection, String exportFileName, String connectionUrl, String sqlQuery, List<Object> queryParameters) {
-        final Sql sql = prepareSql(connectionUrl)
+    private static synchronized void dump(String collection, String exportFileName, String connectionUrl, String sqlQuery, List<Object> queryParameters) {
 
+        final Sql sql = prepareSql(connectionUrl)
         FileDumper fileDumper = new FileDumper(exportFileName)
 
         int rowCount = 0
@@ -71,6 +74,8 @@ class PostgresLoadfileWriter {
         List<VCopyDataRow> previousRowsInGroup = []
         VCopyDataRow previousRow = null
         VCopyDataRow currentRow = null
+
+        List<List<VCopyDataRow>> currentBatch = []
 
         sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
             try {
@@ -85,7 +90,7 @@ class PostgresLoadfileWriter {
                         previousRowsInGroup.add(currentRow)
                         break
                     default:                                //new record
-                        fileDumper.append( previousRowsInGroup )
+                        currentBatch = batchForConversion(previousRowsInGroup, currentBatch, fileDumper)
                         ++recordCount
                         previousRow = currentRow
                         previousRowsInGroup = []
@@ -111,14 +116,36 @@ class PostgresLoadfileWriter {
         }
 
         if (!previousRowsInGroup.isEmpty()) {
-            fileDumper.append( previousRowsInGroup )
+            currentBatch = batchForConversion(previousRowsInGroup, currentBatch, fileDumper)
             ++recordCount
         }
+        currentBatch = flushConversionBatch(currentBatch, fileDumper)
 
         println "Done reading from DB."
 
         fileDumper.close()
         println "Done."
+    }
+
+    /**
+     * Send the row list to be dispatched for conversion. Essentially this means, add it to the global 'currentBatch',
+     * and if the batch is large enough flush it to the conversion process and return a new empty batch instead.
+     */
+    private static List<List<VCopyDataRow>> batchForConversion(List<VCopyDataRow> rowList,
+                                                               List<List<VCopyDataRow>> currentBatch,
+                                                               FileDumper fileDumper) {
+        currentBatch.add(rowList)
+
+        if (currentBatch.size() > BATCH_SIZE) {
+            return flushConversionBatch(currentBatch, fileDumper)
+        }
+        return currentBatch
+    }
+
+    private static List<List<VCopyDataRow>> flushConversionBatch(List<List<VCopyDataRow>> currentBatch,
+                                                                 FileDumper fileDumper) {
+        fileDumper.convertAndWrite(currentBatch)
+        return []
     }
 
     private static Sql prepareSql(String connectionUrl) {

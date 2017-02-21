@@ -24,13 +24,13 @@ class VCopyToWhelkConverter
             try {
                 switch (row.collection) {
                     case 'auth':
-                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created)
+                        document = convertDocument(doc, row.collection, row.created)
                         break
                     case 'hold':
-                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
+                        document = convertDocument(doc, row.collection, row.created, getOaipmhSetSpecs(rows))
                         break
                     case 'bib':
-                        document = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
+                        document = convertDocument(doc, row.collection, row.created, getOaipmhSetSpecs(rows))
                         break
                 }
                 return [collection: row.collection, document: document, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber]
@@ -46,7 +46,7 @@ class VCopyToWhelkConverter
             return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber]
     }
 
-    private static Document convertDocument(converter, Map doc, String collection, Date created, List authData = null) {
+    private static Document convertDocument(Map doc, String collection, Date created, List authData = null) {
         if (doc && !isSuppressed(doc)) {
             String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
 
