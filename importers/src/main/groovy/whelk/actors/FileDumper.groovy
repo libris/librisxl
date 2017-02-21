@@ -6,6 +6,7 @@ import groovyx.gpars.actor.DefaultActor
 import whelk.Document
 import whelk.PostgresLoadfileWriter
 import whelk.VCopyDataRow
+import whelk.VCopyToWhelkConverter
 import whelk.converter.marc.MarcFrameConverter
 
 import java.nio.charset.Charset
@@ -16,7 +17,7 @@ import java.nio.file.Paths
  * Created by theodortolstoy on 2017-01-24.
  */
 @Slf4j
-    class FileDumper extends DefaultActor {
+    class FileDumper {
 
     BufferedWriter mainTableWriter
     BufferedWriter identifiersWriter
@@ -29,57 +30,45 @@ import java.nio.file.Paths
         converter.start()
     }
 
-
-    void afterStart() {
-        println "FileDumper started."
-    }
-
-    void afterStop() {
-        println "FileDumper stopping. Flushing writers"
+    void close() {
         mainTableWriter.flush()
         identifiersWriter.flush()
-        println "Writers flushed"
     }
 
-    @Override
-    protected void act() {
-        loop {
-            react { List<VCopyDataRow> argument ->
-                try {
-                    Map record = PostgresLoadfileWriter.handleRowGroup(argument, converter)
-                    if (record && !record.isSuppressed) {
+    boolean append(List<VCopyDataRow> argument) {
+        try {
+            Map record = VCopyToWhelkConverter.convert(argument)
+            if (record && !record.isSuppressed) {
 
-                        Document doc = record.document
-                        String coll = record.collection
-                        final String delimiter = '\t'
-                        final String nullString = "\\N"
+                Document doc = record.document
+                String coll = record.collection
+                final String delimiter = '\t'
+                final String nullString = "\\N"
 
-                        final delimiterString = new String(delimiter)
+                final delimiterString = new String(delimiter)
 
-                        List<String> identifiers = doc.recordIdentifiers
+                List<String> identifiers = doc.recordIdentifiers
 
-                        mainTableWriter.write("${doc.shortId}\t" +
-                                "${doc.dataAsString.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
-                                "${coll.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
-                                "${"vcopy"}\t" +
-                                "${nullString}\t" +
-                                "${doc.checksum.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
-                                "${doc.created}\n")
+                mainTableWriter.write("${doc.shortId}\t" +
+                        "${doc.dataAsString.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
+                        "${coll.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
+                        "${"vcopy"}\t" +
+                        "${nullString}\t" +
+                        "${doc.checksum.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
+                        "${doc.created}\n")
 
-                        for (String identifier : identifiers) {
-                            identifiersWriter.write("${doc.shortId}\t${identifier}\n")
-                        }
-                        reply true
-                    } else {
-                        println "Suppressed record"
-                        reply false
-                    }
+                for (String identifier : identifiers) {
+                    identifiersWriter.write("${doc.shortId}\t${identifier}\n")
                 }
-                catch (Exception any) {
-                    log.error("Error in FileDumper", any)
-                    reply false
-                }
+                return true
+            } else {
+                println "Suppressed record"
+                return false
             }
+        }
+        catch (Exception any) {
+            log.error("Error in FileDumper", any)
+            return false
         }
     }
 
