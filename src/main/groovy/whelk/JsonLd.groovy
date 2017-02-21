@@ -296,12 +296,12 @@ public class JsonLd {
         return frame(mainId, null, flatJsonLd)
     }
 
-    public static Map frame(String mainId, String thingLink, Map flatJsonLd) {
+    public static Map frame(String mainId, String thingLink, Map flatJsonLd, boolean mutate = false) {
         if (isFramed(flatJsonLd)) {
             return flatJsonLd
         }
 
-        Map flatCopy = (Map) Document.deepCopy(flatJsonLd)
+        Map flatCopy = mutate ? flatJsonLd : (Map) Document.deepCopy(flatJsonLd)
 
         if (mainId) {
             mainId = Document.BASE_URI.resolve(mainId)
