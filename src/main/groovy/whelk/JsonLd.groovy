@@ -95,6 +95,26 @@ public class JsonLd {
         return filterOutDanglingBnodes(externalRefs)
     }
 
+    static List expandLinks(List refs, Map context) {
+        List result = []
+        refs.each { ref ->
+            def match
+            if (ref =~ $/^https?:///$) {
+                result << ref
+            } else if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
+                def resolved = context[match[0][1]]
+                if (resolved) {
+                    URI base = new URI(resolved)
+                    result << base.resolve(match[0][2]).toString()
+                }
+            } else {
+                result << ref
+            }
+        }
+
+        return result
+    }
+
     private static Set getLocalObjects(Map jsonLd) {
         List result = []
         if (jsonLd.get(GRAPH_KEY)) {
