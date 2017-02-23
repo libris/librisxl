@@ -4390,14 +4390,19 @@
           ],
           "result": {
             "@type": "TopicalTerm",
-            "@id": "http://libris.kb.se/auth/140482",
+            "@id": "https://id.kb.se/term/sao/Barnpsykologi",
+            "sameAs":  [{"@id": "http://libris.kb.se/auth/140482"}],
             "prefLabel": "Barnpsykologi",
             "inScheme":  {
               "@type": "ConceptScheme",
               "@id": "https://id.kb.se/term/sao",
               "notation": "sao"
             },
-            "sameAs":  [{"@id": "https://id.kb.se/term/sao/Barnpsykologi"}]
+            "focus": {
+              "@type": "Thing",
+              "@id": "https://id.kb.se/term/sao/Barnpsykologi#it",
+              "sameAs":  [{"@id": "http://libris.kb.se/resource/auth/140482"}]
+            }
           }
         },
         {
@@ -4409,7 +4414,8 @@
           ],
           "result": {
             "@type": "TopicalTerm",
-            "@id": "http://libris.kb.se/auth/140482",
+            "@id": "https://id.kb.se/term/sao/Barn--psykologi",
+            "sameAs":  [{"@id": "http://libris.kb.se/auth/140482"}],
             "prefLabel": "Barn--psykologi",
             "inScheme":  {
               "@type": "ConceptScheme",
@@ -4426,7 +4432,11 @@
                 "prefLabel": "psykologi"
               }
             ],
-            "sameAs":  [{"@id": "https://id.kb.se/term/sao/Barn--psykologi"}]
+            "focus": {
+              "@type": "Thing",
+              "@id": "https://id.kb.se/term/sao/Barn--psykologi#it",
+              "sameAs":  [{"@id": "http://libris.kb.se/resource/auth/140482"}]
+            }
           }
         }
       ]
