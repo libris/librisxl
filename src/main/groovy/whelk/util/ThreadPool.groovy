@@ -10,7 +10,7 @@ public class ThreadPool {
     }
 
     public interface Worker<T> {
-        void doWork(T t)
+        void doWork(T t, int threadIndex)
     }
 
     /**
@@ -30,7 +30,7 @@ public class ThreadPool {
             if (s_threadPool[i] == null || s_threadPool[i].getState() == Thread.State.TERMINATED) {
                 s_threadPool[i] = new Thread(new Runnable() {
                     public void run() {
-                        worker.doWork(workLoad)
+                        worker.doWork(workLoad, i)
                     }
                 })
                 s_threadPool[i].start()
