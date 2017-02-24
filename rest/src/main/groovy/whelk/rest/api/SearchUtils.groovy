@@ -201,6 +201,8 @@ class SearchUtils {
             items = JsonLd.toCards(esResult['items'], displayData)
         }
 
+        items = embellishItems(items)
+
         if (statsTree) {
             stats = buildStats(esResult['aggregations'].asMap,
                                makeFindUrl(SearchType.ELASTIC, pageParams))
@@ -222,6 +224,23 @@ class SearchUtils {
         }
 
         return result
+    }
+
+    private List embellishItems(List items) {
+        Map context = this.displayData[JsonLd.CONTEXT_KEY]
+        List embellished = []
+
+        for (item in items) {
+            Map graph = JsonLd.flatten(item)
+            List refs = JsonLd.getExternalReferences(graph)
+            List ids = JsonLd.expandLinks(refs, context)
+            Map recordMap = whelk.bulkLoad(ids).collectEntries { id, doc -> [id, doc.data] }
+            JsonLd.embellish(graph, recordMap, displayData)
+
+            embellished << JsonLd.frame(item[JsonLd.ID_KEY], null, graph, true)
+        }
+
+        return embellished
     }
 
     private Map assembleSearchResults(SearchType st, List items,

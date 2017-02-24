@@ -238,8 +238,8 @@ class Crud extends HttpServlet {
     private Document getEmbellishedDocument(Document doc) {
         List externalRefs = doc.getExternalRefs()
         List convertedExternalLinks = convertExternalLinks(externalRefs)
-        Map referencedDocuments = getDocuments(convertedExternalLinks)
-        doc.embellish(referencedDocuments, displayData)
+        Map referencedData = getReferencedData(convertedExternalLinks)
+        doc.embellish(referencedData, displayData)
 
         return doc
     }
@@ -265,23 +265,7 @@ class Crud extends HttpServlet {
     }
 
     private List convertExternalLinks(List refs) {
-        List result = []
-        refs.each { ref ->
-            def match
-            if (ref =~ $/^https?:///$) {
-                result << ref
-            } else if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
-                def resolved = this.displayData['@context'][match[0][1]]
-                if (resolved) {
-                    URI base = new URI(resolved)
-                    result << base.resolve(match[0][2]).toString()
-                }
-            } else {
-                result << ref
-            }
-        }
-
-        return result
+        return JsonLd.expandLinks(refs, this.displayData[JsonLd.CONTEXT_KEY])
     }
 
     /**
@@ -446,22 +430,8 @@ class Crud extends HttpServlet {
      * Map is of the form ID -> JSON-LD Map.
      *
      */
-    Map getDocuments(List ids) {
-        Map result = [:]
-        Document doc
-        ids.each { id ->
-            if (id.startsWith(Document.BASE_URI.toString())) {
-                id = Document.BASE_URI.resolve(id).getPath().substring(1)
-                doc = whelk.storage.load(id)
-            } else {
-                doc = whelk.storage.locate(id, true)?.document
-            }
-
-            if (doc && !doc.deleted) {
-                result[id] = doc.data
-            }
-        }
-        return result
+    Map getReferencedData(List ids) {
+        whelk.bulkLoad(ids).collectEntries { id, doc -> [id, doc.data]  }
     }
 
     /**
