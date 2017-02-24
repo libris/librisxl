@@ -15,6 +15,7 @@ class MySQLToMarcJSONDumper {
 
     static dump(String connectionUrl, String collection, String dumpFileName) {
         def mapper = new ObjectMapper()
+        /*
         def loader = new MySQLLoader(connectionUrl, collection)
         def dumpWriter = dumpFileName ?
                 Files.newBufferedWriter(Paths.get(dumpFileName), Charset.forName("UTF-8"))
@@ -42,6 +43,7 @@ class MySQLToMarcJSONDumper {
 
         def endSecs = (System.currentTimeMillis() - startTime) / 1000
         System.err.println "Done. Processed $counter documents in $endSecs seconds."
+        */
     }
 
 }

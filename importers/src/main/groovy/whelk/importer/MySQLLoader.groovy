@@ -1,24 +1,17 @@
 package whelk.importer
 
-import groovy.transform.CompileStatic
+import groovy.sql.Sql
 import groovy.util.logging.Slf4j as Log
-import se.kb.libris.util.marc.MarcRecord
-import se.kb.libris.util.marc.io.Iso2709Deserializer
-import whelk.converter.MarcJSONConverter
-
-import java.sql.Connection
-import java.sql.DriverManager
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import whelk.VCopyDataRow
 import java.text.Normalizer
+import java.sql.ResultSet
+import java.sql.Statement
 
 @Log
-@CompileStatic
 class MySQLLoader {
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
-    final String collection
-    final String connectionUrl
+    static private final int BATCH_SIZE = 200
 
     static  Map<String,String> selectExampleDataByMarcType = [
             auth: """
@@ -75,11 +68,120 @@ class MySQLLoader {
 
     ]
 
-    MySQLLoader(String connectionUrl, String collection) {
+    /*MySQLLoader(String connectionUrl, String collection) {
         Class.forName(JDBC_DRIVER)
-        this.connectionUrl = connectionUrl
-        this.collection = collection
+        //this.connectionUrl = connectionUrl
+        //this.collection = collection
+    }*/
+
+    static{
+        Class.forName(JDBC_DRIVER)
     }
+
+    static void run(LoadHandler handler, String sqlQuery, List<Object> queryParameters, String collection, String connectionUrl) {
+
+        final Sql sql = prepareSql(connectionUrl)
+
+        int rowCount = 0
+        int recordCount = 0
+        long startTime = System.currentTimeMillis()
+
+        List<VCopyDataRow> previousRowsInGroup = []
+        VCopyDataRow previousRow = null
+        VCopyDataRow currentRow = null
+
+        List<List<VCopyDataRow>> currentBatch = []
+
+        sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
+            try {
+                ++rowCount
+                currentRow = new VCopyDataRow(resultSet, collection)
+                switch (previousRow) {
+                    case null:                              //first run
+                        previousRow = currentRow
+                        previousRowsInGroup.add(currentRow)
+                        break
+                    case { collection == 'bib' && it.bib_id == currentRow.bib_id }://Same bib record
+                        previousRowsInGroup.add(currentRow)
+                        break
+                    default:                                //new record
+                        currentBatch = batchForConversion(previousRowsInGroup, currentBatch, handler)
+                        ++recordCount
+                        previousRow = currentRow
+                        previousRowsInGroup = []
+                        previousRowsInGroup.add(currentRow)
+                        break
+                }
+            }
+            catch (any) {
+                println any.message
+                println any.stackTrace
+                //throw any // dont want to miss any records
+            }
+
+            if (recordCount % 1000 == 1) {
+                def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
+                if (elapsedSecs > 0) {
+                    def docsPerSec = recordCount / elapsedSecs
+                    def message = "Working. Currently ${rowCount} rows recieved and ${recordCount} records sent. Crunching ${docsPerSec} records / s."
+                    println message
+                    log.info message
+                }
+            }
+        }
+
+        if (!previousRowsInGroup.isEmpty()) {
+            currentBatch = batchForConversion(previousRowsInGroup, currentBatch, handler)
+            ++recordCount
+        }
+        currentBatch = flushConversionBatch(currentBatch, handler)
+        println "Done reading from DB."
+
+    }
+
+    static interface LoadHandler {
+        void handle(List<List<VCopyDataRow>> currentBatch)
+    }
+
+    /**
+     * Send the row list to be dispatched for conversion. Essentially this means, add it to the global 'currentBatch',
+     * and if the batch is large enough flush it to the conversion process and return a new empty batch instead.
+     */
+    private static List<List<VCopyDataRow>> batchForConversion(List<VCopyDataRow> rowList,
+                                                               List<List<VCopyDataRow>> currentBatch,
+                                                               LoadHandler handler) {
+        currentBatch.add(rowList)
+
+        if (currentBatch.size() > BATCH_SIZE) {
+            return flushConversionBatch(currentBatch, handler)
+        }
+        return currentBatch
+    }
+
+    private static List<List<VCopyDataRow>> flushConversionBatch(List<List<VCopyDataRow>> currentBatch,
+                                                                 LoadHandler handler) {
+        handler.handle(currentBatch)
+        return []
+    }
+
+    private static Sql prepareSql(String connectionUrl) {
+        def sql = Sql.newInstance(connectionUrl, "com.mysql.jdbc.Driver")
+        sql.withStatement { Statement stmt -> stmt.fetchSize = Integer.MIN_VALUE }
+        sql.connection.autoCommit = false
+        sql.resultSetType = ResultSet.TYPE_FORWARD_ONLY
+        sql.resultSetConcurrency = ResultSet.CONCUR_READ_ONLY
+        sql
+    }
+
+    static String normalizeString(String inString) {
+        if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
+            log.trace("Normalizing ...")
+            return Normalizer.normalize(inString, Normalizer.Form.NFC)
+        }
+        return inString
+    }
+
+    /*
 
     void run(LoadHandler handler) {
         Connection connection = DriverManager.getConnection(connectionUrl)
@@ -133,16 +235,8 @@ class MySQLLoader {
         }
     }
 
-    static String normalizeString(String inString) {
-        if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
-            log.trace("Normalizing ...")
-            return Normalizer.normalize(inString, Normalizer.Form.NFC)
-        }
-        return inString
-    }
-
     static interface LoadHandler {
         void handle(Map doc, Date createDate)
     }
-
+    */
 }

@@ -8,6 +8,7 @@ import whelk.VCopyToWhelkConverter
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
 import whelk.filter.LinkFinder
+import whelk.importer.MySQLLoader
 import whelk.util.ThreadPool
 
 import java.nio.charset.Charset
@@ -18,7 +19,7 @@ import java.nio.file.Paths
  * Created by theodortolstoy on 2017-01-24.
  */
 @Slf4j
-    class FileDumper {
+    class FileDumper implements MySQLLoader.LoadHandler {
 
     BufferedWriter mainTableWriter
     BufferedWriter identifiersWriter
@@ -52,7 +53,7 @@ import java.nio.file.Paths
         identifiersWriter.close()
     }
 
-    public void convertAndWrite(List<List<VCopyDataRow>> batch) {
+    public void handle(List<List<VCopyDataRow>> batch) {
         threadPool.executeOnThread( batch, { _batch, threadIndex ->
             List<Map> writeBatch = []
 
