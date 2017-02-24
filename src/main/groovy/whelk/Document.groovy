@@ -465,9 +465,10 @@ class Document {
                 }
             }
         }
-        else {
+        else { // node is a list
+            int i = 0
             for (entry in node)
-                term += calculateCheckSum(entry, depth+1)
+                term += calculateCheckSum(entry, depth + 1 + (i++))
         }
 
         return term
