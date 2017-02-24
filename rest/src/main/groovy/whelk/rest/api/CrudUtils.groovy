@@ -17,7 +17,7 @@ class CrudUtils {
     static String getBestContentType(HttpServletRequest request) {
         String suffix
         String acceptHeader = request.getHeader("Accept")
-        List tokens = request.pathInfo.tokenize(".")
+        List tokens = request.getRequestURI().tokenize(".")
         if (tokens.size >= 2) {
             suffix = tokens[-1]
         }

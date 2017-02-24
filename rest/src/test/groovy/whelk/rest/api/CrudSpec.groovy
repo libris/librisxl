@@ -146,7 +146,7 @@ class CrudSpec extends Specification {
     def "GET /<id> should display requested document if it exists"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
             id
         }
         request.getHeader("Accept") >> {
@@ -167,7 +167,7 @@ class CrudSpec extends Specification {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def altId = BASE_URI.resolve("/alt_1234").toString()
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
             altId
         }
         request.getHeader("Accept") >> {
@@ -186,7 +186,7 @@ class CrudSpec extends Specification {
     def "GET /<id> should return 404 Not Found if document can't be found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
             id
         }
         storage.locate(_, _) >> {
@@ -201,7 +201,7 @@ class CrudSpec extends Specification {
     def "GET /<alternate_id> if URI not found should return 404 Not Found"() {
         given:
         def altId = BASE_URI.resolve("/alt_1234").toString()
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
             altId
         }
         request.getHeader("Accept") >> {
@@ -219,7 +219,7 @@ class CrudSpec extends Specification {
     def "GET /<id> should return 410 Gone if document is deleted"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
             id
         }
         request.getHeader("Accept") >> {
@@ -239,7 +239,7 @@ class CrudSpec extends Specification {
     def "GET /<id>?version=1 should display requested document if it exists"() {
         given:
         def id = BASE_URI.resolve("/1234?version=1").toString()
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
             id
         }
         request.getHeader("Accept") >> {
@@ -261,7 +261,7 @@ class CrudSpec extends Specification {
     def "GET /<id>?version=1 should return 404 Not Found if document can't be found"() {
         given:
         def id = BASE_URI.resolve("/1234?version=1").toString()
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
             id
         }
         storage.locate(_, _) >> {
@@ -277,7 +277,7 @@ class CrudSpec extends Specification {
         // We don't allow this for now
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
             "#{id}/data".toString()
         }
         request.getHeader("Accept") >> {
@@ -298,7 +298,7 @@ class CrudSpec extends Specification {
     def "GET /<id>/data.jsonld should display document in JSON-LD format"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
             "#{id}/data.jsonld".toString()
         }
         request.getHeader("Accept") >> {
@@ -319,7 +319,7 @@ class CrudSpec extends Specification {
     def "GET /<id>/data.json should display document in JSON format"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
             "#{id}/data.json".toString()
         }
         request.getHeader("Accept") >> {
@@ -349,7 +349,7 @@ class CrudSpec extends Specification {
     def "GET /<id>/data.ttl should return 406 Not Acceptable"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
             "#{id}/data.ttl".toString()
         }
         request.getHeader("Accept") >> {
@@ -368,7 +368,7 @@ class CrudSpec extends Specification {
     def "GET /<id>/data.rdf should return 406 Not Acceptable"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
             "#{id}/data.rdf".toString()
         }
         request.getHeader("Accept") >> {

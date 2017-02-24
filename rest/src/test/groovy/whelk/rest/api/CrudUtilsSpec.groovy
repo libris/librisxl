@@ -19,7 +19,7 @@ class CrudUtilsSpec extends Specification {
         request.getHeader(_) >> {
             "application/json, */*, text/html"
         }
-        request.getPathInfo() >> {
+        request.getRequestURI() >> {
           "/"
         }
         when:

@@ -157,7 +157,7 @@ class Crud extends HttpServlet {
         }
 
         try {
-            def path = request.pathInfo
+            def path = request.getRequestURI()
 
             // Tomcat incorrectly strips away double slashes from the pathinfo.
             // Compensate here.
