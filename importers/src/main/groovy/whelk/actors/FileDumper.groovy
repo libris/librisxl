@@ -26,7 +26,7 @@ import java.nio.file.Paths
 
     /*
     In order to guard against the possibility that the conversion process may (one day?) no longer be reentrant,
-    give each thread (slot) a converter of its' own (but share connection factory (PostgreSQLComponent)).
+    give each thread (slot) a converter of its' own.
      */
     MarcFrameConverter[] converterPool
 
@@ -37,14 +37,13 @@ import java.nio.file.Paths
     FileDumper(String exportFileName) {
 
         final int THREAD_COUNT = 4*Runtime.getRuntime().availableProcessors()
-        final postgresqlComponent = new PostgreSQLComponent()
 
         mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"))
         identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"))
         threadPool = new ThreadPool(THREAD_COUNT)
         converterPool = new MarcFrameConverter[THREAD_COUNT]
         for (int i = 0; i < THREAD_COUNT; ++i)
-            converterPool[i] = new MarcFrameConverter(new LinkFinder(postgresqlComponent))
+            converterPool[i] = new MarcFrameConverter()
     }
 
     public void close() {

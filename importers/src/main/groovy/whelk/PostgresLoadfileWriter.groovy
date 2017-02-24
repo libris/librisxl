@@ -104,7 +104,7 @@ class PostgresLoadfileWriter {
                 //throw any // dont want to miss any records
             }
 
-            if (recordCount % 1000 == 0) {
+            if (recordCount % 1000 == 1) {
                 def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
                 if (elapsedSecs > 0) {
                     def docsPerSec = recordCount / elapsedSecs
