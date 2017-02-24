@@ -26,12 +26,15 @@ class VCopyImporter {
         def whelkSaver = new WhelkSaver(whelk, converter, sourceSystem)
         whelkSaver.importResult.sourceSystem = sourceSystem
         whelkSaver.importResult.fromDate = from
-        whelkSaver.start()
 
-        PostgresLoadfileWriter.import(whelkSaver, collection, connectionUrl, from)
+        String sqlQuery = MySQLLoader.selectHarvestByMarcType[collection]
+        String dateString = date.toTimestamp().toString()
+        List<Object> queryParameters = [0, dateString, dateString]
+        MySQLLoader.run(whelkSaver, sqlQuery, queryParameters, collection, connectionUrl)
+
+
         ImportResult result = whelkSaver.importResult
         log.debug new JsonBuilder(result).toPrettyString()
-        whelkSaver.stop()
         return result
     }
 
@@ -40,12 +43,13 @@ class VCopyImporter {
         def whelkSaver = new WhelkSaver(whelk, converter, sourceSystem)
         whelkSaver.importResult.sourceSystem = sourceSystem
 
-        whelkSaver.start()
+        String sqlQuery = MySQLLoader.selectExampleDataByMarcType[collection].replace('?', vcopyIdsToImport.collect { it -> '?' }.join(','))
 
-        PostgresLoadfileWriter.import(whelkSaver, collection, connectionUrl, vcopyIdsToImport)
+        MySQLLoader.run(whelkSaver, sqlQuery, vcopyIdsToImport.toList(), collection, connectionUrl)
+
         ImportResult result = whelkSaver.importResult
         log.debug new JsonBuilder(result).toPrettyString()
-        whelkSaver.stop()
+
         return result
     }
 

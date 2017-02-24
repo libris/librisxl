@@ -68,12 +68,6 @@ class MySQLLoader {
 
     ]
 
-    /*MySQLLoader(String connectionUrl, String collection) {
-        Class.forName(JDBC_DRIVER)
-        //this.connectionUrl = connectionUrl
-        //this.collection = collection
-    }*/
-
     static{
         Class.forName(JDBC_DRIVER)
     }
@@ -181,62 +175,4 @@ class MySQLLoader {
         return inString
     }
 
-    /*
-
-    void run(LoadHandler handler) {
-        Connection connection = DriverManager.getConnection(connectionUrl)
-        connection.setAutoCommit(false)
-
-        PreparedStatement statement = connection.prepareStatement(
-                selectByMarcType[collection],
-                java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
-        statement.setFetchSize(Integer.MIN_VALUE)
-        statement.setInt(1, 0) // start from id 0
-
-        ResultSet resultSet = statement.executeQuery()
-
-        try {
-            while (resultSet.next()) {
-                processNext(resultSet, handler)
-            }
-        }
-        catch (any) {
-            log.error("", any)
-        }
-        finally {
-            resultSet.close()
-            statement.close()
-            connection.close()
-        }
-    }
-
-    void processNext(ResultSet resultSet, LoadHandler handler) {
-        int currentRecordId = -1
-        Map doc = null
-        int recordId = resultSet.getInt(1)
-        MarcRecord record = Iso2709Deserializer.deserialize(
-                normalizeString(
-                        new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
-        if (record) {
-
-            doc = MarcJSONConverter.toJSONMap(record)
-            if (!recordId.equals(currentRecordId)) {
-                if (doc) {
-                    handler.handle(doc, resultSet.getTimestamp("create_date"))
-                }
-                currentRecordId = recordId
-                doc = [:]
-
-            }
-        }
-
-        if (doc) {
-            handler.handle(doc, resultSet.getTimestamp("create_date"))
-        }
-    }
-
-    static interface LoadHandler {
-        void handle(Map doc, Date createDate)
-    }
-    */
 }
