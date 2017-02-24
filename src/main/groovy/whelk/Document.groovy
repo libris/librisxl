@@ -1,6 +1,7 @@
 package whelk
 
 import groovy.util.logging.Slf4j as Log
+import org.apache.lucene.analysis.util.CharArrayMap
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.PropertyLoader
 
@@ -415,7 +416,11 @@ class Document {
      * This function relies on the fact that the deserialized jsonld (using Jackson ObjectMapper) consists of LinkedHashMaps
      * (which preserve order), unlike normal HashMaps which do not, so be careful not to place HashMaps into a document
      * structure and then try to calculate a checksum. Makes the order of the inner elements not matter for the caclulation
+     *
+     * This method of getting checksums is deprecated, because it is extremely expensive, and comparing full documents
+     * would actually be faster than this.
      */
+    /*
     String getChecksum() {
         Document clone = clone()
 
@@ -434,5 +439,37 @@ class Document {
         BigInteger bigInt = new BigInteger(1, digest)
         String hashtext = bigInt.toString(16)
         return hashtext
+    }*/
+
+    String getChecksum() {
+        long checksum = calculateCheckSum(data, 0)
+        return Long.toString(checksum)
+    }
+
+    private long calculateCheckSum(node, int depth) {
+        long term = 0
+
+        if (node == null)
+            return term
+        else if (node instanceof String)
+            return node.hashCode() + depth
+        else if (node instanceof Boolean)
+            return node.booleanValue() ? 1 + depth : depth
+        else if (node instanceof Integer)
+            return node.intValue() + depth
+        else if (node instanceof Map) {
+            for (String key : node.keySet()) {
+                if ( !key.equals(JsonLd.MODIFIED_KEY) && !key.equals(JsonLd.CREATED_KEY)) {
+                    term += key.hashCode() + depth
+                    term += calculateCheckSum(node[key], depth + 1)
+                }
+            }
+        }
+        else {
+            for (entry in node)
+                term += calculateCheckSum(entry, depth+1)
+        }
+
+        return term
     }
 }
