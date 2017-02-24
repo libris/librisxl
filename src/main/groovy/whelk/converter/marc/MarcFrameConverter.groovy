@@ -263,7 +263,14 @@ class MarcConversion {
             }
         }
 
-        record["@id"] = resolve(recordId)
+        // NOTE: use minted ("pretty") uri as primary @id
+        if (recordId != null) {
+            if (record["@id"]) {
+                record.get('sameAs', []) << ['@id': resolve(recordId)]
+            } else {
+                record["@id"] = resolve(recordId)
+            }
+        }
 
         marcRuleSet.completeEntities(state.entityMap)
 
@@ -1536,15 +1543,17 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             if (uriTemplateParams.keySet().containsAll(uriTemplateKeys)) {
                 def computedUri = fromTemplate(uriTemplate).expand(uriTemplateParams)
                 def altUriRel = "sameAs"
-                if (definesDomainEntityType != null) {
+                // NOTE: We used to force minted ("pretty") uri to be an alias here...
+                /*if (definesDomainEntityType != null) {
                     addValue(entity, altUriRel, ['@id': computedUri], true)
-                } else {
-                    if (entity['@id']) {
-                        // TODO: ok as precaution?
-                        addValue(entity, altUriRel, ['@id': entity['@id']], true)
-                    }
-                    entity['@id'] = computedUri
+                } else {*/
+                if (entity['@id']) {
+                    // TODO: ok as precaution?
+                    addValue(entity, altUriRel, ['@id': entity['@id']], true)
                 }
+                // ... but now we promote it to primary id if none has been given.
+                entity['@id'] = computedUri
+                /*}*/
             }
         }
 

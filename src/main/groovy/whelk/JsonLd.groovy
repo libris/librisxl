@@ -88,11 +88,61 @@ public class JsonLd {
 
     public static List getExternalReferences(Map jsonLd){
         Set allReferences = getAllReferences(jsonLd)
-        Set localObjects = getIdMap(jsonLd).keySet()
+        Set localObjects = getLocalObjects(jsonLd)
         List externalRefs = allReferences.minus(localObjects) as List
         // NOTE: this is necessary because some documents contain references to
         // bnodes that don't exist (in that document).
         return filterOutDanglingBnodes(externalRefs)
+    }
+
+    static List expandLinks(List refs, Map context) {
+        List result = []
+        refs.each { ref ->
+            def match
+            if (ref =~ $/^https?:///$) {
+                result << ref
+            } else if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
+                def resolved = context[match[0][1]]
+                if (resolved) {
+                    URI base = new URI(resolved)
+                    result << base.resolve(match[0][2]).toString()
+                }
+            } else {
+                result << ref
+            }
+        }
+
+        return result
+    }
+
+    private static Set getLocalObjects(Map jsonLd) {
+        List result = []
+        if (jsonLd.get(GRAPH_KEY)) {
+            for (item in jsonLd.get(GRAPH_KEY)) {
+                if (item.containsKey(GRAPH_KEY)) {
+                    result.addAll(getLocalObjects(item))
+                }
+                if (item.containsKey(ID_KEY)) {
+                    def id = item.get(ID_KEY)
+                    if (!result.contains(id)) {
+                        result << id
+                    }
+                }
+                if (item.containsKey(JSONLD_ALT_ID_KEY)) {
+                    item.get(JSONLD_ALT_ID_KEY).each {
+                        if (!it.containsKey(ID_KEY)) {
+                            return
+                        }
+
+                        def id = it.get(ID_KEY)
+                        if (!result.contains(id)) {
+                            result << id
+                        }
+                    }
+                }
+            }
+        }
+        return result
     }
 
     private static List filterOutDanglingBnodes(List refs) {
@@ -161,7 +211,15 @@ public class JsonLd {
 
         additionalObjects.each { id, object ->
             Map chip = toChip(object, displayData)
-            graphItems << ["@graph": chip]
+            if (chip.containsKey('@graph')) {
+                if (!chip.containsKey('@id')) {
+                    chip['@id'] = id
+                }
+                graphItems << chip
+            } else {
+                graphItems << ['@graph': chip,
+                               '@id': id]
+            }
         }
         jsonLd[GRAPH_KEY] = graphItems
 
@@ -258,12 +316,12 @@ public class JsonLd {
         return frame(mainId, null, flatJsonLd)
     }
 
-    public static Map frame(String mainId, String thingLink, Map flatJsonLd) {
+    public static Map frame(String mainId, String thingLink, Map flatJsonLd, boolean mutate = false) {
         if (isFramed(flatJsonLd)) {
             return flatJsonLd
         }
 
-        Map flatCopy = (Map) Document.deepCopy(flatJsonLd)
+        Map flatCopy = mutate ? flatJsonLd : (Map) Document.deepCopy(flatJsonLd)
 
         if (mainId) {
             mainId = Document.BASE_URI.resolve(mainId)
@@ -468,9 +526,8 @@ public class JsonLd {
         if (flatJsonLd.containsKey(GRAPH_KEY)) {
             for (item in flatJsonLd.get(GRAPH_KEY)) {
                 if (item.containsKey(GRAPH_KEY)) {
-                    item = item.get(GRAPH_KEY)
-                }
-                if (item.containsKey(ID_KEY)) {
+                    idMap = idMap + getIdMap(item)
+                } else if (item.containsKey(ID_KEY)) {
                     def id = item.get(ID_KEY)
                     if (idMap.containsKey(id)) {
                         Map existing = idMap.get(id)

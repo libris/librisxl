@@ -32,7 +32,9 @@ class FoldLinkedPropertyStep extends MarcFramePostProcStepBase {
     def getLink(thing) {
         def useLink = defaultLink
         typeLinkMap.each { type, link ->
-            if (thing[TYPE].find { it.startsWith(type) }) {
+            if ((thing[TYPE] instanceof List &&
+                        thing[TYPE].find { it.startsWith(type) })
+                    || thing[TYPE]?.startsWith(type)) {
                 useLink = link
             }
         }

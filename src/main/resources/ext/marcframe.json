@@ -418,12 +418,12 @@
           },
           {
             "source": {
-              "@type": ["ManuscriptText"],
+              "@type": "ManuscriptText",
               "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
               "marc:publishedYear": "1977"
             },
             "result": {
-              "@type": ["ManuscriptText"],
+              "@type": "ManuscriptText",
               "manufacture": [ {"date": "1977"} ]
             }
           }
@@ -623,7 +623,7 @@
           "p": "Mixed",
           "s": "Serial"
         },
-        "addProperty": "@type"
+        "property": "@type"
       },
       "tokenTypeMap": "[0:1]",
       "Text": {
@@ -1015,7 +1015,7 @@
         "embedded": true
       },
       "[0:1]": {
-        "addProperty": "@type",
+        "property": "@type",
         "tokenMap": {
           "a": "Map",
           "c": "Electronic",
@@ -1583,7 +1583,7 @@
           "normalized": {"007":"aj |a|||               "},
           "result": {
             "mainEntity": {
-              "@type": ["Map"],
+              "@type": "Map",
               "carrierType": [{"@id": "marc:MapATwoDimensionalMap"}],
               "marc:medium": {"@id": "marc:Paper"}
             }
@@ -1596,12 +1596,12 @@
           ],
           "result": {
             "mainEntity": {
-              "@type": ["Map"],
+              "@type": "Map",
               "carrierType": [{"@id": "marc:MapATwoDimensionalMap"}],
               "marc:medium": {"@id": "marc:Paper"},
               "hasPart": [
                 {
-                  "@type": ["Electronic"],
+                  "@type": "Electronic",
                   "carrierType": [{"@id": "marc:MagneticDisk"}],
                   "marc:fileFormats": {"@id": "marc:OneFileFormat"}
                 }
@@ -4390,14 +4390,19 @@
           ],
           "result": {
             "@type": "TopicalTerm",
-            "@id": "http://libris.kb.se/auth/140482",
+            "@id": "https://id.kb.se/term/sao/Barnpsykologi",
+            "sameAs":  [{"@id": "http://libris.kb.se/auth/140482"}],
             "prefLabel": "Barnpsykologi",
             "inScheme":  {
               "@type": "ConceptScheme",
               "@id": "https://id.kb.se/term/sao",
               "notation": "sao"
             },
-            "sameAs":  [{"@id": "https://id.kb.se/term/sao/Barnpsykologi"}]
+            "focus": {
+              "@type": "Thing",
+              "@id": "https://id.kb.se/term/sao/Barnpsykologi#it",
+              "sameAs":  [{"@id": "http://libris.kb.se/resource/auth/140482"}]
+            }
           }
         },
         {
@@ -4409,7 +4414,8 @@
           ],
           "result": {
             "@type": "TopicalTerm",
-            "@id": "http://libris.kb.se/auth/140482",
+            "@id": "https://id.kb.se/term/sao/Barn--psykologi",
+            "sameAs":  [{"@id": "http://libris.kb.se/auth/140482"}],
             "prefLabel": "Barn--psykologi",
             "inScheme":  {
               "@type": "ConceptScheme",
@@ -4426,7 +4432,11 @@
                 "prefLabel": "psykologi"
               }
             ],
-            "sameAs":  [{"@id": "https://id.kb.se/term/sao/Barn--psykologi"}]
+            "focus": {
+              "@type": "Thing",
+              "@id": "https://id.kb.se/term/sao/Barn--psykologi#it",
+              "sameAs":  [{"@id": "http://libris.kb.se/resource/auth/140482"}]
+            }
           }
         }
       ]
@@ -4727,7 +4737,7 @@
             "source": {
               "mainEntity": {
                 "itemOf": {
-                  "@type": ["Monograph"]
+                  "@type": "Monograph"
                 }
               }
             },
@@ -4735,7 +4745,7 @@
               "holdingType": {"@id": "marc:SinglePartItemHolding"},
               "mainEntity": {
                 "itemOf": {
-                  "@type": ["Monograph"]
+                  "@type": "Monograph"
                 }
               }
             }
