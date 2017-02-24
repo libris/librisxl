@@ -13,12 +13,12 @@ import java.sql.Timestamp
 
 class VCopyToWhelkConverter
 {
-    private static MarcFrameConverter marcFrameConverter = new MarcFrameConverter(new LinkFinder(new PostgreSQLComponent()))
+    //private static MarcFrameConverter marcFrameConverter = new MarcFrameConverter(new LinkFinder(new PostgreSQLComponent()))
 
-    public static Map convert(List<VCopyDataRow> rows) {
+    public static Map convert(List<VCopyDataRow> rows, MarcFrameConverter marcFrameConverter) {
         VCopyDataRow row = rows.last()
 
-        def document = null
+        Document whelkDocument = null
         Timestamp timestamp = row.updated >= row.created ? row.updated : row.created
         Map doc = getMarcDocMap(row.data)
         def controlNumber = getControlNumber(doc)
@@ -26,29 +26,29 @@ class VCopyToWhelkConverter
             try {
                 switch (row.collection) {
                     case 'auth':
-                        document = convertDocument(doc, row.collection, row.created)
+                        whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created)
                         break
                     case 'hold':
-                        document = convertDocument(doc, row.collection, row.created, getOaipmhSetSpecs(rows))
+                        whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
                         break
                     case 'bib':
-                        document = convertDocument(doc, row.collection, row.created, getOaipmhSetSpecs(rows))
+                        whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
                         break
                 }
-                return [collection: row.collection, document: document, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber]
+                return [collection: row.collection, document: whelkDocument, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber, checksum: whelkDocument.getChecksum()]
             }
             catch (any) {
                 println "ALLVARLIGT FEL! ${any.message}"
                 println "Bibid: ${row.bib_id}"
                 any.printStackTrace()
-                return [collection: row.collection, document: null, isSuppressed: true, isDeleted: false, timestamp: timestamp, controlNumber: "0"]
+                return [collection: row.collection, document: null, isSuppressed: true, isDeleted: false, timestamp: timestamp, controlNumber: "0", checksum: "0"]
             }
 
         } else
-            return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber]
+            return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber, checksum: "0"]
     }
 
-    private static Document convertDocument(Map doc, String collection, Date created, List authData = null) {
+    private static Document convertDocument(MarcFrameConverter marcFrameConverter, Map doc, String collection, Date created, List authData = null) {
         if (doc && !isSuppressed(doc)) {
             String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
 
