@@ -66,7 +66,6 @@ import java.nio.file.Paths
         })
     }
 
-    //private synchronized void append(Map recordMap) {
     private synchronized void append(List<Map> recordMaps) {
         for (Map recordMap in recordMaps) {
 
