@@ -2,6 +2,13 @@ package whelk
 
 import spock.lang.Specification
 import spock.lang.Unroll
+import whelk.component.PostgreSQLComponent
+import whelk.converter.marc.MarcFrameConverter
+import whelk.filter.LinkFinder
+import whelk.util.LegacyIntegrationTools
+import whelk.util.PropertyLoader
+
+import java.sql.Timestamp
 
 class DocumentSpec extends Specification {
 
@@ -121,10 +128,10 @@ class DocumentSpec extends Specification {
         String altId = '/bar'
         Document doc = new Document(['@graph': [['@id': id,
                                                  'sameAs': [['@id': altId]]
-                                                 ]]])
+                                                ]]])
         Document expected = new Document(['@graph': [['@id': id,
                                                       'sameAs': [['@id': altId]]
-                                                      ]]])
+                                                     ]]])
         doc.addRecordIdentifier(altId)
         expect:
         assert doc.data == expected.data
@@ -387,4 +394,28 @@ class DocumentSpec extends Specification {
         expect:
         assert doc.getSigel() == null
     }
+
+    def "Cannot set created"() {
+        //TODO: Fix this and make this a positive test.
+        //TODO: see JIRA Ticket LXL-329
+        given:
+
+        String docString = "['leader':'01114cam a22002897ar4500', 'fields':[['001':'714'], ['005':'20100621095537.0'], ['008':'810114s1980    gw a          001 0 ger c'], ['020':['ind1':' ', 'ind2':' ', 'subfields':[['a':'3-13-200904-0']]]], ['035':['ind1':' ', 'ind2':' ', 'subfields':[['9':'3132009040']]]], ['040':['ind1':' ', 'ind2':' ', 'subfields':[['a':'Lkc']]]], ['080':['ind1':' ', 'ind2':' ', 'subfields':[['a':'547']]]], ['084':['ind1':' ', 'ind2':' ', 'subfields':[['a':'Uceb'], ['2':'kssb/6']]]], ['245':['ind1':'0', 'ind2':'0', 'subfields':[['a':'Methoden der organischen Chemie :'], ['b':'(Houben-Weyl) /'], ['c':'begründet von Eugen Müller und Otto Bayer. Bd 4. 1. c, Reduktion, T. 1 / bearbeitet von A.W. Frahm ... ; Herausgeber Heinz Kropf']]]], ['247':['ind1':'0', 'ind2':'0', 'subfields':[['a':'Methods of organic chemistry.']]]], ['250':['ind1':' ', 'ind2':' ', 'subfields':[['a':'4., völlig neu gest. Aufl.']]]], ['260':['ind1':' ', 'ind2':' ', 'subfields':[['a':'Stuttgart :'], ['b':'Thieme,'], ['c':'1980']]]], ['300':['ind1':' ', 'ind2':' ', 'subfields':[['a':'xxxi, 912 s.'], ['b':'ill.']]]], ['599':['ind1':' ', 'ind2':' ', 'subfields':[['a':'T: Särkatalogiseras ej fr.o.m. okt. 1980. Bestånd se fortsättningskatalogen']]]], ['650':['ind1':' ', 'ind2':'0', 'subfields':[['a':'Chemistry, Organic']]]], ['700':['ind1':'1', 'ind2':' ', 'subfields':[['a':'Müller, Eugen'], ['4':'edt']]]], ['700':['ind1':'1', 'ind2':' ', 'subfields':[['a':'Bayer, Otto'], ['4':'edt']]]], ['700':['ind1':'1', 'ind2':' ', 'subfields':[['a':'Frahm, August W.'], ['4':'aut']]]], ['700':['ind1':'1', 'ind2':' ', 'subfields':[['a':'Kropf, Heinz'], ['4':'edt']]]], ['740':['ind1':'0', 'ind2':' ', 'subfields':[['a':'Reduktion, T. 1']]]], ['772':['ind1':'0', 'ind2':'0', 'subfields':[['7':'nn'], ['t':'Methoden der organischen Chemie : (Houben-Weyl)'], ['b':'4., völlig neu gestaltete Aufl.'], ['d':'Stuttgart : Thieme, 1953-'], ['w':'9900002636'], ['9':'4'], ['9':'1'], ['9':'c']]]], ['976':['ind1':' ', 'ind2':'2', 'subfields':[['a':'Uceb'], ['b':'Kemi Organisk']]]]]]"
+        String id = 'gzrbgsks3xl1ndb'
+        def converter = new MarcFrameConverter()
+        def oldid = "/bib/451"
+
+        Map convertedData = converter.convert(Eval.me(docString),id)
+        Document doc = new Document(convertedData)
+        def cs = doc.getChecksum()
+        def lgc = LegacyIntegrationTools.generateId(oldid)
+        doc.modified = Timestamp.valueOf("2001-12-11 00:00:00.0")
+        expect:
+        doc.modified != Timestamp.valueOf("2001-12-11 00:00:00.0")
+
+
+
+    }
+
+
 }
