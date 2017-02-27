@@ -332,7 +332,11 @@ class Document {
             // Check path integrity, in all but the last step (which will presumably be replaced)
             else if ((i < path.size() - 1) &&
                     !matchingContainer(candidate.getClass(), nextReplacementType)) {
-                log.warn("Structure conflict, path: " + path + ", at token: " + (i + 1) + ", expected data to be: " + nextReplacementType + ", data was: " + candidate.getClass() + ", data:\n" + data)
+                log.warn("Structure conflict, path: " + path + ", at token: " +
+                         (i + 1) + ", expected data to be: " +
+                         nextReplacementType + ", data class was: " +
+                         candidate.getClass())
+                log.debug("preparePath integrity check failed, data was: ${data}")
                 return false
             }
 
