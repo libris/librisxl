@@ -1,5 +1,6 @@
 package whelk
 
+import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709Deserializer
 import whelk.converter.MarcJSONConverter
@@ -11,6 +12,8 @@ import java.sql.Timestamp
 
 class VCopyToWhelkConverter
 {
+    private static ObjectMapper mapper = new ObjectMapper()
+
     public static Map convert(List<VCopyDataRow> rows, MarcFrameConverter marcFrameConverter) {
         VCopyDataRow row = rows.last()
 
@@ -54,6 +57,13 @@ class VCopyToWhelkConverter
 
             Map convertedData = authData == null ? marcFrameConverter.convert(doc as Map, id as String) :
                     marcFrameConverter.convert(doc as Map, id as String, spec as Map)
+
+            /*
+             * Temporary, make converted data use the same structure (Lists, not LinkedHashmap$LinkedValues) as
+             * everything else. Do this by serializing as json text and deserializing back. Obviously slow. Fix later.
+             */
+            String jsonString = mapper.writeValueAsString(convertedData)
+            convertedData = mapper.readValue(jsonString, Map)
 
             Document document = new Document(convertedData)
             document.created = created
