@@ -95,12 +95,12 @@ class Crud extends HttpServlet {
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
-                     String dataset, String siteBaseUri = null) {
+                     String dataset) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String callback = queryParameters.remove("callback")
 
         try {
-            Map results = search.doSearch(queryParameters, dataset, siteBaseUri)
+            Map results = search.doSearch(queryParameters, dataset)
             def jsonResult
 
             if (callback) {

@@ -40,11 +40,12 @@ class SearchUtils {
             : [:]
     }
 
-    Map doSearch(Map queryParameters, String dataset, String siteBaseUri) {
+    Map doSearch(Map queryParameters, String dataset) {
         String relation = getReservedQueryParameter('p', queryParameters)
         String reference = getReservedQueryParameter('o', queryParameters)
         String value = getReservedQueryParameter('value', queryParameters)
         String query = getReservedQueryParameter('q', queryParameters)
+        String siteBaseUri = getReservedQueryParameter('_site_base_uri', queryParameters)
 
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
         int limit = limitAndOffset.first
