@@ -587,8 +587,11 @@ class SearchUtils {
                 String valueProp
                 String termKey
                 def value
-                if (param == JsonLd.TYPE_KEY ||
-                    param.endsWith(JsonLd.ID_KEY)) {
+                if (param == JsonLd.TYPE_KEY || param == JsonLd.ID_KEY) {
+                    valueProp = 'object'
+                    termKey = param
+                    value = [(JsonLd.ID_KEY): val]
+                } else if (param.endsWith(".${JsonLd.ID_KEY}")) {
                     valueProp = 'object'
                     termKey = param[0..-5]
                     value = [(JsonLd.ID_KEY): val]
