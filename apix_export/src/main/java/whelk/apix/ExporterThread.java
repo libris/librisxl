@@ -150,6 +150,7 @@ public class ExporterThread extends Thread
 				  case BATCH_NEXT_TIMESTAMP:
 				  {
 					 m_exportNewerThan = modified;
+					 m_ui.setCurrentTimeStamp(m_exportNewerThan);
 					 m_ui.outputText("Completed export of " + successfullyExportedDocumentsCount + " out of " + documentsInBatchCount + " document(s) with modified = " + modified);
 					 break;
 				  }
