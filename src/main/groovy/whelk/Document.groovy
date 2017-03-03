@@ -44,7 +44,7 @@ class Document {
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
     static final List failedApixExportPath = ["@graph", 0, "apixExportFailedAt"]
     static final List controlNumberPath = ["@graph", 0, "controlNumber"]
-    static final List holdingForPath = ["@graph", 1, "holdingFor", "@id"]
+    static final List holdingForPath = ["@graph", 1, "itemOf", "@id"]
     static final List createdPath = ["@graph", 0, "created"]
     static final List modifiedPath = ["@graph", 0, "modified"]
     static final List encLevelPath = ["@graph", 0, "marc:encLevel", "@id"]
