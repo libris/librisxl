@@ -608,7 +608,7 @@ class Crud extends HttpServlet {
         // return 201 or error
         String collection = request.getParameter("collection")
         boolean isUpdate = false
-        Document savedDoc = saveDocument(newDoc, collection, isUpdate)
+        Document savedDoc = saveDocument(newDoc, response, collection, isUpdate)
         sendCreateResponse(response, savedDoc.getURI().toString(),
                 savedDoc.getModified() as String)
     }
@@ -706,7 +706,7 @@ class Crud extends HttpServlet {
 
         String collection = request.getParameter("collection")
         boolean isUpdate = true
-        Document savedDoc = saveDocument(updatedDoc, collection, isUpdate)
+        Document savedDoc = saveDocument(updatedDoc, response, collection, isUpdate)
         sendUpdateResponse(response, savedDoc.getURI().toString(),
                 savedDoc.getModified() as String)
 
@@ -741,7 +741,7 @@ class Crud extends HttpServlet {
         }
     }
 
-    Document saveDocument(Document doc, String collection, boolean isUpdate) {
+    Document saveDocument(Document doc, HttpServletResponse response, String collection, boolean isUpdate) {
         try {
             if (doc) {
                 log.debug("Saving document (${doc.getShortId()})")
