@@ -906,25 +906,24 @@ class PostgreSQLComponent implements whelk.component.Storage {
     @Override
     boolean remove(String identifier, String changedIn, String changedBy, String collection) {
         if (versioning) {
-            log.debug("Creating tombstone record with id ${identifier}")
-            Document tombstone = createTombstone(identifier)
-            return store(tombstone, true, changedIn, changedBy, collection, true)
-        } else {
-            Connection connection = getConnection()
-            PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
-            PreparedStatement delidstmt = connection.prepareStatement(DELETE_IDENTIFIERS)
+            log.debug("Marking document with ID ${identifier} as deleted.")
+
             try {
-                delstmt.setString(1, identifier)
-                delstmt.executeUpdate()
-                delidstmt.setString(1, identifier)
-                delidstmt.executeUpdate()
-                return true
-            } finally {
-                connection.close()
-                log.debug("[remove] Closed connection.")
+                storeAtomicUpdate(identifier, false, changedIn, changedBy, collection, true,
+                    { Document doc ->
+                        // Add a tombstone marker (without removing anything) perhaps?
+                    })
+            } catch (Throwable e) {
+                log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
+                return false
             }
+            return false
+        } else {
+            throw new whelk.exception.WhelkException(
+                    "Actually deleting data from lddb is currently not supported, because doing so would" +
+                            "make the APIX-exporter (which will pickup the delete after the fact) not know what to delete in Voyager," +
+                            "which is unacceptable as long as Voyager still lives.")
         }
-        return false
     }
 
 
