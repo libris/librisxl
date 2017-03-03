@@ -70,7 +70,14 @@ class Document {
         return mapper.writeValueAsString(data)
     }
 
-    void setApixExportFailFlag(boolean failed) { set(failedApixExportPath, failed, LinkedHashMap) }
+    void setApixExportFailFlag(boolean failed) {
+        if (failed == false) {
+            removeLeafObject(failedApixExportPath, LinkedHashMap)
+        }
+        else {
+            set(failedApixExportPath, failed, LinkedHashMap)
+        }
+    }
 
     boolean getApixExportFailFlag() { get(failedApixExportPath) }
 
@@ -358,6 +365,23 @@ class Document {
         }
 
         node.put(path.get(path.size() - 1), value)
+        return true
+    }
+
+    private boolean removeLeafObject(List path, Type container) {
+        if (!preparePath(path, container))
+            return false
+
+        // Start at root data node
+        Object node = data
+
+        for (int i = 0; i < path.size() - 1; ++i) // follow all but last step
+        {
+            Object step = path.get(i)
+            node = node.get(step)
+        }
+
+        node.remove(path.get(path.size() - 1))
         return true
     }
 

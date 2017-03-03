@@ -33,7 +33,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
                      DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
                      LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
                      LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
-                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, SET_DELETED_ON_DOCUMENT_STATEMENT
+                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
@@ -116,7 +116,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
         LOAD_IDENTIFIERS = "SELECT identifier from $idTableName WHERE id = ?"
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
-        SET_DELETED_ON_DOCUMENT_STATEMENT = "UPDATE $mainTableName SET deleted = true WHERE id = ?"
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
                 "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.identifier = ?"
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE identifier = 'https://id.kb.se/vocab/context')"
@@ -908,40 +907,23 @@ class PostgreSQLComponent implements whelk.component.Storage {
     boolean remove(String identifier, String changedIn, String changedBy, String collection) {
         if (versioning) {
             log.debug("Marking document with ID ${identifier} as deleted.")
-            Connection connection = getConnection()
-            PreparedStatement delstmt = connection.prepareStatement(SET_DELETED_ON_DOCUMENT_STATEMENT)
+
             try {
-                delstmt.setString(1, identifier)
-                delstmt.executeUpdate()
-                return true
-            } finally {
-                connection.close()
-                log.debug("[remove] Closed connection.")
+                storeAtomicUpdate(identifier, false, changedIn, changedBy, collection, true,
+                    { Document doc ->
+                        // Add a tombstone marker (without removing anything) perhaps?
+                    })
+            } catch (Throwable e) {
+                log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
+                return false
             }
             return false
         } else {
-
-            throw new whelk.exception.WhelkRuntimeException(
+            throw new whelk.exception.WhelkException(
                     "Actually deleting data from lddb is currently not supported, because doing so would" +
-                            "make APIX not know what to delete in Voyager, which is unacceptable as long as Voyager still lives.")
-
-            /*
-            Connection connection = getConnection()
-            PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
-            PreparedStatement delidstmt = connection.prepareStatement(DELETE_IDENTIFIERS)
-            try {
-                delstmt.setString(1, identifier)
-                delstmt.executeUpdate()
-                delidstmt.setString(1, identifier)
-                delidstmt.executeUpdate()
-                return true
-            } finally {
-                connection.close()
-                log.debug("[remove] Closed connection.")
-            }
-            */
+                            "make the APIX-exporter (which will pickup the delete after the fact) not know what to delete in Voyager," +
+                            "which is unacceptable as long as Voyager still lives.")
         }
-        return false
     }
 
 
