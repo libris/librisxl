@@ -470,7 +470,7 @@ class Document {
     }*/
 
     String getChecksum() {
-        long checksum = calculateCheckSum(data, 0)
+        long checksum = calculateCheckSum(data, 1)
         return Long.toString(checksum)
     }
 
@@ -480,23 +480,23 @@ class Document {
         if (node == null)
             return term
         else if (node instanceof String)
-            return node.hashCode() + depth
+            return node.hashCode() * depth
         else if (node instanceof Boolean)
-            return node.booleanValue() ? 1 + depth : depth
+            return node.booleanValue() ? depth : term
         else if (node instanceof Integer)
-            return node.intValue() + depth
+            return node.intValue() * depth
         else if (node instanceof Map) {
             for (String key : node.keySet()) {
                 if ( !key.equals(JsonLd.MODIFIED_KEY) && !key.equals(JsonLd.CREATED_KEY)) {
-                    term += key.hashCode() + depth
+                    term += key.hashCode() * depth
                     term += calculateCheckSum(node[key], depth + 1)
                 }
             }
         }
         else { // node is a list
-            int i = 0
+            int i = 1
             for (entry in node)
-                term += calculateCheckSum(entry, depth + 1 + (i++))
+                term += calculateCheckSum(entry, depth + (i++))
         }
 
         return term
