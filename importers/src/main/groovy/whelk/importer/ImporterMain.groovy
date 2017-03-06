@@ -1,5 +1,6 @@
 package whelk.importer
 
+import whelk.Conversiontester
 import whelk.ElasticConfigGenerator
 
 import java.lang.annotation.*
@@ -48,6 +49,16 @@ class ImporterMain {
     void vcopydump(String toFileName, String collection) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
         PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl)
+    }
+
+    @Command(args='COLLECTION')
+    void conversiontest(String collection) {
+        String connUrl = props.getProperty("mysqlConnectionUrl")
+        String sqlQuery = MySQLLoader.selectByMarcType[collection]
+        List<Object> queryParameters = [0]
+        Conversiontester conversionTester = new Conversiontester()
+        MySQLLoader.run(conversionTester, sqlQuery, queryParameters, collection, connUrl)
+        conversionTester.close()
     }
 
     /**
