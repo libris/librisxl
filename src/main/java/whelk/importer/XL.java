@@ -25,7 +25,6 @@ class XL
     private Parameters m_parameters;
     private Properties m_properties;
     private MarcFrameConverter m_marcFrameConverter;
-    private LinkFinder m_linkfinder;
 
     private final static String IMPORT_SYSTEM_CODE = "batch import";
 
@@ -36,7 +35,6 @@ class XL
         m_postgreSQLComponent = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
         m_elasticSearchComponent = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
         m_marcFrameConverter = new MarcFrameConverter();
-        m_linkfinder = new LinkFinder(m_postgreSQLComponent);
     }
 
     /**
@@ -116,7 +114,6 @@ class XL
         Document rdfDoc = convertToRDF(marcRecord, generatedId);
         if (collection.equals("hold"))
             rdfDoc.setHoldingFor(relatedWithBibResourceId);
-        m_linkfinder.findLinks(rdfDoc);
 
         if (!m_parameters.getReadOnly())
         {
@@ -138,7 +135,6 @@ class XL
         Document rdfDoc = convertToRDF(incomingMarcRecord, ourId);
         if (collection.equals("hold"))
             rdfDoc.setHoldingFor(relatedWithBibResourceId);
-        m_linkfinder.findLinks(rdfDoc);
 
         if (!m_parameters.getReadOnly())
         {
