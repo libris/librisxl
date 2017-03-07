@@ -8,19 +8,18 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
-public class ListSets {
+public class ListSets
+{
     private final static String RESUMPTION_PARAM = "resumptionToken";
 
     /**
      * Verifies the integrity of a OAI-PMH request with the verb 'ListSets' and sends a proper response.
      */
     public static void handleListSetsRequest(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, XMLStreamException, SQLException {
+            throws IOException, XMLStreamException, SQLException
+    {
         // Parse and verify the parameters allowed for this request
         String resumptionToken = request.getParameter(RESUMPTION_PARAM); // exclusive, not supported/used
 
@@ -28,7 +27,8 @@ public class ListSets {
             return;
 
         // We do not use resumption tokens.
-        if (resumptionToken != null) {
+        if (resumptionToken != null)
+        {
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN,
                     "No such resumption token was issued", request, response);
             return;
@@ -71,16 +71,19 @@ public class ListSets {
         writer.writeEndElement(); // set
 
         // Dynamic sigel-sets
-       /* try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
+        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
              PreparedStatement preparedStatement = prepareStatement(dbconn);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
-            while (resultSet.next()) {
+             ResultSet resultSet = preparedStatement.executeQuery())
+        {
+            while (resultSet.next())
+            {
                 String sigel = LegacyIntegrationTools.uriToLegacySigel(resultSet.getString("sigel"));
 
-                if (sigel != null) {
+                if (sigel != null)
+                {
                     writer.writeStartElement("set");
                     writer.writeStartElement("setSpec");
-                    writer.writeCharacters("hold:" + sigel.replace("\"", ""));
+                    writer.writeCharacters("hold:"+sigel.replace("\"", ""));
                     writer.writeEndElement(); // setSpec
                     writer.writeStartElement("setName");
                     writer.writeCharacters("Holding records for sigel: " + sigel);
@@ -89,13 +92,14 @@ public class ListSets {
                 }
             }
         }
-*/
+
         writer.writeEndElement(); // ListSets
         ResponseCommon.writeOaiPmhClose(writer, request);
     }
 
     private static PreparedStatement prepareStatement(Connection dbconn)
-            throws SQLException {
+            throws SQLException
+    {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
