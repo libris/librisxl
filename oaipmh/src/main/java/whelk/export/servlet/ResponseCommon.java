@@ -251,7 +251,7 @@ public class ResponseCommon
 
         for (int i = 0; i < itIds.size(); ++i)
         {
-            selectSQL.append(" data#>>'{@graph,1,holdingFor,@id}' = ? ");
+            selectSQL.append(" data#>>'{@graph,1,itemOf,@id}' = ? ");
 
             // If this is the last id
             if (i+1 == itIds.size())

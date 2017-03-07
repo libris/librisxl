@@ -214,7 +214,8 @@ public class ApiTest
     @Test
     public void testHoldingsForBibSingle() throws Exception
     {
-        String response = TestCommon.httpGet("/oaipmh/?verb=GetRecord&metadataPrefix=oai_dc_includehold&identifier=https://libris.kb.se/l4xz4wvx42rfsnb");
+        String response = TestCommon.httpGet("/oaipmh/?verb=GetRecord&metadataPrefix=oai_dc_includehold&identifier=" +
+                OaiPmh.configuration.getProperty("baseUri") + "l4xz4wvx42rfsnb");
         Assert.assertTrue( response.contains("holding sigel=\"Gbg\" id=\"59hm0xrb4wxl4bm\"") );
     }
 
