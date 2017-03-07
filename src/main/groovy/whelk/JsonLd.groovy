@@ -521,23 +521,61 @@ public class JsonLd {
         return false
     }
 
+    /*
+     * Traverse the JSON doc and grab all @id and their respective objects
+     *
+     * This is then useful for framing, since we can easily find the object
+     * we'll replace the reference with.
+     *
+     */
     private static Map getIdMap(Map flatJsonLd) {
         Map idMap = [:]
         if (flatJsonLd.containsKey(GRAPH_KEY)) {
-            for (item in flatJsonLd.get(GRAPH_KEY)) {
-                if (item.containsKey(GRAPH_KEY)) {
-                    idMap = idMap + getIdMap(item)
-                } else if (item.containsKey(ID_KEY)) {
-                    def id = item.get(ID_KEY)
-                    if (idMap.containsKey(id)) {
-                        Map existing = idMap.get(id)
-                        idMap.put(id, existing + item)
-                    } else {
-                        idMap.put(id, item)
-                    }
-                }
+            def graphObject = flatJsonLd.get(GRAPH_KEY)
+            // we expect this to be a list
+            for (item in graphObject) {
+                idMap = idMap + getIdMapRecursively(item)
             }
         }
+        return idMap
+    }
+
+    private static Map getIdMapRecursively(Object thing) {
+        if (thing instanceof List) {
+            return getIdMapFromList(thing)
+        } else if (thing instanceof Map) {
+            return getIdMapFromMap(thing)
+        } else {
+            throw new FramingException(
+                "Unexpected structure in flat JSON-LD: ${thing}")
+        }
+    }
+
+    private static Map getIdMapFromList(List objects) {
+        Map idMap = [:]
+
+        for (object in objects) {
+            idMap = idMap + getIdMapRecursively(object)
+        }
+
+        return idMap
+    }
+
+    private static Map getIdMapFromMap(Map item) {
+        Map idMap = [:]
+
+        if (item.containsKey(GRAPH_KEY)) {
+            idMap = idMap + getIdMapRecursively(item.get(GRAPH_KEY))
+        } else if (item.containsKey(ID_KEY)) {
+            def id = item.get(ID_KEY)
+            if (idMap.containsKey(id)) {
+                Map existing = idMap.get(id)
+                idMap.put(id, existing + item)
+            } else {
+                idMap.put(id, item)
+            }
+        }
+
         return idMap
     }
 
