@@ -46,17 +46,20 @@ class JsonLdSpec extends Specification {
         assert JsonLd.getIdMap(bnode_graph).keySet() == expected as Set
     }
 
-    def "should expect list as @graph value when getting id map"() {
+    def "should accept list and map as @graph value when getting id map"() {
         given:
         def graph = ['@graph': [['@id': '/some',
                                  'foo': ['@id': '_:foo']],
+                                ['@graph': [['@id': '_:baz']]],
                                 ['@graph': ['@id': '_:bar']]]]
 
-        when:
-        JsonLd.getIdMap(graph)
+        def expected = ['/some': ['@id': '/some',
+                                  'foo': ['@id': '_:foo']],
+                        '_:baz': ['@id': '_:baz'],
+                        '_:bar': ['@id': '_:bar']]
 
-        then:
-        thrown MissingMethodException
+        expect:
+        assert JsonLd.getIdMap(graph) == expected
     }
 
     def "should find external references"() {
