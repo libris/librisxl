@@ -40,11 +40,12 @@ class SearchUtils {
             : [:]
     }
 
-    Map doSearch(Map queryParameters, String dataset, String siteBaseUri) {
+    Map doSearch(Map queryParameters, String dataset) {
         String relation = getReservedQueryParameter('p', queryParameters)
         String reference = getReservedQueryParameter('o', queryParameters)
         String value = getReservedQueryParameter('value', queryParameters)
         String query = getReservedQueryParameter('q', queryParameters)
+        String siteBaseUri = getReservedQueryParameter('_site_base_uri', queryParameters)
 
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
         int limit = limitAndOffset.first
@@ -587,8 +588,11 @@ class SearchUtils {
                 String valueProp
                 String termKey
                 def value
-                if (param == JsonLd.TYPE_KEY ||
-                    param.endsWith(JsonLd.ID_KEY)) {
+                if (param == JsonLd.TYPE_KEY || param == JsonLd.ID_KEY) {
+                    valueProp = 'object'
+                    termKey = param
+                    value = [(JsonLd.ID_KEY): val]
+                } else if (param.endsWith(".${JsonLd.ID_KEY}")) {
                     valueProp = 'object'
                     termKey = param[0..-5]
                     value = [(JsonLd.ID_KEY): val]
