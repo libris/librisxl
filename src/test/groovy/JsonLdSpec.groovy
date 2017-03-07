@@ -22,6 +22,8 @@ class JsonLdSpec extends Specification {
         ids                     | items
         ['/some', '/other']     | [['@id': '/some'], ['@id': '/other']]
         ['/some', '/other']     | [['@id': '/some'], ['@graph': [['@id': '/other']]]]
+        // once we've got an @id, we don't go deeper into the structure
+        ['/some']               | [['@id': '/some', 'sameAs': [['@id': '/other']]]]
     }
 
     def "should get nested id map"() {
