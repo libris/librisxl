@@ -52,7 +52,7 @@ class ImporterMain {
     }
 
     @Command(args='COLLECTION')
-    void conversiontest(String collection) {
+    void vcopyconversiontest(String collection) {
         String connUrl = props.getProperty("mysqlConnectionUrl")
         String sqlQuery = MySQLLoader.selectByMarcType[collection]
         List<Object> queryParameters = [0]
