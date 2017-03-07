@@ -45,39 +45,39 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
 
         MarcFrameConverter marcFrameConverter = new MarcFrameConverter()
 
-        try {
             for (List<VCopyDataRow> argument : batch) {
-                log.trace "Got message (${argument.size()} rows). Reacting."
-                Map record = VCopyToWhelkConverter.convert(argument, marcFrameConverter)
-                if (record && !record.isSuppressed) {
-                    log.trace "record is not suppressed. Record: ${record.inspect()}"
-                    setLastRecordTimeStamp(record.timestamp as Timestamp)
-                    Document doc = record.document
-                    if (record.isDeleted) {
-                        log.trace "Record is deleted"
-                        Location l = whelk.storage.locate(record.controlNumber as String, false)
-                        String systemId = l?.id
-                        if (systemId) {
-                            log.trace "Removing record with systemID: ${systemId}"
-                            whelk.remove(systemId, sourceSystem, null, record.collection as String)
-                            importResult.numberOfDocumentsDeleted++
+                try {
+                    log.trace "Got message (${argument.size()} rows). Reacting."
+                    Map record = VCopyToWhelkConverter.convert(argument, marcFrameConverter)
+                    if (record && !record.isSuppressed) {
+                        log.trace "record is not suppressed. Record: ${record.inspect()}"
+                        setLastRecordTimeStamp(record.timestamp as Timestamp)
+                        Document doc = record.document
+                        if (record.isDeleted) {
+                            log.trace "Record is deleted"
+                            Location l = whelk.storage.locate(record.controlNumber as String, false)
+                            String systemId = l?.id
+                            if (systemId) {
+                                log.trace "Removing record with systemID: ${systemId}"
+                                whelk.remove(systemId, sourceSystem, null, record.collection as String)
+                                importResult.numberOfDocumentsDeleted++
+                            }
+                        } else if (record.isSuppressed) {
+                            log.trace "Record is suppressed"
+                            importResult.numberOfDocumentsSkipped++
+                        } else {
+                            log.trace "Storing record "
+                            whelk.store(doc, sourceSystem, null, record.collection as String, false)
                         }
-                    } else if (record.isSuppressed) {
-                        log.trace "Record is suppressed"
-                        importResult.numberOfDocumentsSkipped++
-                    } else {
-                        log.trace "Storing record "
-                        whelk.store(doc, sourceSystem, null, record.collection as String, false)
-                    }
-                    importResult.numberOfDocuments++
+                        importResult.numberOfDocuments++
 
+                    }
+                }
+                catch (any) {
+                    exceptionsThrown++
+                    log.error "Error saving to Whelk", any
+                    println any.message
                 }
             }
-        }
-        catch (any) {
-            exceptionsThrown++
-            log.error "Error saving to Whelk", any
-            println any.message
-        }
     }
 }

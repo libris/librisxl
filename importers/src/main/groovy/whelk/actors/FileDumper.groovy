@@ -58,8 +58,15 @@ import java.nio.file.Paths
             List<Map> writeBatch = []
 
             for ( List<VCopyDataRow> rowList in _batch) {
-                Map recordMap = VCopyToWhelkConverter.convert(rowList, converterPool[threadIndex])
-                writeBatch.add(recordMap)
+                Map recordMap = null
+                try {
+                    recordMap = VCopyToWhelkConverter.convert(rowList, converterPool[threadIndex])
+                }
+                catch (Throwable e) {
+                    log.error("Failed converting document with id: " + rowList.last().bib_id, e)
+                }
+                if (recordMap != null)
+                    writeBatch.add(recordMap)
             }
 
             append(writeBatch)

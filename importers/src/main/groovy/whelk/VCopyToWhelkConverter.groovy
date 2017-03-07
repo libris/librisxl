@@ -22,27 +22,18 @@ class VCopyToWhelkConverter
         Map doc = getMarcDocMap(row.data)
         def controlNumber = getControlNumber(doc)
         if (!isSuppressed(doc)) {
-            try {
-                switch (row.collection) {
-                    case 'auth':
-                        whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created)
-                        break
-                    case 'hold':
-                        whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
-                        break
-                    case 'bib':
-                        whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
-                        break
-                }
-                return [collection: row.collection, document: whelkDocument, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber, checksum: whelkDocument.getChecksum()]
+            switch (row.collection) {
+                case 'auth':
+                    whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created)
+                    break
+                case 'hold':
+                    whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
+                    break
+                case 'bib':
+                    whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
+                    break
             }
-            catch (any) {
-                println "ALLVARLIGT FEL! ${any.message}"
-                println "Bibid: ${row.bib_id}"
-                any.printStackTrace()
-                return [collection: row.collection, document: null, isSuppressed: true, isDeleted: false, timestamp: timestamp, controlNumber: "0", checksum: "0"]
-            }
-
+            return [collection: row.collection, document: whelkDocument, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber, checksum: whelkDocument.getChecksum()]
         } else
             return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber, checksum: "0"]
     }
