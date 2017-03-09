@@ -250,6 +250,7 @@ class SearchUtils {
         Map result = [(JsonLd.TYPE_KEY): 'PartialCollectionView']
         result[(JsonLd.ID_KEY)] = makeFindUrl(st, pageParams, offset)
         result['itemOffset'] = offset
+        result['itemsPerPage'] = limit
         result['totalItems'] = total
 
         result['search'] = ['mapping': mappings]
