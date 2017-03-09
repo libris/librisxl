@@ -1,5 +1,6 @@
 package whelk
 
+import se.kb.libris.util.marc.io.Iso2709Deserializer
 import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
@@ -34,36 +35,62 @@ class Conversiontester implements MySQLLoader.LoadHandler {
 
             for ( List<VCopyDataRow> rowList in _batch ) {
 
+                String voyagerId = getVoyagerId(rowList)
+
                 Map recordMap
 
                 try {
                     recordMap = VCopyToWhelkConverter.convert(rowList, toJsonConverterPool[threadIndex])
                 } catch (Throwable throwable) {
-                    // Log marc->json error
-                    String marcString = MySQLLoader.normalizeString(new String(rowList.last().data, "UTF-8"))
-                    outputErrorLog(marcString, throwable)
+                    logConversionFailure(voyagerId, rowList.last().data, "None, failed at initial MARC->JSON conversion", throwable)
                     continue
                 }
 
                 Document xlDocument = recordMap.document
 
                 try {
-                    Map reconvertedMarcData = toMarcConverterPool[threadIndex].convert(xlDocument.data, xlDocument.getShortId())
+                    toMarcConverterPool[threadIndex].convert(xlDocument.data, xlDocument.getShortId())
                 } catch (Throwable throwable) {
-                    // Log json->marc error
-                    outputErrorLog(xlDocument.getDataAsString(), throwable)
+                    logConversionFailure(voyagerId, rowList.last().data, xlDocument.getDataAsString(), throwable)
                 }
             }
         })
     }
 
-    private synchronized outputErrorLog(String sourceData, Throwable throwable) {
+    private synchronized logConversionFailure(String voyagerId, byte[] sourceMarc, String intermediateJson, Throwable throwable) {
 
-        String errorString = "Conversion failed. The data on which conversion was attempted:\n" +
-                sourceData + "\n\n Failed on: "  + throwable.toString() + ". Callstack was:\n" +
+        String marcString = Iso2709Deserializer.deserialize(MySQLLoader.normalizeString(new String(sourceMarc, "UTF-8")).getBytes()).toString()
+
+        String errorString = voyagerId + " conversion failed.\n\nOriginal MARC was:\n" +
+                marcString + "\n\nIntermediate JSON was:\n" + intermediateJson +
+                "\n\nFailed on: "  + throwable.toString() + ". Callstack was:\n" +
                 getHumanReadableCallStack(throwable)
 
-        outputWriter.writeLine(errorString + "---------------\n")
+        outputWriter.writeLine(errorString + "\n---------------\n")
+    }
+
+    private getVoyagerId(List<VCopyDataRow> rowList) {
+        // Each rowList pertains to _one_ voyager post. Get the ID of that post.
+        String id = null
+        switch (rowList.last().collection) {
+            case "auth":
+                id = "auth/" + rowList.last().auth_id
+                break
+            case "bib":
+                id = "bib/" + rowList.last().bib_id
+                break
+            case "hold":
+                id = "hold/" + rowList.last().mfhd_id
+                break
+        }
+
+        if (id == null) { // Unless something is extremely wrong, this should be unreachable code.
+            outputWriter.writeLine("Fatal: Could not determine Voyager ID of incoming Voyager post. Aborting.")
+            outputWriter.close()
+            System.exit(-1)
+        }
+
+        return id
     }
 
     private String getHumanReadableCallStack(Throwable e) {

@@ -14,6 +14,7 @@ class VCopyDataRow {
     String collection
     int bib_id
     int auth_id
+    int mfhd_id
     byte[] authdata
     String sigel
 
@@ -26,6 +27,7 @@ class VCopyDataRow {
         this.collection = collection
         bib_id = collection == 'bib' ? resultSet.getInt('bib_id') : 0
         auth_id = collection == 'bib' ? resultSet.getInt('auth_id') : 0
+        mfhd_id = collection == 'hold' ? resultSet.getInt('mfhd_id') : 0
         authdata = collection == 'bib' ? resultSet.getBytes('auth_data') : null
         sigel = collection == "hold" ? resultSet.getString("shortname") : null
     }
