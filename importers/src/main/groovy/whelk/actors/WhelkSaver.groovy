@@ -7,6 +7,8 @@ import whelk.Document
 import whelk.Location
 import whelk.VCopyToWhelkConverter
 import whelk.Whelk
+import whelk.component.PostgreSQLComponent
+import whelk.filter.LinkFinder
 import whelk.importer.ImportResult
 import whelk.VCopyDataRow
 import whelk.PostgresLoadfileWriter
@@ -26,8 +28,10 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
     String sourceSystem
     Whelk whelk
     MarcFrameConvertingActor convertActor
+    PostgreSQLComponent postgreSQLComponent
 
-    WhelkSaver(Whelk w, MarcFrameConverter converter, String sourceSystem) {
+    WhelkSaver(Whelk w, MarcFrameConverter converter, String sourceSystem, PostgreSQLComponent postgreSQLComponent) {
+        this.postgreSQLComponent = postgreSQLComponent
         exceptionsThrown = 0
         this.importResult = new ImportResult()
         this.whelk = w
@@ -43,7 +47,9 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
 
     void handle(List<List<VCopyDataRow>> batch) {
 
-        MarcFrameConverter marcFrameConverter = new MarcFrameConverter()
+        LinkFinder lf = new LinkFinder(postgreSQLComponent)
+
+        MarcFrameConverter marcFrameConverter = new MarcFrameConverter(lf)
 
             for (List<VCopyDataRow> argument : batch) {
                 try {

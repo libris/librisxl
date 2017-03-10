@@ -25,7 +25,7 @@ class VCopyImporter {
 
     ImportResult doImport(String collection, String sourceSystem, String connectionUrl, Date from) {
 
-        def whelkSaver = new WhelkSaver(whelk, converter, sourceSystem)
+        def whelkSaver = new WhelkSaver(whelk, converter, sourceSystem, whelk.storage)
         whelkSaver.importResult.sourceSystem = sourceSystem
         whelkSaver.importResult.fromDate = from
 
@@ -42,7 +42,7 @@ class VCopyImporter {
 
     ImportResult doImport(String collection, String sourceSystem, String connectionUrl, String[] vcopyIdsToImport) {
 
-        def whelkSaver = new WhelkSaver(whelk, converter, sourceSystem)
+        def whelkSaver = new WhelkSaver(whelk, converter, sourceSystem, whelk.storage )
         whelkSaver.importResult.sourceSystem = sourceSystem
 
         String sqlQuery = MySQLLoader.selectExampleDataByMarcType[collection].replace('?', vcopyIdsToImport.collect { it -> '?' }.join(','))

@@ -51,7 +51,7 @@ class ImporterMain {
     @Command(args='TO_FILE_NAME COLLECTION')
     void vcopydump(String toFileName, String collection) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl)
+        PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, pico.getComponent(PostgreSQLComponent))
     }
 
     @Command(args='COLLECTION')
