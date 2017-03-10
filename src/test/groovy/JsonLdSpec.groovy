@@ -289,42 +289,53 @@ class JsonLdSpec extends Specification {
     def "should convert to cards and chips"() {
         given:
         Map input = ["@type": "Instance",
-                     "mediaType": "foobar",
-                     "instanceOf": ["@type": "Work",
-                                    "contribution": ["@type": "Text",
-                                                     "foo": ["mediaType": "bar"]],
-                                    "hasTitle": ["@type": "ProvisionActivity",
-                                                 "date": "2000-01-01",
-                                                 "noValidKey": "shouldBeRemoved",
-                                                 "@id": "foo"]],
-                     "@aKey": "external-foobar",
-                     "hasTitle": ["value1", "value2", "value3", ["someKey": "theValue",
-                                                                 "@type": "Work"]],
-                     "foo": "bar"]
+            "mediaType": "foobar",
+            "instanceOf": ["@type": "Work",
+                        "contribution": ["@type": "Text",
+                                            "foo": ["mediaType": "bar"]],
+                        "hasTitle": ["@type": "Publication",
+                                        "date": "2000-01-01",
+                                        "noValidKey": "shouldBeRemoved",
+                                        "@id": "foo"]],
+            "@aKey": "external-foobar",
+            "hasTitle": ["value1", "value2", "value3", ["someKey": "theValue",
+                                                        "@type": "Work"]],
+            "foo": "bar"]
 
-        Map displayData = ["lensGroups":
-                                   ["chips":
-                                            ["lenses":
-                                                     ["Work": ["showProperties": ["hasTitle",
-                                                                                  "contribution",
-                                                                                  "language"]],
-                                                      "ProvisionActivity": ["showProperties": ["date",
-                                                                                               "agent",
-                                                                                               "place"]]]],
-                                    "cards":
-                                            ["lenses":
-                                                     ["Instance":
-                                                              ["showProperties": ["mediaType",
-                                                                                  "hasTitle",
-                                                                                  "instanceOf"]]]]]]
+        Map displayData = [
+            "@context": ["@vocab": "http://example.org/ns/"],
+            "lensGroups":
+                    ["chips":
+                            ["lenses":
+                                        ["Work": ["showProperties": ["hasTitle",
+                                                                    "contribution",
+                                                                    "language"]],
+                                        "Event": ["showProperties": ["date",
+                                                                                "agent",
+                                                                                "place"]]]],
+                    "cards":
+                            ["lenses":
+                                        ["Instance":
+                                                ["showProperties": ["mediaType",
+                                                                    "hasTitle",
+                                                                    "instanceOf"]]]]]]
 
+
+        Map vocabData = [
+            "@graph": [
+                    ["@id": "http://example.org/ns/ProvisionActivity",
+                     "subClassOf": [ ["@id": "http://example.org/ns/Event"] ]],
+                    ["@id": "http://example.org/ns/Publication",
+                     "subClassOf": ["@id": "http://example.org/ns/ProvisionActivity"]]
+                ]
+            ]
 
         Map expected = ["@type": "Instance",
                       "mediaType": "foobar",
                       "instanceOf": ["@type": "Work",
                                      "contribution": ["@type": "Text",
                                                       "foo": ["mediaType": "bar"]],
-                                     "hasTitle": ["@type": "ProvisionActivity",
+                                     "hasTitle": ["@type": "Publication",
                                                   "date": "2000-01-01",
                                                   "@id": "foo"]],
                       "@aKey": "external-foobar",
@@ -332,7 +343,7 @@ class JsonLdSpec extends Specification {
 
 
         expect:
-        Map output = JsonLd.toCard(input, displayData)
+        Map output = new JsonLd(displayData, vocabData).toCard(input)
         output == expected
     }
 

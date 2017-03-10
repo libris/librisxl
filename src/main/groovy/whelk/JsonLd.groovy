@@ -17,6 +17,7 @@ public class JsonLd {
 
     static final String GRAPH_KEY = "@graph"
     static final String CONTEXT_KEY = "@context"
+    static final String VOCAB_KEY = "@vocab"
     static final String ID_KEY = "@id"
     static final String TYPE_KEY = "@type"
     static final String REVERSE_KEY = "@reverse"
@@ -42,6 +43,31 @@ public class JsonLd {
 
     private static Logger log = LoggerFactory.getLogger(JsonLd.class)
 
+    Map displayData
+    Map vocabIndex
+    private String vocabId
+
+    /**
+     * Make an instance to incapsulate model driven behaviour.
+     */
+    JsonLd(Map displayData, Map vocabData) {
+        this.displayData = displayData ?: Collections.emptyMap()
+        vocabId = displayData?.get(CONTEXT_KEY)?.get(VOCAB_KEY)
+        vocabIndex = vocabData ?
+            vocabData[JsonLd.GRAPH_KEY].collectEntries {
+                [toTermKey(it[JsonLd.ID_KEY]), it]
+            }
+            : Collections.emptyMap()
+    }
+
+    String toTermKey(String termId) {
+        return termId.replace(vocabId, '')
+    }
+
+    List expandLinks(List refs) {
+        return JsonLd.expandLinks(refs, displayData[JsonLd.CONTEXT_KEY])
+    }
+
     /**
      * This flatten-method does not create description-based flat json (i.e. with entry, items and quoted)
      */
@@ -57,7 +83,7 @@ public class JsonLd {
         return [(GRAPH_KEY): flatList.reverse()]
     }
 
-    private static storeFlattened(current, result) {
+    private static Object storeFlattened(Object current, result) {
         if (current instanceof Map) {
             def flattened = makeFlat(current, result)
             if (flattened.containsKey(ID_KEY) && flattened.size() > 1) {
@@ -69,7 +95,7 @@ public class JsonLd {
         return current
     }
 
-    private static makeFlat(obj, result) {
+    private static Map makeFlat(obj, result) {
         def updated = [:]
         obj.each { key, value ->
             if (value instanceof List) {
@@ -85,6 +111,7 @@ public class JsonLd {
         }
         return updated
     }
+
 
     public static List getExternalReferences(Map jsonLd){
         Set allReferences = getAllReferences(jsonLd)
@@ -202,7 +229,30 @@ public class JsonLd {
         return result
     }
 
+    @Deprecated
     public static Map embellish(Map jsonLd, Map additionalObjects, Map displayData) {
+        return new JsonLd(displayData, null).embellish(jsonLd, additionalObjects)
+    }
+
+
+    @Deprecated
+    public static List<Map> toCards(List<Map> things, Map displayData) {
+        def ld = new JsonLd(displayData, null)
+        return things.collect { ld.toCard(it) }
+    }
+
+    @Deprecated
+    public static Map toCard(Map thing, Map displayData) {
+        return new JsonLd(displayData, null).toCard(thing)
+    }
+
+    @Deprecated
+    public static Object toChip(Object object, Map displayData) {
+        return new JsonLd(displayData, null).toChip(object)
+    }
+
+
+    Map embellish(Map jsonLd, Map additionalObjects) {
         if (!jsonLd.get(GRAPH_KEY)) {
             return jsonLd
         }
@@ -226,55 +276,38 @@ public class JsonLd {
         return jsonLd
     }
 
-
-    /**
-     * Convert a list of posts to cards.
-     *
-     */
-    public static List toCards(List things, Map displayData) {
-        return things.collect { toCard(it, displayData) }
-    }
-
     /**
      * Convert a post to card.
      *
      */
-    public static Map toCard(Map thing, Map displayData) {
+    public Map toCard(Map thing) {
         Map lensGroups = displayData.get("lensGroups")
         Map cardLensGroup = lensGroups.get("cards")
         Map result = [:]
 
         Map card = removeProperties(thing, cardLensGroup)
         card.each {key, value ->
-            result[key] = toChip(value, displayData)
+            result[key] = toChip(value)
         }
         return result
-    }
-
-    /**
-     * Convert a list of posts to chips.
-     *
-     */
-    public static List toChips(List things, Map displayData) {
-        return things.collect { toChip(it, displayData) }
     }
 
     /**
      * Convert a post to chip.
      *
      */
-    public static Object toChip(Object object, Map displayData) {
+    public Object toChip(Object object) {
         Map lensGroups = displayData.get("lensGroups")
         Map chipLensGroup = lensGroups.get("chips")
         Map itemsToKeep = [:]
         Map result = [:]
 
-        if (object instanceof List){
-            return toChips(object, displayData)
+        if (object instanceof List) {
+            return object.collect { toChip(it) }
         } else if ((object instanceof Map)) {
             itemsToKeep = removeProperties(object, chipLensGroup)
             itemsToKeep.each {key, value ->
-                result[key] = toChip(value, displayData)
+                result[key] = toChip(value)
             }
             return result
         } else {
@@ -282,29 +315,55 @@ public class JsonLd {
         }
     }
 
-    private static Map removeProperties(Map jsonMap, Map lensGroups) {
+    private Map removeProperties(Map thing, Map lensGroup) {
         Map itemsToKeep = [:]
-        Map types = lensGroups.get("lenses")
-        String type = jsonMap.get("@type")
 
-        if (!type) {
-            return jsonMap
-        }
+        Map lens = getLensFor(thing, lensGroup)
 
-        Map showPropertiesField = types.get(type)
+        if (lens) {
+            List propertiesToKeep = lens.get("showProperties")
 
-        if (showPropertiesField) {
-            List propertiesToKeep = showPropertiesField.get("showProperties")
-
-            jsonMap.each {key, value ->
+            thing.each {key, value ->
                 if (shouldKeep(key, propertiesToKeep)) {
                     itemsToKeep[key] = value
                 }
             }
             return itemsToKeep
         } else {
-            return jsonMap
+            return thing
         }
+    }
+
+    Map getLensFor(Map thing, Map lensGroup) {
+        def types = thing.get(TYPE_KEY)
+        if (types instanceof String)
+            types = [types]
+        for (type in types) {
+            return findLensForType(type, lensGroup)
+                    ?: findLensForType('Resource', lensGroup)
+        }
+    }
+
+    private Map findLensForType(String typeKey, Map lensGroup) {
+        def lenses = lensGroup['lenses']
+        def lens = lenses.get(typeKey)
+        if (lens)
+            return lens
+        def typedfn = vocabIndex.get(typeKey)
+        if (!typedfn)
+            return null
+        def basetypes = typedfn.get('subClassOf')
+        if (basetypes instanceof Map)
+            basetypes = [basetypes]
+        for (basetype in basetypes) {
+            if (!basetype[ID_KEY])
+                continue
+            def baseTypeKey = toTermKey(basetype[ID_KEY])
+            lens = findLensForType(baseTypeKey, lensGroup)
+            if (lens)
+                return lens
+        }
+        return null
     }
 
     private static boolean shouldKeep(String key, List propertiesToKeep) {
@@ -579,6 +638,10 @@ public class JsonLd {
         return idMap
     }
 
+    // TODO: This doesn't quite belong here, at least not while dependent on a
+    // JsonLD2MarcXMLConverter. If validation worked on the JSON-level (e.g.
+    // used a json-schema to validate against), it would be a bit more
+    // appropriate here.
     static boolean validateItemModel(Document doc) {
         if (!doc || !doc.data) {
             throw new ModelValidationException("Document has no data to validate.")
