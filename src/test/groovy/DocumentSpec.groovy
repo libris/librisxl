@@ -229,57 +229,6 @@ class DocumentSpec extends Specification {
         assert doc.data == expected
     }
 
-    def "should convert to cards and chips"() {
-        given:
-        Map input = ["@type": "Instance",
-                     "mediaType": "foobar",
-                     "instanceOf": ["@type": "Work",
-                                    "contribution": ["@type": "Text",
-                                                     "foo": ["mediaType": "bar"]],
-                                    "hasTitle": ["@type": "ProvisionActivity",
-                                                 "date": "2000-01-01",
-                                                 "noValidKey": "shouldBeRemoved",
-                                                 "@id": "foo"]],
-                     "@aKey": "external-foobar",
-                     "hasTitle": ["value1", "value2", "value3", ["someKey": "theValue",
-                                                                 "@type": "Work"]],
-                     "foo": "bar"]
-
-        Map displayData = ["lensGroups":
-                                   ["chips":
-                                            ["lenses":
-                                                     ["Work": ["showProperties": ["hasTitle",
-                                                                                  "contribution",
-                                                                                  "language"]],
-                                                      "ProvisionActivity": ["showProperties": ["date",
-                                                                                               "agent",
-                                                                                               "place"]]]],
-                                    "cards":
-                                            ["lenses":
-                                                     ["Instance":
-                                                              ["showProperties": ["mediaType",
-                                                                                  "hasTitle",
-                                                                                  "instanceOf"]]]]]]
-
-
-        Map output = ["@type": "Instance",
-                      "mediaType": "foobar",
-                      "instanceOf": ["@type": "Work",
-                                     "contribution": ["@type": "Text",
-                                                      "foo": ["mediaType": "bar"]],
-                                     "hasTitle": ["@type": "ProvisionActivity",
-                                                  "date": "2000-01-01",
-                                                  "@id": "foo"]],
-                      "@aKey": "external-foobar",
-                      "hasTitle": ["value1", "value2", "value3", ["@type": "Work"]]]
-
-
-        Document doc = new Document(input)
-        doc.toCard(displayData)
-        expect:
-        assert doc.data == output
-    }
-
     def "should return true for holding"() {
         given:
         def id = "/1234"

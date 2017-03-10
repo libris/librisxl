@@ -201,7 +201,7 @@ class JsonLdSpec extends Specification {
                                                    "subfields": [{"a":"Unga vuxna"}]},
                                            "_unhandled": ["ind2"]}],
                      "about": {"@id": "/resource/bib/13531679"}}]}
-        """
+        """ // """
         def framedInput = """
         {"@id": "/bib/13531679",
          "encLevel": {"@id": "/def/enum/record/AbbreviatedLevel"},
@@ -284,6 +284,56 @@ class JsonLdSpec extends Specification {
         then:
         assert JsonLd.validateItemModel(validDocument)
         assert !JsonLd.validateItemModel(invalidDocument)
+    }
+
+    def "should convert to cards and chips"() {
+        given:
+        Map input = ["@type": "Instance",
+                     "mediaType": "foobar",
+                     "instanceOf": ["@type": "Work",
+                                    "contribution": ["@type": "Text",
+                                                     "foo": ["mediaType": "bar"]],
+                                    "hasTitle": ["@type": "ProvisionActivity",
+                                                 "date": "2000-01-01",
+                                                 "noValidKey": "shouldBeRemoved",
+                                                 "@id": "foo"]],
+                     "@aKey": "external-foobar",
+                     "hasTitle": ["value1", "value2", "value3", ["someKey": "theValue",
+                                                                 "@type": "Work"]],
+                     "foo": "bar"]
+
+        Map displayData = ["lensGroups":
+                                   ["chips":
+                                            ["lenses":
+                                                     ["Work": ["showProperties": ["hasTitle",
+                                                                                  "contribution",
+                                                                                  "language"]],
+                                                      "ProvisionActivity": ["showProperties": ["date",
+                                                                                               "agent",
+                                                                                               "place"]]]],
+                                    "cards":
+                                            ["lenses":
+                                                     ["Instance":
+                                                              ["showProperties": ["mediaType",
+                                                                                  "hasTitle",
+                                                                                  "instanceOf"]]]]]]
+
+
+        Map expected = ["@type": "Instance",
+                      "mediaType": "foobar",
+                      "instanceOf": ["@type": "Work",
+                                     "contribution": ["@type": "Text",
+                                                      "foo": ["mediaType": "bar"]],
+                                     "hasTitle": ["@type": "ProvisionActivity",
+                                                  "date": "2000-01-01",
+                                                  "@id": "foo"]],
+                      "@aKey": "external-foobar",
+                      "hasTitle": ["value1", "value2", "value3", ["@type": "Work"]]]
+
+
+        expect:
+        Map output = JsonLd.toCard(input, displayData)
+        output == expected
     }
 
 }
