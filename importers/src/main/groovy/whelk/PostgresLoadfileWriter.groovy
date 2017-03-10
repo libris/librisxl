@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709Deserializer
 import whelk.actors.FileDumper
+import whelk.component.PostgreSQLComponent
 import whelk.converter.MarcJSONConverter
 import whelk.importer.MySQLLoader
 import whelk.util.LegacyIntegrationTools
@@ -54,15 +55,17 @@ class PostgresLoadfileWriter {
     }
 */
 
-    public static void dumpToFile(String exportFileName, String collection, String connectionUrl) {
+    public static void dumpToFile(String exportFileName, String collection, String connectionUrl,
+                                  PostgreSQLComponent postgreSQLComponent) {
         String sqlQuery = MySQLLoader.selectByMarcType[collection]
         List<Object> queryParameters = [0]
-        dump(collection, exportFileName, connectionUrl, sqlQuery, queryParameters)
+        dump(collection, exportFileName, connectionUrl, sqlQuery, queryParameters, postgreSQLComponent)
     }
 
-    private static void dump(String collection, String exportFileName, String connectionUrl, String sqlQuery, List<Object> queryParameters) {
+    private static void dump(String collection, String exportFileName, String connectionUrl, String sqlQuery,
+                             List<Object> queryParameters, PostgreSQLComponent postgreSQLComponent) {
 
-        FileDumper fileDumper = new FileDumper(exportFileName)
+        FileDumper fileDumper = new FileDumper(exportFileName, postgreSQLComponent)
 
         MySQLLoader.run(fileDumper, sqlQuery, queryParameters, collection, connectionUrl)
 

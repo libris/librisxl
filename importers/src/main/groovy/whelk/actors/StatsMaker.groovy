@@ -1,75 +1,59 @@
 package whelk.actors
 
 import groovy.util.logging.Slf4j as Log
-import groovyx.gpars.actor.DefaultActor
 import whelk.SetSpecMatcher
-import whelk.PostgresLoadfileWriter
 import whelk.VCopyDataRow
+import whelk.VCopyToWhelkConverter
+import whelk.converter.marc.MarcFrameConverter
+import whelk.importer.MySQLLoader
+import whelk.util.ThreadPool
 
+import java.nio.charset.Charset
+import java.nio.file.Files
 import java.nio.file.Paths
 
 /**
  * Created by theodortolstoy on 2017-01-11.
  */
 @Log
-class StatsMaker extends DefaultActor {
-    def counter = 0
-    def startTime = System.currentTimeMillis()
+class StatsMaker implements MySQLLoader.LoadHandler {
+
+    ThreadPool threadPool
     int missingBibFields = 0
-    def uncertainFileWriter = new FileWriter(Paths.get("uncertainMatches.tsv") as String)
-    def completeFileWriter = new FileWriter(Paths.get("completeMatches.tsv") as String)
-    Map resultMap = [possibleMatches: 0, matches: 0, MisMatchesOnA: 0, bibInAukt: 0, auktInBib: 0, doubleDiff: 0, specAndDoc: 0, allAuth: 0, ignoredSetSpecs: 0, MissingBibFields: 0]
+    BufferedWriter uncertainFileWriter
+    BufferedWriter completeFileWriter
+    Map resultMap = [possibleMatches : 0,
+                     matches         : 0,
+                     MisMatchesOnA   : 0,
+                     bibInAukt       : 0,
+                     auktInBib       : 0,
+                     doubleDiff      : 0,
+                     specAndDoc      : 0,
+                     allAuth         : 0,
+                     ignoredSetSpecs : 0,
+                     MissingBibFields: 0]
+
     def lacksValidAuthRecords = 0
     def docIsNull = 0
 
-    static void printDiffResultsToFile(FileWriter fileWriter, matches, doc, setSpecs) {
-        matches.each { match ->
-            fileWriter << "${match.type}" +
-                    "'\t${match.diff.count { it }}" +
-                    "\t${match.spec.field}" +
-                    "\t${match.bibField}" +
-                    "\t${match.subfieldsInOverlap}" +
-                    "\t${match.subfieldsInDiff}" +
-                    "\t${match.subfieldsInReversediff}" +
-                    "\t${match.reverseDiff.count { it }}" +
-                    "\t${match.overlap.count { it }}" +
-                    //"\t${doc.leader?.substring(5, 6) ?: ''}" +
-                    //"\t${doc.leader?.substring(6, 7) ?: ''}" +
-                    //"\t${doc.leader?.substring(7, 8) ?: ''}" +
-                    //"\t${doc.leader?.substring(17, 18) ?: ''}" +
-                    //"\t${doc.fields?."008"?.find { it -> it }?.take(2) ?: ''}" +
-                    //"\t _" +
-                    //"\t${doc.fields?."040"?.find { it -> it }?.subfields?."a"?.find { it -> it } ?: ''}" +
-                    //"\t${doc.fields?."040"?.find { it -> it }?.subfields?."d"?.find { it -> it } ?: ''}" +
-                    //"\t${match.spec.data?.leader?.substring(5, 6) ?: ''}" +
-                    //"\t${match.spec.data?.leader?.substring(6, 7) ?: ''}" +
-                    //"\t${match.spec.data?.fields?."008"?.find { it -> it }?.take(2) ?: ''}" +
-                    //"\t${match.spec.data?.fields?."008"?.find { it -> it }?.substring(9, 10) ?: ''}" +
-                    //"\t${match.spec.data?.fields?."008"?.find { it -> it }?.substring(33, 34) ?: ''}" +
-                    //"\t${match.spec.data?.fields?."008"?.find { it -> it }?.substring(39, 40) ?: ''}" +
-                    "\t${match.numBibFields}" +
-                    "\t${match.numAuthFields}" +
-                    "\t${match.partialD}" +
-                    //"\t${match.bibHas035a}" +
-                    "\t${match.bibSet} " +
-                    "\t${match.authSet} " +
-                    "\t${match.bibField} " +
-                    "\t${match.authField} " +
-                    "\t${match.bibHas240a}" +
-                    "\n"
-
-        }
-
+    StatsMaker() {
+        final int THREAD_COUNT = 4 * Runtime.getRuntime().availableProcessors()
+        threadPool = new ThreadPool(THREAD_COUNT)
+        uncertainFileWriter = Files.newBufferedWriter(
+                Paths.get("uncertainMatches.tsv"), Charset.forName("UTF-8"))
+        completeFileWriter = Files.newBufferedWriter(
+                Paths.get("completeMatches.tsv"), Charset.forName("UTF-8"))
     }
 
-    @Override
-    protected void act() {
-        loop {
-            react { List<VCopyDataRow> argument ->
 
-                VCopyDataRow row = argument.last()
-                def allAuthRecords = PostgresLoadfileWriter.getAuthDocsFromRows(argument)
-                Map doc = PostgresLoadfileWriter.getMarcDocMap(row.data)
+    void handle(List<List<VCopyDataRow>> batch) {
+        threadPool.executeOnThread(batch, { _batch, threadIndex ->
+
+            batch.each { rows ->
+
+                VCopyDataRow row = rows.last()
+                def allAuthRecords = VCopyToWhelkConverter.getAuthDocsFromRows(rows)
+                Map doc = VCopyToWhelkConverter.getMarcDocMap(row.data)
                 if (doc == null)
                     docIsNull++
 
@@ -78,18 +62,18 @@ class StatsMaker extends DefaultActor {
 
                 if (doc != null && SetSpecMatcher.hasValidAuthRecords(allAuthRecords)) {
 
-                    def matchResults = SetSpecMatcher.matchAuthToBib(doc, allAuthRecords, true)
+                    List<Map> matchResults = SetSpecMatcher.matchAuthToBib(doc, allAuthRecords, true)
 
-                    List authRecords = allAuthRecords.findAll { authRecord ->
-                        !SetSpecMatcher.ignoredAuthFields.contains(authRecord.field)
+                    List authRecords = allAuthRecords.findAll {
+                        !SetSpecMatcher.ignoredAuthFields.contains(it.field)
                     }
 
-                    def uncertainMatches = matchResults.findAll { match ->
+                    def uncertainMatches = matchResults.findAll { Map match ->
                         ((match.hasOnlyDiff || match.hasOnlyReverseDiff || match.hasDoubleDiff)
                                 && !match.hasMisMatchOnA && !match.isMatch)
                     }
 
-                    matchResults.findAll { match ->
+                    matchResults.findAll { Map match ->
                         !match.hasOnlyDiff &&
                                 !match.hasOnlyReverseDiff &&
                                 !match.hasDoubleDiff &&
@@ -100,49 +84,58 @@ class StatsMaker extends DefaultActor {
                     }
 
 
-                    def completeMatches = matchResults.findAll { match -> match.isMatch }
+                    def completeMatches = matchResults.findAll { it.isMatch }
 
-                    def misMatchesOnA = matchResults.findAll { match -> match.hasMisMatchOnA }
+                    def misMatchesOnA = matchResults.findAll { it.hasMisMatchOnA }
 
 
                     resultMap.possibleMatches += matchResults.count { it }
 
                     resultMap.matches += completeMatches.size()
                     resultMap.MisMatchesOnA += misMatchesOnA.size()
-                    resultMap.bibInAukt += uncertainMatches.count { match ->
-                        match.hasOnlyDiff
-                    }
-                    resultMap.auktInBib += uncertainMatches.count { match ->
-                        match.hasOnlyReverseDiff
-                    }
-                    resultMap.doubleDiff += uncertainMatches.count { match ->
-                        match.hasDoubleDiff
-                    }
+                    resultMap.bibInAukt += uncertainMatches.count { it.hasOnlyDiff }
+                    resultMap.auktInBib += uncertainMatches.count { it.hasOnlyReverseDiff }
+                    resultMap.doubleDiff += uncertainMatches.count { it.hasDoubleDiff }
 
                     resultMap.specAndDoc++
                     resultMap.allAuth = allAuthRecords.size()
                     resultMap.ignoredSetSpecs = allAuthRecords.size() - authRecords.size()
                     resultMap.MissingBibFields = missingBibFields
 
-                    if (uncertainMatches.any()) {
-                        printDiffResultsToFile(uncertainFileWriter, uncertainMatches, doc, authRecords)
-                    }
-                    if (completeMatches.any()) {
-                        printDiffResultsToFile(completeFileWriter, completeMatches, doc, authRecords)
-                    }
+                    printDiffResultsToFile(uncertainMatches, completeMatches)
 
-                    if (++counter % 10000 == 0) {
-                        def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
-                        if (elapsedSecs > 0) {
-                            def docsPerSec = counter > 0 ? counter / elapsedSecs : 0
-                            log.info "Working. Currently ${counter} documents recieved. Crunching ${docsPerSec} docs / s. "
-
-                        }
-                    }
                 }
-                reply true
             }
-        }
+        })
+    }
 
+    synchronized void printDiffResultsToFile(uncertainMatches, completeMatches) {
+        appendtofile(uncertainFileWriter, uncertainMatches)
+        appendtofile(completeFileWriter, completeMatches)
+    }
+
+    synchronized void appendtofile(BufferedWriter fileWriter, matches) {
+        matches.each { match ->
+            fileWriter.write("${match.type}" +
+                    "'\t${match.diff.count { it }}" +
+                    "\t${match.spec.field}" +
+                    "\t${match.bibField}" +
+                    "\t${match.subfieldsInOverlap}" +
+                    "\t${match.subfieldsInDiff}" +
+                    "\t${match.subfieldsInReversediff}" +
+                    "\t${match.reverseDiff.count { it }}" +
+                    "\t${match.overlap.count { it }}" +
+                    "\t${match.numBibFields}" +
+                    "\t${match.numAuthFields}" +
+                    "\t${match.partialD}" +
+                    "\t${match.bibSet} " +
+                    "\t${match.authSet} " +
+                    "\t${match.bibField} " +
+                    "\t${match.authField} " +
+                    "\t${match.bibHas240a}" +
+                    "\n")
+
+        }
     }
 }
+

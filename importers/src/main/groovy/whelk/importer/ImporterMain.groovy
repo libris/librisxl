@@ -2,6 +2,9 @@ package whelk.importer
 
 import whelk.Conversiontester
 import whelk.ElasticConfigGenerator
+import whelk.actors.FileDumper
+import whelk.actors.StatsMaker
+import whelk.component.PostgreSQLComponent
 
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
@@ -48,7 +51,7 @@ class ImporterMain {
     @Command(args='TO_FILE_NAME COLLECTION')
     void vcopydump(String toFileName, String collection) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl)
+        PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, pico.getComponent(PostgreSQLComponent))
     }
 
     @Command(args='COLLECTION')
@@ -80,8 +83,12 @@ class ImporterMain {
 
     @Command(args='TO_FOLDER_NAME')
     void vcopystats(String toFolderName) {
-        def connUrl = props.getProperty("mysqlConnectionUrl")
-        PostgresLoadfileWriter.dumpAuthStats(toFolderName, connUrl)
+        def connectionUrl = props.getProperty("mysqlConnectionUrl")
+        def collection = 'bib'
+        StatsMaker statsMaker = new StatsMaker()
+        String sqlQuery = MySQLLoader.selectByMarcType[collection]
+
+        MySQLLoader.run(statsMaker, sqlQuery, [0], collection, connectionUrl)
     }
 
     @Command(args='COLLECTION [TO_FILE_NAME]')

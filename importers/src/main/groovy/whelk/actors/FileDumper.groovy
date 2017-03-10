@@ -19,7 +19,7 @@ import java.nio.file.Paths
  * Created by theodortolstoy on 2017-01-24.
  */
 @Slf4j
-    class FileDumper implements MySQLLoader.LoadHandler {
+class FileDumper implements MySQLLoader.LoadHandler {
 
     BufferedWriter mainTableWriter
     BufferedWriter identifiersWriter
@@ -35,16 +35,18 @@ import java.nio.file.Paths
         throw new Error("Groovy might let you call implicit default constructors, I will not.")
     }
 
-    FileDumper(String exportFileName) {
+    FileDumper(String exportFileName, PostgreSQLComponent postgreSQLComponent) {
 
-        final int THREAD_COUNT = 4*Runtime.getRuntime().availableProcessors()
+        final int THREAD_COUNT = 4 * Runtime.getRuntime().availableProcessors()
 
         mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"))
         identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"))
         threadPool = new ThreadPool(THREAD_COUNT)
         converterPool = new MarcFrameConverter[THREAD_COUNT]
-        for (int i = 0; i < THREAD_COUNT; ++i)
-            converterPool[i] = new MarcFrameConverter()
+        for (int i = 0; i < THREAD_COUNT; ++i) {
+            LinkFinder lf = new LinkFinder(postgreSQLComponent)
+            converterPool[i] = new MarcFrameConverter(lf)
+        }
     }
 
     public void close() {
@@ -54,10 +56,10 @@ import java.nio.file.Paths
     }
 
     public void handle(List<List<VCopyDataRow>> batch) {
-        threadPool.executeOnThread( batch, { _batch, threadIndex ->
+        threadPool.executeOnThread(batch, { _batch, threadIndex ->
             List<Map> writeBatch = []
 
-            for ( List<VCopyDataRow> rowList in _batch) {
+            for (List<VCopyDataRow> rowList in _batch) {
                 Map recordMap = null
                 try {
                     recordMap = VCopyToWhelkConverter.convert(rowList, converterPool[threadIndex])

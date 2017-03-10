@@ -46,7 +46,7 @@ class SetSpecMatcher {
         })
     }
 
-    static matchAuthToBib(Map doc, List allAuthRecords, boolean generateStats = false) {
+    static List matchAuthToBib(Map doc, List allAuthRecords, boolean generateStats = false) {
         List statsResults = []
         if (doc != null && hasValidAuthRecords(allAuthRecords)) {
             List authRecords = allAuthRecords.findAll { it -> !ignoredAuthFields.contains(it.field) }
@@ -149,11 +149,10 @@ class SetSpecMatcher {
             }
         }
 
-        return authRecords.groupBy {
-            it.field
-        }
-        .toSorted {
-            -(it.hasProperty('normalizedSubfields') ? it.normalizedSubfields.count { it } : 0)
+        return authRecords.groupBy { it.field }
+                .toSorted {
+            -(it.hasProperty('normalizedSubfields') ?
+                    it.normalizedSubfields.count { it } : 0)
         }
     }
 
