@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j as Log
 import whelk.Whelk
 import whelk.actors.WhelkSaver
 import whelk.PostgresLoadfileWriter
+import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
 
 /**
@@ -15,6 +16,7 @@ class VCopyImporter {
 
     Whelk whelk
     MarcFrameConverter converter
+
 
     VCopyImporter(Whelk whelk, MarcFrameConverter converter) {
         this.whelk = whelk

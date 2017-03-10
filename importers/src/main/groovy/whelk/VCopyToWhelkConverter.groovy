@@ -10,11 +10,10 @@ import whelk.util.LegacyIntegrationTools
 
 import java.sql.Timestamp
 
-class VCopyToWhelkConverter
-{
+class VCopyToWhelkConverter {
     private static ObjectMapper mapper = new ObjectMapper()
 
-    public static Map convert(List<VCopyDataRow> rows, MarcFrameConverter marcFrameConverter) {
+    static Map convert(List<VCopyDataRow> rows, MarcFrameConverter marcFrameConverter) {
         VCopyDataRow row = rows.last()
 
         Document whelkDocument = null
@@ -38,7 +37,8 @@ class VCopyToWhelkConverter
             return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber, checksum: "0"]
     }
 
-    private static Document convertDocument(MarcFrameConverter marcFrameConverter, Map doc, String collection, Date created, List authData = null) {
+    private
+    static Document convertDocument(MarcFrameConverter marcFrameConverter, Map doc, String collection, Date created, List authData = null) {
         if (doc && !isSuppressed(doc)) {
             String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
 
@@ -65,7 +65,7 @@ class VCopyToWhelkConverter
         }
     }
 
-    private static Map getMarcDocMap(byte[] data) {
+    static Map getMarcDocMap(byte[] data) {
         byte[] dataBytes = MySQLLoader.normalizeString(
                 new String(data as byte[], "UTF-8"))
                 .getBytes("UTF-8")
@@ -79,7 +79,7 @@ class VCopyToWhelkConverter
         }
     }
 
-    private static getAuthDocsFromRows(List<VCopyDataRow> rows) {
+    static getAuthDocsFromRows(List<VCopyDataRow> rows) {
         rows.collect { it ->
             if (it.auth_id > 0) {
                 return [bibid: it.bib_id,
