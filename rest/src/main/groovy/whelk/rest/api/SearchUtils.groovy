@@ -29,15 +29,11 @@ class SearchUtils {
     }
 
     Whelk whelk
-    Map displayData
-    Map vocabIndex
+    JsonLd ld
 
     SearchUtils(Whelk whelk, Map displayData, Map vocabData) {
         this.whelk = whelk
-        this.displayData = displayData
-        this.vocabIndex = vocabData ?
-            vocabData[JsonLd.GRAPH_KEY].collectEntries { [it[JsonLd.ID_KEY], it] }
-            : [:]
+        ld = new JsonLd(displayData, vocabData)
     }
 
     Map doSearch(Map queryParameters, String dataset) {
@@ -91,10 +87,10 @@ class SearchUtils {
                                                            limit, offset)
         List mappings = []
         mappings << ['variable': 'p',
-                     'predicate': JsonLd.toChip(getVocabEntry('predicate'), displayData),
+                     'predicate': ld.toChip(getVocabEntry('predicate')),
                      'value': relation]
         mappings << ['variable': 'o',
-                     'predicate': JsonLd.toChip(getVocabEntry('object'), displayData),
+                     'predicate': ld.toChip(getVocabEntry('object')),
                      'value': reference]
 
         Map pageParams = ['p': relation, 'o': reference,
@@ -102,7 +98,7 @@ class SearchUtils {
 
         int total = whelk.storage.countByRelation(relation, reference)
 
-        List items = JsonLd.toCards(docs.collect { it.data }, displayData)
+        List items = docs.collect { ld.toCard(it.data) }
 
         return assembleSearchResults(SearchType.FIND_BY_RELATION,
                                      items, mappings, pageParams,
@@ -118,10 +114,10 @@ class SearchUtils {
 
         List mappings = []
         mappings << ['variable': 'p',
-                     'predicate': JsonLd.toChip(getVocabEntry('predicate'), displayData),
+                     'predicate': ld.toChip(getVocabEntry('predicate')),
                      'value': relation]
         mappings << ['variable': 'value',
-                     'predicate': JsonLd.toChip(getVocabEntry('object'), displayData),
+                     'predicate': ld.toChip(getVocabEntry('object')),
                      'value': value]
 
         Map pageParams = ['p': relation, 'value': value,
@@ -129,7 +125,7 @@ class SearchUtils {
 
         int total = whelk.storage.countByValue(relation, value)
 
-        List items = JsonLd.toCards(docs.collect { it.data }, displayData)
+        List items = docs.collect { ld.toCard(it.data) }
 
         return assembleSearchResults(SearchType.FIND_BY_VALUE,
                                      items, mappings, pageParams,
@@ -144,14 +140,14 @@ class SearchUtils {
 
         List mappings = []
         mappings << ['variable': 'o',
-                     'predicate': JsonLd.toChip(getVocabEntry('object'), displayData),
+                     'predicate': ld.toChip(getVocabEntry('object')),
                      'value': identifier]
 
         Map pageParams = ['o': identifier, '_limit': limit]
 
         int total = whelk.storage.countByQuotation(identifier)
 
-        List items = JsonLd.toCards(docs.collect { it.data }, displayData)
+        List items = docs.collect { ld.toCard(it.data) }
 
         return assembleSearchResults(SearchType.FIND_BY_QUOTATION,
                                      items, mappings, pageParams,
@@ -168,7 +164,7 @@ class SearchUtils {
         Map stats = null
         List mappings = []
         mappings << ['variable': 'q',
-                     'predicate': JsonLd.toChip(getVocabEntry('textQuery'), displayData),
+                     'predicate': ld.toChip(getVocabEntry('textQuery')),
                      'value': query]
         def dslQuery = ElasticSearch.createJsonDsl(queryParameters,
                                                    limit, offset)
@@ -199,7 +195,7 @@ class SearchUtils {
 
         List items = []
         if (esResult['items']) {
-            items = JsonLd.toCards(esResult['items'], displayData)
+            items = esResult['items'].collect { ld.toCard(it) }
         }
 
         items = embellishItems(items)
@@ -228,15 +224,14 @@ class SearchUtils {
     }
 
     private List embellishItems(List items) {
-        Map context = this.displayData[JsonLd.CONTEXT_KEY]
         List embellished = []
 
         for (item in items) {
             Map graph = JsonLd.flatten(item)
             List refs = JsonLd.getExternalReferences(graph)
-            List ids = JsonLd.expandLinks(refs, context)
+            List ids = ld.expandLinks(refs)
             Map recordMap = whelk.bulkLoad(ids).collectEntries { id, doc -> [id, doc.data] }
-            JsonLd.embellish(graph, recordMap, displayData)
+            ld.embellish(graph, recordMap)
 
             embellished << JsonLd.frame(item[JsonLd.ID_KEY], null, graph, true)
         }
@@ -325,7 +320,7 @@ class SearchUtils {
 
                 Map observation = ['totalItems': bucket.getAt('docCount'),
                                    'view': [(JsonLd.ID_KEY): searchPageUrl],
-                                   'object': JsonLd.toChip(lookup(itemId), displayData)]
+                                   'object': ld.toChip(lookup(itemId))]
 
                 Map bucketAggs = bucket.getAggregations().asMap
 
@@ -371,8 +366,9 @@ class SearchUtils {
      *
      */
     private Map getVocabEntry(String id) {
-        if (id in vocabIndex) {
-            return vocabIndex[id]
+        def termKey = ld.toTermKey(id)
+        if (termKey in ld.vocabIndex) {
+            return ld.vocabIndex[termKey]
         }
         String fullId = VOCAB_BASE_URI.resolve(id).toString()
         Location loc = whelk.storage.locate(fullId, true)
@@ -606,7 +602,7 @@ class SearchUtils {
                 Map termChip
                 Map termDef = getVocabEntry(termKey)
                 if (termDef) {
-                    termChip = JsonLd.toChip(termDef, displayData)
+                    termChip = ld.toChip(termDef)
                 }
 
                 result << ['variable': param, 'predicate': termChip,
