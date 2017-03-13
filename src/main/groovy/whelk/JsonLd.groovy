@@ -73,13 +73,13 @@ public class JsonLd {
 
     private void expandAliasesInLensProperties() {
         Map propAliases = [:]
-        displayData?.get(CONTEXT_KEY)?.each { k, v ->
+        displayData.get(CONTEXT_KEY)?.each { k, v ->
             if (v instanceof Map && v[CONTAINER_KEY] == LANGUAGE_KEY) {
                 propAliases[v[ID_KEY]] = k
             }
         }
-        displayData['lensGroups'].values().each { group ->
-            group.get('lenses').values().each { lens ->
+        displayData['lensGroups']?.values().each { group ->
+            group.get('lenses')?.values().each { lens ->
                 lens['showProperties'] = lens['showProperties'].collect {
                     def alias = propAliases[it]
                     return alias ? [it, alias] : it
