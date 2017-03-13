@@ -18,8 +18,15 @@ public class JsonLd {
     static final String GRAPH_KEY = "@graph"
     static final String CONTEXT_KEY = "@context"
     static final String VOCAB_KEY = "@vocab"
+    //static final String VALUE_KEY = "@base"
     static final String ID_KEY = "@id"
     static final String TYPE_KEY = "@type"
+    //static final String VALUE_KEY = "@value"
+    static final String LANGUAGE_KEY = "@language"
+    static final String CONTAINER_KEY = "@container"
+    //static final String VALUE_KEY = "@index"
+    //static final String VALUE_KEY = "@list"
+    //static final String VALUE_KEY = "@set"
     static final String REVERSE_KEY = "@reverse"
     static final String THING_KEY = "mainEntity"
     static final String RECORD_KEY = "meta"
@@ -52,12 +59,33 @@ public class JsonLd {
      */
     JsonLd(Map displayData, Map vocabData) {
         this.displayData = displayData ?: Collections.emptyMap()
-        vocabId = displayData?.get(CONTEXT_KEY)?.get(VOCAB_KEY)
+        Map context = displayData?.get(CONTEXT_KEY)
+        vocabId = context?.get(VOCAB_KEY)
+
         vocabIndex = vocabData ?
             vocabData[JsonLd.GRAPH_KEY].collectEntries {
                 [toTermKey(it[JsonLd.ID_KEY]), it]
             }
             : Collections.emptyMap()
+
+        expandAliasesInLensProperties()
+    }
+
+    private void expandAliasesInLensProperties() {
+        Map propAliases = [:]
+        displayData?.get(CONTEXT_KEY)?.each { k, v ->
+            if (v instanceof Map && v[CONTAINER_KEY] == LANGUAGE_KEY) {
+                propAliases[v[ID_KEY]] = k
+            }
+        }
+        displayData['lensGroups'].values().each { group ->
+            group.get('lenses').values().each { lens ->
+                lens['showProperties'] = lens['showProperties'].collect {
+                    def alias = propAliases[it]
+                    return alias ? [it, alias] : it
+                }.flatten()
+            }
+        }
     }
 
     String toTermKey(String termId) {

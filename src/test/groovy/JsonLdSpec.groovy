@@ -347,4 +347,21 @@ class JsonLdSpec extends Specification {
         output == expected
     }
 
+    def "extend lenses with property aliases"() {
+        given:
+        Map displayData = [
+            "@context": [
+                "labelByLang": ["@id": "label", "@container": "@language"]
+            ],
+            "lensGroups":
+                    ["chips":
+                            ["lenses": [
+                                "Thing": ["showProperties": ["notation", "label", "note"]]]
+                            ]]]
+        def ld = new JsonLd(displayData, null)
+        expect:
+        def props = ld.displayData.lensGroups.chips.lenses.Thing.showProperties
+        props == ['notation', 'label', 'labelByLang', 'note']
+    }
+
 }
