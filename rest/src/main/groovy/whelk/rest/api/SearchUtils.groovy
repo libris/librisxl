@@ -490,7 +490,7 @@ class SearchUtils {
         result['first'] = [(JsonLd.ID_KEY): makeFindUrl(st, pageParams)]
         result['last'] = [(JsonLd.ID_KEY): makeFindUrl(st, pageParams, offsets.last)]
 
-        if (offsets.prev) {
+        if (offsets.prev != null) {
             if (offsets.prev == 0) {
                 result['previous'] = result['first']
             } else {
