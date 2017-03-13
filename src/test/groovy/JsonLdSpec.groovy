@@ -74,7 +74,11 @@ class JsonLdSpec extends Specification {
                                  'foo': '/foo',
                                  'some': 'value'],
                                 ['@id': '/third',
-                                 'external': ['@id': '/external']]
+                                 'external': ['@id': '/external']],
+								['@id': '/fourth',
+								 'internal': ['@id': '/some_id']],
+								['@graph': [['@id': '/some_id']]],
+								['@graph': ['@id': '/some_other_id']]
                                ],
                      '@context': 'base.jsonld']
         def expected = ['/external']
@@ -89,8 +93,9 @@ class JsonLdSpec extends Specification {
                                 'sameAs': [['@id': '/baz']],
                                 'bar': ['@id': '/bar']],
                                 ['@graph': [['@id': '/quux',
-                                             'some': 'value']]]]]
-        Set expected = ['/foo', '/baz', '/quux']
+                                             'some': 'value']]],
+		                        ['@graph': ['@id': '/some_id']]]]
+        Set expected = ['/foo', '/baz', '/quux', '/some_id']
 
         expect:
         assert JsonLd.getLocalObjects(input) == expected
