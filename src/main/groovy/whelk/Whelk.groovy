@@ -93,6 +93,9 @@ class Whelk {
         return result
     }
 
+    /**
+     * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
+     */
     Document store(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean createOrUpdate = true) {
         if (storage.store(document, createOrUpdate, changedIn, changedBy, collection, deleted)) {
             if (elastic) {
@@ -100,6 +103,14 @@ class Whelk {
             }
         }
         return document
+    }
+
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, Storage.UpdateAgent updateAgent) {
+        Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, collection, deleted, updateAgent)
+        if (elastic) {
+            elastic.index(updated, collection)
+        }
+        return updated
     }
 
     void bulkStore(final List<Document> documents, String changedIn, String changedBy, String collection, boolean createOrUpdate = true) {

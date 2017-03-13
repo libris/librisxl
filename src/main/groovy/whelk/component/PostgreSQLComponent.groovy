@@ -283,17 +283,10 @@ class PostgreSQLComponent implements whelk.component.Storage {
     }
 
     /**
-     * Interface for performing atomic document updates
-     */
-    public interface UpdateAgent {
-        public void update(Document doc)
-    }
-
-    /**
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    void storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, UpdateAgent updateAgent) {
+    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, whelk.component.Storage.UpdateAgent updateAgent) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
@@ -301,6 +294,8 @@ class PostgreSQLComponent implements whelk.component.Storage {
         PreparedStatement selectStatement
         PreparedStatement updateStatement
         ResultSet resultSet
+
+        Document doc = null
 
         connection.setAutoCommit(false)
         try {
@@ -310,7 +305,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
             if (!resultSet.next())
                 throw new SQLException("There is no document with the id: " + id)
 
-            Document doc = assembleDocument(resultSet)
+            doc = assembleDocument(resultSet)
 
             // Performs the callers updates on the document
             updateAgent.update(doc)
@@ -361,6 +356,8 @@ class PostgreSQLComponent implements whelk.component.Storage {
             }
             log.debug("[store] Closed connection.")
         }
+
+        return doc
     }
 
     private void saveIdentifiers(Document doc, Connection connection) {
