@@ -453,7 +453,16 @@ class Crud extends HttpServlet {
                             "type=\"application/ld+json\"")
         }
 
-        response.setHeader("ETag", modified)
+        String etag = modified
+
+        String ifNoneMatch = request.getHeader("If-None-Match")
+        if (ifNoneMatch != null && ifNoneMatch == etag) {
+            response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
+                    "Document has not been modified.")
+            return 
+        }
+
+        response.setHeader("ETag", etag)
 
         if (path in contextHeaders.collect { it.value }) {
             log.debug("request is for context file. " +

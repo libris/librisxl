@@ -384,6 +384,22 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NOT_ACCEPTABLE
     }
 
+    def "GET document with If-None-Match equal to ETag should return 304 Not Modified"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def doc = new Document(["@graph": [["@id": id]]])
+        doc.setModified(new Date())
+        def etag = doc.getModified()
+        request.getRequestURI() >> { id }
+        request.getHeader("Accept") >> { "*/*" }
+        request.getHeader("If-None-Match") >> { etag }
+        storage.locate(_, _) >> { new Location(doc) }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED
+    }
+
 
     // Tests for create
     def "POST to / should create document with generated @id if not supplied"() {
