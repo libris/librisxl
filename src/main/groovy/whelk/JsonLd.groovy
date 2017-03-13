@@ -171,29 +171,60 @@ public class JsonLd {
     }
 
     private static Set getLocalObjects(Map jsonLd) {
-        List result = []
+        Set result = [] as Set
         if (jsonLd.get(GRAPH_KEY)) {
+            // we expect this to be a list
             for (item in jsonLd.get(GRAPH_KEY)) {
-                if (item.containsKey(GRAPH_KEY)) {
-                    result.addAll(getLocalObjects(item))
-                }
-                if (item.containsKey(ID_KEY)) {
-                    def id = item.get(ID_KEY)
-                    if (!result.contains(id)) {
-                        result << id
-                    }
-                }
-                if (item.containsKey(JSONLD_ALT_ID_KEY)) {
-                    item.get(JSONLD_ALT_ID_KEY).each {
-                        if (!it.containsKey(ID_KEY)) {
-                            return
-                        }
+                result.addAll(getLocalObjectsRecursively(item))
+            }
+        }
+        return result
+    }
 
-                        def id = it.get(ID_KEY)
-                        if (!result.contains(id)) {
-                            result << id
-                        }
-                    }
+    private static Set getLocalObjectsRecursively(Object thing){
+        if (thing instanceof List) {
+            return getLocalObjectsFromList(thing)
+        } else if (thing instanceof Map) {
+            return getLocalObjectsFromMap(thing)
+        } else {
+            throw new FramingException(
+                "Unexpected structure in JSON-LD: ${thing}")
+        }
+    }
+
+    private static Set getLocalObjectsFromList(List things) {
+        Set result = [] as Set
+
+        for (thing in things) {
+            result.addAll(getLocalObjectsRecursively(thing))
+        }
+
+        return result
+    }
+
+    private static Set getLocalObjectsFromMap(Map jsonLd) {
+        Set result = [] as Set
+        if (jsonLd.containsKey(GRAPH_KEY)) {
+            def thing = jsonLd.get(GRAPH_KEY)
+            result.addAll(getLocalObjectsRecursively(thing))
+        }
+
+        if (jsonLd.containsKey(ID_KEY)) {
+            def id = jsonLd.get(ID_KEY)
+            if (!result.contains(id)) {
+                result << id
+            }
+        }
+
+        if (jsonLd.containsKey(JSONLD_ALT_ID_KEY)) {
+            jsonLd.get(JSONLD_ALT_ID_KEY).each {
+                if (!it.containsKey(ID_KEY)) {
+                    return
+                }
+
+                def id = it.get(ID_KEY)
+                if (!result.contains(id)) {
+                    result << id
                 }
             }
         }
