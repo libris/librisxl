@@ -47,6 +47,8 @@ class Conversiontester implements MySQLLoader.LoadHandler {
                 }
 
                 Document xlDocument = recordMap.document
+                if (xlDocument == null)
+                    continue
 
                 try {
                     toMarcConverterPool[threadIndex].convert(xlDocument.data, xlDocument.getShortId())
