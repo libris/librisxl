@@ -21,6 +21,14 @@ class CrudUtils {
         if (tokens.size >= 2) {
             suffix = tokens[-1]
         }
+
+        /**
+         * from w3.org:
+         * If no Accept header field is present, then it is assumed that the client accepts all media types.
+         */
+        if (acceptHeader == null)
+            return MimeTypes.JSONLD
+
         return getBestContentType(acceptHeader, suffix)
     }
 
