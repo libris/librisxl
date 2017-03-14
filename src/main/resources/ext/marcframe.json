@@ -426,6 +426,34 @@
               "@type": "ManuscriptText",
               "manufacture": [ {"date": "1977"} ]
             }
+          },
+          {
+            "source": {
+              "publication": [ {"@type": "Publication", "date": "1977"} ]
+            },
+            "result": {
+              "publication": [ {"@type": "Publication", "date": "1977"} ]
+            }
+          },
+          {
+            "source": {
+              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publishedYear": "1977",
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            },
+            "result": {
+              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publishedYear": "1977",
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            }
+          },
+          {
+            "source": {
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            },
+            "result": {
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            }
           }
         ]
       },
