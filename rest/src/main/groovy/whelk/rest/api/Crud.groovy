@@ -765,12 +765,14 @@ class Crud extends HttpServlet {
                             }
 
                             log.debug("All checks passed.")
+                            log.debug("Saving UPDATE of document ("+ doc.getId() +")")
 
                             // Replace our data with the incoming data.
                             _doc.data = doc.data
                     })
                 }
                 else {
+                    log.debug("Saving NEW document ("+ doc.getId() +")")
                     doc = whelk.store(doc, "xl", null, collection, false, isUpdate)
                 }
 
@@ -792,6 +794,7 @@ class Crud extends HttpServlet {
                     wae.message)
             return null
         } catch (EtagMissmatchException eme) {
+            log.warn("Did not store document, because the ETAGs did not match.")
             response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED,
                                         "The resource has been updated by someone " +
                                                 "else. Please refetch.")

@@ -418,6 +418,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "POST"
         }
+        request.getParameter("collection") >> {
+            "bib"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -459,6 +462,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
+        }
+        request.getParameter("collection") >> {
+            "bib"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -694,6 +700,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "POST"
         }
+        request.getParameter("collection") >> {
+            "bib"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -744,6 +753,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "POST"
         }
+        request.getParameter("collection") >> {
+            "bib"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -793,6 +805,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
+        }
+        request.getParameter("collection") >> {
+            "bib"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -1043,6 +1058,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "POST"
         }
+        request.getParameter("collection") >> {
+            "bib"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -1142,6 +1160,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
+        }
+        request.getParameter("collection") >> {
+            "bib"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -1300,6 +1321,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "PUT"
+        }
+        request.getParameter("collection") >> {
+            "bib"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -1497,60 +1521,6 @@ class CrudSpec extends Specification {
         crud.doPut(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
-    }
-
-    def "PUT to /<id> should return 412 Precondition Failed on outdated If-Match header"() {
-        given:
-        def createdDate = "2009-04-21T00:00:00.0+02:00"
-        def modifiedDate = "2016-05-21T00:00:00.0+02:00"
-        def etag = "2009-05-21T00:00:00.0+02:00"
-        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-        def id = "/1234"
-        def fullId = BASE_URI.resolve(id).toString()
-        def oldContent = ["@graph": [["@id": fullId,
-                                      "@type": "Record",
-                                      "contains": "some data"]]]
-        def newContent = ["@graph": [["@id": fullId,
-                                      "@type": "Record",
-                                      "created": createdDate,
-                                      "contains": "some updated data"]]]
-        def is = GroovyMock(ServletInputStream.class)
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
-        request.getInputStream() >> {
-            is
-        }
-        request.getPathInfo() >> {
-            id
-        }
-        request.getMethod() >> {
-            "PUT"
-        }
-        request.getContentType() >> {
-            "application/ld+json"
-        }
-        request.getHeader(_) >> {
-            return etag
-        }
-        request.getAttribute(_) >> {
-            if (it.first() == "user") {
-                return ["user": "SYSTEM"]
-            }
-        }
-        request.getRequestURL() >> {
-            return new StringBuffer(BASE_URI.toString())
-        }
-        storage.locate(_, _) >> {
-            Document doc = new Document(oldContent)
-            doc.setCreated(Date.parse(dateFormat, createdDate))
-            doc.setModified(Date.parse(dateFormat, modifiedDate))
-            return new Location(doc)
-        }
-        when:
-        crud.doPut(request, response)
-        then:
-        response.getStatus() == HttpServletResponse.SC_PRECONDITION_FAILED
     }
 
     def "PUT to /<id> should return 403 Forbidden if user has insufficient privilege"() {
@@ -2117,6 +2087,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "PUT"
         }
+        request.getParameter("collection") >> {
+            "bib"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -2184,6 +2157,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "PUT"
+        }
+        request.getParameter("collection") >> {
+            "bib"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -2383,6 +2359,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "PUT"
+        }
+        request.getParameter("collection") >> {
+            "bib"
         }
         request.getContentType() >> {
             "application/ld+json"
