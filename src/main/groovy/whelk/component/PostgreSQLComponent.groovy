@@ -327,8 +327,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
             log.debug("SQL failed: ${psqle.message}")
             connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
-                Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
-                Matcher m = messageDetailPattern.matcher(psqle.message)
                 throw new StorageCreateFailedException()
             } else {
                 throw psqle
