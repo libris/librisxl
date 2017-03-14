@@ -617,8 +617,9 @@ class Crud extends HttpServlet {
         // return 201 or error
         String collection = request.getParameter("collection")
         boolean isUpdate = false
-        Document savedDoc = saveDocument(newDoc, response, collection, isUpdate)
-        sendCreateResponse(response, savedDoc.getURI().toString(),
+        Document savedDoc = saveDocument(newDoc, request, response, collection, isUpdate)
+        if (savedDoc != null)
+            sendCreateResponse(response, savedDoc.getURI().toString(),
                 savedDoc.getModified() as String)
     }
 
@@ -681,15 +682,6 @@ class Crud extends HttpServlet {
             documentId = existingDoc.id
         }
 
-        if (request.getHeader("If-Match") &&
-                existingDoc.modified as String != request.getHeader("If-Match")) {
-            log.debug("PUT performed on stale document.")
-            response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED,
-                    "The resource has been updated by someone " +
-                            "else. Please refetch.")
-            return
-        }
-
         Document updatedDoc = new Document(requestBody)
         updatedDoc.setId(documentId)
 
@@ -711,12 +703,12 @@ class Crud extends HttpServlet {
                     mve.getMessage())
             return
         }
-        log.debug("All checks passed.")
 
         String collection = request.getParameter("collection")
         boolean isUpdate = true
-        Document savedDoc = saveDocument(updatedDoc, response, collection, isUpdate)
-        sendUpdateResponse(response, savedDoc.getURI().toString(),
+        Document savedDoc = saveDocument(updatedDoc, request, response, collection, isUpdate)
+        if (savedDoc != null)
+            sendUpdateResponse(response, savedDoc.getURI().toString(),
                 savedDoc.getModified() as String)
 
     }
@@ -750,13 +742,40 @@ class Crud extends HttpServlet {
         }
     }
 
-    Document saveDocument(Document doc, HttpServletResponse response, String collection, boolean isUpdate) {
+    private class EtagMissmatchException extends RuntimeException {}
+
+    Document saveDocument(Document doc, HttpServletRequest request, HttpServletResponse response, String collection, boolean isUpdate) {
+        if (collection == null){
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "The 'collection' parameter is mandatory.")
+            log.warn("Tried to save a dcoument without a collection (not saving anything).")
+            return null
+        }
+
         try {
             if (doc) {
+
+                if (isUpdate) {
+                    whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", null, collection, false, {
+                        Document _doc ->
+                            if (_doc.modified as String != request.getHeader("If-Match")) {
+                                log.debug("PUT performed on stale document.")
+
+                                throw new EtagMissmatchException()
+                            }
+
+                            log.debug("All checks passed.")
+
+                            // Replace our data with the incoming data.
+                            _doc.data = doc.data
+                    })
+                }
+                else {
+                    doc = whelk.store(doc, "xl", null, collection, false, isUpdate)
+                }
+
                 log.debug("Saving document (${doc.getShortId()})")
                 log.info("Document accepted: created is: ${doc.getCreated()}")
-
-                doc = whelk.store(doc, "xl", null, collection, false, isUpdate)
 
                 return doc
             }
@@ -765,17 +784,26 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_CONFLICT,
                     "Document with id \"${scfe.duplicateId}\" " +
                             "already exists.")
+            return null
         } catch (WhelkAddException wae) {
             log.warn("Whelk failed to store document: ${wae.message}")
             // FIXME data leak
             response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
                     wae.message)
+            return null
+        } catch (EtagMissmatchException eme) {
+            response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED,
+                                        "The resource has been updated by someone " +
+                                                "else. Please refetch.")
+            return null
         } catch (Exception e) {
             log.error("Operation failed", e)
             // FIXME data leak
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     e.message)
+            return null
         }
+        return null
     }
 
     void sendCreateResponse(HttpServletResponse response, String locationRef,
