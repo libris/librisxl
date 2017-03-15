@@ -13,7 +13,7 @@ class MarcFrameConverterSpec extends Specification {
             super.initialize(config)
             this.config = config
             super.conversion.doPostProcessing = false
-            super.conversion.flatQuotedForm = false
+            super.conversion.flatLinkedForm = false
             super.conversion.baseUri = new URI("/")
         }
     }
@@ -35,11 +35,11 @@ class MarcFrameConverterSpec extends Specification {
 
         ['bib', 'auth', 'hold'].each { marcType ->
             def ruleSets = converter.conversion.marcRuleSets
-            converter.config[marcType].each { code, dfn ->
+            converter.config[marcType].each { tag, dfn ->
                 def ruleSet = ruleSets[marcType]
                 def thingLink = ruleSet.thingLink
 
-                if (code == 'postProcessing') {
+                if (tag == 'postProcessing') {
                     ruleSet.postProcSteps.eachWithIndex { step, i ->
                         dfn[i]._spec.each {
                             postProcStepSpecs << [step: step, spec: it, thingLink: thingLink]
@@ -48,7 +48,7 @@ class MarcFrameConverterSpec extends Specification {
                     return
                 }
 
-                if (code == '000') {
+                if (tag == '000') {
                     marcSkeletons[marcType] = dfn._spec[0].source
                     marcResults[marcType] = dfn._spec[0].result
                 }
@@ -59,7 +59,7 @@ class MarcFrameConverterSpec extends Specification {
                                            normalized: it.normalized,
                                            result: it.result,
                                            name: it.name ?: "",
-                                           marcType: marcType, code: code,
+                                           marcType: marcType, tag: tag,
                                            thingLink: thingLink]
                         }
                     }
@@ -109,10 +109,12 @@ class MarcFrameConverterSpec extends Specification {
         value << ["Text", ["@id": "/link"]]
     }
 
-    def "should convert field spec for #fieldSpec.marcType #fieldSpec.code (#fieldSpec.name)"() {
+    def "should convert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name)"() {
         given:
         def marcType = fieldSpec.marcType
-        def marc = deepcopy(marcSkeletons[marcType])
+        def marc = fieldSpec.tag == '000'
+                ? [leader: fieldSpec.source.leader]
+                : deepcopy(marcSkeletons[marcType])
         if (fieldSpec.source instanceof List) {
             marc.fields += fieldSpec.source
         } else if (fieldSpec.source.fields) {
@@ -138,7 +140,7 @@ class MarcFrameConverterSpec extends Specification {
     }
 
     @Requires({ env.mfspec == 'all' })
-    def "should revert field spec for #fieldSpec.marcType #fieldSpec.code (#fieldSpec.name)"() {
+    def "should revert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name)"() {
         given:
         def marcType = fieldSpec.marcType
         def jsonld = deepcopy(marcResults[marcType])
@@ -308,16 +310,20 @@ class MarcFrameConverterSpec extends Specification {
         thing['sameAs'] == [link('resource/auth/123')]
     }
 
-    def "should make some id"() {
+    def "should handle uri:s without dollar signs"(){
         given:
-        def conv = converter.conversion
-        expect:
-        conv.makeSomeId(entity) == '/some?' + params
-        where:
-        params                      | entity
-        'type=Thing&name=someone'   | ['@type': 'Thing', name: 'someone']
-        'type=Thing&name=other'     | ['@type': 'Thing', name: ['some', 'other']]
-        'type=Thing&real=true'      | ['@type': 'Thing', real: true]
+        def data
+        def dataWithOutDollars
+        def converter
+        when:
+        converter = new MarcFrameConverter()
+        dataWithOutDollars = ['doc':['leader':'01103cam a2200265 a 4500', 'fields':[['001':'9387233'], ['005':'20101001124525.0'], ['008':'040302s2002    sw ||||      |10| 0 swe c'], ['020':['ind1':' ', 'ind2':' ', 'subfields':[['a':'91-89655-25-7']]]], ['040':['ind1':' ', 'ind2':' ', 'subfields':[['a':'Ai']]]], ['042':['ind1':' ', 'ind2':' ', 'subfields':[['9':'ARB']]]], ['100':['ind1':'1', 'ind2':' ', 'subfields':[['a':'Essén, Anna,'], ['d':'1977-']]]], ['245':['ind1':'0', 'ind2':'0', 'subfields':[['a':'Svensk invandring och arbetsmarknaden :'], ['b':'återblick och nuläge /'], ['c':'Essén,  Anna']]]], ['260':['ind1':' ', 'ind2':' ', 'subfields':[['a':'Stockholm :'], ['b':'Institutet för framtidsstudier,'], ['c':'2002']]]], ['300':['ind1':' ', 'ind2':' ', 'subfields':[['a':'64 s.']]]], ['440':['ind1':' ', 'ind2':'0', 'subfields':[['a':'Arbetsrapport / Institutet för Framtidsstudier,'], ['x':'1652-120X ;'], ['v':'2002:6']]]], ['650':['ind1':' ', 'ind2':'7', 'subfields':[['a':'Invandrare'], ['2':'albt//swe']]]], ['650':['ind1':' ', 'ind2':'7', 'subfields':[['a':'Arbetsmarknad'], ['2':'albt//swe']]]], ['650':['ind1':' ', 'ind2':'7', 'subfields':[['a':'Sysselsättningsmöjligheter'], ['2':'albt//swe']]]], ['650':['ind1':' ', 'ind2':'7', 'subfields':[['a':'Trender och tendenser'], ['2':'albt//swe']]]], ['650':['ind1':' ', 'ind2':'7', 'subfields':[['a':'Arbetsmarknadsstatistik'], ['2':'albt//swe']]]], ['650':['ind1':' ', 'ind2':'7', 'subfields':[['a':'Sverige'], ['2':'albt//swe']]]], ['710':['ind1':'2', 'ind2':' ', 'subfields':[['a':'Institutet för framtidsstudier'], ['4':'pbl']]]], ['776':['ind1':'0', 'ind2':'8', 'subfields':[['i':'Online'], ['a':'Essén, Anna, 1977-'], ['t':'Svensk invandring och arbetsmarknaden'], ['d':'2002'], ['w':'10149216']]]], ['856':['ind1':'4', 'ind2':'1', 'subfields':[['u':'http://www.framtidsstudier.se/filebank/files/20051201133251fil048Ti3PL2UIwRJQEBbDG.pdf'], ['z':'Fritt tillgänglig via Institutet för framtidsstudier']]]]]], 'id':'fxqp0f0r1nfrgss', 'spec':null]
+
+        //Does not blow
+        def resultWithoutDollars = converter.convert(dataWithOutDollars.doc, dataWithOutDollars.id)
+
+        then:
+        resultWithoutDollars != null
     }
 
     def "should get as list"() {

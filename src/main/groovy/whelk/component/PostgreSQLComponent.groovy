@@ -25,12 +25,18 @@ class PostgreSQLComponent implements whelk.component.Storage {
     boolean versioning = true
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, UPDATE_DOCUMENT, INSERT_DOCUMENT, INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_DOCUMENT_VERSION,
-                     GET_ALL_DOCUMENT_VERSIONS, GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
-                     LOAD_ALL_DOCUMENTS_BY_COLLECTION, DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT, LOAD_ID_FROM_ALTERNATE,
-                     INSERT_IDENTIFIERS, LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS, GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT
+    protected String UPSERT_DOCUMENT, UPDATE_DOCUMENT, INSERT_DOCUMENT,
+                     INSERT_DOCUMENT_VERSION, GET_DOCUMENT,
+                     GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS,
+                     GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
+                     LOAD_ALL_DOCUMENTS_BY_COLLECTION,
+                     DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
+                     LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
+                     LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
+                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
+    protected String FIND_BY, COUNT_BY
 
     // Deprecated
     protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
@@ -121,7 +127,18 @@ class PostgreSQLComponent implements whelk.component.Storage {
         LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
         SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
                 "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
-    }
+
+        FIND_BY = "SELECT id, data, created, modified, deleted " +
+                  "FROM $mainTableName " +
+                  "WHERE data->'@graph' @> ? " +
+                  "OR data->'@graph' @> ? " +
+                  "LIMIT ? OFFSET ?"
+
+        COUNT_BY = "SELECT count(*) " +
+                   "FROM $mainTableName " +
+                   "WHERE data->'@graph' @> ? " +
+                   "OR data->'@graph' @> ?"
+     }
 
 
     public Map status(URI uri, Connection connection = null) {
@@ -266,17 +283,10 @@ class PostgreSQLComponent implements whelk.component.Storage {
     }
 
     /**
-     * Interface for performing atomic document updates
-     */
-    public interface UpdateAgent {
-        public void update(Document doc)
-    }
-
-    /**
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    void storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, UpdateAgent updateAgent) {
+    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, whelk.component.Storage.UpdateAgent updateAgent) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
@@ -284,6 +294,8 @@ class PostgreSQLComponent implements whelk.component.Storage {
         PreparedStatement selectStatement
         PreparedStatement updateStatement
         ResultSet resultSet
+
+        Document doc = null
 
         connection.setAutoCommit(false)
         try {
@@ -293,7 +305,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
             if (!resultSet.next())
                 throw new SQLException("There is no document with the id: " + id)
 
-            Document doc = assembleDocument(resultSet)
+            doc = assembleDocument(resultSet)
 
             // Performs the callers updates on the document
             updateAgent.update(doc)
@@ -315,8 +327,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
             log.debug("SQL failed: ${psqle.message}")
             connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
-                Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
-                Matcher m = messageDetailPattern.matcher(psqle.message)
                 throw new StorageCreateFailedException()
             } else {
                 throw psqle
@@ -344,6 +354,8 @@ class PostgreSQLComponent implements whelk.component.Storage {
             }
             log.debug("[store] Closed connection.")
         }
+
+        return doc
     }
 
     private void saveIdentifiers(Document doc, Connection connection) {
@@ -889,25 +901,24 @@ class PostgreSQLComponent implements whelk.component.Storage {
     @Override
     boolean remove(String identifier, String changedIn, String changedBy, String collection) {
         if (versioning) {
-            log.debug("Creating tombstone record with id ${identifier}")
-            Document tombstone = createTombstone(identifier)
-            return store(tombstone, true, changedIn, changedBy, collection, true)
-        } else {
-            Connection connection = getConnection()
-            PreparedStatement delstmt = connection.prepareStatement(DELETE_DOCUMENT_STATEMENT)
-            PreparedStatement delidstmt = connection.prepareStatement(DELETE_IDENTIFIERS)
+            log.debug("Marking document with ID ${identifier} as deleted.")
+
             try {
-                delstmt.setString(1, identifier)
-                delstmt.executeUpdate()
-                delidstmt.setString(1, identifier)
-                delidstmt.executeUpdate()
-                return true
-            } finally {
-                connection.close()
-                log.debug("[remove] Closed connection.")
+                storeAtomicUpdate(identifier, false, changedIn, changedBy, collection, true,
+                    { Document doc ->
+                        // Add a tombstone marker (without removing anything) perhaps?
+                    })
+            } catch (Throwable e) {
+                log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
+                return false
             }
+            return false
+        } else {
+            throw new whelk.exception.WhelkException(
+                    "Actually deleting data from lddb is currently not supported, because doing so would" +
+                            "make the APIX-exporter (which will pickup the delete after the fact) not know what to delete in Voyager," +
+                            "which is unacceptable as long as Voyager still lives.")
         }
-        return false
     }
 
 
@@ -959,4 +970,222 @@ class PostgreSQLComponent implements whelk.component.Storage {
         return connectionPool.getConnection()
     }
 
+    @Override
+    List<Document> findByRelation(String relation, String reference,
+                                  int limit, int offset) {
+        Connection connection = getConnection()
+        PreparedStatement find = connection.prepareStatement(FIND_BY)
+
+        find = rigFindByRelationStatement(find, relation, reference, limit, offset)
+
+        try {
+            return executeFindByQuery(find)
+        } finally {
+            connection.close()
+        }
+    }
+
+    List<Document> findByRelation(String relation, String reference) {
+        int limit = DEFAULT_PAGE_SIZE
+        int offset = 0
+
+        findByRelation(relation, reference, limit, offset)
+    }
+
+    @Override
+    int countByRelation(String relation, String reference) {
+        Connection connection = getConnection()
+        PreparedStatement count = connection.prepareStatement(COUNT_BY)
+
+        count = rigCountByRelationStatement(count, relation, reference)
+
+        try {
+            return executeCountByQuery(count)
+        } finally {
+            connection.close()
+        }
+    }
+
+    @Override
+    List<Document> findByQuotation(String identifier, int limit, int offset) {
+        Connection connection = getConnection()
+        PreparedStatement find = connection.prepareStatement(FIND_BY)
+
+        find = rigFindByQuotationStatement(find, identifier, limit, offset)
+
+        try {
+            return executeFindByQuery(find)
+        } finally {
+            connection.close()
+        }
+
+    }
+
+    List<Document> findByQuotation(String identifier) {
+        int limit = DEFAULT_PAGE_SIZE
+        int offset = 0
+
+        findByQuotation(identifier, limit, offset)
+    }
+
+    @Override
+    int countByQuotation(String identifier) {
+        Connection connection = getConnection()
+        PreparedStatement count = connection.prepareStatement(COUNT_BY)
+
+        count = rigCountByQuotationStatement(count, identifier)
+
+        try {
+            return executeCountByQuery(count)
+        } finally {
+            connection.close()
+        }
+
+    }
+
+    @Override
+    List<Document> findByValue(String relation, String value, int limit,
+                               int offset) {
+        Connection connection = getConnection()
+        PreparedStatement find = connection.prepareStatement(FIND_BY)
+
+        find = rigFindByValueStatement(find, relation, value, limit, offset)
+
+        try {
+            return executeFindByQuery(find)
+        } finally {
+            connection.close()
+        }
+    }
+
+    List<Document> findByValue(String relation, String value) {
+        int limit = DEFAULT_PAGE_SIZE
+        int offset = 0
+
+        findByValue(relation, value, limit, offset)
+    }
+
+    @Override
+    int countByValue(String relation, String value) {
+        Connection connection = getConnection()
+        PreparedStatement count = connection.prepareStatement(COUNT_BY)
+
+        count = rigCountByValueStatement(count, relation, value)
+
+        try {
+            return executeCountByQuery(count)
+        } finally {
+            connection.close()
+        }
+    }
+
+    private List<Document> executeFindByQuery(PreparedStatement query) {
+        log.debug("Executing find query: ${query}")
+
+        ResultSet rs = query.executeQuery()
+
+        List<Document> docs = []
+
+        while (rs.next()) {
+            docs << assembleDocument(rs)
+        }
+
+        return docs
+    }
+
+    private int executeCountByQuery(PreparedStatement query) {
+        log.debug("Executing count query: ${query}")
+
+        ResultSet rs = query.executeQuery()
+
+        int result = 0
+
+        if (rs.next()) {
+            result = rs.getInt('count')
+        }
+
+        return result
+    }
+
+    private PreparedStatement rigFindByRelationStatement(PreparedStatement find,
+                                                         String relation,
+                                                         String reference,
+                                                         int limit,
+                                                         int offset) {
+        List refQuery = [[(relation): ["@id": reference]]]
+        List refsQuery = [[(relation): [["@id": reference]]]]
+
+        return rigFindByStatement(find, refQuery, refsQuery, limit, offset)
+    }
+
+    private PreparedStatement rigCountByRelationStatement(PreparedStatement find,
+                                                          String relation,
+                                                          String reference) {
+        List refQuery = [[(relation): ["@id": reference]]]
+        List refsQuery = [[(relation): [["@id": reference]]]]
+
+        return rigCountByStatement(find, refQuery, refsQuery)
+    }
+
+    private PreparedStatement rigFindByQuotationStatement(PreparedStatement find,
+                                                          String identifier,
+                                                          int limit,
+                                                          int offset) {
+        List refQuery = [["@graph": ["@id": identifier]]]
+        List sameAsQuery = [["@graph": [["@sameAs": [["@id": identifier]]]]]]
+
+        return rigFindByStatement(find, refQuery, sameAsQuery, limit, offset)
+    }
+
+    private PreparedStatement rigCountByQuotationStatement(PreparedStatement find,
+                                                           String identifier) {
+        List refQuery = [["@graph": ["@id": identifier]]]
+        List sameAsQuery = [["@graph": [["@sameAs": [["@id": identifier]]]]]]
+
+        return rigCountByStatement(find, refQuery, sameAsQuery)
+    }
+
+    private PreparedStatement rigFindByValueStatement(PreparedStatement find,
+                                                      String relation,
+                                                      String value,
+                                                      int limit,
+                                                      int offset) {
+        List valueQuery = [[(relation): value]]
+        List valuesQuery = [[(relation): [value]]]
+
+        return rigFindByStatement(find, valueQuery, valuesQuery, limit, offset)
+    }
+
+    private PreparedStatement rigCountByValueStatement(PreparedStatement find,
+                                                       String relation,
+                                                       String value) {
+        List valueQuery = [[(relation): value]]
+        List valuesQuery = [[(relation): [value]]]
+
+        return rigCountByStatement(find, valueQuery, valuesQuery)
+    }
+
+    private PreparedStatement rigFindByStatement(PreparedStatement find,
+                                                 List firstCondition,
+                                                 List secondCondition,
+                                                 int limit,
+                                                 int offset) {
+      find.setObject(1, mapper.writeValueAsString(firstCondition),
+                     java.sql.Types.OTHER)
+      find.setObject(2, mapper.writeValueAsString(secondCondition),
+                     java.sql.Types.OTHER)
+      find.setInt(3, limit)
+      find.setInt(4, offset)
+      return find
+    }
+
+    private PreparedStatement rigCountByStatement(PreparedStatement find,
+                                                  List firstCondition,
+                                                  List secondCondition) {
+      find.setObject(1, mapper.writeValueAsString(firstCondition),
+                     java.sql.Types.OTHER)
+      find.setObject(2, mapper.writeValueAsString(secondCondition),
+                     java.sql.Types.OTHER)
+      return find
+    }
 }

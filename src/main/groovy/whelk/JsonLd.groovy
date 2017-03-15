@@ -17,10 +17,19 @@ public class JsonLd {
 
     static final String GRAPH_KEY = "@graph"
     static final String CONTEXT_KEY = "@context"
+    static final String VOCAB_KEY = "@vocab"
+    //static final String VALUE_KEY = "@base"
     static final String ID_KEY = "@id"
+    static final String TYPE_KEY = "@type"
+    //static final String VALUE_KEY = "@value"
+    static final String LANGUAGE_KEY = "@language"
+    static final String CONTAINER_KEY = "@container"
+    //static final String VALUE_KEY = "@index"
+    //static final String VALUE_KEY = "@list"
+    //static final String VALUE_KEY = "@set"
+    static final String REVERSE_KEY = "@reverse"
     static final String THING_KEY = "mainEntity"
     static final String RECORD_KEY = "meta"
-    static final String TYPE_KEY = "@type"
     static final String CREATED_KEY = "created"
     static final String MODIFIED_KEY = "modified"
     static final String DELETED_KEY = "deleted"
@@ -41,6 +50,52 @@ public class JsonLd {
 
     private static Logger log = LoggerFactory.getLogger(JsonLd.class)
 
+    Map displayData
+    Map vocabIndex
+    private String vocabId
+
+    /**
+     * Make an instance to incapsulate model driven behaviour.
+     */
+    JsonLd(Map displayData, Map vocabData) {
+        this.displayData = displayData ?: Collections.emptyMap()
+        Map context = displayData?.get(CONTEXT_KEY)
+        vocabId = context?.get(VOCAB_KEY)
+
+        vocabIndex = vocabData ?
+            vocabData[JsonLd.GRAPH_KEY].collectEntries {
+                [toTermKey(it[JsonLd.ID_KEY]), it]
+            }
+            : Collections.emptyMap()
+
+        expandAliasesInLensProperties()
+    }
+
+    private void expandAliasesInLensProperties() {
+        Map propAliases = [:]
+        displayData.get(CONTEXT_KEY)?.each { k, v ->
+            if (v instanceof Map && v[CONTAINER_KEY] == LANGUAGE_KEY) {
+                propAliases[v[ID_KEY]] = k
+            }
+        }
+        displayData['lensGroups']?.values().each { group ->
+            group.get('lenses')?.values().each { lens ->
+                lens['showProperties'] = lens['showProperties'].collect {
+                    def alias = propAliases[it]
+                    return alias ? [it, alias] : it
+                }.flatten()
+            }
+        }
+    }
+
+    String toTermKey(String termId) {
+        return termId.replace(vocabId, '')
+    }
+
+    List expandLinks(List refs) {
+        return JsonLd.expandLinks(refs, displayData[JsonLd.CONTEXT_KEY])
+    }
+
     /**
      * This flatten-method does not create description-based flat json (i.e. with entry, items and quoted)
      */
@@ -56,7 +111,7 @@ public class JsonLd {
         return [(GRAPH_KEY): flatList.reverse()]
     }
 
-    private static storeFlattened(current, result) {
+    private static Object storeFlattened(Object current, result) {
         if (current instanceof Map) {
             def flattened = makeFlat(current, result)
             if (flattened.containsKey(ID_KEY) && flattened.size() > 1) {
@@ -68,7 +123,7 @@ public class JsonLd {
         return current
     }
 
-    private static makeFlat(obj, result) {
+    private static Map makeFlat(obj, result) {
         def updated = [:]
         obj.each { key, value ->
             if (value instanceof List) {
@@ -85,10 +140,101 @@ public class JsonLd {
         return updated
     }
 
+
     public static List getExternalReferences(Map jsonLd){
         Set allReferences = getAllReferences(jsonLd)
-        Set localObjects = getIdMap(jsonLd).keySet()
-        return allReferences.minus(localObjects) as List
+        Set localObjects = getLocalObjects(jsonLd)
+        List externalRefs = allReferences.minus(localObjects) as List
+        // NOTE: this is necessary because some documents contain references to
+        // bnodes that don't exist (in that document).
+        return filterOutDanglingBnodes(externalRefs)
+    }
+
+    static List expandLinks(List refs, Map context) {
+        List result = []
+        refs.each { ref ->
+            def match
+            if (ref =~ $/^https?:///$) {
+                result << ref
+            } else if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
+                def resolved = context[match[0][1]]
+                if (resolved) {
+                    URI base = new URI(resolved)
+                    result << base.resolve(match[0][2]).toString()
+                }
+            } else {
+                result << ref
+            }
+        }
+
+        return result
+    }
+
+    private static Set getLocalObjects(Map jsonLd) {
+        Set result = [] as Set
+        if (jsonLd.get(GRAPH_KEY)) {
+            // we expect this to be a list
+            for (item in jsonLd.get(GRAPH_KEY)) {
+                result.addAll(getLocalObjectsRecursively(item))
+            }
+        }
+        return result
+    }
+
+    private static Set getLocalObjectsRecursively(Object thing){
+        if (thing instanceof List) {
+            return getLocalObjectsFromList(thing)
+        } else if (thing instanceof Map) {
+            return getLocalObjectsFromMap(thing)
+        } else {
+            throw new FramingException(
+                "Unexpected structure in JSON-LD: ${thing}")
+        }
+    }
+
+    private static Set getLocalObjectsFromList(List things) {
+        Set result = [] as Set
+
+        for (thing in things) {
+            result.addAll(getLocalObjectsRecursively(thing))
+        }
+
+        return result
+    }
+
+    private static Set getLocalObjectsFromMap(Map jsonLd) {
+        Set result = [] as Set
+        if (jsonLd.containsKey(GRAPH_KEY)) {
+            def thing = jsonLd.get(GRAPH_KEY)
+            result.addAll(getLocalObjectsRecursively(thing))
+        }
+
+        if (jsonLd.containsKey(ID_KEY)) {
+            def id = jsonLd.get(ID_KEY)
+            if (!result.contains(id)) {
+                result << id
+            }
+        }
+
+        if (jsonLd.containsKey(JSONLD_ALT_ID_KEY)) {
+            jsonLd.get(JSONLD_ALT_ID_KEY).each {
+                if (!it.containsKey(ID_KEY)) {
+                    return
+                }
+
+                def id = it.get(ID_KEY)
+                if (!result.contains(id)) {
+                    result << id
+                }
+            }
+        }
+        return result
+    }
+
+    private static List filterOutDanglingBnodes(List refs) {
+        return refs.findAll {
+            !it.startsWith('_:')
+        }
     }
 
     public static Set getAllReferences(Map jsonLd) {
@@ -142,26 +288,158 @@ public class JsonLd {
         return result
     }
 
-    public static Map embellish(Map jsonLd, Map additionalObjects) {
-      // FIXME handle malformed input
-      List items = jsonLd.get(GRAPH_KEY)
-      additionalObjects.each { id, object ->
-          items << object
-      }
-      jsonLd[GRAPH_KEY] = items
-      return jsonLd
+    @Deprecated
+    public static Map embellish(Map jsonLd, Map additionalObjects, Map displayData) {
+        return new JsonLd(displayData, null).embellish(jsonLd, additionalObjects)
     }
+
+
+    @Deprecated
+    public static List<Map> toCards(List<Map> things, Map displayData) {
+        def ld = new JsonLd(displayData, null)
+        return things.collect { ld.toCard(it) }
+    }
+
+    @Deprecated
+    public static Map toCard(Map thing, Map displayData) {
+        return new JsonLd(displayData, null).toCard(thing)
+    }
+
+    @Deprecated
+    public static Object toChip(Object object, Map displayData) {
+        return new JsonLd(displayData, null).toChip(object)
+    }
+
+
+    Map embellish(Map jsonLd, Map additionalObjects) {
+        if (!jsonLd.get(GRAPH_KEY)) {
+            return jsonLd
+        }
+
+        List graphItems = jsonLd.get(GRAPH_KEY)
+
+        additionalObjects.each { id, object ->
+            Map chip = toChip(object, displayData)
+            if (chip.containsKey('@graph')) {
+                if (!chip.containsKey('@id')) {
+                    chip['@id'] = id
+                }
+                graphItems << chip
+            } else {
+                graphItems << ['@graph': chip,
+                               '@id': id]
+            }
+        }
+        jsonLd[GRAPH_KEY] = graphItems
+
+        return jsonLd
+    }
+
+    /**
+     * Convert a post to card.
+     *
+     */
+    public Map toCard(Map thing) {
+        Map lensGroups = displayData.get("lensGroups")
+        Map cardLensGroup = lensGroups.get("cards")
+        Map result = [:]
+
+        Map card = removeProperties(thing, cardLensGroup)
+        card.each {key, value ->
+            result[key] = toChip(value)
+        }
+        return result
+    }
+
+    /**
+     * Convert a post to chip.
+     *
+     */
+    public Object toChip(Object object) {
+        Map lensGroups = displayData.get("lensGroups")
+        Map chipLensGroup = lensGroups.get("chips")
+        Map itemsToKeep = [:]
+        Map result = [:]
+
+        if (object instanceof List) {
+            return object.collect { toChip(it) }
+        } else if ((object instanceof Map)) {
+            itemsToKeep = removeProperties(object, chipLensGroup)
+            itemsToKeep.each {key, value ->
+                result[key] = toChip(value)
+            }
+            return result
+        } else {
+            return object
+        }
+    }
+
+    private Map removeProperties(Map thing, Map lensGroup) {
+        Map itemsToKeep = [:]
+
+        Map lens = getLensFor(thing, lensGroup)
+
+        if (lens) {
+            List propertiesToKeep = lens.get("showProperties")
+
+            thing.each {key, value ->
+                if (shouldKeep(key, propertiesToKeep)) {
+                    itemsToKeep[key] = value
+                }
+            }
+            return itemsToKeep
+        } else {
+            return thing
+        }
+    }
+
+    Map getLensFor(Map thing, Map lensGroup) {
+        def types = thing.get(TYPE_KEY)
+        if (types instanceof String)
+            types = [types]
+        for (type in types) {
+            return findLensForType(type, lensGroup)
+                    ?: findLensForType('Resource', lensGroup)
+        }
+    }
+
+    private Map findLensForType(String typeKey, Map lensGroup) {
+        def lenses = lensGroup['lenses']
+        def lens = lenses.get(typeKey)
+        if (lens)
+            return lens
+        def typedfn = vocabIndex.get(typeKey)
+        if (!typedfn)
+            return null
+        def basetypes = typedfn.get('subClassOf')
+        if (basetypes instanceof Map)
+            basetypes = [basetypes]
+        for (basetype in basetypes) {
+            if (!basetype[ID_KEY])
+                continue
+            def baseTypeKey = toTermKey(basetype[ID_KEY])
+            lens = findLensForType(baseTypeKey, lensGroup)
+            if (lens)
+                return lens
+        }
+        return null
+    }
+
+    private static boolean shouldKeep(String key, List propertiesToKeep) {
+        return (key in propertiesToKeep || key.startsWith("@"))
+    }
+
 
     public static Map frame(String mainId, Map flatJsonLd) {
         return frame(mainId, null, flatJsonLd)
     }
 
-    public static Map frame(String mainId, String thingLink, Map flatJsonLd) {
+    public static Map frame(String mainId, String thingLink, Map flatJsonLd, boolean mutate = false) {
         if (isFramed(flatJsonLd)) {
             return flatJsonLd
         }
 
-        Map flatCopy = (Map) Document.deepCopy(flatJsonLd)
+        Map flatCopy = mutate ? flatJsonLd : (Map) Document.deepCopy(flatJsonLd)
 
         if (mainId) {
             mainId = Document.BASE_URI.resolve(mainId)
@@ -361,27 +639,68 @@ public class JsonLd {
         return false
     }
 
+    /*
+     * Traverse the JSON doc and grab all @id and their respective objects
+     *
+     * This is then useful for framing, since we can easily find the object
+     * we'll replace the reference with.
+     *
+     */
     private static Map getIdMap(Map flatJsonLd) {
         Map idMap = [:]
         if (flatJsonLd.containsKey(GRAPH_KEY)) {
-            for (item in flatJsonLd.get(GRAPH_KEY)) {
-                if (item.containsKey(GRAPH_KEY)) {
-                    item = item.get(GRAPH_KEY)
-                }
-                if (item.containsKey(ID_KEY)) {
-                    def id = item.get(ID_KEY)
-                    if (idMap.containsKey(id)) {
-                        Map existing = idMap.get(id)
-                        idMap.put(id, existing + item)
-                    } else {
-                        idMap.put(id, item)
-                    }
-                }
+            def graphObject = flatJsonLd.get(GRAPH_KEY)
+            // we expect this to be a list
+            for (item in graphObject) {
+                idMap = idMap + getIdMapRecursively(item)
             }
         }
         return idMap
     }
 
+    private static Map getIdMapRecursively(Object thing) {
+        if (thing instanceof List) {
+            return getIdMapFromList(thing)
+        } else if (thing instanceof Map) {
+            return getIdMapFromMap(thing)
+        } else {
+            throw new FramingException(
+                "Unexpected structure in flat JSON-LD: ${thing}")
+        }
+    }
+
+    private static Map getIdMapFromList(List objects) {
+        Map idMap = [:]
+
+        for (object in objects) {
+            idMap = idMap + getIdMapRecursively(object)
+        }
+
+        return idMap
+    }
+
+    private static Map getIdMapFromMap(Map item) {
+        Map idMap = [:]
+
+        if (item.containsKey(GRAPH_KEY)) {
+            idMap = idMap + getIdMapRecursively(item.get(GRAPH_KEY))
+        } else if (item.containsKey(ID_KEY)) {
+            def id = item.get(ID_KEY)
+            if (idMap.containsKey(id)) {
+                Map existing = idMap.get(id)
+                idMap.put(id, existing + item)
+            } else {
+                idMap.put(id, item)
+            }
+        }
+
+        return idMap
+    }
+
+    // TODO: This doesn't quite belong here, at least not while dependent on a
+    // JsonLD2MarcXMLConverter. If validation worked on the JSON-level (e.g.
+    // used a json-schema to validate against), it would be a bit more
+    // appropriate here.
     static boolean validateItemModel(Document doc) {
         if (!doc || !doc.data) {
             throw new ModelValidationException("Document has no data to validate.")

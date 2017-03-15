@@ -11,6 +11,7 @@ import java.util.Map;
  */
 public interface Storage {
     boolean store(Document document, boolean createOrUpdate, String changedIn, String changedBy, String collection, boolean deleted);
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, UpdateAgent updateAgent);
     boolean bulkStore(List<Document> documents, boolean createOrUpdate, String changedIn, String changedBy, String collection);
     Location locate(String uri, boolean loadDocumentIfFound);
     Document load(String id);
@@ -22,4 +23,19 @@ public interface Storage {
     Map<String,Object> query(Map<String,String[]> queryParameters, String dataset, StorageType storageType);
     Map<String,Object> loadSettings(String key);
     void saveSettings(String key, Map<String,Object> settings);
+    List<Document> findByRelation(String relation, String reference,
+                                  int limit, int offset);
+    List<Document> findByQuotation(String identifier, int limit, int offset);
+    List<Document> findByValue(String relation, String value,
+                               int limit, int offset);
+    int countByRelation(String relation, String reference);
+    int countByQuotation(String identifier);
+    int countByValue(String relation, String value);
+
+    /**
+     * Interface for performing atomic document updates
+     */
+    public interface UpdateAgent {
+        public void update(Document doc);
+    }
 }

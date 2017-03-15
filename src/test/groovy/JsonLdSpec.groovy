@@ -21,7 +21,97 @@ class JsonLdSpec extends Specification {
         where:
         ids                     | items
         ['/some', '/other']     | [['@id': '/some'], ['@id': '/other']]
-        ['/some', '/other']     | [['@id': '/some'], ['@graph': ['@id': '/other']]]
+        ['/some', '/other']     | [['@id': '/some'], ['@graph': [['@id': '/other']]]]
+        // once we've got an @id, we don't go deeper into the structure
+        ['/some']               | [['@id': '/some', 'sameAs': [['@id': '/other']]]]
+    }
+
+    def "should get nested id map"() {
+        given:
+        def graph = ['@graph': [['@id': '/foo', 'some': 'value'],
+                                ['@graph': [['@id': '/bar']]]],
+                     '@context': 'base.jsonln']
+        def expected = ['/foo', '/bar']
+        expect:
+        assert JsonLd.getIdMap(graph).keySet() == expected as Set
+
+    }
+
+    def "should get id map with bnode"() {
+        given:
+        def bnode_graph = ['@graph': [['@id': '/some',
+                                       'foo': ['@id': '_:foo']],
+                                      ['@graph': [['@id': '/other']]],
+                                      ['@graph': [['@id': '_:bar']]]]]
+        def expected = ['/some', '/other', '_:bar']
+        expect:
+        assert JsonLd.getIdMap(bnode_graph).keySet() == expected as Set
+    }
+
+    def "should accept list and map as @graph value when getting id map"() {
+        given:
+        def graph = ['@graph': [['@id': '/some',
+                                 'foo': ['@id': '_:foo']],
+                                ['@graph': [['@id': '_:baz']]],
+                                ['@graph': ['@id': '_:bar']]]]
+
+        def expected = ['/some': ['@id': '/some',
+                                  'foo': ['@id': '_:foo']],
+                        '_:baz': ['@id': '_:baz'],
+                        '_:bar': ['@id': '_:bar']]
+
+        expect:
+        assert JsonLd.getIdMap(graph) == expected
+    }
+
+    def "should find external references"() {
+        given:
+        def graph = ['@graph': [['@id': '/foo',
+                                 'sameAs': [['@id': '/bar'], ['@id': '/baz']],
+                                 'third': ['@id': '/third']
+                                ],
+                                ['@id': '/second',
+                                 'foo': '/foo',
+                                 'some': 'value'],
+                                ['@id': '/third',
+                                 'external': ['@id': '/external']],
+								['@id': '/fourth',
+								 'internal': ['@id': '/some_id']],
+								['@graph': [['@id': '/some_id']]],
+								['@graph': ['@id': '/some_other_id']]
+                               ],
+                     '@context': 'base.jsonld']
+        def expected = ['/external']
+
+        expect:
+        assert JsonLd.getExternalReferences(graph) == expected
+    }
+
+    def "should get local objects"() {
+        given:
+        def input = ['@graph': [['@id': '/foo',
+                                'sameAs': [['@id': '/baz']],
+                                'bar': ['@id': '/bar']],
+                                ['@graph': [['@id': '/quux',
+                                             'some': 'value']]],
+		                        ['@graph': ['@id': '/some_id']]]]
+        Set expected = ['/foo', '/baz', '/quux', '/some_id']
+
+        expect:
+        assert JsonLd.getLocalObjects(input) == expected
+    }
+
+    def "should handle malformed sameAs when getting local objects"() {
+        given:
+        def input = ['@graph': [['@id': '/foo',
+                                'sameAs': [['bad_key': '/baz']],
+                                'bar': ['@id': '/bar']],
+                                ['@graph': [['@id': '/quux',
+                                             'some': 'value']]]]]
+        Set expected = ['/foo', '/quux']
+
+        expect:
+        assert JsonLd.getLocalObjects(input) == expected
     }
 
    def "should get all references"() {
@@ -116,7 +206,7 @@ class JsonLdSpec extends Specification {
                                                    "subfields": [{"a":"Unga vuxna"}]},
                                            "_unhandled": ["ind2"]}],
                      "about": {"@id": "/resource/bib/13531679"}}]}
-        """
+        """ // """
         def framedInput = """
         {"@id": "/bib/13531679",
          "encLevel": {"@id": "/def/enum/record/AbbreviatedLevel"},
@@ -199,6 +289,84 @@ class JsonLdSpec extends Specification {
         then:
         assert JsonLd.validateItemModel(validDocument)
         assert !JsonLd.validateItemModel(invalidDocument)
+    }
+
+    def "should convert to cards and chips"() {
+        given:
+        Map input = ["@type": "Instance",
+            "mediaType": "foobar",
+            "instanceOf": ["@type": "Work",
+                        "contribution": ["@type": "Text",
+                                            "foo": ["mediaType": "bar"]],
+                        "hasTitle": ["@type": "Publication",
+                                        "date": "2000-01-01",
+                                        "noValidKey": "shouldBeRemoved",
+                                        "@id": "foo"]],
+            "@aKey": "external-foobar",
+            "hasTitle": ["value1", "value2", "value3", ["someKey": "theValue",
+                                                        "@type": "Work"]],
+            "foo": "bar"]
+
+        Map displayData = [
+            "@context": ["@vocab": "http://example.org/ns/"],
+            "lensGroups":
+                    ["chips":
+                            ["lenses":
+                                        ["Work": ["showProperties": ["hasTitle",
+                                                                    "contribution",
+                                                                    "language"]],
+                                        "Event": ["showProperties": ["date",
+                                                                                "agent",
+                                                                                "place"]]]],
+                    "cards":
+                            ["lenses":
+                                        ["Instance":
+                                                ["showProperties": ["mediaType",
+                                                                    "hasTitle",
+                                                                    "instanceOf"]]]]]]
+
+
+        Map vocabData = [
+            "@graph": [
+                    ["@id": "http://example.org/ns/ProvisionActivity",
+                     "subClassOf": [ ["@id": "http://example.org/ns/Event"] ]],
+                    ["@id": "http://example.org/ns/Publication",
+                     "subClassOf": ["@id": "http://example.org/ns/ProvisionActivity"]]
+                ]
+            ]
+
+        Map expected = ["@type": "Instance",
+                      "mediaType": "foobar",
+                      "instanceOf": ["@type": "Work",
+                                     "contribution": ["@type": "Text",
+                                                      "foo": ["mediaType": "bar"]],
+                                     "hasTitle": ["@type": "Publication",
+                                                  "date": "2000-01-01",
+                                                  "@id": "foo"]],
+                      "@aKey": "external-foobar",
+                      "hasTitle": ["value1", "value2", "value3", ["@type": "Work"]]]
+
+
+        expect:
+        Map output = new JsonLd(displayData, vocabData).toCard(input)
+        output == expected
+    }
+
+    def "extend lenses with property aliases"() {
+        given:
+        Map displayData = [
+            "@context": [
+                "labelByLang": ["@id": "label", "@container": "@language"]
+            ],
+            "lensGroups":
+                    ["chips":
+                            ["lenses": [
+                                "Thing": ["showProperties": ["notation", "label", "note"]]]
+                            ]]]
+        def ld = new JsonLd(displayData, null)
+        expect:
+        def props = ld.displayData.lensGroups.chips.lenses.Thing.showProperties
+        props == ['notation', 'label', 'labelByLang', 'note']
     }
 
 }

@@ -1,6 +1,7 @@
 package whelk
 
 import groovy.util.logging.Slf4j as Log
+import org.apache.lucene.analysis.util.CharArrayMap
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.PropertyLoader
 
@@ -43,13 +44,14 @@ class Document {
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
     static final List failedApixExportPath = ["@graph", 0, "apixExportFailedAt"]
     static final List controlNumberPath = ["@graph", 0, "controlNumber"]
-    static final List holdingForPath = ["@graph", 1, "holdingFor", "@id"]
+    static final List holdingForPath = ["@graph", 1, "itemOf", "@id"]
     static final List createdPath = ["@graph", 0, "created"]
     static final List modifiedPath = ["@graph", 0, "modified"]
     static final List encLevelPath = ["@graph", 0, "marc:encLevel", "@id"]
 
     public Map data = [:]
-    boolean deleted
+    private boolean deleted = false
+
 
     Document(Map data) {
         this.data = data
@@ -68,7 +70,14 @@ class Document {
         return mapper.writeValueAsString(data)
     }
 
-    void setApixExportFailFlag(boolean failed) { set(failedApixExportPath, failed, LinkedHashMap) }
+    void setApixExportFailFlag(boolean failed) {
+        if (failed == false) {
+            removeLeafObject(failedApixExportPath, LinkedHashMap)
+        }
+        else {
+            set(failedApixExportPath, failed, LinkedHashMap)
+        }
+    }
 
     boolean getApixExportFailFlag() { get(failedApixExportPath) }
 
@@ -134,6 +143,41 @@ class Document {
     }
 
     String getModified() { get(modifiedPath) }
+
+    void setDeleted(boolean newValue) {
+        deleted = newValue
+    }
+
+    boolean getDeleted() {
+        return deleted
+    }
+
+    boolean isHolding() {
+        List graphList = this.data.get("@graph")
+        return graphList.any { it ->
+            it.get('@type')?.equalsIgnoreCase('Item')
+        }
+    }
+
+    String getSigel() {
+        if (this.isHolding()) {
+            List graphItems = this.data.get("@graph")
+
+            Map item = graphItems.find { element ->
+                element[JsonLd.TYPE_KEY] == 'Item'
+            }
+
+            if (item.heldBy?.notation) {
+                return item.heldBy.notation
+            } else {
+                return null
+            }
+        } else {
+            // TODO undefined for non-holding posts for now
+            return null
+        }
+    }
+
 
     /**
      * By convention the first id in the returned list is the MAIN resource id.
@@ -210,8 +254,8 @@ class Document {
      * Expand the doc with the supplied extra info.
      *
      */
-    void embellish(Map additionalObjects) {
-        this.data = JsonLd.embellish(this.data, additionalObjects)
+    void embellish(Map additionalObjects, Map displayData) {
+        this.data = JsonLd.embellish(this.data, additionalObjects, displayData)
         return
     }
 
@@ -260,7 +304,11 @@ class Document {
             // Check path integrity, in all but the last step (which will presumably be replaced)
             else if ((i < path.size() - 1) &&
                     !matchingContainer(candidate.getClass(), nextReplacementType)) {
-                log.warn("Structure conflict, path: " + path + ", at token: " + (i + 1) + ", expected data to be: " + nextReplacementType + ", data was: " + candidate.getClass() + ", data:\n" + data)
+                log.warn("Structure conflict, path: " + path + ", at token: " +
+                         (i + 1) + ", expected data to be: " +
+                         nextReplacementType + ", data class was: " +
+                         candidate.getClass())
+                log.debug("preparePath integrity check failed, data was: ${data}")
                 return false
             }
 
@@ -286,6 +334,23 @@ class Document {
         }
 
         node.put(path.get(path.size() - 1), value)
+        return true
+    }
+
+    private boolean removeLeafObject(List path, Type container) {
+        if (!preparePath(path, container))
+            return false
+
+        // Start at root data node
+        Object node = data
+
+        for (int i = 0; i < path.size() - 1; ++i) // follow all but last step
+        {
+            Object step = path.get(i)
+            node = node.get(step)
+        }
+
+        node.remove(path.get(path.size() - 1))
         return true
     }
 
@@ -320,19 +385,35 @@ class Document {
     }
 
     static Object deepCopy(Object orig) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream()
-        ObjectOutputStream oos = new ObjectOutputStream(bos)
-        oos.writeObject(orig); oos.flush()
-        ByteArrayInputStream bin = new ByteArrayInputStream(bos.toByteArray())
-        ObjectInputStream ois = new ObjectInputStream(bin)
-        return ois.readObject()
+        //TODO: see https://jira.kb.se/browse/LXL-270
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream()
+            ObjectOutputStream oos = new ObjectOutputStream(bos)
+            oos.writeObject(orig); oos.flush()
+            ByteArrayInputStream bin = new ByteArrayInputStream(bos.toByteArray())
+            ObjectInputStream ois = new ObjectInputStream(bin)
+            return ois.readObject()
+        } catch (any) {
+            //§println "ERROR! ${any.message} in deepCopy. Cloning using other approach"
+            def o = orig.inspect()
+            ByteArrayOutputStream bos = new ByteArrayOutputStream()
+            ObjectOutputStream oos = new ObjectOutputStream(bos)
+            oos.writeObject(o); oos.flush()
+            ByteArrayInputStream bin = new ByteArrayInputStream(bos.toByteArray())
+            ObjectInputStream ois = new ObjectInputStream(bin)
+            return Eval.me(ois.readObject())
+        }
     }
 
     /**
      * This function relies on the fact that the deserialized jsonld (using Jackson ObjectMapper) consists of LinkedHashMaps
      * (which preserve order), unlike normal HashMaps which do not, so be careful not to place HashMaps into a document
      * structure and then try to calculate a checksum. Makes the order of the inner elements not matter for the caclulation
+     *
+     * This method of getting checksums is deprecated, because it is extremely expensive, and comparing full documents
+     * would actually be faster than this.
      */
+    /*
     String getChecksum() {
         Document clone = clone()
 
@@ -341,7 +422,7 @@ class Document {
         clone.set(createdPath, "", LinkedHashMap)
         clone.data = clone.data["@graph"].collectEntries {
             it ->
-                it.toSorted {a, b -> a.key <=> b.key}
+                it.toSorted { a, b -> a.key <=> b.key }
         }
         MessageDigest m = MessageDigest.getInstance("MD5")
         m.reset()
@@ -351,5 +432,38 @@ class Document {
         BigInteger bigInt = new BigInteger(1, digest)
         String hashtext = bigInt.toString(16)
         return hashtext
+    }*/
+
+    String getChecksum() {
+        long checksum = calculateCheckSum(data, 0)
+        return Long.toString(checksum)
+    }
+
+    private long calculateCheckSum(node, int depth) {
+        long term = 0
+
+        if (node == null)
+            return term
+        else if (node instanceof String)
+            return node.hashCode() + depth
+        else if (node instanceof Boolean)
+            return node.booleanValue() ? 1 + depth : depth
+        else if (node instanceof Integer)
+            return node.intValue() + depth
+        else if (node instanceof Map) {
+            for (String key : node.keySet()) {
+                if ( !key.equals(JsonLd.MODIFIED_KEY) && !key.equals(JsonLd.CREATED_KEY)) {
+                    term += key.hashCode() + depth
+                    term += calculateCheckSum(node[key], depth + 1)
+                }
+            }
+        }
+        else { // node is a list
+            int i = 0
+            for (entry in node)
+                term += calculateCheckSum(entry, depth + 1 + (i++))
+        }
+
+        return term
     }
 }
