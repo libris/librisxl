@@ -113,6 +113,10 @@ dependencies {
     compile 'com.thetransactioncompany:cors-filter:2.1.2'
     providedCompile 'javax.servlet:servlet-api:2.5'
 
+    // metrics
+    compile 'io.prometheus:simpleclient:0.0.21'
+    compile 'io.prometheus:simpleclient_servlet:0.0.21'
+
     // profiling and test
     testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"
     testCompile 'cglib:cglib-nodep:3.1'
