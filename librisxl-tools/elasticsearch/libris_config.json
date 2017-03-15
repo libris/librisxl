@@ -57,16 +57,18 @@
             "_timestamp": {
                 "enabled": true
             },
-            "identifiedBy": {
-                "type": "nested",
-                "include_in_parent": true,
-                "properties": {
-                    "@type": {
-                        "type": "string"
-                    },
-                    "value": {
-                        "type": "string",
-                        "analyzer": "isbn_analyzer"
+            "properties" : {
+                "identifiedBy": {
+                    "type": "nested",
+                    "include_in_parent": true,
+                    "properties": {
+                        "@type": {
+                            "type": "string"
+                        },
+                        "value": {
+                            "type": "string",
+                            "analyzer": "isbn_analyzer"
+                        }
                     }
                 }
             },
