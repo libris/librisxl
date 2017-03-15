@@ -6,13 +6,10 @@ WORKDIR=$(pwd)/work
 
 usage () {
     cat <<EOF
-Usage: ./setup-dev-whelk.sh -n <NAME> -O <OAIPMH CREDENTIALS> [-D <DATABASE USER>] [-C <CREATEDB USER>]
+Usage: ./setup-dev-whelk.sh -n <NAME> [-D <DATABASE USER>] [-C <CREATEDB USER>]
 
     -n, --whelk-name
         Instance name. Used as database name and ElasticSearch index.
-
-    -O, --oaipmh-credentials
-        Credentials for OAIPMH. On the form "<USER>:<PASSWORD>".
 
     -D, --db-user
         PostgreSQL database user.
@@ -36,10 +33,6 @@ do
     case $key in
         -n|--whelk-name)
             WHELKNAME="$2"
-            shift
-            ;;
-        -O|--oaipmh-credentials)
-            OAIPMH_CREDENTIALS="$2"
             shift
             ;;
         -D|--db-user)
@@ -82,37 +75,6 @@ if [ -z "$WHELKNAME" ]; then
     exit 1
 fi
 
-if [ -z "$OAIPMH_CREDENTIALS" ]; then
-    echo "ERROR: OAIPMH credentials not specified!"
-    echo ""
-    usage
-    exit 1
-fi
-
-
-
-# Create OAI-PMH files from examples unless they exist
-if [ "$FORCE_REBUILD" = true ] || [ ! -f $WORKDIR/oaidump/bib/oaipmh ]; then
-    echo ""
-    echo "Setting up OAIPMH dump..."
-    echo ""
-
-    mkdir -p $WORKDIR/oaidump
-
-    if [ "$FORCE_REBUILD" = true ]; then
-        rm -rf .venv
-    fi
-    if [ ! -d .venv ]; then
-        virtualenv -p python2.7 .venv
-        .venv/bin/pip install -r librisxl-tools/scripts/requirements.txt
-    fi
-
-    .venv/bin/python librisxl-tools/scripts/assemble_oaipmh_records.py \
-           $OAIPMH_CREDENTIALS \
-           librisxl-tools/scripts/example_records.tsv $WORKDIR/oaidump/
-fi
-
-
 # Create definitions dataset unless it exists
 DEFS_FILE=../definitions/build/definitions.jsonld.lines
 if [ "$FORCE_REBUILD" = true ] || [ ! -f $DEFS_FILE ]; then
@@ -136,11 +98,11 @@ fi
 
 # Import OAIPMH data
 echo ""
-echo "Importing OAIPMH data..."
+echo "Importing example data..."
 echo ""
 
 pushd importers
-JAR=build/libs/importers.jar
+JAR=build/libs/vcopyImporter.jar
 if [ "$FORCE_REBUILD" = true ] || [ ! -f $JAR ]; then
     gradle jar
 fi
@@ -148,11 +110,11 @@ fi
 java -Dxl.secret.properties=../secret.properties -jar $JAR \
      defs ../$DEFS_FILE
 
-for source in auth bib hold; do
-    java -Dxl.secret.properties=../secret.properties \
-         -jar build/libs/importers.jar \
-         harvest file:///$WORKDIR/oaidump/$source/oaipmh
-done
+java -Dxl.secret.properties=../secret.properties \
+    -Dxl.mysql.properties=../mysql.properties \
+     -jar build/libs/vcopyImporter.jar \
+     vcopyloadexampledata ../librisxl-tools/scripts/example_records.tsv
+
 popd
 
 

@@ -1,4 +1,5 @@
 .gradle
+.DS_Store
 *.properties
 /dep/locgov-*/build
 .*.swp
@@ -7,6 +8,7 @@ whelkoperator.lck
 /mystuff
 .idea
 build
+.log
 *.iml
 gradle/wrapper/gradle-wrapper.jar
 gradle/wrapper/gradle-wrapper.properties

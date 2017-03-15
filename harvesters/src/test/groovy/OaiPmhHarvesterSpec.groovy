@@ -10,7 +10,7 @@ import whelk.component.PostgreSQLComponent
 import whelk.component.Storage
 import whelk.converter.marc.MarcFrameConverter
 
-@Log
+/*@Log
 class OaiPmhHarvesterSpec extends Specification {
 
     static BASE = "http://example.org/service"
@@ -382,4 +382,4 @@ class OaiPmhHarvesterSpec extends Specification {
             </record>
         """)
     ]
-}
+}*/

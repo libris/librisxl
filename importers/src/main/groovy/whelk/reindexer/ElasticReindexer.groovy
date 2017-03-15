@@ -21,8 +21,8 @@ class ElasticReindexer {
         int counter = 0
         long startTime = System.currentTimeMillis()
         List<String> collections = suppliedCollection ? [suppliedCollection] : whelk.storage.loadCollections()
-        List<Document> documents = []
         collections.each { collection ->
+            List<Document> documents = []
             for (document in whelk.storage.loadAll(collection)) {
                 documents.add(document)
                 Tools.printSpinner("Elapsed time: ${(System.currentTimeMillis() - startTime) / 1000} seconds. Loaded $counter documents.", counter)

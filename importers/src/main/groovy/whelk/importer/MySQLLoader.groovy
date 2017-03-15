@@ -1,94 +1,170 @@
 package whelk.importer
 
-import groovy.transform.CompileStatic
+import groovy.sql.Sql
 import groovy.util.logging.Slf4j as Log
-import se.kb.libris.util.marc.MarcRecord
-import se.kb.libris.util.marc.io.Iso2709Deserializer
-import whelk.converter.MarcJSONConverter
-
-import java.sql.Connection
-import java.sql.DriverManager
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import whelk.VCopyDataRow
 import java.text.Normalizer
+import java.sql.ResultSet
+import java.sql.Statement
 
 @Log
-@CompileStatic
 class MySQLLoader {
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
-    final String collection
-    final String connectionUrl
+    static private final int BATCH_SIZE = 200
+
+    static  Map<String,String> selectExampleDataByMarcType = [
+            auth: """
+            SELECT auth_id, data, create_date, deleted, update_date FROM auth_record WHERE auth_id IN (?) ORDER BY auth_id
+            """,
+            bib : """
+            SELECT bib.bib_id, bib.data, bib.create_date, auth.auth_id, auth_data.data as auth_data, bib.deleted as deleted, bib.update_date as update_date FROM bib_record bib
+            LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id
+            LEFT JOIN auth_record auth_data on auth.auth_id = auth_data.auth_id
+            WHERE bib.bib_id IN (?) ORDER BY bib.bib_id
+             """,
+            hold: """
+            SELECT mfhd_id, data, bib_id, shortname, create_date, deleted, update_date FROM mfhd_record
+            WHERE mfhd_id IN (?) ORDER BY mfhd_id
+            """]
 
     static Map<String, String> selectByMarcType = [
 
             auth: """
-            SELECT auth_id, data, create_date FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id
+            SELECT auth_id, data, create_date, deleted, update_date FROM auth_record WHERE auth_id > ? AND deleted = 0 ORDER BY auth_id
             """,
 
             bib : """
-            SELECT bib.bib_id, bib.data, bib.create_date FROM bib_record bib
+            SELECT bib.bib_id, bib.data, bib.create_date, auth.auth_id, auth_data.data as auth_data, bib.deleted as deleted, bib.update_date as update_date FROM bib_record bib
+            LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id
+            LEFT JOIN auth_record auth_data on auth.auth_id = auth_data.auth_id
             WHERE bib.bib_id > ? AND bib.deleted = 0 ORDER BY bib.bib_id
              """,
 
             hold: """
-            SELECT mfhd_id, data, bib_id, shortname, create_date FROM mfhd_record
+            SELECT mfhd_id, data, bib_id, shortname, create_date, deleted, update_date FROM mfhd_record
             WHERE mfhd_id > ? AND deleted = 0 ORDER BY mfhd_id
             """
+
     ]
 
-    MySQLLoader(String connectionUrl, String collection) {
+    static Map<String, String> selectHarvestByMarcType = [
+
+            auth: """
+            SELECT auth_id, data, create_date, deleted, update_date FROM auth_record WHERE auth_id > ? AND (update_date > ? OR create_date > ?) ORDER BY update_date,create_date
+            """,
+
+            bib : """
+            SELECT bib.bib_id, bib.data, bib.create_date, auth.auth_id, auth_data.data AS auth_data, bib.deleted AS deleted, bib.update_date AS update_date FROM bib_record bib
+            LEFT JOIN auth_bib auth ON bib.bib_id = auth.bib_id
+            LEFT JOIN auth_record auth_data ON auth.auth_id = auth_data.auth_id
+            WHERE bib.bib_id > ? AND (bib.update_date > ? OR bib.create_date > ? ) ORDER BY bib.update_date,bib.create_date
+             """,
+
+            hold: """
+            SELECT mfhd_id, data, bib_id, shortname, create_date, deleted, update_date FROM mfhd_record
+            WHERE mfhd_id > ? AND (update_date > ? OR create_date > ?)  ORDER BY update_date,create_date
+            """
+
+    ]
+
+    static{
         Class.forName(JDBC_DRIVER)
-        this.connectionUrl = connectionUrl
-        this.collection = collection
     }
 
-    void run(LoadHandler handler) {
-        Connection connection = DriverManager.getConnection(connectionUrl)
-        connection.setAutoCommit(false)
+    static void run(LoadHandler handler, String sqlQuery, List<Object> queryParameters, String collection, String connectionUrl) {
 
-        PreparedStatement statement = connection.prepareStatement(
-                selectByMarcType[collection],
-                java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_READ_ONLY)
-        statement.setFetchSize(Integer.MIN_VALUE)
-        statement.setInt(1, 0) // start from id 0
+        final Sql sql = prepareSql(connectionUrl)
 
-        ResultSet resultSet = statement.executeQuery()
+        int rowCount = 0
+        int recordCount = 0
+        long startTime = System.currentTimeMillis()
 
-        try {
-            while (resultSet.next()) {
-                processNext(resultSet, handler)
-            }
-        }
-        finally {
-            resultSet.close()
-            statement.close()
-            connection.close()
-        }
-    }
+        List<VCopyDataRow> previousRowsInGroup = []
+        VCopyDataRow previousRow = null
+        VCopyDataRow currentRow = null
 
-    void processNext(ResultSet resultSet, LoadHandler handler) {
-        int currentRecordId = -1
-        Map doc = null
-        int recordId = resultSet.getInt(1)
-        MarcRecord record = Iso2709Deserializer.deserialize(
-                normalizeString(
-                        new String(resultSet.getBytes("data"), "UTF-8")).getBytes("UTF-8"))
-        if (record) {
-            doc = MarcJSONConverter.toJSONMap(record)
-            if (!recordId.equals(currentRecordId)) { //TODO: What is this construct for?
-                if (doc) {
-                    handler.handle(doc, resultSet.getTimestamp("create_date"))
+        List<List<VCopyDataRow>> currentBatch = []
+
+        sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
+            try {
+                ++rowCount
+                currentRow = new VCopyDataRow(resultSet, collection)
+                switch (previousRow) {
+                    case null:                              //first run
+                        previousRow = currentRow
+                        previousRowsInGroup.add(currentRow)
+                        break
+                    case { collection == 'bib' && it.bib_id == currentRow.bib_id }://Same bib record
+                        previousRowsInGroup.add(currentRow)
+                        break
+                    default:                                //new record
+                        currentBatch = batchForConversion(previousRowsInGroup, currentBatch, handler)
+                        ++recordCount
+                        previousRow = currentRow
+                        previousRowsInGroup = []
+                        previousRowsInGroup.add(currentRow)
+                        break
                 }
-                currentRecordId = recordId
-                doc = [:]
+            }
+            catch (any) {
+                println any.message
+                println any.stackTrace
+                //throw any // dont want to miss any records
+            }
 
+            if (recordCount % 1000 == 1) {
+                def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
+                if (elapsedSecs > 0) {
+                    def docsPerSec = recordCount / elapsedSecs
+                    def message = "Working. Currently ${rowCount} rows recieved and ${recordCount} records sent. Crunching ${docsPerSec} records / s."
+                    println message
+                    log.info message
+                }
             }
         }
 
-        if (doc) {
-            handler.handle(doc, resultSet.getTimestamp("create_date"))
+        if (!previousRowsInGroup.isEmpty()) {
+            currentBatch = batchForConversion(previousRowsInGroup, currentBatch, handler)
+            ++recordCount
         }
+        currentBatch = flushConversionBatch(currentBatch, handler)
+        println "Done reading from DB."
+
+    }
+
+    static interface LoadHandler {
+        void handle(List<List<VCopyDataRow>> currentBatch)
+    }
+
+    /**
+     * Send the row list to be dispatched for conversion. Essentially this means, add it to the global 'currentBatch',
+     * and if the batch is large enough flush it to the conversion process and return a new empty batch instead.
+     */
+    private static List<List<VCopyDataRow>> batchForConversion(List<VCopyDataRow> rowList,
+                                                               List<List<VCopyDataRow>> currentBatch,
+                                                               LoadHandler handler) {
+        currentBatch.add(rowList)
+
+        if (currentBatch.size() > BATCH_SIZE) {
+            return flushConversionBatch(currentBatch, handler)
+        }
+        return currentBatch
+    }
+
+    private static List<List<VCopyDataRow>> flushConversionBatch(List<List<VCopyDataRow>> currentBatch,
+                                                                 LoadHandler handler) {
+        handler.handle(currentBatch)
+        return []
+    }
+
+    private static Sql prepareSql(String connectionUrl) {
+        def sql = Sql.newInstance(connectionUrl, "com.mysql.jdbc.Driver")
+        sql.withStatement { Statement stmt -> stmt.fetchSize = Integer.MIN_VALUE }
+        sql.connection.autoCommit = false
+        sql.resultSetType = ResultSet.TYPE_FORWARD_ONLY
+        sql.resultSetConcurrency = ResultSet.CONCUR_READ_ONLY
+        sql
     }
 
     static String normalizeString(String inString) {
@@ -97,10 +173,6 @@ class MySQLLoader {
             return Normalizer.normalize(inString, Normalizer.Form.NFC)
         }
         return inString
-    }
-
-    static interface LoadHandler {
-        void handle(Map doc, Date createDate)
     }
 
 }

@@ -1,14 +1,31 @@
 {
     "settings": {
-        "index" : {
-            "max_result_window" : 100000
+        "index": {
+            "max_result_window": 100000
         },
         "analysis": {
+            "char_filter": {
+                "hyphen_mapping": {
+                    "type": "mapping",
+                    "mappings": [
+                        "-=>"
+                    ]
+                }
+            },
             "analyzer": {
                 "completer": {
                     "filter": "custom_edge_ngram",
                     "tokenizer": "lowercase",
                     "type": "custom"
+                },
+                "isbn_analyzer": {
+                    "tokenizer": "standard",
+                    "char_filter": [
+                        "hyphen_mapping"
+                    ],
+                    "filter": [
+                        "lowercase"
+                    ]
                 },
                 "default": {
                     "filter": [
@@ -40,6 +57,21 @@
             "_timestamp": {
                 "enabled": true
             },
+            "properties" : {
+                "identifiedBy": {
+                    "type": "nested",
+                    "include_in_parent": true,
+                    "properties": {
+                        "@type": {
+                            "type": "string"
+                        },
+                        "value": {
+                            "type": "string",
+                            "analyzer": "isbn_analyzer"
+                        }
+                    }
+                }
+            },
             "date_detection": false,
             "dynamic_templates": [
                 {
@@ -47,7 +79,6 @@
                         "mapping": {
                             "type": "object",
                             "enabled": false
-
                         },
                         "match": "@context"
                     }
@@ -232,63 +263,59 @@
         },
         "auth": {
             "properties": {
-                "about": {
+                "altLabel": {
+                    "analyzer": "completer",
+                    "type": "string"
+                },
+                "closeMatch": {
                     "properties": {
-                        "altLabel": {
-                            "analyzer": "completer",
-                            "type": "string"
-                        },
-                        "closeMatch": {
+                        "inScheme": {
                             "properties": {
-                                "inScheme": {
-                                    "properties": {
-                                        "prefLabel": {
-                                            "analyzer": "completer",
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        "controlledLabel": {
-                            "analyzer": "completer",
-                            "type": "string",
-                            "boost": 5
-                        },
-                        "familyName": {
-                            "analyzer": "completer",
-                            "type": "string"
-                        },
-                        "givenName": {
-                            "analyzer": "completer",
-                            "type": "string"
-                        },
-                        "hiddenLabel": {
-                            "analyzer": "completer",
-                            "type": "string"
-                        },
-                        "label": {
-                            "analyzer": "completer",
-                            "type": "string",
-                            "boost": 2
-                        },
-                        "name": {
-                            "analyzer": "completer",
-                            "type": "string",
-                            "boost": 10
-                        },
-                        "prefLabel": {
-                            "analyzer": "completer",
-                            "type": "string",
-                            "boost": 10
-                        },
-                        "sameAs": {
-                            "properties": {
-                                "controlledLabel": {
+                                "prefLabel": {
                                     "analyzer": "completer",
                                     "type": "string"
                                 }
                             }
+                        }
+                    }
+                },
+                "controlledLabel": {
+                    "analyzer": "completer",
+                    "type": "string",
+                    "boost": 5
+                },
+                "familyName": {
+                    "analyzer": "completer",
+                    "type": "string"
+                },
+                "givenName": {
+                    "analyzer": "completer",
+                    "type": "string"
+                },
+                "hiddenLabel": {
+                    "analyzer": "completer",
+                    "type": "string"
+                },
+                "label": {
+                    "analyzer": "completer",
+                    "type": "string",
+                    "boost": 2
+                },
+                "name": {
+                    "analyzer": "completer",
+                    "type": "string",
+                    "boost": 10
+                },
+                "prefLabel": {
+                    "analyzer": "completer",
+                    "type": "string",
+                    "boost": 10
+                },
+                "sameAs": {
+                    "properties": {
+                        "controlledLabel": {
+                            "analyzer": "completer",
+                            "type": "string"
                         }
                     }
                 }
@@ -296,41 +323,37 @@
         },
         "bib": {
             "properties": {
-                "about": {
+                "attributedTo": {
                     "properties": {
-                        "attributedTo": {
-                            "properties": {
+                        "controlledLabel": {
+                            "fields": {
                                 "controlledLabel": {
-                                    "fields": {
-                                        "controlledLabel": {
-                                            "analyzer": "completer",
-                                            "type": "string"
-                                        },
-                                        "raw": {
-                                            "index": "not_analyzed",
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "multi_field"
+                                    "analyzer": "completer",
+                                    "type": "string"
+                                },
+                                "raw": {
+                                    "index": "not_analyzed",
+                                    "type": "string"
                                 }
-                            }
-                        },
-                        "influencedBy": {
-                            "properties": {
+                            },
+                            "type": "multi_field"
+                        }
+                    }
+                },
+                "influencedBy": {
+                    "properties": {
+                        "controlledLabel": {
+                            "fields": {
                                 "controlledLabel": {
-                                    "fields": {
-                                        "controlledLabel": {
-                                            "analyzer": "completer",
-                                            "type": "string"
-                                        },
-                                        "raw": {
-                                            "index": "not_analyzed",
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "multi_field"
+                                    "analyzer": "completer",
+                                    "type": "string"
+                                },
+                                "raw": {
+                                    "index": "not_analyzed",
+                                    "type": "string"
                                 }
-                            }
+                            },
+                            "type": "multi_field"
                         }
                     }
                 }

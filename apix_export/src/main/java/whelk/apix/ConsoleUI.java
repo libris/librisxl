@@ -47,6 +47,8 @@ public class ConsoleUI implements UI
         exporterThread.start();
     }
 
+    public void setCurrentTimeStamp(ZonedDateTime zdt) {}
+
     public void outputText(String text)
     {
         System.out.println(text);

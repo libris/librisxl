@@ -61,7 +61,7 @@ delete_es_collection() {
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
          "DELETE FROM lddb__versions where collection = '$collection';"
 
-    curl -XDELETE http://$ESHOST:9200/$WHELKNAME/$collection/_query \
+    curl -XDELETE http://$ESHOST:9200/$ESINDEX/$collection/_query \
          -d '{"query": {"match_all": {}}}'
 }
 
@@ -80,6 +80,10 @@ do
             ;;
         -e|--es-host)
             ESHOST="$2"
+            shift
+            ;;
+        -E|--es-index)
+            ESINDEX="$2"
             shift
             ;;
         -D|--db-user)
@@ -113,6 +117,10 @@ if [ -z "$ESHOST" ]; then
     ESHOST="localhost"
 fi
 
+if [ -z "$ESINDEX" ]; then
+    ESINDEX="${WHELKNAME}"
+fi
+
 if [ "$DBUSER" ]; then
     DBUSER_ARG="-U ${DBUSER}"
 fi
@@ -131,8 +139,8 @@ if [ "$RECREATE_DB" = true ]; then
     echo "(Re)creating ElasticSearch database..."
     echo ""
 
-    curl -XDELETE http://$ESHOST:9200/$WHELKNAME
-    curl -XPOST http://$ESHOST:9200/$WHELKNAME \
+    curl -XDELETE http://$ESHOST:9200/$ESINDEX
+    curl -XPOST http://$ESHOST:9200/$ESINDEX \
          -d@$TOOLDIR/elasticsearch/libris_config.json
 
     echo ""

@@ -150,6 +150,7 @@ public class ExporterThread extends Thread
 				  case BATCH_NEXT_TIMESTAMP:
 				  {
 					 m_exportNewerThan = modified;
+					 m_ui.setCurrentTimeStamp(m_exportNewerThan);
 					 m_ui.outputText("Completed export of " + successfullyExportedDocumentsCount + " out of " + documentsInBatchCount + " document(s) with modified = " + modified);
 					 break;
 				  }
@@ -248,8 +249,9 @@ public class ExporterThread extends Thread
             case BATCH_PREVIOUSLY_FAILED:
             {
                 // Select any documents that _have_ a apix export failed flag
-                String sql = "SELECT id, data, modified, collection, deleted FROM " + m_properties.getProperty("sqlMaintable") +
-                        " WHERE (data->>'" + JsonLd.getAPIX_FAILURE_KEY() + "')::text is not null";
+                String sql = "SELECT id, data, modified, collection, changedIn, changedBy, deleted FROM " + m_properties.getProperty("sqlMaintable") +
+                        " WHERE (data#>>'{@graph, 0," + JsonLd.getAPIX_FAILURE_KEY() + "}')::text is not null";
+
                 PreparedStatement statement = connection.prepareStatement(sql);
                 return statement;
             }
@@ -287,6 +289,7 @@ public class ExporterThread extends Thread
     private String apixRequest(String url, String httpVerb, String data)
             throws IOException
     {
+        s_logger.debug("APIX exporter sending http request: " + httpVerb + " to : " + url);
         LongTermHttpRequest request = new LongTermHttpRequest(url, httpVerb, "application/xml",
                 data, m_properties.getProperty("apixUsername"), m_properties.getProperty("apixPassword"));
         int responseCode = request.getResponseCode();
@@ -318,7 +321,7 @@ public class ExporterThread extends Thread
             {
                 if (responseData == null)
                     responseData = "";
-                throw new IOException("APIX responded with http " + responseCode + ": " + responseData);
+                throw new IOException("APIX responded on " + url + " with http " + responseCode + ": " + responseData);
             }
         }
     }

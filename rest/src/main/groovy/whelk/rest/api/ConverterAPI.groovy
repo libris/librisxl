@@ -45,9 +45,9 @@ class ConverterAPI extends HttpServlet {
 
         String requestedContentType = request.getParameter("to") ?:
             ContentType.parse(request.getHeader("Accept")).getMimeType() ?:
-            "application/x-marcjson"
+            "application/x-marc-json"
 
-        if (requestedContentType == "application/x-marcjson") {
+        if (requestedContentType == "application/x-marc-json") {
             String jsonText = Tools.normalizeString(request.getInputStream().getText("UTF-8"))
             Map json = marcFrameConverter.mapper.readValue(jsonText, Map)
             log.info("Constructed document. Converting to $requestedContentType")

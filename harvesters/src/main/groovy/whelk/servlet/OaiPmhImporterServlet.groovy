@@ -45,7 +45,7 @@ class OaiPmhImporterServlet extends HttpServlet {
     public OaiPmhImporterServlet() {
         log.info("Starting oaipmhimporter.")
 
-        props = PropertyLoader.loadProperties("secret", "oaipmh")
+        props = PropertyLoader.loadProperties("secret", "mysql")
 
         pico = Whelk.getPreparedComponentsContainer(props)
 
