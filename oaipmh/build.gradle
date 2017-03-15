@@ -17,7 +17,7 @@ dependencies {
     // XL dependencies
     compile('../../whelk-core' in project.subprojects*.name?
             project(':../../whelk-core') :
-            'com.github.libris:whelk-core:develop-SNAPSHOT')
+            'com.github.libris:whelk-core:0.3.0')
 
     def jettyVersion="9.3.6.v20151106"
 

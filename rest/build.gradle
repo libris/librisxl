@@ -81,7 +81,7 @@ dependencies {
     compile 'com.github.libris:isbntools:e70a5fbedb'
     compile('../../whelk-core' in project.subprojects*.name?
             project(':../../whelk-core') :
-            'com.github.libris:whelk-core:develop-SNAPSHOT')
+            'com.github.libris:whelk-core:0.3.0')
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
