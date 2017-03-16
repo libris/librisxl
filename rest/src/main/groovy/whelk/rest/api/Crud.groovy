@@ -7,6 +7,7 @@ import org.picocontainer.PicoContainer
 
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
+import io.prometheus.client.Summary
 
 import whelk.Document
 import whelk.JsonLd
@@ -58,6 +59,10 @@ class Crud extends HttpServlet {
         .name("api_ongoing_requests_total").help("Total ongoing API requests.")
         .labelNames("method").register()
 
+    static final Summary requestsLatency = Summary.build()
+        .name("api_requests_latency_seconds")
+        .help("API request latency in seconds.")
+        .labelNames("method").register()
 
     enum FormattingType {
         FRAMED, EMBELLISHED, FRAMED_AND_EMBELLISHED, RAW
@@ -160,11 +165,13 @@ class Crud extends HttpServlet {
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         requests.labels("GET").inc()
         ongoingRequests.labels("GET").inc()
+        Summary.Timer requestTimer = requestsLatency.labels("GET").startTimer()
         log.debug("Handling GET request.")
         try {
             doGet2(request, response)
         } finally {
             ongoingRequests.labels("GET").dec()
+            requestTimer.observeDuration()
         }
     }
 
@@ -572,12 +579,14 @@ class Crud extends HttpServlet {
     void doPost(HttpServletRequest request, HttpServletResponse response) {
         requests.labels("POST").inc()
         ongoingRequests.labels("POST").inc()
+        Summary.Timer requestTimer = requestsLatency.labels("POST").startTimer()
         log.debug("Handling POST request.")
 
         try {
             doPost2(request, response)
         } finally {
             ongoingRequests.labels("POST").dec()
+            requestTimer.observeDuration()
         }
     }
 
@@ -694,12 +703,14 @@ class Crud extends HttpServlet {
     void doPut(HttpServletRequest request, HttpServletResponse response) {
         requests.labels("PUT").inc()
         ongoingRequests.labels("PUT").inc()
+        Summary.Timer requestTimer = requestsLatency.labels("PUT").startTimer()
         log.debug("Handling PUT request.")
 
         try {
             doPut2(request, response)
         } finally {
             ongoingRequests.labels("PUT").dec()
+            requestTimer.observeDuration()
         }
 
     }
@@ -1016,12 +1027,14 @@ class Crud extends HttpServlet {
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
         requests.labels("DELETE").inc()
         ongoingRequests.labels("DELETE").inc()
+        Summary.Timer requestTimer = requestsLatency.labels("DELETE").startTimer()
         log.debug("Handling DELETE request.")
 
         try {
             doDelete2(request, response)
         } finally {
             ongoingRequests.labels("DELETE").dec()
+            requestTimer.observeDuration()
         }
     }
 
