@@ -4,7 +4,9 @@ import groovy.util.logging.Slf4j as Log
 import org.apache.http.entity.ContentType
 import org.codehaus.jackson.map.ObjectMapper
 import org.picocontainer.PicoContainer
+
 import io.prometheus.client.Counter
+import io.prometheus.client.Gauge
 
 import whelk.Document
 import whelk.JsonLd
@@ -51,6 +53,11 @@ class Crud extends HttpServlet {
     static final Counter failedRequests = Counter.build()
         .name("api_failed_requests_total").help("Total failed requests to API.")
         .labelNames("method", "resource", "status").register()
+
+    static final Gauge ongoingRequests = Gauge.build()
+        .name("api_ongoing_requests_total").help("Total ongoing API requests.")
+        .labelNames("method").register()
+
 
     enum FormattingType {
         FRAMED, EMBELLISHED, FRAMED_AND_EMBELLISHED, RAW
@@ -152,7 +159,16 @@ class Crud extends HttpServlet {
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         requests.labels("GET").inc()
+        ongoingRequests.labels("GET").inc()
         log.debug("Handling GET request.")
+        try {
+            doGet2(request, response)
+        } finally {
+            ongoingRequests.labels("GET").dec()
+        }
+    }
+
+    void doGet2(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo == "/") {
             displayInfo(response)
             return
@@ -555,8 +571,17 @@ class Crud extends HttpServlet {
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
         requests.labels("POST").inc()
+        ongoingRequests.labels("POST").inc()
         log.debug("Handling POST request.")
 
+        try {
+            doPost2(request, response)
+        } finally {
+            ongoingRequests.labels("POST").dec()
+        }
+    }
+
+    void doPost2(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo != "/") {
             log.debug("Invalid POST request URL.")
             failedRequests.labels("POST", request.getRequestURI(),
@@ -668,8 +693,18 @@ class Crud extends HttpServlet {
     @Override
     void doPut(HttpServletRequest request, HttpServletResponse response) {
         requests.labels("PUT").inc()
+        ongoingRequests.labels("PUT").inc()
         log.debug("Handling PUT request.")
 
+        try {
+            doPut2(request, response)
+        } finally {
+            ongoingRequests.labels("PUT").dec()
+        }
+
+    }
+
+    void doPut2(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo == "/") {
             log.debug("Invalid PUT request URL.")
             failedRequests.labels("PUT", request.getRequestURI(),
@@ -980,7 +1015,17 @@ class Crud extends HttpServlet {
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
         requests.labels("DELETE").inc()
+        ongoingRequests.labels("DELETE").inc()
         log.debug("Handling DELETE request.")
+
+        try {
+            doDelete2(request, response)
+        } finally {
+            ongoingRequests.labels("DELETE").dec()
+        }
+    }
+
+    void doDelete2(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo == "/") {
             failedRequests.labels("DELETE", request.getRequestURI(),
                     HttpServletResponse.SC_METHOD_NOT_ALLOWED.toString()).inc()
