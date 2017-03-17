@@ -22,6 +22,10 @@ import whelk.importer.ImportResult
 import whelk.importer.VCopyImporter
 import whelk.util.PropertyLoader
 
+import io.prometheus.client.Counter
+import io.prometheus.client.Gauge
+import io.prometheus.client.Summary
+
 /**
  * Created by Theodor on 17-01-09
  * Copy of OAIPMH Harvester servlet, but data source is vcopy
@@ -42,11 +46,28 @@ class VCopyImporterServlet extends HttpServlet {
 
     static final ObjectMapper mapper = new ObjectMapper()
 
+    static final Counter requests = Counter.build()
+            .name("vcopy_importer_requests_total").help("Total requests to VCopy Importer.")
+            .labelNames("method").register()
+
+    static final Counter failedRequests = Counter.build()
+            .name("vcopy_importer_failed_requests_total").help("Total failed requests to VCopy Importer.")
+            .labelNames("method", "resource", "status").register()
+
+    static final Gauge ongoingRequests = Gauge.build()
+            .name("vcopy_importer_ongoing_requests_total").help("Total ongoing VCopy Importer requests.")
+            .labelNames("method").register()
+
+    static final Summary requestsLatency = Summary.build()
+            .name("vcopy_importer_requests_latency_seconds")
+            .help("VCopy Importer request latency in seconds.")
+            .labelNames("method").register()
+
 
     VCopyImporterServlet() {
         log.info("Starting vcopyImporter.")
 
-        props = PropertyLoader.loadProperties('secret','mysql')
+        props = PropertyLoader.loadProperties('secret', 'mysql')
         pico = Whelk.getPreparedComponentsContainer(props)
         pico.addComponent(VCopyImporter)
         pico.addComponent(LinkFinder)
@@ -57,6 +78,19 @@ class VCopyImporterServlet extends HttpServlet {
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
+        requests.labels("GET").inc()
+        ongoingRequests.labels("GET").inc()
+        Summary.Timer requestTimer = requestsLatency.labels("GET").startTimer()
+        log.debug("Handling GET request.")
+        try {
+            doGet2(response, request)
+        } finally {
+            ongoingRequests.labels("GET").dec()
+            requestTimer.observeDuration()
+        }
+    }
+
+    private void doGet2(HttpServletResponse response, HttpServletRequest request) {
         def storage = pico.getComponent(PostgreSQLComponent)
         String html, json
         if (jobs) {
@@ -133,7 +167,19 @@ class VCopyImporterServlet extends HttpServlet {
     }
 
     void doPost(HttpServletRequest request, HttpServletResponse response) {
+        requests.labels("POST").inc()
+        ongoingRequests.labels("POST").inc()
+        Summary.Timer requestTimer = requestsLatency.labels("POST").startTimer()
         log.debug("Received post request. Got this: ${request.getParameterMap()}")
+        try {
+            doPost2(request, response)
+        } finally {
+            ongoingRequests.labels("POST").dec()
+            requestTimer.observeDuration()
+        }
+    }
+
+    private void doPost2(HttpServletRequest request, HttpServletResponse response) {
         for (reqs in request.getParameterNames()) {
             if (reqs == "action_all") {
                 for (job in jobs) {
@@ -297,7 +343,7 @@ class ScheduledJob implements Runnable {
                 whelkState.put("status", "RUNNING")
 
                 storage.saveSettings(collection, whelkState)
-                ImportResult result = importer.doImport(collection.replace(VCopyImporterServlet.SETTINGS_PFX,''), sourceSystem, vcopyConnectionString, nextSince)
+                ImportResult result = importer.doImport(collection.replace(VCopyImporterServlet.SETTINGS_PFX, ''), sourceSystem, vcopyConnectionString, nextSince)
                 log.trace("Import completed, result: $result")
                 if (result && (result.numberOfDocuments > 0 || result.numberOfDocumentsDeleted > 0 || result.numberOfDocumentsSkipped > 0)) {
                     log.debug("Imported ${result.numberOfDocuments} documents and deleted ${result.numberOfDocumentsDeleted} for $collection. Last record has datestamp: ${result.lastRecordDatestamp.format(DATE_FORMAT)}")
