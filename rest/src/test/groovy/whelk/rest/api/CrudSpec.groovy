@@ -103,6 +103,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -117,6 +120,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -129,6 +135,9 @@ class CrudSpec extends Specification {
     def "POST to /<id> should return 405 Method Not Allowed"() {
         given:
         request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -415,6 +424,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "POST"
         }
@@ -458,6 +470,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            "/"
+        }
+        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -505,6 +520,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "POST"
         }
@@ -545,6 +563,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "POST"
         }
@@ -583,6 +604,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "POST"
         }
@@ -608,6 +632,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            "/"
+        }
+        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -645,6 +672,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            "/"
+        }
+        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -695,6 +725,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            "/"
+        }
+        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -750,6 +783,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "POST"
         }
@@ -801,6 +837,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            "/"
+        }
+        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -857,6 +896,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "POST"
         }
@@ -907,6 +949,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "POST"
         }
@@ -950,6 +995,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            "/"
+        }
+        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -1000,6 +1048,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            "/"
+        }
+        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -1055,6 +1106,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "POST"
         }
@@ -1108,6 +1162,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "POST"
         }
@@ -1156,6 +1213,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            "/"
+        }
+        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -1210,6 +1270,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "POST"
         }
@@ -1253,6 +1316,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/some_id"
         }
+        request.getRequestURI() >> {
+            "/"
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1279,6 +1345,9 @@ class CrudSpec extends Specification {
         }
         request.getPathInfo() >> {
             "/some_id"
+        }
+        request.getRequestURI() >> {
+            "/"
         }
         request.getMethod() >> {
             "PUT"
@@ -1317,6 +1386,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -1378,6 +1450,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/alt1234"
         }
+        request.getRequestURI() >> {
+            "/alt1234"
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1423,6 +1498,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/bad_id"
         }
+        request.getRequestURI() >> {
+            "/bad_id"
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1459,6 +1537,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            id
+        }
+        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -1498,6 +1579,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            "/some_other_id"
+        }
+        request.getRequestURI() >> {
             "/some_other_id"
         }
         request.getMethod() >> {
@@ -1557,6 +1641,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            id
+        }
+        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -1626,6 +1713,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
+        request.getRequestURI() >> {
+            id
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1691,6 +1781,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            id
+        }
+        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -1760,6 +1853,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
+        request.getRequestURI() >> {
+            id
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1827,6 +1923,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
+        request.getRequestURI() >> {
+            id
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1890,6 +1989,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            id
+        }
+        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -1957,6 +2059,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
+        request.getRequestURI() >> {
+            id
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2022,6 +2127,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
+        request.getRequestURI() >> {
+            id
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2082,6 +2190,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            id
+        }
+        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -2155,6 +2266,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
+        request.getRequestURI() >> {
+            id
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2226,6 +2340,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
+        request.getRequestURI() >> {
+            id
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2295,6 +2412,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
+        request.getRequestURI() >> {
+            id
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2355,6 +2475,9 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
+            id
+        }
+        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -2423,6 +2546,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
+        request.getRequestURI() >> {
+            id
+        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2463,6 +2589,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
+        request.getRequestURI() >> {
+            "/1234"
+        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -2486,6 +2615,9 @@ class CrudSpec extends Specification {
     def "DELETE to /<id> should return 404 Not Found if document does not exist"() {
         given:
         request.getPathInfo() >> {
+            "/dataset/some_document"
+        }
+        request.getRequestURI() >> {
             "/dataset/some_document"
         }
         request.getMethod() >> {
@@ -2519,6 +2651,9 @@ class CrudSpec extends Specification {
                                          ["notation": "Ting"]]]
         ]
         request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getRequestURI() >> {
             "/1234"
         }
         request.getAttribute(_) >> {
@@ -2560,6 +2695,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
+        request.getRequestURI() >> {
+            "/1234"
+        }
         request.getAttribute(_) >> {
             return ["authorization": [["sigel": "Ting",
                                        "xlreg": true,
@@ -2598,6 +2736,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
+        request.getRequestURI() >> {
+            "/1234"
+        }
         request.getAttribute(_) >> {
             return null
         }
@@ -2627,6 +2768,9 @@ class CrudSpec extends Specification {
                                 "@type": "Item",
                                 "contains": "some new data"]]]
         request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getRequestURI() >> {
             "/1234"
         }
         request.getAttribute(_) >> {
@@ -2667,6 +2811,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
+        request.getRequestURI() >> {
+            "/1234"
+        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -2703,6 +2850,9 @@ class CrudSpec extends Specification {
                                 "heldBy":
                                         ["notation": "S"]]]]
         request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -2746,6 +2896,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
+        request.getRequestURI() >> {
+            "/1234"
+        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -2786,6 +2939,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/5678"
         }
+        request.getRequestURI() >> {
+            "/5678"
+        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -2822,6 +2978,9 @@ class CrudSpec extends Specification {
                                 "heldBy":
                                         ["notation": "S"]]]]
         request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -2862,6 +3021,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
+        request.getRequestURI() >> {
+            "/1234"
+        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -2898,6 +3060,9 @@ class CrudSpec extends Specification {
                                 "heldBy":
                                         ["notation": "Ting"]]]]
         request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -2938,6 +3103,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
+        request.getRequestURI() >> {
+            "/1234"
+        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -2974,6 +3142,9 @@ class CrudSpec extends Specification {
                                 "heldBy":
                                         ["notation": "Ting"]]]]
         request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
