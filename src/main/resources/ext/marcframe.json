@@ -2159,6 +2159,27 @@
               }
             }
           }
+        },
+        {
+          "name": "do not use weird language token that does not fit in column",
+          "source": [
+            {"008": "160420s1995    fr |||||||||||000 0|   |c"},
+            {"041": {"ind1": "0", "ind2": " ", "subfields": [{"a": "freeng"}]}}
+          ],
+          "result": {
+            "created": "2016-04-20T00:00:00.0+02:00",
+            "marc:catalogingSource": {"@id": "marc:CooperativeCatalogingProgram"},
+            "mainEntity": {
+              "marc:publishedYear": "1995",
+              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "publicationCountry": [{"@id": "https://id.kb.se/country/fr"}],
+              "instanceOf": {
+                "@type": "Text",
+                "marc:literaryForm": {"@id": "marc:NotFictionNotFurtherSpecified"},
+                "language": [{"@id": "https://id.kb.se/language/freeng", "notation": "freeng"}]
+              }
+            }
+          }
         }
       ]
     },

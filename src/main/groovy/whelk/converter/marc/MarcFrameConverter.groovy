@@ -923,16 +923,14 @@ class MarcFixedFieldHandler {
         def value = new StringBuilder(FIXED_NONE * fieldSize)
         def actualValue = false
         for (col in columns) {
+            assert value.size() > col.start // columns must fit within value
             def obj = col.revert(data)
             // TODO: ambiguity trouble if this is a List!
             if (obj instanceof List) {
                 obj = obj.find { it }
             }
             obj = (String) obj
-            if (obj) {
-                assert col.width - obj.size() > -1
-                assert value.size() > col.start
-                assert col.width >= obj.size()
+            if (obj && col.width >= obj.size()) {
                 def end = col.start + obj.size() - 1
                 value[col.start..end] = obj
                 if (col.isActualValue(obj)) {
@@ -957,6 +955,9 @@ class MarcFixedFieldHandler {
             this.start = start
             this.end = end
             this.fixedDefault = fixedDefault
+            if (fixedDefault) {
+                assert this.fixedDefault.size() == this.width
+            }
             if (matchAsDefault) {
                 this.matchAsDefault = Pattern.compile((String) matchAsDefault)
             }
