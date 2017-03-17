@@ -60,13 +60,11 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                 if(VCopyToWhelkConverter.isSuppressed(doc))
                     suppressed++
 
-
                 if (!SetSpecMatcher.hasValidAuthRecords(allAuthRecords))
                     lacksValidAuthRecords++
 
                 if (doc != null && SetSpecMatcher.hasValidAuthRecords(allAuthRecords)) {
-
-                    List<Map> matchResults = SetSpecMatcher.matchAuthT  oBib(doc, allAuthRecords, true)
+                    List<Map> matchResults = SetSpecMatcher.matchAuthToBib(doc, allAuthRecords, true)
 
                     List authRecords = allAuthRecords.findAll {
                         !SetSpecMatcher.ignoredAuthFields.contains(it.field)
