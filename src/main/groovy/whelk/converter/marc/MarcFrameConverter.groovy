@@ -927,7 +927,7 @@ class MarcFixedFieldHandler {
             def obj = col.revert(data)
             // TODO: ambiguity trouble if this is a List!
             if (obj instanceof List) {
-                obj = obj.find { it }
+                obj = obj.find { it && col.width >= it.size() }
             }
             obj = (String) obj
             if (obj && col.width >= obj.size()) {
