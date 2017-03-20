@@ -21,7 +21,7 @@
 
     <servlet-mapping>
         <servlet-name>VCopyImporterServlet</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/vcopyimporter</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
