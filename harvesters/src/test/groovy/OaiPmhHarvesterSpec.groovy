@@ -108,17 +108,6 @@ class OaiPmhHarvesterSpec extends Specification {
         result.lastRecordDatestamp == date("2007-01-01T00:00:00Z")
     }
 
-    def "should disregard suppressed records"() {
-        given:
-        currentPageSet = suppressedPageSet
-        when:
-        def result = importer.harvest(BASE, null, "ListRecords", "marcxml")
-        then:
-        result.numberOfDocuments == 0
-        result.numberOfDocumentsSkipped == 1
-        result.lastRecordDatestamp == date("2015-05-28T12:43:00Z")
-    }
-
     def "should not accept lastRecordDatestamp lower than start date"() {
         given:
         currentPageSet = badDateOrderPageSet
@@ -320,28 +309,6 @@ class OaiPmhHarvesterSpec extends Specification {
                     <datafield tag="887" ind1=" " ind2=" ">
                         <subfield code="a">{"@id": "http://example.org/item/1", "modified": 1167609600000}</subfield>
                         <subfield code="2">librisxl</subfield>
-                    </datafield>
-                    </record>
-                </metadata>
-            </record>
-        """)
-    ]
-
-    static suppressedPageSet = [
-        (BASE+'?verb=ListRecords&metadataPrefix=marcxml'): oaiPmhPage("""
-            <record>
-                <header>
-                    <identifier>http://example.org/item/1</identifier>
-                    <datestamp>2015-05-28T12:43:00Z</datestamp>
-                    <setSpec>license:CC0</setSpec>
-                </header>
-                <metadata>
-                    <record xmlns="http://www.loc.gov/MARC21/slim" type="Authority">
-                    <leader>00986cz  a2200217n  4500</leader>
-                    <controlfield tag="001">1</controlfield>
-                    <controlfield tag="005">20150528124300.0</controlfield>
-                    <datafield tag="599" ind1=" " ind2=" ">
-                        <subfield code="a">SUPPRESSRECORD</subfield>
                     </datafield>
                     </record>
                 </metadata>
