@@ -10,7 +10,7 @@ import groovy.util.logging.Slf4j as Log
 class StatsPrinter extends DefaultActor {
     def rows = 0
     def records = 0
-    def suppressed = 0
+
     def startTime = System.currentTimeMillis()
 
     @Override
@@ -23,9 +23,6 @@ class StatsPrinter extends DefaultActor {
                         break
                     case 'row':
                         rows++
-                        break
-                    case 'suppressed':
-                        suppressed++
                         break
                     case 'record':
                         if (++records % 10000 == 0)

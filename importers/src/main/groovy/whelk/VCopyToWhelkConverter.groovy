@@ -19,27 +19,26 @@ class VCopyToWhelkConverter {
         Document whelkDocument = null
         Timestamp timestamp = row.updated >= row.created ? row.updated : row.created
         Map doc = getMarcDocMap(row.data)
+
         def controlNumber = getControlNumber(doc)
-        if (!isSuppressed(doc)) {
-            switch (row.collection) {
-                case 'auth':
-                    whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created)
-                    break
-                case 'hold':
-                    whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
-                    break
-                case 'bib':
-                    whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
-                    break
-            }
-            return [collection: row.collection, document: whelkDocument, isSuppressed: false, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber, checksum: whelkDocument.getChecksum()]
-        } else
-            return [collection: row.collection, document: null, isSuppressed: true, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber, checksum: "0"]
+        switch (row.collection) {
+            case 'auth':
+                whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created)
+                break
+            case 'hold':
+                whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
+                break
+            case 'bib':
+                whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
+                break
+        }
+        return [collection: row.collection, document: whelkDocument, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber, checksum: whelkDocument.getChecksum()]
+
     }
 
     private
     static Document convertDocument(MarcFrameConverter marcFrameConverter, Map doc, String collection, Date created, List authData = null) {
-        if (doc && !isSuppressed(doc)) {
+        if (doc) {
             String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
 
             def id = LegacyIntegrationTools.generateId(oldStyleIdentifier)
@@ -59,9 +58,6 @@ class VCopyToWhelkConverter {
             Document document = new Document(convertedData)
             document.created = created
             return document
-        } else {
-            println "is suppressed: ${isSuppressed(doc)}"
-            return null
         }
     }
 
@@ -105,23 +101,6 @@ class VCopyToWhelkConverter {
             }
         }
         return specs
-    }
-
-    private static isSuppressed(Map doc) {
-        def fields = doc.get("fields")
-        for (def field : fields) {
-            if (field.get("599") != null) {
-                def field599 = field.get("599")
-                if (field599.get("subfields") != null) {
-                    def subfields = field599.get("subfields")
-                    for (def subfield : subfields) {
-                        if (subfield.get("a").equals("SUPPRESSRECORD"))
-                            return true
-                    }
-                }
-            }
-        }
-        return false
     }
 
     private static String getControlNumber(Map doc) {

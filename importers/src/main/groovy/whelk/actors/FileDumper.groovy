@@ -78,7 +78,7 @@ class FileDumper implements MySQLLoader.LoadHandler {
     private synchronized void append(List<Map> recordMaps) {
         for (Map recordMap in recordMaps) {
 
-            if (recordMap && !recordMap.isSuppressed) {
+            if (recordMap) {
 
                 Document doc = recordMap.document
                 String coll = recordMap.collection
