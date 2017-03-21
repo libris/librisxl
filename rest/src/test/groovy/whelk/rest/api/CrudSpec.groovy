@@ -61,7 +61,6 @@ class CrudSpec extends Specification {
         // We want to pass through calls in some cases
         accessControl = GroovySpy(AccessControl.class)
         whelk = new Whelk()
-        whelk.version = "version"
         whelk.storage = storage
         whelk.displayData = ['@context': [
                                  'examplevocab': 'http://example.com',

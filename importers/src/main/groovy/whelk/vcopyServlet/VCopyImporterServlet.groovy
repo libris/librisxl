@@ -137,7 +137,6 @@ class VCopyImporterServlet extends HttpServlet {
             html = """
                 <html><head><title>OAIPMH Harvester control panel</title></head>
                 <body>
-                System version: ${props.version}<br><br>
                 ${table.toString()}
                 </form>
                 """
@@ -149,9 +148,8 @@ class VCopyImporterServlet extends HttpServlet {
                 <body>
 
                 HARVESTER DISABLED<br/>
-                System version ${props.version} is incompatible with data version ${loadDataVersion()}.
                 """
-            json = mapper.writeValueAsString(["state": "disabled", "system.version": props.version, "data.version": loadDataVersion()])
+            json = mapper.writeValueAsString(["state": "disabled"])
         }
         PrintWriter out = response.getWriter();
 
@@ -203,43 +201,34 @@ class VCopyImporterServlet extends HttpServlet {
     void init() {
 
         log.debug "Props: ${props.inspect()}"
-        if (props.getProperty("version").startsWith(loadDataVersion())) {
-            log.info("Initializing vcopy importer. System version: ${pico.getComponent(Whelk.class).version}")
-            Storage storage = pico.getComponent(PostgreSQLComponent.class)
-            List<String> services = DEFAULT_SERVICES
+        log.info("Initializing vcopy importer.")
+        Storage storage = pico.getComponent(PostgreSQLComponent.class)
+        List<String> services = DEFAULT_SERVICES
 
-            ScheduledExecutorService ses = Executors.newScheduledThreadPool(services.size())
+        ScheduledExecutorService ses = Executors.newScheduledThreadPool(services.size())
 
-            for (service in services) {
-                log.info("Setting up schedule for $service")
-                String vcopyConnectionString = props.getProperty("mysqlConnectionUrl")
-                int scheduleIntervalSeconds = DEFAULT_INTERVAL as int
-                String harvesterClass = DEFAULT_IMPORTER
-                String sourceSystem = DEFAULT_SYSTEM
-                def job = new ScheduledJob(
-                        pico.getComponent(Whelk.class) as Whelk,
-                        pico.getComponent(Class.forName(harvesterClass)) as VCopyImporter,
-                        "${service}",
-                        sourceSystem,
-                        storage,
-                        vcopyConnectionString)
-                jobs[service] = job
+        for (service in services) {
+            log.info("Setting up schedule for $service")
+            String vcopyConnectionString = props.getProperty("mysqlConnectionUrl")
+            int scheduleIntervalSeconds = DEFAULT_INTERVAL as int
+            String harvesterClass = DEFAULT_IMPORTER
+            String sourceSystem = DEFAULT_SYSTEM
+            def job = new ScheduledJob(
+                    pico.getComponent(Whelk.class) as Whelk,
+                    pico.getComponent(Class.forName(harvesterClass)) as VCopyImporter,
+                    "${service}",
+                    sourceSystem,
+                    storage,
+                    vcopyConnectionString)
+            jobs[service] = job
 
-                try {
-                    ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
-                } catch (RejectedExecutionException ree) {
-                    log.error("execution failed", ree)
-                }
+            try {
+                ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
+            } catch (RejectedExecutionException ree) {
+                log.error("execution failed", ree)
             }
-            log.info("scheduler started")
-        } else {
-            log.error("INCOMPATIBLE VERSIONS! Not scheduling any harvesters.")
         }
-    }
-
-    String loadDataVersion() {
-        def systemSettings = pico.getComponent(PostgreSQLComponent.class).loadSettings("system")
-        return systemSettings.get("version")
+        log.info("scheduler started")
     }
 }
 

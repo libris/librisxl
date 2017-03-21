@@ -155,7 +155,6 @@ class Crud extends HttpServlet {
     void displayInfo(response) {
         def info = [:]
         info["system"] = "LIBRISXL"
-        info["version"] = whelk.storage.loadSettings("system").get("version")
         info["format"] = "linked-data-api"
         //info["collections"] = whelk.storage.loadCollections()
         sendResponse(response, mapper.writeValueAsString(info), "application/json")
