@@ -3,13 +3,13 @@
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+      <pattern>%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
     <appender name="FILE-WHELK" class="ch.qos.logback.core.FileAppender">
         <file>${catalina.base}/logs/whelk.log</file>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -18,11 +18,11 @@
   <logger name="org.apache.camel.component.http4" level="warn"/>
   <logger name="org.apache.camel.component.elasticsearch" level="warn"/>
   <logger name="org.apache.activemq" level="warn"/>
-  <logger name="whelk.rest.api.Crud" level="debug"/>
-  <logger name="whelk.component.PostgreSQLComponent" level="debug"/>
-  <logger name="whelk.component.ElasticSearch" level="debug"/>
-  <logger name="whelk.JsonLd" level="trace"/>
-  <logger name="whelk.Document" level="debug"/>
+  <logger name="whelk.rest.api.Crud" level="info"/>
+  <logger name="whelk.component.PostgreSQLComponent" level="info"/>
+  <logger name="whelk.component.ElasticSearch" level="info"/>
+  <logger name="whelk.JsonLd" level="info"/>
+  <logger name="whelk.Document" level="info"/>
 
   <root level="info">
       <appender-ref ref="FILE-WHELK" />
