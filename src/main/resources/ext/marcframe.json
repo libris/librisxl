@@ -71,6 +71,63 @@
         "s": "marc:DeletedHeadingSplitIntoTwoOrMoreHeading",
         "x": "marc:DeletedHeadingReplacedByAnotherHeading"
       }
+    },
+
+    {
+      "timePeriod": {
+        "a0": "-XXXX/-3000",
+        "b0": "-29XX",
+        "b1": "-28XX",
+        "b2": "-27XX",
+        "b3": "-26XX",
+        "b4": "-25XX",
+        "b5": "-24XX",
+        "b6": "-23XX",
+        "b7": "-22XX",
+        "b8": "-21XX",
+        "b9": "-20XX",
+        "c0": "-19XX",
+        "c1": "-18XX",
+        "c2": "-17XX",
+        "c3": "-16XX",
+        "c4": "-15XX",
+        "c5": "-14XX",
+        "c6": "-13XX",
+        "c7": "-12XX",
+        "c8": "-11XX",
+        "c9": "-10XX",
+        "d0": "-09XX",
+        "d1": "-08XX",
+        "d2": "-07XX",
+        "d3": "-06XX",
+        "d4": "-05XX",
+        "d5": "-04XX",
+        "d6": "-03XX",
+        "d7": "-02XX",
+        "d8": "-01XX",
+        "d9": "-00XX",
+        "e": "00",
+        "f": "01",
+        "g": "02",
+        "h": "03",
+        "i": "04",
+        "j": "05",
+        "k": "06",
+        "l": "07",
+        "m": "08",
+        "n": "09",
+        "o": "10",
+        "p": "11",
+        "q": "12",
+        "r": "13",
+        "s": "14",
+        "t": "15",
+        "u": "16",
+        "v": "17",
+        "w": "18",
+        "x": "19",
+        "y": "20"
+      }
     }
 
   ],
@@ -2576,7 +2633,9 @@
 
     "037": {},
 
-    "038": {},
+    "038": {
+      "$a": {"link": "metadataLicensor", "resourceType": "Organization", "property": "label"}
+    },
 
     "040": {
       "aboutEntity": "?record",
@@ -3503,7 +3562,11 @@
     "540": {},
     "541": {},
     "542": {},
-    "544": {},
+    "544": {
+      "addLink": "note",
+      "resourceType": "marc:RelatedMaterialNote",
+      "$a": {"addProperty": "label"}
+    },
     "545": {},
     "546": {"aboutEntity": "?thing", "$a": {"addProperty": "languageNote"}},
     "547": {},
@@ -4302,6 +4365,11 @@
         "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "notation"
       }
     },
+
+    "045": {
+      "$a": {"property": "temporalCoverage", "tokenMap": "timePeriod", "TODO": "This is the EDTF value table from the LoC BF2 converter, not the readable form. Might be better as linked resources with with both labels and codes."}
+    },
+
     "046" : {
         "TODO": "parseDateTimeUsingFormatHints",
         "$f": {"property": "birthDate"},
@@ -4577,6 +4645,12 @@
       "addLink": "hasVersion",
       "resourceType": "MeetingTerm"
     },
+
+    "430": {
+      "ignored": true,
+      "TODO": "alternativeForm a Work (like a structured altLabel)"
+    },
+
     "450" : {
       "aboutEntity": "?record",
       "$a": {"addProperty": "altLabel"},
@@ -4689,6 +4763,11 @@
     "688" : {
       "aboutEntity": "?record",
       "$a": {"addProperty": "historyNote"}
+    },
+
+    "700": {
+      "ignored": true,
+      "TODO": "exactMatch a Person (external system)"
     },
 
     "750" : {
@@ -5056,9 +5135,9 @@
       "$a": {"addProperty": "librisIIINumber"}
     },
 
-    "024": {
-      "inherit": "bib"
-    },
+    "024": {"inherit": "bib"},
+
+    "035": {"inherit": "bib", "$9": null},
 
     "084": {"inherit": "bib", "addLink": "callno"},
 
@@ -5089,6 +5168,8 @@
       "addLink": "workExample", "embedded": true, "resourceType": "Item",
       "$a": {"addProperty": "bindingInformation"}
     },
+
+    "599": {"inherit": "bib", "NOTE:i1": null},
 
     "600": {
       "TODO:aboutEntity": "?exampleOfWork (which may be the sameAs ?itemOf)",
