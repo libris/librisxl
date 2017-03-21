@@ -803,6 +803,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     boolean repeatable = false
     String resourceType
     Map linkRepeated = null
+    boolean onlySubsequentRepeated = false
 
     static final ConvertResult OK = new ConvertResult(true)
     static final ConvertResult FAIL = new ConvertResult(false)
@@ -824,7 +825,12 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         resourceType = fieldDfn.resourceType
         embedded = fieldDfn.embedded == true
 
-        Map dfn = (Map) fieldDfn['linkRepeated']
+        Map dfn = (Map) fieldDfn['linkEveryIfRepeated']
+        if (fieldDfn['linkSubsequentRepeated']) {
+            assert !dfn, "linkEveryIfRepeated and linkSubsequentRepeated not allowed on ${ruleSet.name} ${tag}"
+            dfn = (Map) fieldDfn['linkSubsequentRepeated']
+            onlySubsequentRepeated = true
+        }
         if (dfn) {
             linkRepeated = [
                     link        : dfn.addLink ?: dfn.link,
@@ -843,8 +849,11 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     Map getLinkRule(Map state, value) {
         if (linkRepeated) {
             Collection tagValues = (Collection) state.sourceMap[tag]
-            if (tagValues.size() > 1 && !value.is(tagValues[0][tag])) {
-                return linkRepeated
+            if (tagValues.size() > 1) {
+                boolean firstOccurrence = value.is(tagValues[0][tag])
+                if (!(firstOccurrence && onlySubsequentRepeated)) {
+                    return linkRepeated
+                }
             }
         }
         return [

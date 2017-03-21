@@ -1095,7 +1095,7 @@
     },
 
     "007": {
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "embedded": true
       },
@@ -2650,7 +2650,7 @@
       "$9": {"property": "license"}
     },
     "041": {
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "embedded": true
       },
@@ -3062,7 +3062,7 @@
 
     "250": {
       "aboutEntity": "?thing",
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "otherEdition",
         "embedded": true
       },
@@ -3256,7 +3256,7 @@
 
     "300": {
       "aboutEntity": "?thing",
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
         "embedded": true
@@ -3302,7 +3302,7 @@
 
     "336": {
       "aboutEntity": "?work",
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Work",
         "embedded": true,
@@ -3317,7 +3317,7 @@
       "$8": {"about": "_:contentType", "property": "_groupID"}
     },
     "337": {
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
         "embedded": true
@@ -3332,7 +3332,7 @@
       "$8": {"about": "_:mediaType", "property": "_groupID"}
     },
     "338": {
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "embedded": true
       },
@@ -5185,9 +5185,11 @@
 
     "852": {
       "aboutType": "Item",
-      "addLink": "hasComponent",
-      "embedded": true,
-      "resourceType": "Item",
+      "linkEveryIfRepeated": {
+        "addLink": "hasComponent",
+        "embedded": true,
+        "resourceType": "Item"
+      },
       "TODO:i1": {},
       "FIXME:i2": {
         "property": "shelfOrder"
@@ -5245,13 +5247,31 @@
           "result": {
             "mainEntity": {
               "@type": "Item",
+              "copyNumber": "1",
+              "heldBy": [{"@id": "https://libris.kb.se/library/H", "@type": "Organization", "notation": "H"}],
+              "shelfControlNumber": "65.465",
+              "shelfLocation": ["MAG"]
+            }
+          }
+        },
+        {
+          "source": [
+            {"852": {"ind1": " ", "ind2": " ", "subfields": [{"b": "X"}, {"t": "1"}]}},
+            {"852": {"ind1": " ", "ind2": " ", "subfields": [{"b": "Y"}, {"t": "2"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
               "hasComponent": [
                 {
                   "@type": "Item",
                   "copyNumber": "1",
-                  "heldBy": [{"@id": "https://libris.kb.se/library/H", "@type": "Organization", "notation": "H"}],
-                  "shelfControlNumber": "65.465",
-                  "shelfLocation": ["MAG"]
+                  "heldBy": [{"@id": "https://libris.kb.se/library/X", "@type": "Organization", "notation": "X"}]
+                },
+                {
+                  "@type": "Item",
+                  "copyNumber": "2",
+                  "heldBy": [{"@id": "https://libris.kb.se/library/Y", "@type": "Organization", "notation": "Y"}]
                 }
               ]
             }
