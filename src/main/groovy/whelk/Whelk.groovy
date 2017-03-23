@@ -124,10 +124,17 @@ class Whelk {
     }
 
     void remove(String id, String changedIn, String changedBy, String collection) {
-      if (storage.remove(id, changedIn, changedBy, collection)) {
+        log.debug "Deleting ${id} from Whelk"
+        if (storage.remove(id, changedIn, changedBy, collection)) {
             if (elastic) {
                 elastic.remove(id)
+                log.debug "Object ${id} was removed from Whelk"
             }
+            else {
+                log.warn "No Elastic present when deleting. Skipping call to elastic.remove(${id})"
+            }
+        } else {
+            log.warn "storage did not remove ${id} from whelk"
         }
     }
 }
