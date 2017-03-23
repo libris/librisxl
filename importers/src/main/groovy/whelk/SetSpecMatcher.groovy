@@ -97,7 +97,7 @@ class SetSpecMatcher {
                             log.info "Bib ${setSpec.bibid} already has a different subfield 0 (${linkedAuthIds}) than matched auth id. Another subfield 0 will be added (${setSpec.id}) ${matchedField}"
                     }
                     matchedField[matchedField.keySet()[0]].subfields.add(['0': setSpec.id])
-                    log.trace "Addded ${setSpec.id} as subfield 0 to  bib:${setSpec.bibid} on field ${matchedField}"
+                    log.debug "Addded ${setSpec.id} as subfield 0 to  bib:${setSpec.bibid} on field ${matchedField}"
 
                 }
                 if (generateStats)
