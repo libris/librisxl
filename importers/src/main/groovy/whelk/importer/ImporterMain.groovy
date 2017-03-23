@@ -54,12 +54,21 @@ class ImporterMain {
         PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, pico.getComponent(PostgreSQLComponent))
     }
 
-    @Command(args='COLLECTION')
-    void vcopyconversiontest(String collection) {
+    /**
+     * Typical invocation:
+     * java -jar build/libs/vcopyImporter.jar vcopyconversiontest bib
+     * or (for also generating a marc reversion diff file):
+     * java -jar build/libs/vcopyImporter.jar vcopyconversiontest bib diff
+     */
+    @Command(args='COLLECTION [DIFF_OPTION]')
+    void vcopyconversiontest(String collection, diffOption = null) {
         String connUrl = props.getProperty("mysqlConnectionUrl")
         String sqlQuery = MySQLLoader.selectByMarcType[collection]
         List<Object> queryParameters = [0]
-        Conversiontester conversionTester = new Conversiontester()
+        boolean generateDiffFile = false
+        if (diffOption == "diff")
+            generateDiffFile = true
+        Conversiontester conversionTester = new Conversiontester(generateDiffFile)
         MySQLLoader.run(conversionTester, sqlQuery, queryParameters, collection, connUrl)
         conversionTester.close()
     }
