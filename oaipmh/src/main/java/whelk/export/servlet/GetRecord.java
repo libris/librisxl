@@ -17,10 +17,16 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+import io.prometheus.client.Counter;
+
 public class GetRecord
 {
     private final static String IDENTIFIER_PARAM = "identifier";
     private final static String FORMAT_PARAM = "metadataPrefix";
+
+    private static final Counter failedRequests = Counter.build()
+            .name("oaipmh_failed_getrecord_requests_total").help("Total failed GetRecord requests.")
+            .labelNames("error").register();
 
     /**
      * Verifies the integrity of a OAI-PMH request with the verb 'GetRecord' and sends a proper response.
@@ -37,6 +43,7 @@ public class GetRecord
 
         if (metadataPrefix == null)
         {
+            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
                     "metadataPrefix argument required.", request, response);
             return;
@@ -44,6 +51,7 @@ public class GetRecord
 
         if (identifierUri == null)
         {
+            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
                     "identifier argument required.", request, response);
             return;
@@ -57,6 +65,7 @@ public class GetRecord
         {
             if (!resultSet.next())
             {
+                failedRequests.labels(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST).inc();
                 ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
                 return;
             }
