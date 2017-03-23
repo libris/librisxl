@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.sql.*;
 import java.time.ZonedDateTime;
 
+import io.prometheus.client.Counter;
+
 public class ListRecords
 {
     private final static String FROM_PARAM = "from";
@@ -16,6 +18,11 @@ public class ListRecords
     private final static String SET_PARAM = "set";
     private final static String RESUMPTION_PARAM = "resumptionToken";
     private final static String FORMAT_PARAM = "metadataPrefix";
+
+    private static final Counter failedRequests = Counter.build()
+            .name("oaipmh_failed_listrecords_requests_total").help("Total failed ListRecords requests.")
+            .labelNames("error").register();
+
 
     /**
      * Verifies the integrity of a OAI-PMH request with the verb 'ListRecords', sends a proper response.
@@ -39,6 +46,7 @@ public class ListRecords
         // We do not use resumption tokens.
         if (resumptionToken != null)
         {
+            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN,
                     "No such resumption token was issued", request, response);
             return;
@@ -46,6 +54,7 @@ public class ListRecords
 
         if (metadataPrefix == null)
         {
+            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
                     "metadataPrefix argument required.", request, response);
             return;
@@ -55,6 +64,7 @@ public class ListRecords
         SetSpec setSpec = new SetSpec(set);
         if (!setSpec.isValid())
         {
+            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
                     "Not a supported set spec: " + set, request, response);
             return;
@@ -63,6 +73,7 @@ public class ListRecords
         // Was the data ordered in a format we know?
         if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix.replace(OaiPmh.FORMAT_EXPANDED_POSTFIX, "")))
         {
+            failedRequests.labels(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + metadataPrefix,
                     request, response);
             return;
@@ -98,6 +109,7 @@ public class ListRecords
         // Is the resultset empty?
         if (!resultSet.isBeforeFirst())
         {
+            failedRequests.labels(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
             return;
         }

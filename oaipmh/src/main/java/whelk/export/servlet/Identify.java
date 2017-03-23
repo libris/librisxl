@@ -13,6 +13,8 @@ import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
+import io.prometheus.client.Counter;
+
 public class Identify
 {
     /**
