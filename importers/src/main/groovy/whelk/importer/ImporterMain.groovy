@@ -119,7 +119,6 @@ class ImporterMain {
         println sourceSystem
         def connUrl = props.getProperty("mysqlConnectionUrl")
         def whelk = pico.getComponent(Whelk)
-        println whelk.version
         def importer = pico.getComponent(VCopyImporter)
         importer.doImport(collection, sourceSystem, connUrl)
     }
@@ -246,12 +245,6 @@ class ImporterMain {
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
         println "Linkfinding completed. Elapsed time: ${System.currentTimeMillis() - startTime}"
-    }
-
-    @Command
-    void setversion() {
-        def importer = pico.getComponent(MockImporter)
-        importer.run(null)
     }
 
     static COMMANDS = getMethods().findAll { it.getAnnotation(Command)

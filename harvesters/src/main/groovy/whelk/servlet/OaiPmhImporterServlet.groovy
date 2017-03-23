@@ -110,7 +110,6 @@ class OaiPmhImporterServlet extends HttpServlet {
             html = """
                 <html><head><title>OAIPMH Harvester control panel</title></head>
                 <body>
-                System version: ${props.version}<br><br>
                 ${table.toString()}
                 </form>
                 """
@@ -122,9 +121,8 @@ class OaiPmhImporterServlet extends HttpServlet {
                 <body>
 
                 HARVESTER DISABLED<br/>
-                System version ${props.version} is incompatible with data version ${loadDataVersion()}.
                 """
-            json = mapper.writeValueAsString(["state":"disabled", "system.version":props.version, "data.version":loadDataVersion()])
+            json = mapper.writeValueAsString(["state":"disabled"])
         }
         PrintWriter out = response.getWriter();
 
@@ -167,41 +165,32 @@ class OaiPmhImporterServlet extends HttpServlet {
     }
 
     void init() {
-        if (props.getProperty("version").startsWith(loadDataVersion())) {
-            log.info("Initializing OAIPMH harvester. System version: ${pico.getComponent(Whelk.class).version}")
-            Storage storage = pico.getComponent(PostgreSQLComponent.class)
-            List services = props.scheduledServices.split(",")
+        log.info("Initializing OAIPMH harvester.")
+        Storage storage = pico.getComponent(PostgreSQLComponent.class)
+        List services = props.scheduledServices.split(",")
 
-            ScheduledExecutorService ses = Executors.newScheduledThreadPool(services.size())
+        ScheduledExecutorService ses = Executors.newScheduledThreadPool(services.size())
 
-            for (service in services) {
+        for (service in services) {
 
-                log.info("Setting up schedule for $service")
-                int scheduleIntervalSeconds = props.getProperty(service + ".interval", "" + DEFAULT_INTERVAL) as int
-                String harvesterClass = props.getProperty(service + ".harvesterClass", DEFAULT_HARVESTER)
-                String serviceUrl = props.getProperty(service + ".serviceUrl")
-                String username = props.getProperty(service + ".username")
-                String password = props.getProperty(service + ".password")
-                String sourceSystem = props.getProperty(service + ".sourceSystem", DEFAULT_SYSTEM)
-                def job = new ScheduledJob(pico.getComponent(Class.forName(harvesterClass)), "${SETTINGS_PFX}${service}",
-                        serviceUrl, username, password, sourceSystem, storage)
-                jobs[service] = job
+            log.info("Setting up schedule for $service")
+            int scheduleIntervalSeconds = props.getProperty(service + ".interval", "" + DEFAULT_INTERVAL) as int
+            String harvesterClass = props.getProperty(service + ".harvesterClass", DEFAULT_HARVESTER)
+            String serviceUrl = props.getProperty(service + ".serviceUrl")
+            String username = props.getProperty(service + ".username")
+            String password = props.getProperty(service + ".password")
+            String sourceSystem = props.getProperty(service + ".sourceSystem", DEFAULT_SYSTEM)
+            def job = new ScheduledJob(pico.getComponent(Class.forName(harvesterClass)), "${SETTINGS_PFX}${service}",
+                    serviceUrl, username, password, sourceSystem, storage)
+            jobs[service] = job
 
-                try {
-                    ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
-                } catch (RejectedExecutionException ree) {
-                    log.error("execution failed", ree)
-                }
+            try {
+                ses.scheduleWithFixedDelay(job, scheduleDelaySeconds, scheduleIntervalSeconds, TimeUnit.SECONDS)
+            } catch (RejectedExecutionException ree) {
+                log.error("execution failed", ree)
             }
-            log.info("scheduler started")
-        } else {
-            log.error("INCOMPATIBLE VERSIONS! Not scheduling any harvesters.")
         }
-    }
-
-    String loadDataVersion() {
-        def systemSettings = pico.getComponent(PostgreSQLComponent.class).loadSettings("system")
-        return systemSettings.get("version")
+        log.info("scheduler started")
     }
 }
 
