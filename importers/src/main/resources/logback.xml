@@ -19,7 +19,7 @@
     <logger name="whelk.importer" level="info" />
     <logger name="whelk.vcopyServlet" level="info" />
     <logger name="whelk.converter" level="info" />
-    <root level="trace">
+    <root level="info">
         <appender-ref ref="FILE" />
         <appender-ref ref="STDOUT" />
     </root>
