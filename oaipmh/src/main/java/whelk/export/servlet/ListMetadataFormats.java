@@ -8,9 +8,15 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
 
+import io.prometheus.client.Counter;
+
 public class ListMetadataFormats
 {
     private final static String IDENTIFIER_PARAM = "identifier";
+
+    private static final Counter failedRequests = Counter.build()
+            .name("oaipmh_failed_listmetadataformats_requests_total").help("Total failed ListMetadataFormats requests.")
+            .labelNames("error").register();
 
     /**
      * Verifies the integrity of a OAI-PMH request with the verb 'ListMetadataFormats' and sends a proper response.
@@ -28,6 +34,7 @@ public class ListMetadataFormats
 
             String id = Helpers.getShorthandDocumentId(identifier);
             if (id == null) {
+                failedRequests.labels(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST).inc();
                 ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
                 return;
             }
@@ -42,11 +49,13 @@ public class ListMetadataFormats
                     boolean recordDeleted = resultSet.getBoolean("deleted");
                     if (recordDeleted)
                     {
+                        failedRequests.labels(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST).inc();
                         ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
                         return;
                     }
                 }
                 else {
+                    failedRequests.labels(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST).inc();
                     ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
                     return;
                 }

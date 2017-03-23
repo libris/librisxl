@@ -18,6 +18,11 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.prometheus.client.Counter;
+import io.prometheus.client.Gauge;
+import io.prometheus.client.Summary;
+
+
 public class OaiPmh extends HttpServlet
 {
     // OAI-PMH Error/Condition codes
@@ -29,6 +34,24 @@ public class OaiPmh extends HttpServlet
     public final static String OAIPMH_ERROR_NO_RECORDS_MATCH = "noRecordsMatch";
     public final static String OAIPMH_ERROR_NO_METADATA_FORMATS = "noMetadataFormats";
     public final static String OAIPMH_ERROR_NO_SET_HIERARCHY = "noSetHierarchy";
+
+
+    static final Counter requests = Counter.build()
+            .name("oaipmh_requests_total").help("Total requests to OAIPMH.")
+            .labelNames("verb").register();
+
+    static final Gauge ongoingRequests = Gauge.build()
+            .name("oaipmh_ongoing_requests_total").help("Total ongoing OAIPMH requests.")
+            .labelNames("verb").register();
+
+    static final Summary requestsLatency = Summary.build()
+            .name("oaipmh_requests_latency_seconds")
+            .help("OAIPMH request latency in seconds.")
+            .labelNames("verb").register();
+
+    static final Counter badRequests = Counter.build()
+            .name("oaipmh_bad_request_total").help("Total bad requests.")
+            .labelNames("error").register();
 
     // Supported OAI-PMH metadata formats
     public static class FormatDescription
@@ -102,6 +125,10 @@ public class OaiPmh extends HttpServlet
 
         res.setContentType("text/xml");
 
+        requests.labels(verb).inc();
+        ongoingRequests.labels(verb).inc();
+        Summary.Timer requestTimer = requestsLatency.labels(verb).startTimer();
+
         try
         {
             switch (verb) {
@@ -125,6 +152,7 @@ public class OaiPmh extends HttpServlet
                     ListSets.handleListSetsRequest(req, res);
                     break;
                 default:
+                    badRequests.labels(OAIPMH_ERROR_BAD_VERB).inc();
                     ResponseCommon.sendOaiPmhError(OAIPMH_ERROR_BAD_VERB, "OAI-PMH verb must be one of [GetRecord, Identify, " +
                             "ListIdentifiers, ListMetadataFormats, ListRecords, ListSets].", req, res);
             }
@@ -139,6 +167,10 @@ public class OaiPmh extends HttpServlet
         {
             logger.error("Database error.", e);
             res.sendError(500);
+        }
+        finally {
+            ongoingRequests.labels(verb).dec();
+            requestTimer.observeDuration();
         }
     }
 }
