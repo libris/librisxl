@@ -226,7 +226,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
             return true
         } catch (PSQLException psqle) {
-            log.debug("SQL failed: ${psqle.message}")
+            log.error("SQL failed: ${psqle.message}")
             connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
                 Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
@@ -324,7 +324,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
-            log.debug("SQL failed: ${psqle.message}")
+            log.error("SQL failed: ${psqle.message}")
             connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
                 throw new StorageCreateFailedException()
@@ -332,7 +332,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
                 throw psqle
             }
         } catch (Exception e) {
-            log.info("Failed to save document: ${e.message}. Rolling back.")
+            log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
             throw e
         } finally {
