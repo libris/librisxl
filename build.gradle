@@ -95,19 +95,6 @@ configurations {
     all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
 }
 
-task generateVersion(type:Exec) {
-    commandLine 'git', 'describe', '--tags'
-
-    standardOutput = new ByteArrayOutputStream()
-    doLast {
-        String output = standardOutput.toString().trim()
-        new File("src/main/resources/version.properties").write("version: ${output}\n")
-        println("Updated version.properties to \"${output}\"")
-    }
-}
-
-//processResources.dependsOn("generateVersion")
-
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
     classpath = sourceSets.test.runtimeClasspath
