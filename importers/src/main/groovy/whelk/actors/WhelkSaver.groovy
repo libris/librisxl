@@ -78,7 +78,6 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
                 catch (any) {
                     exceptionsThrown++
                     log.error "Error saving to Whelk", any
-                    println any.message
                 }
             }
     }
