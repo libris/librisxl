@@ -18,31 +18,27 @@ class Whelk {
     Storage storage
     Index elastic
     JsonLdLinkExpander expander
-    String version
     Map displayData
     Map vocabData
 
     String vocabDisplayUri = "https://id.kb.se/vocab/display" // TODO: encapsulate and configure (LXL-260)
     String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
 
-    public Whelk(String version, Storage pg, Index es, JsonLdLinkExpander ex) {
+    public Whelk(Storage pg, Index es, JsonLdLinkExpander ex) {
         this.storage = pg
         this.elastic = es
         this.expander = ex
-        this.version = version
         log.info("Whelk started with storage ${storage}, index $elastic and expander.")
     }
 
-    public Whelk(String version, Storage pg, Index es) {
+    public Whelk(Storage pg, Index es) {
         this.storage = pg
         this.elastic = es
-        this.version = version
         log.info("Whelk started with storage $storage and index $elastic")
     }
 
-    public Whelk(String version, Storage pg) {
+    public Whelk(Storage pg) {
         this.storage = pg
-        this.version = version
         log.info("Whelk started with storage $storage")
     }
 
@@ -93,6 +89,9 @@ class Whelk {
         return result
     }
 
+    /**
+     * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
+     */
     Document store(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean createOrUpdate = true) {
         if (storage.store(document, createOrUpdate, changedIn, changedBy, collection, deleted)) {
             if (elastic) {
@@ -100,6 +99,14 @@ class Whelk {
             }
         }
         return document
+    }
+
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, Storage.UpdateAgent updateAgent) {
+        Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, collection, deleted, updateAgent)
+        if (elastic) {
+            elastic.index(updated, collection)
+        }
+        return updated
     }
 
     void bulkStore(final List<Document> documents, String changedIn, String changedBy, String collection, boolean createOrUpdate = true) {
@@ -113,10 +120,17 @@ class Whelk {
     }
 
     void remove(String id, String changedIn, String changedBy, String collection) {
-      if (storage.remove(id, changedIn, changedBy, collection)) {
+        log.debug "Deleting ${id} from Whelk"
+        if (storage.remove(id, changedIn, changedBy, collection)) {
             if (elastic) {
                 elastic.remove(id)
+                log.debug "Object ${id} was removed from Whelk"
             }
+            else {
+                log.warn "No Elastic present when deleting. Skipping call to elastic.remove(${id})"
+            }
+        } else {
+            log.warn "storage did not remove ${id} from whelk"
         }
     }
 }

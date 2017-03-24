@@ -71,6 +71,63 @@
         "s": "marc:DeletedHeadingSplitIntoTwoOrMoreHeading",
         "x": "marc:DeletedHeadingReplacedByAnotherHeading"
       }
+    },
+
+    {
+      "timePeriod": {
+        "a0": "-XXXX/-3000",
+        "b0": "-29XX",
+        "b1": "-28XX",
+        "b2": "-27XX",
+        "b3": "-26XX",
+        "b4": "-25XX",
+        "b5": "-24XX",
+        "b6": "-23XX",
+        "b7": "-22XX",
+        "b8": "-21XX",
+        "b9": "-20XX",
+        "c0": "-19XX",
+        "c1": "-18XX",
+        "c2": "-17XX",
+        "c3": "-16XX",
+        "c4": "-15XX",
+        "c5": "-14XX",
+        "c6": "-13XX",
+        "c7": "-12XX",
+        "c8": "-11XX",
+        "c9": "-10XX",
+        "d0": "-09XX",
+        "d1": "-08XX",
+        "d2": "-07XX",
+        "d3": "-06XX",
+        "d4": "-05XX",
+        "d5": "-04XX",
+        "d6": "-03XX",
+        "d7": "-02XX",
+        "d8": "-01XX",
+        "d9": "-00XX",
+        "e": "00",
+        "f": "01",
+        "g": "02",
+        "h": "03",
+        "i": "04",
+        "j": "05",
+        "k": "06",
+        "l": "07",
+        "m": "08",
+        "n": "09",
+        "o": "10",
+        "p": "11",
+        "q": "12",
+        "r": "13",
+        "s": "14",
+        "t": "15",
+        "u": "16",
+        "v": "17",
+        "w": "18",
+        "x": "19",
+        "y": "20"
+      }
     }
 
   ],
@@ -425,6 +482,34 @@
             "result": {
               "@type": "ManuscriptText",
               "manufacture": [ {"date": "1977"} ]
+            }
+          },
+          {
+            "source": {
+              "publication": [ {"@type": "Publication", "date": "1977"} ]
+            },
+            "result": {
+              "publication": [ {"@type": "Publication", "date": "1977"} ]
+            }
+          },
+          {
+            "source": {
+              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publishedYear": "1977",
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            },
+            "result": {
+              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publishedYear": "1977",
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            }
+          },
+          {
+            "source": {
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            },
+            "result": {
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
             }
           }
         ]
@@ -1010,7 +1095,7 @@
     },
 
     "007": {
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "embedded": true
       },
@@ -2131,6 +2216,27 @@
               }
             }
           }
+        },
+        {
+          "name": "do not use weird language token that does not fit in column",
+          "source": [
+            {"008": "160420s1995    fr |||||||||||000 0|   |c"},
+            {"041": {"ind1": "0", "ind2": " ", "subfields": [{"a": "freeng"}]}}
+          ],
+          "result": {
+            "created": "2016-04-20T00:00:00.0+02:00",
+            "marc:catalogingSource": {"@id": "marc:CooperativeCatalogingProgram"},
+            "mainEntity": {
+              "marc:publishedYear": "1995",
+              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "publicationCountry": [{"@id": "https://id.kb.se/country/fr"}],
+              "instanceOf": {
+                "@type": "Text",
+                "marc:literaryForm": {"@id": "marc:NotFictionNotFurtherSpecified"},
+                "language": [{"@id": "https://id.kb.se/language/freeng", "notation": "freeng"}]
+              }
+            }
+          }
         }
       ]
     },
@@ -2527,7 +2633,9 @@
 
     "037": {},
 
-    "038": {},
+    "038": {
+      "$a": {"link": "metadataLicensor", "resourceType": "Organization", "property": "label"}
+    },
 
     "040": {
       "aboutEntity": "?record",
@@ -2542,7 +2650,7 @@
       "$9": {"property": "license"}
     },
     "041": {
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "embedded": true
       },
@@ -2581,7 +2689,7 @@
       "$9": {
         "addLink": "bibliography",
         "resourceType": "Library",
-        "uriTemplate": "http://libris.kb.se/library/{_}",
+        "uriTemplate": "https://libris.kb.se/library/{_}",
         "property": "sigel"
       }
     },
@@ -2954,7 +3062,7 @@
 
     "250": {
       "aboutEntity": "?thing",
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "otherEdition",
         "embedded": true
       },
@@ -3148,7 +3256,7 @@
 
     "300": {
       "aboutEntity": "?thing",
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
         "embedded": true
@@ -3194,7 +3302,7 @@
 
     "336": {
       "aboutEntity": "?work",
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Work",
         "embedded": true,
@@ -3209,7 +3317,7 @@
       "$8": {"about": "_:contentType", "property": "_groupID"}
     },
     "337": {
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
         "embedded": true
@@ -3224,7 +3332,7 @@
       "$8": {"about": "_:mediaType", "property": "_groupID"}
     },
     "338": {
-      "linkRepeated": {
+      "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "embedded": true
       },
@@ -3454,7 +3562,11 @@
     "540": {},
     "541": {},
     "542": {},
-    "544": {},
+    "544": {
+      "addLink": "note",
+      "resourceType": "marc:RelatedMaterialNote",
+      "$a": {"addProperty": "label"}
+    },
     "545": {},
     "546": {"aboutEntity": "?thing", "$a": {"addProperty": "languageNote"}},
     "547": {},
@@ -4253,6 +4365,11 @@
         "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "notation"
       }
     },
+
+    "045": {
+      "$a": {"property": "temporalCoverage", "tokenMap": "timePeriod", "TODO": "This is the EDTF value table from the LoC BF2 converter, not the readable form. Might be better as linked resources with with both labels and codes."}
+    },
+
     "046" : {
         "TODO": "parseDateTimeUsingFormatHints",
         "$f": {"property": "birthDate"},
@@ -4528,6 +4645,12 @@
       "addLink": "hasVersion",
       "resourceType": "MeetingTerm"
     },
+
+    "430": {
+      "ignored": true,
+      "TODO": "alternativeForm a Work (like a structured altLabel)"
+    },
+
     "450" : {
       "aboutEntity": "?record",
       "$a": {"addProperty": "altLabel"},
@@ -4642,6 +4765,11 @@
       "$a": {"addProperty": "historyNote"}
     },
 
+    "700": {
+      "ignored": true,
+      "TODO": "exactMatch a Person (external system)"
+    },
+
     "750" : {
       "include": ["subjectbase", "termbase", "uri_from_i2"],
       "i1": null,
@@ -4707,7 +4835,7 @@
         "TODO:apply": "852-$b",
         "about": "?thing",
         "link": "heldBy",
-        "uriTemplate": "http://libris.kb.se/library/{notation}",
+        "uriTemplate": "https://libris.kb.se/library/{notation}",
         "resourceType": "Organization",
         "property": "notation"
       }
@@ -5007,9 +5135,9 @@
       "$a": {"addProperty": "librisIIINumber"}
     },
 
-    "024": {
-      "inherit": "bib"
-    },
+    "024": {"inherit": "bib"},
+
+    "035": {"inherit": "bib", "$9": null},
 
     "084": {"inherit": "bib", "addLink": "callno"},
 
@@ -5041,6 +5169,8 @@
       "$a": {"addProperty": "bindingInformation"}
     },
 
+    "599": {"inherit": "bib", "NOTE:i1": null},
+
     "600": {
       "TODO:aboutEntity": "?exampleOfWork (which may be the sameAs ?itemOf)",
       "TODO:remnants-of-inherit": "bib:100",
@@ -5055,9 +5185,11 @@
 
     "852": {
       "aboutType": "Item",
-      "addLink": "hasComponent",
-      "embedded": true,
-      "resourceType": "Item",
+      "linkEveryIfRepeated": {
+        "addLink": "hasComponent",
+        "embedded": true,
+        "resourceType": "Item"
+      },
       "TODO:i1": {},
       "FIXME:i2": {
         "property": "shelfOrder"
@@ -5115,13 +5247,31 @@
           "result": {
             "mainEntity": {
               "@type": "Item",
+              "copyNumber": "1",
+              "heldBy": [{"@id": "https://libris.kb.se/library/H", "@type": "Organization", "notation": "H"}],
+              "shelfControlNumber": "65.465",
+              "shelfLocation": ["MAG"]
+            }
+          }
+        },
+        {
+          "source": [
+            {"852": {"ind1": " ", "ind2": " ", "subfields": [{"b": "X"}, {"t": "1"}]}},
+            {"852": {"ind1": " ", "ind2": " ", "subfields": [{"b": "Y"}, {"t": "2"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
               "hasComponent": [
                 {
                   "@type": "Item",
                   "copyNumber": "1",
-                  "heldBy": [{"@id": "https://libris.kb.se/library/H", "@type": "Organization", "notation": "H"}],
-                  "shelfControlNumber": "65.465",
-                  "shelfLocation": ["MAG"]
+                  "heldBy": [{"@id": "https://libris.kb.se/library/X", "@type": "Organization", "notation": "X"}]
+                },
+                {
+                  "@type": "Item",
+                  "copyNumber": "2",
+                  "heldBy": [{"@id": "https://libris.kb.se/library/Y", "@type": "Organization", "notation": "Y"}]
                 }
               ]
             }

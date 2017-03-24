@@ -22,6 +22,8 @@ class JsonLdSpec extends Specification {
         ids                     | items
         ['/some', '/other']     | [['@id': '/some'], ['@id': '/other']]
         ['/some', '/other']     | [['@id': '/some'], ['@graph': [['@id': '/other']]]]
+        // once we've got an @id, we don't go deeper into the structure
+        ['/some']               | [['@id': '/some', 'sameAs': [['@id': '/other']]]]
     }
 
     def "should get nested id map"() {
@@ -46,17 +48,20 @@ class JsonLdSpec extends Specification {
         assert JsonLd.getIdMap(bnode_graph).keySet() == expected as Set
     }
 
-    def "should expect list as @graph value when getting id map"() {
+    def "should accept list and map as @graph value when getting id map"() {
         given:
         def graph = ['@graph': [['@id': '/some',
                                  'foo': ['@id': '_:foo']],
+                                ['@graph': [['@id': '_:baz']]],
                                 ['@graph': ['@id': '_:bar']]]]
 
-        when:
-        JsonLd.getIdMap(graph)
+        def expected = ['/some': ['@id': '/some',
+                                  'foo': ['@id': '_:foo']],
+                        '_:baz': ['@id': '_:baz'],
+                        '_:bar': ['@id': '_:bar']]
 
-        then:
-        thrown MissingMethodException
+        expect:
+        assert JsonLd.getIdMap(graph) == expected
     }
 
     def "should find external references"() {
@@ -69,7 +74,11 @@ class JsonLdSpec extends Specification {
                                  'foo': '/foo',
                                  'some': 'value'],
                                 ['@id': '/third',
-                                 'external': ['@id': '/external']]
+                                 'external': ['@id': '/external']],
+								['@id': '/fourth',
+								 'internal': ['@id': '/some_id']],
+								['@graph': [['@id': '/some_id']]],
+								['@graph': ['@id': '/some_other_id']]
                                ],
                      '@context': 'base.jsonld']
         def expected = ['/external']
@@ -84,8 +93,9 @@ class JsonLdSpec extends Specification {
                                 'sameAs': [['@id': '/baz']],
                                 'bar': ['@id': '/bar']],
                                 ['@graph': [['@id': '/quux',
-                                             'some': 'value']]]]]
-        Set expected = ['/foo', '/baz', '/quux']
+                                             'some': 'value']]],
+		                        ['@graph': ['@id': '/some_id']]]]
+        Set expected = ['/foo', '/baz', '/quux', '/some_id']
 
         expect:
         assert JsonLd.getLocalObjects(input) == expected
@@ -196,7 +206,7 @@ class JsonLdSpec extends Specification {
                                                    "subfields": [{"a":"Unga vuxna"}]},
                                            "_unhandled": ["ind2"]}],
                      "about": {"@id": "/resource/bib/13531679"}}]}
-        """
+        """ // """
         def framedInput = """
         {"@id": "/bib/13531679",
          "encLevel": {"@id": "/def/enum/record/AbbreviatedLevel"},
@@ -279,6 +289,84 @@ class JsonLdSpec extends Specification {
         then:
         assert JsonLd.validateItemModel(validDocument)
         assert !JsonLd.validateItemModel(invalidDocument)
+    }
+
+    def "should convert to cards and chips"() {
+        given:
+        Map input = ["@type": "Instance",
+            "mediaType": "foobar",
+            "instanceOf": ["@type": "Work",
+                        "contribution": ["@type": "Text",
+                                            "foo": ["mediaType": "bar"]],
+                        "hasTitle": ["@type": "Publication",
+                                        "date": "2000-01-01",
+                                        "noValidKey": "shouldBeRemoved",
+                                        "@id": "foo"]],
+            "@aKey": "external-foobar",
+            "hasTitle": ["value1", "value2", "value3", ["someKey": "theValue",
+                                                        "@type": "Work"]],
+            "foo": "bar"]
+
+        Map displayData = [
+            "@context": ["@vocab": "http://example.org/ns/"],
+            "lensGroups":
+                    ["chips":
+                            ["lenses":
+                                        ["Work": ["showProperties": ["hasTitle",
+                                                                    "contribution",
+                                                                    "language"]],
+                                        "Event": ["showProperties": ["date",
+                                                                                "agent",
+                                                                                "place"]]]],
+                    "cards":
+                            ["lenses":
+                                        ["Instance":
+                                                ["showProperties": ["mediaType",
+                                                                    "hasTitle",
+                                                                    "instanceOf"]]]]]]
+
+
+        Map vocabData = [
+            "@graph": [
+                    ["@id": "http://example.org/ns/ProvisionActivity",
+                     "subClassOf": [ ["@id": "http://example.org/ns/Event"] ]],
+                    ["@id": "http://example.org/ns/Publication",
+                     "subClassOf": ["@id": "http://example.org/ns/ProvisionActivity"]]
+                ]
+            ]
+
+        Map expected = ["@type": "Instance",
+                      "mediaType": "foobar",
+                      "instanceOf": ["@type": "Work",
+                                     "contribution": ["@type": "Text",
+                                                      "foo": ["mediaType": "bar"]],
+                                     "hasTitle": ["@type": "Publication",
+                                                  "date": "2000-01-01",
+                                                  "@id": "foo"]],
+                      "@aKey": "external-foobar",
+                      "hasTitle": ["value1", "value2", "value3", ["@type": "Work"]]]
+
+
+        expect:
+        Map output = new JsonLd(displayData, vocabData).toCard(input)
+        output == expected
+    }
+
+    def "extend lenses with property aliases"() {
+        given:
+        Map displayData = [
+            "@context": [
+                "labelByLang": ["@id": "label", "@container": "@language"]
+            ],
+            "lensGroups":
+                    ["chips":
+                            ["lenses": [
+                                "Thing": ["showProperties": ["notation", "label", "note"]]]
+                            ]]]
+        def ld = new JsonLd(displayData, null)
+        expect:
+        def props = ld.displayData.lensGroups.chips.lenses.Thing.showProperties
+        props == ['notation', 'label', 'labelByLang', 'note']
     }
 
 }

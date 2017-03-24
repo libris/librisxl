@@ -253,7 +253,7 @@ class MarcFrameConverterSpec extends Specification {
         when:
         conv.marcRuleSets['hold'].processExtraData(entityMap, extraData)
         then:
-        thing['heldBy']['@id'] == 'http://libris.kb.se/library/S'
+        thing['heldBy']['@id'] == 'https://libris.kb.se/library/S'
         thing['holdingFor']['@id'] == 'http://libris.kb.se/resource/bib/123'
     }
 

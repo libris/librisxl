@@ -192,7 +192,7 @@ class ElasticSearch implements Index {
                 .setSource(["query":["term":["_id":toElasticId(identifier)]]])
                 .execute()
                 .actionGet()
-        log.debug("Response: ${rsp.totalDeleted}")
+        log.debug("Response: ${rsp.totalDeleted} objects deleted")
     }
 
     Map getShapeForIndex(Document doc) {
@@ -252,7 +252,8 @@ class ElasticSearch implements Index {
                                                    'default_operator': 'and']]
         }
 
-        List reservedParameters = ['q', 'p', 'o', 'value', '_limit', '_offset']
+        List reservedParameters = ['q', 'p', 'o', 'value', '_limit',
+                                   '_offset', '_site_base_uri']
 
         def groups = queryParameters.groupBy {p -> getPrefixIfExist(p.key)}
         Map nested = groups.findAll{g -> g.value.size() == 2}

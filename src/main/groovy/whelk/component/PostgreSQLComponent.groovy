@@ -32,7 +32,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
                      LOAD_ALL_DOCUMENTS_BY_COLLECTION,
                      DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
                      LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
-                     LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
+                     LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
                      GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
@@ -96,7 +96,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
         INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted) VALUES (?,?,?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
-        INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, identifier) VALUES (?,?)"
+        INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, modified, deleted) SELECT ?,?,?,?,?,?,?,? " +
                 "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
@@ -113,12 +113,13 @@ class PostgreSQLComponent implements whelk.component.Storage {
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE modified >= ? AND modified <= ? AND collection = ?"
-        LOAD_IDENTIFIERS = "SELECT identifier from $idTableName WHERE id = ?"
+        LOAD_RECORD_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 0"
+        LOAD_THING_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 1"
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
-                "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.identifier = ?"
-        GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE identifier = 'https://id.kb.se/vocab/context')"
+                "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
+        GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -226,7 +227,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
             return true
         } catch (PSQLException psqle) {
-            log.debug("SQL failed: ${psqle.message}")
+            log.error("SQL failed: ${psqle.message}")
             connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
                 Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
@@ -283,17 +284,10 @@ class PostgreSQLComponent implements whelk.component.Storage {
     }
 
     /**
-     * Interface for performing atomic document updates
-     */
-    public interface UpdateAgent {
-        public void update(Document doc)
-    }
-
-    /**
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    void storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, UpdateAgent updateAgent) {
+    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, whelk.component.Storage.UpdateAgent updateAgent) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
@@ -301,6 +295,8 @@ class PostgreSQLComponent implements whelk.component.Storage {
         PreparedStatement selectStatement
         PreparedStatement updateStatement
         ResultSet resultSet
+
+        Document doc = null
 
         connection.setAutoCommit(false)
         try {
@@ -310,7 +306,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
             if (!resultSet.next())
                 throw new SQLException("There is no document with the id: " + id)
 
-            Document doc = assembleDocument(resultSet)
+            doc = assembleDocument(resultSet)
 
             // Performs the callers updates on the document
             updateAgent.update(doc)
@@ -329,17 +325,15 @@ class PostgreSQLComponent implements whelk.component.Storage {
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
-            log.debug("SQL failed: ${psqle.message}")
+            log.error("SQL failed: ${psqle.message}")
             connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
-                Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
-                Matcher m = messageDetailPattern.matcher(psqle.message)
                 throw new StorageCreateFailedException()
             } else {
                 throw psqle
             }
         } catch (Exception e) {
-            log.info("Failed to save document: ${e.message}. Rolling back.")
+            log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
             throw e
         } finally {
@@ -361,6 +355,8 @@ class PostgreSQLComponent implements whelk.component.Storage {
             }
             log.debug("[store] Closed connection.")
         }
+
+        return doc
     }
 
     private void saveIdentifiers(Document doc, Connection connection) {
@@ -372,6 +368,18 @@ class PostgreSQLComponent implements whelk.component.Storage {
         for (altId in doc.getRecordIdentifiers()) {
             altIdInsert.setString(1, doc.getShortId())
             altIdInsert.setString(2, altId)
+            altIdInsert.setInt(3, 0) // record id -> graphIndex = 0
+            if (altId == doc.getCompleteId())
+                altIdInsert.setBoolean(4, true) // main ID
+            else
+                altIdInsert.setBoolean(4, false) // alternative ID, not the main ID
+            altIdInsert.addBatch()
+        }
+        for (altThingId in doc.getThingIdentifiers()) {
+            altIdInsert.setString(1, doc.getShortId())
+            altIdInsert.setString(2, altThingId)
+            altIdInsert.setInt(3, 1) // thing id -> graphIndex = 1
+            altIdInsert.setBoolean(4, false) // thing IDs are never the main ID
             altIdInsert.addBatch()
         }
         try {
@@ -769,7 +777,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
 
 
     Document loadBySameAsIdentifier(String identifier) {
-        log.info("Using loadBySameAsIdentifier")
+        log.debug("Using loadBySameAsIdentifier")
         //return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]]) // This one is for descriptionsbased data
         return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1: [["sameAs": ["@id": identifier]]]])
     }
@@ -813,22 +821,41 @@ class PostgreSQLComponent implements whelk.component.Storage {
             log.trace("Resultset didn't have created. Probably a version request.")
         }
 
-        for (altId in loadIdentifiers(doc.id)) {
+        for (altId in loadRecordIdentifiers(doc.id)) {
             doc.addRecordIdentifier(altId)
+        }
+        for (altId in loadThingIdentifiers(doc.id)) {
+            doc.addThingIdentifier(altId)
         }
         return doc
 
     }
 
-    private List<String> loadIdentifiers(String id) {
+    private List<String> loadRecordIdentifiers(String id) {
         List<String> identifiers = []
         Connection connection = getConnection()
-        PreparedStatement loadIds = connection.prepareStatement(LOAD_IDENTIFIERS)
+        PreparedStatement loadIds = connection.prepareStatement(LOAD_RECORD_IDENTIFIERS)
         try {
             loadIds.setString(1, id)
             ResultSet rs = loadIds.executeQuery()
             while (rs.next()) {
-                identifiers << rs.getString("identifier")
+                identifiers << rs.getString("iri")
+            }
+        } finally {
+            connection.close()
+        }
+        return identifiers
+    }
+
+    private List<String> loadThingIdentifiers(String id) {
+        List<String> identifiers = []
+        Connection connection = getConnection()
+        PreparedStatement loadIds = connection.prepareStatement(LOAD_THING_IDENTIFIERS)
+        try {
+            loadIds.setString(1, id)
+            ResultSet rs = loadIds.executeQuery()
+            while (rs.next()) {
+                identifiers << rs.getString("iri")
             }
         } finally {
             connection.close()
@@ -907,17 +934,16 @@ class PostgreSQLComponent implements whelk.component.Storage {
     boolean remove(String identifier, String changedIn, String changedBy, String collection) {
         if (versioning) {
             log.debug("Marking document with ID ${identifier} as deleted.")
-
             try {
                 storeAtomicUpdate(identifier, false, changedIn, changedBy, collection, true,
                     { Document doc ->
                         // Add a tombstone marker (without removing anything) perhaps?
                     })
+                return true
             } catch (Throwable e) {
                 log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
                 return false
             }
-            return false
         } else {
             throw new whelk.exception.WhelkException(
                     "Actually deleting data from lddb is currently not supported, because doing so would" +

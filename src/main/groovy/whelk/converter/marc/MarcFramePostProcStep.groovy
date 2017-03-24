@@ -46,7 +46,7 @@ class FoldLinkedPropertyStep extends MarcFramePostProcStepBase {
         if (thing[statusFlag]?.get(ID) != statusFlagValue)
             return
         def value = thing[sourceProperty]
-        if (!value || !matchValuePattern.matcher(value))
+        if (!(value instanceof String) || !matchValuePattern.matcher(value))
             return
         for (object in thing[link]) {
             if (object[property] == value) {
@@ -72,7 +72,7 @@ class FoldLinkedPropertyStep extends MarcFramePostProcStepBase {
         def link = getLink(thing)
         for (object in thing[link]) {
             def value = object[property]
-            if (!value || !matchValuePattern.matcher(value))
+            if (!(value instanceof String) || !matchValuePattern.matcher(value))
                 continue
             thing[statusFlag] = [(ID): statusFlagValue]
             thing[sourceProperty] = value

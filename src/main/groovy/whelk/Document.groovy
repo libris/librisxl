@@ -268,41 +268,6 @@ class Document {
     }
 
     /**
-     * Convert a list of posts to cards.
-     *
-     */
-    List toCards(List things, Map displayData) {
-        return JsonLd.toCards(things, displayData)
-    }
-
-    /**
-     * Convert a post to card.
-     *
-     */
-    void toCard(Map displayData) {
-        this.data = JsonLd.toCard(this.data, displayData)
-        return
-    }
-
-    /**
-     * Convert a list of posts to chips.
-     *
-     */
-    List toChips(List things, Map displayData) {
-        return JsonLd.toChips(things, displayData)
-    }
-
-    /**
-     * Convert a post to chip.
-     *
-     */
-    Map toChip(Map displayData) {
-        return this.data = JsonLd.toChip(this.data, displayData)
-    }
-
-
-
-    /**
      * Adds empty structure to the document so that 'path' can be traversed.
      */
     private boolean preparePath(List path, Type leafType) {
