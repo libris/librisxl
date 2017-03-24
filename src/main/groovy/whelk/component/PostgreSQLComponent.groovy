@@ -227,7 +227,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
             return true
         } catch (PSQLException psqle) {
-            log.debug("SQL failed: ${psqle.message}")
+            log.error("SQL failed: ${psqle.message}")
             connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
                 Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
@@ -325,7 +325,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
-            log.debug("SQL failed: ${psqle.message}")
+            log.error("SQL failed: ${psqle.message}")
             connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
                 throw new StorageCreateFailedException()
@@ -333,7 +333,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
                 throw psqle
             }
         } catch (Exception e) {
-            log.info("Failed to save document: ${e.message}. Rolling back.")
+            log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
             throw e
         } finally {
@@ -777,7 +777,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
 
 
     Document loadBySameAsIdentifier(String identifier) {
-        log.info("Using loadBySameAsIdentifier")
+        log.debug("Using loadBySameAsIdentifier")
         //return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]]) // This one is for descriptionsbased data
         return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1: [["sameAs": ["@id": identifier]]]])
     }
@@ -934,17 +934,16 @@ class PostgreSQLComponent implements whelk.component.Storage {
     boolean remove(String identifier, String changedIn, String changedBy, String collection) {
         if (versioning) {
             log.debug("Marking document with ID ${identifier} as deleted.")
-
             try {
                 storeAtomicUpdate(identifier, false, changedIn, changedBy, collection, true,
                     { Document doc ->
                         // Add a tombstone marker (without removing anything) perhaps?
                     })
+                return true
             } catch (Throwable e) {
                 log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
                 return false
             }
-            return false
         } else {
             throw new whelk.exception.WhelkException(
                     "Actually deleting data from lddb is currently not supported, because doing so would" +
