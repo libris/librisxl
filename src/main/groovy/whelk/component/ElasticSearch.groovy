@@ -192,7 +192,7 @@ class ElasticSearch implements Index {
                 .setSource(["query":["term":["_id":toElasticId(identifier)]]])
                 .execute()
                 .actionGet()
-        log.debug("Response: ${rsp.totalDeleted}")
+        log.debug("Response: ${rsp.totalDeleted} objects deleted")
     }
 
     Map getShapeForIndex(Document doc) {

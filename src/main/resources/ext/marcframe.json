@@ -2689,7 +2689,7 @@
       "$9": {
         "addLink": "bibliography",
         "resourceType": "Library",
-        "uriTemplate": "http://libris.kb.se/library/{_}",
+        "uriTemplate": "https://libris.kb.se/library/{_}",
         "property": "sigel"
       }
     },
@@ -4862,7 +4862,7 @@
         "TODO:apply": "852-$b",
         "about": "?thing",
         "link": "heldBy",
-        "uriTemplate": "http://libris.kb.se/library/{notation}",
+        "uriTemplate": "https://libris.kb.se/library/{notation}",
         "resourceType": "Organization",
         "property": "notation"
       }
