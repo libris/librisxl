@@ -7,7 +7,7 @@ CREATE INDEX idx_lddb_systemnumber on lddb using gin ((data#>'{@graph,0,systemNu
 CREATE INDEX idx_lddb_thing_identifiers on lddb using gin ((data#>'{@graph,1,identifier}'));
 
 CREATE INDEX idx_lddb__identifiers_id ON lddb__identifiers (id);
-CREATE INDEX idx_lddb__identifiers_identifier ON lddb__identifiers (identifier);
+CREATE INDEX idx_lddb__identifiers_iri ON lddb__identifiers (iri);
 
 CREATE INDEX idx_lddb__versions_id ON lddb__versions (id);
 CREATE INDEX idx_lddb__versions_modified ON lddb__versions (modified);
