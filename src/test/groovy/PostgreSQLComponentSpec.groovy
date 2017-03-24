@@ -70,6 +70,8 @@ class PostgreSQLComponentSpec extends Specification {
         given:
         2 * result.next() >> { true }
         1 * result.next() >> { false }
+        2 * result.next() >> { true }
+        1 * result.next() >> { false }
         result.getString(_) >> {
             if (it.first() == "id") {
                 return "testid"
@@ -77,7 +79,7 @@ class PostgreSQLComponentSpec extends Specification {
             if (it.first() == "data") {
                 return documentData
             }
-            if (it.first() == "identifier") {
+            if (it.first() == "iri") {
                 return identifiers
             }
         }
