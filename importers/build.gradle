@@ -21,16 +21,16 @@ def loadConfiguration() {
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def versionprops = new Properties()
-try {
-    file("src/main/resources/version.properties").withInputStream { stream ->
-        versionprops.load(stream)
-    }
-} catch (Exception e) {
+def getGitVersion() {
+	def stdout = new ByteArrayOutputStream()
+	exec {
+		commandLine 'git', 'describe', '--tags'
+		standardOutput = stdout
+	}
+	return stdout.toString().trim()
 }
 
-// Version is set on deploy, but to maintain semblance of control, update default value appropriately when releasing.
-def versionNumber = versionprops.get("releaseTag", "0.9.0.x")
+def versionNumber = getGitVersion()
 
 /*sourceSets {
     main {
@@ -64,7 +64,7 @@ dependencies {
     if ('useLocalDeps' in System.properties.keySet()) {
         compile project(':../../whelk-core')
     } else {
-        compile 'com.github.libris:whelk-core:0.3.0'
+        compile 'com.github.libris:whelk-core:0.3.1'
     }
 
     // Common tools
@@ -89,6 +89,11 @@ dependencies {
     compile 'mysql:mysql-connector-java:5.1.33'
     compile 'org.picocontainer:picocontainer:2.15'
     compile 'org.codehaus.gpars:gpars:1.2.1'
+
+    // metrics
+    compile 'io.prometheus:simpleclient:0.0.21'
+    compile 'io.prometheus:simpleclient_servlet:0.0.21'
+
 
     // profiling and test
     testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"

@@ -108,9 +108,7 @@ class MySQLLoader {
                 }
             }
             catch (any) {
-                println any.message
-                println any.stackTrace
-                //throw any // dont want to miss any records
+                log.error("Batch failed" , any)
             }
 
             if (recordCount % 1000 == 1) {
@@ -126,10 +124,9 @@ class MySQLLoader {
 
         if (!previousRowsInGroup.isEmpty()) {
             currentBatch = batchForConversion(previousRowsInGroup, currentBatch, handler)
-            ++recordCount
         }
         currentBatch = flushConversionBatch(currentBatch, handler)
-        println "Done reading from DB."
+        log.info "Done reading from DB."
 
     }
 

@@ -30,7 +30,7 @@ class VCopyImporter {
         whelkSaver.importResult.fromDate = from
 
         String sqlQuery = MySQLLoader.selectHarvestByMarcType[collection]
-        String dateString = date.toTimestamp().toString()
+        String dateString = from.toTimestamp().toString()
         List<Object> queryParameters = [0, dateString, dateString]
         MySQLLoader.run(whelkSaver, sqlQuery, queryParameters, collection, connectionUrl)
 

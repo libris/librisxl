@@ -12,16 +12,7 @@ abstract class Importer {
     Whelk whelk
 
     final void run(String collection) {
-        String version = whelk.version
-        if (version ==~ /\d+\.\d+\.\d+-\w+-\w+/) {
-            log.debug("Whelk version contains commit marker, using only tag version info.")
-            version = version.split("-")[0]
-        }
-        log.info("Preparing import. Noting version ${version} in system settings.")
-        def settings = whelk.storage.loadSettings("system")
-        settings.put("version", version)
-        whelk.storage.saveSettings("system", settings)
-
+        log.info("Preparing import of collection ${collection}.")
         doImport(collection)
     }
 

@@ -4,6 +4,11 @@ import groovy.util.logging.Slf4j as Log
 import org.apache.http.entity.ContentType
 import org.codehaus.jackson.map.ObjectMapper
 import org.picocontainer.PicoContainer
+
+import io.prometheus.client.Counter
+import io.prometheus.client.Gauge
+import io.prometheus.client.Summary
+
 import whelk.Document
 import whelk.JsonLd
 import whelk.Location
@@ -41,6 +46,23 @@ class Crud extends HttpServlet {
 
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
     final static String DOCBASE_URI = "http://libris.kb.se/" // TODO: encapsulate and configure (LXL-260)
+
+    static final Counter requests = Counter.build()
+        .name("api_requests_total").help("Total requests to API.")
+        .labelNames("method").register()
+
+    static final Counter failedRequests = Counter.build()
+        .name("api_failed_requests_total").help("Total failed requests to API.")
+        .labelNames("method", "resource", "status").register()
+
+    static final Gauge ongoingRequests = Gauge.build()
+        .name("api_ongoing_requests_total").help("Total ongoing API requests.")
+        .labelNames("method").register()
+
+    static final Summary requestsLatency = Summary.build()
+        .name("api_requests_latency_seconds")
+        .help("API request latency in seconds.")
+        .labelNames("method").register()
 
     enum FormattingType {
         FRAMED, EMBELLISHED, FRAMED_AND_EMBELLISHED, RAW
@@ -114,12 +136,16 @@ class Crud extends HttpServlet {
         } catch (WhelkRuntimeException wse) {
             log.error("Attempted elastic query, but whelk has no " +
                     "elastic component configured.")
+            failedRequests.labels("GET", request.getRequestURI(),
+                    HttpServletResponse.SC_NOT_IMPLEMENTED.toString()).inc()
             response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,
                     "Attempted to use elastic for query, but " +
                             "no elastic component is configured.")
             return
         } catch (InvalidQueryException iqe) {
             log.error("Invalid query: ${queryParameters}")
+            failedRequests("GET", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Invalid query, please check the documentation.")
             return
@@ -129,7 +155,6 @@ class Crud extends HttpServlet {
     void displayInfo(response) {
         def info = [:]
         info["system"] = "LIBRISXL"
-        info["version"] = whelk.storage.loadSettings("system").get("version")
         info["format"] = "linked-data-api"
         //info["collections"] = whelk.storage.loadCollections()
         sendResponse(response, mapper.writeValueAsString(info), "application/json")
@@ -137,7 +162,21 @@ class Crud extends HttpServlet {
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
-        log.debug("Handling GET request.")
+        requests.labels("GET").inc()
+        ongoingRequests.labels("GET").inc()
+        Summary.Timer requestTimer = requestsLatency.labels("GET").startTimer()
+        log.info("Handling GET request for ${request.pathInfo}.")
+        try {
+            doGet2(request, response)
+        } finally {
+            ongoingRequests.labels("GET").dec()
+            requestTimer.observeDuration()
+            log.info("Sending GET response with status " +
+                     "${response.getStatus()} for ${request.pathInfo}")
+        }
+    }
+
+    void doGet2(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo == "/") {
             displayInfo(response)
             return
@@ -169,8 +208,12 @@ class Crud extends HttpServlet {
 
             handleGetRequest(request, response, path)
         } catch (UnsupportedContentTypeException ucte) {
+            failedRequests.labels("GET", request.getRequestURI(),
+                    response.SC_NOT_ACCEPTABLE.toString()).inc()
             response.sendError(response.SC_NOT_ACCEPTABLE, ucte.message)
         } catch (WhelkRuntimeException wrte) {
+            failedRequests.labels("GET", request.getRequestURI(),
+                    response.SC_INTERNAL_SERVER_ERROR.toString()).inc()
             response.sendError(response.SC_INTERNAL_SERVER_ERROR, wrte.message)
         }
     }
@@ -187,6 +230,8 @@ class Crud extends HttpServlet {
         Location loc = docAndLocation.second
 
         if (!doc && !loc) {
+            failedRequests.labels("GET", request.getRequestURI(),
+                    HttpServletResponse.SC_NOT_FOUND.toString()).inc()
             response.sendError(HttpServletResponse.SC_NOT_FOUND,
                     "Document not found.")
             return
@@ -194,6 +239,8 @@ class Crud extends HttpServlet {
             sendRedirect(request, response, loc)
             return
         } else if (doc && doc.deleted) {
+            failedRequests.labels("GET", request.getRequestURI(),
+                    HttpServletResponse.SC_GONE.toString()).inc()
             response.sendError(HttpServletResponse.SC_GONE,
                     "Document has been deleted.")
             return
@@ -531,10 +578,26 @@ class Crud extends HttpServlet {
 
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
-        log.debug("Handling POST request.")
+        requests.labels("POST").inc()
+        ongoingRequests.labels("POST").inc()
+        Summary.Timer requestTimer = requestsLatency.labels("POST").startTimer()
+        log.info("Handling POST request for ${request.pathInfo}.")
 
+        try {
+            doPost2(request, response)
+        } finally {
+            ongoingRequests.labels("POST").dec()
+            requestTimer.observeDuration()
+            log.info("Sending POST response with status " +
+                     "${response.getStatus()} for ${request.pathInfo}")
+        }
+    }
+
+    void doPost2(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo != "/") {
             log.debug("Invalid POST request URL.")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_METHOD_NOT_ALLOWED.toString()).inc()
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
                     "Method not allowed.")
             return
@@ -542,6 +605,8 @@ class Crud extends HttpServlet {
 
         if (!isSupportedContentType(request)) {
             log.debug("Unsupported Content-Type for POST.")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Content-Type not supported.")
             return
@@ -551,6 +616,8 @@ class Crud extends HttpServlet {
 
         if (isEmptyInput(requestBody)) {
             log.debug("Empty POST request.")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "No data received")
             return
@@ -558,6 +625,8 @@ class Crud extends HttpServlet {
 
         if (!JsonLd.isFlat(requestBody)) {
             log.debug("POST body is not flat JSON-LD")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Body is not flat JSON-LD.")
         }
@@ -571,6 +640,8 @@ class Crud extends HttpServlet {
         if (fullDocumentId &&
                 fullDocumentId.startsWith(Document.BASE_URI.toString())) {
             log.debug("Invalid supplied ID in POST request.")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Supplied document ID not allowed.")
             return
@@ -579,6 +650,8 @@ class Crud extends HttpServlet {
         Document existingDoc = whelk.storage.locate(documentId, true)?.document
         if (existingDoc) {
             log.debug("Tried to POST existing document.")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_CONFLICT.toString()).inc()
             response.sendError(HttpServletResponse.SC_CONFLICT,
                     "Document with ID ${documentId} already exists.")
             return
@@ -601,12 +674,16 @@ class Crud extends HttpServlet {
             // is in.
             boolean allowed = hasPostPermission(newDoc, request.getAttribute("user"))
             if (!allowed) {
+                failedRequests.labels("POST", request.getRequestURI(),
+                        HttpServletResponse.SC_FORBIDDEN.toString()).inc()
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
                         "You are not authorized to perform this " +
                                 "operation")
                 return
             }
         } catch (ModelValidationException mve) {
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             // FIXME data leak
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     mve.getMessage())
@@ -617,18 +694,37 @@ class Crud extends HttpServlet {
         // return 201 or error
         String collection = request.getParameter("collection")
         boolean isUpdate = false
-        Document savedDoc = saveDocument(newDoc, request, response, collection, isUpdate)
-        if (savedDoc != null)
+        Document savedDoc = saveDocument(newDoc, request, response,
+                                         collection, isUpdate, "POST")
+        if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
-                savedDoc.getModified() as String)
+                               savedDoc.getModified() as String)
+        }
     }
 
     @Override
     void doPut(HttpServletRequest request, HttpServletResponse response) {
-        log.debug("Handling PUT request.")
+        requests.labels("PUT").inc()
+        ongoingRequests.labels("PUT").inc()
+        Summary.Timer requestTimer = requestsLatency.labels("PUT").startTimer()
+        log.info("Handling PUT request for ${request.pathInfo}.")
 
+        try {
+            doPut2(request, response)
+        } finally {
+            ongoingRequests.labels("PUT").dec()
+            requestTimer.observeDuration()
+            log.info("Sending PUT response with status " +
+                     "${response.getStatus()} for ${request.pathInfo}")
+        }
+
+    }
+
+    void doPut2(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo == "/") {
             log.debug("Invalid PUT request URL.")
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_METHOD_NOT_ALLOWED.toString()).inc()
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
                     "Method not allowed.")
             return
@@ -636,6 +732,8 @@ class Crud extends HttpServlet {
 
         if (!isSupportedContentType(request)) {
             log.debug("Unsupported Content-Type for PUT.")
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Content-Type not supported.")
             return
@@ -645,6 +743,8 @@ class Crud extends HttpServlet {
 
         if (isEmptyInput(requestBody)) {
             log.debug("Empty PUT request.")
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "No data received")
             return
@@ -655,11 +755,15 @@ class Crud extends HttpServlet {
 
         if (!documentId) {
             log.debug("Missing document ID in PUT request.")
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Missing @id in request.")
             return
         } else if (idFromUrl != documentId) {
             log.debug("Document ID does not match ID in URL.")
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "ID in document does not match ID in URL.")
             return
@@ -669,10 +773,14 @@ class Crud extends HttpServlet {
         Location location = whelk.storage.locate(documentId, true)
         Document existingDoc = location?.document
         if (!existingDoc && location?.uri) {
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_METHOD_NOT_ALLOWED.toString()).inc()
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
                     "PUT does not support alternate IDs.")
             return
         } else if (!existingDoc) {
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_NOT_FOUND.toString()).inc()
             response.sendError(HttpServletResponse.SC_NOT_FOUND,
                     "Document not found.")
             return
@@ -692,12 +800,16 @@ class Crud extends HttpServlet {
             boolean allowed = hasPutPermission(updatedDoc, existingDoc,
                     request.getAttribute("user"))
             if (!allowed) {
+                failedRequests.labels("PUT", request.getRequestURI(),
+                        HttpServletResponse.SC_FORBIDDEN.toString()).inc()
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
                         "You are not authorized to perform this " +
                                 "operation")
                 return
             }
         } catch (ModelValidationException mve) {
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             // FIXME data leak
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     mve.getMessage())
@@ -706,10 +818,12 @@ class Crud extends HttpServlet {
 
         String collection = request.getParameter("collection")
         boolean isUpdate = true
-        Document savedDoc = saveDocument(updatedDoc, request, response, collection, isUpdate)
-        if (savedDoc != null)
+        Document savedDoc = saveDocument(updatedDoc, request, response,
+                                         collection, isUpdate, "PUT")
+        if (savedDoc != null) {
             sendUpdateResponse(response, savedDoc.getURI().toString(),
-                savedDoc.getModified() as String)
+                               savedDoc.getModified() as String)
+        }
 
     }
 
@@ -744,7 +858,9 @@ class Crud extends HttpServlet {
 
     private class EtagMissmatchException extends RuntimeException {}
 
-    Document saveDocument(Document doc, HttpServletRequest request, HttpServletResponse response, String collection, boolean isUpdate) {
+    Document saveDocument(Document doc, HttpServletRequest request,
+                          HttpServletResponse response, String collection,
+                          boolean isUpdate, String httpMethod) {
         if (collection == null){
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "The 'collection' parameter is mandatory.")
@@ -783,24 +899,32 @@ class Crud extends HttpServlet {
             }
         } catch (StorageCreateFailedException scfe) {
             log.warn("Already have document with id ${scfe.duplicateId}")
+            failedRequests.labels(httpMethod, request.getRequestURI(),
+                    HttpServletResponse.SC_CONFLICT.toString()).inc()
             response.sendError(HttpServletResponse.SC_CONFLICT,
                     "Document with id \"${scfe.duplicateId}\" " +
                             "already exists.")
             return null
         } catch (WhelkAddException wae) {
             log.warn("Whelk failed to store document: ${wae.message}")
+            failedRequests.labels(httpMethod, request.getRequestURI(),
+                    HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE.toString()).inc()
             // FIXME data leak
             response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
                     wae.message)
             return null
         } catch (EtagMissmatchException eme) {
             log.warn("Did not store document, because the ETAGs did not match.")
+            failedRequests.labels(httpMethod, request.getRequestURI(),
+                    HttpServletResponse.SC_PRECONDITION_FAILED.toString()).inc()
             response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED,
                                         "The resource has been updated by someone " +
                                                 "else. Please refetch.")
             return null
         } catch (Exception e) {
             log.error("Operation failed", e)
+            failedRequests.labels(httpMethod, request.getRequestURI(),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
             // FIXME data leak
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     e.message)
@@ -906,8 +1030,25 @@ class Crud extends HttpServlet {
 
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
-        log.debug("Handling DELETE request.")
+        requests.labels("DELETE").inc()
+        ongoingRequests.labels("DELETE").inc()
+        Summary.Timer requestTimer = requestsLatency.labels("DELETE").startTimer()
+        log.info("Handling DELETE request for ${request.pathInfo}.")
+
+        try {
+            doDelete2(request, response)
+        } finally {
+            ongoingRequests.labels("DELETE").dec()
+            requestTimer.observeDuration()
+            log.info("Sending DELETE response with status " +
+                     "${response.getStatus()} for ${request.pathInfo}")
+        }
+    }
+
+    void doDelete2(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo == "/") {
+            failedRequests.labels("DELETE", request.getRequestURI(),
+                    HttpServletResponse.SC_METHOD_NOT_ALLOWED.toString()).inc()
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method not allowed.")
             return
         }
@@ -922,9 +1063,13 @@ class Crud extends HttpServlet {
                 if (loc) {
                     sendRedirect(request, response, loc)
                 } else {
+                    failedRequests.labels("DELETE", request.getRequestURI(),
+                            HttpServletResponse.SC_NOT_FOUND.toString()).inc()
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
                 }
             } else if (doc && !hasDeletePermission(doc, request.getAttribute("user"))) {
+                failedRequests.labels("DELETE", request.getRequestURI(),
+                        HttpServletResponse.SC_FORBIDDEN.toString()).inc()
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
             } else {
                 log.debug("Removing resource at ${id}")
@@ -933,11 +1078,15 @@ class Crud extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
         } catch (ModelValidationException mve) {
+            failedRequests.labels("DELETE", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             // FIXME data leak
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     mve.getMessage())
         } catch (Exception wre) {
             log.error("Something went wrong", wre)
+            failedRequests.labels("DELETE", request.getRequestURI(),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
         }
 

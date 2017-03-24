@@ -10,9 +10,15 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
 
+import io.prometheus.client.Counter;
+
 public class ListSets
 {
     private final static String RESUMPTION_PARAM = "resumptionToken";
+
+    private static final Counter failedRequests = Counter.build()
+            .name("oaipmh_failed_listsets_requests_total").help("Total failed ListSets requests.")
+            .labelNames("error").register();
 
     /**
      * Verifies the integrity of a OAI-PMH request with the verb 'ListSets' and sends a proper response.
@@ -29,6 +35,7 @@ public class ListSets
         // We do not use resumption tokens.
         if (resumptionToken != null)
         {
+            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN,
                     "No such resumption token was issued", request, response);
             return;

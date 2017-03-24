@@ -17,7 +17,7 @@ dependencies {
     // XL dependencies
     compile('../../whelk-core' in project.subprojects*.name?
             project(':../../whelk-core') :
-            'com.github.libris:whelk-core:0.3.0')
+            'com.github.libris:whelk-core:0.3.1')
 
     def jettyVersion="9.3.6.v20151106"
 
@@ -30,6 +30,10 @@ dependencies {
     // Logging
     compile 'org.slf4j:slf4j-api:1.7.6'
     compile 'org.slf4j:log4j-over-slf4j:1.7.6'
+
+    // metrics
+    compile 'io.prometheus:simpleclient:0.0.21'
+    compile 'io.prometheus:simpleclient_servlet:0.0.21'
 
     // Testing
     testCompile 'junit:junit:4.12'

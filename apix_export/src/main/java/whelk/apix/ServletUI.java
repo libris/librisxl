@@ -104,6 +104,7 @@ public class ServletUI extends HttpServlet implements UI
                         m_exporterThread.join();
                     } catch (InterruptedException e) {}
                 }
+                cancelAutomaticResuming();
                 break;
             }
             default:
@@ -141,7 +142,7 @@ public class ServletUI extends HttpServlet implements UI
                 System.out.println(statement);
                 String settings = resultSet.getString("settings");
 
-                ObjectMapper mapper = (ObjectMapper) m_postgreSQLComponent.mapper;
+                ObjectMapper mapper = (ObjectMapper) PostgreSQLComponent.mapper;
                 Map<String, String> map = mapper.readValue(settings, Map.class);
 
                 ZonedDateTime lastTimeStamp = ZonedDateTime.parse( map.get(LDDB_TIMESTAMP_KEY_NAME) );
@@ -156,6 +157,29 @@ public class ServletUI extends HttpServlet implements UI
         {
             outputText("Failed to read start time from database, not starting: " + ex);
         }
+    }
+
+    private void cancelAutomaticResuming()
+    {
+        try (Connection connection = m_postgreSQLComponent.getConnection();
+             PreparedStatement statement = prepareCancelStatement(connection))
+        {
+            statement.executeUpdate();
+        } catch (SQLException sqlEx)
+        {
+            outputText("Failed to clear current time from database (cancel automatic resuming): " + sqlEx);
+        }
+    }
+
+    private PreparedStatement prepareCancelStatement(Connection connection)
+            throws SQLException
+    {
+        String tableName = m_properties.getProperty("sqlMaintable") + "__settings";
+        String sql = "DELETE from " + tableName + " where key = ?";
+
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.setString(1, LDDB_ROW_KEY_NAME);
+        return statement;
     }
 
     private PreparedStatement prepareWriteStatement(Connection connection, String json)

@@ -80,7 +80,7 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                                 !match.hasMisMatchOnA &&
                                 !match.isMatch
                     }.each { diff ->
-                        println "miss! Diff: ${diff.inspect()}"
+                        log.debug "miss! Diff: ${diff.inspect()}"
                     }
 
 
