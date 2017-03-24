@@ -82,12 +82,10 @@ class FileDumper implements MySQLLoader.LoadHandler {
 
                 Document doc = recordMap.document
                 String coll = recordMap.collection
+                String mainId = doc.getCompleteId()
 
                 final String delimiterString = '\t'
                 final String nullString = "\\N"
-
-
-                List<String> identifiers = doc.recordIdentifiers
 
                 mainTableWriter.write("${doc.shortId}\t" +
                         "${doc.dataAsString.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
@@ -97,8 +95,14 @@ class FileDumper implements MySQLLoader.LoadHandler {
                         "${recordMap.checksum.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
                         "${doc.created}\n")
 
-                for (String identifier : identifiers) {
-                    identifiersWriter.write("${doc.shortId}\t${identifier}\n")
+                for (String identifier : doc.getRecordIdentifiers()) {
+                    if (identifier == mainId)
+                        identifiersWriter.write("${doc.shortId}\t${identifier}\t0\ttrue\n")
+                    else
+                        identifiersWriter.write("${doc.shortId}\t${identifier}\t0\tfalse\n")
+                }
+                for (String identifier : doc.getThingIdentifiers()) {
+                    identifiersWriter.write("${doc.shortId}\t${identifier}\t1\tfalse\n")
                 }
             }
         }
