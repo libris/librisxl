@@ -96,7 +96,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
         INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted) VALUES (?,?,?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
-        INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, identifier) VALUES (?,?)"
+        INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, modified, deleted) SELECT ?,?,?,?,?,?,?,? " +
                 "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
@@ -113,12 +113,12 @@ class PostgreSQLComponent implements whelk.component.Storage {
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE modified >= ? AND modified <= ? AND collection = ?"
-        LOAD_IDENTIFIERS = "SELECT identifier from $idTableName WHERE id = ?"
+        LOAD_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ?"
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
-                "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.identifier = ?"
-        GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE identifier = 'https://id.kb.se/vocab/context')"
+                "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
+        GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -367,6 +367,18 @@ class PostgreSQLComponent implements whelk.component.Storage {
         for (altId in doc.getRecordIdentifiers()) {
             altIdInsert.setString(1, doc.getShortId())
             altIdInsert.setString(2, altId)
+            altIdInsert.setInt(3, 0) // record id -> graphIndex = 0
+            if (altId == doc.getCompleteId())
+                altIdInsert.setBoolean(4, true) // main ID
+            else
+                altIdInsert.setBoolean(4, false) // alternative ID, not the main ID
+            altIdInsert.addBatch()
+        }
+        for (altThingId in doc.getThingIdentifiers()) {
+            altIdInsert.setString(1, doc.getShortId())
+            altIdInsert.setString(2, altThingId)
+            altIdInsert.setInt(3, 1) // thing id -> graphIndex = 1
+            altIdInsert.setBoolean(4, false) // thing IDs are never the main ID
             altIdInsert.addBatch()
         }
         try {
@@ -823,7 +835,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
             loadIds.setString(1, id)
             ResultSet rs = loadIds.executeQuery()
             while (rs.next()) {
-                identifiers << rs.getString("identifier")
+                identifiers << rs.getString("iri")
             }
         } finally {
             connection.close()
