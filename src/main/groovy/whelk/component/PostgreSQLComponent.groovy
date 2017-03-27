@@ -32,7 +32,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
                      LOAD_ALL_DOCUMENTS_BY_COLLECTION,
                      DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
                      LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
-                     LOAD_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
+                     LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
                      GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
@@ -96,7 +96,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
         INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted) VALUES (?,?,?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
-        INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, identifier) VALUES (?,?)"
+        INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, modified, deleted) SELECT ?,?,?,?,?,?,?,? " +
                 "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
@@ -113,12 +113,13 @@ class PostgreSQLComponent implements whelk.component.Storage {
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE modified >= ? AND modified <= ? AND collection = ?"
-        LOAD_IDENTIFIERS = "SELECT identifier from $idTableName WHERE id = ?"
+        LOAD_RECORD_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 0"
+        LOAD_THING_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 1"
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
-                "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.identifier = ?"
-        GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE identifier = 'https://id.kb.se/vocab/context')"
+                "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
+        GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -367,6 +368,18 @@ class PostgreSQLComponent implements whelk.component.Storage {
         for (altId in doc.getRecordIdentifiers()) {
             altIdInsert.setString(1, doc.getShortId())
             altIdInsert.setString(2, altId)
+            altIdInsert.setInt(3, 0) // record id -> graphIndex = 0
+            if (altId == doc.getCompleteId())
+                altIdInsert.setBoolean(4, true) // main ID
+            else
+                altIdInsert.setBoolean(4, false) // alternative ID, not the main ID
+            altIdInsert.addBatch()
+        }
+        for (altThingId in doc.getThingIdentifiers()) {
+            altIdInsert.setString(1, doc.getShortId())
+            altIdInsert.setString(2, altThingId)
+            altIdInsert.setInt(3, 1) // thing id -> graphIndex = 1
+            altIdInsert.setBoolean(4, false) // thing IDs are never the main ID
             altIdInsert.addBatch()
         }
         try {
@@ -808,22 +821,41 @@ class PostgreSQLComponent implements whelk.component.Storage {
             log.trace("Resultset didn't have created. Probably a version request.")
         }
 
-        for (altId in loadIdentifiers(doc.id)) {
+        for (altId in loadRecordIdentifiers(doc.id)) {
             doc.addRecordIdentifier(altId)
+        }
+        for (altId in loadThingIdentifiers(doc.id)) {
+            doc.addThingIdentifier(altId)
         }
         return doc
 
     }
 
-    private List<String> loadIdentifiers(String id) {
+    private List<String> loadRecordIdentifiers(String id) {
         List<String> identifiers = []
         Connection connection = getConnection()
-        PreparedStatement loadIds = connection.prepareStatement(LOAD_IDENTIFIERS)
+        PreparedStatement loadIds = connection.prepareStatement(LOAD_RECORD_IDENTIFIERS)
         try {
             loadIds.setString(1, id)
             ResultSet rs = loadIds.executeQuery()
             while (rs.next()) {
-                identifiers << rs.getString("identifier")
+                identifiers << rs.getString("iri")
+            }
+        } finally {
+            connection.close()
+        }
+        return identifiers
+    }
+
+    private List<String> loadThingIdentifiers(String id) {
+        List<String> identifiers = []
+        Connection connection = getConnection()
+        PreparedStatement loadIds = connection.prepareStatement(LOAD_THING_IDENTIFIERS)
+        try {
+            loadIds.setString(1, id)
+            ResultSet rs = loadIds.executeQuery()
+            while (rs.next()) {
+                identifiers << rs.getString("iri")
             }
         } finally {
             connection.close()

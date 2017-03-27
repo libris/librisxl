@@ -70,6 +70,8 @@ class PostgreSQLComponentSpec extends Specification {
         given:
         2 * result.next() >> { true }
         1 * result.next() >> { false }
+        2 * result.next() >> { true }
+        1 * result.next() >> { false }
         result.getString(_) >> {
             if (it.first() == "id") {
                 return "testid"
@@ -77,7 +79,7 @@ class PostgreSQLComponentSpec extends Specification {
             if (it.first() == "data") {
                 return documentData
             }
-            if (it.first() == "identifier") {
+            if (it.first() == "iri") {
                 return identifiers
             }
         }
@@ -144,5 +146,22 @@ class PostgreSQLComponentSpec extends Specification {
 
     }
 
+    def "should calculate different checksums when a list is reordered"() {
+        when:
+        String cs1 = new Document(["@graph": [["key": "some data", "@id": "testid"], ["identifier": "testid", "collection": "test"]]]).checksum
+        String cs2 = new Document(["@graph": [["identifier": "testid", "collection": "test"], ["@id": "testid", "key": "some data"]]]).checksum
+
+        then:
+        cs1 != cs2
+    }
+
+    def "should calculate equal checksums when objects in an object change order"() {
+        when:
+        String cs1 = new Document(["@graph": [["key": "some data", "@id": "testid"], ["identifier": "testid", "collection": "test"]]]).checksum
+        String cs2 = new Document(["@graph": [["@id": "testid", "key": "some data"], ["identifier": "testid", "collection": "test"]]]).checksum
+
+        then:
+        cs1 == cs2
+    }
 
 }

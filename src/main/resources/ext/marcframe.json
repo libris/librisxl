@@ -5226,7 +5226,8 @@
       "$8": {"property": "sequenceNumber"},
       "$a": {"property": "location"},
       "$b": {
-        "addLink": "heldBy",
+        "link": "heldBy",
+        "NOTE:repeatable": "true in MARC21, but not in Libris (although it's been in 0.06 % of our records)",
         "resourceType": "Organization",
         "uriTemplate": "https://libris.kb.se/library/{_}",
         "matchUriToken": "^\\S+$",
@@ -5275,7 +5276,7 @@
             "mainEntity": {
               "@type": "Item",
               "copyNumber": "1",
-              "heldBy": [{"@id": "https://libris.kb.se/library/H", "@type": "Organization", "notation": "H"}],
+              "heldBy": {"@id": "https://libris.kb.se/library/H", "@type": "Organization", "notation": "H"},
               "shelfControlNumber": "65.465",
               "shelfLocation": ["MAG"]
             }
@@ -5293,12 +5294,12 @@
                 {
                   "@type": "Item",
                   "copyNumber": "1",
-                  "heldBy": [{"@id": "https://libris.kb.se/library/X", "@type": "Organization", "notation": "X"}]
+                  "heldBy": {"@id": "https://libris.kb.se/library/X", "@type": "Organization", "notation": "X"}
                 },
                 {
                   "@type": "Item",
                   "copyNumber": "2",
-                  "heldBy": [{"@id": "https://libris.kb.se/library/Y", "@type": "Organization", "notation": "Y"}]
+                  "heldBy": {"@id": "https://libris.kb.se/library/Y", "@type": "Organization", "notation": "Y"}
                 }
               ]
             }

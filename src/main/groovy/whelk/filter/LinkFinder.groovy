@@ -27,7 +27,7 @@ class LinkFinder {
                         WHERE data -> '@graph' @> ?
                         AND id IN (SELECT id
                                      FROM lddb__identifiers
-                                     WHERE identifier IN (€));"""
+                                     WHERE iri IN (€));"""
     }
 
     int numCalls = 0
