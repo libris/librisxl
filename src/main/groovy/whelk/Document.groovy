@@ -229,7 +229,9 @@ class Document {
     List<String> getRecordIdentifiers() {
         List<String> ret = []
 
-        ret.add(get(recordIdPath)) // must be present
+        String mainId = get(recordIdPath)
+        if (mainId != null)
+        ret.add(mainId)
 
         List sameAsObjects = get(recordSameAsPath)
         for (Map object : sameAsObjects) {
