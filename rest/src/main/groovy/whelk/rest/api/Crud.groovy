@@ -633,45 +633,13 @@ class Crud extends HttpServlet {
 
         // FIXME we're assuming Content-Type application/ld+json here
         // should we deny the others?
-        String fullDocumentId = JsonLd.findFullIdentifier(requestBody)
-        String documentId = JsonLd.findIdentifier(requestBody)
-
-        // FIXME handle this better
-        if (fullDocumentId &&
-                fullDocumentId.startsWith(Document.BASE_URI.toString())) {
-            log.debug("Invalid supplied ID in POST request.")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Supplied document ID not allowed.")
-            return
-        }
-
-        Document existingDoc = whelk.storage.locate(documentId, true)?.document
-        if (existingDoc) {
-            log.debug("Tried to POST existing document.")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_CONFLICT.toString()).inc()
-            response.sendError(HttpServletResponse.SC_CONFLICT,
-                    "Document with ID ${documentId} already exists.")
-            return
-        }
 
         Document newDoc = new Document(requestBody)
-
-        // if no identifier, create one
-        if (!documentId) {
-            newDoc.setId(mintIdentifier(requestBody))
-        } else {
-            // FIXME why does the caller need to set the ID?
-            newDoc.setId(documentId)
-        }
+        newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
 
         // verify user permissions
         log.debug("Checking permissions for ${newDoc}")
         try {
-            // TODO: 'collection' must also match the collection 'existingDoc'
-            // is in.
             boolean allowed = hasPostPermission(newDoc, request.getAttribute("user"))
             if (!allowed) {
                 failedRequests.labels("POST", request.getRequestURI(),
