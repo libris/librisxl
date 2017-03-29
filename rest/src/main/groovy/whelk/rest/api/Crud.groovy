@@ -1071,6 +1071,11 @@ class Crud extends HttpServlet {
                 failedRequests.labels("DELETE", request.getRequestURI(),
                         HttpServletResponse.SC_FORBIDDEN.toString()).inc()
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
+            } else if (doc && doc.deleted) {
+                failedRequests.labels("DELETE", request.getRequestURI(),
+                        HttpServletResponse.SC_GONE.toString()).inc()
+                response.sendError(HttpServletResponse.SC_GONE,
+                        "Document has been deleted.")
             } else {
                 log.debug("Removing resource at ${id}")
                 // FIXME don't hardcode collection
