@@ -2636,6 +2636,40 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NOT_FOUND
     }
 
+    def "DELETE to /<id> should return 410 Gone on already deleted document"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def data = ["@graph": [["@id": id,
+                                "@type": "Record",
+                                "contains": "some new data"]]]
+        request.getPathInfo() >> {
+            "/1234"
+        }
+        request.getRequestURI() >> {
+            "/1234"
+        }
+        request.getMethod() >> {
+            "DELETE"
+        }
+        request.getAttribute(_) >> {
+            if (it.first() == "user") {
+                return ["user": "SYSTEM"]
+            }
+        }
+        storage.load(_) >> {
+            def doc = new Document(data)
+            doc.deleted = true
+            return doc
+        }
+        storage.remove(_, _) >> {
+          return true
+        }
+        when:
+        crud.doDelete(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_GONE
+    }
+
     def "DELETE to /<id> should return 403 Forbidden if user has insufficient privilege"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
