@@ -26,9 +26,9 @@ class DefinitionsImporter extends Importer {
         int counter = 0
         defFile.eachLine {
             def data = mapper.readValue(it.getBytes("UTF-8"), Map)
-            def newId = IdGenerator.generate()
+            def newId = Document.BASE_URI.toString() + IdGenerator.generate()
             Document doc = new Document(data)
-            doc.setId(newId)
+            doc.addRecordIdentifier(newId)
             documentList.add(doc)
             counter++
         }
