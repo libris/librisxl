@@ -425,6 +425,10 @@ class Document {
     void deepReplaceId(String newId) {
         String oldId = getCompleteSystemId()
 
+        // If there is no "proper id" use whatever is at the record ID path.
+        if (oldId == null)
+            oldId = get(recordIdPath)
+
         deepReplaceIdInternal(oldId, newId, data)
     }
 
