@@ -57,10 +57,17 @@ public class GetRecord
             return;
         }
 
-        String id = Helpers.getShorthandDocumentId(identifierUri);
+        String id = null;
+        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
+             PreparedStatement preparedStatement = prepareSameAsStatement(dbconn, identifierUri);
+             ResultSet resultSet = preparedStatement.executeQuery())
+        {
+            if (resultSet.next())
+                id = resultSet.getString("id");
+        }
 
         try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
-             PreparedStatement preparedStatement = prepareStatement(dbconn, id);
+             PreparedStatement preparedStatement = prepareMatchingDocumentStatement(dbconn, id);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
             if (!resultSet.next())
@@ -108,7 +115,7 @@ public class GetRecord
         }
     }
 
-    private static PreparedStatement prepareStatement(Connection dbconn, String id)
+    private static PreparedStatement prepareMatchingDocumentStatement(Connection dbconn, String id)
             throws SQLException
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
@@ -119,6 +126,18 @@ public class GetRecord
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);
 
+        return preparedStatement;
+    }
+
+    private static PreparedStatement prepareSameAsStatement(Connection dbconn, String id)
+            throws SQLException
+    {
+        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+
+        String sql = "SELECT id FROM " + tableName + "__identifiers WHERE iri = ?";
+        PreparedStatement preparedStatement = dbconn.prepareStatement(sql);
+        preparedStatement.setString(1, id);
+        
         return preparedStatement;
     }
 }
