@@ -25,22 +25,24 @@ public class ListMetadataFormats
             throws IOException, XMLStreamException, SQLException
     {
         // Parse and verify the parameters allowed for this request
-        String identifier = request.getParameter(IDENTIFIER_PARAM); // optional
+        String identifierUri = request.getParameter(IDENTIFIER_PARAM); // optional
 
         if (ResponseCommon.errorOnExtraParameters(request, response, IDENTIFIER_PARAM))
             return;
 
-        if (identifier != null) {
-
-            String id = Helpers.getShorthandDocumentId(identifier);
-            if (id == null) {
-                failedRequests.labels(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST).inc();
-                ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
-                return;
+        if (identifierUri != null)
+        {
+            String id = null;
+            try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
+                 PreparedStatement preparedStatement = Helpers.prepareSameAsStatement(dbconn, identifierUri);
+                 ResultSet resultSet = preparedStatement.executeQuery())
+            {
+                if (resultSet.next())
+                    id = resultSet.getString("id");
             }
 
             try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
-                 PreparedStatement preparedStatement = prepareStatement(dbconn, id);
+                 PreparedStatement preparedStatement = prepareMatchingDocumentStatement(dbconn, id);
                  ResultSet resultSet = preparedStatement.executeQuery())
             {
                 // If there was no such document
@@ -104,7 +106,7 @@ public class ListMetadataFormats
         writer.writeEndElement(); // metadataFormat
     }
 
-    private static PreparedStatement prepareStatement(Connection dbconn, String id)
+    private static PreparedStatement prepareMatchingDocumentStatement(Connection dbconn, String id)
             throws SQLException
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");

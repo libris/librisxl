@@ -46,12 +46,16 @@ public class Helpers
         return ZonedDateTime.parse(dateTimeString);
     }
 
-    public static String getShorthandDocumentId(String completeId)
+    public static PreparedStatement prepareSameAsStatement(Connection dbconn, String id)
+            throws SQLException
     {
-        String idPrefix = Document.getBASE_URI().toString();
-        if (!completeId.startsWith(idPrefix))
-            return null;
-        return completeId.substring(idPrefix.length());
+        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+
+        String sql = "SELECT id FROM " + tableName + "__identifiers WHERE iri = ?";
+        PreparedStatement preparedStatement = dbconn.prepareStatement(sql);
+        preparedStatement.setString(1, id);
+
+        return preparedStatement;
     }
 
     public static PreparedStatement getMatchingDocumentsStatement(Connection dbconn, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec)

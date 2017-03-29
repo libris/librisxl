@@ -59,7 +59,7 @@ public class GetRecord
 
         String id = null;
         try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
-             PreparedStatement preparedStatement = prepareSameAsStatement(dbconn, identifierUri);
+             PreparedStatement preparedStatement = Helpers.prepareSameAsStatement(dbconn, identifierUri);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
             if (resultSet.next())
@@ -126,18 +126,6 @@ public class GetRecord
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);
 
-        return preparedStatement;
-    }
-
-    private static PreparedStatement prepareSameAsStatement(Connection dbconn, String id)
-            throws SQLException
-    {
-        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-
-        String sql = "SELECT id FROM " + tableName + "__identifiers WHERE iri = ?";
-        PreparedStatement preparedStatement = dbconn.prepareStatement(sql);
-        preparedStatement.setString(1, id);
-        
         return preparedStatement;
     }
 }
