@@ -100,6 +100,7 @@ class Document {
         if (!id.startsWith(Document.BASE_URI.toString()))
             id = Document.BASE_URI.resolve(id)
 
+        set(recordIdPath, id, LinkedHashMap)
         addRecordIdentifier(id)
     }
 
@@ -119,6 +120,16 @@ class Document {
      */
     String getCompleteId() {
         return get(recordIdPath)
+    }
+
+    /**
+     * Gets the document system ID.
+     * Usually this is equivalent to getComleteId(). But getComleteId() can sometimes return pretty-IDs
+     * (like https://id.kb.se/something) when appropriate. This function will always return the complete
+     * system internal ID (like so: [BASE_URI]/fnrglbrgl)
+     */
+    String getCompleteSystemId() {
+        return BASE_URI.toString() + getShortId()
     }
 
     /**
@@ -248,15 +259,6 @@ class Document {
             if (sameAsList.every { it -> it != idObject })
                 sameAsList.add(idObject)
         }
-    }
-
-    /**
-     * Expand the doc with the supplied extra info.
-     *
-     */
-    void embellish(Map additionalObjects, Map displayData) {
-        this.data = JsonLd.embellish(this.data, additionalObjects, displayData)
-        return
     }
 
     /**
@@ -406,33 +408,32 @@ class Document {
     }
 
     /**
-     * This function relies on the fact that the deserialized jsonld (using Jackson ObjectMapper) consists of LinkedHashMaps
-     * (which preserve order), unlike normal HashMaps which do not, so be careful not to place HashMaps into a document
-     * structure and then try to calculate a checksum. Makes the order of the inner elements not matter for the caclulation
-     *
-     * This method of getting checksums is deprecated, because it is extremely expensive, and comparing full documents
-     * would actually be faster than this.
+     * Replaces the main ID of this document with 'newId'.
+     * Also replaces all derivatives of the old systemId, like for example oldId#it with the corresponding derivative
+     * of the new id (newId#it).
+     * Finally replaces all document-internal references to
      */
-    /*
-    String getChecksum() {
-        Document clone = clone()
+    void deepReplaceId(String newId) {
+        String oldId = getCompleteSystemId()
 
-        // timestamps not part of checksum
-        clone.set(modifiedPath, "", LinkedHashMap)
-        clone.set(createdPath, "", LinkedHashMap)
-        clone.data = clone.data["@graph"].collectEntries {
-            it ->
-                it.toSorted { a, b -> a.key <=> b.key }
+        deepReplaceIdInternal(oldId, newId, data)
+    }
+
+    private void deepReplaceIdInternal(String oldId, String newId, node) {
+        if (node instanceof List) {
+            for (element in node)
+                deepReplaceIdInternal(oldId, newId, element)
         }
-        MessageDigest m = MessageDigest.getInstance("MD5")
-        m.reset()
-        byte[] databytes = mapper.writeValueAsBytes(clone.data)
-        m.update(databytes)
-        byte[] digest = m.digest()
-        BigInteger bigInt = new BigInteger(1, digest)
-        String hashtext = bigInt.toString(16)
-        return hashtext
-    }*/
+        if (node instanceof Map) {
+            for (String key : node.keySet()) {
+                deepReplaceIdInternal(oldId, newId, node.get(key))
+            }
+            String nodeId = node["@id"]
+            if (nodeId != null && nodeId.startsWith(oldId)) {
+                node["@id"] = newId + node["@id"].substring(oldId.length())
+            }
+        }
+    }
 
     String getChecksum() {
         long checksum = calculateCheckSum(data, 1)
