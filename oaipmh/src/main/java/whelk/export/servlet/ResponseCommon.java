@@ -122,9 +122,6 @@ public class ResponseCommon
         {
             try
             {
-                /*Document convertedDocument = formatDescription.converter.convert(jsonLDdoc);
-                convertedText = (String) convertedDocument.getData().get("content");*/
-
                 convertedText = (String) formatDescription.converter.convert(jsonLDdoc.data, jsonLDdoc.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY());
             }
             catch (Exception | Error e) // Depending on the converter, a variety of problems may arise here
@@ -228,11 +225,21 @@ public class ResponseCommon
             writer.writeStartElement("about");
             while(resultSet.next())
             {
-                writer.writeStartElement("holding");
+                String sigelUri = resultSet.getString("sigel");
+                if (sigelUri == null)
+                {
+                    logger.warn("Holding post without sigel/library-URI, which is not allowed. hold id: {}", resultSet.getString("id"));
+                    continue;
+                }
+                String sigel = LegacyIntegrationTools.uriToLegacySigel(sigelUri.replace("\"", ""));
+                if (sigel == null)
+                {
+                    logger.warn("Holding post library-URI that could not be mapped to a classic sigel. hold id: {}", resultSet.getString("id"));
+                    continue;
+                }
 
-                String sigel = LegacyIntegrationTools.uriToLegacySigel(resultSet.getString("sigel").replace("\"", ""));
-                if (sigel != null)
-                    writer.writeAttribute("sigel", sigel);
+                writer.writeStartElement("holding");
+                writer.writeAttribute("sigel", sigel);
                 writer.writeAttribute("id", resultSet.getString("id"));
                 writer.writeEndElement(); // holding
             }
@@ -245,7 +252,7 @@ public class ResponseCommon
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
-        StringBuilder selectSQL = new StringBuilder("SELECT id, data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM ");
+        StringBuilder selectSQL = new StringBuilder("SELECT id, data#>>'{@graph,1,heldBy,@id}' AS sigel FROM ");
         selectSQL.append(tableName);
         selectSQL.append(" WHERE collection = 'hold' AND deleted = false AND (");
 

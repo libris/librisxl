@@ -173,7 +173,7 @@ public class ListRecordTrees
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT id, collection, deleted, modified, data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM "
+        String selectSQL = "SELECT id, collection, deleted, modified, data#>>'{@graph,1,heldBy,@id}' AS sigel FROM "
                 + tableName + " WHERE collection <> 'definitions' ";
         if (setSpec.getRootSet() != null)
             selectSQL += " AND collection = ?";
@@ -188,9 +188,9 @@ public class ListRecordTrees
 
         if (setSpec.getSubset() != null)
         {
-            String strMap = "{\"@graph\":[{\"hasComponent\":[{\"heldBy\":[{\"@id\": \""+
+            String strMap = "{\"@graph\":[{\"heldBy\":{\"@id\": \""+
                     LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset())+
-                    "\"}]}]}]}";
+                    "\"}}]}";
 
             preparedStatement.setObject(2, strMap, java.sql.Types.OTHER);
         }
@@ -216,7 +216,7 @@ public class ListRecordTrees
     {
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
-        String sql = "SELECT id FROM " + tableName + "__identifiers WHERE identifier = ?";
+        String sql = "SELECT id FROM " + tableName + "__identifiers WHERE iri = ?";
         PreparedStatement preparedStatement = dbconn.prepareStatement(sql);
         preparedStatement.setString(1, id);
 

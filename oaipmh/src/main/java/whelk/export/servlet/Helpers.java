@@ -88,9 +88,9 @@ public class Helpers
             preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
         if (setSpec.getSubset() != null)
         {
-            String strMap = "{\"@graph\":[{\"hasComponent\":[{\"heldBy\":[{\"@id\": \""+
+            String strMap = "{\"@graph\":[{\"heldBy\":{\"@id\": \""+
                     LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset())+
-                    "\"}]}]}]}";
+                    "\"}}]}";
 
             preparedStatement.setObject(parameterIndex++, strMap, java.sql.Types.OTHER);
         }

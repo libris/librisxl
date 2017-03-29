@@ -84,19 +84,21 @@ public class ListSets
         {
             while (resultSet.next())
             {
-                String sigel = LegacyIntegrationTools.uriToLegacySigel(resultSet.getString("sigel"));
+                String sigel = resultSet.getString("sigel");
+                if (sigel == null)
+                    continue;
+                sigel = LegacyIntegrationTools.uriToLegacySigel(sigel);
+                if (sigel == null)
+                    continue;
 
-                if (sigel != null)
-                {
-                    writer.writeStartElement("set");
-                    writer.writeStartElement("setSpec");
-                    writer.writeCharacters("hold:"+sigel.replace("\"", ""));
-                    writer.writeEndElement(); // setSpec
-                    writer.writeStartElement("setName");
-                    writer.writeCharacters("Holding records for sigel: " + sigel);
-                    writer.writeEndElement(); // setName
-                    writer.writeEndElement(); // set
-                }
+                writer.writeStartElement("set");
+                writer.writeStartElement("setSpec");
+                writer.writeCharacters("hold:"+sigel.replace("\"", ""));
+                writer.writeEndElement(); // setSpec
+                writer.writeStartElement("setName");
+                writer.writeCharacters("Holding records for sigel: " + sigel);
+                writer.writeEndElement(); // setName
+                writer.writeEndElement(); // set
             }
         }
 
@@ -110,7 +112,7 @@ public class ListSets
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT DISTINCT data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM " + tableName +
+        String selectSQL = "SELECT DISTINCT data#>>'{@graph,1,heldBy,@id}' AS sigel FROM " + tableName +
                 " WHERE collection = 'hold' ";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setFetchSize(512);

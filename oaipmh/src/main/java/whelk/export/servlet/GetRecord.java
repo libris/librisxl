@@ -114,7 +114,7 @@ public class GetRecord
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT data, collection, modified, deleted, data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM " +
+        String selectSQL = "SELECT data, collection, modified, deleted, data#>>'{@graph,1,heldBy,@id}' AS sigel FROM " +
                 tableName + " WHERE id = ? AND collection <> 'definitions' ";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);
