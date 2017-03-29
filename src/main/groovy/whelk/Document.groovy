@@ -408,6 +408,15 @@ class Document {
     }
 
     /**
+     * Expand the doc with the supplied extra info.
+     *
+     */
+    void embellish(Map additionalObjects, Map displayData) {
+        this.data = JsonLd.embellish(this.data, additionalObjects, displayData)
+    }
+
+
+    /**
      * Replaces the main ID of this document with 'newId'.
      * Also replaces all derivatives of the old systemId, like for example oldId#it with the corresponding derivative
      * of the new id (newId#it).
