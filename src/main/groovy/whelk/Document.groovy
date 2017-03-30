@@ -129,7 +129,10 @@ class Document {
      * system internal ID (like so: [BASE_URI]/fnrglbrgl)
      */
     String getCompleteSystemId() {
-        return BASE_URI.toString() + getShortId()
+        String shortId = getShortId()
+        if (shortId != null)
+            return BASE_URI.toString() + shortId
+        return null
     }
 
     /**
