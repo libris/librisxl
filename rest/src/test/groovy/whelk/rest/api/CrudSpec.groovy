@@ -410,12 +410,13 @@ class CrudSpec extends Specification {
 
 
     // Tests for create
-    def "POST to / should create document with generated @id if not supplied"() {
+    def "POST to / should create document with generated @id"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
         is.getBytes() >> {
-            mapper.writeValueAsBytes(["@type": "Record",
-                                      "contains": "some new data"])
+            mapper.writeValueAsBytes(["@graph": [["@type"   : "Record",
+                                                  "@id"     : "some_temporary_id",
+                                                  "contains": "some new data"]]])
         }
         request.getInputStream() >> {
             is
@@ -454,53 +455,6 @@ class CrudSpec extends Specification {
         assert response.getStatus() == HttpServletResponse.SC_CREATED
         // FIXME use BASE_URI instead of hardcoding
         assert response.getHeader("Location") =~ /^http:\/\/127.0.0.1:5000\/[0-9a-z]{16}$/
-    }
-
-    def "POST to / should create document with supplied @id unless it begins with BASE_URI"() {
-        given:
-        def is = GroovyMock(ServletInputStream.class)
-        def postData = ["@graph": [["@id": "/dataset/identifier",
-                                    "@type": "Record",
-                                    "contains": "some new data"]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
-        request.getInputStream() >> {
-            is
-        }
-        request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
-            "/"
-        }
-        request.getMethod() >> {
-            "POST"
-        }
-        request.getParameter("collection") >> {
-            "bib"
-        }
-        request.getContentType() >> {
-            "application/ld+json"
-        }
-        request.getAttribute(_) >> {
-            if (it.first() == "user") {
-                return ["user": "SYSTEM"]
-            }
-        }
-        request.getRequestURL() >> {
-            return new StringBuffer(BASE_URI.toString())
-        }
-        storage.store(_, _) >> {
-            Document doc = it.first()
-            doc.setModified(new Date())
-            return doc
-        }
-        when:
-        crud.doPost(request, response)
-        then:
-        response.getStatus() == HttpServletResponse.SC_CREATED
-        response.getHeader("Location") == "http://127.0.0.1:5000/dataset/identifier"
     }
 
     def "POST to / should return 400 Bad Request if supplied @id begins with BASE_URI"() {
@@ -545,50 +499,6 @@ class CrudSpec extends Specification {
         crud.doPost(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
-    }
-
-    def "POST to / should return 409 Conflict if document with same @id exists"() {
-        given:
-        def is = GroovyMock(ServletInputStream.class)
-        def postData = ["@graph": [["@id": "/some_id",
-                                    "@type": "Record",
-                                    "contains": "some data"]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
-        request.getInputStream() >> {
-            is
-        }
-        request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
-            "/"
-        }
-        request.getMethod() >> {
-            "POST"
-        }
-        request.getContentType() >> {
-            "application/ld+json"
-        }
-        request.getAttribute(_) >> {
-            if (it.first() == "user") {
-                return ["user": "SYSTEM"]
-            }
-        }
-        request.getRequestURL() >> {
-            return new StringBuffer(BASE_URI.toString())
-        }
-        storage.locate(_, _) >> {
-            return new Location(new Document(postData))
-        }
-        storage.store(_, _) >> {
-            throw new Exception("This shouldn't happen")
-        }
-        when:
-        crud.doPost(request, response)
-        then:
-        response.getStatus() == HttpServletResponse.SC_CONFLICT
     }
 
     def "POST to / should return 400 Bad Request on empty content"() {
@@ -748,9 +658,6 @@ class CrudSpec extends Specification {
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
-        }
-        storage.locate(_, _) >> {
-            return null
         }
         storage.store(_, _) >> {
             return null
