@@ -2834,7 +2834,7 @@
     "100": {
       "aboutEntity": "?work",
       "include": "contribution",
-      "resourceType": "Principal",
+      "resourceType": "PrimaryContribution",
       "_spec": [
         {
           "source": {
@@ -2852,7 +2852,7 @@
               "@type": "Text",
               "contribution": [
                 {
-                  "@type": "Principal",
+                  "@type": "PrimaryContribution",
                   "agent": {"@type": "Person",
                     "familyName":  "Jansson",
                     "givenName":  "Tove",
@@ -3855,7 +3855,7 @@
             "_:contribution": {
               "about": "_:work",
               "addLink": "contribution",
-              "resourceType": "Principal",
+              "resourceType": "PrimaryContribution",
               "embedded": true
             },
             "_:agent": {
@@ -3884,7 +3884,7 @@
           "pendingResources": {
             "_:contribution": {
               "addLink": "contribution",
-              "resourceType": "Principal",
+              "resourceType": "PrimaryContribution",
               "embedded": true
             },
             "_:agent": {
@@ -3898,7 +3898,7 @@
         {
           "when": null,
           "include": "contribution",
-          "resourceType": "Additional"
+          "resourceType": "Contribution"
         }
       ],
       "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
@@ -3915,7 +3915,7 @@
               "@type": "Text",
               "contribution": [
                 {
-                  "@type": "Additional",
+                  "@type": "Contribution",
                   "agent": {"@type": "Person",
                     "familyName":  "Pietilä",
                     "givenName":  "Tuulikki",
@@ -3945,7 +3945,7 @@
                     "title": "Anteckningar från en ö",
                     "contribution": [
                       {
-                        "@type": "Principal",
+                        "@type": "PrimaryContribution",
                         "role": [{"label": "Skapad av"}],
                         "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
                       }
