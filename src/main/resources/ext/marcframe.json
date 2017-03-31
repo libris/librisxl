@@ -3839,14 +3839,13 @@
         {
           "when": "$t & i2=2 & $i",
           "inherit-match": "$t & $i",
-          "addLink": "qualifiedPart",
-          "resourceType": "Part"
+          "resourceType": "PartitiveRelationship"
         },
         {
           "when": "$t & $i",
           "include": "agentdata",
-          "addLink": "qualifiedInfluence",
-          "resourceType": "Influence",
+          "addLink": "relationship",
+          "resourceType": "Relationship",
           "pendingResources": {
             "_:work": {
               "link": "entity",
@@ -3866,7 +3865,7 @@
               "embedded": false
             }
           },
-          "$i": {"addLink": "role", "property": "label"},
+          "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
         },
@@ -3937,10 +3936,10 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "qualifiedInfluence": [
+              "relationship": [
                 {
-                  "@type": "Influence",
-                  "role": [{"label": "Parafraserar"}],
+                  "@type": "Relationship",
+                  "relation": [{"label": "Parafraserar"}],
                   "entity": {
                     "@type": "UniformWork",
                     "title": "Anteckningar från en ö",
