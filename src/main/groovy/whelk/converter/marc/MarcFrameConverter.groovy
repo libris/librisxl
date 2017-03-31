@@ -468,7 +468,7 @@ class MarcRuleSet {
                 handler = new TokenSwitchFieldHandler(this, tag, dfn, 'recTypeBibLevelMap')
             } else if (dfn.find { it.key[0] == '[' }) {
                 handler = new MarcFixedFieldHandler(this, tag, dfn)
-            } else if (dfn.find { it.key[0] == '$' }) {
+            } else if ('match' in dfn || dfn.find { it.key[0] == '$' }) {
                 handler = new MarcFieldHandler(this, tag, dfn)
                 if (handler.dependsOn) {
                     primaryTags += handler.dependsOn
@@ -508,21 +508,29 @@ class MarcRuleSet {
     }
 
     static Map processInclude(Map config, Map fieldDfn, String tag = "N/A") {
-        def includes = fieldDfn.include
-        if (!includes) {
-            return fieldDfn
-        }
         def merged = [:] + fieldDfn
-        for (include in Util.asList(includes)) {
-            def baseDfn = config['patterns'][include]
-            assert tag && baseDfn
-            if (baseDfn.include) {
-                baseDfn = processInclude(config, baseDfn, tag)
+
+        def includes = merged['include']
+        if (includes) {
+            for (include in Util.asList(includes)) {
+                def baseDfn = config['patterns'][include]
+                assert tag && baseDfn
+                if (baseDfn.include) {
+                    baseDfn = processInclude(config, baseDfn, tag)
+                }
+                assert tag && !(baseDfn.keySet().intersect(fieldDfn.keySet()) - 'include')
+                merged += baseDfn
+                merged.remove('include')
             }
-            assert tag && !(baseDfn.keySet().intersect(fieldDfn.keySet()) - 'include')
-            merged += baseDfn
-            merged.remove('include')
         }
+
+        def matchRules = merged['match']
+        if (matchRules) {
+            merged['match'] = matchRules.collect {
+                processInclude(config, it, tag)
+            }
+        }
+
         return merged
     }
 
@@ -827,7 +835,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
 
         Map dfn = (Map) fieldDfn['linkEveryIfRepeated']
         if (fieldDfn['linkSubsequentRepeated']) {
-            assert !dfn, "linkEveryIfRepeated and linkSubsequentRepeated not allowed on ${ruleSet.name} ${tag}"
+            assert !dfn, "linkEveryIfRepeated and linkSubsequentRepeated not allowed on ${fieldId}"
             dfn = (Map) fieldDfn['linkSubsequentRepeated']
             onlySubsequentRepeated = true
         }
@@ -845,6 +853,10 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     abstract ConvertResult convert(Map state, value)
 
     abstract def revert(Map data, Map result)
+
+    String getFieldId() {
+        return "${ruleSet.name} ${tag}"
+    }
 
     Map getLinkRule(Map state, value) {
         if (linkRepeated) {
@@ -1386,7 +1398,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map uriTemplateDefaults
     Map computeLinks
     Map<String, MarcSubFieldHandler> subfields = [:]
-    List<MatchRule> matchRules = []
+    List<MatchRule> matchRules
     Map<String, Map> pendingResources
     String ignoreOnRevertInFavourOf
 
@@ -1415,27 +1427,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             computeLinks.use = computeLinks.use.replaceFirst(/^\$/, '')
         }
 
-        def matchDomain = fieldDfn['match-domain']
-        if (matchDomain) {
-            matchRules << new DomainMatchRule(this, fieldDfn, 'match-domain', matchDomain)
-        }
-        def matchI1 = fieldDfn['match-i1']
-        if (matchI1) {
-            matchRules << new IndMatchRule(this, fieldDfn, 'match-i1', matchI1, 'ind1')
-        }
-        def matchI2 = fieldDfn['match-i2']
-        if (matchI2) {
-            matchRules << new IndMatchRule(this, fieldDfn, 'match-i2', matchI2, 'ind2')
-        }
-        def matchCode = fieldDfn['match-code']
-        if (matchCode) {
-            matchRules << new CodeMatchRule(this, fieldDfn, 'match-code', matchCode)
-        }
-        def matchPattern = fieldDfn['match-pattern']
-        if (matchPattern) {
-            matchRules << new CodePatternMatchRule(
-                    this, fieldDfn, 'match-pattern', matchPattern)
-        }
+
+        matchRules = MatchRule.parseRules(this, fieldDfn) ?: Collections.emptyList()
 
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
@@ -1469,10 +1462,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         for (rule in matchRules) {
-            def handler = rule.getHandler(aboutEntity, value)
-            if (handler) {
-                // TODO: resolve combined config
-                return handler.convert(state, value)
+            def matchHandler = rule.getHandler(aboutEntity, value)
+            if (matchHandler) {
+                return matchHandler.convert(state, value)
             }
         }
 
@@ -1631,6 +1623,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map getLocalEntity(Map state, Map owner, String id, Map localEntities) {
         def entity = (Map) localEntities[id]
         if (entity == null) {
+            assert pendingResources, "Missing pendingResources in ${fieldId}, cannot use ${id}"
             def pending = pendingResources[id]
             entity = localEntities[id] = newEntity(state,
                     (String) pending.resourceType,
@@ -1646,7 +1639,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    def revert(Map data, Map result, MatchCandidate matchCandidate = null) {
+    def revert(Map data, Map result, MatchRule usedMatchRule = null) {
 
         if (ignoreOnRevertInFavourOf) {
             return null
@@ -1654,24 +1647,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def matchedResults = []
 
-        if (matchCandidate == null) {
-            // NOTE: The order of rules upon revert must be reverse, since that
-            // incidentally runs the most independent and specific rules last.
-            // TODO: MatchRule mechanics should be simplified!
-            for (rule in matchRules.reverse(false)) {
-                for (candidate in rule.candidates) {
-                    // NOTE: Combinations allow for one nested level...
-                    if (candidate.handler.matchRules) {
-                        for (subrule in candidate.handler.matchRules) {
-                            for (subcandidate in subrule.candidates) {
-                                def matchres = subcandidate.handler.revert(data, result, subcandidate)
-                                matchedResults += matchres
-                            }
-                        }
-                    }
-                    def matchres = candidate.handler.revert(data, result, candidate)
-                    matchedResults += matchres
-                }
+        for (rule in matchRules) {
+            def matchres = rule.handler.revert(data, result, rule)
+            if (matchres) {
+                matchedResults += matchres
             }
         }
 
@@ -1750,7 +1729,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 abouts.each { about ->
                     def oneAboutMap = key ? [(key): about] : [:]
                     useEntities.each {
-                        def field = revertOne(data, it, null, oneAboutMap, matchCandidate)
+                        def field = revertOne(data, it, null, oneAboutMap, usedMatchRule)
                         if (field) {
                             if (useLink.subfield) {
                                 field.subfields << useLink.subfield
@@ -1767,10 +1746,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     @CompileStatic(SKIP)
     def revertOne(Map data, Map currentEntity, Set onlyCodes = null, Map aboutMap = null,
-                  MatchCandidate matchCandidate = null) {
+                  MatchRule usedMatchRule = null) {
 
-        def i1 = matchCandidate?.ind1 ?: ind1 ? ind1.revert(data, currentEntity) : ' '
-        def i2 = matchCandidate?.ind2 ?: ind2 ? ind2.revert(data, currentEntity) : ' '
+        def i1 = usedMatchRule?.ind1 ?: ind1 ? ind1.revert(data, currentEntity) : ' '
+        def i2 = usedMatchRule?.ind2 ?: ind2 ? ind2.revert(data, currentEntity) : ' '
 
         def subs = []
         def failedRequired = false
@@ -1814,12 +1793,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def value = subhandler.revert(data, selectedEntity)
             if (value instanceof List) {
                 value.each {
-                    if (!matchCandidate || matchCandidate.matchValue(code, it)) {
+                    if (!usedMatchRule || usedMatchRule.matchValue(code, it)) {
                         subs << [(code): it]
                     }
                 }
             } else if (value != null) {
-                if (!matchCandidate || matchCandidate.matchValue(code, value)) {
+                if (!usedMatchRule || usedMatchRule.matchValue(code, value)) {
                     subs << [(code): value]
                 }
             } else {
@@ -2105,199 +2084,128 @@ class MarcSubFieldHandler extends ConversionPart {
 
 }
 
-abstract class MatchRule {
+@CompileStatic
+class MatchRule {
 
-    static matchRuleKeys = [
-            'match-domain', 'match-i1', 'match-i2', 'match-code', 'match-pattern'
-    ]
+    static List<MatchRule> parseRules(MarcFieldHandler parent, Map fieldDfn) {
+        List<Map> matchDefs = (List) fieldDfn.remove('match')
+        if (matchDefs.is(null))
+            return null
 
-    Map ruleMap = [:]
-
-    boolean combinatory = false
-
-    MatchRule(MarcFieldHandler handler, Map fieldDfn, String ruleKey, rules) {
-        rules.each { String key, Map matchDfn ->
-            def comboDfn = (Map) fieldDfn.clone()
-            if (!combinatory) {
-                comboDfn.remove(ruleKey)
-            }
-            // create nested combinations, but prevent recursive nesting
-            if (comboDfn.nestedMatch) {
-                matchRuleKeys.each {
-                    comboDfn.remove(it)
-                }
-            } else {
-                comboDfn.nestedMatch = true
-                if (combinatory) {
-                    def newRule = (Map) comboDfn[ruleKey].clone()
-                    newRule.remove(key)
-                    comboDfn[ruleKey] = newRule
-                }
-            }
-            comboDfn += matchDfn
-            def tag = "${handler.tag}:${ruleKey}:${key}"
-            ruleMap[key] = new MarcFieldHandler(handler.ruleSet, tag, comboDfn)
+        Map<String, Map> ruleWhenMap = matchDefs.collectEntries {
+            [it['when'], it]
+        }
+        Map dfnCopy = fieldDfn.findAll { it.key != 'match' }
+        return matchDefs?.collect {
+            new MatchRule(parent, dfnCopy + (Map) it, ruleWhenMap)
         }
     }
 
-    @CompileStatic
+    MarcFieldHandler handler
+    boolean whenAll = true
+    List<Closure> whenTests = []
+
+    // TODO: change to use parsedWhen results to also do the revert check?
+    String ind1
+    String ind2
+
+    Map<String, Closure> codePatterns = [:]
+
+    String matchDomain
+
+    boolean matchValue(String code, String value) {
+        Closure pattern = codePatterns[code]
+        if (!pattern)
+            return true
+        return pattern(value)
+    }
+
+    MatchRule(MarcFieldHandler parent, Map dfn, Map<String, Map> ruleWhenMap) {
+        String when = dfn.remove('when')
+        parseWhen(parent.fieldId, when)
+        String inherit = dfn.remove('inherit-match')
+        if (inherit) {
+            dfn = ruleWhenMap[inherit] + dfn
+            dfn.remove('when')
+            dfn.remove('inherit-match')
+        }
+        String tag = parent.tag
+        if (when) {
+            tag += "[${when}]"
+        }
+        handler = new MarcFieldHandler(parent.ruleSet, tag, dfn)
+    }
+
+    private Pattern whenPattern = ~/(?:(?:\$(\w+)|i(1|2)|(\S+))(?:\s*(=~?)\s*(\S+))?)(?:\s*(\&|\|)\s*)?/
+
+    @CompileStatic(SKIP)
+    private void parseWhen(String fieldId, String when) {
+        if (when.is(null)) {
+            whenTests << { true }
+            return
+        }
+        def currentAndOrOr = null
+        whenPattern.matcher(when).each {
+            def (match, code, indNum, term, comparator, matchValue, andOrOr) = it
+            if (andOrOr) {
+                if (currentAndOrOr)
+                    assert currentAndOrOr == andOrOr, "Unsupported combination of AND/OR in ${fieldId}[${when}]"
+                whenAll = andOrOr == '&'
+                currentAndOrOr = andOrOr
+            }
+            if (code) {
+                if (comparator) {
+                    Closure check = null
+                    if (comparator == '=~') {
+                        def pattern = Pattern.compile(matchValue)
+                        check = codePatterns[code] = { pattern.matcher(it).matches() }
+                    } else {
+                        check = codePatterns[code] = { it == matchValue }
+                    }
+                    whenTests << { value ->
+                        for (sub in value.subfields) {
+                            if (code in sub) return check(sub[code])
+                        }
+                        return false
+                    }
+                } else {
+                    whenTests << { value ->
+                        for (sub in value.subfields) {
+                            if (code in sub) return true
+                        }
+                        return false
+                    }
+                }
+            } else if (indNum) {
+                String indKey = "ind${indNum}"
+                whenTests << { value -> value[indKey] == matchValue }
+                if (indNum == '1')
+                    ind1 = matchValue
+                else if (indNum == '2')
+                    ind2 = matchValue
+            } else if (term == '@type') {
+                matchDomain = matchValue
+            }
+        }
+    }
+
     MarcFieldHandler getHandler(Map entity, value) {
-        for (String key : getKeys(entity, value)) {
-            def handler = (MarcFieldHandler) ruleMap[key]
-            if (handler) {
+        if (matchDomain) {
+            if (entity['@type'] != matchDomain)
+                return null
+            else if (whenTests.size() == 0)
+                return handler
+        }
+        if (whenAll) {
+            if (whenTests.every { it(value) }) {
                 return handler
             }
+        } else if (whenTests.any { it(value) }) {
+            return handler
         }
         return null
     }
 
-    List<String> getKeys(entity, value) {
-        return [getSingleKey(entity, value)]
-    }
-
-    abstract String getSingleKey(entity, value)
-
-    List<MatchCandidate> getCandidates() {
-        return []
-    }
-
-}
-
-@CompileStatic
-class MatchCandidate {
-    String ind1
-    String ind2
-    MarcFieldHandler handler
-    String code
-    Pattern pattern
-
-    boolean matchValue(String code, String value) {
-        if (!pattern) {
-            return true
-        } else {
-            return (code == this.code) && pattern.matcher(value)
-        }
-    }
-}
-
-class DomainMatchRule extends MatchRule {
-    DomainMatchRule(handler, fieldDfn, ruleKey, rules) {
-        super(handler, fieldDfn, ruleKey, rules)
-    }
-
-    List<String> getKeys(entity, value) {
-        def types = entity['@type']
-        return types instanceof String ? [types] : types ?: []
-    }
-
-    String getSingleKey(entity, value) {
-        throw new UnsupportedOperationException()
-    }
-}
-
-class IndMatchRule extends MatchRule {
-    String indKey
-
-    IndMatchRule(handler, fieldDfn, ruleKey, rules, indKey) {
-        super(handler, fieldDfn, ruleKey, rules)
-        this.indKey = indKey
-    }
-
-    String getSingleKey(entity, value) {
-        return value[indKey]
-    }
-
-    List<MatchCandidate> getCandidates() {
-        return ruleMap.collect { token, handler ->
-            new MatchCandidate(handler: handler, (indKey): token)
-        }
-    }
-}
-
-class CodeMatchRule extends MatchRule {
-
-    boolean combinatory = true
-
-    CodeMatchRule(handler, fieldDfn, ruleKey, rules) {
-        super(handler, fieldDfn, ruleKey, parseRules(rules))
-    }
-
-    static Map parseRules(Map rules) {
-        def parsed = [:]
-        rules.each { key, map ->
-            key.split().each { parsed[it] = map }
-        }
-        return parsed
-    }
-
-    String getSingleKey(entity, value) {
-        for (sub in value.subfields) {
-            for (key in sub.keySet()) {
-                if (key in ruleMap)
-                    return key
-            }
-        }
-    }
-
-    List<MatchCandidate> getCandidates() {
-        def candidates = []
-        for (handler in ruleMap.values()) {
-            candidates << new MatchCandidate(handler: handler)
-            break
-        }
-        return candidates
-    }
-}
-
-class CodePatternMatchRule extends MatchRule {
-    Map<String, Map> patterns = [:]
-
-    CodePatternMatchRule(handler, fieldDfn, ruleKey, rules) {
-        super(handler, fieldDfn, ruleKey, parseRules(rules))
-        fillPatternCombos(rules)
-    }
-
-    static Map parseRules(Map rules) {
-        def parsed = [:]
-        rules.each { code, patternMap ->
-            assert code[0] == '$' // IMPROVE: don't require code prefix?
-            code = code.substring(1)
-            patternMap.each { pattern, map ->
-                parsed["${code} ${pattern}"] = map
-            }
-        }
-        return parsed
-    }
-
-    Map fillPatternCombos(Map rules) {
-        rules.each { code, patternMap ->
-            code = code.substring(1)
-            patternMap.each { pattern, map ->
-                patterns[code] = [pattern: ~pattern, key: "${code} ${pattern}"]
-            }
-        }
-    }
-
-    String getSingleKey(entity, value) {
-        def key
-        for (sub in value.subfields) {
-            sub.each { code, codeval ->
-                def combo = patterns[code]
-                if (combo && combo.pattern.matcher(codeval))
-                    key = combo.key
-            }
-        }
-        return key
-    }
-
-    List<MatchCandidate> getCandidates() {
-        return patterns.collect { code, patternDfn ->
-            new MatchCandidate(
-                    handler: ruleMap[patternDfn.key],
-                    code: code,
-                    pattern: patternDfn.pattern)
-        }
-    }
 }
 
 @CompileStatic
