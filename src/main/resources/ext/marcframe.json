@@ -4502,10 +4502,11 @@
     "035" : {"inherit": "bib"},
     "040" : {
       "inherit": "bib",
-      "aboutEntity": "?thing",
       "TODO": "if no $f, drop entire record (or mark as obsolete)",
+      "$a": {"link": "assigner", "resourceType": "Organization", "property": "name"},
       "$f": {
         "IMPROVE:about": "$thing if Concept else $record",
+        "aboutEntity": "?thing",
         "link": "inScheme", "resourceType": "ConceptScheme",
         "TODO:set-link-to?": "inCollection if . = sgp?",
         "TODO:uriMap?": "if token is unknown: make bnode scheme and keep code",
