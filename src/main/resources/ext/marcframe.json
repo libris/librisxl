@@ -3596,7 +3596,7 @@
     "556": {},
     "561": {},
     "562": {
-      "addLink": "workExample",
+      "addLink": "hasItem",
       "embedded": true,
       "resourceType": "Item",
       "$a": {"addProperty": "itemCondition"},
@@ -5345,14 +5345,14 @@
 
     "541": {
       "TODO:linkedEntity": "?example-$i",
-      "addLink": "workExample", "embedded": true, "resourceType": "Item",
+      "addLink": "hasItem", "embedded": true, "resourceType": "Item",
       "$a": {"addProperty": "immediateSourceOfAcquisition"},
       "repeatable": true
     },
 
     "561": {
       "TODO:linkedEntity": "?example-$i",
-      "addLink": "workExample", "embedded": true, "resourceType": "Item",
+      "addLink": "hasItem", "embedded": true, "resourceType": "Item",
       "$a": {"addProperty": "custodialHistory"}
     },
 
@@ -5363,7 +5363,7 @@
 
     "563": {
       "TODO:linkedEntity": "?example-$i",
-      "addLink": "workExample", "embedded": true, "resourceType": "Item",
+      "addLink": "hasItem", "embedded": true, "resourceType": "Item",
       "$a": {"addProperty": "bindingInformation"}
     },
 
