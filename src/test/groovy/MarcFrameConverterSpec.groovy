@@ -127,7 +127,11 @@ class MarcFrameConverterSpec extends Specification {
         def expected = deepcopy(marcResults[marcType])
         // test id generation separately
         expected['@id'] = result['@id']
-        expected[fieldSpec.thingLink]['@id'] = result[fieldSpec.thingLink]['@id']
+        assert expected.containsKey(fieldSpec.thingLink)
+        def resultThingId = result[fieldSpec.thingLink]['@id']
+        if (resultThingId) {
+            expected[fieldSpec.thingLink]['@id'] = resultThingId
+        }
         fieldSpec.result.each { prop, obj ->
             def value = expected[prop]
             if (value instanceof Map) value.putAll(obj)

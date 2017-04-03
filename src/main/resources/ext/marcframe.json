@@ -3627,6 +3627,7 @@
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Concept",
+      "FIXME": "_:agent = ?thing",
       "pendingResources": {
         "_:agent": {"link": "focus", "resourceType": "Person", "embedded": false}
       }
@@ -4332,17 +4333,12 @@
   "auth": {
 
     "pendingResources": {
-      "?record": {
-        "resourceType": "Concept",
-        "uriTemplate": "http://libris.kb.se/auth/{controlNumber}"
-      },
       "?thing": {
         "about": "?record",
-        "link": "focus",
-        "resourceType": "Thing",
+        "link": "mainEntity",
+        "resourceType": "Concept",
         "fragmentId": "it",
-        "uriTemplate": "http://libris.kb.se/resource/auth/{controlNumber}",
-        "addEmpty": true
+        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
       }
     },
 
@@ -4366,22 +4362,18 @@
             "fields": [{"001": "140482"}]
           },
           "result": {
-            "@type": "IndexTerm",
+            "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
             "marc:encLevel": {"@id": "marc:CompleteAuthorityRecord"},
             "marc:status": {"@id": "marc:CorrectedOrRevised"},
-            "focus": {
-              "@type": "Thing",
-              "@id": "http://libris.kb.se/resource/auth/140482"
-            }
+            "mainEntity": { }
           }
         }
       ]
     },
     "001" : {
       "aboutEntity": "?record",
-      "aboutType": "IndexTerm",
       "property": "controlNumber"
     },
     "005": {"inherit": "bib"},
@@ -4510,9 +4502,9 @@
     "035" : {"inherit": "bib"},
     "040" : {
       "inherit": "bib",
+      "aboutEntity": "?thing",
       "TODO": "if no $f, drop entire record (or mark as obsolete)",
       "$f": {
-        "aboutEntity": "?record",
         "IMPROVE:about": "$thing if Concept else $record",
         "link": "inScheme", "resourceType": "ConceptScheme",
         "TODO:set-link-to?": "inCollection if . = sgp?",
@@ -4532,13 +4524,19 @@
         {
           "source": {"040": {"ind1":" ","ind2":" ", "subfields": [{"f":"barn"}]}},
           "result": {
-            "inScheme":  {"@type": "ConceptScheme", "@id": "https://id.kb.se/term/barn", "notation": "barn"}
+            "mainEntity": {
+              "@type": "Concept",
+              "inScheme":  {
+                "@type": "ConceptScheme",
+                "@id": "https://id.kb.se/term/barn",
+                "notation": "barn"
+              }
+            }
           }
         }
       ]
     },
     "042": {
-      "aboutEntity": "?record",
       "$a": {"property": "authenticationCode"},
       "$9": {
         "addLink": "inCollection",
@@ -4565,14 +4563,12 @@
     },
     "065" : {
       "inherit": "bib:084",
-      "aboutEntity": "?record",
       "addLink": "broadMatch"
     },
 
     "073": {
       "TODO": "ignore entirely (should be removed)",
       "ignoreOnRevertInFavourOf": "550",
-      "aboutEntity": "?record",
       "addLink": "broader",
       "resourceType": "TopicalTerm",
       "$a": {"property": "prefLabel"},
@@ -4585,7 +4581,6 @@
     },
     "083" : {
       "inherit": "bib",
-      "aboutEntity": "?record",
       "addLink": "closeMatch",
       "TODO:match @type = ?": {
         "Concept": {"addLink": "closeMatch"},
@@ -4595,26 +4590,35 @@
     },
 
     "100" : {
-      "aboutEntity": "?record",
-      "aboutType": "PersonTerm",
-      "pendingResources": {
-        "_:agent": {"link": "focus", "resourceType": "Person", "embedded": true}
-      },
       "match": [
         {
           "when": "$t",
           "include": "agentdata",
-          "aboutType": "WorkTerm",
+          "aboutType": "Work",
+          "$t": {"property": "title"},
+          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
           "pendingResources": {
-            "_:work": {"link": "focus", "resourceType": "UniformWork", "embedded": true},
-            "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
-          },
-          "$t": {"about": "_:work", "property": "title"},
-          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Person",
+              "embedded": false
+            }
+          }
         },
         {
           "when": null,
-          "include": "agentdata"
+          "include": "agentdata",
+          "aboutEntity": "?record",
+          "FIXME": "_:agent = ?thing",
+          "pendingResources": {
+            "_:agent": {"link": "mainEntity", "resourceType": "Person"}
+          }
         }
       ],
       "_spec": [
@@ -4624,8 +4628,7 @@
               {"a": "Jansson, Tove"}
           ]}},
           "result": {
-            "@type": "PersonTerm",
-            "focus": {
+            "mainEntity": {
               "@type": "Person",
               "familyName":  "Jansson", "givenName":  "Tove"
             }
@@ -4638,12 +4641,17 @@
               {"t": "Anteckningar från en ö"}
           ]}},
           "result": {
-            "@type": "WorkTerm",
-            "focus": {
-              "@type": "UniformWork",
+            "mainEntity": {
+              "@type": "Work",
               "title": "Anteckningar från en ö",
-              "contributor": {"@type": "Person",
-                "familyName":  "Jansson", "givenName":  "Tove"}
+              "contribution": [
+                {
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"
+                  }
+                }
+              ]
             }
           }
         }
@@ -4651,32 +4659,27 @@
     },
     "110" : {
       "inherit": "bib",
-      "aboutEntity": "?record",
-      "aboutType": "OrganizationTerm",
-      "link": "focus", "embedded": true
+      "aboutEntity": "?thing", "link": null, "resourceType": null,
+      "aboutType": "OrganizationTerm"
     },
     "111" : {
       "inherit": "bib",
-      "aboutEntity": "?record",
-      "aboutType": "MeetingTerm",
-      "link": "focus", "embedded": true
+      "aboutEntity": "?thing", "link": null, "resourceType": null,
+      "aboutType": "MeetingTerm"
     },
     "130" : {
       "inherit": "bib",
-      "aboutEntity": "?record",
-      "aboutType": "WorkTerm",
-      "link": "focus", "embedded": true,
-      "resourceType": "UniformWork"
+      "aboutEntity": "?thing", "link": null, "resourceType": null,
+      "aboutType": "WorkTerm"
     },
     "148" : {
-      "aboutEntity": "?record",
+      "aboutEntity": "?thing", "link": null, "resourceType": null,
       "aboutType": "ChronologicalTerm",
       "$a": {"property": "prefLabel"},
       "uriTemplate": "https://id.kb.se/term/sao/{prefLabel}"
     },
     "150" : {
       "include": "termbase",
-      "aboutEntity": "?record",
       "aboutType": "TopicalTerm",
       "dependsOn": ["040", "042"],
       "TODO:ignore:$0": "not-defined-for-150;or-assert-equal-to-001",
@@ -4687,9 +4690,11 @@
             {"150": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Barnpsykologi"}]}}
           ],
           "result": {
-            "@type": "TopicalTerm",
-            "@id": "http://libris.kb.se/auth/140482",
-            "prefLabel": "Barnpsykologi"
+            "mainEntity": {
+              "@type": "TopicalTerm",
+              "@id": "http://libris.kb.se/resource/auth/140482",
+              "prefLabel": "Barnpsykologi"
+            }
           }
         },
         {
@@ -4699,19 +4704,16 @@
             {"150": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Barnpsykologi"}]}}
           ],
           "result": {
-            "@type": "TopicalTerm",
-            "@id": "https://id.kb.se/term/sao/Barnpsykologi",
-            "sameAs":  [{"@id": "http://libris.kb.se/auth/140482"}],
-            "prefLabel": "Barnpsykologi",
-            "inScheme":  {
-              "@type": "ConceptScheme",
-              "@id": "https://id.kb.se/term/sao",
-              "notation": "sao"
-            },
-            "focus": {
-              "@type": "Thing",
-              "@id": "https://id.kb.se/term/sao/Barnpsykologi#it",
-              "sameAs":  [{"@id": "http://libris.kb.se/resource/auth/140482"}]
+            "mainEntity": {
+              "@type": "TopicalTerm",
+              "@id": "https://id.kb.se/term/sao/Barnpsykologi",
+              "sameAs":  [{"@id": "http://libris.kb.se/resource/auth/140482"}],
+              "prefLabel": "Barnpsykologi",
+              "inScheme":  {
+                "@type": "ConceptScheme",
+                "@id": "https://id.kb.se/term/sao",
+                "notation": "sao"
+              }
             }
           }
         },
@@ -4723,29 +4725,26 @@
               "subfields": [{"a": "Barn"}, {"x": "psykologi"}]}}
           ],
           "result": {
-            "@type": "TopicalTerm",
-            "@id": "https://id.kb.se/term/sao/Barn--psykologi",
-            "sameAs":  [{"@id": "http://libris.kb.se/auth/140482"}],
-            "prefLabel": "Barn--psykologi",
-            "inScheme":  {
-              "@type": "ConceptScheme",
-              "@id": "https://id.kb.se/term/sao",
-              "notation": "sao"
-            },
-            "termComponentList": [
-              {
-                "@type": "TopicalTerm",
-                "prefLabel": "Barn"
+            "mainEntity": {
+              "@type": "TopicalTerm",
+              "@id": "https://id.kb.se/term/sao/Barn--psykologi",
+              "sameAs":  [{"@id": "http://libris.kb.se/resource/auth/140482"}],
+              "prefLabel": "Barn--psykologi",
+              "inScheme":  {
+                "@type": "ConceptScheme",
+                "@id": "https://id.kb.se/term/sao",
+                "notation": "sao"
               },
-              {
-                "@type": "SubdivisionTerm",
-                "prefLabel": "psykologi"
-              }
-            ],
-            "focus": {
-              "@type": "Thing",
-              "@id": "https://id.kb.se/term/sao/Barn--psykologi#it",
-              "sameAs":  [{"@id": "http://libris.kb.se/resource/auth/140482"}]
+              "termComponentList": [
+                {
+                  "@type": "TopicalTerm",
+                  "prefLabel": "Barn"
+                },
+                {
+                  "@type": "SubdivisionTerm",
+                  "prefLabel": "psykologi"
+                }
+              ]
             }
           }
         }
@@ -4753,12 +4752,10 @@
     },
     "151" : {
       "include": "termbase",
-      "aboutEntity": "?record",
       "aboutType": "GeographicalTerm"
     },
     "155" : {
       "include": "termbase",
-      "aboutEntity": "?record",
       "aboutType": "GenreTerm",
       "TODO:just-assert-inScheme=saogf?:uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "TODO:if-inScheme=barn?:uriTemplate": "https://id.kb.se/term/barn/gf/{prefLabel}"
@@ -4766,13 +4763,11 @@
     "162" : {
       "include": "termbase",
       "TODO": "besättning - musik",
-      "aboutEntity": "?record",
       "aboutType": "OrchestraTerm"
     },
 
     "180" : {
       "include": "termid",
-      "aboutEntity": "?record",
       "aboutType": "SubdivisionTerm",
       "$x": {
         "property": "prefLabel",
@@ -4781,26 +4776,22 @@
     },
     "181" : {
       "include": "termid",
-      "aboutEntity": "?record",
       "aboutType": "GeographicalSubdivisionTerm",
       "$z": {"property": "prefLabel"}
     },
     "182" : {
       "include": "termid",
-      "aboutEntity": "?record",
       "aboutType": "ChronologicalSubdivisionTerm",
       "$y": {"property": "prefLabel"}
     },
     "185" : {
       "include": "termid",
-      "aboutEntity": "?record",
       "aboutType": "GenreSubdivisionTerm",
       "$v": {"property": "prefLabel"}
     },
 
     "400": {
       "TODO:remnants-of-inherit": "bib:100",
-      "aboutEntity": "?record",
       "pendingResources": {
         "_:agent": {"link": "contributor", "resourceType": "Person"}
       },
@@ -4816,9 +4807,9 @@
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
         },
         {
-            "when": "@type = PersonTerm",
+            "when": "@type = Person",
             "pendingResources": {
-              "_:agent": {"link": "exactMatch", "resourceType": "PersonTerm"}
+              "_:agent": {"link": "exactMatch", "resourceType": "Person"}
             },
             "include": "agentdata",
             "embedded": true,
@@ -4835,12 +4826,10 @@
     "410": {
       "inherit": "bib:610",
       "TODO:i2": null,
-      "aboutEntity": "?record",
       "addLink": "hasVersion",
       "resourceType": "OrganizationTerm"
     },
     "411": {
-      "aboutEntity": "?record",
       "inherit": "bib:611",
       "addLink": "hasVersion",
       "resourceType": "MeetingTerm"
@@ -4852,7 +4841,6 @@
     },
 
     "450" : {
-      "aboutEntity": "?record",
       "$a": {"addProperty": "altLabel"},
       "match": [
         {
@@ -4871,7 +4859,7 @@
       "TODO:remnants-of-inherit": "bib:100",
       "include": ["agentdata", "splicedworkentity"],
       "TODO": "this is really a link to other auth post..",
-      "aboutEntity": "?thing", "NOTE": "not really though - see 100",
+      "NOTE": "not really though - see 100",
       "pendingResources": {
         "_:agent": {"link": "hasPersona", "resourceType": "Person"}
       }
@@ -4880,7 +4868,6 @@
     "511" : {"inherit": "bib:111", "aboutType": null, "addLink": "seeAlso"},
     "550" : {
       "include": ["termbase", "relation_from_w"],
-      "aboutEntity": "?record",
       "resourceType": "TopicalTerm",
       "_spec": [
         {
@@ -4889,14 +4876,17 @@
             {"550": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Other"}]}}
           ],
           "result": {
-            "inScheme": {
-              "@id": "https://id.kb.se/term/sao",
-              "@type": "ConceptScheme",
-              "notation": "sao"
-            },
-            "related": [
-              {"@type": "TopicalTerm", "@id": "https://id.kb.se/term/sao/Other", "prefLabel":  "Other"}
-            ]
+            "mainEntity": {
+              "@type": "Concept",
+              "inScheme": {
+                "@id": "https://id.kb.se/term/sao",
+                "@type": "ConceptScheme",
+                "notation": "sao"
+              },
+              "related": [
+                {"@type": "TopicalTerm", "@id": "https://id.kb.se/term/sao/Other", "prefLabel":  "Other"}
+              ]
+            }
           }
         },
         {
@@ -4906,16 +4896,19 @@
               "subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}]}}
           ],
           "result": {
-            "inScheme": {
-              "@id": "https://id.kb.se/term/sao",
-              "@type": "ConceptScheme",
-              "notation": "sao"
-            },
-            "broader": [
-              {"@type": "TopicalTerm",
-                "@id": "https://id.kb.se/term/sao/Commedia%20dell%60arte",
-                "prefLabel":  "Commedia dell`arte"}
-            ]
+            "mainEntity": {
+              "@type": "Concept",
+              "inScheme": {
+                "@id": "https://id.kb.se/term/sao",
+                "@type": "ConceptScheme",
+                "notation": "sao"
+              },
+              "broader": [
+                {"@type": "TopicalTerm",
+                  "@id": "https://id.kb.se/term/sao/Commedia%20dell%60arte",
+                  "prefLabel":  "Commedia dell`arte"}
+              ]
+            }
           }
         }
       ]
@@ -4927,7 +4920,6 @@
     },
     "555" : {
       "include": ["termbase_noid", "relation_from_w"],
-      "aboutEntity": "?record",
       "resourceType": "GenreTerm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
@@ -4973,7 +4965,6 @@
 
     "750" : {
       "i1": null,
-      "aboutEntity": "?record",
       "addLink": "closeMatch",
       "resourceType": "TopicalTerm",
       "match": [
@@ -4992,7 +4983,6 @@
     "755" : {
       "include": ["subjectbase", "termbase_noid"],
       "i1": null,
-      "aboutEntity": "?record",
       "addLink": "closeMatch",
       "resourceType": "GenreTerm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",

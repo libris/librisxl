@@ -482,6 +482,8 @@ class MarcRuleSet {
             }
             fieldHandlers[tag] = handler
             if (dfn.aboutType && dfn.aboutType != 'Record') {
+                if (dfn.aboutEntity)
+                    assert tag && aboutTypeMap.containsKey(dfn.aboutEntity)
                 aboutTypeMap[dfn.aboutEntity ?: '?thing'] << dfn.aboutType
             }
         }
