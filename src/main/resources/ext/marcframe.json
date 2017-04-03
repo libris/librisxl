@@ -296,7 +296,7 @@
         {
           "when": "$t",
           "pendingResources": {
-            "_:work": {"addLink": "subject", "resourceType": "UniformWork", "embedded": false},
+            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
             "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
           },
           "$t": {"about": "_:work", "property": "title"},
@@ -2908,7 +2908,7 @@
     "130": {
       "aboutEntity": "?work",
       "link": "expressionOf",
-      "resourceType": "UniformWork",
+      "resourceType": "Work",
       "TODO": "Similar to 240. Could use link:expressionOf if 130 XOR 240",
       "$a": {"property": "uniformTitle"},
       "$d": {"property": "date"},
@@ -3713,7 +3713,7 @@
       "TOOO:i2": {},
       "inherit": "130",
       "aboutEntity": "?work",
-      "addLink": "subject", "resourceType": "UniformWork"
+      "addLink": "subject", "resourceType": "Work"
     },
     "648": {
       "include": ["subjectbase", "termbase", "uri_from_i2"],
@@ -3846,7 +3846,7 @@
           "when": "$t & i2=2",
           "include": "agentdata",
           "addLink": "hasPart",
-          "resourceType": "UniformWork",
+          "resourceType": "Work",
           "$t": {"property": "title"},
           "$l": {"link": "language", "resourceType": "Language", "property": "label"},
           "pendingResources": {
@@ -3871,7 +3871,7 @@
           "pendingResources": {
             "_:work": {
               "link": "entity",
-              "resourceType": "UniformWork",
+              "resourceType": "Work",
               "embedded": false
             },
             "_:contribution": {
@@ -3942,7 +3942,7 @@
                   "@type": "Relationship",
                   "relation": [{"label": "Parafraserar"}],
                   "entity": {
-                    "@type": "UniformWork",
+                    "@type": "Work",
                     "title": "Anteckningar från en ö",
                     "contribution": [
                       {
@@ -3970,7 +3970,7 @@
                 {
                   "@type": "Relationship",
                   "entity": {
-                    "@type": "UniformWork",
+                    "@type": "Work",
                     "title": "Anteckningar från en ö",
                     "contribution": [
                       {
@@ -3995,7 +3995,7 @@
               "@type": "Text",
               "hasPart": [
                 {
-                  "@type": "UniformWork",
+                  "@type": "Work",
                   "title": "Anteckningar från en ö",
                   "contribution": [
                     {
@@ -4018,7 +4018,7 @@
               "@type": "Text",
               "hasPart": [
                 {
-                  "@type": "UniformWork",
+                  "@type": "Work",
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
@@ -4045,7 +4045,7 @@
                   "@type": "PartitiveRelationship",
                   "relation": [{"label": "Parafraserar"}],
                   "entity": {
-                    "@type": "UniformWork",
+                    "@type": "Work",
                     "title": "Anteckningar från en ö",
                     "contribution": [
                       {
@@ -4073,7 +4073,7 @@
         {"when": "i2=2", "addLink": "influentialPart"}
       ],
       "addLink": "influentialRelation",
-      "resourceType": "UniformWork",
+      "resourceType": "Work",
       "$a": {"property": "title"}
     },
 
@@ -4585,7 +4585,7 @@
       "TODO:match @type = ?": {
         "Concept": {"addLink": "closeMatch"},
         "Place": {"addLink": "closeMatch"},
-        "UniformWork": {"addLink": "subject"}
+        "Work": {"addLink": "subject"}
       }
     },
 
@@ -4800,7 +4800,7 @@
           "when": "$t",
           "include": "agentdata",
           "pendingResources": {
-            "_:work": {"addLink": "hasVersion", "resourceType": "UniformWork", "embedded": false},
+            "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
             "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
           },
           "$t": {"about": "_:work", "property": "title"},
