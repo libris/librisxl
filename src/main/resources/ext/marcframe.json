@@ -2877,6 +2877,11 @@
       "i1": {"marcDefault": "2"},
       "match": [
         {
+          "when": "$b",
+          "$a": {"link": "isPartOf", "resourceType": "Organization", "property": "name"},
+          "$b": {"property": "name"}
+        },
+        {
           "when": "i1=0",
           "$a": {"property": "name", "required": true}
         },
@@ -2887,11 +2892,6 @@
             "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
             "required": true
           }
-        },
-        {
-          "when": "$b",
-          "$a": {"link": "isPartOf", "resourceType": "Organization", "property": "name"},
-          "$b": {"property": "name"}
         }
       ],
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
