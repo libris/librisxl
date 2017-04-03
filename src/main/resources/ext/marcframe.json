@@ -364,21 +364,21 @@
         {
           "when": "$v | $x | $y | $z",
           "$a": {"addLink": "termComponentList",
-                 "resourceType": "TopicalTerm",
+                 "resourceType": "Topic",
                  "property": "prefLabel", "required": true},
           "$v": {"addLink": "termComponentList",
                "TODO": "use /term/saogf/{_}, but only if $2=sao",
-                 "resourceType": "GenreTerm",
+                 "resourceType": "GenreForm",
                  "property": "prefLabel"},
           "$x": {"addLink": "termComponentList",
-                 "resourceType": "SubdivisionTerm",
+                 "resourceType": "Subdivision",
                  "property": "prefLabel"},
           "$y": {"addLink": "termComponentList",
-                 "resourceType": "ChronologicalTerm",
+                 "resourceType": "Temporal",
                  "property": "prefLabel"},
           "$z": {"addLink": "termComponentList",
                  "TODO": "use /place/{_}, but only if $2=sao",
-                 "resourceType": "GeographicalTerm",
+                 "resourceType": "Geographic",
                  "property": "prefLabel"}
         }
       ]
@@ -3636,14 +3636,14 @@
       "include": "subjectbase",
       "aboutEntity": "?work",
       "addLink": "subject",
-      "resourceType": "OrganizationTerm",
+      "resourceType": "Organization",
       "i1": {"marcDefault": "2"},
       "match": [
         {
           "when": "$x",
           "include": "uri_from_i2",
           "$a": {"addLink": "termComponentList", "resourceType": "Organization", "property": "name"},
-          "$x": {"addLink": "termComponentList", "resourceType": "SubdivisionTerm", "property": "prefLabel"}
+          "$x": {"addLink": "termComponentList", "resourceType": "Subdivision", "property": "prefLabel"}
         },
         {
           "when": "i1=0",
@@ -3684,10 +3684,10 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "OrganizationTerm",
+                  "@type": "Organization",
                   "termComponentList": [
                     {"@type": "Organization", "name": "Kungl. biblioteket"},
-                    {"@type": "SubdivisionTerm", "prefLabel": "samlingar"}
+                    {"@type": "Subdivision", "prefLabel": "samlingar"}
                   ],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/sao",
@@ -3706,7 +3706,7 @@
       "TOOO:i2": {},
       "inherit": "111",
       "aboutEntity": "?work",
-      "addLink": "subject", "resourceType": "MeetingTerm"
+      "addLink": "subject", "resourceType": "Meeting"
     },
     "630": {
       "TOOO:i1": {},
@@ -3719,14 +3719,14 @@
       "include": ["subjectbase", "termbase", "uri_from_i2"],
       "aboutEntity": "?work",
       "addLink": "subject",
-      "resourceType": "ChronologicalTerm"
+      "resourceType": "Temporal"
     },
     "650": {
       "include": ["subjectbase", "termbase_with_uri_from_i2"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-      "resourceType": "TopicalTerm",
+      "resourceType": "Topic",
       "i1": {
         "property": "marc:subjectLevel",
         "marcDefault": " ",
@@ -3747,7 +3747,7 @@
               "subject": [
                 {
                   "@id": "https://id.kb.se/term/sao/Fysik",
-                  "@type": "TopicalTerm",
+                  "@type": "Topic",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/sao",
                     "@type": "ConceptScheme",
@@ -3768,16 +3768,16 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "TopicalTerm",
+                  "@type": "Topic",
                   "@id": "http://id.loc.gov/authorities/label/Information--Information%20Age",
                   "prefLabel": "Information--Information Age",
                   "termComponentList": [
                     {
-                      "@type": "TopicalTerm",
+                      "@type": "Topic",
                       "prefLabel": "Information"
                     },
                     {
-                      "@type": "ChronologicalTerm",
+                      "@type": "Temporal",
                       "prefLabel": "Information Age"
                     }
                   ],
@@ -3797,7 +3797,7 @@
       "include": ["subjectbase", "termbase", "uri_from_i2"],
       "aboutEntity": "?work",
       "addLink": "subject",
-      "resourceType": "GeographicalTerm",
+      "resourceType": "Geographic",
       "i1": null
     },
     "653": {
@@ -3815,7 +3815,7 @@
       "include": ["subjectbase", "termbase_noid"],
       "aboutEntity": "?work",
       "addLink": "genre",
-      "resourceType": "GenreTerm",
+      "resourceType": "GenreForm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
 
@@ -4435,7 +4435,7 @@
       "[16:17]": {
         "aboutEntity": "?record",
         "property": "marc:headingSeries",
-        "tokenMap": "HeadingType"
+        "tokenMap": {"a": true, "b": false}
       },
       "[17:18]": {
         "aboutEntity": "?record",
@@ -4488,7 +4488,7 @@
       "[14:15]": {
         "aboutEntity": "?record",
         "property": "marc:headingMain",
-        "tokenMap": "HeadingType"
+        "tokenMap": {"a": true, "b": false}
       },
       "[15:16]": {
         "aboutEntity": "?record",
@@ -4570,7 +4570,7 @@
       "TODO": "ignore entirely (should be removed)",
       "ignoreOnRevertInFavourOf": "550",
       "addLink": "broader",
-      "resourceType": "TopicalTerm",
+      "resourceType": "Topic",
       "$a": {"property": "prefLabel"},
       "$z": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
       "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{prefLabel}"
@@ -4660,27 +4660,27 @@
     "110" : {
       "inherit": "bib",
       "aboutEntity": "?thing", "link": null, "resourceType": null,
-      "aboutType": "OrganizationTerm"
+      "aboutType": "Organization"
     },
     "111" : {
       "inherit": "bib",
       "aboutEntity": "?thing", "link": null, "resourceType": null,
-      "aboutType": "MeetingTerm"
+      "aboutType": "Meeting"
     },
     "130" : {
       "inherit": "bib",
       "aboutEntity": "?thing", "link": null, "resourceType": null,
-      "aboutType": "WorkTerm"
+      "aboutType": "Work"
     },
     "148" : {
       "aboutEntity": "?thing", "link": null, "resourceType": null,
-      "aboutType": "ChronologicalTerm",
+      "aboutType": "Temporal",
       "$a": {"property": "prefLabel"},
       "uriTemplate": "https://id.kb.se/term/sao/{prefLabel}"
     },
     "150" : {
       "include": "termbase",
-      "aboutType": "TopicalTerm",
+      "aboutType": "Topic",
       "dependsOn": ["040", "042"],
       "TODO:ignore:$0": "not-defined-for-150;or-assert-equal-to-001",
       "_spec": [
@@ -4691,7 +4691,7 @@
           ],
           "result": {
             "mainEntity": {
-              "@type": "TopicalTerm",
+              "@type": "Topic",
               "@id": "http://libris.kb.se/resource/auth/140482",
               "prefLabel": "Barnpsykologi"
             }
@@ -4705,7 +4705,7 @@
           ],
           "result": {
             "mainEntity": {
-              "@type": "TopicalTerm",
+              "@type": "Topic",
               "@id": "https://id.kb.se/term/sao/Barnpsykologi",
               "sameAs":  [{"@id": "http://libris.kb.se/resource/auth/140482"}],
               "prefLabel": "Barnpsykologi",
@@ -4726,7 +4726,7 @@
           ],
           "result": {
             "mainEntity": {
-              "@type": "TopicalTerm",
+              "@type": "Topic",
               "@id": "https://id.kb.se/term/sao/Barn--psykologi",
               "sameAs":  [{"@id": "http://libris.kb.se/resource/auth/140482"}],
               "prefLabel": "Barn--psykologi",
@@ -4737,11 +4737,11 @@
               },
               "termComponentList": [
                 {
-                  "@type": "TopicalTerm",
+                  "@type": "Topic",
                   "prefLabel": "Barn"
                 },
                 {
-                  "@type": "SubdivisionTerm",
+                  "@type": "Subdivision",
                   "prefLabel": "psykologi"
                 }
               ]
@@ -4752,23 +4752,23 @@
     },
     "151" : {
       "include": "termbase",
-      "aboutType": "GeographicalTerm"
+      "aboutType": "Geographic"
     },
     "155" : {
       "include": "termbase",
-      "aboutType": "GenreTerm",
+      "aboutType": "GenreForm",
       "TODO:just-assert-inScheme=saogf?:uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "TODO:if-inScheme=barn?:uriTemplate": "https://id.kb.se/term/barn/gf/{prefLabel}"
     },
     "162" : {
       "include": "termbase",
       "TODO": "besättning - musik",
-      "aboutType": "OrchestraTerm"
+      "aboutType": "MusicEnsemble"
     },
 
     "180" : {
       "include": "termid",
-      "aboutType": "SubdivisionTerm",
+      "aboutType": "Subdivision",
       "$x": {
         "property": "prefLabel",
         "defaults": {"inCollection": {"@id": "https://id.kb.se/term/subdivisions", "notation": "subdivisions"}}
@@ -4776,17 +4776,17 @@
     },
     "181" : {
       "include": "termid",
-      "aboutType": "GeographicalSubdivisionTerm",
+      "aboutType": "GeographicSubdivision",
       "$z": {"property": "prefLabel"}
     },
     "182" : {
       "include": "termid",
-      "aboutType": "ChronologicalSubdivisionTerm",
+      "aboutType": "ChronologicalSubdivision",
       "$y": {"property": "prefLabel"}
     },
     "185" : {
       "include": "termid",
-      "aboutType": "GenreSubdivisionTerm",
+      "aboutType": "GenreSubdivision",
       "$v": {"property": "prefLabel"}
     },
 
@@ -4827,12 +4827,12 @@
       "inherit": "bib:610",
       "TODO:i2": null,
       "addLink": "hasVersion",
-      "resourceType": "OrganizationTerm"
+      "resourceType": "Organization"
     },
     "411": {
       "inherit": "bib:611",
       "addLink": "hasVersion",
-      "resourceType": "MeetingTerm"
+      "resourceType": "Meeting"
     },
 
     "430": {
@@ -4846,7 +4846,7 @@
         {
           "when": "$x",
           "addLink": "replaces",
-          "resourceType": "TopicalTerm",
+          "resourceType": "Topic",
           "uriTemplate": "https://id.kb.se/term/sao/{termComponentList.prefLabel*}",
           "$a": {"addLink": "termComponentList",  "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"},
           "$x": {"addLink": "termComponentList",  "property": "prefLabel"}
@@ -4868,7 +4868,7 @@
     "511" : {"inherit": "bib:111", "aboutType": null, "addLink": "seeAlso"},
     "550" : {
       "include": ["termbase", "relation_from_w"],
-      "resourceType": "TopicalTerm",
+      "resourceType": "Topic",
       "_spec": [
         {
           "source": [
@@ -4884,7 +4884,7 @@
                 "notation": "sao"
               },
               "related": [
-                {"@type": "TopicalTerm", "@id": "https://id.kb.se/term/sao/Other", "prefLabel":  "Other"}
+                {"@type": "Topic", "@id": "https://id.kb.se/term/sao/Other", "prefLabel":  "Other"}
               ]
             }
           }
@@ -4904,7 +4904,7 @@
                 "notation": "sao"
               },
               "broader": [
-                {"@type": "TopicalTerm",
+                {"@type": "Topic",
                   "@id": "https://id.kb.se/term/sao/Commedia%20dell%60arte",
                   "prefLabel":  "Commedia dell`arte"}
               ]
@@ -4915,19 +4915,19 @@
     },
     "551" : {
       "include": ["termbase_noid", "relation_from_w"],
-      "resourceType": "GeographicalTerm",
+      "resourceType": "Geographic",
       "uriTemplate": "https://id.kb.se/place/{prefLabel}"
     },
     "555" : {
       "include": ["termbase_noid", "relation_from_w"],
-      "resourceType": "GenreTerm",
+      "resourceType": "GenreForm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
     "580" : {
       "TODO": "incomplete",
       "inherit": "180",
       "aboutType": null,
-      "resourceType": "SubdivisionTerm"
+      "resourceType": "Subdivision"
     },
     "667" : {
       "aboutEntity": "?record",
@@ -4966,10 +4966,10 @@
     "750" : {
       "i1": null,
       "addLink": "closeMatch",
-      "resourceType": "TopicalTerm",
+      "resourceType": "Topic",
       "match": [
         {
-          "when": "@type = WorkTerm",
+          "when": "@type = Work",
           "include": ["subjectbase", "termbase", "uri_from_i2"],
           "addLink": "subject"
         },
@@ -4984,7 +4984,7 @@
       "include": ["subjectbase", "termbase_noid"],
       "i1": null,
       "addLink": "closeMatch",
-      "resourceType": "GenreTerm",
+      "resourceType": "GenreForm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
     },
@@ -4994,12 +4994,12 @@
     },
     "781" : {
       "inherit": "750",
-      "resourceType": "GeographicalSubdivisionTerm",
+      "resourceType": "GeographicSubdivision",
       "$z": {"property": "prefLabel"}
     },
     "782" : {
       "inherit": "750",
-      "resourceType": "ChronologicalSubdivisionTerm",
+      "resourceType": "ChronologicalSubdivision",
       "$y": {"property": "prefLabel"}
     },
     "785" : {
