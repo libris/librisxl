@@ -795,7 +795,15 @@ class Crud extends HttpServlet {
             return
         }
 
-        String collection = request.getParameter("collection")
+        String collection = LegacyIntegrationTools.determineLegacyCollection(updatedDoc, jsonld)
+        if ( !(collection in ["auth", "bib", "hold"]) ) {
+            log.debug("Could not determine legacy collection")
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Body could not be categorized as auth, bib or hold.")
+        }
+
         boolean isUpdate = true
         Document savedDoc = saveDocument(updatedDoc, request, response,
                                          collection, isUpdate, "PUT")
