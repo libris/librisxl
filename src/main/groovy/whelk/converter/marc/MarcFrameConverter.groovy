@@ -1831,7 +1831,7 @@ class MarcSubFieldHandler extends ConversionPart {
 
     MarcFieldHandler fieldHandler
     String code
-    char[] interpunctionChars
+    char[] punctuationChars
     char[] surroundingChars
     String link
     String about
@@ -1859,7 +1859,7 @@ class MarcSubFieldHandler extends ConversionPart {
         this.fieldHandler = fieldHandler
         this.code = code
         aboutEntityName = subDfn.aboutEntity
-        interpunctionChars = subDfn.interpunctionChars?.toCharArray()
+        punctuationChars = subDfn.punctuationChars?.toCharArray()
         surroundingChars = subDfn.surroundingChars?.toCharArray()
         super.setTokenMap(fieldHandler, subDfn)
         link = subDfn.link
@@ -1968,8 +1968,8 @@ class MarcSubFieldHandler extends ConversionPart {
     String clearChars(String subVal) {
         def val = subVal.trim()
         if (val.size() > 2) {
-            if (interpunctionChars) {
-                for (c in interpunctionChars) {
+            if (punctuationChars) {
+                for (c in punctuationChars) {
                     if (val.size() < 2) {
                         break
                     }

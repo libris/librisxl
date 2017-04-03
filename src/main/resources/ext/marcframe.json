@@ -217,9 +217,9 @@
       "$k": {"addProperty": "qualifyingNote"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$m": {"addProperty": "musicPerformanceMedium"},
-      "$n": {"addProperty": "partNumber", "interpunctionChars": ","},
+      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "$o": {"property": "musicArrangement"},
-      "$p": {"addProperty": "partTitle", "interpunctionChars": "/"},
+      "$p": {"addProperty": "partTitle", "punctuationChars": "/"},
       "$r": {"property": "musicKey"},
       "$s": {"property": "version"},
       "$0": {
@@ -231,23 +231,23 @@
     "structuredtitle": {
       "$a": {
         "property": "mainTitle",
-        "interpunctionChars": ":/.",
-        "TODO:interpunctionRules": {
+        "punctuationChars": ":/.",
+        "TODO:punctuationRules": {
           " :": {"$b": {"property": "subtitle"}},
           " =": {"$b": {"property": "parallelTitle"}},
           " .": {"TODO": "$a and $b represent equal titles"}
         }
       },
-      "$b": {"property": "titleRemainder", "interpunctionChars": "/"},
-      "$n": {"addProperty": "partNumber", "interpunctionChars": ","},
-      "$p": {"addProperty": "partTitle", "interpunctionChars": "/"}
+      "$b": {"property": "titleRemainder", "punctuationChars": "/"},
+      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+      "$p": {"addProperty": "partTitle", "punctuationChars": "/"}
     },
 
     "agentdata": {
       "match": [
         {
           "when": "i1=0",
-          "$a": {"about": "_:agent", "property": "name", "required": true, "interpunctionChars": ")"}
+          "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"}
         },
         {
           "when": "i1=1",
@@ -2872,7 +2872,7 @@
       "link": "contributor",
       "TODO": [
         "change splitValueProperties to work on result, to handle match combo",
-        "groupByRepetitionAndInterpunctionPattern ($n $d ...)?"
+        "groupByRepetitionAndPunctuationPattern ($n $d ...)?"
       ],
       "i1": {"marcDefault": "2"},
       "match": [
@@ -2977,7 +2977,7 @@
       "i2": {"marcDefault": "0"},
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
-        "NOTE": "interpunction may include data about included parts (e.g. short stories)"
+        "NOTE": "punctuation may include data about included parts (e.g. short stories)"
       },
       "$f": {"aboutEntity": "?thing", "property": "temporalCoverage"},
       "$g": {"aboutEntity": "?thing", "property": "marc:generalTemporalCoverageNote"},
@@ -3084,7 +3084,7 @@
         "addLink": "otherEdition",
         "embedded": true
       },
-      "$a": {"property": "editionStatement", "interpunctionChars": "/"},
+      "$a": {"property": "editionStatement", "punctuationChars": "/"},
       "$b": {"property": "editionEnumeration"},
       "$3": {"property": "part"},
       "_spec": [
@@ -3146,14 +3146,14 @@
         "?publication": {"resourceType": "Publication", "addLink": "publication", "embedded": true},
         "?manufacture": {"resourceType": "Manufacture", "addLink": "manufacture", "embedded": true}
       },
-      "TODO:groupByRepetitionAndInterpunctionPattern": "$3 $a $b $c $e $f $g",
+      "TODO:groupByRepetitionAndPunctuationPattern": "$3 $a $b $c $e $f $g",
       "TODO:i1": {"property": "marc:isLatest", "tokenMap": {"2": false, "3": true}},
-      "$a": {"about": "?publication", "link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
-      "$b": {"about": "?publication", "link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;)"},
-      "$c": {"about": "?publication", "property": "date", "interpunctionChars": ",;"},
-      "$e": {"about": "?manufacture", "link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ":;", "surroundingChars" : "()"},
-      "$f": {"about": "?manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;)"},
-      "$g": {"about": "?manufacture", "property": "date", "interpunctionChars": ",;"},
+      "$a": {"about": "?publication", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:"},
+      "$b": {"about": "?publication", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
+      "$c": {"about": "?publication", "property": "date", "punctuationChars": ",;"},
+      "$e": {"about": "?manufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":;", "surroundingChars" : "()"},
+      "$f": {"about": "?manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
+      "$g": {"about": "?manufacture", "property": "date", "punctuationChars": ",;"},
       "$3": {"about": "?publication", "property": "part", "position": 0, "TODO": "put in first out-split entity"},
       "_spec": [
         {
@@ -3240,9 +3240,9 @@
       "addLink": "provision",
       "embedded": true,
       "resourceType": "ProvisionActivity",
-      "$a": {"link": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ",:"},
-      "$b": {"link": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",:;)"},
-      "$c": {"property": "date", "interpunctionChars": ",;"},
+      "$a": {"link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:"},
+      "$b": {"link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
+      "$c": {"property": "date", "punctuationChars": ",;"},
       "_spec": [
         {
           "source": [
@@ -3282,10 +3282,10 @@
       "$a": {
         "property": "extent",
         "TODO:bf2": {"link": "extent", "resourceType": "Extent", "property": "label"},
-        "interpunctionChars": "+:;"
+        "punctuationChars": "+:;"
       },
-      "$b": {"property": "marc:otherPhysicalDetails", "interpunctionChars": ";+"},
-      "$c": {"property": "dimensions", "interpunctionChars": ":;+"},
+      "$b": {"property": "marc:otherPhysicalDetails", "punctuationChars": ";+"},
+      "$c": {"property": "dimensions", "punctuationChars": ":;+"},
       "$e": {
         "TODO:previousSubfieldEndsWith": "+",
         "link": "accompaniedBy", "property": "label", "embedded": true
@@ -3419,13 +3419,13 @@
       "embedded": true,
       "resourceType": "Serial",
       "TOOO:i2": {},
-      "$a": {"property": "title", "interpunctionChars": ".,=;"},
+      "$a": {"property": "title", "punctuationChars": ".,=;"},
       "$0": {"TODO:property": "authorityRecordControlNumber"},
       "$n": {"addProperty": "numberOfPartOfAWork"},
-      "$p": {"addProperty": "nameOfPartOfAWork", "interpunctionChars": ".,=;"},
+      "$p": {"addProperty": "nameOfPartOfAWork", "punctuationChars": ".,=;"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
-      "$x": {"property": "issn", "interpunctionChars": ".,=;"}
+      "$x": {"property": "issn", "punctuationChars": ".,=;"}
     },
     "490": {
       "inherit": "440",
@@ -3537,9 +3537,9 @@
       "pendingResources": {
         "_:event": {"addLink": "provision", "resourceType": "ProvisionActivity"}
       },
-      "$a": {"property": "description", "interpunctionChars": ":"},
-      "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label", "interpunctionChars": ":", "embedded": false},
-      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label", "interpunctionChars": ",", "embedded": false},
+      "$a": {"property": "description", "punctuationChars": ":"},
+      "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":", "embedded": false},
+      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",", "embedded": false},
       "$d": {"about": "_:event", "property": "date"},
       "$e": {"property": "physicalDescription"},
       "$f": {"addProperty": "seriesStatement"},
@@ -4211,7 +4211,7 @@
       "$a": {"property": "uniformTitle"},
       "$d": {"addProperty": "date"},
       "$v": {"property": "seriesEnumeration"},
-      "$x": {"property": "issn", "interpunctionChars": ".,=;"}
+      "$x": {"property": "issn", "punctuationChars": ".,=;"}
     },
     "841": {},
     "842": {},
