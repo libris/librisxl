@@ -3834,15 +3834,36 @@
 
     "700": {
       "aboutEntity": "?work",
-      "TODO:when i2=2 without $t": "add untitled hasPart?",
       "match": [
         {
           "when": "$t & i2=2 & $i",
-          "inherit-match": "$t & $i",
+          "inherit-match": "$t",
+          "TODO": "i2=2 in conjunction with $i is probably wrong?",
           "resourceType": "PartitiveRelationship"
         },
         {
-          "when": "$t & $i",
+          "when": "$t & i2=2",
+          "include": "agentdata",
+          "addLink": "hasPart",
+          "resourceType": "UniformWork",
+          "$t": {"property": "title"},
+          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Person",
+              "embedded": false
+            }
+          }
+        },
+        {
+          "when": "$t",
           "include": "agentdata",
           "addLink": "relationship",
           "resourceType": "Relationship",
@@ -3870,30 +3891,9 @@
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
         },
         {
-          "when": "$t & i2=2",
-          "inherit-match": "$t",
-          "addLink": "hasPart"
-        },
-        {
-          "when": "$t",
-          "include": "agentdata",
-          "addLink": "entity",
-          "resourceType": "UniformWork",
-          "$t": {"property": "title"},
-          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-          "pendingResources": {
-            "_:contribution": {
-              "addLink": "contribution",
-              "resourceType": "PrimaryContribution",
-              "embedded": true
-            },
-            "_:agent": {
-              "about": "_:contribution",
-              "link": "agent",
-              "resourceType": "Person",
-              "embedded": false
-            }
-          }
+          "when": "i2=2",
+          "inherit-match": "$t & i2=2",
+          "NOTE": "An egent is not a part; we add an untitled, intermediary hasPart"
         },
         {
           "when": null,
@@ -3947,6 +3947,108 @@
                       {
                         "@type": "PrimaryContribution",
                         "role": [{"label": "Skapad av"}],
+                        "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove"},
+              {"t": "Anteckningar från en ö"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relationship": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "UniformWork",
+                    "title": "Anteckningar från en ö",
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
+                        "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "1", "ind2": "2", "subfields": [
+              {"a": "Jansson, Tove"},
+              {"t": "Anteckningar från en ö"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "UniformWork",
+                  "title": "Anteckningar från en ö",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                    }
+                  ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "1", "ind2": "2", "subfields": [
+              {"a": "Jansson, Tove"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "UniformWork",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                    }
+                  ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "1", "ind2": "2", "subfields": [
+              {"a": "Jansson, Tove"},
+              {"t": "Anteckningar från en ö"},
+              {"i": "Parafraserar"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relationship": [
+                {
+                  "@type": "PartitiveRelationship",
+                  "relation": [{"label": "Parafraserar"}],
+                  "entity": {
+                    "@type": "UniformWork",
+                    "title": "Anteckningar från en ö",
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
                         "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
                       }
                     ]
