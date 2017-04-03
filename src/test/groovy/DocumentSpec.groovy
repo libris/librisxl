@@ -220,13 +220,12 @@ class DocumentSpec extends Specification {
                                                               ["showProperties": ["mediaType",
                                                                                   "hasTitle",
                                                                                   "instanceOf"]]]]]]
-
-
-        Document doc = new Document(input)
         when:
-        doc.embellish(extra, displayData)
+
+        Map result = new JsonLd(displayData, null).embellish(input, extra)
+
         then:
-        assert doc.data == expected
+        assert result == expected
     }
 
     def "should return true for holding"() {
