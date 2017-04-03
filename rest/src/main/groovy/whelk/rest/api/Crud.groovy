@@ -28,6 +28,7 @@ import whelk.rest.api.CrudUtils
 import whelk.rest.api.MimeTypes
 import whelk.rest.api.SearchUtils
 import whelk.rest.security.AccessControl
+import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
 import javax.activation.MimetypesFileTypeMap
@@ -81,6 +82,7 @@ class Crud extends HttpServlet {
 
     Map vocabData
     Map displayData
+    JsonLd jsonld
 
     SearchUtils search
     PicoContainer pico
@@ -112,6 +114,7 @@ class Crud extends HttpServlet {
         whelk.loadCoreData()
         displayData = whelk.displayData
         vocabData = whelk.vocabData
+        jsonld = new JsonLd(displayData, vocabData)
         search = new SearchUtils(whelk, displayData, vocabData)
 
     }
@@ -637,6 +640,15 @@ class Crud extends HttpServlet {
         Document newDoc = new Document(requestBody)
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
 
+        String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
+        if ( !(collection in ["auth", "bib", "hold"]) ) {
+            log.debug("Could not determine legacy collection")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Body could not be categorized as auth, bib or hold.")
+        }
+
         // verify user permissions
         log.debug("Checking permissions for ${newDoc}")
         try {
@@ -660,7 +672,6 @@ class Crud extends HttpServlet {
 
         // try store document
         // return 201 or error
-        String collection = request.getParameter("collection")
         boolean isUpdate = false
         Document savedDoc = saveDocument(newDoc, request, response,
                                          collection, isUpdate, "POST")
