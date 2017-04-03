@@ -1,7 +1,9 @@
 package whelk.util
 
 import whelk.DateUtil
+import whelk.Document
 import whelk.IdGenerator
+import whelk.JsonLd
 
 class LegacyIntegrationTools {
 
@@ -30,4 +32,49 @@ class LegacyIntegrationTools {
         return null
     }
 
+    /**
+     * Will return "auth", "bib", "hold" or null
+     */
+    static String determineLegacyCollection(Document document, JsonLd jsonld) {
+        String type = document.getThingType() // for example "Instance"
+
+        String categoryId = getMarcCategoryInHierarchy(type, jsonld)
+        return categoryUriToTerm(categoryId)
+    }
+
+    static String getMarcCategoryInHierarchy(String type, JsonLd jsonld) {
+        def termMap = jsonld.vocabIndex[type]
+        if (termMap == null)
+            return null
+
+        if (termMap["category"] == null) {
+            if (termMap["subClassOf"] != null) {
+                List superClasses = termMap["subClassOf"]
+
+                for (superClass in superClasses) {
+                    String superClassType = jsonld.toTermKey( superClass["@id"] )
+                    String category = getMarcCategoryInHierarchy(superClassType, jsonld)
+                    if ( category != null )
+                        return category
+                }
+            }
+            return null
+        }
+        else
+            return termMap["category"]["@id"]
+    }
+
+    static String categoryUriToTerm(String uri) {
+        if (uri == null)
+            return null
+        switch (uri) {
+            case "https://id.kb.se/marc/auth":
+                return "auth"
+            case "https://id.kb.se/marc/bib":
+                return "bib"
+            case "https://id.kb.se/marc/hold":
+                return "hold"
+            default: return null
+        }
+    }
 }

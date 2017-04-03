@@ -39,6 +39,7 @@ class Document {
 
     static final List thingIdPath = ["@graph", 0, "mainEntity", "@id"]
     static final List thingIdPath2 = ["@graph", 1, "@id"]
+    static final List thingTypePath = ["@graph", 1, "@type"]
     static final List thingSameAsPath = ["@graph", 1, "sameAs"]
     static final List recordIdPath = ["@graph", 0, "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
@@ -92,6 +93,10 @@ class Document {
     void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, LinkedHashMap) }
 
     String getEncodingLevel() { get(encLevelPath) }
+
+    void setThingType(thingType) { set(thingTypePath, thingType, LinkedHashMap) }
+
+    String getThingType() { get(thingTypePath) }
 
     /**
      * Will have base URI prepended if not already there
