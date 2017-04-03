@@ -244,11 +244,13 @@
     },
 
     "agentdata": {
-      "match-i1": {
-        "0": {
+      "match": [
+        {
+          "when": "i1=0",
           "$a": {"about": "_:agent", "property": "name", "required": true, "interpunctionChars": ")"}
         },
-        "1": {
+        {
+          "when": "i1=1",
           "$a": {
             "about": "_:agent",
             "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
@@ -256,11 +258,12 @@
             "required": true
           }
         },
-        "3": {
+        {
+          "when": "i1=3",
           "resourceType": "Family",
           "$a": {"about": "_:agent", "property": "name", "required": true}
         }
-      },
+      ],
       "$a": {"required": true},
       "$b": {"about": "_:agent", "property": "numeration"},
       "$c": {"about": "_:agent", "addProperty": "qualifyingNote"},
@@ -276,29 +279,30 @@
       "$q": {"about": "_:agent", "property": "label"}
     },
 
-    "attribution": {
+    "contribution": {
       "include": "agentdata",
-      "addLink": "qualifiedAttribution",
+      "addLink": "contribution",
       "embedded": true,
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Person"}
       },
-      "$4": {"link": "role", "property": "notation", "uriTemplate": "{notation}", "TODO:mapping": "relatorCode"},
+      "$4": {"addLink": "role", "property": "notation", "uriTemplate": "{notation}", "TODO:mapping": "relatorCode"},
       "$e": {"addProperty": "roleNote"}
     },
 
     "splicedworkentity": {
       "TODO:l": "see-other-fields",
-      "match-code": {
-        "t": {
+      "match": [
+        {
+          "when": "$t",
           "pendingResources": {
             "_:work": {"addLink": "subject", "resourceType": "UniformWork", "embedded": false},
-            "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
+            "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
           },
           "$t": {"about": "_:work", "property": "title"},
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
         }
-      }
+      ]
     },
 
     "classification-ddc": {
@@ -356,8 +360,9 @@
       "constructProperties": {
         "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
       },
-      "match-code": {
-        "v x y z": {
+      "match": [
+        {
+          "when": "$v | $x | $y | $z",
           "$a": {"addLink": "termComponentList",
                  "resourceType": "TopicalTerm",
                  "property": "prefLabel", "required": true},
@@ -376,17 +381,31 @@
                  "resourceType": "GeographicalTerm",
                  "property": "prefLabel"}
         }
-      }
+      ]
     },
     "termbase": {
       "include": ["termbase_noid", "termid"]
     },
+    "termbase_with_uri_from_i2": {
+      "match": [
+        {
+          "when": "i2=0",
+          "include": ["termbase_noid"],
+          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
+        },
+        {
+          "when": null,
+          "include": ["termbase_noid", "termid"]
+        }
+      ]
+    },
     "uri_from_i2": {
-      "match-i2": {
-        "0": {
+      "match": [
+        {
+          "when": "i2=0",
           "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
         }
-      }
+      ]
     },
     "relation_from_w": {
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
@@ -2285,7 +2304,6 @@
 
     "020": {
       "include": ["identifier"],
-      "TODO:match-domain?": {"EBook": {"addLink": "commonEndeavor"}},
       "resourceType": "ISBN",
       "$c": {"property": "acquisitionTerms"},
       "_spec": [
@@ -2601,14 +2619,13 @@
 
     "035": {
       "aboutEntity": "?record",
-      "match-pattern": {
-        "$a": {
-          "^http://dbpedia\\.org/": {
-            "aboutEntity": "?thing",
-            "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"}
-          }
+      "match": [
+        {
+          "when": "$a =~ ^http://dbpedia\\.org/.+",
+          "aboutEntity": "?thing",
+          "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"}
         }
-      },
+      ],
       "$a": {"addProperty": "systemNumber"},
       "$9": {"addProperty": "librisIIINumber"},
       "_spec": [
@@ -2816,8 +2833,8 @@
 
     "100": {
       "aboutEntity": "?work",
-      "include": "attribution",
-      "resourceType": "Principal",
+      "include": "contribution",
+      "resourceType": "PrimaryContribution",
       "_spec": [
         {
           "source": {
@@ -2833,9 +2850,9 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "qualifiedAttribution": [
+              "contribution": [
                 {
-                  "@type": "Principal",
+                  "@type": "PrimaryContribution",
                   "agent": {"@type": "Person",
                     "familyName":  "Jansson",
                     "givenName":  "Tove",
@@ -2852,30 +2869,31 @@
     "110": {
       "aboutEntity": "?work",
       "resourceType": "Organization",
-      "link": "attributedTo",
+      "link": "contributor",
       "TODO": [
         "change splitValueProperties to work on result, to handle match combo",
         "groupByRepetitionAndInterpunctionPattern ($n $d ...)?"
       ],
       "i1": {"marcDefault": "2"},
-      "match-i1": {
-        "0": {
+      "match": [
+        {
+          "when": "$b",
+          "$a": {"link": "isPartOf", "resourceType": "Organization", "property": "name"},
+          "$b": {"property": "name"}
+        },
+        {
+          "when": "i1=0",
           "$a": {"property": "name", "required": true}
         },
-        "1": {
+        {
+          "when": "i1=1",
           "$a": {
             "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
             "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
             "required": true
           }
         }
-      },
-      "match-code": {
-        "b": {
-          "$a": {"link": "isPartOf", "resourceType": "Organization", "property": "name"},
-          "$b": {"property": "name"}
-        }
-      },
+      ],
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$a": {"property": "name"}
     },
@@ -3212,13 +3230,13 @@
 
     "264": {
       "TOOO:i1": {},
-      "match-i2": {
-        "0": {"addLink": "production", "resourceType": "Production"},
-        "1": {"addLink": "publication", "resourceType": "Publication"},
-        "2": {"addLink": "distribution", "resourceType": "Distribution"},
-        "3": {"addLink": "manufacture", "resourceType": "Manufacture"},
-        "4": {"addLink": "copyright", "resourceType": "Copyright"}
-      },
+      "match": [
+        {"when": "i2=0", "addLink": "production", "resourceType": "Production"},
+        {"when": "i2=1", "addLink": "publication", "resourceType": "Publication"},
+        {"when": "i2=2", "addLink": "distribution", "resourceType": "Distribution"},
+        {"when": "i2=3", "addLink": "manufacture", "resourceType": "Manufacture"},
+        {"when": "i2=4", "addLink": "copyright", "resourceType": "Copyright"}
+      ],
       "addLink": "provision",
       "embedded": true,
       "resourceType": "ProvisionActivity",
@@ -3453,7 +3471,7 @@
 
     "511": {
       "aboutEntity": "?work",
-      "match-i1": {"1": {"$a": {"addProperty": "participantNote"}}},
+      "match": [{"when": "i1=1", "$a": {"addProperty": "participantNote"}}],
       "$a": {
         "addProperty": "performerNote"
       }
@@ -3469,8 +3487,9 @@
       "aboutEntity": "?thing",
       "TOOO:i1": {},
       "$a": {"addProperty": "summary"},
-      "match-code": {
-        "u": {
+      "match": [
+        {
+          "when": "$u",
           "TODO": "unify with summary or the generic annotation model?",
           "addLink": "describedBy",
           "resourceType": "WebPage",
@@ -3478,7 +3497,7 @@
           "$a": {"property": "label"},
           "$u": {"addLink": "sameAs", "uriTemplate": "{+_}"}
         }
-      },
+      ],
       "_spec": [
         {
           "source": {"520": {"ind1": " ", "ind2": " ", "subfields": [
@@ -3613,33 +3632,42 @@
       }
     },
     "610": {
-      "include": ["subjectbase", "uri_from_i2"],
+      "include": "subjectbase",
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "OrganizationTerm",
       "i1": {"marcDefault": "2"},
-      "match-i1": {
-        "0": {
+      "match": [
+        {
+          "when": "$x",
+          "include": "uri_from_i2",
+          "$a": {"addLink": "termComponentList", "resourceType": "Organization", "property": "name"},
+          "$x": {"addLink": "termComponentList", "resourceType": "SubdivisionTerm", "property": "prefLabel"}
+        },
+        {
+          "when": "i1=0",
+          "include": "uri_from_i2",
           "$a": {
             "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
             "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
             "required": true
           }
         },
-        "1": {
+        {
+          "when": "i1=1",
+          "include": "uri_from_i2",
           "TODO": "name of administrative unit",
           "$a": {"property": "name", "required": true}
         },
-        "2": {
+        {
+          "when": "i1=2",
           "$a": {"property": "name", "required": true}
+        },
+        {
+          "when": null,
+          "include": "uri_from_i2"
         }
-      },
-      "match-code": {
-        "x": {
-          "$a": {"addLink": "termComponentList", "resourceType": "Organization", "property": "name"},
-          "$x": {"addLink": "termComponentList", "resourceType": "SubdivisionTerm", "property": "prefLabel"}
-        }
-      },
+      ],
       "$a": {"property": "name", "required": true},
       "_spec": [
         {
@@ -3693,7 +3721,7 @@
       "resourceType": "ChronologicalTerm"
     },
     "650": {
-      "include": ["subjectbase", "termbase", "uri_from_i2"],
+      "include": ["subjectbase", "termbase_with_uri_from_i2"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
@@ -3806,25 +3834,75 @@
 
     "700": {
       "aboutEntity": "?work",
-      "include": "attribution",
-      "resourceType": "Additional",
-      "TODO:if-resourceType-ignoreOnRevertInFavourOf": "100",
-      "match-code": {
-        "t": {
+      "match": [
+        {
+          "when": "$t & i2=2 & $i",
+          "inherit-match": "$t",
+          "TODO": "i2=2 in conjunction with $i is probably wrong?",
+          "resourceType": "PartitiveRelationship"
+        },
+        {
+          "when": "$t & i2=2",
+          "include": "agentdata",
+          "addLink": "hasPart",
+          "resourceType": "UniformWork",
+          "$t": {"property": "title"},
+          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
           "pendingResources": {
-            "_:work": {"link": "agent", "resourceType": "UniformWork", "embedded": false},
-            "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Person",
+              "embedded": false
+            }
+          }
+        },
+        {
+          "when": "$t",
+          "include": "agentdata",
+          "addLink": "relationship",
+          "resourceType": "Relationship",
+          "pendingResources": {
+            "_:work": {
+              "link": "entity",
+              "resourceType": "UniformWork",
+              "embedded": false
+            },
+            "_:contribution": {
+              "about": "_:work",
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Person",
+              "embedded": false
+            }
           },
+          "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
+        },
+        {
+          "when": "i2=2",
+          "inherit-match": "$t & i2=2",
+          "NOTE": "An egent is not a part; we add an untitled, intermediary hasPart"
+        },
+        {
+          "when": null,
+          "include": "contribution",
+          "resourceType": "Contribution"
         }
-      },
-      "TODO:match-i2": {
-        "2": {
-          "NOTE": "analytiskt bidrag",
-          "TODO:addLink": "hasPart"
-        }
-      },
+      ],
+      "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
+      "$4": {"about": "_:contribution", "addLink": "role", "property": "notation", "uriTemplate": "{notation}", "TODO:mapping": "relatorCode"},
       "_spec": [
         {
           "source": {"700":
@@ -3835,13 +3913,44 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "qualifiedAttribution": [
+              "contribution": [
                 {
-                  "@type": "Additional",
+                  "@type": "Contribution",
                   "agent": {"@type": "Person",
                     "familyName":  "Pietilä",
                     "givenName":  "Tuulikki",
                     "birthYear":  "1917"}
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Jansson, Tove"},
+              {"t": "Anteckningar från en ö"},
+              {"i": "Parafraserar"},
+              {"e": "Skapad av"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relationship": [
+                {
+                  "@type": "Relationship",
+                  "relation": [{"label": "Parafraserar"}],
+                  "entity": {
+                    "@type": "UniformWork",
+                    "title": "Anteckningar från en ö",
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
+                        "role": [{"label": "Skapad av"}],
+                        "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                      }
+                    ]
+                  }
                 }
               ]
             }
@@ -3856,14 +3965,93 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "qualifiedAttribution": [
+              "relationship": [
                 {
-                  "@type": "Additional",
-                  "agent": {
+                  "@type": "Relationship",
+                  "entity": {
                     "@type": "UniformWork",
                     "title": "Anteckningar från en ö",
-                    "attributedTo": {"@type": "Person",
-                      "familyName":  "Jansson", "givenName":  "Tove"}
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
+                        "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "1", "ind2": "2", "subfields": [
+              {"a": "Jansson, Tove"},
+              {"t": "Anteckningar från en ö"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "UniformWork",
+                  "title": "Anteckningar från en ö",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                    }
+                  ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "1", "ind2": "2", "subfields": [
+              {"a": "Jansson, Tove"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "UniformWork",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                    }
+                  ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "1", "ind2": "2", "subfields": [
+              {"a": "Jansson, Tove"},
+              {"t": "Anteckningar från en ö"},
+              {"i": "Parafraserar"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relationship": [
+                {
+                  "@type": "PartitiveRelationship",
+                  "relation": [{"label": "Parafraserar"}],
+                  "entity": {
+                    "@type": "UniformWork",
+                    "title": "Anteckningar från en ö",
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
+                        "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                      }
+                    ]
                   }
                 }
               ]
@@ -3880,9 +4068,9 @@
 
     "730": {
       "TOOO:i1": {},
-      "TODO:match-i2": {
-        "2": {"addLink": "influentialPart"}
-      },
+      "TODO:match": [
+        {"when": "i2=2", "addLink": "influentialPart"}
+      ],
       "addLink": "influentialRelation",
       "resourceType": "UniformWork",
       "$a": {"property": "title"}
@@ -4049,12 +4237,12 @@
       "i1": {
         "marcDefault": "4"
       },
-      "match-i2": {
-        "0": {"addLink": "associatedMedia", "resourceType": "MediaObject"},
-        "1": {"addLink": "otherPhysicalFormat", "resourceType": "Electronic"},
-        "2": {"addLink": "isPrimaryTopicOf", "resourceType": "Document"},
-        "8": {"addLink": "relatedTo", "resourceType": "Document"}
-      },
+      "match": [
+        {"when": "i2=0", "addLink": "associatedMedia", "resourceType": "MediaObject"},
+        {"when": "i2=1", "addLink": "otherPhysicalFormat", "resourceType": "Electronic"},
+        {"when": "i2=2", "addLink": "isPrimaryTopicOf", "resourceType": "Document"},
+        {"when": "i2=8", "addLink": "relatedTo", "resourceType": "Document"}
+      ],
       "TODO?": {
         "if $x=digipic or $y=bild": {"addLink": "depiction"},
         "if $z=Wikipedia|IMDB": {"addLink": "isPrimaryTopicOf"}
@@ -4399,7 +4587,7 @@
       "inherit": "bib",
       "aboutEntity": "?record",
       "addLink": "closeMatch",
-      "match-domain": {
+      "TODO:match @type = ?": {
         "Concept": {"addLink": "closeMatch"},
         "Place": {"addLink": "closeMatch"},
         "UniformWork": {"addLink": "subject"}
@@ -4407,23 +4595,28 @@
     },
 
     "100" : {
-      "include": "agentdata",
       "aboutEntity": "?record",
       "aboutType": "PersonTerm",
       "pendingResources": {
         "_:agent": {"link": "focus", "resourceType": "Person", "embedded": true}
       },
-      "match-code": {
-        "t": {
+      "match": [
+        {
+          "when": "$t",
+          "include": "agentdata",
           "aboutType": "WorkTerm",
           "pendingResources": {
             "_:work": {"link": "focus", "resourceType": "UniformWork", "embedded": true},
-            "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
+            "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
           },
           "$t": {"about": "_:work", "property": "title"},
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
+        },
+        {
+          "when": null,
+          "include": "agentdata"
         }
-      },
+      ],
       "_spec": [
         {
           "source": {
@@ -4449,7 +4642,7 @@
             "focus": {
               "@type": "UniformWork",
               "title": "Anteckningar från en ö",
-              "attributedTo": {"@type": "Person",
+              "contributor": {"@type": "Person",
                 "familyName":  "Jansson", "givenName":  "Tove"}
             }
           }
@@ -4607,30 +4800,37 @@
 
     "400": {
       "TODO:remnants-of-inherit": "bib:100",
-      "include": ["agentdata"],
       "aboutEntity": "?record",
       "pendingResources": {
-        "_:agent": {"link": "attributedTo", "resourceType": "Person"}
+        "_:agent": {"link": "contributor", "resourceType": "Person"}
       },
-      "match-code": {
-        "t": {
+      "match": [
+        {
+          "when": "$t",
+          "include": "agentdata",
           "pendingResources": {
             "_:work": {"addLink": "hasVersion", "resourceType": "UniformWork", "embedded": false},
-            "_:agent": {"about": "_:work", "link": "attributedTo", "resourceType": "Person", "embedded": false}
+            "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
           },
           "$t": {"about": "_:work", "property": "title"},
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
+        },
+        {
+            "when": "@type = PersonTerm",
+            "pendingResources": {
+              "_:agent": {"link": "exactMatch", "resourceType": "PersonTerm"}
+            },
+            "include": "agentdata",
+            "embedded": true,
+            "TODO:alternative $a": {"addProperty": "altLabel"},
+            "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+            "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
+        },
+        {
+          "when": null,
+          "include": "agentdata"
         }
-      },
-      "match-domain": {
-        "PersonTerm": {
-          "addLink": "sameAs",
-          "embedded": true,
-          "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
-          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
-        }
-      }
+      ]
     },
     "410": {
       "inherit": "bib:610",
@@ -4654,15 +4854,16 @@
     "450" : {
       "aboutEntity": "?record",
       "$a": {"addProperty": "altLabel"},
-      "match-code": {
-        "x": {
+      "match": [
+        {
+          "when": "$x",
           "addLink": "replaces",
           "resourceType": "TopicalTerm",
           "uriTemplate": "https://id.kb.se/term/sao/{termComponentList.prefLabel*}",
           "$a": {"addLink": "termComponentList",  "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"},
           "$x": {"addLink": "termComponentList",  "property": "prefLabel"}
         }
-      },
+      ],
       "TODO": "whatIs w||e"
     },
     "455" : {"inherit": "450"},
@@ -4771,14 +4972,21 @@
     },
 
     "750" : {
-      "include": ["subjectbase", "termbase", "uri_from_i2"],
       "i1": null,
       "aboutEntity": "?record",
       "addLink": "closeMatch",
       "resourceType": "TopicalTerm",
-      "match-domain": {
-        "WorkTerm": {"addLink": "subject"}
-      },
+      "match": [
+        {
+          "when": "@type = WorkTerm",
+          "include": ["subjectbase", "termbase", "uri_from_i2"],
+          "addLink": "subject"
+        },
+        {
+          "when": null,
+          "include": ["subjectbase", "termbase", "uri_from_i2"]
+        }
+      ],
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html"
     },
     "755" : {
@@ -4814,12 +5022,12 @@
       "addLink": "relatedTo",
       "resourceType": "Document",
       "TODO:i1": {},
-      "match-i2": {
-        "0": {"addLink": "sameAs", "resourceType": "Thing"},
-        "1": {"addLink": "isPrimaryTopicOf", "resourceType": "Electronic"},
-        "2": {"addLink": "relatedTo", "resourceType": "Document"},
-        "8": {"addLink": "relatedTo", "resourceType": "Document"}
-      }
+      "match": [
+        {"when": "i2=0", "addLink": "sameAs", "resourceType": "Thing"},
+        {"when": "i2=1", "addLink": "isPrimaryTopicOf", "resourceType": "Electronic"},
+        {"when": "i2=2", "addLink": "relatedTo", "resourceType": "Document"},
+        {"when": "i2=8", "addLink": "relatedTo", "resourceType": "Document"}
+      ]
     }
   },
 
