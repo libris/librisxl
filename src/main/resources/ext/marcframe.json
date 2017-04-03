@@ -286,7 +286,7 @@
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Person"}
       },
-      "$4": {"addLink": "role", "property": "notation", "uriTemplate": "{notation}", "TODO:mapping": "relatorCode"},
+      "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "property": "label"}
     },
 
@@ -309,15 +309,15 @@
       "TODO:$a": {"property": "classificationDdc", "note": "use this flattened form?"},
       "resourceType": "ClassificationDdc",
       "TOOO:i1": {},
-      "uriTemplate": "http://dewey.info/class/{notation}/e{+inScheme.version}/",
-      "$a": {"property": "notation", "required": true},
+      "uriTemplate": "http://dewey.info/class/{code}/e{+inScheme.version}/",
+      "$a": {"property": "code", "required": true},
       "$2": {
         "note": "ignorable (just use defaults)?",
         "link": "inScheme", "resourceType": "ConceptScheme",
         "required": true,
         "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
         "defaults": {
-          "notation": "DDC",
+          "code": "DDC",
           "versionOf": {"@id": "http://dewey.info/scheme/ddc/"}
         },
         "property": "version",
@@ -332,7 +332,7 @@
         "link": "inScheme",
         "resourceType": "ConceptScheme",
         "uriTemplate": "https://id.kb.se/term/{+_}",
-        "property": "notation",
+        "property": "code",
         "tokenMap": "thesaurus",
         "marcDefault": "4",
         "definedElsewhereToken": "7"
@@ -342,12 +342,12 @@
         "link": "inScheme",
         "uriTemplate": "https://id.kb.se/term/{+_}",
         "resourceType": "ConceptScheme",
-        "property": "notation"
+        "property": "code"
       }
     },
 
     "termid": {
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
     },
     "termbase_noid": {
       "$a": {"property": "prefLabel"},
@@ -356,7 +356,7 @@
         "uriTemplate": "http://libris.kb.se/resource/auth/{_}",
         "property": "controlNumber"
       },
-      "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
+      "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "code"},
       "constructProperties": {
         "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
       },
@@ -667,7 +667,7 @@
             "marc:status": {"@id": "marc:CorrectedOrRevised"},
             "descriptionConventions": [
               {"@id": "marc:Isbd"},
-              {"@type": "DescriptionConventions", "notation": "rda"}
+              {"@type": "DescriptionConventions", "code": "rda"}
             ],
             "controlNumber": "0000000",
             "mainEntity": {
@@ -2252,7 +2252,7 @@
               "instanceOf": {
                 "@type": "Text",
                 "marc:literaryForm": {"@id": "marc:NotFictionNotFurtherSpecified"},
-                "language": [{"@id": "https://id.kb.se/language/freeng", "notation": "freeng"}]
+                "language": [{"@id": "https://id.kb.se/language/freeng", "code": "freeng"}]
               }
             }
           }
@@ -2659,11 +2659,11 @@
       "$a": {"link": "assigner", "resourceType": "Organization", "property": "name"},
       "$b": {
         "addLink": "descriptionLanguage",
-        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$c": {"link": "marc:transcribingAgency", "resourceType": "Organization", "property": "name"},
       "$d": {"link": "descriptionModifier", "resourceType": "Organization", "property": "name"},
-      "$e": {"addLink": "descriptionConventions", "NOTE:repeatable": false, "resourceType": "DescriptionConventions", "property": "notation"},
+      "$e": {"addLink": "descriptionConventions", "NOTE:repeatable": false, "resourceType": "DescriptionConventions", "property": "code"},
       "$9": {"property": "license"}
     },
     "041": {
@@ -2682,22 +2682,22 @@
         "TODO:unifyWith": ["008:language", "240.a?", "546"],
         "TODO": "not repeated if equal with existing",
         "addLink": "language",
-        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$b": {
         "about": "_:summary",
         "addLink": "language",
-        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$h": {
         "about": "_:translationSource",
         "addLink": "language",
-        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$k": {
         "about": "_:original",
         "addLink": "language",
-        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "notation"
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       }
     },
     "042": {
@@ -2736,7 +2736,7 @@
       "resourceType": "ClassificationNlm",
       "TOOO:i1": {},
       "TOOO:i2": {},
-      "$a": {"property": "notation"},
+      "$a": {"property": "code"},
       "$b": {"property": "classificationItem", "ignored": true}
     },
     "061": {},
@@ -2762,7 +2762,7 @@
       "TOOO:i1": {},
       "addLink": "classification",
       "resourceType": "ClassificationUdc",
-      "$a": {"property": "notation"},
+      "$a": {"property": "code"},
       "_spec": [
         {
           "source": {
@@ -2773,7 +2773,7 @@
               "instanceOf": {
                 "@type": "Text",
                 "classification": [
-                  {"@type": "ClassificationUdc", "notation": "030"}
+                  {"@type": "ClassificationUdc", "code": "030"}
                 ]
               }
             }
@@ -2806,14 +2806,14 @@
       "aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "Classification",
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{notation}",
-      "uriTemplateDefaults": {"inScheme.notation": "kssb"},
-      "$a": {"property": "notation", "required": true},
+      "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{code}",
+      "uriTemplateDefaults": {"inScheme.code": "kssb"},
+      "$a": {"property": "code", "required": true},
       "$2": {
         "link": "inScheme",
         "resourceType": "ConceptScheme",
         "uriTemplate": "https://id.kb.se/term/{+_}",
-        "property": "notation"
+        "property": "code"
       },
       "$b": {"property": "classificationItem"},
       "_spec": [
@@ -2956,7 +2956,7 @@
       "resourceType": "InstanceTitle",
       "$c": {"property": "responsibilityStatement"},
       "$h": {"property": "marc:mediaTerm"},
-      "$y": {"link": "language", "property": "notation"},
+      "$y": {"link": "language", "property": "code"},
       "TODO": "Translation of? merge into 245?"
     },
 
@@ -3330,7 +3330,7 @@
         "_:contentType": {"addLink": "contentType", "resourceType": "Class"}
       },
       "$a": {"about": "_:contentType", "property": "label"},
-      "$b": {"about": "_:contentType", "property": "notation"},
+      "$b": {"about": "_:contentType", "property": "code"},
       "$2": {"about": "_:contentType", "property": "termGroup"},
       "$8": {"about": "_:contentType", "property": "_groupID"}
     },
@@ -3345,7 +3345,7 @@
       },
       "aboutEntity": "?thing",
       "$a": {"about": "_:mediaType", "property": "label"},
-      "$b": {"about": "_:mediaType", "property": "notation"},
+      "$b": {"about": "_:mediaType", "property": "code"},
       "$2": {"about": "_:mediaType", "property": "termGroup"},
       "$8": {"about": "_:mediaType", "property": "_groupID"}
     },
@@ -3358,7 +3358,7 @@
         "_:carrierType": {"addLink": "carrierType", "resourceType": "CarrierType"}
       },
       "$a": {"about": "_:carrierType", "property": "label"},
-      "$b": {"about": "_:carrierType", "property": "notation"},
+      "$b": {"about": "_:carrierType", "property": "code"},
       "$2": {"about": "_:carrierType", "property": "termGroup"},
       "$8": {"about": "_:carrierType", "property": "_groupID"},
       "_spec": [
@@ -3371,7 +3371,7 @@
                 "carrierType": [
                   {
                     "@type": "CarrierType",
-                    "notation": "nc",
+                    "code": "nc",
                     "label": "volume",
                     "termGroup": "rdacarrier"
                   }
@@ -3432,7 +3432,7 @@
       "TOOO:i1": {},
       "i2": null,
       "TODO:ignoreOnRevertInFavourOf": "773?",
-      "$l": {"link": "callno", "resourceType": "Concept", "property": "notation"}
+      "$l": {"link": "callno", "resourceType": "Concept", "property": "code"}
     },
 
     "500": {"$a": {"aboutEntity": "?thing", "addProperty": "comment"}},
@@ -3692,7 +3692,7 @@
                   "inScheme": {
                     "@id": "https://id.kb.se/term/sao",
                     "@type": "ConceptScheme",
-                    "notation": "sao"
+                    "code": "sao"
                   }
                 }
               ]
@@ -3751,7 +3751,7 @@
                   "inScheme": {
                     "@id": "https://id.kb.se/term/sao",
                     "@type": "ConceptScheme",
-                    "notation": "sao"
+                    "code": "sao"
                   },
                   "prefLabel": "Fysik"
                 }
@@ -3784,7 +3784,7 @@
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
                     "@type": "ConceptScheme",
-                    "notation": "lcsh"
+                    "code": "lcsh"
                   }
                 }
               ]
@@ -3903,7 +3903,7 @@
         }
       ],
       "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
-      "$4": {"about": "_:contribution", "addLink": "role", "property": "notation", "uriTemplate": "{notation}", "TODO:mapping": "relatorCode"},
+      "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "_spec": [
         {
           "source": {"700":
@@ -4313,17 +4313,17 @@
 
     "976": {
       "aboutEntity": "?work",
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{notation}",
+      "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{code}",
       "addLink": "classification",
       "resourceType": "Classification",
       "i2": {
         "link": "inScheme", "resourceType": "ConceptScheme",
         "uriTemplate": "https://id.kb.se/term/{+_}",
-        "property": "notation",
+        "property": "code",
         "tokenMap": {"0": "sab/6", "1": "sab/5", "2": "sab"},
         "TODO": "proper code for sab förkortad"
       },
-      "$a": {"property": "notation"},
+      "$a": {"property": "code"},
       "$b": {"property": "prefLabel"},
       "TODO": "ta bort? automatiskt pålagda - ska gå att få fram via 084.broader"
     }
@@ -4508,7 +4508,7 @@
         "IMPROVE:about": "$thing if Concept else $record",
         "link": "inScheme", "resourceType": "ConceptScheme",
         "TODO:set-link-to?": "inCollection if . = sgp?",
-        "TODO:uriMap?": "if token is unknown: make bnode scheme and keep notation",
+        "TODO:uriMap?": "if token is unknown: make bnode scheme and keep code",
         "uriTemplate": "https://id.kb.se/term/{_}",
         "tokenMap": {
             "sao": "sao",
@@ -4518,7 +4518,7 @@
             "sgp": "sgp",
             "gmgpc//swe": "gmgpc//swe"
         },
-        "property": "notation"
+        "property": "code"
       },
       "_spec": [
         {
@@ -4529,7 +4529,7 @@
               "inScheme":  {
                 "@type": "ConceptScheme",
                 "@id": "https://id.kb.se/term/barn",
-                "notation": "barn"
+                "code": "barn"
               }
             }
           }
@@ -4542,13 +4542,13 @@
         "addLink": "inCollection",
         "resourceType": "TermCollection",
         "uriTemplate": "https://id.kb.se/term/{_}",
-        "property": "notation"
+        "property": "code"
       }
     },
     "043" : {
       "$a": {
         "link": "nationality",
-        "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "notation"
+        "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "code"
       }
     },
 
@@ -4572,8 +4572,8 @@
       "addLink": "broader",
       "resourceType": "Topic",
       "$a": {"property": "prefLabel"},
-      "$z": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "notation"},
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.notation}/{prefLabel}"
+      "$z": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "code"},
+      "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
     },
 
     "082" : {
@@ -4712,7 +4712,7 @@
               "inScheme":  {
                 "@type": "ConceptScheme",
                 "@id": "https://id.kb.se/term/sao",
-                "notation": "sao"
+                "code": "sao"
               }
             }
           }
@@ -4733,7 +4733,7 @@
               "inScheme":  {
                 "@type": "ConceptScheme",
                 "@id": "https://id.kb.se/term/sao",
-                "notation": "sao"
+                "code": "sao"
               },
               "termComponentList": [
                 {
@@ -4771,7 +4771,7 @@
       "aboutType": "Subdivision",
       "$x": {
         "property": "prefLabel",
-        "defaults": {"inCollection": {"@id": "https://id.kb.se/term/subdivisions", "notation": "subdivisions"}}
+        "defaults": {"inCollection": {"@id": "https://id.kb.se/term/subdivisions", "code": "subdivisions"}}
       }
     },
     "181" : {
@@ -4881,7 +4881,7 @@
               "inScheme": {
                 "@id": "https://id.kb.se/term/sao",
                 "@type": "ConceptScheme",
-                "notation": "sao"
+                "code": "sao"
               },
               "related": [
                 {"@type": "Topic", "@id": "https://id.kb.se/term/sao/Other", "prefLabel":  "Other"}
@@ -4901,7 +4901,7 @@
               "inScheme": {
                 "@id": "https://id.kb.se/term/sao",
                 "@type": "ConceptScheme",
-                "notation": "sao"
+                "code": "sao"
               },
               "broader": [
                 {"@type": "Topic",
@@ -5033,9 +5033,9 @@
         "TODO:apply": "852-$b",
         "about": "?thing",
         "link": "heldBy",
-        "uriTemplate": "https://libris.kb.se/library/{notation}",
+        "uriTemplate": "https://libris.kb.se/library/{code}",
         "resourceType": "Organization",
-        "property": "notation"
+        "property": "code"
       }
     },
 
@@ -5402,7 +5402,7 @@
         "resourceType": "Organization",
         "uriTemplate": "https://libris.kb.se/library/{_}",
         "matchUriToken": "^\\S+$",
-        "property": "notation",
+        "property": "code",
         "TODO": "move to mainEntity and auto-repeat here",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
       },
@@ -5447,7 +5447,7 @@
             "mainEntity": {
               "@type": "Item",
               "copyNumber": "1",
-              "heldBy": {"@id": "https://libris.kb.se/library/H", "@type": "Organization", "notation": "H"},
+              "heldBy": {"@id": "https://libris.kb.se/library/H", "@type": "Organization", "code": "H"},
               "shelfControlNumber": "65.465",
               "shelfLocation": ["MAG"]
             }
@@ -5465,12 +5465,12 @@
                 {
                   "@type": "Item",
                   "copyNumber": "1",
-                  "heldBy": {"@id": "https://libris.kb.se/library/X", "@type": "Organization", "notation": "X"}
+                  "heldBy": {"@id": "https://libris.kb.se/library/X", "@type": "Organization", "code": "X"}
                 },
                 {
                   "@type": "Item",
                   "copyNumber": "2",
-                  "heldBy": {"@id": "https://libris.kb.se/library/Y", "@type": "Organization", "notation": "Y"}
+                  "heldBy": {"@id": "https://libris.kb.se/library/Y", "@type": "Organization", "code": "Y"}
                 }
               ]
             }
