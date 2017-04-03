@@ -4951,11 +4951,9 @@
       "$a": {"addProperty": "note"}
     },
     "680" : {
-      "aboutEntity": "?record",
       "$i": {"addProperty": "scopeNote"}
     },
     "688" : {
-      "aboutEntity": "?record",
       "$a": {"addProperty": "historyNote"}
     },
 
