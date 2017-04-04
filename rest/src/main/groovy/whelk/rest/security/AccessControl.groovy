@@ -11,13 +11,13 @@ class AccessControl {
     private static final XLREG_KEY = 'xlreg'
     private static final KAT_KEY = 'kat'
 
-    boolean checkDocumentToPost(Document newDoc, Map userPrivileges) {
-        return checkDocument(newDoc, userPrivileges)
+    boolean checkDocumentToPost(Document newDoc, Map userPrivileges, JsonLd jsonld) {
+        return checkDocument(newDoc, userPrivileges, jsonld)
     }
 
     boolean checkDocumentToPut(Document newDoc, Document oldDoc,
-                               Map userPrivileges) {
-		if (oldDoc.isHolding()) {
+                               Map userPrivileges, JsonLd jsonld) {
+		if (oldDoc.isHolding(jsonld)) {
 			def newDocSigel = newDoc.getSigel()
 			def oldDocSigel = oldDoc.getSigel()
 
@@ -39,16 +39,16 @@ class AccessControl {
 
 		}
 
-		return checkDocument(newDoc, userPrivileges) &&
-					checkDocument(oldDoc, userPrivileges)
+		return checkDocument(newDoc, userPrivileges, jsonld) &&
+					checkDocument(oldDoc, userPrivileges, jsonld)
     }
 
-    boolean checkDocumentToDelete(Document oldDoc, Map userPrivileges) {
-        return checkDocument(oldDoc, userPrivileges)
+    boolean checkDocumentToDelete(Document oldDoc, Map userPrivileges, JsonLd jsonld) {
+        return checkDocument(oldDoc, userPrivileges, jsonld)
     }
 
-    boolean checkDocument(Document document, Map userPrivileges) {
-        if (document.isHolding()) {
+    boolean checkDocument(Document document, Map userPrivileges, JsonLd jsonld) {
+        if (document.isHolding(jsonld)) {
             String sigel = document.getSigel()
             if (!sigel) {
                 throw new ModelValidationException('Missing sigel in document.')

@@ -116,7 +116,6 @@ class Crud extends HttpServlet {
         vocabData = whelk.vocabData
         jsonld = new JsonLd(displayData, vocabData)
         search = new SearchUtils(whelk, displayData, vocabData)
-
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
@@ -659,6 +658,7 @@ class Crud extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
                         "You are not authorized to perform this " +
                                 "operation")
+                log.debug("Permission check failed. Denying request.")
                 return
             }
         } catch (ModelValidationException mve) {
@@ -667,6 +667,7 @@ class Crud extends HttpServlet {
             // FIXME data leak
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     mve.getMessage())
+            log.debug("Model validation check failed. Denying request: " + mve.getMessage())
             return
         }
 
@@ -951,7 +952,7 @@ class Crud extends HttpServlet {
             if (isSystemUser(userInfo)) {
                 return true
             } else {
-                return accessControl.checkDocumentToPost(newDoc, userInfo)
+                return accessControl.checkDocumentToPost(newDoc, userInfo, jsonld)
             }
         }
         log.info("No user information received, denying request.")
@@ -964,7 +965,7 @@ class Crud extends HttpServlet {
             if (isSystemUser(userInfo)) {
                 return true
             } else {
-                return accessControl.checkDocumentToPut(newDoc, oldDoc, userInfo)
+                return accessControl.checkDocumentToPut(newDoc, oldDoc, userInfo, jsonld)
             }
         }
         log.info("No user information received, denying request.")
@@ -977,7 +978,7 @@ class Crud extends HttpServlet {
             if (isSystemUser(userInfo)) {
                 return true
             } else {
-                return accessControl.checkDocumentToDelete(oldDoc, userInfo)
+                return accessControl.checkDocumentToDelete(oldDoc, userInfo, jsonld)
             }
         }
         log.info("No user information received, denying request.")
