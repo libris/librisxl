@@ -3,6 +3,7 @@ package whelk
 import groovy.util.logging.Slf4j as Log
 import org.apache.lucene.analysis.util.CharArrayMap
 import org.codehaus.jackson.map.ObjectMapper
+import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
 import java.lang.reflect.Type
@@ -49,6 +50,7 @@ class Document {
     static final List createdPath = ["@graph", 0, "created"]
     static final List modifiedPath = ["@graph", 0, "modified"]
     static final List encLevelPath = ["@graph", 0, "marc:encLevel", "@id"]
+    static final List sigelPath = ["@graph", 1, "heldBy", "@id"]
 
     public Map data = [:]
     private boolean deleted = false
@@ -171,30 +173,15 @@ class Document {
         return deleted
     }
 
-    boolean isHolding() {
-        List graphList = this.data.get("@graph")
-        return graphList.any { it ->
-            it.get('@type')?.equalsIgnoreCase('Item')
-        }
+    boolean isHolding(JsonLd jsonld) {
+        return ("hold" == LegacyIntegrationTools.determineLegacyCollection(this, jsonld))
     }
 
     String getSigel() {
-        if (this.isHolding()) {
-            List graphItems = this.data.get("@graph")
-
-            Map item = graphItems.find { element ->
-                element[JsonLd.TYPE_KEY] == 'Item'
-            }
-
-            if (item.heldBy?.notation) {
-                return item.heldBy.notation
-            } else {
-                return null
-            }
-        } else {
-            // TODO undefined for non-holding posts for now
-            return null
-        }
+        String uri = get(sigelPath)
+        if (uri != null)
+            return LegacyIntegrationTools.uriToLegacySigel( uri )
+        return null
     }
 
 
