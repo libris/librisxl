@@ -21,7 +21,7 @@ class AccessControl {
 			def newDocSigel = newDoc.getSigel()
 			def oldDocSigel = oldDoc.getSigel()
 
-			if (!newDoc.isHolding()) {
+			if (!newDoc.isHolding(jsonld)) {
 				// we don't allow changing from holding to non-holding
 				return false
 			}
