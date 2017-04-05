@@ -179,6 +179,45 @@
           "back": true
         }
       ]
+    },
+    {
+      "type": "VerboseRevertData",
+      "sourceProperty": "@id",
+      "addLink": "identifiedBy",
+      "addProperty": "value",
+      "_name": "Use @id for $0 on revert",
+      "_spec": [
+        {
+          "source": {
+            "mainEntity": {
+              "subject": [
+                {
+                  "@id": "http://id.kb.se/term/sao/Steampunk"
+                }
+              ]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "subject": [
+                {
+                  "@id": "http://id.kb.se/term/sao/Steampunk"
+                }
+              ]
+            }
+          },
+          "back": {
+            "mainEntity": {
+              "subject": [
+                {
+                  "@id": "http://id.kb.se/term/sao/Steampunk",
+                  "identifiedBy": [{"value": "http://id.kb.se/term/sao/Steampunk"}]
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
   ],
 
@@ -221,11 +260,7 @@
       "$o": {"property": "musicArrangement"},
       "$p": {"addProperty": "partTitle", "punctuationChars": "/"},
       "$r": {"property": "musicKey"},
-      "$s": {"property": "version"},
-      "$0": {
-        "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
-        "uriTemplate": "http://libris.kb.se/auth/{_}"
-      }
+      "$s": {"property": "version"}
     },
 
     "structuredtitle": {
@@ -343,7 +378,8 @@
         "uriTemplate": "https://id.kb.se/term/{+_}",
         "resourceType": "ConceptScheme",
         "property": "code"
-      }
+      },
+      "$0": {"addLink": "identifiedBy", "property": "value"}
     },
 
     "termid": {
@@ -2835,6 +2871,7 @@
       "aboutEntity": "?work",
       "include": "contribution",
       "resourceType": "PrimaryContribution",
+      "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
       "_spec": [
         {
           "source": {
@@ -2874,7 +2911,6 @@
         "change splitValueProperties to work on result, to handle match combo",
         "groupByRepetitionAndPunctuationPattern ($n $d ...)?"
       ],
-      "i1": {"marcDefault": "2"},
       "match": [
         {
           "when": "$b",
@@ -2895,7 +2931,9 @@
         }
       ],
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-      "$a": {"property": "name"}
+      "i1": {"marcDefault": "2"},
+      "$a": {"property": "name"},
+      "$0": {"addLink": "identifiedBy", "property": "value"}
     },
 
     "111": {
@@ -2912,7 +2950,8 @@
       "TODO": "Similar to 240. Could use link:expressionOf if 130 XOR 240",
       "$a": {"property": "uniformTitle"},
       "$d": {"property": "date"},
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"}
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+      "$0": {"addLink": "identifiedBy", "property": "value"}
     },
 
     "210": {
@@ -2945,7 +2984,12 @@
       "embedded": true,
       "link": "hasTitle",
       "resourceType": "WorkTitle",
-      "$a": {"property": "mainTitle"}
+      "$a": {"property": "mainTitle"},
+      "$0": {
+        "aboutEntity": "?work",
+        "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
+        "uriTemplate": "http://libris.kb.se/auth/{_}"
+      }
     },
 
     "242": {
@@ -3420,7 +3464,7 @@
       "resourceType": "Serial",
       "TOOO:i2": {},
       "$a": {"property": "title", "punctuationChars": ".,=;"},
-      "$0": {"TODO:property": "authorityRecordControlNumber"},
+      "$0": {"addLink": "identifiedBy", "property": "value"},
       "$n": {"addProperty": "numberOfPartOfAWork"},
       "$p": {"addProperty": "nameOfPartOfAWork", "punctuationChars": ".,=;"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
@@ -3846,6 +3890,7 @@
           "resourceType": "Work",
           "$t": {"property": "title"},
           "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+          "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
             "_:contribution": {
               "addLink": "contribution",
@@ -3886,7 +3931,8 @@
           },
           "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
-          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": "i2=2",
@@ -4215,6 +4261,7 @@
       "include": "agentdata",
       "$t": {"property": "title"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+      "$0": {"addLink": "identifiedBy", "property": "value"},
       "pendingResources": {
         "_:contribution": {
           "addLink": "contribution",
@@ -4237,7 +4284,8 @@
       "$a": {"property": "uniformTitle"},
       "$d": {"addProperty": "date"},
       "$v": {"property": "seriesEnumeration"},
-      "$x": {"property": "issn", "punctuationChars": ".,=;"}
+      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$0": {"addLink": "identifiedBy", "property": "value"}
     },
     "841": {},
     "842": {},
@@ -4624,6 +4672,7 @@
           "aboutType": "Work",
           "$t": {"property": "title"},
           "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+          "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
             "_:contribution": {
               "addLink": "contribution",
@@ -4643,7 +4692,8 @@
           "aboutEntity": "?thing",
           "aboutType": "Person",
           "about": "_:agent",
-          "include": "agentdata"
+          "include": "agentdata",
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
       "_spec": [
@@ -4829,7 +4879,8 @@
             "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
           },
           "$t": {"about": "_:work", "property": "title"},
-          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": null,
@@ -4840,7 +4891,8 @@
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
-          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ]
     },
