@@ -34,7 +34,6 @@ class StatsMaker implements MySQLLoader.LoadHandler {
 
     def lacksValidAuthRecords = 0
     def docIsNull = 0
-    def suppressed = 0
 
     StatsMaker() {
         final int THREAD_COUNT = 4 * Runtime.getRuntime().availableProcessors()
@@ -56,9 +55,6 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                 Map doc = VCopyToWhelkConverter.getMarcDocMap(row.data)
                 if (doc == null)
                     docIsNull++
-
-                if(VCopyToWhelkConverter.isSuppressed(doc))
-                    suppressed++
 
                 if (!SetSpecMatcher.hasValidAuthRecords(allAuthRecords))
                     lacksValidAuthRecords++
@@ -108,7 +104,6 @@ class StatsMaker implements MySQLLoader.LoadHandler {
 
                 }
             }
-            println "Suppressed so far: ${suppressed}"
         })
     }
 
