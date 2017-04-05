@@ -10,7 +10,7 @@ import groovy.util.logging.Log4j2 as Log
 @Log
 class SetSpecMatcher {
 
-    static List ignoredAuthFields = ['180', '181', '182', '185', '162', '148']
+    static List ignoredAuthFields = ['180', '181', '182', '185', '162']
 
     //TODO: These rules should be put somewhere else and be made configurable outside of compiled code.
     static Map fieldRules = [
@@ -22,6 +22,8 @@ class SetSpecMatcher {
                     bibFields        : ['111', '611', '711']],
             '130': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['130', '630', '730', '830']],
+            '148': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
+                    bibFields        : ['648']],
             '150': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['650'],
                     authFieldsToAdd  : [[field: '040', subfield: 'f', targetField: '2']]],
@@ -94,10 +96,10 @@ class SetSpecMatcher {
                     if (hasLinkedAuthId) {
                         def linkedAuthIds = matchedField[matchedField.keySet()[0]].subfields.findAll { it -> it.keySet().first() == '0' }.collect { Map it -> it[it.keySet()[0]] }
                         if (!linkedAuthIds.contains(setSpec.id))
-                            log.info "Bib ${setSpec.bibid} already has a different subfield 0 (${linkedAuthIds}) than matched auth id. Another subfield 0 will be added (${setSpec.id}) ${matchedField}"
+                            log.debug "Bib ${setSpec.bibid} already has a different subfield 0 (${linkedAuthIds}) than matched auth id. Another subfield 0 will be added (${setSpec.id}) ${matchedField}"
                     }
                     matchedField[matchedField.keySet()[0]].subfields.add(['0': setSpec.id])
-                    log.debug "Addded ${setSpec.id} as subfield 0 to  bib:${setSpec.bibid} on field ${matchedField}"
+                    log.trace "Addded ${setSpec.id} as subfield 0 to bib:${setSpec.bibid} on field ${matchedField}"
 
                 }
                 if (generateStats)
@@ -187,7 +189,9 @@ class SetSpecMatcher {
                     bibHas240a            : getHas240a(doc),
                     partialD              : partialMatchOnSubfieldD,
                     bibSet                : bibSet,
-                    authSet               : authSet
+                    authSet               : authSet,
+                    bibId                 : setSpec.bibid,
+                    authId                : setSpec.id
             ]
             result.type = getMatchType(result)
             return result
@@ -224,6 +228,8 @@ class SetSpecMatcher {
         for (Map bibField in map.data.fields) {
             String key = bibField.keySet()[0]
             if (key.startsWith('1')) {
+                if(key == '148')
+                    log.info "148 funnen"
                 map.field = key
                 map.subfields = bibField[key].subfields
                 if (fieldRules.containsKey(key) && fieldRules[key].authFieldsToAdd != null) {
@@ -233,10 +239,8 @@ class SetSpecMatcher {
                         extrafields.each { extrafield ->
                             map.subfields << [(add.targetField): extrafield]
                         }
-                        log.trace "${map.subfields}"
                     }
                 }
-
                 return map
             }
         }
@@ -282,14 +286,14 @@ class SetSpecMatcher {
         switch (map) {
             case { it.isMatch }:
                 return "match"
+            case { it.hasMisMatchOnA }:
+                return "hasMisMatchOnA"
             case { it.hasOnlyDiff }:
                 return "hasOnlyDiff"
             case { it.hasOnlyReverseDiff }:
                 return "hasOnlyReverseDiff"
             case { it.hasDoubleDiff }:
                 return "hasDoubleDiff"
-            case { it.hasMisMatchOnA }:
-                return "hasMisMatchOnA"
             default:
                 "other"
         }
