@@ -241,8 +241,10 @@ class MarcFrameConverterSpec extends Specification {
         when:
         item.step.unmodify(record, thing)
         then:
-        !item.spec.back || data == (item.spec.back == true?
-                                    item.spec.source : item.spec.back)
+        if (item.spec.back) {
+            def expected = (item.spec.back == true? item.spec.source : item.spec.back)
+            assert data == expected
+        }
 
         where:
         item << postProcStepSpecs
