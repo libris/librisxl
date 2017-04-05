@@ -4059,12 +4059,21 @@
       ]
     },
 
-    "710": {"inherit": "110", "TOOO:i2": {}, "addLink": "influencedBy"},
-    "711": {"inherit": "111"},
+    "710": {
+      "TODO": "change to 700 - Person + Organization!",
+      "inherit": "110",
+      "TOOO:i2": {},
+      "addLink": "relatedTo"
+    },
+    "711": {
+      "TODO": "change to 700 - Person + Meeting!",
+      "inherit": "111"
+    },
 
     "720": {},
 
     "730": {
+      "TODO": "like 700 but just a Work!",
       "TOOO:i1": {},
       "TODO:match": [
         {"when": "i2=2", "addLink": "influentialPart"}
@@ -4199,7 +4208,27 @@
       "addLink": "relatedTo"
     },
 
-    "800": {},
+    "800": {
+      "addLink": "hasSeries",
+      "resourceType": "Serial",
+      "TODO:aboutEntity?": "?series",
+      "include": "agentdata",
+      "$t": {"property": "title"},
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+      "pendingResources": {
+        "_:contribution": {
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        },
+        "_:agent": {
+          "about": "_:contribution",
+          "link": "agent",
+          "resourceType": "Person",
+          "embedded": false
+        }
+      }
+    },
     "810": {},
     "811": {},
     "830": {
