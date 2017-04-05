@@ -109,6 +109,8 @@ class MySQLLoader {
             }
             catch (any) {
                 log.error("Batch failed" , any)
+                // we might want to throw the exception 
+                // here eventually in order to not hide failed records
             }
 
             if (recordCount % 1000 == 1) {
