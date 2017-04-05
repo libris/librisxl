@@ -1432,9 +1432,14 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         matchRules = MatchRule.parseRules(this, fieldDfn) ?: Collections.emptyList()
 
+        def aboutAlias = fieldDfn['about']
+
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
             if (m) {
+                if (obj && obj['about'] == aboutAlias) {
+                    obj = obj.findAll { it.key != 'about' }
+                }
                 addSubfield(m.group(1), obj)
             }
         }

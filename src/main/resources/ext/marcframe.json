@@ -3626,11 +3626,8 @@
       "include": ["subjectbase", "agentdata", "splicedworkentity"],
       "aboutEntity": "?work",
       "addLink": "subject",
-      "resourceType": "Concept",
-      "FIXME": "_:agent = ?thing",
-      "pendingResources": {
-        "_:agent": {"link": "focus", "resourceType": "Person", "embedded": false}
-      }
+      "about": "_:agent",
+      "resourceType": "Person"
     },
     "610": {
       "include": "subjectbase",
@@ -4614,12 +4611,10 @@
         },
         {
           "when": null,
-          "include": "agentdata",
-          "aboutEntity": "?record",
-          "FIXME": "_:agent = ?thing",
-          "pendingResources": {
-            "_:agent": {"link": "mainEntity", "resourceType": "Person"}
-          }
+          "aboutEntity": "?thing",
+          "aboutType": "Person",
+          "about": "_:agent",
+          "include": "agentdata"
         }
       ],
       "_spec": [
@@ -4808,19 +4803,15 @@
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
         },
         {
-            "when": "@type = Person",
-            "pendingResources": {
-              "_:agent": {"link": "exactMatch", "resourceType": "Person"}
-            },
-            "include": "agentdata",
-            "embedded": true,
-            "TODO:alternative $a": {"addProperty": "altLabel"},
-            "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
-            "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
-        },
-        {
           "when": null,
-          "include": "agentdata"
+          "pendingResources": {
+            "_:agent": {"link": "exactMatch", "resourceType": "Person"}
+          },
+          "include": "agentdata",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"}
         }
       ]
     },
