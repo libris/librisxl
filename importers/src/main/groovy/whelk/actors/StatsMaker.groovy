@@ -139,7 +139,7 @@ class StatsMaker implements MySQLLoader.LoadHandler {
     synchronized void appendtofile(BufferedWriter fileWriter, matches) {
         matches.each { match ->
             fileWriter.write("${match.type}" +
-                    "'\t${match.diff.count { it }}" +
+                    "\t${match.diff.count { it }}" +
                     "\t${match.spec.field}" +
                     "\t${match.bibField}" +
                     "\t${match.subfieldsInOverlap}" +
@@ -152,9 +152,11 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                     "\t${match.partialD}" +
                     "\t${match.bibSet} " +
                     "\t${match.authSet} " +
-                    "\t${match.bibField} " +
-                    "\t${match.authField} " +
                     "\t${match.bibHas240a}" +
+                    "\t${match.bibId} " +
+                    "\t${match.authId} " +
+                    "\thttp://data.libris.kb.se/auth/oaipmh?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/auth/${match.authId}" +
+                    "\thttp://data.libris.kb.se/bib/oaipmh?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/bib/${match.bibId}" +
                     "\n")
 
         }
