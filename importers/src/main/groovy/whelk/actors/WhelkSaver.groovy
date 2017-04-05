@@ -27,7 +27,6 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
     int exceptionsThrown
     String sourceSystem
     Whelk whelk
-    MarcFrameConvertingActor convertActor
     PostgreSQLComponent postgreSQLComponent
 
     WhelkSaver(Whelk w, MarcFrameConverter converter, String sourceSystem, PostgreSQLComponent postgreSQLComponent) {
@@ -36,8 +35,6 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
         this.importResult = new ImportResult()
         this.whelk = w
         this.sourceSystem = sourceSystem
-        convertActor = new MarcFrameConvertingActor(converter)
-        convertActor.start()
     }
 
     void setLastRecordTimeStamp(Timestamp timestamp) {
@@ -71,7 +68,6 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
                             whelk.store(doc, sourceSystem, null, record.collection as String, false, true)
                         }
                         importResult.numberOfDocuments++
-
                     }
                 }
                 catch (any) {
