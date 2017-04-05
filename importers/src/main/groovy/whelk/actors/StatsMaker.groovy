@@ -40,8 +40,11 @@ class StatsMaker implements MySQLLoader.LoadHandler {
         threadPool = new ThreadPool(THREAD_COUNT)
         uncertainFileWriter = Files.newBufferedWriter(
                 Paths.get("uncertainMatches.tsv"), Charset.forName("UTF-8"))
+        uncertainFileWriter.write(header)
         completeFileWriter = Files.newBufferedWriter(
                 Paths.get("completeMatches.tsv"), Charset.forName("UTF-8"))
+        completeFileWriter.write(header)
+
     }
 
 
@@ -111,6 +114,27 @@ class StatsMaker implements MySQLLoader.LoadHandler {
         appendtofile(uncertainFileWriter, uncertainMatches)
         appendtofile(completeFileWriter, completeMatches)
     }
+
+    String header = "MatchType" +
+            "\tAuthNotInBib" +
+            "\tAuktfält" +
+            "\tBibfält" +
+            "\tÖverensstämmandeDelfält" +
+            "\tSubfieldsInDiff" +
+            "\tSubfieldsInReverseDiff" +
+            "\tReverseDiffCount" +
+            "\tOverlapCount" +
+            "\tAntalBibdelfält" +
+            "\tAntalAuktdelfält" +
+            "\tHasPartialD" +
+            "\tbibdelfält" +
+            "\tauktdelfält" +
+            "\thas240a" +
+            "\tbibId" +
+            "\tauktId" +
+            "\tauktUrl" +
+            "\tbibUrl" +
+            "\n"
 
     synchronized void appendtofile(BufferedWriter fileWriter, matches) {
         matches.each { match ->
