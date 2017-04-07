@@ -370,7 +370,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
             altIdInsert.setString(2, altId)
             altIdInsert.setInt(3, 0) // record id -> graphIndex = 0
             if (altId == doc.getCompleteId())
-                altIdInsert.setBoolean(4, true) // main ID
+                altIdInsert.setBoolean(4, true) // Main ID
             else
                 altIdInsert.setBoolean(4, false) // alternative ID, not the main ID
             altIdInsert.addBatch()
@@ -379,7 +379,10 @@ class PostgreSQLComponent implements whelk.component.Storage {
             altIdInsert.setString(1, doc.getShortId())
             altIdInsert.setString(2, altThingId)
             altIdInsert.setInt(3, 1) // thing id -> graphIndex = 1
-            altIdInsert.setBoolean(4, false) // thing IDs are never the main ID
+            if (altThingId == doc.getThingIdentifiers()[0])
+                altIdInsert.setBoolean(4, true) // Main ID
+            else
+                altIdInsert.setBoolean(4, false) // alternative ID
             altIdInsert.addBatch()
         }
         try {
