@@ -82,7 +82,8 @@ class FileDumper implements MySQLLoader.LoadHandler {
 
                 Document doc = recordMap.document
                 String coll = recordMap.collection
-                String mainId = doc.getCompleteId()
+                String mainRecordId = doc.getCompleteId()
+                String mainThingId = doc.getThingIdentifiers()[0]
 
                 final String delimiterString = '\t'
                 final String nullString = "\\N"
@@ -96,13 +97,16 @@ class FileDumper implements MySQLLoader.LoadHandler {
                         "${doc.created}\n")
 
                 for (String identifier : doc.getRecordIdentifiers()) {
-                    if (identifier == mainId)
+                    if (identifier == mainRecordId)
                         identifiersWriter.write("${doc.shortId}\t${identifier}\t0\ttrue\n")
                     else
                         identifiersWriter.write("${doc.shortId}\t${identifier}\t0\tfalse\n")
                 }
                 for (String identifier : doc.getThingIdentifiers()) {
-                    identifiersWriter.write("${doc.shortId}\t${identifier}\t1\tfalse\n")
+                    if (identifier == mainThingId)
+                        identifiersWriter.write("${doc.shortId}\t${identifier}\t1\ttrue\n")
+                    else
+                        identifiersWriter.write("${doc.shortId}\t${identifier}\t1\tfalse\n")
                 }
             }
         }
