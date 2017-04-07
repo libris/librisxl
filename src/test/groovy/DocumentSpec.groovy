@@ -244,8 +244,18 @@ class DocumentSpec extends Specification {
                                       "heldBy":
                                               ["notation": "S"]]]]
         Document doc = new Document(content)
+
+        Map displayData = ["@context":
+                                   ["@vocab":"https://id.kb.se/vocab/"]
+        ]
+
+        Map vocabData = ["@graph":[
+                ["@id":"https://id.kb.se/vocab/Item",
+                 "category":["@id":"https://id.kb.se/marc/hold"]]
+        ]]
+
         expect:
-        assert doc.isHolding() == true
+        assert doc.isHolding(new JsonLd(displayData, vocabData)) == true
     }
 
     def "should return false for non-holding"() {
@@ -262,8 +272,18 @@ class DocumentSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some new other data"]]]
         Document doc = new Document(content)
+
+        Map displayData = ["@context":
+                ["@vocab":"https://id.kb.se/vocab/"]
+        ]
+
+        Map vocabData = ["@graph":[
+                ["@id":"https://id.kb.se/vocab/Item",
+                 "category":["@id":"https://id.kb.se/marc/hold"]]
+        ]]
+
         expect:
-        assert doc.isHolding() == false
+        assert doc.isHolding(new JsonLd(displayData, vocabData)) == false
     }
 
     def "should get sigel for holding"() {
@@ -280,7 +300,7 @@ class DocumentSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["notation": "S", "@id": "https://libris.kb.se/library/S"]]]]
         Document doc = new Document(content)
         expect:
         assert doc.getSigel() == 'S'
