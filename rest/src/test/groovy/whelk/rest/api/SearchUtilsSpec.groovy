@@ -40,7 +40,7 @@ class SearchUtilsSpec extends Specification {
         when:
         Map tree = ['@type': []]
         Map expected = ['@type': ['terms': ['field': '@type',
-                                            'size': 1000],
+                                            'size': 10],
                                   'aggs': [:]]]
         SearchUtils search = new SearchUtils(null, null, null)
         then:
