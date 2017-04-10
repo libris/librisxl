@@ -1,5 +1,7 @@
 package whelk.export.servlet;
 
+import whelk.JsonLd;
+import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.FormatConverter;
 import whelk.converter.JsonLD2DublinCoreConverter;
@@ -14,6 +16,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.sql.*;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +37,6 @@ public class OaiPmh extends HttpServlet
     public final static String OAIPMH_ERROR_NO_RECORDS_MATCH = "noRecordsMatch";
     public final static String OAIPMH_ERROR_NO_METADATA_FORMATS = "noMetadataFormats";
     public final static String OAIPMH_ERROR_NO_SET_HIERARCHY = "noSetHierarchy";
-
 
     static final Counter requests = Counter.build()
             .name("oaipmh_requests_total").help("Total requests to OAIPMH.")
@@ -93,6 +95,8 @@ public class OaiPmh extends HttpServlet
 
     public static Properties configuration;
     public static PostgreSQLComponent s_postgreSqlComponent;
+    public static JsonLd s_jsonld; // For model driven behaviour
+    public static Whelk s_whelk;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
@@ -109,6 +113,12 @@ public class OaiPmh extends HttpServlet
     {
         configuration = PropertyLoader.loadProperties("secret");
         s_postgreSqlComponent = new PostgreSQLComponent(configuration.getProperty("sqlUrl"), configuration.getProperty("sqlMaintable"));
+
+        s_whelk = new Whelk(s_postgreSqlComponent);
+        s_whelk.loadCoreData();
+        Map displayData = s_whelk.getDisplayData();
+        Map vocabData = s_whelk.getVocabData();
+        s_jsonld = new JsonLd(displayData, vocabData);
     }
 
     public void destroy()

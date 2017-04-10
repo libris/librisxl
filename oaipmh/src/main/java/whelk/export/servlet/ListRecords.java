@@ -82,28 +82,22 @@ public class ListRecords
         ZonedDateTime fromDateTime = Helpers.parseISO8601(from);
         ZonedDateTime untilDateTime = Helpers.parseISO8601(until);
 
-        if (metadataPrefix.endsWith(OaiPmh.FORMAT_EXPANDED_POSTFIX))
+        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection())
         {
-            // Expand each record with its dependency tree
-            ListRecordTrees.respond(request, response, fromDateTime, untilDateTime, setSpec, metadataPrefix, onlyIdentifiers);
-        } else {
-            // Normal record retrieval
-            try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection())
+            dbconn.setAutoCommit(false);
+            try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec);
+                 ResultSet resultSet = preparedStatement.executeQuery())
             {
-                dbconn.setAutoCommit(false);
-                try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec);
-                    ResultSet resultSet = preparedStatement.executeQuery())
-                {
-                    respond(request, response, metadataPrefix, onlyIdentifiers, resultSet);
-                } finally {
-                    dbconn.commit();
-                }
+                respond(request, response, metadataPrefix, onlyIdentifiers,
+                        metadataPrefix.endsWith(OaiPmh.FORMAT_EXPANDED_POSTFIX), resultSet);
+            } finally {
+                dbconn.commit();
             }
         }
     }
 
     private static void respond(HttpServletRequest request, HttpServletResponse response,
-                                String requestedFormat, boolean onlyIdentifiers, ResultSet resultSet)
+                                String requestedFormat, boolean onlyIdentifiers, boolean embellish, ResultSet resultSet)
             throws IOException, XMLStreamException, SQLException
     {
         // Is the resultset empty?
@@ -128,7 +122,7 @@ public class ListRecords
 
         while (resultSet.next())
         {
-            ResponseCommon.emitRecord(resultSet, null, writer, requestedFormat, onlyIdentifiers);
+            ResponseCommon.emitRecord(resultSet, writer, requestedFormat, onlyIdentifiers, embellish);
         }
 
         writer.writeEndElement(); // ListIdentifiers/ListRecords

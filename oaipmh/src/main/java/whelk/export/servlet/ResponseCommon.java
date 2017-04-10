@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import whelk.Document;
 import whelk.JsonLd;
+import whelk.component.PostgreSQLComponent;
 import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,6 +28,7 @@ import java.util.Map;
 public class ResponseCommon
 {
     private static final Logger logger = LoggerFactory.getLogger(ResponseCommon.class);
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     /**
      * Send a properly formatted OAI-PMH error response to the requesting harvester.
@@ -141,7 +143,8 @@ public class ResponseCommon
             writer.writeCData(convertedText);
     }
 
-    public static void emitRecord(ResultSet resultSet, Document document, XMLStreamWriter writer, String requestedFormat, boolean onlyIdentifiers)
+    public static void emitRecord(ResultSet resultSet, XMLStreamWriter writer, String requestedFormat,
+                                  boolean onlyIdentifiers, boolean embellish)
             throws SQLException, XMLStreamException, IOException
     {
         boolean deleted = resultSet.getBoolean("deleted");
@@ -149,15 +152,22 @@ public class ResponseCommon
         if (sigel != null)
             sigel = LegacyIntegrationTools.uriToLegacySigel( resultSet.getString("sigel").replace("\"", "") );
 
-        // If no document was explicitly passed, create one from the supplied resultset.
-        // The reason documents may be passed explicitly at all, is that sometimes the document is
-        // modified before this function is called, for example when doing expanded document trees.
-        if (document == null)
+        String data = resultSet.getString("data");
+        HashMap datamap = mapper.readValue(data, HashMap.class);
+        Document document = new Document(datamap);
+
+        if (embellish)
         {
-            ObjectMapper mapper = new ObjectMapper();
-            String data = resultSet.getString("data");
-            HashMap datamap = mapper.readValue(data, HashMap.class);
-            document = new Document(datamap);
+            List externalRefs = document.getExternalRefs();
+            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) OaiPmh.s_jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()));
+            Map referencedData = OaiPmh.s_whelk.bulkLoad(convertedExternalLinks);
+
+            // The madness
+            Map referencedData2 = new HashMap();
+            for (Object key : referencedData.keySet())
+                referencedData2.put(key, ((Document)referencedData.get(key)).data );
+
+            OaiPmh.s_jsonld.embellish(document.data, referencedData2);
         }
 
         if (!onlyIdentifiers)
