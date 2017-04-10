@@ -279,7 +279,7 @@ class SearchUtils {
      * Build the term aggregation part of an ES query.
      *
      */
-    Map buildAggQuery(def tree, int size=1000) {
+    Map buildAggQuery(def tree, int size=10) {
         Map query = [:]
         List keys = []
 
