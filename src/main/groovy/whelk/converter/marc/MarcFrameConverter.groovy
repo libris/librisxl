@@ -180,6 +180,7 @@ class MarcConversion {
             case 'FoldJoinedProperties': new FoldJoinedPropertiesStep(props); break
             case 'SetUpdatedStatus': new SetUpdatedStatusStep(props); break
             case 'MappedProperty': new MappedPropertyStep(props); break
+            case 'VerboseRevertData': new VerboseRevertDataStep(props); break
         }
     }
 
@@ -482,6 +483,8 @@ class MarcRuleSet {
             }
             fieldHandlers[tag] = handler
             if (dfn.aboutType && dfn.aboutType != 'Record') {
+                if (dfn.aboutEntity)
+                    assert tag && aboutTypeMap.containsKey(dfn.aboutEntity)
                 aboutTypeMap[dfn.aboutEntity ?: '?thing'] << dfn.aboutType
             }
         }
@@ -1430,9 +1433,14 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         matchRules = MatchRule.parseRules(this, fieldDfn) ?: Collections.emptyList()
 
+        def aboutAlias = fieldDfn['about']
+
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
             if (m) {
+                if (obj && obj['about'] == aboutAlias) {
+                    obj = obj.findAll { it.key != 'about' }
+                }
                 addSubfield(m.group(1), obj)
             }
         }
@@ -1829,7 +1837,7 @@ class MarcSubFieldHandler extends ConversionPart {
 
     MarcFieldHandler fieldHandler
     String code
-    char[] interpunctionChars
+    char[] punctuationChars
     char[] surroundingChars
     String link
     String about
@@ -1857,7 +1865,7 @@ class MarcSubFieldHandler extends ConversionPart {
         this.fieldHandler = fieldHandler
         this.code = code
         aboutEntityName = subDfn.aboutEntity
-        interpunctionChars = subDfn.interpunctionChars?.toCharArray()
+        punctuationChars = subDfn.punctuationChars?.toCharArray()
         surroundingChars = subDfn.surroundingChars?.toCharArray()
         super.setTokenMap(fieldHandler, subDfn)
         link = subDfn.link
@@ -1966,8 +1974,8 @@ class MarcSubFieldHandler extends ConversionPart {
     String clearChars(String subVal) {
         def val = subVal.trim()
         if (val.size() > 2) {
-            if (interpunctionChars) {
-                for (c in interpunctionChars) {
+            if (punctuationChars) {
+                for (c in punctuationChars) {
                     if (val.size() < 2) {
                         break
                     }
