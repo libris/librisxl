@@ -89,7 +89,7 @@ public class ListRecords
                  ResultSet resultSet = preparedStatement.executeQuery())
             {
                 respond(request, response, metadataPrefix, onlyIdentifiers,
-                        metadataPrefix.endsWith(OaiPmh.FORMAT_EXPANDED_POSTFIX), resultSet);
+                        metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX), resultSet);
             } finally {
                 dbconn.commit();
             }

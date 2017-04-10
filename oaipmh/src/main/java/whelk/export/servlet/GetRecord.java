@@ -93,7 +93,7 @@ public class GetRecord
             ResponseCommon.writeOaiPmhHeader(writer, request, true);
             writer.writeStartElement("GetRecord");
 
-            ResponseCommon.emitRecord(resultSet, writer, metadataPrefix, false, metadataPrefix.endsWith(OaiPmh.FORMAT_EXPANDED_POSTFIX));
+            ResponseCommon.emitRecord(resultSet, writer, metadataPrefix, false, metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX));
 
             writer.writeEndElement(); // GetRecord
             ResponseCommon.writeOaiPmhClose(writer, request);

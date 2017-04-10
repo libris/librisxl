@@ -85,6 +85,7 @@ public class OaiPmh extends HttpServlet
         {
             supportedFormats.put(format+FORMAT_INCLUDE_HOLD_POSTFIX, supportedFormats.get(format));
             supportedFormats.put(format+FORMAT_EXPANDED_POSTFIX, supportedFormats.get(format));
+            supportedFormats.put(format+FORMAT_INCLUDE_HOLD_POSTFIX+FORMAT_EXPANDED_POSTFIX, supportedFormats.get(format));
         }
     }
 
