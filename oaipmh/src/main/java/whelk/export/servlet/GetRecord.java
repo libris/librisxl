@@ -49,6 +49,14 @@ public class GetRecord
             return;
         }
 
+        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix))
+        {
+            failedRequests.labels(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT).inc();
+            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + metadataPrefix,
+                    request, response);
+            return;
+        }
+
         if (identifierUri == null)
         {
             failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();

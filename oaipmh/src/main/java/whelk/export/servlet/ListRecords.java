@@ -71,7 +71,7 @@ public class ListRecords
         }
 
         // Was the data ordered in a format we know?
-        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix.replace(OaiPmh.FORMAT_EXPANDED_POSTFIX, "")))
+        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix))
         {
             failedRequests.labels(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + metadataPrefix,
