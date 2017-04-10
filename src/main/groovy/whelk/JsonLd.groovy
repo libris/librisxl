@@ -319,7 +319,7 @@ public class JsonLd {
         List graphItems = jsonLd.get(GRAPH_KEY)
 
         additionalObjects.each { id, object ->
-            Map chip = toChip(object, displayData)
+            Map chip = toChip(object)
             if (chip.containsKey('@graph')) {
                 if (!chip.containsKey('@id')) {
                     chip['@id'] = id
