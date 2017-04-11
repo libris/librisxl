@@ -3942,7 +3942,8 @@
         {
           "when": null,
           "include": "contribution",
-          "resourceType": "Contribution"
+          "resourceType": "Contribution",
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
       "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
