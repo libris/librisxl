@@ -29,7 +29,7 @@ class JsonLD2RdfXml implements FormatConverter {
         model = model.read(input, Document.BASE_URI.toString(), "JSONLD")
         RDFWriter writer = model.getWriter("RDF/XML")
         writer.setProperty("allowBadURIs","true")
-        writer.write(model, baos, Document.BASE_URI.toString())
+        writer.write(model, baos, "")
 
         HashMap<String, String> data = new HashMap<String, String>()
         data.put(JsonLd.NON_JSON_CONTENT_KEY, baos.toString("UTF-8"))
