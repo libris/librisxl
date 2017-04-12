@@ -783,7 +783,7 @@
           "tokenMap": "BooksIllustrationsType"
         },
         "[5:6]": {
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
@@ -861,7 +861,7 @@
           "tokenMap": "MusicPartsType"
         },
         "[5:6]": {
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
@@ -985,7 +985,7 @@
           "TODO:patternMap": "VisualRunningTimeType"
         },
         "[5:6]": {
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
@@ -1037,7 +1037,7 @@
       },
       "Digital": {
         "[5:6]": {
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
@@ -1854,7 +1854,7 @@
         },
         "[22:23]": {
           "aboutEntity": "?work",
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
@@ -1927,7 +1927,7 @@
       "Digital": {
         "[22:23]": {
           "aboutEntity": "?work",
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
@@ -2053,7 +2053,7 @@
         },
         "[22:23]": {
           "aboutEntity": "?work",
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
@@ -2194,7 +2194,7 @@
         },
         "[22:23]": {
           "aboutEntity": "?work",
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
@@ -3548,7 +3548,7 @@
 
     "521": {
       "aboutEntity": "?work",
-      "addLink": "audience",
+      "addLink": "intendedAudience",
       "embedded": true,
       "resourceType": "Audience",
       "TOOO:i1": {},
