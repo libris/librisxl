@@ -834,12 +834,14 @@
           "fixedDefault": "0"
         },
         "[16:17]": {
-          "link": "marc:literaryForm",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "BooksLiteraryFormType"
         },
         "[17:18]": {
-          "link": "marc:biography",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "BooksBiographyType"
         }
@@ -1859,7 +1861,8 @@
           "tokenMap": "AudienceType"
         },
         "[23:24]": {
-          "link": "marc:additionalCarrierType",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "BooksItemType"
         },
@@ -1913,13 +1916,15 @@
         },
         "[33:34]": {
           "aboutEntity": "?work",
-          "link": "marc:literaryForm",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "BooksLiteraryFormType"
         },
         "[34:35]": {
           "aboutEntity": "?work",
-          "link": "marc:biography",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "BooksBiographyType"
         }
@@ -1932,7 +1937,8 @@
           "tokenMap": "AudienceType"
         },
         "[23:24]": {
-          "link": "marc:additionalCarrierType",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerItemType"
         },
@@ -1997,7 +2003,8 @@
           "tokenMap": "GovernmentPublicationType"
         },
         "[29:30]": {
-          "link": "marc:additionalCarrierType",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
         },
@@ -2027,7 +2034,8 @@
       },
       "Mixed": {
         "[23:24]": {
-          "link": "marc:additionalCarrierType",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
         }
@@ -2058,7 +2066,8 @@
           "tokenMap": "AudienceType"
         },
         "[23:24]": {
-          "link": "marc:additionalCarrierType",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
         },
@@ -2136,7 +2145,8 @@
           "tokenMap": "SerialsOriginalItemType"
         },
         "[23:24]": {
-          "link": "marc:additionalCarrierType",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
         },
@@ -2205,7 +2215,8 @@
           "tokenMap": "GovernmentPublicationType"
         },
         "[29:30]": {
-          "link": "marc:additionalCarrierType",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
         },
@@ -2261,8 +2272,9 @@
               "instanceOf": {
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],
-                "marc:biography": {"@id": "marc:Autobiography"},
-                "marc:literaryForm": {"@id": "marc:NotFictionNotFurtherSpecified"}
+                "genreForm": [{"@id": "marc:NotFictionNotFurtherSpecified"},
+                              {"@id": "marc:Autobiography"}
+                ]
               }
             }
           }
@@ -2282,7 +2294,7 @@
               "publicationCountry": [{"@id": "https://id.kb.se/country/fr"}],
               "instanceOf": {
                 "@type": "Text",
-                "marc:literaryForm": {"@id": "marc:NotFictionNotFurtherSpecified"},
+                "genreForm": {"@id": "marc:NotFictionNotFurtherSpecified"},
                 "language": [{"@id": "https://id.kb.se/language/freeng", "code": "freeng"}]
               }
             }
