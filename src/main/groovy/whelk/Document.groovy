@@ -108,7 +108,6 @@ class Document {
             id = Document.BASE_URI.resolve(id)
 
         set(recordIdPath, id, LinkedHashMap)
-        addRecordIdentifier(id)
     }
 
     /**

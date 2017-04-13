@@ -15,7 +15,14 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 @Log
-class PostgreSQLComponent implements whelk.component.Storage {
+class PostgreSQLComponent {
+
+    /**
+     * Interface for performing atomic document updates
+     */
+    public interface UpdateAgent {
+        public void update(Document doc)
+    }
 
     private BasicDataSource connectionPool
     static String driverClass = "org.postgresql.Driver"
@@ -33,7 +40,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
                      DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
                      LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
                      LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
-                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT
+                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
@@ -109,6 +116,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
                 "FROM $versionsTableName WHERE id = ? ORDER BY modified"
         GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE data->'@graph' @> ?"
+        GET_RECORD_ID_BY_THING_ID = "SELECT id FROM $idTableName WHERE iri = ? AND graphIndex = 1"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
@@ -173,7 +181,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
         return statusMap
     }
 
-    @Override
     public List<String> loadCollections() {
         Connection connection = getConnection()
         PreparedStatement collectionStatement = connection.prepareStatement(LOAD_COLLECTIONS)
@@ -188,7 +195,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
         return collections
     }
 
-    @Override
     boolean store(Document doc, boolean upsert, String changedIn, String changedBy, String collection, boolean deleted) {
         store(doc, upsert, false, changedIn, changedBy, collection, deleted)
     }
@@ -287,7 +293,7 @@ class PostgreSQLComponent implements whelk.component.Storage {
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, whelk.component.Storage.UpdateAgent updateAgent) {
+    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, UpdateAgent updateAgent) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
@@ -472,7 +478,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
         return insvers
     }
 
-    @Override
     boolean bulkStore(
             final List<Document> docs, boolean upsert, String changedIn, String changedBy, String collection) {
         if (!docs || docs.isEmpty()) {
@@ -516,7 +521,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
         return false
     }
 
-    @Override
     Map<String, Object> query(Map queryParameters, String collection, StorageType storageType) {
         log.debug("Performing query with type $storageType : $queryParameters")
         long startTime = System.currentTimeMillis()
@@ -682,7 +686,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
     }
 
     // TODO: Update to real locate
-    @Override
     Location locate(String identifier, boolean loadDoc) {
         log.debug("Locating $identifier")
         if (identifier) {
@@ -722,7 +725,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
         return null
     }
 
-    @Override
     Document load(String id) {
         return load(id, null)
     }
@@ -741,6 +743,30 @@ class PostgreSQLComponent implements whelk.component.Storage {
             doc = loadFromSql(GET_DOCUMENT, [1: id])
         }
         return doc
+    }
+
+    String getSystemIdByThingId(String thingId) {
+        Connection connection
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(GET_RECORD_ID_BY_THING_ID)
+            preparedStatement.setString(1, thingId)
+            rs = preparedStatement.executeQuery()
+            if (rs.next()) {
+                return rs.getString(1)
+            }
+            return null
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+            if (connection != null)
+                connection.close()
+        }
     }
 
     private Document loadFromSql(String sql, Map<Integer, Object> parameters) {
@@ -933,7 +959,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
         }
     }
 
-    @Override
     boolean remove(String identifier, String changedIn, String changedBy, String collection) {
         if (versioning) {
             log.debug("Marking document with ID ${identifier} as deleted.")
@@ -1004,7 +1029,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
         return connectionPool.getConnection()
     }
 
-    @Override
     List<Document> findByRelation(String relation, String reference,
                                   int limit, int offset) {
         Connection connection = getConnection()
@@ -1026,7 +1050,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
         findByRelation(relation, reference, limit, offset)
     }
 
-    @Override
     int countByRelation(String relation, String reference) {
         Connection connection = getConnection()
         PreparedStatement count = connection.prepareStatement(COUNT_BY)
@@ -1040,7 +1063,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
         }
     }
 
-    @Override
     List<Document> findByQuotation(String identifier, int limit, int offset) {
         Connection connection = getConnection()
         PreparedStatement find = connection.prepareStatement(FIND_BY)
@@ -1062,7 +1084,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
         findByQuotation(identifier, limit, offset)
     }
 
-    @Override
     int countByQuotation(String identifier) {
         Connection connection = getConnection()
         PreparedStatement count = connection.prepareStatement(COUNT_BY)
@@ -1077,7 +1098,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
 
     }
 
-    @Override
     List<Document> findByValue(String relation, String value, int limit,
                                int offset) {
         Connection connection = getConnection()
@@ -1099,7 +1119,6 @@ class PostgreSQLComponent implements whelk.component.Storage {
         findByValue(relation, value, limit, offset)
     }
 
-    @Override
     int countByValue(String relation, String value) {
         Connection connection = getConnection()
         PreparedStatement count = connection.prepareStatement(COUNT_BY)

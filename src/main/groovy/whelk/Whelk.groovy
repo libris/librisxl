@@ -5,7 +5,7 @@ import org.picocontainer.Characteristics
 import org.picocontainer.DefaultPicoContainer
 import org.picocontainer.containers.PropertiesPicoContainer
 import whelk.component.Index
-import whelk.component.Storage
+import whelk.component.PostgreSQLComponent
 import whelk.filter.JsonLdLinkExpander
 import whelk.util.PropertyLoader
 
@@ -15,7 +15,7 @@ import whelk.util.PropertyLoader
 @Log
 class Whelk {
 
-    Storage storage
+    PostgreSQLComponent storage
     Index elastic
     JsonLdLinkExpander expander
     Map displayData
@@ -24,20 +24,20 @@ class Whelk {
     String vocabDisplayUri = "https://id.kb.se/vocab/display" // TODO: encapsulate and configure (LXL-260)
     String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
 
-    public Whelk(Storage pg, Index es, JsonLdLinkExpander ex) {
+    public Whelk(PostgreSQLComponent pg, Index es, JsonLdLinkExpander ex) {
         this.storage = pg
         this.elastic = es
         this.expander = ex
         log.info("Whelk started with storage ${storage}, index $elastic and expander.")
     }
 
-    public Whelk(Storage pg, Index es) {
+    public Whelk(PostgreSQLComponent pg, Index es) {
         this.storage = pg
         this.elastic = es
         log.info("Whelk started with storage $storage and index $elastic")
     }
 
-    public Whelk(Storage pg) {
+    public Whelk(PostgreSQLComponent pg) {
         this.storage = pg
         log.info("Whelk started with storage $storage")
     }
@@ -101,7 +101,7 @@ class Whelk {
         return document
     }
 
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, Storage.UpdateAgent updateAgent) {
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, PostgreSQLComponent.UpdateAgent updateAgent) {
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, collection, deleted, updateAgent)
         if (elastic) {
             elastic.index(updated, collection)
