@@ -107,7 +107,7 @@ public class GetRecord
 
         // Construct the query
         String selectSQL = "SELECT data, collection, modified, deleted, data#>>'{@graph,1,heldBy,@id}' AS sigel FROM " +
-                tableName + " WHERE id = ?";
+                tableName + " WHERE id = ? AND collection <> 'definitions' ";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);
 
