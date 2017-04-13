@@ -2,7 +2,6 @@ package whelk.filter
 
 import groovy.transform.Synchronized
 import groovy.util.logging.Slf4j as Log
-import javafx.geometry.Pos
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.*
 import whelk.component.*
