@@ -813,7 +813,8 @@
           "tokenMap": "BooksContentsType"
         },
         "[11:12]": {
-          "link": "marc:govtPub",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -950,7 +951,8 @@
           "tokenMap": "MapsMaterialType"
         },
         "[11:12]": {
-          "link": "marc:govtPub",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -992,7 +994,8 @@
           "tokenMap": "AudienceType"
         },
         "[11:12]": {
-          "link": "marc:govtPub",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -1054,7 +1057,8 @@
           "tokenMap": "ComputerTypeOfFileType"
         },
         "[11:12]": {
-          "link": "marc:govtPub",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         }
@@ -1123,7 +1127,8 @@
           "tokenMap": "SerialsContentsType"
         },
         "[11:12]": {
-          "link": "marc:govtPub",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -1892,7 +1897,8 @@
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "link": "marc:govtPub",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -1950,7 +1956,8 @@
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "link": "marc:govtPub",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -1998,7 +2005,8 @@
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "link": "marc:govtPub",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -2176,7 +2184,8 @@
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "link": "marc:govtPub",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -2210,7 +2219,8 @@
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "link": "marc:govtPub",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
