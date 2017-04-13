@@ -387,11 +387,6 @@
     },
     "termbase_noid": {
       "$a": {"property": "prefLabel"},
-      "$0": {
-        "addLink": "sameAs",
-        "uriTemplate": "http://libris.kb.se/resource/auth/{_}",
-        "property": "controlNumber"
-      },
       "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "code"},
       "constructProperties": {
         "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
