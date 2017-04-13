@@ -14,7 +14,6 @@ import java.util.concurrent.TimeUnit
 
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
-import whelk.component.Storage
 import whelk.converter.marc.MarcFrameConverter
 import whelk.filter.LinkFinder
 import whelk.importer.BrokenRecordException
@@ -202,7 +201,7 @@ class VCopyImporterServlet extends HttpServlet {
 
         log.debug "Props: ${props.inspect()}"
         log.info("Initializing vcopy importer.")
-        Storage storage = pico.getComponent(PostgreSQLComponent.class)
+        PostgreSQLComponent storage = pico.getComponent(PostgreSQLComponent.class)
         List<String> services = DEFAULT_SERVICES
 
         ScheduledExecutorService ses = Executors.newScheduledThreadPool(services.size())

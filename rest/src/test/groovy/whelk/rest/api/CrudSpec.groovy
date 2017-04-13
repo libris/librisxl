@@ -6,7 +6,7 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
-import whelk.component.Storage
+import whelk.component.PostgreSQLComponent
 import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkRuntimeException
@@ -26,7 +26,7 @@ class CrudSpec extends Specification {
 
     Crud crud
     Whelk whelk
-    Storage storage
+    PostgreSQLComponent storage
     AccessControl accessControl
     HttpServletRequest request
     HttpServletResponse response
@@ -59,7 +59,7 @@ class CrudSpec extends Specification {
                 return headers.get(h)
             }
         }
-        storage = GroovyMock(Storage.class)
+        storage = GroovyMock(PostgreSQLComponent.class)
         // We want to pass through calls in some cases
         accessControl = GroovySpy(AccessControl.class)
         whelk = new Whelk()

@@ -14,6 +14,7 @@ import whelk.VCopyDataRow
 import whelk.PostgresLoadfileWriter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
+import whelk.util.LegacyIntegrationTools
 
 import java.sql.Timestamp
 
@@ -68,6 +69,25 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
                                 importResult.numberOfDocumentsDeleted++
                             }
                         } else {
+
+                            // At this point doc.id will have been generated based on the incoming Voyager ID. This
+                            // ensures that it correctly matches the ID of the stored XL post that is now to be updated
+                            // _IF_ the post was first created in Voyager.
+                            //
+                            // If the post was however first created in XL, then the stored XL post that is now to be
+                            // updated will have a timestamp-based ID, not related to the Voyager ID (which would only
+                            // have been added to the post later).
+                            // This means that doc.id and the XL id that we now want to update do _not_ match.
+                            // Therefore we must search for existing XL posts based on the voyager-id based thing sameAs
+                            // and, if any are found, replace doc.id.
+
+                            String voyagerBasedThingSameAs = "http://libris.kb.se/resource/" + record.collection + "/" + record.controlNumber
+                            String duplicateWithId = whelk.storage.getSystemIdByThingId(voyagerBasedThingSameAs)
+                            if (duplicateWithId != null) {
+                                log.debug("Incoming document is actually a duplicate of " + duplicateWithId + ". Replacing ID before saving.")
+                                doc.setId(duplicateWithId)
+                            }
+
                             log.trace "Storing record "
                             whelk.store(doc, sourceSystem, null, record.collection as String, false)
                         }
