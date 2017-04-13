@@ -89,7 +89,15 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
                             }
 
                             log.trace "Storing record "
-                            whelk.store(doc, sourceSystem, null, record.collection as String, false)
+                            if (duplicateWithId == null)
+                                whelk.store(doc, sourceSystem, null, record.collection as String, false, false)
+                            else
+                                whelk.storeAtomicUpdate(duplicateWithId, false, sourceSystem, null,
+                                        record.collection, false, {
+                                    Document _doc ->
+                                        // Replace stored data with the incoming data.
+                                        _doc.data = doc.data
+                                })
                         }
                         importResult.numberOfDocuments++
 
