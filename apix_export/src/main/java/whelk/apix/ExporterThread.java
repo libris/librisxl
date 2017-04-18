@@ -250,7 +250,7 @@ public class ExporterThread extends Thread
             {
                 // Select any documents that _have_ a apix export failed flag
                 String sql = "SELECT id, data, modified, collection, changedIn, changedBy, deleted FROM " + m_properties.getProperty("sqlMaintable") +
-                        " WHERE (data#>>'{@graph, 0," + JsonLd.getAPIX_FAILURE_KEY() + "}')::text is not null";
+                        " WHERE data->'@graph' @> '[{\"" + JsonLd.getAPIX_FAILURE_KEY() + "\":true}]'";
 
                 PreparedStatement statement = connection.prepareStatement(sql);
                 return statement;
