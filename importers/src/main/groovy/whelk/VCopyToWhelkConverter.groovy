@@ -16,28 +16,19 @@ class VCopyToWhelkConverter {
     static Map convert(List<VCopyDataRow> rows, MarcFrameConverter marcFrameConverter) {
         VCopyDataRow row = rows.last()
 
-        Document whelkDocument = null
         Timestamp timestamp = row.updated >= row.created ? row.updated : row.created
         Map doc = getMarcDocMap(row.data)
 
         def controlNumber = getControlNumber(doc)
-        switch (row.collection) {
-            case 'auth':
-                whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created)
-                break
-            case 'hold':
-                whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
-                break
-            case 'bib':
-                whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, row.created, getOaipmhSetSpecs(rows))
-                break
-        }
+        Document whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, getOaipmhSetSpecs(rows))
+        whelkDocument.created = row.created
+
         return [collection: row.collection, document: whelkDocument, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber, checksum: whelkDocument.getChecksum()]
 
     }
 
     private
-    static Document convertDocument(MarcFrameConverter marcFrameConverter, Map doc, String collection, Date created, List authData = null) {
+    static Document convertDocument(MarcFrameConverter marcFrameConverter, Map doc, String collection, List authData) {
         if (doc) {
             String oldStyleIdentifier = "/" + collection + "/" + getControlNumber(doc)
 
@@ -56,7 +47,6 @@ class VCopyToWhelkConverter {
             convertedData = mapper.readValue(jsonString, Map)
 
             Document document = new Document(convertedData)
-            document.created = created
             return document
         }
     }
@@ -99,6 +89,8 @@ class VCopyToWhelkConverter {
                 if (resultSet.sigel)
                     specs.add("location:${resultSet.sigel}")
             }
+            else
+                return null
         }
         return specs
     }

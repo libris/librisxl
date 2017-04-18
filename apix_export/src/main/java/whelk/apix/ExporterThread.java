@@ -167,8 +167,8 @@ public class ExporterThread extends Thread
                 // If there were no new/changed documents to export, set the next time to search from to 3 hours ago,
                 // if m_exportNewerThan is not already at a higher value.
                 // This is to alleviate stress on the DB when there have been no changes in a long time, as we now never
-                // need to look further back then 3 hours in history.
-                // The point of specific value of 3 hours is to be doubly safe with regards to daylight saving changes etc.
+                // need to look further back than 3 hours in history.
+                // The point of the specific value of 3 hours is to be doubly safe with regards to daylight saving changes etc.
                 ZonedDateTime searchFromNext = ZonedDateTime.now().minus(3, ChronoUnit.HOURS);
                 if (searchFromNext.compareTo(m_exportNewerThan) > 0)
                 {
