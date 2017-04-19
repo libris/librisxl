@@ -82,7 +82,7 @@ COLSPECS['hold'] = {
 
 COMBO_FLOOR = 400
 
-EXAMPLES_LIMIT = 4
+EXAMPLES_LIMIT = 16
 
 
 class Stats:
@@ -212,13 +212,30 @@ class Stats:
 
 
 class ExampleCounter(object):
-    def __init__(self):
-        self.counter = 0
+    """
+    Usage:
+    >>> counter = ExampleCounter(limit=4)
+    >>> for i in range(8):
+    ...     counter.count(str(i + 1))
+    ...     print(', '.join(counter.examples))
+    1
+    1, 2
+    1, 2, 3
+    1, 2, 3, 4
+    2, 3, 4, 5
+    3, 4, 5, 6
+    4, 5, 6, 7
+    5, 6, 7, 8
+    """
+    def __init__(self, limit=EXAMPLES_LIMIT):
+        self.limit = limit
+        self.total = 0
         self.examples = []
     def count(self, example):
-        if len(self.examples) < EXAMPLES_LIMIT:
-            self.examples.append(example)
-        self.counter += 1
+        if len(self.examples) == self.limit:
+            self.examples.pop(0)
+        self.examples.append(example)
+        self.total += 1
 
 
 class CounterDict(object):
@@ -233,9 +250,9 @@ class CounterDict(object):
     def __dict__(self):
         items = self.dd.items()
         if self.floor:
-            items = (item for item in items if item[1].counter >= self.floor)
+            items = (item for item in items if item[1].total >= self.floor)
         return OrderedDict(sorted(items,
-            key=lambda (k, v): v.counter, reverse=True))
+            key=lambda (k, v): v.total, reverse=True))
 
 
 def compute_stats(marctype, stats_dest):
@@ -275,6 +292,11 @@ def clear():
 
 if __name__ == '__main__':
     args = sys.argv[1:]
+
+    if not args:
+        import doctest
+        doctest.testmod()
+        exit()
 
     marctype = args.pop(0) if args else 'bib'
     stats_dest = args.pop(0)
