@@ -1,15 +1,17 @@
 package whelk.actors
-
-import groovy.util.logging.Log4j2 as Log
 import whelk.SetSpecMatcher
-import whelk.util.VCopyToWhelkConverter
 import whelk.converter.marc.MarcFrameConverter
+import whelk.AuthBibMatcher
+import whelk.VCopyDataRow
 import whelk.importer.MySQLLoader
 import whelk.util.ThreadPool
 
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
+
+import groovy.util.logging.Slf4j as Log
+
 
 /**
  * Created by theodortolstoy on 2017-01-11.
@@ -59,14 +61,14 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                 if (doc == null)
                     docIsNull++
 
-                if (!SetSpecMatcher.hasValidAuthRecords(allAuthRecords))
+                if (!AuthBibMatcher.hasValidAuthRecords(allAuthRecords))
                     lacksValidAuthRecords++
 
-                if (doc != null && SetSpecMatcher.hasValidAuthRecords(allAuthRecords)) {
-                    List<Map> matchResults = SetSpecMatcher.matchAuthToBib(doc, allAuthRecords, true)
+                if (doc != null && AuthBibMatcher.hasValidAuthRecords(allAuthRecords)) {
+                    List<Map> matchResults = AuthBibMatcher.matchAuthToBib(doc, allAuthRecords, true)
 
                     List authRecords = allAuthRecords.findAll {
-                        !SetSpecMatcher.ignoredAuthFields.contains(it.field)
+                        !AuthBibMatcher.ignoredAuthFields.contains(it.field)
                     }
 
                     def uncertainMatches = matchResults.findAll { Map match ->

@@ -8,7 +8,7 @@ import groovy.util.logging.Log4j2 as Log
  * Matches a set of authority records with a bibliographic record and supplies $0 on the fields that is matched
  */
 @Log
-class SetSpecMatcher {
+class AuthBibMatcher {
 
     static List ignoredAuthFields = ['180', '181', '182', '185', '162']
 
