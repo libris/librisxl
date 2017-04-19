@@ -247,7 +247,7 @@ class PostgreSQLComponent {
                 insert.executeUpdate()
                 saveVersion(doc, connection, now, changedIn, changedBy, collection, deleted)
             }
-            saveIdentifiers(doc, connection)
+            saveIdentifiers(doc, connection, deleted)
             saveDependencies(doc, connection)
             for (String dependerId : getDependers(doc.getShortId())) {
                 updateMinMaxDepModified(dependerId, connection)
@@ -357,7 +357,7 @@ class PostgreSQLComponent {
 
             // The versions and identifiers tables are NOT under lock. Synchronization is only maintained on the main table.
             saveVersion(doc, connection, modTime, changedIn, changedBy, collection, deleted)
-            saveIdentifiers(doc, connection)
+            saveIdentifiers(doc, connection, deleted)
             saveDependencies(doc, connection)
             for (String dependerId : getDependers(doc.getShortId())) {
                 updateMinMaxDepModified(dependerId, connection)
@@ -494,31 +494,36 @@ class PostgreSQLComponent {
 
     }
 
-    private void saveIdentifiers(Document doc, Connection connection) {
+    private void saveIdentifiers(Document doc, Connection connection, boolean deleted) {
         PreparedStatement removeIdentifiers = connection.prepareStatement(DELETE_IDENTIFIERS)
         removeIdentifiers.setString(1, doc.getShortId())
         int numRemoved = removeIdentifiers.executeUpdate()
         log.debug("Removed $numRemoved identifiers for id ${doc.getShortId()}")
+
         PreparedStatement altIdInsert = connection.prepareStatement(INSERT_IDENTIFIERS)
         for (altId in doc.getRecordIdentifiers()) {
             altIdInsert.setString(1, doc.getShortId())
             altIdInsert.setString(2, altId)
             altIdInsert.setInt(3, 0) // record id -> graphIndex = 0
-            if (altId == doc.getCompleteId())
+            if (altId == doc.getCompleteId()) {
                 altIdInsert.setBoolean(4, true) // Main ID
-            else
+                altIdInsert.addBatch()
+            } else if (!deleted) {
                 altIdInsert.setBoolean(4, false) // alternative ID, not the main ID
-            altIdInsert.addBatch()
+                altIdInsert.addBatch()
+            }
         }
         for (altThingId in doc.getThingIdentifiers()) {
             altIdInsert.setString(1, doc.getShortId())
             altIdInsert.setString(2, altThingId)
             altIdInsert.setInt(3, 1) // thing id -> graphIndex = 1
-            if (altThingId == doc.getThingIdentifiers()[0])
+            if (altThingId == doc.getThingIdentifiers()[0]) {
                 altIdInsert.setBoolean(4, true) // Main ID
-            else
+                altIdInsert.addBatch()
+            } else if (!deleted) {
                 altIdInsert.setBoolean(4, false) // alternative ID
-            altIdInsert.addBatch()
+                altIdInsert.addBatch()
+            }
         }
         try {
             altIdInsert.executeBatch()
@@ -630,7 +635,7 @@ class PostgreSQLComponent {
                     batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
                 }
                 batch.addBatch()
-                saveIdentifiers(doc, connection)
+                saveIdentifiers(doc, connection, false)
                 saveDependencies(doc, connection)
                 for (String dependerId : getDependers(doc.getShortId())) {
                     updateMinMaxDepModified(dependerId, connection)
