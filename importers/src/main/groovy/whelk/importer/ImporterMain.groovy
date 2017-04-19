@@ -102,8 +102,13 @@ class ImporterMain {
 
     @Command(args='COLLECTION [TO_FILE_NAME]')
     void vcopyjsondump(String collection, String toFileName=null) {
-        def connUrl = props.getProperty("mysqlConnectionUrl")
-        MySQLToMarcJSONDumper.dump(connUrl, collection, toFileName)
+        def connectionUrl = props.getProperty("mysqlConnectionUrl")
+        MySQLToMarcJSONDumper myDumper = new MySQLToMarcJSONDumper(toFileName)
+        String sqlQuery = MySQLLoader.selectByMarcType[collection]
+        MySQLLoader.run(myDumper, sqlQuery, [0], collection, connectionUrl)
+        myDumper.dumpWriter.close()
+        def endSecs = (System.currentTimeMillis() - myDumper.startTime) / 1000
+        System.err.println "Done in $endSecs seconds."
     }
 
     @Command(args='FNAME')
