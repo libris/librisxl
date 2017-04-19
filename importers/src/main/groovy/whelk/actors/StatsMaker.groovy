@@ -31,7 +31,7 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                      doubleDiff      : 0,
                      specAndDoc      : 0,
                      allAuth         : 0,
-                     ignoredSetSpecs : 0,
+                     ignoredAuthRecords : 0,
                      MissingBibFields: 0]
 
     def lacksValidAuthRecords = 0
@@ -102,7 +102,7 @@ class StatsMaker implements MySQLLoader.LoadHandler {
 
                     resultMap.specAndDoc++
                     resultMap.allAuth = allAuthRecords.size()
-                    resultMap.ignoredSetSpecs = allAuthRecords.size() - authRecords.size()
+                    resultMap.ignoredAuthRecords = allAuthRecords.size() - authRecords.size()
                     resultMap.MissingBibFields = missingBibFields
 
                     printDiffResultsToFile(uncertainMatches, completeMatches)
