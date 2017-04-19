@@ -34,7 +34,7 @@ class AuthBibMatcher {
                     authFieldsToAdd  : [[field: '040', subfield: 'f', targetField: '2']]]
     ]
 
-    private static ArrayList getAuthLinkableFields() {
+     static ArrayList getAuthLinkableFields() {
         fieldRules.collectMany { rule ->
             rule.getValue().bibFields.collect { s ->
                 [authfield: rule.getKey(), bibField: s]
