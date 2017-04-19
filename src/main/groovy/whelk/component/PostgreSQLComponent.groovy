@@ -43,7 +43,8 @@ class PostgreSQLComponent {
                      DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
                      LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
                      LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
-                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, GET_DEPENDENCIES, GET_DEPENDERS
+                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, GET_DEPENDENCIES, GET_DEPENDERS,
+                     GET_DOCUMENT_BY_MAIN_ID, GET_MAIN_ID
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
     protected String QUERY_LD_API
@@ -128,6 +129,13 @@ class PostgreSQLComponent {
         GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE data->'@graph' @> ?"
         GET_RECORD_ID_BY_THING_ID = "SELECT id FROM $idTableName WHERE iri = ? AND graphIndex = 1"
+        GET_DOCUMENT_BY_MAIN_ID = "SELECT id,data,created,modified,deleted " +
+                                  "FROM $mainTableName " +
+                                  "WHERE id = (SELECT id FROM $idTableName " +
+                                              "WHERE mainid = 't' AND iri = ?)"
+        GET_MAIN_ID = "SELECT iri FROM $idTableName " +
+                      "WHERE graphindex = 0 AND mainid = 't' " +
+                      "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
@@ -811,6 +819,7 @@ class PostgreSQLComponent {
     }
 
     // TODO: Update to real locate
+    @Deprecated
     Location locate(String identifier, boolean loadDoc) {
         log.debug("Locating $identifier")
         if (identifier) {
@@ -856,6 +865,76 @@ class PostgreSQLComponent {
         }
 
         return null
+    }
+
+    /**
+     * Load document using supplied identifier as main ID
+     *
+     * Supplied identifier can be either document ID or thing ID.
+     *
+     */
+    Document loadDocumentByMainId(String mainId) {
+        Connection connection = getConnection()
+        PreparedStatement selectstmt
+        ResultSet rs
+        try {
+            selectstmt = connection.prepareStatement(GET_DOCUMENT_BY_MAIN_ID)
+            selectstmt.setString(1, mainId)
+            rs = selectstmt.executeQuery()
+            List<Document> docs = []
+
+            while (rs.next()) {
+               docs << assembleDocument(rs)
+            }
+
+            if (docs.size() > 1) {
+                log.warn("Multiple documents found for main ID ${mainId}")
+            }
+
+            if (docs.isEmpty()) {
+                return null
+            } else {
+                return docs[0]
+            }
+        } finally {
+            connection.close()
+        }
+        return
+    }
+
+    /**
+     * Get the corresponding main ID for supplied identifier
+     *
+     * Supplied identifier can be either the document ID, the thing ID, or a
+     * sameAs ID.
+     *
+     */
+    String getMainId(String id) {
+        Connection connection = getConnection()
+        PreparedStatement selectstmt
+        ResultSet rs
+        try {
+            selectstmt = connection.prepareStatement(GET_MAIN_ID)
+            selectstmt.setString(1, id)
+            rs = selectstmt.executeQuery()
+            List<String> ids = []
+
+            while (rs.next()) {
+                ids << rs.getString('iri')
+            }
+
+            if (ids.size() > 1) {
+                log.warn("Multiple main IDs found for ID ${id}")
+            }
+
+            if (ids.isEmpty()) {
+                return null
+            } else {
+                return ids[0]
+            }
+        } finally {
+            connection.close()
+        }
     }
 
     Document load(String id) {
