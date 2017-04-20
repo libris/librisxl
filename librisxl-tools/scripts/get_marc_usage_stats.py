@@ -82,8 +82,6 @@ COLSPECS['hold'] = {
 
 COMBO_FLOOR = 400
 
-EXAMPLES_LIMIT = 16
-
 
 class Stats:
 
@@ -93,7 +91,7 @@ class Stats:
         self.biblevelmap = {}
         self.stats = {
             'total': 0,
-            'examplesLimit': EXAMPLES_LIMIT,
+            'examplesLimit': ExampleCounter.LIMIT,
             'comboFloor': COMBO_FLOOR,
             'byBiblevel': self.biblevelmap
         }
@@ -121,12 +119,12 @@ class Stats:
         recstats = self.biblevelmap.get(biblevel)
         if not recstats:
             recstats = self.biblevelmap[biblevel] = {
-                'count': 0,
+                'total': 0,
                 'combos': CounterDict(COMBO_FLOOR),
                 'rectypebiblevel': defaultdict(int)
             }
 
-        recstats['count'] += 1
+        recstats['total'] += 1
         recstats['rectypebiblevel'][rectypebiblevel] += 1
 
         tag_count = defaultdict(int)
@@ -161,14 +159,14 @@ class Stats:
         if not fieldstats:
             subcombos = CounterDict()
             fieldstats = recstats[tag] = {
-                'count': 0,
+                'total': 0,
                 'repeats': CounterDict(),
                 'combos': subcombos,
                 'errors': CounterDict()
             }
         else:
             subcombos = fieldstats['combos']
-        fieldstats['count'] += 1
+        fieldstats['total'] += 1
 
         if tag in {'000', '001', '003', '005', '006', '007', '008'}:
             if isinstance(value, unicode):
@@ -214,7 +212,8 @@ class Stats:
 class ExampleCounter:
     """
     Usage:
-    >>> counter = ExampleCounter(limit=4)
+    >>> ExampleCounter.LIMIT = 4
+    >>> counter = ExampleCounter()
     >>> for i in range(8):
     ...     counter.count(str(i + 1))
     ...     print(', '.join(counter.examples))
@@ -227,13 +226,15 @@ class ExampleCounter:
     4, 5, 6, 7
     5, 6, 7, 8
     """
-    def __init__(self, limit=EXAMPLES_LIMIT):
-        self.limit = limit
+
+    LIMIT = 16
+
+    def __init__(self):
         self.total = 0
         self.examples = []
 
     def count(self, example):
-        if len(self.examples) == self.limit:
+        if len(self.examples) == self.LIMIT:
             self.examples.pop(0)
         self.examples.append(example)
         self.total += 1
