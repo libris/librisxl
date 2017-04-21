@@ -116,7 +116,6 @@ class MySQLLoader {
                 if (elapsedSecs > 0) {
                     def docsPerSec = recordCount / elapsedSecs
                     def message = "Working. Currently ${rowCount} rows recieved and ${recordCount} records sent. Crunching ${docsPerSec} records / s."
-                    println message
                     log.info message
                 }
             }
