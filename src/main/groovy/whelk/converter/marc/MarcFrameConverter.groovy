@@ -336,7 +336,7 @@ class MarcConversion {
             log.debug "No linkfinder present"
         }
 
-        def entities = state.entityMap.values()
+        ArrayList entities = state.entityMap.values()
         return [
                 '@graph': entities
         ]
