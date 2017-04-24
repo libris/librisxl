@@ -37,6 +37,8 @@ class Whelk {
         log.info("Whelk started with storage $storage")
     }
 
+    public Whelk() {}
+
     public static DefaultPicoContainer getPreparedComponentsContainer(Properties properties) {
         DefaultPicoContainer pico = new DefaultPicoContainer(new PropertiesPicoContainer(properties))
         Properties componentProperties = PropertyLoader.loadProperties("component")
