@@ -1915,7 +1915,7 @@
           "tokenMap": {"1": true, "0": false}
         },
         "[31:32]": {
-          "link": "marc:index",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "IndexType",
           "fixedDefault": "0"
@@ -2017,7 +2017,7 @@
           "tokenMap": "ItemType"
         },
         "[31:32]": {
-          "link": "marc:index",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "IndexType",
           "fixedDefault": "0"
