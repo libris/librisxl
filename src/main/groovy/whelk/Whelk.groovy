@@ -4,7 +4,7 @@ import groovy.util.logging.Slf4j as Log
 import org.picocontainer.Characteristics
 import org.picocontainer.DefaultPicoContainer
 import org.picocontainer.containers.PropertiesPicoContainer
-import whelk.component.Index
+import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.filter.JsonLdLinkExpander
 import whelk.util.LegacyIntegrationTools
@@ -17,7 +17,7 @@ import whelk.util.PropertyLoader
 class Whelk {
 
     PostgreSQLComponent storage
-    Index elastic
+    ElasticSearch elastic
     JsonLdLinkExpander expander
     Map displayData
     Map vocabData
@@ -26,14 +26,7 @@ class Whelk {
     String vocabDisplayUri = "https://id.kb.se/vocab/display" // TODO: encapsulate and configure (LXL-260)
     String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
 
-    public Whelk(PostgreSQLComponent pg, Index es, JsonLdLinkExpander ex) {
-        this.storage = pg
-        this.elastic = es
-        this.expander = ex
-        log.info("Whelk started with storage ${storage}, index $elastic and expander.")
-    }
-
-    public Whelk(PostgreSQLComponent pg, Index es) {
+    public Whelk(PostgreSQLComponent pg, ElasticSearch es) {
         this.storage = pg
         this.elastic = es
         log.info("Whelk started with storage $storage and index $elastic")
@@ -42,9 +35,6 @@ class Whelk {
     public Whelk(PostgreSQLComponent pg) {
         this.storage = pg
         log.info("Whelk started with storage $storage")
-    }
-
-    public Whelk() {
     }
 
     public static DefaultPicoContainer getPreparedComponentsContainer(Properties properties) {
@@ -98,7 +88,7 @@ class Whelk {
         for (String id : dependingDocuments.keySet()) {
             Document dependingDoc = dependingDocuments.get(id)
             String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
-            elastic.index(dependingDoc, dependingDocCollection)
+            elastic.index(dependingDoc, dependingDocCollection, this)
         }
     }
 
@@ -108,7 +98,7 @@ class Whelk {
     Document store(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean createOrUpdate = true) {
         if (storage.store(document, createOrUpdate, changedIn, changedBy, collection, deleted)) {
             if (elastic) {
-                elastic.index(document, collection)
+                elastic.index(document, collection, this)
                 reindexDependers(document)
             }
         }
@@ -118,7 +108,7 @@ class Whelk {
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, PostgreSQLComponent.UpdateAgent updateAgent) {
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, collection, deleted, updateAgent)
         if (elastic) {
-            elastic.index(updated, collection)
+            elastic.index(updated, collection, this)
             reindexDependers(updated)
         }
         return updated
@@ -127,7 +117,7 @@ class Whelk {
     void bulkStore(final List<Document> documents, String changedIn, String changedBy, String collection, boolean createOrUpdate = true) {
         if (storage.bulkStore(documents, createOrUpdate, changedIn, changedBy, collection)) {
             if (elastic) {
-                elastic.bulkIndex(documents, collection)
+                elastic.bulkIndex(documents, collection, this)
                 for (Document doc : documents) {
                     reindexDependers(doc)
                 }

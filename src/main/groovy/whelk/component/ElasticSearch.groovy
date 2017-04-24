@@ -26,9 +26,10 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.exception.*
 import whelk.filter.JsonLdLinkExpander
+import whelk.Whelk
 
 @Log
-class ElasticSearch implements Index {
+class ElasticSearch {
 
     static final int WARN_AFTER_TRIES = 1000
     static final int RETRY_TIMEOUT = 300
@@ -149,14 +150,13 @@ class ElasticSearch implements Index {
         return response
     }
 
-    @Override
-    public void bulkIndex(List<Document> docs, String collection) {
+    public void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
         assert collection
         if (docs) {
             BulkRequest bulk = new BulkRequest()
             for (doc in docs) {
                 try {
-                    Map shapedData = getShapeForIndex(doc)
+                    Map shapedData = getShapeForIndex(doc, whelk)
                     bulk.add(new IndexRequest(getIndexName(), collection, toElasticId(doc.getShortId())).source(shapedData))
                 } catch (Throwable e) {
                     log.error("Failed to create indexrequest for document ${doc.getShortId()}. Reason: ${e.message}")
@@ -176,15 +176,13 @@ class ElasticSearch implements Index {
         }
     }
 
-    @Override
-    public void index(Document doc, String collection) {
-        Map shapedData = getShapeForIndex(doc)
+    public void index(Document doc, String collection, Whelk whelk) {
+        Map shapedData = getShapeForIndex(doc, whelk)
         def idxReq = new IndexRequest(getIndexName(), collection, toElasticId(doc.getShortId())).source(shapedData)
         def response = performExecute(idxReq)
         log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${response.getId()} as version ${response.getVersion()}")
     }
 
-    @Override
     public void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         DeleteByQueryResponse rsp = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE)
@@ -195,17 +193,20 @@ class ElasticSearch implements Index {
         log.debug("Response: ${rsp.totalDeleted} objects deleted")
     }
 
-    Map getShapeForIndex(Document doc) {
-        log.debug("Framing ${doc.getShortId()}")
-        Map framed = JsonLd.frame(doc.getCompleteId(), JsonLd.THING_KEY, doc.data)
+    Map getShapeForIndex(Document document, Whelk whelk) {
+
+        List externalRefs = document.getExternalRefs()
+        List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
+        Map referencedData = whelk.bulkLoad(convertedExternalLinks).collectEntries { id, doc -> [id, doc.data] }
+        whelk.jsonld.embellish(document.data, referencedData)
+
+        log.debug("Framing ${document.getShortId()}")
+        Map framed = JsonLd.frame(document.getCompleteId(), JsonLd.THING_KEY, document.data)
         log.trace("Framed data: ${framed}")
-        /*if (expander) {
-            doc = expander.filter(doc)
-        }*/
+
         return framed
     }
 
-    @Override
     Map query(Map jsonDsl, String collection) {
         def idxlist = [defaultIndex] as String[]
 
