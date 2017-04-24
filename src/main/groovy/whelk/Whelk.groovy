@@ -7,6 +7,7 @@ import org.picocontainer.containers.PropertiesPicoContainer
 import whelk.component.Index
 import whelk.component.PostgreSQLComponent
 import whelk.filter.JsonLdLinkExpander
+import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
 /**
@@ -20,6 +21,7 @@ class Whelk {
     JsonLdLinkExpander expander
     Map displayData
     Map vocabData
+    JsonLd jsonld
 
     String vocabDisplayUri = "https://id.kb.se/vocab/display" // TODO: encapsulate and configure (LXL-260)
     String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
@@ -61,6 +63,7 @@ class Whelk {
     void loadCoreData() {
         loadDisplayData()
         loadVocabData()
+        jsonld = new JsonLd(displayData, vocabData)
     }
 
     void loadDisplayData() {
@@ -89,6 +92,16 @@ class Whelk {
         return result
     }
 
+    private void reindexDependers(Document document) {
+        List<String> dependingIDs = storage.getDependers(document.getId())
+        Map dependingDocuments = bulkLoad(dependingIDs)
+        for (String id : dependingDocuments.keySet()) {
+            Document dependingDoc = dependingDocuments.get(id)
+            String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
+            elastic.index(dependingDoc, dependingDocCollection)
+        }
+    }
+
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
@@ -96,6 +109,7 @@ class Whelk {
         if (storage.store(document, createOrUpdate, changedIn, changedBy, collection, deleted)) {
             if (elastic) {
                 elastic.index(document, collection)
+                reindexDependers(document)
             }
         }
         return document
@@ -105,6 +119,7 @@ class Whelk {
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, collection, deleted, updateAgent)
         if (elastic) {
             elastic.index(updated, collection)
+            reindexDependers(updated)
         }
         return updated
     }
@@ -113,6 +128,9 @@ class Whelk {
         if (storage.bulkStore(documents, createOrUpdate, changedIn, changedBy, collection)) {
             if (elastic) {
                 elastic.bulkIndex(documents, collection)
+                for (Document doc : documents) {
+                    reindexDependers(doc)
+                }
             }
         } else {
             log.warn("Bulk store failed, not indexing : ${documents.first().id} - ${documents.last().id}")

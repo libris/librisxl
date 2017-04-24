@@ -6,6 +6,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
 import whelk.Document
+import whelk.JsonLd
 import whelk.Location
 import whelk.exception.StorageCreateFailedException
 
@@ -40,10 +41,12 @@ class PostgreSQLComponent {
                      DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
                      LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
                      LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
-                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID
+                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, GET_DEPENDENCIES, GET_DEPENDERS
     protected String LOAD_SETTINGS, SAVE_SETTINGS
+    protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
     protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
+    protected String GET_SYSTEMID_BY_IRI
 
     // Deprecated
     protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
@@ -68,6 +71,7 @@ class PostgreSQLComponent {
         String idTableName = mainTableName + "__identifiers"
         String versionsTableName = mainTableName + "__versions"
         String settingsTableName = mainTableName + "__settings"
+        String dependenciesTableName = mainTableName + "__dependencies"
 
 
         connectionPool = new BasicDataSource()
@@ -105,6 +109,9 @@ class PostgreSQLComponent {
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
+        DELETE_DEPENDENCIES = "DELETE FROM $dependenciesTableName WHERE id = ?"
+        INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, dependsOnId) VALUES (?,?)"
+
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, modified, deleted) SELECT ?,?,?,?,?,?,?,? " +
                 "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
                 "ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"
@@ -128,6 +135,8 @@ class PostgreSQLComponent {
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
                 "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
+        GET_DEPENDENCIES = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ?"
+        GET_DEPENDERS = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ?"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -147,6 +156,8 @@ class PostgreSQLComponent {
                    "FROM $mainTableName " +
                    "WHERE data->'@graph' @> ? " +
                    "OR data->'@graph' @> ?"
+
+        GET_SYSTEMID_BY_IRI = "SELECT id FROM $idTableName WHERE iri = ?"
      }
 
 
@@ -222,6 +233,7 @@ class PostgreSQLComponent {
                 saveVersion(doc, connection, now, changedIn, changedBy, collection, deleted)
             }
             saveIdentifiers(doc, connection)
+            saveDependencies(doc, connection)
             connection.commit()
             def status = status(doc.getURI(), connection)
             if (status.exists) {
@@ -328,6 +340,7 @@ class PostgreSQLComponent {
             // The versions and identifiers tables are NOT under lock. Synchronization is only maintained on the main table.
             saveVersion(doc, connection, modTime, changedIn, changedBy, collection, deleted)
             saveIdentifiers(doc, connection)
+            saveDependencies(doc, connection)
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
@@ -363,6 +376,52 @@ class PostgreSQLComponent {
         }
 
         return doc
+    }
+
+    private void saveDependencies(Document doc, Connection connection) {
+        // Compile list of dependency system ids
+        List dependencies = []
+        for (String iri : doc.getExternalRefs()) {
+            if (!iri.startsWith("http"))
+                continue
+            PreparedStatement getSystemId
+            try {
+                getSystemId = connection.prepareStatement(GET_SYSTEMID_BY_IRI)
+                getSystemId.setString(1, iri)
+                ResultSet rs
+                try {
+                    rs = getSystemId.executeQuery()
+                    if (rs.next())
+                        dependencies.add(rs.getString(1))
+                } finally {
+                    if (rs != null) rs.close()
+                }
+            } finally {
+                if (getSystemId != null) getSystemId.close()
+            }
+        }
+
+        // Clear out old dependencies
+        PreparedStatement removeDependencies = connection.prepareStatement(DELETE_DEPENDENCIES)
+        try {
+            removeDependencies.setString(1, doc.getShortId())
+            int numRemoved = removeDependencies.executeUpdate()
+            log.debug("Removed $numRemoved dependencies for id ${doc.getShortId()}")
+        } finally { removeDependencies.close() }
+
+        // Insert the dependency list
+        PreparedStatement insertDependencies = connection.prepareStatement(INSERT_DEPENDENCIES)
+        for (String dependsOnId : dependencies) {
+            insertDependencies.setString(1, doc.getShortId())
+            insertDependencies.setString(2, dependsOnId)
+            insertDependencies.addBatch()
+        }
+        try {
+            insertDependencies.executeBatch()
+        } catch(BatchUpdateException bue) {
+            log.error("Failed saving dependencies for ${doc.getShortId()}")
+            throw bue.getNextException()
+        } finally { insertDependencies.close() }
     }
 
     private void saveIdentifiers(Document doc, Connection connection) {
@@ -502,6 +561,7 @@ class PostgreSQLComponent {
                 }
                 batch.addBatch()
                 saveIdentifiers(doc, connection)
+                saveDependencies(doc, connection)
             }
             batch.executeBatch()
             ver_batch.executeBatch()
@@ -743,6 +803,39 @@ class PostgreSQLComponent {
             doc = loadFromSql(GET_DOCUMENT, [1: id])
         }
         return doc
+    }
+
+    List<String> getDependencies(String id) {
+        return getDependencyData(id, GET_DEPENDENCIES)
+    }
+
+    List<String> getDependers(String id) {
+        return getDependencyData(id, GET_DEPENDERS)
+    }
+
+    private List<String> getDependencyData(String id, String query) {
+        Connection connection
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(query)
+            preparedStatement.setString(1, id)
+            rs = preparedStatement.executeQuery()
+            List<String> dependecies = []
+            while (rs.next()) {
+                dependecies.add( rs.getString(1) )
+            }
+            return dependecies
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+            if (connection != null)
+                connection.close()
+        }
     }
 
     String getSystemIdByThingId(String thingId) {
