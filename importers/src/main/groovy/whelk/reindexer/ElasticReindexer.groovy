@@ -16,7 +16,6 @@ class ElasticReindexer {
         this.whelk = w
     }
 
-
     void reindex(String suppliedCollection) {
         int counter = 0
         long startTime = System.currentTimeMillis()
@@ -30,7 +29,7 @@ class ElasticReindexer {
                 if (counter % BATCH_SIZE == 0) {
                     long indexTime = System.currentTimeMillis()
                     print("Elapsed time: ${(System.currentTimeMillis() - startTime) / 1000} seconds. Loaded $counter documents. Bulk indexing ${documents.size()} documents ...")
-                    whelk.elastic.bulkIndex(documents, collection)
+                    whelk.elastic.bulkIndex(documents, collection, whelk)
                     println(" In ${(System.currentTimeMillis() - indexTime)} milliseconds.")
                     documents = []
                 }

@@ -20,6 +20,7 @@ class VCopyImporter {
 
     VCopyImporter(Whelk whelk, MarcFrameConverter converter) {
         this.whelk = whelk
+        this.whelk.loadCoreData()
         this.converter = converter
     }
 
