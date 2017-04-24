@@ -378,9 +378,22 @@ class PostgreSQLComponent {
         return doc
     }
 
-    private void saveDependencies(Document doc, Connection connection) {
-        // Compile list of dependency system ids
-        List dependencies = []
+    /**
+     * Given a document, look up all it's dependencies (links/references) and return a list of those referencess that
+     * have Libris system IDs (fnrgls). You were probably looking for getDependencies() which is much more efficient
+     * for a document that is already saved in lddb!
+     */
+    public List<String> calculateDependenciesSystemIDs(Document doc) {
+        Connection connection = getConnection()
+        try {
+            return _calculateDependenciesSystemIDs(doc, connection)
+        } finally {
+            connection.close()
+        }
+    }
+
+    private List<String> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
+        List<String> dependencies = []
         for (String iri : doc.getExternalRefs()) {
             if (!iri.startsWith("http"))
                 continue
@@ -400,6 +413,11 @@ class PostgreSQLComponent {
                 if (getSystemId != null) getSystemId.close()
             }
         }
+        return dependencies
+    }
+
+    private void saveDependencies(Document doc, Connection connection) {
+        List dependencies = _calculateDependenciesSystemIDs(doc, connection)
 
         // Clear out old dependencies
         PreparedStatement removeDependencies = connection.prepareStatement(DELETE_DEPENDENCIES)
