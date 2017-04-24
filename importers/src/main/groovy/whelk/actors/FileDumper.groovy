@@ -23,6 +23,7 @@ class FileDumper implements MySQLLoader.LoadHandler {
 
     BufferedWriter mainTableWriter
     BufferedWriter identifiersWriter
+    BufferedWriter dependenciesWriter
     ThreadPool threadPool
 
     /*
@@ -31,16 +32,23 @@ class FileDumper implements MySQLLoader.LoadHandler {
      */
     MarcFrameConverter[] converterPool
 
+    /*
+    The PostgreSQLComponent is already otherwise required to be thread safe.
+     */
+    PostgreSQLComponent postgreSQLComponent
+
     FileDumper() {
         throw new Error("Groovy might let you call implicit default constructors, I will not.")
     }
 
-    FileDumper(String exportFileName, PostgreSQLComponent postgreSQLComponent) {
+    FileDumper(String exportFileName, PostgreSQLComponent postgres) {
 
         final int THREAD_COUNT = 4 * Runtime.getRuntime().availableProcessors()
 
+        postgreSQLComponent = postgres
         mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"))
         identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"))
+        dependenciesWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_dependencies"), Charset.forName("UTF-8"))
         threadPool = new ThreadPool(THREAD_COUNT)
         converterPool = new MarcFrameConverter[THREAD_COUNT]
         for (int i = 0; i < THREAD_COUNT; ++i) {
@@ -53,6 +61,7 @@ class FileDumper implements MySQLLoader.LoadHandler {
         threadPool.joinAll()
         mainTableWriter.close()
         identifiersWriter.close()
+        dependenciesWriter.close()
     }
 
     public void handle(List<List<VCopyDataRow>> batch) {
@@ -67,8 +76,11 @@ class FileDumper implements MySQLLoader.LoadHandler {
                 catch (Throwable e) {
                     log.error("Failed converting document with id: " + rowList.last().bib_id, e)
                 }
-                if (recordMap != null)
+                if (recordMap != null) {
+                    List<String> depencyIDs = postgreSQLComponent.calculateDependenciesSystemIDs(recordMap.document)
+                    recordMap["dependencies"] = depencyIDs
                     writeBatch.add(recordMap)
+                }
             }
 
             append(writeBatch)
@@ -107,6 +119,10 @@ class FileDumper implements MySQLLoader.LoadHandler {
                         identifiersWriter.write("${doc.shortId}\t${identifier}\t1\ttrue\n")
                     else
                         identifiersWriter.write("${doc.shortId}\t${identifier}\t1\tfalse\n")
+                }
+
+                for (String dependency : recordMap.dependencies) {
+                    dependenciesWriter.write("${doc.shortId}\t${dependency}\n")
                 }
             }
         }
