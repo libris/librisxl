@@ -18,6 +18,12 @@ CREATE TABLE IF NOT EXISTS lddb__identifiers (
     mainId boolean not null
 );
 
+CREATE TABLE IF NOT EXISTS lddb__dependencies (
+    pk serial,
+    id text not null,
+    dependsOnId text not null
+);
+
 CREATE TABLE IF NOT EXISTS lddb__versions (
     pk serial,
     id text not null,

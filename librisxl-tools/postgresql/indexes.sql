@@ -9,6 +9,9 @@ CREATE INDEX idx_lddb_thing_identifiers on lddb using gin ((data#>'{@graph,1,ide
 CREATE INDEX idx_lddb__identifiers_id ON lddb__identifiers (id);
 CREATE INDEX idx_lddb__identifiers_iri ON lddb__identifiers (iri);
 
+CREATE INDEX idx_lddb__dependencies_id ON lddb__dependencies (id);
+CREATE INDEX idx_lddb__dependencies_depends_on ON lddb__dependencies (dependsOnId);
+
 CREATE INDEX idx_lddb__versions_id ON lddb__versions (id);
 CREATE INDEX idx_lddb__versions_modified ON lddb__versions (modified);
 CREATE INDEX idx_lddb__versions_checksum ON lddb__versions (checksum);
