@@ -854,7 +854,7 @@
           "tokenMap": "MusicCompositionType"
         },
         "[3:4]": {
-          "link": "additionalType",
+          "link": "musicFormat",
           "uriTemplate": "{_}",
           "tokenMap": "MusicFormatType"
         },
@@ -2057,7 +2057,7 @@
         },
         "[20:21]": {
           "aboutEntity": "?work",
-          "link": "additionalType",
+          "link": "musicFormat",
           "uriTemplate": "{_}",
           "tokenMap": "MusicFormatType"
         },
