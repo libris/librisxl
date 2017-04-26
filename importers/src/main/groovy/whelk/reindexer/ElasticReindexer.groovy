@@ -14,6 +14,7 @@ class ElasticReindexer {
 
     ElasticReindexer(Whelk w) {
         this.whelk = w
+        this.whelk.loadCoreData()
     }
 
     void reindex(String suppliedCollection) {
