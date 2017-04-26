@@ -35,7 +35,7 @@ class ElasticReindexer {
                 }
             }
             if (documents.size() > 0) {
-                whelk.elastic.bulkIndex(documents, collection)
+                whelk.elastic.bulkIndex(documents, collection, whelk)
             }
         }
         println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
