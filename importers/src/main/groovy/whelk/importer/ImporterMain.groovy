@@ -54,6 +54,12 @@ class ImporterMain {
         PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, pico.getComponent(PostgreSQLComponent))
     }
 
+    @Command(args='TO_FILE_NAME COLLECTION DATA_SELECTION_TSVFILE')
+    void vcopydumptestdata(String toFileName, String collection, String exampleDataFileName) {
+        def connUrl = props.getProperty("mysqlConnectionUrl")
+        PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, exampleDataFileName, pico.getComponent(PostgreSQLComponent))
+    }
+
     /**
      * Typical invocation:
      * java -jar build/libs/vcopyImporter.jar vcopyconversiontest bib
