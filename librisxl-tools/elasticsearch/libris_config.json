@@ -10,6 +10,11 @@
                     "mappings": [
                         "-=>"
                     ]
+                },
+                "non_numeric_remover": {
+                    "type": "pattern_replace",
+                    "pattern": "[^0-9]+",
+                    "replacement": " "
                 }
             },
             "analyzer": {
@@ -27,6 +32,12 @@
                         "lowercase"
                     ]
                 },
+                "numeric_extractor": {
+                    "filter": [
+                        "numeric_keeper"
+                    ],
+                    "tokenizer": "numeric_keeper_tokenizer"
+                },
                 "default": {
                     "filter": [
                         "lowercase",
@@ -36,11 +47,25 @@
                     "tokenizer": "standard"
                 }
             },
+            "tokenizer": {
+                "numeric_keeper_tokenizer": {
+                    "type": "pattern",
+                    "group": 1,
+                    "pattern": "([0-9]{4})"
+                }
+            },
             "filter": {
                 "custom_edge_ngram": {
                     "max_gram": 50,
                     "min_gram": 2,
                     "type": "edgeNGram"
+                },
+                "numeric_keeper": {
+                    "type": "pattern_capture",
+                    "preserve_original": 0,
+                    "patterns": [
+                        "([0-9]{4})"
+                    ]
                 },
                 "swe_light_stemmer": {
                     "name": "light_swedish",
@@ -57,7 +82,7 @@
             "_timestamp": {
                 "enabled": true
             },
-            "properties" : {
+            "properties": {
                 "identifiedBy": {
                     "type": "nested",
                     "include_in_parent": true,
@@ -323,6 +348,24 @@
         },
         "bib": {
             "properties": {
+                "publication": {
+                    "properties": {
+                        "date": {
+                            "fields": {
+                                "date": {
+                                    "analyzer": "completer",
+                                    "type": "string"
+                                },
+                                "raw": {
+                                    "analyzer": "numeric_extractor",
+                                    "index": "analyzed",
+                                    "type": "string"
+                                }
+                            },
+                            "type": "multi_field"
+                        }
+                    }
+                },
                 "attributedTo": {
                     "properties": {
                         "controlledLabel": {
