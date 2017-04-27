@@ -44,7 +44,7 @@ class PostgreSQLComponent {
                      LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
                      LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
                      GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, GET_DEPENDENCIES, GET_DEPENDERS,
-                     GET_DOCUMENT_BY_MAIN_ID, GET_MAIN_ID
+                     GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
     protected String QUERY_LD_API
@@ -133,9 +133,9 @@ class PostgreSQLComponent {
                                   "FROM $mainTableName " +
                                   "WHERE id = (SELECT id FROM $idTableName " +
                                               "WHERE mainid = 't' AND iri = ?)"
-        GET_MAIN_ID = "SELECT iri FROM $idTableName " +
-                      "WHERE graphindex = 0 AND mainid = 't' " +
-                      "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
+        GET_RECORD_ID = "SELECT iri FROM $idTableName " +
+                        "WHERE graphindex = 0 AND mainid = 't' " +
+                        "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
@@ -919,7 +919,7 @@ class PostgreSQLComponent {
         PreparedStatement selectstmt
         ResultSet rs
         try {
-            selectstmt = connection.prepareStatement(GET_MAIN_ID)
+            selectstmt = connection.prepareStatement(GET_RECORD_ID)
             selectstmt.setString(1, id)
             rs = selectstmt.executeQuery()
             List<String> ids = []
