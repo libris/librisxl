@@ -293,9 +293,9 @@ class SearchUtils {
         }
 
         keys.each { key ->
-            query[key] = ['terms': ['field': key, 'size': size]]
-            if (tree instanceof Map) {
-                query[key]['aggs'] = buildAggQuery(tree[key], size)
+            query[key] = ['terms': ['field': key, 'size': tree[key]?.size ?: size]]
+            if (tree[key].subItems instanceof Map) {
+                query[key]['aggs'] = buildAggQuery(tree[key].subItems, size)
             }
         }
         return query
