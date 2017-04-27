@@ -38,6 +38,8 @@ class PostgreSQLComponent {
     protected String UPSERT_DOCUMENT, UPDATE_DOCUMENT, INSERT_DOCUMENT,
                      INSERT_DOCUMENT_VERSION, GET_DOCUMENT,
                      GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS,
+                     GET_DOCUMENT_VERSION_BY_MAIN_ID,
+                     GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID,
                      GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
                      LOAD_ALL_DOCUMENTS_BY_COLLECTION,
                      DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
@@ -124,8 +126,18 @@ class PostgreSQLComponent {
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ? FOR UPDATE"
         GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
-        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,data->>'created' AS created,modified" +
+        GET_DOCUMENT_VERSION_BY_MAIN_ID = "SELECT id,data FROM $versionsTableName " +
+                                          "WHERE id = (SELECT id FROM $idTableName " +
+                                                      "WHERE iri = ? AND mainid = 't') " +
+                                          "AND checksum = ?"
+        // FIXME fix created read (join with lddb?)
+        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,deleted,data->>'created' AS created,modified " +
                 "FROM $versionsTableName WHERE id = ? ORDER BY modified"
+        GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = "SELECT id,data,deleted,data->>'created' AS created,modified " +
+                                               "FROM $versionsTableName " +
+                                               "WHERE id = (SELECT id FROM $idTableName " +
+                                                           "WHERE iri = ? AND mainid = 't') " +
+                                               "ORDER BY modified"
         GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE data->'@graph' @> ?"
         GET_RECORD_ID_BY_THING_ID = "SELECT id FROM $idTableName WHERE iri = ? AND graphIndex = 1"
@@ -875,36 +887,24 @@ class PostgreSQLComponent {
     /**
      * Load document using supplied identifier as main ID
      *
-     * Supplied identifier can be either document ID or thing ID.
+     * Supplied identifier can be either record ID or thing ID.
      *
      */
-    Document loadDocumentByMainId(String mainId) {
-        Connection connection = getConnection()
-        PreparedStatement selectstmt
-        ResultSet rs
-        try {
-            selectstmt = connection.prepareStatement(GET_DOCUMENT_BY_MAIN_ID)
-            selectstmt.setString(1, mainId)
-            rs = selectstmt.executeQuery()
-            List<Document> docs = []
-
-            while (rs.next()) {
-               docs << assembleDocument(rs)
+    Document loadDocumentByMainId(String mainId, String version=null) {
+        Document doc = null
+        if (version && version.isInteger()) {
+            int v = version.toInteger()
+            def docList = loadAllVersionsByMainId(mainId)
+            if (v < docList.size()) {
+                doc = docList[v]
             }
-
-            if (docs.size() > 1) {
-                log.warn("Multiple documents found for main ID ${mainId}")
-            }
-
-            if (docs.isEmpty()) {
-                return null
-            } else {
-                return docs[0]
-            }
-        } finally {
-            connection.close()
+        } else if (version) {
+            doc = loadFromSql(GET_DOCUMENT_VERSION_BY_MAIN_ID,
+                              [1: mainId, 2: version])
+        } else {
+            doc = loadFromSql(GET_DOCUMENT_BY_MAIN_ID, [1: mainId])
         }
-        return
+        return doc
     }
 
     /**
@@ -1092,12 +1092,21 @@ class PostgreSQLComponent {
     }
 
     List<Document> loadAllVersions(String identifier) {
+        return doLoadAllVersions(identifier, GET_ALL_DOCUMENT_VERSIONS)
+    }
+
+    List<Document> loadAllVersionsByMainId(String identifier) {
+        return doLoadAllVersions(identifier,
+                                 GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID)
+    }
+
+    private List<Document> doLoadAllVersions(String identifier, String sql) {
         Connection connection = getConnection()
         PreparedStatement selectstmt
         ResultSet rs
         List<Document> docList = []
         try {
-            selectstmt = connection.prepareStatement(GET_ALL_DOCUMENT_VERSIONS)
+            selectstmt = connection.prepareStatement(sql)
             selectstmt.setString(1, identifier)
             rs = selectstmt.executeQuery()
             int v = 0
@@ -1125,6 +1134,7 @@ class PostgreSQLComponent {
         doc.setDeleted(rs.getBoolean("deleted"))
 
         try {
+            // FIXME better handling of null values
             doc.setCreated(new Date(rs.getTimestamp("created")?.getTime()))
         } catch (SQLException sqle) {
             log.trace("Resultset didn't have created. Probably a version request.")
