@@ -460,15 +460,14 @@ class Crud extends HttpServlet {
             return new Tuple2(doc, null)
         }
 
-        // FIXME use version
-        doc = whelk.storage.loadDocumentByMainId(id)
+        doc = whelk.storage.loadDocumentByMainId(id, version)
         if (doc) {
             return new Tuple2(doc, null)
         }
 
         String mainId = whelk.storage.getMainId(id)
         if (mainId) {
-            doc = whelk.storage.loadDocumentByMainId(mainId)
+            doc = whelk.storage.loadDocumentByMainId(mainId, version)
             return new Tuple2(doc, mainId)
         }
 
