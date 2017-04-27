@@ -737,6 +737,7 @@
 
     "006": {
       "TODO:tokenSyncedWith": "typeOfRecord",
+      "TODO": "Decide if 006 always is hasPart (Work)",
       "TODO:repeats": "008",
       "aboutEntity": "?work",
       "addLink": "hasPart",
@@ -1077,12 +1078,14 @@
       },
       "Serial": {
         "[1:2]": {
-          "link": "marc:frequencyCategory",
+          "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
+          "link": "frequency",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsFrequencyType"
         },
         "[2:3]": {
-          "link": "marc:regularity",
+          "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
+          "link": "frequency",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsRegularityType"
         },
@@ -1960,16 +1963,6 @@
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
-        },
-        "[18:19]": {
-          "link": "marc:frequencyCategory",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerFrequencyType"
-        },
-        "[19:20]": {
-          "link": "marc:regularity",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerRegularityType"
         }
       },
       "Cartography": {
@@ -2127,12 +2120,14 @@
       },
       "Serial": {
         "[18:19]": {
-          "link": "marc:frequencyCategory",
+          "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
+          "link": "frequency",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsFrequencyType"
         },
         "[19:20]": {
-          "link": "marc:regularity",
+          "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
+          "link": "frequency",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsRegularityType"
         },
