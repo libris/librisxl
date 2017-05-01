@@ -1961,7 +1961,8 @@
         },
         "[26:27]": {
           "aboutEntity": "?work",
-          "addLink": "contentType",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerTypeOfFileType"
         },
@@ -2146,7 +2147,9 @@
         },
         "[21:22]": {
           "aboutEntity": "?work",
-          "addLink": "contentType",
+          "TODO:genreForm": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "TODO": "Decide if it should be Work or Instance",
+          "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsTypeOfSerialType"
         },
@@ -2235,7 +2238,8 @@
         },
         "[33:34]": {
           "aboutEntity": "?work",
-          "addLink": "contentType",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMaterialType"
         },
