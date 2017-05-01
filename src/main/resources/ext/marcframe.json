@@ -916,12 +916,14 @@
           "tokenMap": "MusicMatterType"
         },
         "[13:14]": {
-          "link": "marc:text",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicTextType"
         },
         "[14:15]": {
-          "link": "marc:text",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicTextType"
         },
@@ -2123,12 +2125,16 @@
           "tokenMap": "MusicMatterType"
         },
         "[30:31]": {
-          "link": "marc:text",
+          "aboutEntity": "?work",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicTextType"
         },
         "[31:32]": {
-          "link": "marc:text",
+          "aboutEntity": "?work",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicTextType"
         },
