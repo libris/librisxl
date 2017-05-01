@@ -880,32 +880,38 @@
           "tokenMap": "ItemType"
         },
         "[7:8]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[8:9]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[9:10]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[10:11]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[11:12]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[12:13]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
@@ -2081,32 +2087,38 @@
           "tokenMap": "ItemType"
         },
         "[24:25]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance. Compare with Text",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[25:26]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance. Compare with Text",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[26:27]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance. Compare with Text",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[27:28]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance. Compare with Text",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[28:29]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance. Compare with Text",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[29:30]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance. Compare with Text",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
