@@ -764,22 +764,26 @@
       "tokenTypeMap": "[0:1]",
       "Text": {
         "[1:2]": {
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[2:3]": {
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[3:4]": {
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[4:5]": {
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
@@ -1840,25 +1844,29 @@
       "Text": {
         "[18:19]": {
           "aboutEntity": "?work",
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[19:20]": {
           "aboutEntity": "?work",
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[20:21]": {
           "aboutEntity": "?work",
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[21:22]": {
           "aboutEntity": "?work",
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
