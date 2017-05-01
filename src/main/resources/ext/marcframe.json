@@ -1131,22 +1131,26 @@
           "tokenMap": "ItemType"
         },
         "[7:8]": {
-          "link": "marc:nature",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsNatureType"
         },
         "[8:9]": {
-          "link": "marc:contents",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[9:10]": {
-          "link": "marc:contents",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[10:11]": {
-          "link": "marc:contents",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
@@ -2178,25 +2182,29 @@
         },
         "[24:25]": {
           "aboutEntity": "?work",
-          "link": "marc:nature",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsNatureType"
         },
         "[25:26]": {
           "aboutEntity": "?work",
-          "link": "marc:contents",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[26:27]": {
           "aboutEntity": "?work",
-          "link": "marc:contents",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[27:28]": {
           "aboutEntity": "?work",
-          "link": "marc:contents",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
