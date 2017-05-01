@@ -978,11 +978,13 @@
           "tokenMap": "MapsFormatType"
         },
         "[17:18]": {
+          "TODO": "Not used in 008. Should we remove this mapping as well?",
           "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "MapsFormatType"
         },
         "[7:8]": {
+          "TODO": "Not used in 008. Should we remove this mapping as well?",
           "link": "marc:primeMeridian",
           "uriTemplate": "{_}",
           "tokenMap": "MapsPrimeMeridianType"
@@ -1020,26 +1022,31 @@
           "tokenMap": "VisualTechniqueType"
         },
         "[6:7]": {
+          "TODO": "Not used in 008. Should we remove this mapping as well?",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[7:8]": {
+          "TODO": "Not used in 008. Should we remove this mapping as well?",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[8:9]": {
+          "TODO": "Not used in 008. Should we remove this mapping as well?",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[9:10]": {
+          "TODO": "Not used in 008. Should we remove this mapping as well?",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[10:11]": {
+          "TODO": "Not used in 008. Should we remove this mapping as well?",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
@@ -1094,6 +1101,7 @@
           "tokenMap": "SerialsRegularityType"
         },
         "[3:4]": {
+          "TODO": "Not used in 008. Should we remove this mapping as well?",
           "link": "marc:issn",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsISSNType"
@@ -2029,17 +2037,6 @@
           "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "MapsFormatType"
-        },
-        "[34:35]": {
-          "aboutEntity": "?work",
-          "link": "additionalType",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsFormatType"
-        },
-        "[24:25]": {
-          "link": "marc:primeMeridian",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsPrimeMeridianType"
         }
       },
       "Mixed": {
@@ -2139,11 +2136,6 @@
           "link": "frequency",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsRegularityType"
-        },
-        "[20:21]": {
-          "link": "marc:issn",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsISSNType"
         },
         "[21:22]": {
           "aboutEntity": "?work",
@@ -2247,31 +2239,6 @@
           "link": "marc:technique",
           "uriTemplate": "{_}",
           "tokenMap": "VisualTechniqueType"
-        },
-        "[23:24]": {
-          "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
-        },
-        "[24:25]": {
-          "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
-        },
-        "[25:26]": {
-          "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
-        },
-        "[26:27]": {
-          "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
-        },
-        "[27:28]": {
-          "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
         }
       },
       "repeatable": false,
