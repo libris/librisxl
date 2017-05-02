@@ -4744,10 +4744,9 @@
       "aboutType": "Work"
     },
     "148" : {
-      "aboutEntity": "?thing", "link": null, "resourceType": null,
-      "aboutType": "Temporal",
-      "$a": {"property": "prefLabel"},
-      "uriTemplate": "https://id.kb.se/term/sao/{prefLabel}"
+      "include": "termbase",
+      "dependsOn": ["040", "042"],
+      "aboutType": "Temporal"
     },
     "150" : {
       "include": "termbase",
@@ -4829,7 +4828,7 @@
       "include": "termbase",
       "aboutType": "GenreForm",
       "TODO:just-assert-inScheme=saogf?:uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
-      "TODO:if-inScheme=barn?:uriTemplate": "https://id.kb.se/term/barn/gf/{prefLabel}"
+      "TODO:if-inScheme=barn?:uriTemplate": "https://id.kb.se/term/barngf/{prefLabel}"
     },
     "162" : {
       "include": "termbase",
