@@ -103,7 +103,8 @@ class Whelk {
                     for (String id : dependingIDs) {
                         Document dependingDoc = storage.load(id)
                         String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
-                        elastic.index(dependingDoc, dependingDocCollection, _this)
+                        if (dependingDocCollection != null)
+                            elastic.index(dependingDoc, dependingDocCollection, _this)
                     }
                 }
             }).start()
