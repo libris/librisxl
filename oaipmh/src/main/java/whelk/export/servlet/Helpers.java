@@ -81,7 +81,7 @@ public class Helpers
             selectSQL += " AND collection = ? ";
 
         if (setSpec.getSubset() != null)
-            selectSQL += " AND data @> ?";
+            selectSQL += " AND data->'@graph' @> ?";
 
         selectSQL += " ORDER BY modified ";
 
@@ -98,9 +98,9 @@ public class Helpers
             preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
         if (setSpec.getSubset() != null)
         {
-            String strMap = "{\"@graph\":[{\"heldBy\":{\"@id\": \""+
+            String strMap = "[{\"heldBy\":{\"@id\": \""+
                     LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset())+
-                    "\"}}]}";
+                    "\"}}]";
 
             preparedStatement.setObject(parameterIndex++, strMap, java.sql.Types.OTHER);
         }
