@@ -71,7 +71,7 @@ public class Helpers
 
         // Construct the query
         String selectSQL = "SELECT data, collection, modified, deleted, " +
-                " data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' AS sigel FROM " +
+                " data#>>'{@graph,1,heldBy,@id}' AS sigel FROM " +
                 tableName + " WHERE collection <> 'definitions' ";
         if (fromDateTime != null)
             selectSQL += " AND modified >= ? ";
