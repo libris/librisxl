@@ -85,12 +85,29 @@ class Whelk {
     }
 
     private void reindexDependers(Document document) {
-        List<String> dependingIDs = storage.getDependers(document.getId())
-        Map dependingDocuments = bulkLoad(dependingIDs)
-        for (String id : dependingDocuments.keySet()) {
-            Document dependingDoc = dependingDocuments.get(id)
-            String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
-            elastic.index(dependingDoc, dependingDocCollection, this)
+        List<String> dependingIDs = storage.getDependers(document.getShortId())
+
+        // If the number of dependers isn't too large. Update them synchronously
+        if (dependingIDs.size() < 20) {
+            Map dependingDocuments = bulkLoad(dependingIDs)
+            for (String id : dependingDocuments.keySet()) {
+                Document dependingDoc = dependingDocuments.get(id)
+                String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
+                elastic.index(dependingDoc, dependingDocCollection, this)
+            }
+        } else {
+            // else use a fire-and-forget thread
+            Whelk _this = this
+            new Thread(new Runnable() {
+                void run() {
+                    for (String id : dependingIDs) {
+                        Document dependingDoc = storage.load(id)
+                        String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
+                        elastic.index(dependingDoc, dependingDocCollection, _this)
+                    }
+                }
+            }).start()
+
         }
     }
 
