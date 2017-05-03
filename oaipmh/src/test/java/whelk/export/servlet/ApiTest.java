@@ -225,4 +225,11 @@ public class ApiTest
         String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc_includehold");
         Assert.assertTrue( response.contains("holding sigel=\"Gbg\" id=\"59hm0xrb4wxl4bm\"") );
     }
+    
+    @Test
+    public void testSigelSets() throws Exception
+    {
+        String response = TestCommon.httpGet("/oaipmh/?verb=ListIdentifiers&set=hold:S&metadataPrefix=oai_dc");
+        Assert.assertFalse( response.contains("noRecordsMatch")) ;
+    }
 }
