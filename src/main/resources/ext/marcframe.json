@@ -3574,7 +3574,7 @@
       "aboutEntity": "?work",
       "addLink": "intendedAudience",
       "embedded": true,
-      "resourceType": "Audience",
+      "resourceType": "IntendedAudience",
       "TOOO:i1": {},
       "$a": {"property": "label"}
     },
