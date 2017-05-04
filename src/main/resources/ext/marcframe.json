@@ -935,27 +935,27 @@
       },
       "Cartography": {
         "[1:2]": {
-          "link": "marc:relief",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[2:3]": {
-          "link": "marc:relief",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[3:4]": {
-          "link": "marc:relief",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[4:5]": {
-          "link": "marc:relief",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[5:7]": {
-          "link": "marc:projection",
+          "link": "projection",
           "uriTemplate": "{_}",
           "tokenMap": "MapsProjectionType"
         },
@@ -1997,27 +1997,27 @@
       },
       "Cartography": {
         "[18:19]": {
-          "link": "marc:relief",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[19:20]": {
-          "link": "marc:relief",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[20:21]": {
-          "link": "marc:relief",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[21:22]": {
-          "link": "marc:relief",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[22:24]": {
-          "link": "marc:projection",
+          "link": "projection",
           "uriTemplate": "{_}",
           "tokenMap": "MapsProjectionType"
         },
