@@ -3,15 +3,21 @@ __metaclass__ = type
 
 import json
 import sys
-from collections import defaultdict, OrderedDict
+from collections import defaultdict, OrderedDict#, deque
 
+
+COMBO_FLOOR = 400
+
+REPORT_SIZE = 10000
+DUMP_SIZE = 1000000
 
 COLSPECS = {}
+
 COLSPECS['bib'] = {
     '000': [
         [5],  # marc:status
         [6],  # @type
-        [7],  # @type
+        [7],  # biblevel
         [8],  # marc:typeOfControl
         [9],  # marc:characterCoding
         [17],  # marc:encLevel
@@ -24,12 +30,103 @@ COLSPECS['bib'] = {
     '007': [
         [0],  # hasFormat / @type
     ],
-    '008': [
-        [6],  # marc:publicationStatus
-        [38],  # marc:modifiedRecord
-        [39],  # marc:catalogingSource
-    ]
+    '008': {
+        '*': [
+            # [0:6]  created
+            [6],  # marc:publicationStatus
+            # [7:11]  marc:publishedYear
+            # [11:15]  marc:otherYear
+            # [15:18]  publicationCountry
+            # [35:38]  language
+            [38],  # marc:modifiedRecord
+            [39],  # marc:catalogingSource
+        ]
+    }
 }
+
+# Text:
+for rt in 'aht':
+    for bl in 'acdm':
+        COLSPECS['bib']['008'][rt + bl] = [
+            [18], [19], [20], [21], # marc:illustrations (new: illustrativeContent)
+            [23], #marc:additionalCarrierType  (new: carrierType)
+            [24], [25], [26], [27], #contentType
+
+        ]
+
+# Digital:
+for bl in '9abcdimps':
+    COLSPECS['bib']['008']['m' + bl] = [
+        [18],    # marc:frequencyCategory  (ta bort?)
+        [19],    # marc:regularity                  (ta bort?)
+    ]
+
+# Cartography:
+for rt in 'ef':
+    for bl in '9abcdimps':
+        COLSPECS['bib']['008']['m' + bl] = [
+            [24], #    marc:primeMeridian          (ta bort?)
+            [29], #    marc:additionalCarrierType  (new: carrierType)
+            [31], #    marc:index                  (new: supplemantaryContent)
+            [33], #    additionalType
+            [34], #    additionalType              (ta bort?)
+        ]
+
+# Mixed:
+for rts, bls in [('b', '9acdimp'), ('p', 'acdimp')]:
+    for rt in rts:
+        for bl in bls:
+            COLSPECS['bib']['008'][rt + bl] = [
+                [23], #    marc:additionalCarrierType  (new: carrierType)
+            ]
+
+# Audio:
+for rt in 'cdij':
+    for bl in '9abcdimps':
+        COLSPECS['bib']['008'][rt + bl] = [
+            [21], #    marc:parts
+            [23], #    marc:additionalCarrierType  (new: carrierType)
+            [24], #    marc:matter                 (new: supplemantaryContent)
+            [25], #    marc:matter                 (new: supplemantaryContent)
+            [26], #    marc:matter                 (new: supplemantaryContent)
+            [27], #    marc:matter                 (new: supplemantaryContent)
+            [28], #    marc:matter                 (new: supplemantaryContent)
+            [29], #    marc:matter                 (new: supplemantaryContent)
+            [33], #    marc:transposition
+        ]
+
+
+# Serial:
+for rts, bls in [('aht', '9bips'), ('b', 'bs'), ('p', 'bs')]:
+    for rt in rts:
+        for bl in bls:
+            COLSPECS['bib']['008'][rt + bl] = [
+                [18], #    marc:frequencyCategory      (new: frequency)
+                [19], #    marc:regularity                      (new: frequency)
+                [20], #    marc:issn                              (ta bort? Undefined enl LC)
+                [21], #    contentType                          (new: genreForm)
+                [22], #    marc:originalItem
+                [23], #    marc:additionalCarrierType  (new: carrierType)
+                [24], #    marc:nature                          (new: genreForm)
+                [25], #    marc:contents                       (new: genreForm)
+                [26], #    marc:contents                       (new: genreForm)
+                [27], #    marc:contents                       (new: genreForm)
+                [33], #    marc:alphabet
+                [34], #    marc:typeOfEntry
+            ]
+
+# Visual:
+for rts, bls in [('gknor', '9abcdimps'), ('p', '9')]:
+    for rt in rts:
+        for bl in bls:
+            COLSPECS['bib']['008'][rt + bl] = [
+                #[18:21]       marc:runningTime            (new duration)
+                [23], [24], [25], [26], [27],       # marc:matter (Undefined enl LC)
+                [29],     # marc:additionalCarrierType  (new: carrierType)
+                [34],     # marc:technique
+            ]
+
+
 COLSPECS['auth'] = {
     '000': COLSPECS['bib']['000'],
     '008': [
@@ -54,6 +151,7 @@ COLSPECS['auth'] = {
         [39],  # marc:catalogingSource
     ],
 }
+
 COLSPECS['hold'] = {
     '000': [
         [5],  # marc:status
@@ -79,8 +177,6 @@ COLSPECS['hold'] = {
         [25],  # marc:copyReport
     ]
 }
-
-COMBO_FLOOR = 400
 
 
 class Stats:
@@ -138,7 +234,7 @@ class Stats:
                 assert record_id is None
                 record_id = "%s:%s (%s)" % (self.marctype, value, rectypebiblevel)
 
-            self.process_field(recstats, tag, value, record_id)
+            self.process_field(rectypebiblevel, recstats, tag, value, record_id)
 
             recstats[tag]['repeats']['x%s' % tag_count[tag]].count(record_id)
 
@@ -152,9 +248,9 @@ class Stats:
 
         recstats['combos'][rectypebiblevel + ' ' + combo_key].count(record_id)
 
-        self.process_field(recstats, '000', leader, record_id)
+        self.process_field(rectypebiblevel, recstats, '000', leader, record_id)
 
-    def process_field(self, recstats, tag, value, record_id):
+    def process_field(self, rectypebiblevel, recstats, tag, value, record_id):
         fieldstats = recstats.get(tag)
         if not fieldstats:
             subcombos = CounterDict()
@@ -171,7 +267,7 @@ class Stats:
         if tag in {'000', '001', '003', '005', '006', '007', '008'}:
             if isinstance(value, unicode):
                 if tag in {'000', '006', '007', '008'}:
-                    self.measure_fixed(fieldstats, tag, value, record_id)
+                    self.measure_fixed(rectypebiblevel, fieldstats, tag, value, record_id)
             else:
                 fieldstats['errors']['expected_fixed'].count(record_id)
         else:
@@ -182,17 +278,21 @@ class Stats:
                 code_combo = " ".join(codes)
                 subcombos[code_combo].count(record_id)
 
-    def measure_fixed(self, fieldstats, tag, value, record_id):
+    def measure_fixed(self, rectypebiblevel, fieldstats, tag, value, record_id):
         colspecs = COLSPECS.get(self.marctype, {}).get(tag, ())
+        if isinstance(colspecs, dict):
+            colspecs = colspecs.get(rectypebiblevel) or colspecs.get('*')
         for col in colspecs:
             slicecode = '[%s]' % ':'.join(map(str, col))
             colslice = col[0] if len(col) == 1 else slice(*col)
             try:
-                key = '%s=%s' % (slicecode, value[colslice])
+                token = value[colslice]
             except IndexError:
                 fieldstats['errors']['failed_slice-%s' % slicecode].count(record_id)
             else:
-                fieldstats[key] = fieldstats.get(key, 0) + 1
+                colstats = fieldstats.setdefault(slicecode, {})
+                counter = colstats[token] = colstats.get(token) or ExampleCounter()
+                counter.count(record_id)
 
     def measure_subfields(self, fieldstats, tag, value):
         codes = []
@@ -231,6 +331,7 @@ class ExampleCounter:
 
     def __init__(self):
         self.total = 0
+        #self.examples = deque(maxlen=self.LIMIT) # Needs custom json serializer hook
         self.examples = []
 
     def count(self, example):
@@ -266,11 +367,11 @@ def compute_stats(marctype, stats_dest):
 
     for i, line in enumerate(sys.stdin):
         if i:
-            if i % 10**4 == 0:
+            if i % REPORT_SIZE == 0:
                 clear()
                 print("At {:,} (combos: {:,})".format(i,
                       sum(len(stat['combos']) for stat in stats.biblevelmap.values())))
-            if i % 10**6 == 0:
+            if i % DUMP_SIZE == 0:
                 stats.dump()
 
         record = parse_record(line, i + 1)
