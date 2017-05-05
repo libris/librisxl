@@ -92,13 +92,13 @@ public class Helpers
                         "__identifiers ON holdings.id = " + tableName + "__identifiers.iri) ";
         }
 
-        selectSQL += " ORDER BY modified ), heldBy AS ( " +
+        selectSQL += " ), heldBy AS ( " +
                 " WITH subq AS (SELECT data#>>'{@graph,1,itemOf,@id}' AS itemOf, data#>>'{@graph,1,heldBy,@id}' AS sigel FROM lddb) " +
                 " SELECT * FROM subq JOIN lddb__identifiers ON subq.itemOf = lddb__identifiers.iri " +
                 " ), " +
                 "concatenated AS ( " +
                 " SELECT mainquery.id, string_agg(heldBy.sigel, ',') AS sigel_list FROM mainquery JOIN heldBy ON mainquery.id = heldBy.id GROUP BY mainquery.id) " +
-                "SELECT * FROM mainquery LEFT JOIN concatenated ON mainquery.id = concatenated.id";
+                "SELECT * FROM mainquery LEFT JOIN concatenated ON mainquery.id = concatenated.id ORDER BY mainquery.modified";
 
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setFetchSize(512);
