@@ -210,7 +210,6 @@ public class ApiTest
         }
     }
 
-    //"/oaipmh/?verb=GetRecord&metadataPrefix=oai_dc&identifier=https://libris.kb.se/7cjmx02d3hj2p81",
     @Test
     public void testHoldingsForBibSingle() throws Exception
     {
@@ -225,11 +224,34 @@ public class ApiTest
         String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=oai_dc_includehold");
         Assert.assertTrue( response.contains("holding sigel=\"Gbg\" id=\"59hm0xrb4wxl4bm\"") );
     }
-    
+
     @Test
-    public void testSigelSets() throws Exception
+    public void testHoldSigelSets() throws Exception
     {
         String response = TestCommon.httpGet("/oaipmh/?verb=ListIdentifiers&set=hold:S&metadataPrefix=oai_dc");
-        Assert.assertFalse( response.contains("noRecordsMatch")) ;
+        Assert.assertFalse( response.contains("noRecordsMatch"));
+    }
+
+    @Test
+    public void testBibSigelSets() throws Exception
+    {
+        String response = TestCommon.httpGet("/oaipmh/?verb=ListIdentifiers&set=bib:S&metadataPrefix=oai_dc");
+        Assert.assertFalse( response.contains("noRecordsMatch"));
+    }
+
+    @Test
+    public void testBibSigelSetsInHeaderOnGetRecord() throws Exception
+    {
+        String response = TestCommon.httpGet("/oaipmh/?verb=GetRecord&metadataPrefix=oai_dc&identifier=" +
+                OaiPmh.configuration.getProperty("baseUri") + "fxql7jqr38b1dkf");
+        Assert.assertTrue( response.contains("bib:Gbg"));
+    }
+
+    @Test
+    public void testBibSigelSetsInHeaderOnListRecords() throws Exception
+    {
+        String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&set=bib:S&metadataPrefix=oai_dc");
+        Assert.assertTrue( response.contains("bib:Gbg"));
+        Assert.assertTrue( response.contains("bib:S"));
     }
 }
