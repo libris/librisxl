@@ -1,5 +1,6 @@
 package whelk.rest.api
 
+import spock.lang.Ignore
 import spock.lang.Specification
 
 import whelk.rest.api.SearchUtils
@@ -40,11 +41,74 @@ class SearchUtilsSpec extends Specification {
         when:
         Map tree = ['@type': []]
         Map expected = ['@type': ['terms': ['field': '@type',
-                                            'size': 10],
-                                  'aggs': [:]]]
+                                            'size' : 10,
+                                            'order': ['_count': 'desc']]]]
         SearchUtils search = new SearchUtils(null, null, null)
         then:
         assert search.buildAggQuery(tree) == expected
+    }
+
+    def "Should build aggregation query with supplied size parameter"() {
+        when:
+        Map tree = ['@type': ['size': 20]]
+        Map expected = ['@type': ['terms': ['field': '@type',
+                                            'size' : 20,
+                                            'order': ['_count': 'desc']]]]
+        SearchUtils search = new SearchUtils(null, null, null)
+        then:
+        assert search.buildAggQuery(tree) == expected
+    }
+
+    def "Should build aggregation query with supplied Sort-parmeter set to key(term) ascending"() {
+        when:
+        Map tree = ['@type': ['size': 2000, 'sort': 'key', 'sortOrder':'asc' ]]
+        Map expected = ['@type': ['terms': [
+                'field': '@type',
+                'size' : 2000,
+                'order': ['_term': 'asc']]]]
+
+        SearchUtils search = new SearchUtils(null, null, null)
+        then:
+        assert search.buildAggQuery(tree) == expected
+    }
+
+    def "Should build aggregation query with supplied Sort-parmeter for value descending"() {
+        when:
+        Map tree = ['@type': ['sort': 'value', 'sortOrder':'desc' ]]
+        Map expected = ['@type': ['terms': [
+                'field': '@type',
+                'size' : 10,
+                'order': ['_count': 'desc']]]]
+
+        SearchUtils search = new SearchUtils(null, null, null)
+        then:
+        assert search.buildAggQuery(tree) == expected
+    }
+
+    @Ignore
+    def "Should build observations based on ES aggregate"() {
+        when:
+        Map aggregate = [
+                "publication_date": [
+                        "doc_count_error_upper_bound": 0,
+                        "sum_other_doc_count"        : 381,
+                        "buckets"                    : [
+                                [
+                                        "key"      : "1482",
+                                        "doc_count": 2
+                                ],
+                                [
+                                        "key"      : "1525",
+                                        "doc_count": 1
+                                ]
+                        ]
+                ]
+        ]
+        SearchUtils search = new SearchUtils(null, null, null)
+        Map actual = search.addSlices([:], aggregate, 'localhost')
+        then:
+        assert actual
+
     }
 
     def "Should make find URL"() {

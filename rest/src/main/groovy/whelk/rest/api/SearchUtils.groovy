@@ -293,7 +293,12 @@ class SearchUtils {
         }
 
         keys.each { key ->
-            query[key] = ['terms': ['field': key, 'size': tree[key]?.size ?: size]]
+            String sort = tree[key]?.sort =='key' ? '_term' : '_count'
+            def sortOrder = tree[key]?.sortOrder =='asc' ? 'asc' : 'desc'
+            query[key] = ['terms': [
+                    'field': key,
+                    'size': tree[key]?.size ?: size,
+                    'order': [(sort):sortOrder]]]
             if (tree[key].subItems instanceof Map) {
                 query[key]['aggs'] = buildAggQuery(tree[key].subItems, size)
             }
