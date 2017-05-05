@@ -37,10 +37,9 @@ public class SetSpec
         if (sets.length > 2)
             m_isValid = false;
 
-        // only 'hold' root sets may have a subset (sigel)
         if ( sets.length == 2 )
         {
-            if (!sets[0].equals(SET_HOLD))
+            if (!sets[0].equals(SET_HOLD) && !sets[0].equals(SET_BIB))
                 m_isValid = false;
             else
                 m_subSet = sets[1];

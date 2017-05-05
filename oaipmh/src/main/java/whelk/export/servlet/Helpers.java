@@ -81,7 +81,16 @@ public class Helpers
             selectSQL += " AND collection = ? ";
 
         if (setSpec.getSubset() != null)
-            selectSQL += " AND data->'@graph' @> ?";
+        {
+            if (setSpec.getRootSet().startsWith(SetSpec.SET_HOLD))
+                selectSQL += " AND data->'@graph' @> ?";
+
+            else if (setSpec.getRootSet().startsWith(SetSpec.SET_BIB))
+                selectSQL += " AND id IN (" +
+                        "WITH holdings AS (select data#>>'{@graph,1,itemOf,@id}' AS id FROM lddb WHERE data->'@graph' @> ?) " +
+                        "SELECT " + tableName + "__identifiers.id FROM holdings JOIN " + tableName +
+                        "__identifiers ON holdings.id = " + tableName + "__identifiers.iri) ";
+        }
 
         selectSQL += " ORDER BY modified ";
 
