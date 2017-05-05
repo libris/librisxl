@@ -1,5 +1,11 @@
 package whelk.component
 
+import groovy.json.JsonOutput
+import org.elasticsearch.action.search.SearchRequest
+import org.elasticsearch.action.search.SearchRequestBuilder
+import org.elasticsearch.index.query.QueryBuilders
+import org.elasticsearch.index.query.QueryShardContext
+import org.elasticsearch.index.query.WrapperQueryBuilder
 import spock.lang.Specification
 
 //import whelk.ElasticSearch
@@ -79,6 +85,84 @@ class ElasticSearchSpec extends Specification {
 
         then:
         assert ElasticSearch.createJsonDsl(queryParameters, 0, 0) == expected
+    }
+
+    def "ES api should be able to parse our queries.."(){
+        when:
+            String dsl = """{
+    "from": 0,
+    "size": 200,
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "match_all": {}
+                }
+            ]
+        }
+    },
+    "aggs": {
+        "instanceOf.language.@id": {
+            "terms": {
+                "field": "instanceOf.language.@id",
+                "size": 10,
+                "order": {
+                    "_count": "asc"
+                }
+            }
+        },
+        "carrierType": {
+            "terms": {
+                "field": "carrierType",
+                "size": 10,
+                "order": {
+                    "_count": "asc"
+                }
+            }
+        },
+        "instanceOf.@type": {
+            "terms": {
+                "field": "instanceOf.@type",
+                "size": 10,
+                "order": {
+                    "_count": "asc"
+                }
+            }
+        },
+        "instanceOf.contentType.@id": {
+            "terms": {
+                "field": "instanceOf.contentType.@id",
+                "size": 10,
+                "order": {
+                    "_count": "asc"
+                }
+            }
+        },
+        "publication.date.raw": {
+            "terms": {
+                "field": "publication.date.raw",
+                "size": 10,
+                "order": {
+                    "_count": "asc"
+                }
+            }
+        },
+        "@type": {
+            "terms": {
+                "field": "@type",
+                "size": 10,
+                "order": {
+                    "_count": "asc"
+                }
+            }
+        }
+    }
+}"""
+        WrapperQueryBuilder builder = QueryBuilders.wrapperQuery(JsonOutput.toJson(dsl))
+
+
+        then:
+        assert query
     }
 
 }

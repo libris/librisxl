@@ -1,5 +1,6 @@
 package whelk.component
 
+import groovy.json.JsonOutput
 import groovy.util.logging.Slf4j as Log
 
 import org.apache.commons.codec.binary.Base64
@@ -8,20 +9,25 @@ import org.elasticsearch.action.ActionRequest
 import org.elasticsearch.action.ActionResponse
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.bulk.BulkResponse
+import org.elasticsearch.action.bulk.byscroll.DeleteByQueryRequest
 import org.elasticsearch.action.delete.DeleteRequest
-import org.elasticsearch.action.deletebyquery.DeleteByQueryAction
-import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest
-import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse
+
+import org.elasticsearch.action.*
 import org.elasticsearch.action.index.IndexRequest
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.action.search.SearchType
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.NoNodeAvailableException
-import org.elasticsearch.client.transport.TransportClient
+import org.elasticsearch.client.transport.*
+import org.elasticsearch.common.io.stream.StreamInput
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
-import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin
+import org.elasticsearch.index.query.QueryBuilders
+import org.elasticsearch.index.query.WrapperQueryBuilder
+import org.elasticsearch.index.reindex.DeleteByQueryAction
+import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder
+import org.elasticsearch.search.builder.SearchSourceBuilder
+import org.elasticsearch.transport.client.PreBuiltTransportClient
 import whelk.Document
 import whelk.JsonLd
 import whelk.exception.*
@@ -66,14 +72,14 @@ class ElasticSearch {
     void connectClient() {
         if (elastichost) {
             log.info("Connecting to $elasticcluster using hosts $elastichost")
-            def sb = Settings.settingsBuilder()
+            def sb = Settings.builder()
 
             if (elasticcluster) {
                 sb = sb.put("cluster.name", elasticcluster)
             }
             Settings elasticSettings = sb.build()
 
-            client = TransportClient.builder().settings(elasticSettings).addPlugin(DeleteByQueryPlugin.class).build()
+
             try {
                 elastichost.split(",").each {
                     def host, port
@@ -83,7 +89,9 @@ class ElasticSearch {
                         host = it
                         port = 9300
                     }
-                    client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), port as int))
+                    client = new PreBuiltTransportClient(elasticSettings)
+                            .addTransportAddress(
+                                new InetSocketTransportAddress(InetAddress.getByName(host), port as int))
                 }
             } catch (ArrayIndexOutOfBoundsException aioobe) {
                 throw new WhelkRuntimeException("Unable to initialize elasticsearch client. Host configuration might be missing port?")
@@ -185,8 +193,15 @@ class ElasticSearch {
 
     public void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
-        DeleteByQueryResponse rsp = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE)
-                .setIndices(defaultIndex)
+
+        /*def rsp = DeleteByQueryAction
+                DeleteByQueryAction.INSTANCE.newRequestBuilder(client)
+                        .filter(QueryBuilders.matchQuery("gender", "male"))
+                        .source("persons")
+                        .get()*/
+
+        def rsp = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE)
+                //.setIndices(defaultIndex)
                 .setSource(["query":["term":["_id":toElasticId(identifier)]]])
                 .execute()
                 .actionGet()
@@ -210,13 +225,26 @@ class ElasticSearch {
     Map query(Map jsonDsl, String collection) {
         def idxlist = [defaultIndex] as String[]
 
-        byte[] dsl = mapper.writeValueAsBytes(jsonDsl)
-        SearchRequest sr = new SearchRequest(idxlist, dsl)
-        sr.searchType(SearchType.DFS_QUERY_THEN_FETCH)
+        println JsonOutput.toJson(jsonDsl).getClass()
+        def a = JsonOutput.toJson(jsonDsl)
+        println JsonOutput.prettyPrint(a)
+        jsonDsl.remove('from')
+        jsonDsl.remove('aggs')
+        jsonDsl.remove('size')
+        WrapperQueryBuilder builder = QueryBuilders.wrapperQuery(JsonOutput.toJson(jsonDsl))
+        def search = client.prepareSearch(idxlist)
+                .setQuery(builder)
+                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+                .setTypes()
+
+        //byte[] dsl = mapper.writeValueAsBytes(jsonDsl)
+        //SearchRequest sr = new SearchRequest(idxlist, dsl).
+        //SearchRequest sr = new SearchRequest(idxlist, new SearchSourceBuilder(StreamInput.wrap(dsl)))
+        //sr.searchType()
         if (collection) {
-          sr.types([collection] as String[])
+          search.setTypes([collection] as String[])
         }
-        def response = client.search(sr).actionGet()
+        def response = search.get()
 
         def results = [:]
 
