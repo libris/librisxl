@@ -99,6 +99,15 @@ public class ListSets
                 writer.writeCharacters("Holding records for sigel: " + sigel);
                 writer.writeEndElement(); // setName
                 writer.writeEndElement(); // set
+
+                writer.writeStartElement("set");
+                writer.writeStartElement("setSpec");
+                writer.writeCharacters("bib:"+sigel.replace("\"", ""));
+                writer.writeEndElement(); // setSpec
+                writer.writeStartElement("setName");
+                writer.writeCharacters("Bibliographic records for sigel: " + sigel);
+                writer.writeEndElement(); // setName
+                writer.writeEndElement(); // set
             }
         }
 

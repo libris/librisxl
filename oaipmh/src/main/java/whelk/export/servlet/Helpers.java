@@ -70,7 +70,7 @@ public class Helpers
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT data, collection, modified, deleted, " +
+        String selectSQL = "WITH mainquery AS (SELECT id, data, collection, modified, deleted, " +
                 " data#>>'{@graph,1,heldBy,@id}' AS sigel FROM " +
                 tableName + " WHERE collection <> 'definitions' ";
         if (fromDateTime != null)
@@ -92,7 +92,13 @@ public class Helpers
                         "__identifiers ON holdings.id = " + tableName + "__identifiers.iri) ";
         }
 
-        selectSQL += " ORDER BY modified ";
+        selectSQL += " ORDER BY modified ), heldBy AS ( " +
+                " WITH subq AS (SELECT data#>>'{@graph,1,itemOf,@id}' AS itemOf, data#>>'{@graph,1,heldBy,@id}' AS sigel FROM lddb) " +
+                " SELECT * FROM subq JOIN lddb__identifiers ON subq.itemOf = lddb__identifiers.iri " +
+                " ), " +
+                "concatenated AS ( " +
+                " SELECT mainquery.id, string_agg(heldBy.sigel, ',') AS sigel_list FROM mainquery JOIN heldBy ON mainquery.id = heldBy.id GROUP BY mainquery.id) " +
+                "SELECT * FROM mainquery LEFT JOIN concatenated ON mainquery.id = concatenated.id";
 
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setFetchSize(512);
