@@ -352,11 +352,11 @@
                     "properties": {
                         "date": {
                             "fields": {
-                                "date": {
-                                    "analyzer": "completer",
+                                "raw": {
+                                   "index": "not_analyzed",
                                     "type": "string"
                                 },
-                                "raw": {
+                                "date": {
                                     "analyzer": "numeric_extractor",
                                     "index": "analyzed",
                                     "type": "string"
