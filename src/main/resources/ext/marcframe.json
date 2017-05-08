@@ -1253,17 +1253,18 @@
           "tokenMap": "ComputerMaterialType"
         },
         "[3:4]": {
-          "link": "marc:color",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerColorType"
         },
         "[4:5]": {
-          "link": "marc:dimensionsCategory",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerDimensionsType"
         },
         "[5:6]": {
-          "link": "marc:sound",
+          "link": "soundContent",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerSoundType"
         },
@@ -1297,6 +1298,7 @@
           "tokenMap": "ComputerReformattingQualityType"
         },
         "[2:3]": {
+          "TODO": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:fileAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
