@@ -1207,17 +1207,19 @@
       "tokenTypeMap": "[0:1]",
       "Map": {
         "[1:2]": {
-          "addLink": "carrierType",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MapMaterialType"
         },
         "[3:4]": {
-          "link": "marc:color",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "MapColorType"
         },
         "[4:5]": {
-          "link": "marc:medium",
+          "link": "baseMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "MapMediumType"
         },
@@ -1237,6 +1239,7 @@
           "tokenMap": "PolarityType"
         },
         "[2:3]": {
+          "TODO": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:aspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1302,17 +1305,19 @@
       },
       "Globe": {
         "[1:2]": {
-          "addLink": "carrierType",
+          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GlobeMaterialType"
         },
         "[3:4]": {
-          "link": "marc:color",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "MapColorType"
         },
         "[4:5]": {
-          "link": "marc:medium",
+          "link": "baseMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "GlobeMediumType"
         },
@@ -1322,6 +1327,7 @@
           "tokenMap": "ReproductionType"
         },
         "[2:3]": {
+          "TODO": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:aspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1754,8 +1760,8 @@
           "result": {
             "mainEntity": {
               "@type": "Map",
-              "carrierType": [{"@id": "marc:MapATwoDimensionalMap"}],
-              "marc:medium": {"@id": "marc:Paper"}
+              "genreForm": [{"@id": "marc:MapATwoDimensionalMap"}],
+              "baseMaterial": {"@id": "marc:Paper"}
             }
           }
         },
@@ -1767,8 +1773,8 @@
           "result": {
             "mainEntity": {
               "@type": "Map",
-              "carrierType": [{"@id": "marc:MapATwoDimensionalMap"}],
-              "marc:medium": {"@id": "marc:Paper"},
+              "genreForm": [{"@id": "marc:MapATwoDimensionalMap"}],
+              "baseMaterial": {"@id": "marc:Paper"},
               "hasPart": [
                 {
                   "@type": "Electronic",
@@ -2022,6 +2028,7 @@
           "tokenMap": "MapsProjectionType"
         },
         "[25:26]": {
+          "TODO": "Add condition to 'link': (a|b|c|f|g|z) should be issuance. (d|e) should be genreForm",
           "link": "marc:material",
           "uriTemplate": "{_}",
           "tokenMap": "MapsMaterialType"
