@@ -2,8 +2,7 @@ package whelk.actors
 
 import groovy.util.logging.Slf4j as Log
 import whelk.SetSpecMatcher
-import whelk.VCopyDataRow
-import whelk.VCopyToWhelkConverter
+import whelk.util.VCopyToWhelkConverter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
 import whelk.util.ThreadPool
@@ -46,12 +45,12 @@ class StatsMaker implements MySQLLoader.LoadHandler {
     }
 
 
-    void handle(List<List<VCopyDataRow>> batch) {
+    void handle(List<List<VCopyToWhelkConverter.VCopyDataRow>> batch) {
         threadPool.executeOnThread(batch, { _batch, threadIndex ->
 
             batch.each { rows ->
 
-                VCopyDataRow row = rows.last()
+                VCopyToWhelkConverter.VCopyDataRow row = rows.last()
                 def allAuthRecords = VCopyToWhelkConverter.getAuthDocsFromRows(rows)
                 Map doc = VCopyToWhelkConverter.getMarcDocMap(row.data)
                 if (doc == null)

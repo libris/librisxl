@@ -6,6 +6,7 @@ import groovy.util.logging.Slf4j as Log
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
+import whelk.util.VCopyToWhelkConverter
 
 import org.codehaus.jackson.map.ObjectMapper
 
@@ -29,7 +30,7 @@ class MySQLToMarcJSONDumper implements MySQLLoader.LoadHandler {
     }
 
     @Override
-    void handle(List<List<VCopyDataRow>> batch) {
+    void handle(List<List<VCopyToWhelkConverter.VCopyDataRow>> batch) {
         batch.each { rows ->
             dumpWriter.writeLine(
                     mapper.writeValueAsString(

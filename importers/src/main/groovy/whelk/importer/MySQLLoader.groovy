@@ -2,7 +2,7 @@ package whelk.importer
 
 import groovy.sql.Sql
 import groovy.util.logging.Slf4j as Log
-import whelk.VCopyDataRow
+import whelk.util.VCopyToWhelkConverter
 import java.text.Normalizer
 import java.sql.ResultSet
 import java.sql.Statement
@@ -80,16 +80,16 @@ class MySQLLoader {
         int recordCount = 0
         long startTime = System.currentTimeMillis()
 
-        List<VCopyDataRow> previousRowsInGroup = []
-        VCopyDataRow previousRow = null
-        VCopyDataRow currentRow = null
+        List<VCopyToWhelkConverter.VCopyDataRow> previousRowsInGroup = []
+        VCopyToWhelkConverter.VCopyDataRow previousRow = null
+        VCopyToWhelkConverter.VCopyDataRow currentRow = null
 
-        List<List<VCopyDataRow>> currentBatch = []
+        List<List<VCopyToWhelkConverter.VCopyDataRow>> currentBatch = []
 
         sql.eachRow(sqlQuery, queryParameters) { ResultSet resultSet ->
             try {
                 ++rowCount
-                currentRow = new VCopyDataRow(resultSet, collection)
+                currentRow = new VCopyToWhelkConverter.VCopyDataRow(resultSet, collection)
                 switch (previousRow) {
                     case null:                              //first run
                         previousRow = currentRow
@@ -130,15 +130,15 @@ class MySQLLoader {
     }
 
     static interface LoadHandler {
-        void handle(List<List<VCopyDataRow>> currentBatch)
+        void handle(List<List<VCopyToWhelkConverter.VCopyDataRow>> currentBatch)
     }
 
     /**
      * Send the row list to be dispatched for conversion. Essentially this means, add it to the global 'currentBatch',
      * and if the batch is large enough flush it to the conversion process and return a new empty batch instead.
      */
-    private static List<List<VCopyDataRow>> batchForConversion(List<VCopyDataRow> rowList,
-                                                               List<List<VCopyDataRow>> currentBatch,
+    private static List<List<VCopyToWhelkConverter.VCopyDataRow>> batchForConversion(List<VCopyToWhelkConverter.VCopyDataRow> rowList,
+                                                               List<List<VCopyToWhelkConverter.VCopyDataRow>> currentBatch,
                                                                LoadHandler handler) {
         currentBatch.add(rowList)
 
@@ -148,7 +148,7 @@ class MySQLLoader {
         return currentBatch
     }
 
-    private static List<List<VCopyDataRow>> flushConversionBatch(List<List<VCopyDataRow>> currentBatch,
+    private static List<List<VCopyToWhelkConverter.VCopyDataRow>> flushConversionBatch(List<List<VCopyToWhelkConverter.VCopyDataRow>> currentBatch,
                                                                  LoadHandler handler) {
         handler.handle(currentBatch)
         return []
@@ -162,13 +162,4 @@ class MySQLLoader {
         sql.resultSetConcurrency = ResultSet.CONCUR_READ_ONLY
         sql
     }
-
-    static String normalizeString(String inString) {
-        if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
-            log.trace("Normalizing ...")
-            return Normalizer.normalize(inString, Normalizer.Form.NFC)
-        }
-        return inString
-    }
-
 }

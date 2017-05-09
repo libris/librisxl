@@ -3,8 +3,7 @@ package whelk.actors
 
 import groovy.util.logging.Slf4j
 import whelk.Document
-import whelk.VCopyDataRow
-import whelk.VCopyToWhelkConverter
+import whelk.util.VCopyToWhelkConverter
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
 import whelk.filter.LinkFinder
@@ -64,11 +63,11 @@ class FileDumper implements MySQLLoader.LoadHandler {
         dependenciesWriter.close()
     }
 
-    public void handle(List<List<VCopyDataRow>> batch) {
+    public void handle(List<List<VCopyToWhelkConverter.VCopyDataRow>> batch) {
         threadPool.executeOnThread(batch, { _batch, threadIndex ->
             List<Map> writeBatch = []
 
-            for (List<VCopyDataRow> rowList in _batch) {
+            for (List<VCopyToWhelkConverter.VCopyDataRow> rowList in _batch) {
                 Map recordMap = null
                 try {
                     recordMap = VCopyToWhelkConverter.convert(rowList, converterPool[threadIndex])

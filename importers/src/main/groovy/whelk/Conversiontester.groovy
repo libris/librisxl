@@ -6,6 +6,7 @@ import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
 import whelk.util.ThreadPool
+import whelk.util.VCopyToWhelkConverter
 
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -40,10 +41,10 @@ class Conversiontester implements MySQLLoader.LoadHandler {
         this.generateDiffFile = generateDiffFile
     }
 
-    public void handle(List<List<VCopyDataRow>> batch) {
+    public void handle(List<List<VCopyToWhelkConverter.VCopyDataRow>> batch) {
         threadPool.executeOnThread( batch, { _batch, threadIndex ->
 
-            for ( List<VCopyDataRow> rowList in _batch ) {
+            for ( List<VCopyToWhelkConverter.VCopyDataRow> rowList in _batch ) {
                 totalCount.incrementAndGet()
 
                 String voyagerId = getVoyagerId(rowList)
@@ -106,7 +107,7 @@ class Conversiontester implements MySQLLoader.LoadHandler {
         ++diffCount
     }
 
-    private getVoyagerId(List<VCopyDataRow> rowList) {
+    private getVoyagerId(List<VCopyToWhelkConverter.VCopyDataRow> rowList) {
         // Each rowList pertains to _one_ voyager post. Get the ID of that post.
         String id = null
         switch (rowList.last().collection) {

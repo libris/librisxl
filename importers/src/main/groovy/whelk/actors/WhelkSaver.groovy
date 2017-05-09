@@ -5,12 +5,11 @@ import groovy.util.logging.Slf4j as Log
 import groovyx.gpars.actor.DefaultActor
 import whelk.Document
 import whelk.Location
-import whelk.VCopyToWhelkConverter
+import whelk.util.VCopyToWhelkConverter
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.filter.LinkFinder
 import whelk.importer.ImportResult
-import whelk.VCopyDataRow
 import whelk.PostgresLoadfileWriter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
@@ -46,13 +45,13 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
             importResult.lastRecordDatestamp = timestamp
     }
 
-    void handle(List<List<VCopyDataRow>> batch) {
+    void handle(List<List<VCopyToWhelkConverter.VCopyDataRow>> batch) {
 
         LinkFinder lf = new LinkFinder(postgreSQLComponent)
 
         MarcFrameConverter marcFrameConverter = new MarcFrameConverter(lf)
 
-            for (List<VCopyDataRow> argument : batch) {
+            for (List<VCopyToWhelkConverter.VCopyDataRow> argument : batch) {
                 try {
                     log.trace "Got message (${argument.size()} rows). Reacting."
                     Map record = VCopyToWhelkConverter.convert(argument, marcFrameConverter)
