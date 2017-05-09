@@ -76,19 +76,16 @@
             "_source": {
                 "enabled": true
             },
-            "_timestamp": {
-                "enabled": true
-            },
             "properties": {
                 "identifiedBy": {
                     "type": "nested",
                     "include_in_parent": true,
                     "properties": {
                         "@type": {
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "value": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "isbn_analyzer"
                         }
                     }
@@ -109,20 +106,20 @@
                     "type_template": {
                         "mapping": {
                             "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "match": "@type",
-                        "match_mapping_type": "string"
+                        "match_mapping_type": "keyword"
                     }
                 },
                 {
                     "id_template": {
                         "mapping": {
                             "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "match": "@id",
-                        "match_mapping_type": "string"
+                        "match_mapping_type": "keyword"
                     }
                 },
                 {
@@ -131,17 +128,17 @@
                             "fields": {
                                 "notation": {
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "keyword"
                                 },
                                 "raw": {
                                     "index": "not_analyzed",
-                                    "type": "string"
+                                    "type": "keyword"
                                 }
                             },
                             "type": "multi_field"
                         },
                         "match": "notation",
-                        "match_mapping_type": "string"
+                        "match_mapping_type": "keyword"
                     }
                 },
                 {
@@ -150,18 +147,18 @@
                             "fields": {
                                 "raw": {
                                     "index": "not_analyzed",
-                                    "type": "string"
+                                    "type": "keyword"
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string",
+                                    "type": "keyword",
                                     "boost": 50
                                 }
                             },
                             "type": "multi_field"
                         },
                         "match": "*Label",
-                        "match_mapping_type": "string"
+                        "match_mapping_type": "keyword"
                     }
                 },
                 {
@@ -170,18 +167,18 @@
                             "fields": {
                                 "label": {
                                     "index": "analyzed",
-                                    "type": "string",
+                                    "type": "keyword",
                                     "boost": 50
                                 },
                                 "raw": {
                                     "index": "not_analyzed",
-                                    "type": "string"
+                                    "type": "keyword"
                                 }
                             },
                             "type": "multi_field"
                         },
                         "match": "label",
-                        "match_mapping_type": "string"
+                        "match_mapping_type": "keyword"
                     }
                 },
                 {
@@ -190,17 +187,17 @@
                             "fields": {
                                 "raw": {
                                     "index": "not_analyzed",
-                                    "type": "string"
+                                    "type": "keyword"
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "keyword"
                                 }
                             },
                             "type": "multi_field"
                         },
                         "match": "*Scheme",
-                        "match_mapping_type": "string"
+                        "match_mapping_type": "keyword"
                     }
                 },
                 {
@@ -209,18 +206,18 @@
                             "fields": {
                                 "raw": {
                                     "index": "not_analyzed",
-                                    "type": "string"
+                                    "type": "keyword"
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string",
+                                    "type": "keyword",
                                     "boost": 50
                                 }
                             },
                             "type": "multi_field"
                         },
                         "match": "*Name",
-                        "match_mapping_type": "string"
+                        "match_mapping_type": "keyword"
                     }
                 },
                 {
@@ -229,18 +226,18 @@
                             "fields": {
                                 "raw": {
                                     "index": "not_analyzed",
-                                    "type": "string"
+                                    "type": "keyword"
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string",
+                                    "type": "keyword",
                                     "boost": 50
                                 }
                             },
                             "type": "multi_field"
                         },
                         "match": "*Value",
-                        "match_mapping_type": "string"
+                        "match_mapping_type": "keyword"
                     }
                 },
                 {
@@ -249,24 +246,24 @@
                             "fields": {
                                 "raw": {
                                     "index": "not_analyzed",
-                                    "type": "string"
+                                    "type": "keyword"
                                 },
                                 "{name}": {
                                     "index": "analyzed",
-                                    "type": "string",
+                                    "type": "keyword",
                                     "boost": 50
                                 }
                             },
                             "type": "multi_field"
                         },
                         "match": "*title*",
-                        "match_mapping_type": "string"
+                        "match_mapping_type": "keyword"
                     }
                 },
                 {
                     "numberOf_template": {
                         "mapping": {
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "match": "numberOf*"
                     }
@@ -275,9 +272,9 @@
                     "unknown_template": {
                         "mapping": {
                             "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
-                        "match_mapping_type": "string",
+                        "match_mapping_type": "keyword",
                         "path_match": "unknown.*.subfields.*"
                     }
                 }
@@ -287,7 +284,7 @@
             "properties": {
                 "altLabel": {
                     "analyzer": "completer",
-                    "type": "string"
+                    "type": "text"
                 },
                 "closeMatch": {
                     "properties": {
@@ -295,7 +292,7 @@
                             "properties": {
                                 "prefLabel": {
                                     "analyzer": "completer",
-                                    "type": "string"
+                                    "type": "text"
                                 }
                             }
                         }
@@ -303,41 +300,47 @@
                 },
                 "controlledLabel": {
                     "analyzer": "completer",
-                    "type": "string",
+                    "type": "text",
                     "boost": 5
                 },
                 "familyName": {
                     "analyzer": "completer",
-                    "type": "string"
+                    "type": "text"
                 },
                 "givenName": {
                     "analyzer": "completer",
-                    "type": "string"
+                    "type": "text"
                 },
                 "hiddenLabel": {
                     "analyzer": "completer",
-                    "type": "string"
+                    "type": "text"
                 },
                 "label": {
                     "analyzer": "completer",
-                    "type": "string",
+                    "type": "text",
                     "boost": 2
                 },
                 "name": {
                     "analyzer": "completer",
-                    "type": "string",
+                    "type": "text",
                     "boost": 10
                 },
                 "prefLabel": {
                     "analyzer": "completer",
-                    "type": "string",
+                    "type": "text",
                     "boost": 10
                 },
                 "sameAs": {
                     "properties": {
                         "controlledLabel": {
                             "analyzer": "completer",
-                            "type": "string"
+                            "type": "text",
+                            "fields": {
+                                "raw": {
+                                    "index": "not_analyzed",
+                                    "type": "keyword"
+                                }
+                            }
                         }
                     }
                 }
@@ -350,50 +353,44 @@
                         "date": {
                             "fields": {
                                 "raw": {
-                                   "index": "not_analyzed",
-                                    "type": "string"
+                                    "index": "not_analyzed",
+                                    "type": "keyword"
                                 },
                                 "date": {
                                     "analyzer": "numeric_extractor",
                                     "index": "analyzed",
-                                    "type": "string"
+                                    "type": "text"
                                 }
                             },
-                            "type": "multi_field"
+                            "type": "keyword"
                         }
                     }
                 },
                 "attributedTo": {
                     "properties": {
                         "controlledLabel": {
+                            "analyzer": "completer",
+                            "type": "text",
                             "fields": {
-                                "controlledLabel": {
-                                    "analyzer": "completer",
-                                    "type": "string"
-                                },
                                 "raw": {
                                     "index": "not_analyzed",
-                                    "type": "string"
+                                    "type": "keyword"
                                 }
-                            },
-                            "type": "multi_field"
+                            }
                         }
                     }
                 },
                 "influencedBy": {
                     "properties": {
                         "controlledLabel": {
+                            "analyzer": "completer",
+                            "type": "text",
                             "fields": {
-                                "controlledLabel": {
-                                    "analyzer": "completer",
-                                    "type": "string"
-                                },
                                 "raw": {
                                     "index": "not_analyzed",
-                                    "type": "string"
+                                    "type": "keyword"
                                 }
-                            },
-                            "type": "multi_field"
+                            }
                         }
                     }
                 }
