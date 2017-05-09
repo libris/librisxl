@@ -52,6 +52,8 @@ class LegacyIntegrationTools {
                 List superClasses = termMap["subClassOf"]
 
                 for (superClass in superClasses) {
+                    if (superClass == null)
+                        continue
                     String superClassType = jsonld.toTermKey( superClass["@id"] )
                     String category = getMarcCategoryInHierarchy(superClassType, jsonld)
                     if ( category != null )
