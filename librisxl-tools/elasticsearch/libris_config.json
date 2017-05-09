@@ -1,7 +1,12 @@
 {
     "settings": {
         "index": {
-            "max_result_window": 100000
+            "max_result_window": 100000,
+            "mapping": {
+                "total_fields": {
+                    "limit": 10000
+                }
+            }
         },
         "analysis": {
             "char_filter": {
