@@ -201,9 +201,8 @@ class SearchUtils {
         }
 
         items = embellishItems(items)
-
         if (statsTree) {
-            stats = buildStats(esResult['aggregations'].asMap,
+            stats = buildStats(esResult['aggregations'],
                                makeFindUrl(SearchType.ELASTIC, pageParams))
         }
 
