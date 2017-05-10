@@ -44,7 +44,74 @@ COLSPECS['bib'] = {
     }
 }
 
-# Text:
+# 006 Text:
+for rt in 'at':
+    COLSPECS['bib']['006'][rt] = [
+        [5], # marc:audience (new: intendedAudience)
+        [7], [8], [9], [10], #contentType  (new: genreForm)
+        [11], #marc:govtPub  (new: genreForm)
+        [12], #marc:confPub  (new: genreForm)
+        [13], #marc:festschrift  (new: genreForm)
+        [16], #marc:literaryForm  (new: genreForm)
+        [17], #marc:biography  (new: genreForm)
+    ]
+
+# 006 Audio:
+for rt in 'cdij':
+    COLSPECS['bib']['006'][rt] = [
+        [1,3], # marc:composition (new: genreForm) TODO: is this correct? marcframe: [1:3]
+        [3], #additionalType  (new: musicFormat)
+        [4], #marc:parts
+        [5], # marc:audience (new: intendedAudience)
+        [7], [8], [9], [10], [11], [12], # marc:matter (new: supplementaryContent)
+        [13], [14], # marc:text (new: genreForm)
+        [16], # marc:transposition
+    ]
+
+# 006 Cartography:
+for rt in 'ef':
+    COLSPECS['bib']['006'][rt] = [
+        [11], #marc:govtPub  (new: genreForm)
+        [16], [17], # additionalType (new: genreForm)
+    ]
+
+# 006 Visual:
+for rt in 'gkor':
+    COLSPECS['bib']['006'][rt] = [
+        [1,4], # marc:runningTime (new: genreForm) TODO: is this correct? marcframe: [1:4]
+        [5], #audience  (new: intendedAudience)
+        [6], [7], [8], [9], [10], #marc:matter  (Undefined in Bibframe)
+        [11], #marc:govtPub  (new: genreForm)
+        [16], #contentType  (new: genreForm)
+    ]
+
+# 006 Digital:
+for rt in 'm':
+    COLSPECS['bib']['006'][rt] = [
+        [5], #audience  (new: intendedAudience)
+        [9], #contentType  (new: genreForm)
+        [11], #marc:govtPub  (new: genreForm)
+    ]
+
+# 006 Serial:
+for rt in 's':
+    COLSPECS['bib']['006'][rt] = [
+        [1], #marc:frequencyCategory  (new: frequency)
+        [2], #marc:regularity  (new: frequency)
+        [3], #marc:issn  (Undefinded in Bibframe)
+        [4], #contentType  (new: genreForm)
+        [5], #marc:originalItem  (new: genreForm)
+        [6], #marc:additionalCarrierType  (new: carrierType)
+        [7], #marc:nature  (new: genreForm)
+        [8], [9], [10], #marc:contents  (new: genreForm)
+        [11], #marc:govtPub  (new: genreForm)
+        [12], #marc:confPub  (new: genreForm)
+        [16], #marc:alphabet  (new: notation)
+        [17], #marc:typeOfEntry  (new: note)
+    ]
+
+
+# 008 Text:
 for rt in 'aht':
     for bl in 'acdm':
         COLSPECS['bib']['008'][rt + bl] = [
@@ -54,14 +121,14 @@ for rt in 'aht':
 
         ]
 
-# Digital:
+# 008 Digital:
 for bl in '9abcdimps':
     COLSPECS['bib']['008']['m' + bl] = [
         [18],    # marc:frequencyCategory  (ta bort?)
         [19],    # marc:regularity                  (ta bort?)
     ]
 
-# Cartography:
+# 008 Cartography:
 for rt in 'ef':
     for bl in '9abcdimps':
         COLSPECS['bib']['008']['m' + bl] = [
@@ -72,7 +139,7 @@ for rt in 'ef':
             [34], #    additionalType              (ta bort?)
         ]
 
-# Mixed:
+# 008 Mixed:
 for rts, bls in [('b', '9acdimp'), ('p', 'acdimp')]:
     for rt in rts:
         for bl in bls:
@@ -80,7 +147,7 @@ for rts, bls in [('b', '9acdimp'), ('p', 'acdimp')]:
                 [23], #    marc:additionalCarrierType  (new: carrierType)
             ]
 
-# Audio:
+# 008 Audio:
 for rt in 'cdij':
     for bl in '9abcdimps':
         COLSPECS['bib']['008'][rt + bl] = [
@@ -96,7 +163,7 @@ for rt in 'cdij':
         ]
 
 
-# Serial:
+# 008 Serial:
 for rts, bls in [('aht', '9bips'), ('b', 'bs'), ('p', 'bs')]:
     for rt in rts:
         for bl in bls:
@@ -115,7 +182,7 @@ for rts, bls in [('aht', '9bips'), ('b', 'bs'), ('p', 'bs')]:
                 [34], #    marc:typeOfEntry
             ]
 
-# Visual:
+# 008 Visual:
 for rts, bls in [('gknor', '9abcdimps'), ('p', '9')]:
     for rt in rts:
         for bl in bls:
