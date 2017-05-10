@@ -372,14 +372,12 @@
                                 "raw": {
                                     "index": "not_analyzed",
                                     "type": "keyword"
-                                },
-                                "date": {
-                                    "analyzer": "numeric_extractor",
-                                    "index": "analyzed",
-                                    "type": "text"
                                 }
                             },
-                            "type": "keyword"
+                            "analyzer": "numeric_extractor",
+                            "index": "analyzed",
+                            "type": "text",
+                            "fielddata": true
                         }
                     }
                 },
