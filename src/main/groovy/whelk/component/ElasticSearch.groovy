@@ -1,9 +1,14 @@
 package whelk.component
 
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j as Log
 
 import org.apache.commons.codec.binary.Base64
+import org.apache.http.HttpHost
+import org.apache.http.entity.ContentType
+import org.apache.http.nio.entity.NStringEntity
+import org.apache.http.util.EntityUtils
 import org.codehaus.jackson.map.ObjectMapper
 import org.elasticsearch.action.ActionRequest
 import org.elasticsearch.action.ActionResponse
@@ -17,6 +22,8 @@ import org.elasticsearch.action.index.IndexRequest
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.action.search.SearchType
 import org.elasticsearch.client.Client
+import org.elasticsearch.client.Response
+import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.transport.NoNodeAvailableException
 import org.elasticsearch.client.transport.*
 import org.elasticsearch.common.io.stream.StreamInput
@@ -26,6 +33,8 @@ import org.elasticsearch.index.query.QueryBuilders
 import org.elasticsearch.index.query.WrapperQueryBuilder
 import org.elasticsearch.index.reindex.DeleteByQueryAction
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder
+import org.elasticsearch.search.aggregations.AggregationBuilder
+import org.elasticsearch.search.aggregations.AggregationBuilders
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.elasticsearch.transport.client.PreBuiltTransportClient
 import whelk.Document
@@ -42,7 +51,9 @@ class ElasticSearch {
     static final int MAX_RETRY_TIMEOUT = 60*60*1000
     static final int DEFAULT_PAGE_SIZE = 50
 
+
     Client client
+    RestClient restClient
     private String elastichost, elasticcluster
     String defaultType = "record"
     String defaultIndex = null
@@ -59,14 +70,27 @@ class ElasticSearch {
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
         this.expander = ex
-        connectClient()
+        //connectClient()
+        connectRestClient()
     }
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
         this.elastichost = elasticHost
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
-        connectClient()
+        //connectClient()
+        connectRestClient()
+    }
+
+    void connectRestClient(){
+        if (elastichost) {
+            log.info("Connecting to $elasticcluster using hosts $elastichost")
+            println elastichost
+            println elasticPort
+            restClient = RestClient.builder(new HttpHost(elastichost,elasticPort,"http")).build()
+
+            println restClient.inspect()
+        }
     }
 
     void connectClient() {
@@ -228,31 +252,37 @@ class ElasticSearch {
         println JsonOutput.toJson(jsonDsl).getClass()
         def a = JsonOutput.toJson(jsonDsl)
         println JsonOutput.prettyPrint(a)
-        jsonDsl.remove('from')
-        jsonDsl.remove('aggs')
-        jsonDsl.remove('size')
-        WrapperQueryBuilder builder = QueryBuilders.wrapperQuery(JsonOutput.toJson(jsonDsl))
-        def search = client.prepareSearch(idxlist)
+        def query = new NStringEntity(JsonOutput.toJson(jsonDsl), ContentType.APPLICATION_JSON)
+        def response = restClient.performRequest("POST", "/${indexName}/_search",
+                Collections.<String, String>emptyMap(),//Collections.singletonMap("pretty", "true"),
+                query)
+        def eString = EntityUtils.toString(response.getEntity())
+        println eString
+        Map responseMap = mapper.readValue(eString, Map)
+
+        //WrapperQueryBuilder builder = QueryBuilders.wrapperQuery(JsonOutput.toJson(jsonDsl.query))
+
+        /*def search = client.prepareSearch(idxlist).addAggregation(AggregationBuilders.global("agg"))
                 .setQuery(builder)
                 .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-                .setTypes()
+                .setTypes()*/
 
         //byte[] dsl = mapper.writeValueAsBytes(jsonDsl)
         //SearchRequest sr = new SearchRequest(idxlist, dsl).
         //SearchRequest sr = new SearchRequest(idxlist, new SearchSourceBuilder(StreamInput.wrap(dsl)))
         //sr.searchType()
-        if (collection) {
+
+
+        /*if (collection) {
           search.setTypes([collection] as String[])
         }
-        def response = search.get()
-
+        def response = search.get()*/
         def results = [:]
 
         results.startIndex = jsonDsl.from
-        results.searchCompletedInISO8601duration = "PT" + response.took.secondsFrac + "S"
-        results.totalHits = response.hits.totalHits
-        results.items = response.hits.hits.collect { it.source }
-        results.aggregations = response.aggregations
+        results.totalHits = responseMap.hits.totalHits
+        results.items = responseMap.hits.hits.collect { it."_source" }
+        results.aggregations = responseMap.aggregations
 
         return results
     }
@@ -353,7 +383,7 @@ class ElasticSearch {
     public String getElasticHost() { elastichost.split(":").first() }
     public String getElasticCluster() { elasticcluster }
     public int getElasticPort() {
-        try { new Integer(elastichost.split(",").first().split(":").last()).intValue() } catch (NumberFormatException nfe) { 9300 }
+        try { new Integer(elastichost.split(",").first().split(":").last()).intValue() } catch (NumberFormatException nfe) { 9200 }
     }
 
     static String toElasticId(String id) {
