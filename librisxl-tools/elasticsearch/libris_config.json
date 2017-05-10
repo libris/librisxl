@@ -76,6 +76,9 @@
             "_source": {
                 "enabled": true
             },
+            "_all": {
+                "enabled": true
+            },
             "properties": {
                 "identifiedBy": {
                     "type": "nested",
