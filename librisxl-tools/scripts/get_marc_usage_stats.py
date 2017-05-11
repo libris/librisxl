@@ -24,12 +24,16 @@ COLSPECS['bib'] = {
         [18],  # marc:catForm
         [19],  # marc:linked
     ],
-    '006': [
-        [0],  # hasPart / @type
-    ],
-    '007': [
-        [0],  # hasFormat / @type
-    ],
+    '006': {
+        '*': [
+            [0],  # hasPart / @type
+        ]
+    },
+    '007': {
+        '*': [
+            [0],  # hasFormat / @type
+        ]
+    },
     '008': {
         '*': [
             # [0:6]  created
@@ -45,8 +49,8 @@ COLSPECS['bib'] = {
 }
 
 # 006 Text:
-for rt in 'at':
-    COLSPECS['bib']['006'][rt] = [
+for col0 in 'at':
+    COLSPECS['bib']['006'][col0] = [
         [5], # marc:audience (new: intendedAudience)
         [7], [8], [9], [10], #contentType  (new: genreForm)
         [11], #marc:govtPub  (new: genreForm)
@@ -57,9 +61,9 @@ for rt in 'at':
     ]
 
 # 006 Audio:
-for rt in 'cdij':
-    COLSPECS['bib']['006'][rt] = [
-        [1,3], # marc:composition (new: genreForm) TODO: is this correct? marcframe: [1:3]
+for col0 in 'cdij':
+    COLSPECS['bib']['006'][col0] = [
+        [1,3], # marc:composition (new: genreForm)
         [3], #additionalType  (new: musicFormat)
         [4], #marc:parts
         [5], # marc:audience (new: intendedAudience)
@@ -69,16 +73,16 @@ for rt in 'cdij':
     ]
 
 # 006 Cartography:
-for rt in 'ef':
-    COLSPECS['bib']['006'][rt] = [
+for col0 in 'ef':
+    COLSPECS['bib']['006'][col0] = [
         [11], #marc:govtPub  (new: genreForm)
         [16], [17], # additionalType (new: genreForm)
     ]
 
 # 006 Visual:
-for rt in 'gkor':
-    COLSPECS['bib']['006'][rt] = [
-        [1,4], # marc:runningTime (new: genreForm) TODO: is this correct? marcframe: [1:4]
+for col0 in 'gkor':
+    COLSPECS['bib']['006'][col0] = [
+        [1,4], # marc:runningTime (new: genreForm)
         [5], #audience  (new: intendedAudience)
         [6], [7], [8], [9], [10], #marc:matter  (Undefined in Bibframe)
         [11], #marc:govtPub  (new: genreForm)
@@ -86,16 +90,16 @@ for rt in 'gkor':
     ]
 
 # 006 Digital:
-for rt in 'm':
-    COLSPECS['bib']['006'][rt] = [
+for col0 in 'm':
+    COLSPECS['bib']['006'][col0] = [
         [5], #audience  (new: intendedAudience)
         [9], #contentType  (new: genreForm)
         [11], #marc:govtPub  (new: genreForm)
     ]
 
 # 006 Serial:
-for rt in 's':
-    COLSPECS['bib']['006'][rt] = [
+for col0 in 's':
+    COLSPECS['bib']['006'][col0] = [
         [1], #marc:frequencyCategory  (new: frequency)
         [2], #marc:regularity  (new: frequency)
         [3], #marc:issn  (Undefinded in Bibframe)
@@ -348,7 +352,7 @@ class Stats:
     def measure_fixed(self, rectypebiblevel, fieldstats, tag, value, record_id):
         colspecs = COLSPECS.get(self.marctype, {}).get(tag, ())
         if isinstance(colspecs, dict):
-            colspecs = colspecs.get(rectypebiblevel) or colspecs.get('*')
+            colspecs = colspecs.get(rectypebiblevel) or colspecs.get(value[0]) or colspecs.get('*')
         for col in colspecs:
             slicecode = '[%s]' % ':'.join(map(str, col))
             colslice = col[0] if len(col) == 1 else slice(*col)
