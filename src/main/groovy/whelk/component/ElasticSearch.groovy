@@ -280,7 +280,7 @@ class ElasticSearch {
         def results = [:]
 
         results.startIndex = jsonDsl.from
-        results.totalHits = responseMap.hits.totalHits
+        results.totalHits = responseMap.hits.total
         results.items = responseMap.hits.hits.collect { it."_source" }
         results.aggregations = responseMap.aggregations
 
