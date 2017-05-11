@@ -24,6 +24,7 @@ public class VCopyToWhelkConverter {
         byte[] authdata
         String sigel
 
+        public VCopyDataRow() {}
 
         public VCopyDataRow(ResultSet resultSet, String collection) {
             data = resultSet.getBytes('data')
