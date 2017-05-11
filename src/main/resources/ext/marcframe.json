@@ -739,8 +739,9 @@
       "TODO:tokenSyncedWith": "typeOfRecord",
       "TODO": "Decide if 006 always is hasPart (Work)",
       "TODO:repeats": "008",
-      "aboutEntity": "?work",
-      "addLink": "hasPart",
+      "aboutEntity": "?instance",
+      "addLink": "marc:hasAspect",
+      "TODO:pendingResources": {"_:aspectWork":{"link": "instanceOf"}},
       "[0:1]": {
         "tokenMap": {
           "a": "Text",
@@ -759,12 +760,12 @@
           "p": "Mixed",
           "s": "Serial"
         },
+        "TODO:about": "_:aspectWork",
         "property": "@type"
       },
       "tokenTypeMap": "[0:1]",
       "Text": {
         "[1:2]": {
-          "TODO": "Decide if it is Work or Instance?",
           "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
@@ -788,6 +789,7 @@
           "tokenMap": "BooksIllustrationsType"
         },
         "[5:6]": {
+          "TODO:about": "_:aspectWork",
           "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
