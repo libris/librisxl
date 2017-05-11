@@ -1340,42 +1340,43 @@
       },
       "TactileMaterial": {
         "[1:2]": {
-          "addLink": "carrierType",
+          "TODO:layout": "Also more general mapping? Ensure that reconverting are able to handle this",
+          "addLink": "layout",
           "uriTemplate": "{_}",
           "tokenMap": "TacMaterialType"
         },
         "[3:4]": {
-          "link": "marc:tacBrailleWriting",
+          "link": "layout",
           "uriTemplate": "{_}",
           "tokenMap": "TacBrailleWritingType"
         },
         "[4:5]": {
-          "link": "marc:tacBrailleWriting",
+          "link": "layout",
           "uriTemplate": "{_}",
           "tokenMap": "TacBrailleWritingType"
         },
         "[5:6]": {
-          "link": "marc:tacContraction",
+          "link": "layout",
           "uriTemplate": "{_}",
           "tokenMap": "TacContractionType"
         },
         "[6:7]": {
-          "link": "marc:tacBrailleMusic",
+          "link": "notation",
           "uriTemplate": "{_}",
           "tokenMap": "TacBrailleMusicType"
         },
         "[7:8]": {
-          "link": "marc:tacBrailleMusic",
+          "link": "notation",
           "uriTemplate": "{_}",
           "tokenMap": "TacBrailleMusicType"
         },
         "[8:9]": {
-          "link": "marc:tacBrailleMusic",
+          "link": "notation",
           "uriTemplate": "{_}",
           "tokenMap": "TacBrailleMusicType"
         },
         "[9:10]": {
-          "link": "marc:tacSpecPhysicalChar",
+          "link": "notation",
           "uriTemplate": "{_}",
           "tokenMap": "TacSpecPhysicalCharType"
         }
