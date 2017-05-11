@@ -451,6 +451,10 @@ class MarcRuleSet {
                 return
             }
 
+            if (dfn.ignored || dfn.size() == 0) {
+                return
+            }
+
             thingLink = topPendingResources['?thing'].link
             definingTrait = topPendingResources['?work']?.link
 
@@ -458,8 +462,17 @@ class MarcRuleSet {
 
             dfn = processInclude(config, dfn, tag)
 
-            if (dfn.ignored || dfn.size() == 0) {
-                return
+            // aboutTypeMap is used on revert to determine which ruleSet to use
+            if (dfn.aboutType && dfn.aboutType != 'Record') {
+                if (dfn.aboutEntity) {
+                    assert tag && aboutTypeMap.containsKey(dfn.aboutEntity)
+                }
+                aboutTypeMap[dfn.aboutEntity ?: '?thing'] << dfn.aboutType
+            }
+            for (matchDfn in dfn['match']) {
+                if (matchDfn.aboutType && matchDfn.aboutType != 'Record') {
+                    aboutTypeMap[matchDfn.aboutEntity ?: dfn.aboutEntity ?: '?thing'] << matchDfn.aboutType
+                }
             }
 
             def handler = null
@@ -482,11 +495,6 @@ class MarcRuleSet {
                 assert handler.property || handler.uriTemplate, "Incomplete: $tag: $dfn"
             }
             fieldHandlers[tag] = handler
-            if (dfn.aboutType && dfn.aboutType != 'Record') {
-                if (dfn.aboutEntity)
-                    assert tag && aboutTypeMap.containsKey(dfn.aboutEntity)
-                aboutTypeMap[dfn.aboutEntity ?: '?thing'] << dfn.aboutType
-            }
         }
     }
 
@@ -1701,6 +1709,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 if (useLink.resourceType) {
                     useEntities = useEntities.findAll {
                         if (!it) return false
+                        assert it instanceof Map, "Error reverting ${fieldId} - expected object, got: ${it}"
                         def type = it['@type']
                         return (type instanceof List) ?
                                 useLink.resourceType in type : type == useLink.resourceType
