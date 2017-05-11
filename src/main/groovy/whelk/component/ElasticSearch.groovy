@@ -1,7 +1,6 @@
 package whelk.component
 
 import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j as Log
 
 import org.apache.commons.codec.binary.Base64
@@ -14,29 +13,17 @@ import org.elasticsearch.action.ActionRequest
 import org.elasticsearch.action.ActionResponse
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.bulk.BulkResponse
-import org.elasticsearch.action.bulk.byscroll.DeleteByQueryRequest
 import org.elasticsearch.action.delete.DeleteRequest
-
-import org.elasticsearch.action.*
 import org.elasticsearch.action.index.IndexRequest
-import org.elasticsearch.action.search.SearchRequest
-import org.elasticsearch.action.search.SearchType
 import org.elasticsearch.client.Client
-import org.elasticsearch.client.Response
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.transport.NoNodeAvailableException
-import org.elasticsearch.client.transport.*
-import org.elasticsearch.common.io.stream.StreamInput
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
-import org.elasticsearch.index.query.QueryBuilders
-import org.elasticsearch.index.query.WrapperQueryBuilder
 import org.elasticsearch.index.reindex.DeleteByQueryAction
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder
-import org.elasticsearch.search.aggregations.AggregationBuilder
-import org.elasticsearch.search.aggregations.AggregationBuilders
-import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.elasticsearch.transport.client.PreBuiltTransportClient
+
 import whelk.Document
 import whelk.JsonLd
 import whelk.exception.*
@@ -247,36 +234,13 @@ class ElasticSearch {
     }
 
     Map query(Map jsonDsl, String collection) {
-        def idxlist = [defaultIndex] as String[]
-
-        println JsonOutput.toJson(jsonDsl).getClass()
-        def a = JsonOutput.toJson(jsonDsl)
-        println JsonOutput.prettyPrint(a)
         def query = new NStringEntity(JsonOutput.toJson(jsonDsl), ContentType.APPLICATION_JSON)
-        def response = restClient.performRequest("POST", "/${indexName}/_search",
-                Collections.<String, String>emptyMap(),//Collections.singletonMap("pretty", "true"),
-                query)
+        def response = restClient.performRequest("POST", getQueryUrl(collection),
+                                                 Collections.<String, String>emptyMap(),
+                                                 query)
         def eString = EntityUtils.toString(response.getEntity())
-        println eString
         Map responseMap = mapper.readValue(eString, Map)
 
-        //WrapperQueryBuilder builder = QueryBuilders.wrapperQuery(JsonOutput.toJson(jsonDsl.query))
-
-        /*def search = client.prepareSearch(idxlist).addAggregation(AggregationBuilders.global("agg"))
-                .setQuery(builder)
-                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-                .setTypes()*/
-
-        //byte[] dsl = mapper.writeValueAsBytes(jsonDsl)
-        //SearchRequest sr = new SearchRequest(idxlist, dsl).
-        //SearchRequest sr = new SearchRequest(idxlist, new SearchSourceBuilder(StreamInput.wrap(dsl)))
-        //sr.searchType()
-
-
-        /*if (collection) {
-          search.setTypes([collection] as String[])
-        }
-        def response = search.get()*/
         def results = [:]
 
         results.startIndex = jsonDsl.from
@@ -285,6 +249,15 @@ class ElasticSearch {
         results.aggregations = responseMap.aggregations
 
         return results
+    }
+
+    private String getQueryUrl(String collection) {
+        String maybeCollection  = ""
+        if (collection) {
+            maybeCollection = "${collection}/"
+        }
+
+        return "/${indexName}/${maybeCollection}_search"
     }
 
     // TODO merge with logic in whelk.rest.api.SearchUtils
