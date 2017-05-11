@@ -5,9 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import whelk.Document;
 import whelk.JsonLd;
+import whelk.Whelk;
 import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
-import whelk.converter.marc.JsonLD2MarcXMLConverter;
 
 import java.io.IOException;
 import java.sql.*;
@@ -15,10 +15,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,11 +30,10 @@ public class ExporterThread extends Thread
 
     private final Properties m_properties;
     private final UI m_ui;
-    private final PostgreSQLComponent m_postgreSQLComponent;
-    private final ElasticSearch m_elasticSearchComponent;
+    private final Whelk m_whelk;
     private final ObjectMapper m_mapper = new ObjectMapper();
-    private final JsonLD2MarcXMLConverter m_converter = new JsonLD2MarcXMLConverter();
     private final Logger s_logger = LoggerFactory.getLogger(this.getClass());
+    private final Converter m_converter;
 
     private enum ApixOp
     {
@@ -57,8 +53,11 @@ public class ExporterThread extends Thread
         this.m_properties = properties;
         this.m_exportNewerThan = exportNewerThan;
         this.m_ui = ui;
-        this.m_postgreSQLComponent = new PostgreSQLComponent(properties.getProperty("sqlUrl"), properties.getProperty("sqlMaintable"));
-        this.m_elasticSearchComponent = new ElasticSearch(properties.getProperty("elasticHost"), properties.getProperty("elasticCluster"), properties.getProperty("elasticIndex"));
+        PostgreSQLComponent postgres = new PostgreSQLComponent(properties.getProperty("sqlUrl"), properties.getProperty("sqlMaintable"));
+        ElasticSearch elastic = new ElasticSearch(properties.getProperty("elasticHost"), properties.getProperty("elasticCluster"), properties.getProperty("elasticIndex"));
+        m_whelk = new Whelk(postgres, elastic);
+        m_whelk.loadCoreData();
+        m_converter = new Converter(m_whelk);
     }
 
     public void run()
@@ -95,7 +94,7 @@ public class ExporterThread extends Thread
         int successfullyExportedDocumentsCount = 0;
         int documentsInBatchCount = 0;
 
-        try ( Connection connection = m_postgreSQLComponent.getConnection();
+        try ( Connection connection = m_whelk.getStorage().getConnection();
               PreparedStatement statement = prepareStatement(connection, batchSelection);
               ResultSet resultSet = statement.executeQuery() )
         {
@@ -206,8 +205,7 @@ public class ExporterThread extends Thread
             case APIX_UPDATE:
             {
                 String apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + voyagerId;
-                Map convertedData = m_converter.convert(document.data, document.getShortId());
-                String convertedText = (String) convertedData.get(JsonLd.getNON_JSON_CONTENT_KEY());
+                String convertedText = m_converter.makeEmbellishedMarcJSONString(document, collection);
                 apixRequest(apixDocumentUrl, "PUT", convertedText);
                 return null;
             }
@@ -226,9 +224,7 @@ public class ExporterThread extends Thread
                     apixDocumentUrl = m_properties.getProperty("apixHost") + "/apix/0.1/cat/" + voyagerDatabase + "/bib/" + shortBibId + "/newhold";
                 }
 
-                s_logger.debug("Will now attempt JsonLD2MarcXMLConverter.convert() of data:\n"+document.getDataAsString());
-                Map convertedData = m_converter.convert(document.data, document.getShortId());
-                String convertedText = (String) convertedData.get(JsonLd.getNON_JSON_CONTENT_KEY());
+                String convertedText = m_converter.makeEmbellishedMarcJSONString(document, collection);
                 String controlNumber = apixRequest(apixDocumentUrl, "PUT", convertedText);
                 return controlNumber;
             }
@@ -363,8 +359,7 @@ public class ExporterThread extends Thread
                                             String changedBy, String collection, boolean deleted)
             throws IOException, SQLException
     {
-        // Store document atomically in lddb
-        m_postgreSQLComponent.storeAtomicUpdate(id, true, changedIn, changedBy, collection, deleted,
+        m_whelk.storeAtomicUpdate(id, true, changedIn, changedBy, collection, deleted,
                 (Document doc) ->
                 {
                     if (newVoyagerId != null)
@@ -374,22 +369,7 @@ public class ExporterThread extends Thread
                         doc.setControlNumber(newVoyagerId);
                     }
                     doc.setApixExportFailFlag(failedExport);
-                }
-        );
-
-        // Reindex document
-        try ( Connection connection = m_postgreSQLComponent.getConnection();
-              PreparedStatement statement = prepareSelectStatement(connection, id);
-              ResultSet resultSet = statement.executeQuery() )
-        {
-            if (!resultSet.next())
-                throw new SQLException("Document " + id + " must be in lddb but cannot be retrieved.");
-            String data = resultSet.getString("data");
-            HashMap datamap = m_mapper.readValue(data, HashMap.class);
-            Document document = new Document(datamap);
-            document.setId(id);
-            m_elasticSearchComponent.index(document, collection);
-        }
+                });
     }
 
     private PreparedStatement prepareSelectStatement(Connection connection, String id)
