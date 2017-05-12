@@ -93,6 +93,7 @@ public class URIWrapper {
     public String getFragment() { return getDecoded(m_internalUri.getFragment()) }
     public String getHost() { return getDecoded(m_internalUri.getHost()) }
     public String getQuery() { return getDecoded(m_internalUri.getQuery()) }
+    public String getScheme() { return getDecoded(m_internalUri.getScheme()) }
     public String getRawAuthority() { return getDecoded(m_internalUri.getRawAuthority()) }
     public String getRawFragment() { return getDecoded(m_internalUri.getRawFragment()) }
     public String getRawPath() { return getDecoded(m_internalUri.getRawPath()) }
