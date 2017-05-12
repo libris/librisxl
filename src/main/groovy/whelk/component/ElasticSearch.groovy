@@ -12,7 +12,6 @@ import org.codehaus.jackson.map.ObjectMapper
 import org.elasticsearch.action.ActionRequest
 import org.elasticsearch.action.ActionResponse
 import org.elasticsearch.action.bulk.BulkRequest
-import org.elasticsearch.action.bulk.BulkResponse
 import org.elasticsearch.action.delete.DeleteRequest
 import org.elasticsearch.action.index.IndexRequest
 import org.elasticsearch.client.Client
@@ -167,37 +166,41 @@ class ElasticSearch {
         return response
     }
 
-    public void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
+    void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
         assert collection
         if (docs) {
-            BulkRequest bulk = new BulkRequest()
-            for (doc in docs) {
-                try {
-                    Map shapedData = getShapeForIndex(doc, whelk)
-                    bulk.add(new IndexRequest(getIndexName(), collection, toElasticId(doc.getShortId())).source(shapedData))
-                } catch (Throwable e) {
-                    log.error("Failed to create indexrequest for document ${doc.getShortId()}. Reason: ${e.message}", e)
-                    if (haltOnFailure) {
-                        throw e
-                    }
-                }
-            }
-            BulkResponse response = performExecute(bulk)
-            if (response.hasFailures()) {
-                response.iterator().each {
-                    if (it.failed) {
-                        log.error("Indexing of ${it.id} failed: ${it.failureMessage}")
-                    }
-                }
-            }
+            String bulkString = docs.collect{ doc ->
+                String shapedData = JsonOutput.toJson(getShapeForIndex(doc, whelk))
+                String action = createActionRow(doc,collection)
+                "${action}\n${shapedData}\n"
+            }.join('')
+
+            def body = new NStringEntity(bulkString)
+            def response = restClient.performRequest('POST', "/_bulk",
+                    Collections.<String, String>emptyMap(),
+                    body)
+            def eString = EntityUtils.toString(response.getEntity())
+            Map responseMap = mapper.readValue(eString, Map)
+            log.debug("Bulk indexed ${docs.count{it}} docs in ${responseMap.took}")
         }
     }
 
-    public void index(Document doc, String collection, Whelk whelk) {
+    String createActionRow(Document doc, String collection) {
+        def action = ["index" : [ "_index" : indexName,
+                                  "_type" : collection,
+                                  "_id" : toElasticId(doc.getShortId()) ]]
+        return mapper.writeValueAsString(action)
+    }
+
+    void index(Document doc, String collection, Whelk whelk) {
         Map shapedData = getShapeForIndex(doc, whelk)
-        def idxReq = new IndexRequest(getIndexName(), collection, toElasticId(doc.getShortId())).source(shapedData)
-        def response = performExecute(idxReq)
-        log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${response.getId()} as version ${response.getVersion()}")
+        def body = new NStringEntity(JsonOutput.toJson(shapedData), ContentType.APPLICATION_JSON)
+        def response = restClient.performRequest('PUT', "/${indexName}/${collection}/${toElasticId(doc.getShortId())}",
+                Collections.<String, String>emptyMap(),
+                body)
+        def eString = EntityUtils.toString(response.getEntity())
+        Map responseMap = mapper.readValue(eString, Map)
+        log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
     }
 
     void remove(String identifier) {
