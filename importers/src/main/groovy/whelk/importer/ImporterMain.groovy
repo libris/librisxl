@@ -195,10 +195,10 @@ class ImporterMain {
         def idgroups = new File(file).readLines()
                 .findAll { String line -> ['\t', '/'].every { it -> line.contains(it) } }
                 .collect { line ->
-            def split = line.substring(0, line.indexOf("\t")).split('/')
-            [collection: split[0], id: split[1]]
-        }
-        .groupBy { it -> it.collection }
+                            def split = line.substring(0, line.indexOf("\t")).split('/')
+                            [collection: split[0], id: split[1]]
+                         }
+                .groupBy { it -> it.collection }
                 .collect { k, v -> [key: k, value: v.collect { it -> it.id }] }
 
         def bibIds = idgroups.find{it->it.key == 'bib'}.value
@@ -329,6 +329,8 @@ class ImporterMain {
         } catch (IllegalArgumentException e) {
             System.err.println "Missing arguments. Expected:"
             System.err.println "\t${method.name} ${method.getAnnotation(Command).args()}"
+            System.err.println e.message
+            org.codehaus.groovy.runtime.StackTraceUtils.sanitize(e).printStackTrace()
             System.exit(1)
         }
     }
