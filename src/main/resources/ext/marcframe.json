@@ -1241,7 +1241,7 @@
           "tokenMap": "PolarityType"
         },
         "[2:3]": {
-          "TODO": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:aspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1300,7 +1300,7 @@
           "tokenMap": "ComputerReformattingQualityType"
         },
         "[2:3]": {
-          "TODO": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:fileAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1331,7 +1331,7 @@
           "tokenMap": "ReproductionType"
         },
         "[2:3]": {
-          "TODO": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
+          "TODO:ignore": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:aspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1392,36 +1392,38 @@
           "tokenMap": "ProjGraphMaterialType"
         },
         "[3:4]": {
-          "link": "marc:projGraphColor",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "ColorType"
         },
         "[4:5]": {
-          "link": "marc:projGraphEmulsion",
+          "link": "baseMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "ProjGraphEmulsionType"
         },
         "[5:6]": {
-          "link": "marc:projGraphSound",
+          "link": "soundContent",
           "uriTemplate": "{_}",
           "tokenMap": "SoundType"
         },
         "[6:7]": {
-          "link": "marc:projGraphMedium",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "MediumType"
+          "tokenMap": "MediumType",
+          "resourceType": "RecordingMedium"
         },
         "[7:8]": {
-          "link": "marc:projGraphDimensions",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "ProjGraphDimensionsType"
         },
         "[8:9]": {
-          "link": "marc:projGraphSupport",
+          "link": "mount",
           "uriTemplate": "{_}",
           "tokenMap": "ProjGraphSupportType"
         },
         "[2:3]": {
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:projGraphAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
