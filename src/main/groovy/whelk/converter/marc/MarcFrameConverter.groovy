@@ -11,6 +11,7 @@ import whelk.converter.FormatConverter
 import whelk.filter.LinkFinder
 import org.picocontainer.PicoContainer
 import whelk.util.PropertyLoader
+import whelk.util.URIWrapper
 
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -150,7 +151,7 @@ class MarcConversion {
     Map marcTypeMap = [:]
     Map tokenMaps
 
-    URI baseUri = Document.BASE_URI
+    URIWrapper baseUri = Document.BASE_URI
 
     MarcConversion(MarcFrameConverter converter, Map config, Map tokenMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord

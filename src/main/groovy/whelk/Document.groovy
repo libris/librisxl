@@ -5,6 +5,7 @@ import org.apache.lucene.analysis.util.CharArrayMap
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
+import whelk.util.URIWrapper
 
 import java.lang.reflect.Type
 import java.security.MessageDigest
@@ -23,16 +24,16 @@ class Document {
     // If we _statically_ call loadProperties("secret"), without a try/catch it means that no code with a dependency on
     // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
     // depending on whelk-core) sometimes need to do.
-    static final URI BASE_URI
+    static final URIWrapper BASE_URI
 
     static
     {
         try {
-            BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
+            BASE_URI = new URIWrapper(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
         }
         catch (Exception e) {
             System.err.println(e)
-            BASE_URI = new URI("https://libris.kb.se/");
+            BASE_URI = new URIWrapper("https://libris.kb.se/");
         }
     }
 
@@ -65,7 +66,7 @@ class Document {
         return new Document(clonedDate)
     }
 
-    URI getURI() {
+    URIWrapper getURI() {
         return BASE_URI.resolve(getShortId())
     }
 

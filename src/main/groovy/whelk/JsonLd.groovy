@@ -12,6 +12,7 @@ import whelk.exception.ModelValidationException
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
 import se.kb.libris.util.marc.MarcRecord
 import whelk.util.PropertyLoader
+import whelk.util.URIWrapper
 
 public class JsonLd {
 
@@ -159,7 +160,7 @@ public class JsonLd {
             } else if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
                 def resolved = context[match[0][1]]
                 if (resolved) {
-                    URI base = new URI(resolved)
+                    URIWrapper base = new URIWrapper(resolved)
                     result << base.resolve(match[0][2]).toString()
                 }
             } else {
@@ -580,7 +581,7 @@ public class JsonLd {
         return o
     }
 
-    static URI findRecordURI(Map jsonLd) {
+    static URIWrapper findRecordURI(Map jsonLd) {
         String foundIdentifier = findIdentifier(jsonLd)
         if (foundIdentifier) {
             return Document.BASE_URI.resolve(foundIdentifier)

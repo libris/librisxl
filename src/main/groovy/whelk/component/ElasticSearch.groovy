@@ -41,7 +41,7 @@ class ElasticSearch {
     String defaultType = "record"
     String defaultIndex = null
 
-    boolean haltOnFailure = false
+    boolean haltOnFailure = true
 
     JsonLdLinkExpander expander
 
@@ -159,7 +159,7 @@ class ElasticSearch {
                     Map shapedData = getShapeForIndex(doc, whelk)
                     bulk.add(new IndexRequest(getIndexName(), collection, toElasticId(doc.getShortId())).source(shapedData))
                 } catch (Throwable e) {
-                    log.error("Failed to create indexrequest for document ${doc.getShortId()}. Reason: ${e.message}")
+                    log.error("Failed to create indexrequest for document ${doc.getShortId()}. Reason: ${e.message}", e)
                     if (haltOnFailure) {
                         throw e
                     }

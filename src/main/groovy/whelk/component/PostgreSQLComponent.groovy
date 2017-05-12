@@ -9,6 +9,7 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Location
 import whelk.exception.StorageCreateFailedException
+import whelk.util.URIWrapper
 
 import java.sql.*
 import java.util.Date
@@ -161,7 +162,7 @@ class PostgreSQLComponent {
      }
 
 
-    public Map status(URI uri, Connection connection = null) {
+    public Map status(URIWrapper uri, Connection connection = null) {
         Map statusMap = [:]
         boolean newConnection = (connection == null)
         try {
@@ -776,7 +777,7 @@ class PostgreSQLComponent {
                 return new Location(doc)
             }
 
-            URI uri = Document.BASE_URI.resolve(identifier)
+            URIWrapper uri = Document.BASE_URI.resolve(identifier)
 
             log.debug("Finding location status for $uri")
 

@@ -1,5 +1,7 @@
 package whelk
 
+import whelk.util.URIWrapper
+
 import java.util.zip.CRC32
 
 import com.damnhandy.uri.template.UriTemplate
@@ -9,7 +11,7 @@ import groovy.util.logging.Slf4j as Log
 
 @Log
 class URIMinter extends IdGenerator {
-    URI base = new URI("/")
+    URIWrapper base = new URI("/")
     String typeKey = '@type'
     String documentUriTemplate
     String thingUriTemplate
@@ -65,7 +67,7 @@ class URIMinter extends IdGenerator {
         return UUID.randomUUID()
     }
 
-    URI mint(Document doc) {
+    URIWrapper mint(Document doc) {
         return base.resolve(computePath(doc))
     }
 
