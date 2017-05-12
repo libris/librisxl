@@ -2703,7 +2703,7 @@
         "embedded": true
       },
       "aboutEntity": "?work",
-      "TODO:pending": "merge entities from pending in similar fields",
+      "TODO:pending": "Merge entities from pending in similar fields (like bib 520)?",
       "pendingResources": {
         "_:original": {"link": "originalVersion", "resourceType": "Work"},
         "_:summary": {"link": "summary", "resourceType": "Summary"},
@@ -3525,27 +3525,19 @@
     "520": {
       "aboutEntity": "?thing",
       "TOOO:i1": {},
-      "$a": {"addProperty": "summary"},
-      "match": [
-        {
-          "when": "$u",
-          "TODO": "unify with summary or the generic annotation model?",
-          "addLink": "describedBy",
-          "resourceType": "WebPage",
-          "embedded": true,
-          "$a": {"property": "label"},
-          "$u": {"addLink": "sameAs", "uriTemplate": "{+_}"}
-        }
-      ],
+      "addLink": "summary",
+      "resourceType": "Summary",
+      "$a": {"addProperty": "label"},
+      "$u": {"addLink": "sameAs", "uriTemplate": "{+_}"},
       "_spec": [
         {
           "source": {"520": {"ind1": " ", "ind2": " ", "subfields": [
             {"u": "http://example.org/thing-page"}
           ]}},
           "result": {"mainEntity": {
-            "describedBy": [
+            "summary": [
               {
-                "@type": "WebPage",
+                "@type": "Summary",
                 "sameAs": [{"@id": "http://example.org/thing-page"}]
               }
             ]
