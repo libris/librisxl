@@ -20,8 +20,6 @@ import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.transport.NoNodeAvailableException
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
-import org.elasticsearch.index.reindex.DeleteByQueryAction
-import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder
 import org.elasticsearch.transport.client.PreBuiltTransportClient
 
 import whelk.Document
@@ -202,21 +200,16 @@ class ElasticSearch {
         log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${response.getId()} as version ${response.getVersion()}")
     }
 
-    public void remove(String identifier) {
+    void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
-
-        /*def rsp = DeleteByQueryAction
-                DeleteByQueryAction.INSTANCE.newRequestBuilder(client)
-                        .filter(QueryBuilders.matchQuery("gender", "male"))
-                        .source("persons")
-                        .get()*/
-
-        def rsp = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE)
-                //.setIndices(defaultIndex)
-                .setSource(["query":["term":["_id":toElasticId(identifier)]]])
-                .execute()
-                .actionGet()
-        log.debug("Response: ${rsp.totalDeleted} objects deleted")
+        def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
+        def query = new NStringEntity(JsonOutput.toJson(dsl), ContentType.APPLICATION_JSON)
+        def response = restClient.performRequest('POST', "/${indexName}/_delete_by_query",
+                Collections.<String, String>emptyMap(),
+                query)
+        def eString = EntityUtils.toString(response.getEntity())
+        Map responseMap = mapper.readValue(eString, Map)
+        log.debug "Response: ${responseMap.deleted} objects deleted"
     }
 
     Map getShapeForIndex(Document document, Whelk whelk) {
