@@ -114,6 +114,7 @@ class ElasticSearch {
      * Get configured mappings.
      *
      */
+    //TODO: make this work in ES5 REST client
     Map getMappings() {
         def indexClient = client.admin().indices()
         def mappingRequest = indexClient.prepareGetMappings(this.defaultIndex)
@@ -138,6 +139,7 @@ class ElasticSearch {
         return result
     }
 
+    //TODO: remove?
     public ActionResponse performExecute(ActionRequest request) {
         int failcount = 0
         ActionResponse response = null
