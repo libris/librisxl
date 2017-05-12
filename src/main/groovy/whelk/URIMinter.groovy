@@ -11,7 +11,7 @@ import groovy.util.logging.Slf4j as Log
 
 @Log
 class URIMinter extends IdGenerator {
-    URIWrapper base = new URI("/")
+    URIWrapper base = new URIWrapper("/")
     String typeKey = '@type'
     String documentUriTemplate
     String thingUriTemplate
@@ -37,7 +37,7 @@ class URIMinter extends IdGenerator {
     }
 
     void setBase(String uri) {
-        this.base = new URI(uri)
+        this.base = new URIWrapper(uri)
     }
 
     void setEpochDate(String epochDate) {
