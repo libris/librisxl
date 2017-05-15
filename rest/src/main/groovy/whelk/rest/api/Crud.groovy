@@ -1074,13 +1074,11 @@ class Crud extends HttpServlet {
             log.debug("Checking permissions for ${doc}")
 
             if (!doc) {
-                if (loc) {
-                    sendRedirect(request, response, loc)
-                } else {
-                    failedRequests.labels("DELETE", request.getRequestURI(),
-                            HttpServletResponse.SC_NOT_FOUND.toString()).inc()
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
-                }
+                failedRequests.labels("DELETE", request.getRequestURI(),
+                        HttpServletResponse.SC_NOT_FOUND.toString()).inc()
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
+            } else if (doc && loc) {
+                sendRedirect(request, response, loc)
             } else if (doc && !hasDeletePermission(doc, request.getAttribute("user"))) {
                 failedRequests.labels("DELETE", request.getRequestURI(),
                         HttpServletResponse.SC_FORBIDDEN.toString()).inc()
@@ -1091,9 +1089,9 @@ class Crud extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_GONE,
                         "Document has been deleted.")
             } else {
-                log.debug("Removing resource at ${id}")
+                log.debug("Removing resource at ${doc.getShortId()}")
                 // FIXME don't hardcode collection
-                whelk.remove(id, "xl", null, "xl")
+                whelk.remove(doc.getShortId(), "xl", null, "xl")
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
         } catch (ModelValidationException mve) {

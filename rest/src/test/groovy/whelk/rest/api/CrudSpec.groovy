@@ -3023,17 +3023,17 @@ class CrudSpec extends Specification {
         def data = ["@graph": [["@id": id,
                                 "@type": "Record",
                                 "creationDate": "2002-01-08T00:00:00.0+01:00",
-                                "sameAs": redirectId],
+                                "sameAs": [["@id": redirectId]]],
                                ["@id": workId,
                                 "@type": "Work",
                                 "contains": "some new data",
                                 "heldBy":
                                         ["notation": "S"]]]]
         request.getPathInfo() >> {
-            "/5678"
+            redirectId
         }
         request.getRequestURI() >> {
-            "/5678"
+            redirectId
         }
         request.getMethod() >> {
             "DELETE"
@@ -3049,11 +3049,14 @@ class CrudSpec extends Specification {
         storage.load(_) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(redirectId) >> {
             return null
         }
+        storage.loadDocumentByMainId(id) >> {
+            return new Document(data)
+        }
         storage.getMainId(_) >> {
-            return redirectId
+            return id
         }
         when:
         crud.doDelete(request, response)
