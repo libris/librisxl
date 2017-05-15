@@ -1392,6 +1392,7 @@
           "tokenMap": "ProjGraphMaterialType"
         },
         "[3:4]": {
+          "aboutEntity": "?work",
           "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "ColorType"
@@ -1437,17 +1438,17 @@
           "tokenMap": "MicroformMaterialType"
         },
         "[3:4]": {
-          "link": "marc:posNeg",
+          "link": "polarity",
           "uriTemplate": "{_}",
           "tokenMap": "PolarityType"
         },
         "[4:5]": {
-          "link": "marc:dimensionsCategory",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "MicroformDimensionsType"
         },
         "[5:6]": {
-          "link": "marc:range",
+          "link": "reductionRatio",
           "uriTemplate": "{_}",
           "tokenMap": "MicroformRangeType"
         },
@@ -1456,26 +1457,28 @@
           "parseZeroPaddedNumber": true
         },
         "[9:10]": {
-          "link": "marc:color",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "MicroformColorType"
         },
         "[10:11]": {
-          "link": "marc:emulsion",
+          "link": "emulsion",
           "uriTemplate": "{_}",
           "tokenMap": "MicroformEmulsionType"
         },
         "[11:12]": {
-          "link": "marc:generation",
+          "link": "generation",
           "uriTemplate": "{_}",
           "tokenMap": "MicroformGenerationType"
         },
         "[12:13]": {
-          "link": "marc:base",
+          "link": "baseMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "FilmBaseType"
         },
         "[2:3]": {
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:aspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
