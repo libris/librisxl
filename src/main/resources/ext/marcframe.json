@@ -1487,26 +1487,30 @@
       },
       "StillImage": {
         "[1:2]": {
-          "addLink": "carrierType",
+          "TODO:genreForm": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
+          "addLink": "genreForm",
           "uriTemplate": "{_}",
+          "TODO:tokenMap": "Rename the uri:s of NonProjMaterialType (n and v) to not only contain the code",
           "tokenMap": "NonProjMaterialType"
         },
         "[3:4]": {
-          "link": "marc:nonProjColor",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "ColorType"
         },
         "[4:5]": {
-          "link": "marc:nonProjPrimary",
+          "link": "baseMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "NonProjectedType"
         },
         "[5:6]": {
-          "link": "marc:nonProjSecondary",
+          "link": "mount",
           "uriTemplate": "{_}",
           "tokenMap": "NonProjectedType"
         },
         "[2:3]": {
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:nonProjAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
