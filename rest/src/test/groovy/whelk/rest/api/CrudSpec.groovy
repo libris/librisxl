@@ -71,10 +71,14 @@ class CrudSpec extends Specification {
                                  'some_term': 'some_value'
                              ],
                              'lensGroups': ['chips': [:]]]
+        whelk.vocabData = ['@graph': []]
+        whelk.jsonld = new JsonLd(whelk.displayData, whelk.vocabData)
         GroovySpy(LegacyIntegrationTools.class, global: true)
         crud = new Crud()
         crud.whelk = whelk
         crud.displayData = whelk.displayData
+        crud.vocabData = whelk.vocabData
+        crud.jsonld = whelk.jsonld
         crud.accessControl = accessControl
     }
 

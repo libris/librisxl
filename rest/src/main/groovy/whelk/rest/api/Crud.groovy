@@ -113,7 +113,7 @@ class Crud extends HttpServlet {
         whelk.loadCoreData()
         displayData = whelk.displayData
         vocabData = whelk.vocabData
-        jsonld = new JsonLd(displayData, vocabData)
+        jsonld = whelk.jsonld
         search = new SearchUtils(whelk, displayData, vocabData)
     }
 
