@@ -453,21 +453,25 @@ class Crud extends HttpServlet {
      * Document and String in the response may be null.
      *
      */
+    // TODO Handle version requests (See LXL-460)
     Tuple2<Document, String> getDocumentFromStorage(String id,
                                                     String version = null) {
-        Document doc = whelk.storage.load(id, version)
+        // Document doc = whelk.storage.load(id, version)
+        Document doc = whelk.storage.load(id)
         if (doc) {
             return new Tuple2(doc, null)
         }
 
-        doc = whelk.storage.loadDocumentByMainId(id, version)
+        // doc = whelk.storage.loadDocumentByMainId(id, version)
+        doc = whelk.storage.loadDocumentByMainId(id)
         if (doc) {
             return new Tuple2(doc, null)
         }
 
         String mainId = whelk.storage.getMainId(id)
         if (mainId) {
-            doc = whelk.storage.loadDocumentByMainId(mainId, version)
+            // doc = whelk.storage.loadDocumentByMainId(mainId, version)
+            doc = whelk.storage.loadDocumentByMainId(mainId)
             return new Tuple2(doc, mainId)
         }
 
