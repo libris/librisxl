@@ -763,35 +763,36 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Missing @id in request.")
             return
-        } else if (idFromUrl != documentId) {
-            log.debug("Document ID does not match ID in URL.")
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "ID in document does not match ID in URL.")
-            return
         }
 
-        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(documentId)
+        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(idFromUrl)
         Document existingDoc = docAndLoc.first
         String location = docAndLoc.second
 
-        if (!existingDoc && location) {
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_METHOD_NOT_ALLOWED.toString()).inc()
-            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                    "PUT does not support alternate IDs.")
-            return
-        } else if (!existingDoc) {
+        if (!existingDoc) {
             failedRequests.labels("PUT", request.getRequestURI(),
                     HttpServletResponse.SC_NOT_FOUND.toString()).inc()
             response.sendError(HttpServletResponse.SC_NOT_FOUND,
                     "Document not found.")
             return
+        } else if (existingDoc && location) {
+            sendRedirect(request, response, location)
+            return
         } else {
             // FIXME not needed? should be handled by 303 See Other
             log.debug("Identifier was ${documentId}. Setting to ${existingDoc.id}")
             documentId = existingDoc.id
+
+            if (idFromUrl != documentId) {
+                if (Document.BASE_URI.resolve(idFromUrl).toString() != documentId) {
+                    log.debug("Document ID does not match ID in URL.")
+                    failedRequests.labels("PUT", request.getRequestURI(),
+                            HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                            "ID in document does not match ID in URL.")
+                    return
+                }
+            }
         }
 
         Document updatedDoc = new Document(requestBody)

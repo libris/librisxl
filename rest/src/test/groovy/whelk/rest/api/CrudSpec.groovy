@@ -1411,11 +1411,13 @@ class CrudSpec extends Specification {
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
         def id = BASE_URI.resolve("/1234").toString()
         def altId = BASE_URI.resolve("/alt1234").toString()
-        def oldContent = ["@graph": [["@id": altId,
+        def oldContent = ["@graph": [["@id": id,
                                       "@type": "Record",
+                                      "sameAs": [["@id": altId]],
                                       "contains": "some data"]]]
-        def newContent = ["@graph": [["@id": altId,
+        def newContent = ["@graph": [["@id": id,
                                       "@type": "Record",
+                                      "sameAs": [["@id": altId]],
                                       "created": createdDate,
                                       "contains": "some updated data"]]]
         def is = GroovyMock(ServletInputStream.class)
@@ -1426,10 +1428,10 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/alt1234"
+            altId
         }
         request.getRequestURI() >> {
-            "/alt1234"
+            altId
         }
         request.getMethod() >> {
             "PUT"
@@ -1448,8 +1450,11 @@ class CrudSpec extends Specification {
         storage.load(_) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(altId) >> {
             return null
+        }
+        storage.loadDocumentByMainId(id) >> {
+            return new Document(oldContent)
         }
         storage.getMainId(_) >> {
             return id
@@ -1463,7 +1468,7 @@ class CrudSpec extends Specification {
         when:
         crud.doPut(request, response)
         then:
-        assert response.getStatus() == HttpServletResponse.SC_METHOD_NOT_ALLOWED
+        assert response.getStatus() == HttpServletResponse.SC_FOUND
     }
 
     def "PUT to /<id> should return 404 Not Found if document does not exist"() {
@@ -1598,10 +1603,10 @@ class CrudSpec extends Specification {
             return null
         }
         storage.loadDocumentByMainId(_) >> {
-            return null
+            return new Document(putData)
         }
         storage.getMainId(_) >> {
-            return null
+            return id
         }
         when:
         crud.doPut(request, response)
