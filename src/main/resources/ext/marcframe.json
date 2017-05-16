@@ -1664,61 +1664,70 @@
           "tokenMap": "SoundMaterialType"
         },
         "[3:4]": {
-          "link": "marc:soundSpeed",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "SoundSpeedType"
+          "tokenMap": "SoundSpeedType",
+          "resourceType": "PlayingSpeed"
         },
         "[4:5]": {
-          "link": "marc:soundPlaybackChannel",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "SoundPlaybackChannelType"
+          "tokenMap": "SoundPlaybackChannelType",
+          "resourceType": "PlaybackChannels"
         },
         "[5:6]": {
-          "link": "marc:soundGroove",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "SoundGrooveType"
+          "tokenMap": "SoundGrooveType",
+          "resourceType": "GrooveCharacteristic"
         },
         "[6:7]": {
-          "link": "marc:soundDimensions",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "SoundDimensionsType"
         },
         "[7:8]": {
-          "link": "marc:soundTapeWidth",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "SoundTapeWidthType"
         },
         "[8:9]": {
-          "link": "marc:soundTapeConfiguration",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "SoundTapeConfigurationType"
+          "tokenMap": "SoundTapeConfigurationType",
+          "resourceType": "TapeConfig"
         },
         "[9:10]": {
-          "link": "marc:soundKindOfDisc",
+          "link": "generation",
           "uriTemplate": "{_}",
           "tokenMap": "SoundKindOfDiscType"
         },
         "[10:11]": {
+          "TODO": "Depending on value of tokenMap, map to appliedMaterial or baseMaterial?",
           "link": "marc:soundKindOfMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "SoundKindOfMaterialType"
         },
         "[11:12]": {
-          "link": "marc:soundKindOfCutting",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "SoundKindOfCuttingType"
+          "tokenMap": "SoundKindOfCuttingType",
+          "resourceType": "GrooveCharacteristic"
         },
         "[12:13]": {
-          "link": "marc:soundPlaybackCharacter",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "SoundPlaybackCharacterType"
+          "tokenMap": "SoundPlaybackCharacterType",
+          "resourceType": "PlaybackCharacteristic"
         },
         "[13:14]": {
+          "TODO:aboutEntity": "Work or Instance?",
           "link": "marc:soundCapture",
           "uriTemplate": "{_}",
           "tokenMap": "SoundCaptureType"
         },
         "[2:3]": {
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:soundAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1739,32 +1748,33 @@
           "tokenMap": "VideoMaterialType"
         },
         "[3:4]": {
-          "link": "marc:videoColor",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "VideoColorType"
         },
         "[4:5]": {
-          "link": "marc:videoFormat",
+          "link": "videoCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "VideoFormatType"
         },
         "[5:6]": {
-          "link": "marc:videoSound",
+          "link": "soundContent",
           "uriTemplate": "{_}",
           "tokenMap": "SoundType"
         },
         "[6:7]": {
-          "link": "marc:videoMedium",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "MediumType"
         },
         "[7:8]": {
-          "link": "marc:videoDimensions",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "VideoDimensionsType"
         },
         "[8:9]": {
-          "link": "marc:videoPlayback",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "MotionPicConfigurationOrVideoPlaybackType"
         }
