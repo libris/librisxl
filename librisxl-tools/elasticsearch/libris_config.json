@@ -59,7 +59,7 @@
                 },
                 "numeric_keeper": {
                     "type": "pattern_capture",
-                    "preserve_original": 0,
+                    "preserve_original": false,
                     "patterns": [
                         "([0-9]{4})"
                     ]
@@ -108,7 +108,7 @@
                 {
                     "type_template": {
                         "mapping": {
-                            "index": "not_analyzed",
+                            "index": true,
                             "type": "keyword"
                         },
                         "match": "@type",
@@ -118,7 +118,7 @@
                 {
                     "id_template": {
                         "mapping": {
-                            "index": "not_analyzed",
+                            "index": true,
                             "type": "keyword"
                         },
                         "match": "@id",
@@ -134,7 +134,7 @@
                                     "type": "text"
                                 },
                                 "raw": {
-                                    "index": "not_analyzed",
+                                    "index": true,
                                     "type": "keyword"
                                 }
                             },
@@ -149,7 +149,7 @@
                         "mapping": {
                             "fields": {
                                 "raw": {
-                                    "index": "not_analyzed",
+                                    "index": true,
                                     "type": "keyword"
                                 },
                                 "{name}": {
@@ -161,7 +161,7 @@
                             "type": "text"
                         },
                         "match": "*Label",
-                        "match_mapping_type": "keyword"
+                        "match_mapping_type": "string"
                     }
                 },
                 {
@@ -169,7 +169,7 @@
                         "mapping": {
                             "fields": {
                                 "raw": {
-                                    "index": "not_analyzed",
+                                    "index": true,
                                     "type": "keyword"
                                 }
                             },
@@ -186,7 +186,7 @@
                         "mapping": {
                             "fields": {
                                 "raw": {
-                                    "index": "not_analyzed",
+                                    "index": true,
                                     "type": "keyword"
                                 },
                                 "{name}": {
@@ -205,7 +205,7 @@
                         "mapping": {
                             "fields": {
                                 "raw": {
-                                    "index": "not_analyzed",
+                                    "index": true,
                                     "type": "keyword"
                                 },
                                 "{name}": {
@@ -225,7 +225,7 @@
                         "mapping": {
                             "fields": {
                                 "raw": {
-                                    "index": "not_analyzed",
+                                    "index": true,
                                     "type": "keyword"
                                 },
                                 "{name}": {
@@ -245,7 +245,7 @@
                         "mapping": {
                             "fields": {
                                 "raw": {
-                                    "index": "not_analyzed",
+                                    "index": true,
                                     "type": "keyword"
                                 },
                                 "{name}": {
@@ -271,7 +271,7 @@
                 {
                     "unknown_template": {
                         "mapping": {
-                            "index": "not_analyzed",
+                            "index": true,
                             "type": "keyword"
                         },
                         "match_mapping_type": "string",
@@ -337,7 +337,7 @@
                             "type": "text",
                             "fields": {
                                 "raw": {
-                                    "index": "not_analyzed",
+                                    "index": true,
                                     "type": "keyword"
                                 }
                             }
@@ -353,12 +353,12 @@
                         "date": {
                             "fields": {
                                 "raw": {
-                                    "index": "not_analyzed",
+                                    "index": true,
                                     "type": "keyword"
                                 }
                             },
                             "analyzer": "numeric_extractor",
-                            "index": "analyzed",
+                            "index": true,
                             "type": "text",
                             "fielddata": true
                         }
@@ -371,7 +371,7 @@
                             "type": "text",
                             "fields": {
                                 "raw": {
-                                    "index": "not_analyzed",
+                                    "index": true,
                                     "type": "keyword"
                                 }
                             }
@@ -385,7 +385,7 @@
                             "type": "text",
                             "fields": {
                                 "raw": {
-                                    "index": "not_analyzed",
+                                    "index": true,
                                     "type": "keyword"
                                 }
                             }
