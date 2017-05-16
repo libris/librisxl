@@ -9,7 +9,7 @@ public class URIWrapper {
     /* List of excluded ASCII chars per https://www.ietf.org/rfc/rfc2396.txt */
     private static final Map percentEncoding =
             [
-                " ": "", // empty string instead of %20 because this char we don't want to tolerate either
+                " ": "%20",
                 "<": "%3C",
                 ">": "%3E",
                 "#": "%23",
