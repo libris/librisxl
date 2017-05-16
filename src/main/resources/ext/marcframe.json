@@ -3528,7 +3528,7 @@
       "addLink": "summary",
       "resourceType": "Summary",
       "$a": {"addProperty": "label"},
-      "$u": {"addLink": "sameAs", "uriTemplate": "{+_}"},
+      "$u": {"addProperty": "uri"},
       "_spec": [
         {
           "source": {"520": {"ind1": " ", "ind2": " ", "subfields": [
@@ -3538,7 +3538,7 @@
             "summary": [
               {
                 "@type": "Summary",
-                "sameAs": [{"@id": "http://example.org/thing-page"}]
+                "uri": ["http://example.org/thing-page"]
               }
             ]
           }}
@@ -4311,7 +4311,7 @@
         "if $z=Wikipedia|IMDB": {"addLink": "isPrimaryTopicOf"}
       },
       "$3": {"property": "description"},
-      "$u": {"addLink": "sameAs", "uriTemplate": "{+_}"},
+      "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"property": "altLabel"},
       "$z": {"addProperty": "copyNote"},
@@ -4319,13 +4319,13 @@
         {
           "source": {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/review"}]}},
           "result": {"mainEntity": {
-            "isPrimaryTopicOf": [{"@type": "Document", "sameAs": [{"@id": "http://example.org/review"}]}]
+            "isPrimaryTopicOf": [{"@type": "Document", "uri": ["http://example.org/review"]}]
           }}
         },
         {
           "source": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
           "result": {"mainEntity": {
-            "associatedMedia": [{"@type": "MediaObject", "sameAs": [{"@id": "http://example.com/doc.pdf"}]}]
+            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
           }}
         },
         {
@@ -4334,8 +4334,8 @@
             {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/page"}]}}
           ],
           "result": {"mainEntity": {
-            "associatedMedia": [{"@type": "MediaObject", "sameAs": [{"@id": "http://example.com/doc.pdf"}]}],
-            "isPrimaryTopicOf": [{"@type": "Document", "sameAs": [{"@id": "http://example.org/page"}]}]
+            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}],
+            "isPrimaryTopicOf": [{"@type": "Document", "uri": ["http://example.org/page"]}]
           }}
         },
         {
@@ -4345,7 +4345,7 @@
               {"u": "http://www.framtidsstudier.se/filebank/files/20051201$133251$fil$048Ti3PL2UIwRJQEBbDG.pdf"}
             ]}},
           "result": {"mainEntity": {
-            "associatedMedia": [{"@type": "MediaObject", "sameAs": [{"@id": "http://www.framtidsstudier.se/filebank/files/20051201$133251$fil$048Ti3PL2UIwRJQEBbDG.pdf"}]}]
+            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://www.framtidsstudier.se/filebank/files/20051201$133251$fil$048Ti3PL2UIwRJQEBbDG.pdf"]}]
           }}
         }
       ]
@@ -5000,7 +5000,7 @@
       "resourceType": "CreativeWork",
       "$a": {"property": "label"},
       "$b": {"property": "citation"},
-      "$u": {"property": "url"}
+      "$u": {"property": "uri"}
     },
     "675" : {
       "$a": {"property": "label"}
@@ -5071,10 +5071,10 @@
       "resourceType": "Document",
       "TODO:i1": {},
       "match": [
-        {"when": "i2=0", "addLink": "sameAs", "resourceType": "Thing"},
-        {"when": "i2=1", "addLink": "isPrimaryTopicOf", "resourceType": "Electronic"},
-        {"when": "i2=2", "addLink": "relatedTo", "resourceType": "Document"},
-        {"when": "i2=8", "addLink": "relatedTo", "resourceType": "Document"}
+        {"when": "i2=0", "addLink": "describedBy"},
+        {"when": "i2=1", "addLink": "describedBy"},
+        {"when": "i2=2", "addLink": "relatedTo"},
+        {"when": "i2=8", "addLink": "seeAlso"}
       ]
     }
   },
@@ -5488,7 +5488,7 @@
       "$q": {"property": "itemCondition"},
       "$s": {"addProperty": "copyrightArticleFeeCode"},
       "$t": {"property": "copyNumber"},
-      "$u": {"addProperty": "url"},
+      "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {
         "addProperty": "copyNote",
