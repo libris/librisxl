@@ -6,20 +6,12 @@ import groovy.util.logging.Slf4j as Log
 import org.apache.commons.codec.binary.Base64
 import org.apache.http.HttpHost
 import org.apache.http.entity.ContentType
+import org.apache.http.message.BasicHeader
 import org.apache.http.nio.entity.NStringEntity
 import org.apache.http.util.EntityUtils
 import org.codehaus.jackson.map.ObjectMapper
-import org.elasticsearch.action.ActionRequest
-import org.elasticsearch.action.ActionResponse
-import org.elasticsearch.action.bulk.BulkRequest
-import org.elasticsearch.action.delete.DeleteRequest
-import org.elasticsearch.action.index.IndexRequest
-import org.elasticsearch.client.Client
+import org.elasticsearch.client.Response
 import org.elasticsearch.client.RestClient
-import org.elasticsearch.client.transport.NoNodeAvailableException
-import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.common.transport.InetSocketTransportAddress
-import org.elasticsearch.transport.client.PreBuiltTransportClient
 
 import whelk.Document
 import whelk.JsonLd
@@ -30,16 +22,12 @@ import whelk.Whelk
 @Log
 class ElasticSearch {
 
-    static final int WARN_AFTER_TRIES = 1000
-    static final int RETRY_TIMEOUT = 300
-    static final int MAX_RETRY_TIMEOUT = 60*60*1000
     static final int DEFAULT_PAGE_SIZE = 50
 
+    static final String BULK_CONTENT_TYPE = "application/x-ndjson"
 
-    Client client
     RestClient restClient
     private String elastichost, elasticcluster
-    String defaultType = "record"
     String defaultIndex = null
 
     boolean haltOnFailure = false
@@ -54,118 +42,38 @@ class ElasticSearch {
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
         this.expander = ex
-        //connectClient()
-        connectRestClient()
     }
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
         this.elastichost = elasticHost
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
-        //connectClient()
-        connectRestClient()
     }
 
-    void connectRestClient(){
+    private void connectRestClient(){
         if (elastichost) {
-            log.info("Connecting to $elasticcluster using hosts $elastichost")
-            println elastichost
-            println elasticPort
             restClient = RestClient.builder(new HttpHost(elastichost,elasticPort,"http")).build()
-
-            println restClient.inspect()
         }
     }
 
-    void connectClient() {
-        if (elastichost) {
-            log.info("Connecting to $elasticcluster using hosts $elastichost")
-            def sb = Settings.builder()
-
-            if (elasticcluster) {
-                sb = sb.put("cluster.name", elasticcluster)
+    Response performRequest(String method, String path, NStringEntity body, String contentType0 = null){
+        try {
+            connectRestClient()
+            String contentType
+            if (contentType0 == null) {
+                contentType = ContentType.APPLICATION_JSON.toString()
+            } else {
+                contentType = contentType0
             }
-            Settings elasticSettings = sb.build()
 
-
-            try {
-                elastichost.split(",").each {
-                    def host, port
-                    if (it.contains(":")) {
-                        (host, port) = it.split(":")
-                    } else {
-                        host = it
-                        port = 9300
-                    }
-                    client = new PreBuiltTransportClient(elasticSettings)
-                            .addTransportAddress(
-                                new InetSocketTransportAddress(InetAddress.getByName(host), port as int))
-                }
-            } catch (ArrayIndexOutOfBoundsException aioobe) {
-                throw new WhelkRuntimeException("Unable to initialize elasticsearch client. Host configuration might be missing port?")
-            }
-            log.debug("... connected.")
-        } else {
-            throw new WhelkRuntimeException("Unable to initialize ES client.")
+            return restClient.performRequest(method, path,
+                    Collections.<String, String> emptyMap(),
+                    body,
+                    new BasicHeader('content-type', contentType))
         }
-    }
-
-    /**
-     * Get configured mappings.
-     *
-     */
-    //TODO: make this work in ES5 REST client
-    Map getMappings() {
-        def indexClient = client.admin().indices()
-        def mappingRequest = indexClient.prepareGetMappings(this.defaultIndex)
-        def mappings = mappingRequest.get().mappings()
-
-        Map result = [:]
-
-        mappings.keys().toArray().each { key ->
-            def mapping = mappings.get(key)
-            result[key.toString()] = convertMapping(mapping)
+        finally {
+            restClient.close()
         }
-
-        return result
-    }
-
-    private Map convertMapping(def mapping) {
-        Map result = [:]
-        mapping.keys().toArray().each { key ->
-            result[key] = mapping.get(key).getSourceAsMap()
-        }
-
-        return result
-    }
-
-    //TODO: remove?
-    public ActionResponse performExecute(ActionRequest request) {
-        int failcount = 0
-        ActionResponse response = null
-        while (response == null) {
-            try {
-                if (request instanceof IndexRequest) {
-                    response = client.index(request).actionGet()
-                }
-                if (request instanceof BulkRequest) {
-                    response = client.bulk(request).actionGet()
-                }
-                if (request instanceof DeleteRequest) {
-                    response = client.delete(request).actionGet()
-                }
-            } catch (NoNodeAvailableException n) {
-                log.trace("Retrying server connection ...")
-                if (failcount++ > WARN_AFTER_TRIES) {
-                    log.warn("Failed to connect to elasticsearch after $failcount attempts.")
-                }
-                if (failcount % 100 == 0) {
-                    log.info("Server is not responsive. Still trying ...")
-                }
-                Thread.sleep(RETRY_TIMEOUT + failcount > MAX_RETRY_TIMEOUT ? MAX_RETRY_TIMEOUT : RETRY_TIMEOUT + failcount)
-            }
-        }
-        return response
     }
 
     void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
@@ -178,9 +86,7 @@ class ElasticSearch {
             }.join('')
 
             def body = new NStringEntity(bulkString)
-            def response = restClient.performRequest('POST', "/_bulk",
-                    Collections.<String, String>emptyMap(),
-                    body)
+            def response = performRequest('POST', '/_bulk',body, BULK_CONTENT_TYPE)
             def eString = EntityUtils.toString(response.getEntity())
             Map responseMap = mapper.readValue(eString, Map)
             log.debug("Bulk indexed ${docs.count{it}} docs in ${responseMap.took}")
@@ -197,8 +103,8 @@ class ElasticSearch {
     void index(Document doc, String collection, Whelk whelk) {
         Map shapedData = getShapeForIndex(doc, whelk)
         def body = new NStringEntity(JsonOutput.toJson(shapedData), ContentType.APPLICATION_JSON)
-        def response = restClient.performRequest('PUT', "/${indexName}/${collection}/${toElasticId(doc.getShortId())}",
-                Collections.<String, String>emptyMap(),
+        def response = performRequest('PUT',
+                "/${indexName}/${collection}/${toElasticId(doc.getShortId())}",
                 body)
         def eString = EntityUtils.toString(response.getEntity())
         Map responseMap = mapper.readValue(eString, Map)
@@ -208,9 +114,10 @@ class ElasticSearch {
     void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
+        log.warn dsl.inspect()
         def query = new NStringEntity(JsonOutput.toJson(dsl), ContentType.APPLICATION_JSON)
-        def response = restClient.performRequest('POST', "/${indexName}/_delete_by_query",
-                Collections.<String, String>emptyMap(),
+        def response = performRequest('POST',
+                "/${indexName}/_delete_by_query?conflicts=proceed",
                 query)
         def eString = EntityUtils.toString(response.getEntity())
         Map responseMap = mapper.readValue(eString, Map)
@@ -233,9 +140,9 @@ class ElasticSearch {
 
     Map query(Map jsonDsl, String collection) {
         def query = new NStringEntity(JsonOutput.toJson(jsonDsl), ContentType.APPLICATION_JSON)
-        def response = restClient.performRequest("POST", getQueryUrl(collection),
-                                                 Collections.<String, String>emptyMap(),
-                                                 query)
+        def response = performRequest('POST',
+                getQueryUrl(collection),
+                query)
         def eString = EntityUtils.toString(response.getEntity())
         Map responseMap = mapper.readValue(eString, Map)
 
@@ -350,10 +257,8 @@ class ElasticSearch {
     }
 
 
-    public String getIndexName() { defaultIndex }
-    public String getElasticHost() { elastichost.split(":").first() }
-    public String getElasticCluster() { elasticcluster }
-    public int getElasticPort() {
+    String getIndexName() { defaultIndex }
+    int getElasticPort() {
         try { new Integer(elastichost.split(",").first().split(":").last()).intValue() } catch (NumberFormatException nfe) { 9200 }
     }
 
@@ -371,7 +276,7 @@ class ElasticSearch {
             log.warn("Using old style index id's for $id")
             def pathelements = []
             id.split("::").each {
-                pathelements << java.net.URLEncoder.encode(it, "UTF-8")
+                pathelements << URLEncoder.encode(it, "UTF-8")
             }
             return  new String("/"+pathelements.join("/"))
         } else {
