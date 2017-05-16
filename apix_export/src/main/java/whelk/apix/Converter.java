@@ -55,7 +55,7 @@ public class Converter
         Map convertedData = m_converter.convert(document.data, document.getShortId());
         String convertedText = (String) convertedData.get(JsonLd.getNON_JSON_CONTENT_KEY());
 
-        convertedText = addEchoElimination(document, collection, convertedText);
+        //convertedText = addEchoElimination(document, collection, convertedText);
 
         return convertedText;
     }
@@ -101,6 +101,8 @@ public class Converter
 
             // This is obviously a hackish way of editing XML, and it relies on the stability of the converter output.
             // But a full DOM parse + xpath + serialize again would likely cause even more problems.
+            // This must be re-done in a more robust way if the decision to sync Voyager and XL in production is ever
+            // revisited.
             String expected887beginning = "<subfield code=\"a\">{\"@id\":\"" + document.getShortId() + "\",";
             convertedText = convertedText.replace(expected887beginning, expected887beginning + "\"echo checksum\":\"" + reconversionChecksum + "\",");
 

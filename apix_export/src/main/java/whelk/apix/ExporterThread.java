@@ -121,6 +121,12 @@ public class ExporterThread extends Thread
                 else
                     operation = ApixOp.APIX_NEW;
 
+                // Because requirements have changed, APIX-usage for anything other than DELETEs is no longer
+                // a desired feature. And so we early out here. This means a lot of the below code is essentially
+                // dead weight (it is left in place in case this decision is revisited).
+                if (operation != ApixOp.APIX_DELETE)
+                    continue;
+
                 try
                 {
                     String assignedVoyagerId = exportDocument(document, operation, collection);
