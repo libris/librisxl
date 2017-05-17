@@ -121,8 +121,22 @@ public class ListSets
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
         // Construct the query
-        String selectSQL = "SELECT DISTINCT data#>>'{@graph,1,heldBy,@id}' AS sigel FROM " + tableName +
-                " WHERE collection = 'hold' ";
+
+        // The SELECT DISTINCT is semantically correct, but too slow because postgresql does not handle
+        // loose indexscans, which can instead be simulated using the below query, courtesy of:
+        // https://wiki.postgresql.org/wiki/Loose_indexscan
+
+        /*String selectSQL = "SELECT DISTINCT data#>>'{@graph,1,heldBy,@id}' AS sigel FROM " + tableName +
+                " WHERE collection = 'hold' ";*/
+
+        String selectSQL = "WITH RECURSIVE t AS (\n" +
+                "   SELECT MIN(data#>>'{@graph,1,heldBy,@id}') AS col FROM lddb\n" +
+                "   UNION ALL\n" +
+                "   SELECT (SELECT MIN(data#>>'{@graph,1,heldBy,@id}') FROM lddb WHERE data#>>'{@graph,1,heldBy,@id}' > t.col)\n" +
+                "   FROM t WHERE t.col IS NOT NULL\n" +
+                "   )\n" +
+                "SELECT col as sigel FROM t WHERE col IS NOT NULL";
+
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setFetchSize(512);
 
