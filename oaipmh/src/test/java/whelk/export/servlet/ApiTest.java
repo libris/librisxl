@@ -239,6 +239,8 @@ public class ApiTest
         Assert.assertFalse( response.contains("noRecordsMatch"));
     }
 
+    /* The following two tests are disabled, because the functionality they test could not be made to work
+     * in an efficient enough manner when faced with the huge volume of data in Libris.
     @Test
     public void testBibSigelSetsInHeaderOnGetRecord() throws Exception
     {
@@ -253,5 +255,5 @@ public class ApiTest
         String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&set=bib:S&metadataPrefix=oai_dc");
         Assert.assertTrue( response.contains("bib:Gbg"));
         Assert.assertTrue( response.contains("bib:S"));
-    }
+    }*/
 }

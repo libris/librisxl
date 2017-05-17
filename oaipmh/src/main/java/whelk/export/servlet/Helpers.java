@@ -67,38 +67,34 @@ public class Helpers
     public static PreparedStatement getMatchingDocumentsStatement(Connection dbconn, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec)
             throws SQLException
     {
-        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
+        String mainTableName = OaiPmh.configuration.getProperty("sqlMaintable");
+        String identifiersTableName = mainTableName + "__identifiers";
 
         // Construct the query
-        String selectSQL = "WITH mainquery AS (SELECT id, data, collection, modified, deleted, " +
-                " data#>>'{@graph,1,heldBy,@id}' AS sigel FROM " +
-                tableName + " WHERE collection <> 'definitions' ";
+        String selectSQL = "SELECT lddb.id, lddb.data, lddb.collection, lddb.modified, lddb.deleted, lddb.data#>>'{@graph,1,heldBy,@id}' AS sigel" +
+                " FROM lddb " +
+                " INNER JOIN " +
+                identifiersTableName + " bib_iris ON lddb.id = bib_iris.id " +
+                " LEFT JOIN " +
+                mainTableName + " lddb_attached_holdings ON bib_iris.iri = lddb_attached_holdings.data#>>'{@graph,1,itemOf,@id}' " +
+                " WHERE lddb.collection <> 'definitions' ";
         if (fromDateTime != null)
-            selectSQL += " AND modified >= ? ";
+            selectSQL += " AND lddb.modified >= ? ";
         if (untilDateTime != null)
-            selectSQL += " AND modified <= ? ";
+            selectSQL += " AND lddb.modified <= ? ";
         if (setSpec.getRootSet() != null)
-            selectSQL += " AND collection = ? ";
+            selectSQL += " AND lddb.collection = ? ";
 
         if (setSpec.getSubset() != null)
         {
             if (setSpec.getRootSet().startsWith(SetSpec.SET_HOLD))
-                selectSQL += " AND data->'@graph' @> ?";
+                selectSQL += " AND lddb.data->'@graph' @> ?";
 
             else if (setSpec.getRootSet().startsWith(SetSpec.SET_BIB))
-                selectSQL += " AND id IN (" +
-                        "WITH holdings AS (select data#>>'{@graph,1,itemOf,@id}' AS id FROM lddb WHERE data->'@graph' @> ?) " +
-                        "SELECT " + tableName + "__identifiers.id FROM holdings JOIN " + tableName +
-                        "__identifiers ON holdings.id = " + tableName + "__identifiers.iri) ";
+                selectSQL += " AND lddb_attached_holdings.data->'@graph' @> ?";
         }
 
-        selectSQL += " ), heldBy AS ( " +
-                " WITH subq AS (SELECT data#>>'{@graph,1,itemOf,@id}' AS itemOf, data#>>'{@graph,1,heldBy,@id}' AS sigel FROM lddb) " +
-                " SELECT * FROM subq JOIN lddb__identifiers ON subq.itemOf = lddb__identifiers.iri " +
-                " ), " +
-                "concatenated AS ( " +
-                " SELECT mainquery.id, string_agg(heldBy.sigel, ',') AS sigel_list FROM mainquery JOIN heldBy ON mainquery.id = heldBy.id GROUP BY mainquery.id) " +
-                "SELECT * FROM mainquery LEFT JOIN concatenated ON mainquery.id = concatenated.id ORDER BY mainquery.modified";
+        selectSQL += " GROUP BY lddb.id ";
 
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setFetchSize(512);

@@ -152,12 +152,12 @@ public class ResponseCommon
         if (sigel != null)
             sigel = LegacyIntegrationTools.uriToLegacySigel( resultSet.getString("sigel").replace("\"", "") );
 
-        String bibHeldBySigelConcList = resultSet.getString("sigel_list");
+        /*String bibHeldBySigelConcList = resultSet.getString("sigel_list");
         String[] bibHeldBySigelList;
         if (bibHeldBySigelConcList != null)
             bibHeldBySigelList = bibHeldBySigelConcList.split(",");
         else
-            bibHeldBySigelList = new String[0];
+            bibHeldBySigelList = new String[0];*/
 
         String data = resultSet.getString("data");
         HashMap datamap = mapper.readValue(data, HashMap.class);
@@ -209,12 +209,13 @@ public class ResponseCommon
             writer.writeEndElement(); // setSpec
         }
 
+        /*
         for (String bibHeldBySigel : bibHeldBySigelList)
         {
             writer.writeStartElement("setSpec");
             writer.writeCharacters("bib:" + LegacyIntegrationTools.uriToLegacySigel( bibHeldBySigel ));
             writer.writeEndElement(); // setSpec
-        }
+        }*/
 
         writer.writeEndElement(); // header
 
