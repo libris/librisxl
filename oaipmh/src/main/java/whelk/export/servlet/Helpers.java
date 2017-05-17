@@ -64,7 +64,7 @@ public class Helpers
         return preparedStatement;
     }
 
-    public static PreparedStatement getMatchingDocumentsStatement(Connection dbconn, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec)
+    public static PreparedStatement getMatchingDocumentsStatement(Connection dbconn, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec, String id)
             throws SQLException
     {
         String mainTableName = OaiPmh.configuration.getProperty("sqlMaintable");
@@ -80,20 +80,25 @@ public class Helpers
                 " LEFT JOIN " +
                 mainTableName + " lddb_attached_holdings2 ON bib_iris.iri = lddb_attached_holdings2.data#>>'{@graph,1,itemOf,@id}' " +
                 " WHERE lddb.collection <> 'definitions' ";
+        if (id != null)
+            selectSQL += " AND lddb.id = ? ";
         if (fromDateTime != null)
             selectSQL += " AND lddb.modified >= ? ";
         if (untilDateTime != null)
             selectSQL += " AND lddb.modified <= ? ";
-        if (setSpec.getRootSet() != null)
-            selectSQL += " AND lddb.collection = ? ";
 
-        if (setSpec.getSubset() != null)
+        if (setSpec != null)
         {
-            if (setSpec.getRootSet().startsWith(SetSpec.SET_HOLD))
-                selectSQL += " AND lddb.data->'@graph' @> ?";
+            if (setSpec.getRootSet() != null)
+                selectSQL += " AND lddb.collection = ? ";
 
-            else if (setSpec.getRootSet().startsWith(SetSpec.SET_BIB))
-                selectSQL += " AND lddb_attached_holdings.data->'@graph' @> ?";
+            if (setSpec.getSubset() != null) {
+                if (setSpec.getRootSet().startsWith(SetSpec.SET_HOLD))
+                    selectSQL += " AND lddb.data->'@graph' @> ?";
+
+                else if (setSpec.getRootSet().startsWith(SetSpec.SET_BIB))
+                    selectSQL += " AND lddb_attached_holdings.data->'@graph' @> ?";
+            }
         }
 
         selectSQL += " GROUP BY lddb.id ";
@@ -103,19 +108,23 @@ public class Helpers
 
         // Assign parameters
         int parameterIndex = 1;
+        if (id != null)
+            preparedStatement.setString(parameterIndex++, id);
         if (fromDateTime != null)
             preparedStatement.setTimestamp(parameterIndex++, new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L));
         if (untilDateTime != null)
             preparedStatement.setTimestamp(parameterIndex++, new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L));
-        if (setSpec.getRootSet() != null)
-            preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
-        if (setSpec.getSubset() != null)
+        if (setSpec != null)
         {
-            String strMap = "[{\"heldBy\":{\"@id\": \""+
-                    LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset())+
-                    "\"}}]";
+            if (setSpec.getRootSet() != null)
+                preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
+            if (setSpec.getSubset() != null) {
+                String strMap = "[{\"heldBy\":{\"@id\": \"" +
+                        LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset()) +
+                        "\"}}]";
 
-            preparedStatement.setObject(parameterIndex++, strMap, java.sql.Types.OTHER);
+                preparedStatement.setObject(parameterIndex++, strMap, java.sql.Types.OTHER);
+            }
         }
 
         return preparedStatement;

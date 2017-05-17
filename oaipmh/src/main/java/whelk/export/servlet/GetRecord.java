@@ -74,51 +74,34 @@ public class GetRecord
                 id = resultSet.getString("id");
         }
 
-        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
-             PreparedStatement preparedStatement = prepareMatchingDocumentStatement(dbconn, id);
-             ResultSet resultSet = preparedStatement.executeQuery())
+        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection())
         {
-            if (!resultSet.next())
+            dbconn.setAutoCommit(false);
+            try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, null, null, null, id);
+                 ResultSet resultSet = preparedStatement.executeQuery())
             {
-                failedRequests.labels(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST).inc();
-                ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
-                return;
+                if (!resultSet.next())
+                {
+                    failedRequests.labels(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
+                    ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
+                    return;
+                }
+
+                // Build the xml response feed
+                XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+                xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
+                XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
+
+                ResponseCommon.writeOaiPmhHeader(writer, request, true);
+                writer.writeStartElement("GetRecord");
+
+                ResponseCommon.emitRecord(resultSet, writer, metadataPrefix, false, metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX));
+
+                writer.writeEndElement(); // GetRecord
+                ResponseCommon.writeOaiPmhClose(writer, request);
+            } finally {
+                dbconn.commit();
             }
-
-            // Build the xml response feed
-            XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
-            xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
-            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
-
-            ResponseCommon.writeOaiPmhHeader(writer, request, true);
-            writer.writeStartElement("GetRecord");
-
-            ResponseCommon.emitRecord(resultSet, writer, metadataPrefix, false, metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX));
-
-            writer.writeEndElement(); // GetRecord
-            ResponseCommon.writeOaiPmhClose(writer, request);
         }
-    }
-
-    private static PreparedStatement prepareMatchingDocumentStatement(Connection dbconn, String id)
-            throws SQLException
-    {
-        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-
-        // Construct the query
-        String selectSQL = "WITH mainquery AS (" +
-                "SELECT id, data, collection, modified, deleted, data#>>'{@graph,1,heldBy,@id}' AS sigel FROM " +
-                tableName + " WHERE id = ? AND collection <> 'definitions'), " +
-                "heldBy AS (" +
-                "WITH subq AS (SELECT data#>>'{@graph,1,itemOf,@id}' AS itemOf, data#>>'{@graph,1,heldBy,@id}' AS sigel FROM lddb) " +
-                "SELECT * FROM subq JOIN lddb__identifiers ON subq.itemOf = lddb__identifiers.iri " +
-                "), " +
-                "concatenated AS (" +
-                "SELECT mainquery.id, string_agg(heldBy.sigel, ',') AS sigel_list FROM mainquery JOIN heldBy ON mainquery.id = heldBy.id GROUP BY mainquery.id) " +
-                "SELECT * FROM mainquery LEFT JOIN concatenated ON mainquery.id = concatenated.id";
-        PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
-        preparedStatement.setString(1, id);
-
-        return preparedStatement;
     }
 }

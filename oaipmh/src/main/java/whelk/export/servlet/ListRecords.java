@@ -85,7 +85,7 @@ public class ListRecords
         try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection())
         {
             dbconn.setAutoCommit(false);
-            try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec);
+            try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec, null);
                  ResultSet resultSet = preparedStatement.executeQuery())
             {
                 respond(request, response, metadataPrefix, onlyIdentifiers,
