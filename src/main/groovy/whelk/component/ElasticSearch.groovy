@@ -104,7 +104,8 @@ class ElasticSearch {
         Map shapedData = getShapeForIndex(doc, whelk)
         def body = new NStringEntity(JsonOutput.toJson(shapedData), ContentType.APPLICATION_JSON)
         def response = performRequest('PUT',
-                "/${indexName}/${collection}/${toElasticId(doc.getShortId())}",
+                "/${indexName}/${collection}" +
+                "/${toElasticId(doc.getShortId())}?refresh=wait_for",
                 body)
         def eString = EntityUtils.toString(response.getEntity())
         Map responseMap = mapper.readValue(eString, Map)
@@ -114,10 +115,10 @@ class ElasticSearch {
     void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
-        log.warn dsl.inspect()
         def query = new NStringEntity(JsonOutput.toJson(dsl), ContentType.APPLICATION_JSON)
         def response = performRequest('POST',
-                "/${indexName}/_delete_by_query?conflicts=proceed",
+                "/${indexName}/_delete_by_query" +
+                "?conflicts=proceed&refresh=wait_for",
                 query)
         def eString = EntityUtils.toString(response.getEntity())
         Map responseMap = mapper.readValue(eString, Map)
