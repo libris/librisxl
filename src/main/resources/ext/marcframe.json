@@ -737,11 +737,13 @@
 
     "006": {
       "TODO:tokenSyncedWith": "typeOfRecord",
-      "TODO": "Decide if 006 always is hasPart (Work)",
       "TODO:repeats": "008",
-      "aboutEntity": "?instance",
-      "addLink": "marc:hasAspect",
+      "TODO": "Decide if 006 always is hasPart (Work)",
+      "TODO:aboutEntity": "?instance",
+      "TODO:addLink": "marc:hasAspect",
       "TODO:pendingResources": {"_:aspectWork":{"link": "instanceOf"}},
+      "aboutEntity": "?work",
+      "addLink": "hasPart",
       "[0:1]": {
         "tokenMap": {
           "a": "Text",
@@ -820,7 +822,6 @@
           "tokenMap": "BooksContentsType"
         },
         "[11:12]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
@@ -842,13 +843,11 @@
           "fixedDefault": "0"
         },
         "[16:17]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "BooksLiteraryFormType"
         },
         "[17:18]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "BooksBiographyType"
@@ -856,7 +855,6 @@
       },
       "Audio": {
         "[1:3]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicCompositionType"
@@ -918,13 +916,11 @@
           "tokenMap": "MusicMatterType"
         },
         "[13:14]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicTextType"
         },
         "[14:15]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicTextType"
@@ -937,6 +933,7 @@
       },
       "Cartography": {
         "[1:2]": {
+          "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes from 255?",
           "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
@@ -967,7 +964,6 @@
           "tokenMap": "MapsMaterialType"
         },
         "[11:12]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
@@ -1012,7 +1008,6 @@
           "tokenMap": "AudienceType"
         },
         "[11:12]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
@@ -1080,7 +1075,6 @@
           "tokenMap": "ComputerTypeOfFileType"
         },
         "[11:12]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
@@ -1133,31 +1127,26 @@
           "tokenMap": "ItemType"
         },
         "[7:8]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsNatureType"
         },
         "[8:9]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[9:10]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[10:11]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[11:12]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
@@ -1209,7 +1198,6 @@
       "tokenTypeMap": "[0:1]",
       "Map": {
         "[1:2]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MapMaterialType"
@@ -1309,7 +1297,6 @@
       },
       "Globe": {
         "[1:2]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GlobeMaterialType"
@@ -1487,7 +1474,6 @@
       },
       "StillImage": {
         "[1:2]": {
-          "TODO:genreForm": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "addLink": "genreForm",
           "uriTemplate": "{_}",
           "TODO:tokenMap": "Rename the uri:s of NonProjMaterialType (n and v) to not only contain the code",
@@ -1932,7 +1918,7 @@
           "tokenMap": "AudienceType"
         },
         "[23:24]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
+          "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "BooksItemType"
@@ -1963,7 +1949,6 @@
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
@@ -1988,14 +1973,12 @@
         },
         "[33:34]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "BooksLiteraryFormType"
         },
         "[34:35]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "BooksBiographyType"
@@ -2009,24 +1992,34 @@
           "tokenMap": "AudienceType"
         },
         "[23:24]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
+          "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerItemType"
         },
         "[26:27]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerTypeOfFileType"
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
+        },
+        "[18:19]": {
+          "TODO:ignore": true,
+          "link": "marc:frequencyCategory",
+          "uriTemplate": "{_}",
+          "tokenMap": "ComputerFrequencyType"
+        },
+        "[19:20]": {
+          "TODO:ignore": true,
+          "link": "marc:regularity",
+          "uriTemplate": "{_}",
+          "tokenMap": "ComputerRegularityType"
         }
       },
       "Cartography": {
@@ -2063,13 +2056,11 @@
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
         "[29:30]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
           "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
@@ -2085,11 +2076,24 @@
           "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "MapsFormatType"
+        },
+        "[34:35]": {
+          "TODO:ignore": true,
+          "aboutEntity": "?work",
+          "link": "additionalType",
+          "uriTemplate": "{_}",
+          "tokenMap": "MapsFormatType"
+        },
+        "[24:25]": {
+          "TODO:ignore": true,
+          "link": "marc:primeMeridian",
+          "uriTemplate": "{_}",
+          "tokenMap": "MapsPrimeMeridianType"
         }
       },
       "Mixed": {
         "[23:24]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
+          "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
@@ -2098,7 +2102,6 @@
       "Audio": {
         "[18:20]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicCompositionType"
@@ -2122,7 +2125,6 @@
           "tokenMap": "AudienceType"
         },
         "[23:24]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
           "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
@@ -2165,14 +2167,12 @@
         },
         "[30:31]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicTextType"
         },
         "[31:32]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicTextType"
@@ -2196,9 +2196,14 @@
           "uriTemplate": "{_}",
           "tokenMap": "SerialsRegularityType"
         },
+        "[20:21]": {
+          "TODO:ignore": true,
+          "link": "marc:issn",
+          "uriTemplate": "{_}",
+          "tokenMap": "SerialsISSNType"
+        },
         "[21:22]": {
           "aboutEntity": "?work",
-          "TODO:genreForm": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "TODO": "Decide if it should be Work or Instance",
           "addLink": "genreForm",
           "uriTemplate": "{_}",
@@ -2210,45 +2215,43 @@
           "tokenMap": "SerialsOriginalItemType"
         },
         "[23:24]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
           "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
         },
         "[24:25]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsNatureType"
         },
         "[25:26]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[26:27]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[27:28]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
-          "tokenMap": "GovernmentPublicationType"
+          "tokenMap": "GovernmentPublicationType",
+          "TODO": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values",
+          "TODO:uriTemplate": "marc:GovernmentPublicationType-{_}",
+          "TODO:resourceType": "GovernmentPublicationType",
+          "TODO:property": "code"
         },
         "[29:30]": {
           "aboutEntity": "?work",
@@ -2280,20 +2283,17 @@
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
         "[29:30]": {
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general carrier",
           "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
         },
         "[33:34]": {
           "aboutEntity": "?work",
-          "TODO": "Ensure that the reconverting are able to handle mapping to the more general genreForm",
           "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMaterialType"
@@ -2302,6 +2302,36 @@
           "link": "marc:technique",
           "uriTemplate": "{_}",
           "tokenMap": "VisualTechniqueType"
+        },
+        "[23:24]": {
+          "TODO:ignore": true,
+          "link": "marc:matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "VisualMatterType"
+        },
+        "[24:25]": {
+          "TODO:ignore": true,
+          "link": "marc:matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "VisualMatterType"
+        },
+        "[25:26]": {
+          "TODO:ignore": true,
+          "link": "marc:matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "VisualMatterType"
+        },
+        "[26:27]": {
+          "TODO:ignore": true,
+          "link": "marc:matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "VisualMatterType"
+        },
+        "[27:28]": {
+          "TODO:ignore": true,
+          "link": "marc:matter",
+          "uriTemplate": "{_}",
+          "tokenMap": "VisualMatterType"
         }
       },
       "repeatable": false,
