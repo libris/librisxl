@@ -221,7 +221,7 @@ class ImporterMain {
         ImportResult importResult = importer.doImport('auth', 'vcopy', connUrl, extraAuthIds as String[])
         println "Created ${importResult?.numberOfDocuments} documents from linked authority records"
 
-        def extraBibIds = getExtraHoldIds(connUrl,bibIds, collection)
+        def extraBibIds = getExtraHoldIds(connUrl,bibIds)
         println "Found ${extraBibIds.count {it}} linked holding records from bibliographic records. Importing..."
         importResult = importer.doImport('hold', 'vcopy', connUrl, extraBibIds as String[])
         println "Created ${importResult?.numberOfDocuments} documents from linked holding records"
