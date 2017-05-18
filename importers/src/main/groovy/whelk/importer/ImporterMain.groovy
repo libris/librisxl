@@ -196,10 +196,17 @@ class ImporterMain {
                 .collect { k, v -> [key: k, value: v.collect { it -> it.id }] }
 
         def bibIds = idgroups.find{it->it.key == 'bib'}.value
+
         def extraAuthIds = getExtraAuthIds(connUrl,bibIds)
         println "Found ${extraAuthIds.count {it}} linked authority records from bibliographic records"
         ImportResult importResult = importer.doImport('auth', 'vcopy', connUrl, extraAuthIds as String[])
-        println "Created ${importResult?.numberOfDocuments} documents från  linked authority records"
+        println "Created ${importResult?.numberOfDocuments} documents from linked authority records"
+
+        def extraBibIds = getExtraBibIds(connUrl,bibIds)
+        println "Found ${extraBibIds.count {it}} linked holding records from bibliographic records"
+        importResult = importer.doImport('hold', 'vcopy', connUrl, extraBibIds as String[])
+        println "Created ${importResult?.numberOfDocuments} documents from linked holding records"
+
         idgroups.each { group ->
             importResult = importer.doImport(group.key, 'vcopy', connUrl, group.value as String[])
             println "Created ${importResult?.numberOfDocuments} documents from  ${group.key}."
@@ -215,6 +222,14 @@ class ImporterMain {
         def rows = sql.rows(sqlQuery,bibIds)
         return rows.collect {it->it.auth_id}
     }
+
+    static List<String> getExtraBibIds(String connUrl, List<String> bibIds){
+        String sqlQuery = 'SELECT mfhd_id FROM mfhd_record WHERE mfhd_record.bib_id IN (?) AND deleted = 0'.replace('?',bibIds.collect{it->'?'}.join(','))
+        def sql = Sql.newInstance(connUrl, "com.mysql.jdbc.Driver")
+        def rows = sql.rows(sqlQuery,bibIds)
+        return rows.collect {it->it.mfhd_id}
+    }
+
 
     @Command(args='COLLECTION')
     void linkfind(String collection) {
