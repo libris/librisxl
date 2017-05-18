@@ -56,6 +56,10 @@ class ImporterMain {
 
     @Command(args='TO_FILE_NAME COLLECTION DATA_SELECTION_TSVFILE')
     void vcopydumptestdata(String toFileName, String collection, String exampleDataFileName) {
+        if(collection =="bib"){
+            List vcopyIdsToImport = PostgresLoadfileWriter.collectIDsFromExampleFile(exampleDataFileName, collection)
+            importLinkedRecords(vcopyIdsToImport)
+        }
         def connUrl = props.getProperty("mysqlConnectionUrl")
         PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, exampleDataFileName, pico.getComponent(PostgreSQLComponent))
     }
@@ -197,15 +201,7 @@ class ImporterMain {
 
         def bibIds = idgroups.find{it->it.key == 'bib'}.value
 
-        def extraAuthIds = getExtraAuthIds(connUrl,bibIds)
-        println "Found ${extraAuthIds.count {it}} linked authority records from bibliographic records"
-        ImportResult importResult = importer.doImport('auth', 'vcopy', connUrl, extraAuthIds as String[])
-        println "Created ${importResult?.numberOfDocuments} documents from linked authority records"
-
-        def extraBibIds = getExtraBibIds(connUrl,bibIds)
-        println "Found ${extraBibIds.count {it}} linked holding records from bibliographic records"
-        importResult = importer.doImport('hold', 'vcopy', connUrl, extraBibIds as String[])
-        println "Created ${importResult?.numberOfDocuments} documents from linked holding records"
+        importLinkedRecords(bibIds)
 
         idgroups.each { group ->
             importResult = importer.doImport(group.key, 'vcopy', connUrl, group.value as String[])
@@ -216,6 +212,21 @@ class ImporterMain {
         println "All done importing example data."
     }
 
+    def importLinkedRecords(List<String> bibIds) {
+        def connUrl = props.getProperty("mysqlConnectionUrl")
+        def importer = pico.getComponent(VCopyImporter)
+
+        def extraAuthIds = getExtraAuthIds(connUrl,bibIds)
+        println "Found ${extraAuthIds.count {it}} linked authority records from bibliographic records. Importing..."
+        ImportResult importResult = importer.doImport('auth', 'vcopy', connUrl, extraAuthIds as String[])
+        println "Created ${importResult?.numberOfDocuments} documents from linked authority records"
+
+        def extraBibIds = getExtraHoldIds(connUrl,bibIds, collection)
+        println "Found ${extraBibIds.count {it}} linked holding records from bibliographic records. Importing..."
+        importResult = importer.doImport('hold', 'vcopy', connUrl, extraBibIds as String[])
+        println "Created ${importResult?.numberOfDocuments} documents from linked holding records"
+    }
+
     static List<String> getExtraAuthIds(String connUrl, List<String> bibIds){
         String sqlQuery = 'SELECT bib_id, auth_id FROM auth_bib WHERE bib_id IN (?)'.replace('?',bibIds.collect{it->'?'}.join(','))
         def sql = Sql.newInstance(connUrl, "com.mysql.jdbc.Driver")
@@ -223,7 +234,7 @@ class ImporterMain {
         return rows.collect {it->it.auth_id}
     }
 
-    static List<String> getExtraBibIds(String connUrl, List<String> bibIds){
+    static List<String> getExtraHoldIds(String connUrl, List<String> bibIds){
         String sqlQuery = 'SELECT mfhd_id FROM mfhd_record WHERE mfhd_record.bib_id IN (?) AND deleted = 0'.replace('?',bibIds.collect{it->'?'}.join(','))
         def sql = Sql.newInstance(connUrl, "com.mysql.jdbc.Driver")
         def rows = sql.rows(sqlQuery,bibIds)
