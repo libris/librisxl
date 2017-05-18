@@ -141,7 +141,8 @@ if [ "$RECREATE_DB" = true ]; then
 
     curl -XDELETE http://$ESHOST:9200/$ESINDEX
     curl -XPUT http://$ESHOST:9200/$ESINDEX \
-         -d@$TOOLDIR/elasticsearch/libris_config.json
+         -d@$TOOLDIR/elasticsearch/libris_config.json \
+         --header "Content-Type: application/json"
 
     echo ""
     echo ""
