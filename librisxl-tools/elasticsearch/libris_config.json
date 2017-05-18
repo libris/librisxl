@@ -130,7 +130,7 @@
                         "mapping": {
                             "fields": {
                                 "notation": {
-                                    "index": "analyzed",
+                                    "index": true,
                                     "type": "text"
                                 },
                                 "raw": {
@@ -153,7 +153,7 @@
                                     "type": "keyword"
                                 },
                                 "{name}": {
-                                    "index": "analyzed",
+                                    "index": true,
                                     "type": "text",
                                     "boost": 50
                                 }
@@ -174,7 +174,7 @@
                                 }
                             },
                             "type": "text",
-                            "index": "analyzed",
+                            "index": true,
                             "boost": 50
                         },
                         "match": "label",
@@ -190,7 +190,7 @@
                                     "type": "keyword"
                                 },
                                 "{name}": {
-                                    "index": "analyzed",
+                                    "index": true,
                                     "type": "text"
                                 }
                             },
@@ -209,7 +209,7 @@
                                     "type": "keyword"
                                 },
                                 "{name}": {
-                                    "index": "analyzed",
+                                    "index": true,
                                     "type": "text",
                                     "boost": 50
                                 }
@@ -229,7 +229,7 @@
                                     "type": "keyword"
                                 },
                                 "{name}": {
-                                    "index": "analyzed",
+                                    "index": true,
                                     "type": "text",
                                     "boost": 50
                                 }
@@ -249,7 +249,7 @@
                                     "type": "keyword"
                                 },
                                 "{name}": {
-                                    "index": "analyzed",
+                                    "index": true,
                                     "type": "text",
                                     "boost": 50
                                 }
