@@ -206,7 +206,7 @@ class ImporterMain {
         importLinkedRecords(bibIds)
 
         idgroups.each { group ->
-            def importResult = importer.doImport(group.key, 'vcopy', connUrl, group.value as String[])
+            ImportResult importResult = importer.doImport(group.key, 'vcopy', connUrl, group.value as String[])
             println "Created ${importResult?.numberOfDocuments} documents from  ${group.key}."
         }
 
