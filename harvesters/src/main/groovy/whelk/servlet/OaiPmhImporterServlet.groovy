@@ -6,7 +6,6 @@ import org.picocontainer.Characteristics
 import org.picocontainer.PicoContainer
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
-import whelk.component.Storage
 import whelk.converter.marc.MarcFrameConverter
 import whelk.harvester.CullingOaiPmhHarvester
 import whelk.harvester.HarvestResult
@@ -166,7 +165,7 @@ class OaiPmhImporterServlet extends HttpServlet {
 
     void init() {
         log.info("Initializing OAIPMH harvester.")
-        Storage storage = pico.getComponent(PostgreSQLComponent.class)
+        PostgreSQLComponent storage = pico.getComponent(PostgreSQLComponent.class)
         List services = props.scheduledServices.split(",")
 
         ScheduledExecutorService ses = Executors.newScheduledThreadPool(services.size())
