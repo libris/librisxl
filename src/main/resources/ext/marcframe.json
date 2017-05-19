@@ -3085,7 +3085,7 @@
       "TODO": "See also 100$t and 130.",
       "embedded": true,
       "link": "hasTitle",
-      "resourceType": "WorkTitle",
+      "resourceType": "Title",
       "$a": {"property": "mainTitle"},
       "$0": {
         "aboutEntity": "?work",
@@ -3099,7 +3099,7 @@
       "aboutEntity": "?thing",
       "addLink": "marc:hasTranslatedTitle",
       "embedded": true,
-      "resourceType": "InstanceTitle",
+      "resourceType": "Title",
       "$c": {"property": "responsibilityStatement"},
       "$h": {"property": "marc:mediaTerm"},
       "$y": {"link": "language", "property": "code"},
@@ -3119,7 +3119,7 @@
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
       "embedded": true,
-      "resourceType": "InstanceTitle",
+      "resourceType": "Title",
       "i2": {"marcDefault": "0"},
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
@@ -3136,7 +3136,7 @@
               {"a": "Anteckningar från en ö"}
           ]}},
           "result": {"mainEntity": {
-            "hasTitle": [ {"@type": "InstanceTitle",
+            "hasTitle": [ {"@type": "Title",
               "mainTitle":  "Anteckningar från en ö"
             } ]
           }}
@@ -3148,7 +3148,7 @@
               {"c": "Tove Jansson, Tuulikki Pietilä"}
           ]}},
           "result": {"mainEntity": {
-            "hasTitle": [ {"@type": "InstanceTitle",
+            "hasTitle": [ {"@type": "Title",
               "mainTitle":  "Anteckningar från en ö",
               "marc:searchElement": false
             } ],
@@ -3205,7 +3205,7 @@
       "aboutEntity": "?thing",
       "addLink": "marc:previousTitle",
       "embedded": true,
-      "resourceType": "InstanceTitle",
+      "resourceType": "Title",
       "i1": {
         "property": "marc:isAddedEntry",
         "tokenMap": {"1": true},
