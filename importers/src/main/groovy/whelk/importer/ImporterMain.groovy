@@ -56,10 +56,10 @@ class ImporterMain {
 
     @Command(args='TO_FILE_NAME COLLECTION DATA_SELECTION_TSVFILE')
     void vcopydumptestdata(String toFileName, String collection, String exampleDataFileName) {
-        if(collection =="bib"){
+        /*if(collection =="bib"){
             List vcopyIdsToImport = PostgresLoadfileWriter.collectIDsFromExampleFile(exampleDataFileName, collection)
             importLinkedRecords(vcopyIdsToImport)
-        }
+        }*/
         def connUrl = props.getProperty("mysqlConnectionUrl")
         PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, exampleDataFileName, pico.getComponent(PostgreSQLComponent))
     }
