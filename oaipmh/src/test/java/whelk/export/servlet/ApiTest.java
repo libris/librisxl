@@ -69,7 +69,6 @@ public class ApiTest
 
         Assert.assertTrue(records.contains("Johannes de Hesse"));
         Assert.assertTrue(records.contains("Trippelkonserten"));
-        Assert.assertTrue(records.contains("Trippelkonserten"));
     }
 
     @Test
