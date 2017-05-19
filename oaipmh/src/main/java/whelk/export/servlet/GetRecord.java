@@ -73,6 +73,12 @@ public class GetRecord
             if (resultSet.next())
                 id = resultSet.getString("id");
         }
+        if (id == null)
+        {
+            failedRequests.labels(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
+            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
+            return;
+        }
 
         try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection())
         {
