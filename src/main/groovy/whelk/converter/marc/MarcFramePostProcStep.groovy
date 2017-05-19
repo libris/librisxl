@@ -1,7 +1,7 @@
 package whelk.converter.marc
 
 import java.util.regex.Pattern
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 
 interface MarcFramePostProcStep {
     def ID = '@id'

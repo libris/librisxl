@@ -6,7 +6,7 @@ import java.util.zip.CRC32
 
 import com.damnhandy.uri.template.UriTemplate
 
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 
 
 @Log
