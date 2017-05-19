@@ -1,7 +1,7 @@
 package whelk.actors
 
 
-import groovy.util.logging.Slf4j
+import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.util.VCopyToWhelkConverter
 import whelk.component.PostgreSQLComponent
@@ -17,7 +17,7 @@ import java.nio.file.Paths
 /**
  * Created by theodortolstoy on 2017-01-24.
  */
-@Slf4j
+@Log
 class FileDumper implements MySQLLoader.LoadHandler {
 
     BufferedWriter mainTableWriter

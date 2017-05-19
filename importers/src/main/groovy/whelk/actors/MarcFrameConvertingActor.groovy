@@ -1,6 +1,6 @@
 package whelk.actors
 
-import groovy.util.logging.Slf4j
+import groovy.util.logging.Log4j2 as Log
 import groovyx.gpars.actor.DefaultActor
 import whelk.converter.marc.MarcFrameConverter
 
@@ -8,7 +8,7 @@ import whelk.converter.marc.MarcFrameConverter
  * Created by Theodor on 2017-01-21.
  * Actor that hosts a MarcFrameConverter for future (and past) experiments with parallelism
  */
-@Slf4j
+@Log
 class MarcFrameConvertingActor extends DefaultActor {
     MarcFrameConverter marcFrameConverter
 
