@@ -3163,7 +3163,7 @@
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
       "embedded": true,
-      "NOTE:default:resourceType": "VariantTitle",
+      "resourceType": "VariantTitle",
       "i1": {
         "property": "marc:searchControl",
         "tokenMap": {
@@ -3180,8 +3180,8 @@
         "tokenMap": {
           "0": "marc:TitlePart",
           "1": "ParallelTitle",
-          "2": "VariantTitle",
-          "3": "marc:AlsoTitle",
+          "2": "marc:DistinctiveTitle",
+          "3": "marc:OtherTitle",
           "4": "CoverTitle",
           "5": "TitlePage",
           "6": "HeadingTitle",
