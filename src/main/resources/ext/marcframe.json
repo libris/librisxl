@@ -738,6 +738,10 @@
     "006": {
       "TODO:tokenSyncedWith": "typeOfRecord",
       "TODO:repeats": "008",
+      "TODO": "Decide if 006 always is hasPart (Work)",
+      "TODO:aboutEntity": "?instance",
+      "TODO:addLink": "marc:hasAspect",
+      "TODO:pendingResources": {"_:aspectWork":{"link": "instanceOf"}},
       "aboutEntity": "?work",
       "addLink": "hasPart",
       "[0:1]": {
@@ -758,32 +762,37 @@
           "p": "Mixed",
           "s": "Serial"
         },
+        "TODO:about": "_:aspectWork",
         "property": "@type"
       },
       "tokenTypeMap": "[0:1]",
       "Text": {
         "[1:2]": {
-          "link": "marc:illustrations",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[2:3]": {
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[3:4]": {
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[4:5]": {
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[5:6]": {
-          "link": "audience",
+          "TODO:about": "_:aspectWork",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
@@ -813,7 +822,7 @@
           "tokenMap": "BooksContentsType"
         },
         "[11:12]": {
-          "link": "marc:govtPub",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -834,24 +843,24 @@
           "fixedDefault": "0"
         },
         "[16:17]": {
-          "link": "marc:literaryForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "BooksLiteraryFormType"
         },
         "[17:18]": {
-          "link": "marc:biography",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "BooksBiographyType"
         }
       },
       "Audio": {
         "[1:3]": {
-          "link": "marc:composition",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicCompositionType"
         },
         "[3:4]": {
-          "link": "additionalType",
+          "link": "musicFormat",
           "uriTemplate": "{_}",
           "tokenMap": "MusicFormatType"
         },
@@ -861,7 +870,7 @@
           "tokenMap": "MusicPartsType"
         },
         "[5:6]": {
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
@@ -871,42 +880,48 @@
           "tokenMap": "ItemType"
         },
         "[7:8]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[8:9]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[9:10]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[10:11]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[11:12]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[12:13]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[13:14]": {
-          "link": "marc:text",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicTextType"
         },
         "[14:15]": {
-          "link": "marc:text",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicTextType"
         },
@@ -918,27 +933,28 @@
       },
       "Cartography": {
         "[1:2]": {
-          "link": "marc:relief",
+          "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes from 255?",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[2:3]": {
-          "link": "marc:relief",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[3:4]": {
-          "link": "marc:relief",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[4:5]": {
-          "link": "marc:relief",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[5:7]": {
-          "link": "marc:projection",
+          "link": "projection",
           "uriTemplate": "{_}",
           "tokenMap": "MapsProjectionType"
         },
@@ -948,7 +964,7 @@
           "tokenMap": "MapsMaterialType"
         },
         "[11:12]": {
-          "link": "marc:govtPub",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -969,11 +985,13 @@
           "tokenMap": "MapsFormatType"
         },
         "[17:18]": {
+          "TODO:ignore": "Not used in 008",
           "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "MapsFormatType"
         },
         "[7:8]": {
+          "TODO:ignore": "Not used in 008",
           "link": "marc:primeMeridian",
           "uriTemplate": "{_}",
           "tokenMap": "MapsPrimeMeridianType"
@@ -985,12 +1003,12 @@
           "TODO:patternMap": "VisualRunningTimeType"
         },
         "[5:6]": {
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
         "[11:12]": {
-          "link": "marc:govtPub",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -1010,26 +1028,31 @@
           "tokenMap": "VisualTechniqueType"
         },
         "[6:7]": {
+          "TODO:ignore": "Not used in 008",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[7:8]": {
+          "TODO:ignore": "Not used in 008",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[8:9]": {
+          "TODO:ignore": "Not used in 008",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[9:10]": {
+          "TODO:ignore": "Not used in 008",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[10:11]": {
+          "TODO:ignore": "Not used in 008",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
@@ -1037,7 +1060,7 @@
       },
       "Digital": {
         "[5:6]": {
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
@@ -1052,7 +1075,7 @@
           "tokenMap": "ComputerTypeOfFileType"
         },
         "[11:12]": {
-          "link": "marc:govtPub",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         }
@@ -1071,16 +1094,19 @@
       },
       "Serial": {
         "[1:2]": {
-          "link": "marc:frequencyCategory",
+          "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
+          "link": "frequency",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsFrequencyType"
         },
         "[2:3]": {
-          "link": "marc:regularity",
+          "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
+          "link": "frequency",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsRegularityType"
         },
         "[3:4]": {
+          "TODO:ignore": "Not used in 008. Should we remove this mapping as well?",
           "link": "marc:issn",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsISSNType"
@@ -1101,27 +1127,27 @@
           "tokenMap": "ItemType"
         },
         "[7:8]": {
-          "link": "marc:nature",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsNatureType"
         },
         "[8:9]": {
-          "link": "marc:contents",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[9:10]": {
-          "link": "marc:contents",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[10:11]": {
-          "link": "marc:contents",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[11:12]": {
-          "link": "marc:govtPub",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -1172,17 +1198,18 @@
       "tokenTypeMap": "[0:1]",
       "Map": {
         "[1:2]": {
-          "addLink": "carrierType",
+          "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MapMaterialType"
         },
         "[3:4]": {
-          "link": "marc:color",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "MapColorType"
         },
         "[4:5]": {
-          "link": "marc:medium",
+          "link": "baseMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "MapMediumType"
         },
@@ -1202,6 +1229,7 @@
           "tokenMap": "PolarityType"
         },
         "[2:3]": {
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:aspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1215,17 +1243,18 @@
           "tokenMap": "ComputerMaterialType"
         },
         "[3:4]": {
-          "link": "marc:color",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerColorType"
         },
         "[4:5]": {
-          "link": "marc:dimensionsCategory",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerDimensionsType"
         },
         "[5:6]": {
-          "link": "marc:sound",
+          "link": "soundContent",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerSoundType"
         },
@@ -1259,6 +1288,7 @@
           "tokenMap": "ComputerReformattingQualityType"
         },
         "[2:3]": {
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:fileAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1267,17 +1297,18 @@
       },
       "Globe": {
         "[1:2]": {
-          "addLink": "carrierType",
+          "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GlobeMaterialType"
         },
         "[3:4]": {
-          "link": "marc:color",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "MapColorType"
         },
         "[4:5]": {
-          "link": "marc:medium",
+          "link": "baseMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "GlobeMediumType"
         },
@@ -1287,6 +1318,7 @@
           "tokenMap": "ReproductionType"
         },
         "[2:3]": {
+          "TODO:ignore": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:aspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1295,44 +1327,53 @@
       },
       "TactileMaterial": {
         "[1:2]": {
-          "addLink": "carrierType",
+          "TODO:layout": "Also more general mapping? Ensure that reconverting are able to handle this",
+          "addLink": "layout",
           "uriTemplate": "{_}",
           "tokenMap": "TacMaterialType"
         },
         "[3:4]": {
-          "link": "marc:tacBrailleWriting",
+          "link": "layout",
           "uriTemplate": "{_}",
           "tokenMap": "TacBrailleWritingType"
         },
         "[4:5]": {
-          "link": "marc:tacBrailleWriting",
+          "link": "layout",
           "uriTemplate": "{_}",
           "tokenMap": "TacBrailleWritingType"
         },
         "[5:6]": {
-          "link": "marc:tacContraction",
+          "link": "layout",
           "uriTemplate": "{_}",
           "tokenMap": "TacContractionType"
         },
         "[6:7]": {
-          "link": "marc:tacBrailleMusic",
+          "link": "notation",
           "uriTemplate": "{_}",
-          "tokenMap": "TacBrailleMusicType"
+          "tokenMap": "TacBrailleMusicType",
+          "resourceType": "MusicNotation",
+          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[7:8]": {
-          "link": "marc:tacBrailleMusic",
+          "link": "notation",
           "uriTemplate": "{_}",
-          "tokenMap": "TacBrailleMusicType"
+          "tokenMap": "TacBrailleMusicType",
+          "resourceType": "MusicNotation",
+          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[8:9]": {
-          "link": "marc:tacBrailleMusic",
+          "link": "notation",
           "uriTemplate": "{_}",
-          "tokenMap": "TacBrailleMusicType"
+          "tokenMap": "TacBrailleMusicType",
+          "resourceType": "MusicNotation",
+          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[9:10]": {
-          "link": "marc:tacSpecPhysicalChar",
+          "link": "notation",
           "uriTemplate": "{_}",
-          "tokenMap": "TacSpecPhysicalCharType"
+          "tokenMap": "TacSpecPhysicalCharType",
+          "resourceType": "TactileNotation",
+          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         }
       },
       "ProjectedImage": {
@@ -1342,36 +1383,40 @@
           "tokenMap": "ProjGraphMaterialType"
         },
         "[3:4]": {
-          "link": "marc:projGraphColor",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "ColorType"
         },
         "[4:5]": {
-          "link": "marc:projGraphEmulsion",
+          "link": "baseMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "ProjGraphEmulsionType"
         },
         "[5:6]": {
-          "link": "marc:projGraphSound",
+          "link": "soundContent",
           "uriTemplate": "{_}",
           "tokenMap": "SoundType"
         },
         "[6:7]": {
-          "link": "marc:projGraphMedium",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "MediumType"
+          "tokenMap": "MediumType",
+          "resourceType": "RecordingMedium",
+          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[7:8]": {
-          "link": "marc:projGraphDimensions",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "ProjGraphDimensionsType"
         },
         "[8:9]": {
-          "link": "marc:projGraphSupport",
+          "link": "mount",
           "uriTemplate": "{_}",
           "tokenMap": "ProjGraphSupportType"
         },
         "[2:3]": {
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:projGraphAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1385,17 +1430,17 @@
           "tokenMap": "MicroformMaterialType"
         },
         "[3:4]": {
-          "link": "marc:posNeg",
+          "link": "polarity",
           "uriTemplate": "{_}",
           "tokenMap": "PolarityType"
         },
         "[4:5]": {
-          "link": "marc:dimensionsCategory",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "MicroformDimensionsType"
         },
         "[5:6]": {
-          "link": "marc:range",
+          "link": "reductionRatio",
           "uriTemplate": "{_}",
           "tokenMap": "MicroformRangeType"
         },
@@ -1404,26 +1449,28 @@
           "parseZeroPaddedNumber": true
         },
         "[9:10]": {
-          "link": "marc:color",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "MicroformColorType"
         },
         "[10:11]": {
-          "link": "marc:emulsion",
+          "link": "emulsion",
           "uriTemplate": "{_}",
           "tokenMap": "MicroformEmulsionType"
         },
         "[11:12]": {
-          "link": "marc:generation",
+          "link": "generation",
           "uriTemplate": "{_}",
           "tokenMap": "MicroformGenerationType"
         },
         "[12:13]": {
-          "link": "marc:base",
+          "link": "baseMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "FilmBaseType"
         },
         "[2:3]": {
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:aspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1432,26 +1479,29 @@
       },
       "StillImage": {
         "[1:2]": {
-          "addLink": "carrierType",
+          "addLink": "genreForm",
           "uriTemplate": "{_}",
+          "TODO:tokenMap": "Rename the uri:s of NonProjMaterialType (n and v) to not only contain the code",
           "tokenMap": "NonProjMaterialType"
         },
         "[3:4]": {
-          "link": "marc:nonProjColor",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "ColorType"
         },
         "[4:5]": {
-          "link": "marc:nonProjPrimary",
+          "link": "baseMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "NonProjectedType"
         },
         "[5:6]": {
-          "link": "marc:nonProjSecondary",
+          "link": "mount",
           "uriTemplate": "{_}",
           "tokenMap": "NonProjectedType"
         },
         "[2:3]": {
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:nonProjAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1605,61 +1655,76 @@
           "tokenMap": "SoundMaterialType"
         },
         "[3:4]": {
-          "link": "marc:soundSpeed",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "SoundSpeedType"
+          "tokenMap": "SoundSpeedType",
+          "resourceType": "PlayingSpeed",
+          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[4:5]": {
-          "link": "marc:soundPlaybackChannel",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "SoundPlaybackChannelType"
+          "tokenMap": "SoundPlaybackChannelType",
+          "resourceType": "PlaybackChannels",
+          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[5:6]": {
-          "link": "marc:soundGroove",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "SoundGrooveType"
+          "tokenMap": "SoundGrooveType",
+          "resourceType": "GrooveCharacteristic",
+          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[6:7]": {
-          "link": "marc:soundDimensions",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "SoundDimensionsType"
         },
         "[7:8]": {
-          "link": "marc:soundTapeWidth",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "SoundTapeWidthType"
         },
         "[8:9]": {
-          "link": "marc:soundTapeConfiguration",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "SoundTapeConfigurationType"
+          "tokenMap": "SoundTapeConfigurationType",
+          "resourceType": "TapeConfig",
+          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[9:10]": {
-          "link": "marc:soundKindOfDisc",
+          "link": "generation",
           "uriTemplate": "{_}",
           "tokenMap": "SoundKindOfDiscType"
         },
         "[10:11]": {
+          "TODO": "Depending on value of tokenMap, map to appliedMaterial or baseMaterial?",
           "link": "marc:soundKindOfMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "SoundKindOfMaterialType"
         },
         "[11:12]": {
-          "link": "marc:soundKindOfCutting",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "SoundKindOfCuttingType"
+          "tokenMap": "SoundKindOfCuttingType",
+          "resourceType": "GrooveCharacteristic",
+          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[12:13]": {
-          "link": "marc:soundPlaybackCharacter",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "SoundPlaybackCharacterType"
+          "tokenMap": "SoundPlaybackCharacterType",
+          "resourceType": "PlaybackCharacteristic",
+          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[13:14]": {
+          "TODO:aboutEntity": "Work or Instance?",
           "link": "marc:soundCapture",
           "uriTemplate": "{_}",
           "tokenMap": "SoundCaptureType"
         },
         "[2:3]": {
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:soundAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1680,34 +1745,38 @@
           "tokenMap": "VideoMaterialType"
         },
         "[3:4]": {
-          "link": "marc:videoColor",
+          "aboutEntity": "?work",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "VideoColorType"
         },
         "[4:5]": {
-          "link": "marc:videoFormat",
+          "link": "videoCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "VideoFormatType"
+          "tokenMap": "VideoFormatType",
+          "resourceType": "VideoFormat"
         },
         "[5:6]": {
-          "link": "marc:videoSound",
+          "link": "soundContent",
           "uriTemplate": "{_}",
           "tokenMap": "SoundType"
         },
         "[6:7]": {
-          "link": "marc:videoMedium",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "MediumType"
+          "tokenMap": "MediumType",
+          "resourceType": "RecordingMedium"
         },
         "[7:8]": {
-          "link": "marc:videoDimensions",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "VideoDimensionsType"
         },
         "[8:9]": {
-          "link": "marc:videoPlayback",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "MotionPicConfigurationOrVideoPlaybackType"
+          "tokenMap": "MotionPicConfigurationOrVideoPlaybackType",
+          "resourceType": "PlaybackChannels"
         }
       },
       "marc:Unspecified": {},
@@ -1719,8 +1788,8 @@
           "result": {
             "mainEntity": {
               "@type": "Map",
-              "carrierType": [{"@id": "marc:MapATwoDimensionalMap"}],
-              "marc:medium": {"@id": "marc:Paper"}
+              "genreForm": [{"@id": "marc:MapATwoDimensionalMap"}],
+              "baseMaterial": {"@id": "marc:Paper"}
             }
           }
         },
@@ -1732,8 +1801,8 @@
           "result": {
             "mainEntity": {
               "@type": "Map",
-              "carrierType": [{"@id": "marc:MapATwoDimensionalMap"}],
-              "marc:medium": {"@id": "marc:Paper"},
+              "genreForm": [{"@id": "marc:MapATwoDimensionalMap"}],
+              "baseMaterial": {"@id": "marc:Paper"},
               "hasPart": [
                 {
                   "@type": "Electronic",
@@ -1830,36 +1899,41 @@
       "Text": {
         "[18:19]": {
           "aboutEntity": "?work",
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[19:20]": {
           "aboutEntity": "?work",
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[20:21]": {
           "aboutEntity": "?work",
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[21:22]": {
           "aboutEntity": "?work",
-          "link": "marc:illustrations",
+          "TODO": "Decide if it is Work or Instance?",
+          "link": "illustrativeContent",
           "uriTemplate": "{_}",
           "tokenMap": "BooksIllustrationsType"
         },
         "[22:23]": {
           "aboutEntity": "?work",
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
         "[23:24]": {
-          "link": "marc:additionalCarrierType",
+          "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "BooksItemType"
         },
@@ -1889,7 +1963,7 @@
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "link": "marc:govtPub",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
@@ -1906,20 +1980,20 @@
           "tokenMap": {"1": true, "0": false}
         },
         "[31:32]": {
-          "link": "marc:index",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "IndexType",
           "fixedDefault": "0"
         },
         "[33:34]": {
           "aboutEntity": "?work",
-          "link": "marc:literaryForm",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "BooksLiteraryFormType"
         },
         "[34:35]": {
           "aboutEntity": "?work",
-          "link": "marc:biography",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "BooksBiographyType"
         }
@@ -1927,33 +2001,36 @@
       "Digital": {
         "[22:23]": {
           "aboutEntity": "?work",
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
         "[23:24]": {
-          "link": "marc:additionalCarrierType",
+          "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerItemType"
         },
         "[26:27]": {
           "aboutEntity": "?work",
-          "addLink": "contentType",
+          "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerTypeOfFileType"
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "link": "marc:govtPub",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
         "[18:19]": {
+          "TODO:ignore": true,
           "link": "marc:frequencyCategory",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerFrequencyType"
         },
         "[19:20]": {
+          "TODO:ignore": true,
           "link": "marc:regularity",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerRegularityType"
@@ -1961,48 +2038,53 @@
       },
       "Cartography": {
         "[18:19]": {
-          "link": "marc:relief",
+          "TODO": "Ensure we group them correctly",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[19:20]": {
-          "link": "marc:relief",
+          "TODO": "Ensure we group them correctly",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[20:21]": {
-          "link": "marc:relief",
+          "TODO": "Ensure we group them correctly",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[21:22]": {
-          "link": "marc:relief",
+          "TODO": "Ensure we group them correctly",
+          "link": "cartographicAttributes",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[22:24]": {
-          "link": "marc:projection",
+          "link": "projection",
           "uriTemplate": "{_}",
           "tokenMap": "MapsProjectionType"
         },
         "[25:26]": {
+          "TODO": "Add condition to 'link': (a|b|c|f|g|z) should be issuance. (d|e) should be genreForm",
           "link": "marc:material",
           "uriTemplate": "{_}",
           "tokenMap": "MapsMaterialType"
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "link": "marc:govtPub",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
         "[29:30]": {
-          "link": "marc:additionalCarrierType",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
         },
         "[31:32]": {
-          "link": "marc:index",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "IndexType",
           "fixedDefault": "0"
@@ -2014,12 +2096,14 @@
           "tokenMap": "MapsFormatType"
         },
         "[34:35]": {
+          "TODO:ignore": true,
           "aboutEntity": "?work",
           "link": "additionalType",
           "uriTemplate": "{_}",
           "tokenMap": "MapsFormatType"
         },
         "[24:25]": {
+          "TODO:ignore": true,
           "link": "marc:primeMeridian",
           "uriTemplate": "{_}",
           "tokenMap": "MapsPrimeMeridianType"
@@ -2027,7 +2111,8 @@
       },
       "Mixed": {
         "[23:24]": {
-          "link": "marc:additionalCarrierType",
+          "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
         }
@@ -2035,13 +2120,13 @@
       "Audio": {
         "[18:20]": {
           "aboutEntity": "?work",
-          "link": "marc:composition",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicCompositionType"
         },
         "[20:21]": {
           "aboutEntity": "?work",
-          "link": "additionalType",
+          "link": "musicFormat",
           "uriTemplate": "{_}",
           "tokenMap": "MusicFormatType"
         },
@@ -2053,52 +2138,60 @@
         },
         "[22:23]": {
           "aboutEntity": "?work",
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
         "[23:24]": {
-          "link": "marc:additionalCarrierType",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
         },
         "[24:25]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance. Compare with Text",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[25:26]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance. Compare with Text",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[26:27]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance. Compare with Text",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[27:28]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance. Compare with Text",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[28:29]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance. Compare with Text",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[29:30]": {
-          "link": "marc:matter",
+          "TODO": "Decide if this should be Work or Instance. Compare with Text",
+          "link": "supplementaryContent",
           "uriTemplate": "{_}",
           "tokenMap": "MusicMatterType"
         },
         "[30:31]": {
-          "link": "marc:text",
+          "aboutEntity": "?work",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicTextType"
         },
         "[31:32]": {
-          "link": "marc:text",
+          "aboutEntity": "?work",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MusicTextType"
         },
@@ -2110,23 +2203,27 @@
       },
       "Serial": {
         "[18:19]": {
-          "link": "marc:frequencyCategory",
+          "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
+          "link": "frequency",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsFrequencyType"
         },
         "[19:20]": {
-          "link": "marc:regularity",
+          "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
+          "link": "frequency",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsRegularityType"
         },
         "[20:21]": {
+          "TODO:ignore": true,
           "link": "marc:issn",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsISSNType"
         },
         "[21:22]": {
           "aboutEntity": "?work",
-          "addLink": "contentType",
+          "TODO": "Decide if it should be Work or Instance",
+          "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsTypeOfSerialType"
         },
@@ -2136,39 +2233,43 @@
           "tokenMap": "SerialsOriginalItemType"
         },
         "[23:24]": {
-          "link": "marc:additionalCarrierType",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
         },
         "[24:25]": {
           "aboutEntity": "?work",
-          "link": "marc:nature",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsNatureType"
         },
         "[25:26]": {
           "aboutEntity": "?work",
-          "link": "marc:contents",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[26:27]": {
           "aboutEntity": "?work",
-          "link": "marc:contents",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[27:28]": {
           "aboutEntity": "?work",
-          "link": "marc:contents",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "SerialsContentsType"
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "link": "marc:govtPub",
+          "link": "genreForm",
           "uriTemplate": "{_}",
-          "tokenMap": "GovernmentPublicationType"
+          "tokenMap": "GovernmentPublicationType",
+          "TODO": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values",
+          "TODO:uriTemplate": "marc:GovernmentPublicationType-{_}",
+          "TODO:resourceType": "GovernmentPublicationType",
+          "TODO:property": "code"
         },
         "[29:30]": {
           "aboutEntity": "?work",
@@ -2194,24 +2295,24 @@
         },
         "[22:23]": {
           "aboutEntity": "?work",
-          "link": "audience",
+          "link": "intendedAudience",
           "uriTemplate": "{_}",
           "tokenMap": "AudienceType"
         },
         "[28:29]": {
           "aboutEntity": "?work",
-          "link": "marc:govtPub",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType"
         },
         "[29:30]": {
-          "link": "marc:additionalCarrierType",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
         },
         "[33:34]": {
           "aboutEntity": "?work",
-          "addLink": "contentType",
+          "addLink": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMaterialType"
         },
@@ -2221,26 +2322,31 @@
           "tokenMap": "VisualTechniqueType"
         },
         "[23:24]": {
+          "TODO:ignore": true,
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[24:25]": {
+          "TODO:ignore": true,
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[25:26]": {
+          "TODO:ignore": true,
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[26:27]": {
+          "TODO:ignore": true,
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[27:28]": {
+          "TODO:ignore": true,
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
@@ -2261,8 +2367,9 @@
               "instanceOf": {
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],
-                "marc:biography": {"@id": "marc:Autobiography"},
-                "marc:literaryForm": {"@id": "marc:NotFictionNotFurtherSpecified"}
+                "genreForm": [{"@id": "marc:NotFictionNotFurtherSpecified"},
+                              {"@id": "marc:Autobiography"}
+                ]
               }
             }
           }
@@ -2282,7 +2389,7 @@
               "publicationCountry": [{"@id": "https://id.kb.se/country/fr"}],
               "instanceOf": {
                 "@type": "Text",
-                "marc:literaryForm": {"@id": "marc:NotFictionNotFurtherSpecified"},
+                "genreForm": {"@id": "marc:NotFictionNotFurtherSpecified"},
                 "language": [{"@id": "https://id.kb.se/language/freeng", "code": "freeng"}]
               }
             }
@@ -2978,7 +3085,7 @@
       "TODO": "See also 100$t and 130.",
       "embedded": true,
       "link": "hasTitle",
-      "resourceType": "WorkTitle",
+      "resourceType": "Title",
       "$a": {"property": "mainTitle"},
       "$0": {
         "aboutEntity": "?work",
@@ -2992,7 +3099,7 @@
       "aboutEntity": "?thing",
       "addLink": "marc:hasTranslatedTitle",
       "embedded": true,
-      "resourceType": "InstanceTitle",
+      "resourceType": "Title",
       "$c": {"property": "responsibilityStatement"},
       "$h": {"property": "marc:mediaTerm"},
       "$y": {"link": "language", "property": "code"},
@@ -3012,7 +3119,7 @@
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
       "embedded": true,
-      "resourceType": "InstanceTitle",
+      "resourceType": "Title",
       "i2": {"marcDefault": "0"},
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
@@ -3029,7 +3136,7 @@
               {"a": "Anteckningar från en ö"}
           ]}},
           "result": {"mainEntity": {
-            "hasTitle": [ {"@type": "InstanceTitle",
+            "hasTitle": [ {"@type": "Title",
               "mainTitle":  "Anteckningar från en ö"
             } ]
           }}
@@ -3041,7 +3148,7 @@
               {"c": "Tove Jansson, Tuulikki Pietilä"}
           ]}},
           "result": {"mainEntity": {
-            "hasTitle": [ {"@type": "InstanceTitle",
+            "hasTitle": [ {"@type": "Title",
               "mainTitle":  "Anteckningar från en ö",
               "marc:searchElement": false
             } ],
@@ -3056,7 +3163,7 @@
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
       "embedded": true,
-      "NOTE:default:resourceType": "VariantTitle",
+      "resourceType": "VariantTitle",
       "i1": {
         "property": "marc:searchControl",
         "tokenMap": {
@@ -3073,8 +3180,8 @@
         "tokenMap": {
           "0": "marc:TitlePart",
           "1": "ParallelTitle",
-          "2": "VariantTitle",
-          "3": "marc:AlsoTitle",
+          "2": "marc:DistinctiveTitle",
+          "3": "marc:OtherTitle",
           "4": "CoverTitle",
           "5": "TitlePage",
           "6": "HeadingTitle",
@@ -3098,7 +3205,7 @@
       "aboutEntity": "?thing",
       "addLink": "marc:previousTitle",
       "embedded": true,
-      "resourceType": "InstanceTitle",
+      "resourceType": "Title",
       "i1": {
         "property": "marc:isAddedEntry",
         "tokenMap": {"1": true},
@@ -3548,9 +3655,9 @@
 
     "521": {
       "aboutEntity": "?work",
-      "addLink": "audience",
+      "addLink": "intendedAudience",
       "embedded": true,
-      "resourceType": "Audience",
+      "resourceType": "IntendedAudience",
       "TOOO:i1": {},
       "$a": {"property": "label"}
     },

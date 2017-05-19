@@ -1032,7 +1032,7 @@ class MarcFixedFieldHandler {
 
         def revert(Map data) {
             def v = super.revert(data, null)
-            if ((v == null || v == [null]) && fixedDefault)
+            if ((v == null || v.every { it == null }) && fixedDefault)
                 return fixedDefault
             return v
         }
