@@ -1,0 +1,36 @@
+{
+    "description": "Pipeline that adds indexing timestamp and cleans up publication.date",
+    "processors": [
+        {
+            "script": {
+                "lang": "painless",
+                "inline": "ctx.indexedTimeStamp = new Date()"
+            }
+        },
+        {
+            "foreach": {
+                "ignore_failure": true,
+                "field": "publication",
+                "processor": {
+                    "gsub": {
+                        "field": "_ingest._value.date",
+                        "pattern": "([^-\\d])",
+                        "replacement": ""
+                    }
+                }
+            }
+        },
+        {
+            "foreach": {
+                "ignore_failure": true,
+                "field": "publication",
+                "processor": {
+                    "split": {
+                        "field": "_ingest._value.date",
+                        "separator": "-"
+                    }
+                }
+            }
+        }
+    ]
+}
