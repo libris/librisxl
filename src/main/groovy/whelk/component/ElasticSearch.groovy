@@ -115,14 +115,14 @@ class ElasticSearch {
     void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
-        log.warn dsl.inspect()
         def query = new NStringEntity(JsonOutput.toJson(dsl), ContentType.APPLICATION_JSON)
         def response = performRequest('POST',
                 "/${indexName}/_delete_by_query?conflicts=proceed",
                 query)
         def eString = EntityUtils.toString(response.getEntity())
         Map responseMap = mapper.readValue(eString, Map)
-        log.debug "Response: ${responseMap.deleted} objects deleted"
+        log.debug("Response: ${responseMap.deleted} of ${responseMap.total} " +
+                  "objects deleted")
     }
 
     Map getShapeForIndex(Document document, Whelk whelk) {
