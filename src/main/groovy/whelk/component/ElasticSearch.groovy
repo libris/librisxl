@@ -105,7 +105,7 @@ class ElasticSearch {
         def body = new NStringEntity(JsonOutput.toJson(shapedData), ContentType.APPLICATION_JSON)
         def response = performRequest('PUT',
                 "/${indexName}/${collection}" +
-                "/${toElasticId(doc.getShortId())}?refresh=wait_for&pipeline=libris",
+                "/${toElasticId(doc.getShortId())}?pipeline=libris",
                 body)
         def eString = EntityUtils.toString(response.getEntity())
         Map responseMap = mapper.readValue(eString, Map)
