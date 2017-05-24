@@ -12,7 +12,9 @@ import whelk.util.ThreadPool
 
 import java.nio.charset.Charset
 import java.nio.file.Files
+import java.nio.file.OpenOption
 import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 
 /**
  * Created by theodortolstoy on 2017-01-24.
@@ -40,14 +42,14 @@ class FileDumper implements MySQLLoader.LoadHandler {
         throw new Error("Groovy might let you call implicit default constructors, I will not.")
     }
 
-    FileDumper(String exportFileName, PostgreSQLComponent postgres) {
+    FileDumper(String exportFileName, PostgreSQLComponent postgres, boolean overwriteExistingFiles = true) {
 
         final int THREAD_COUNT = 4 * Runtime.getRuntime().availableProcessors()
-
         postgreSQLComponent = postgres
-        mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"))
-        identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"))
-        dependenciesWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_dependencies"), Charset.forName("UTF-8"))
+        def overwriteOption = overwriteExistingFiles ? StandardOpenOption.CREATE_NEW : StandardOpenOption.APPEND
+        mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"), overwriteOption )
+        identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"), overwriteOption)
+        dependenciesWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_dependencies"), Charset.forName("UTF-8"), overwriteOption)
         threadPool = new ThreadPool(THREAD_COUNT)
         converterPool = new MarcFrameConverter[THREAD_COUNT]
         for (int i = 0; i < THREAD_COUNT; ++i) {

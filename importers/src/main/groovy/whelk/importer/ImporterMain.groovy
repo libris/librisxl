@@ -56,12 +56,21 @@ class ImporterMain {
 
     @Command(args='TO_FILE_NAME COLLECTION DATA_SELECTION_TSVFILE')
     void vcopydumptestdata(String toFileName, String collection, String exampleDataFileName) {
-        /*if(collection =="bib"){
-            List vcopyIdsToImport = PostgresLoadfileWriter.collectIDsFromExampleFile(exampleDataFileName, collection)
-            importLinkedRecords(vcopyIdsToImport)
-        }*/
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, exampleDataFileName, pico.getComponent(PostgreSQLComponent))
+        List vcopyIdsToImport = PostgresLoadfileWriter.collectIDsFromExampleFile(exampleDataFileName, collection)
+
+        if(collection =="bib"){
+            def extraAuthIds = getExtraAuthIds(connUrl,vcopyIdsToImport)
+            PostgresLoadfileWriter.dumpToFile(toFileName.replace('bib','auth'), "auth",
+                                                connUrl, extraAuthIds, pico.getComponent(PostgreSQLComponent),true)
+
+            def extraHoldIds = getExtraHoldIds(connUrl,vcopyIdsToImport)
+            PostgresLoadfileWriter.dumpToFile(toFileName.replace('bib','hold'), "hold",
+                                                connUrl, extraHoldIds, pico.getComponent(PostgreSQLComponent),true)
+        }
+
+        PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl,
+                                            vcopyIdsToImport, pico.getComponent(PostgreSQLComponent),true)
     }
 
     /**
@@ -204,7 +213,7 @@ class ImporterMain {
         importLinkedRecords(bibIds)
 
         idgroups.each { group ->
-            importResult = importer.doImport(group.key, 'vcopy', connUrl, group.value as String[])
+            def importResult = importer.doImport(group.key, 'vcopy', connUrl, group.value as String[])
             println "Created ${importResult?.numberOfDocuments} documents from  ${group.key}."
         }
 
@@ -212,7 +221,7 @@ class ImporterMain {
         println "All done importing example data."
     }
 
-    def importLinkedRecords(List<String> bibIds) {
+    def importLinkedRecords(List<String> bibIds, String collection) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
         def importer = pico.getComponent(VCopyImporter)
 
