@@ -46,10 +46,10 @@ class FileDumper implements MySQLLoader.LoadHandler {
 
         final int THREAD_COUNT = 4 * Runtime.getRuntime().availableProcessors()
         postgreSQLComponent = postgres
-        def overwriteOption = overwriteExistingFiles ? StandardOpenOption.CREATE_NEW : StandardOpenOption.APPEND
-        mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"), overwriteOption )
-        identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"), overwriteOption)
-        dependenciesWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_dependencies"), Charset.forName("UTF-8"), overwriteOption)
+        def overwriteOption = overwriteExistingFiles ? StandardOpenOption.TRUNCATE_EXISTING : StandardOpenOption.APPEND
+        mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"), overwriteOption, StandardOpenOption.WRITE, StandardOpenOption.CREATE )
+        identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"), overwriteOption, StandardOpenOption.WRITE, StandardOpenOption.CREATE)
+        dependenciesWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_dependencies"), Charset.forName("UTF-8"), overwriteOption, StandardOpenOption.WRITE, StandardOpenOption.CREATE)
         threadPool = new ThreadPool(THREAD_COUNT)
         converterPool = new MarcFrameConverter[THREAD_COUNT]
         for (int i = 0; i < THREAD_COUNT; ++i) {
