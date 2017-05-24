@@ -62,15 +62,15 @@ class ImporterMain {
         if(collection =="bib"){
             def extraAuthIds = getExtraAuthIds(connUrl,vcopyIdsToImport)
             PostgresLoadfileWriter.dumpToFile(toFileName.replace('bib','auth'), "auth",
-                                                connUrl, extraAuthIds, pico.getComponent(PostgreSQLComponent),true)
+                                                connUrl, extraAuthIds, pico.getComponent(PostgreSQLComponent),false)
 
             def extraHoldIds = getExtraHoldIds(connUrl,vcopyIdsToImport)
             PostgresLoadfileWriter.dumpToFile(toFileName.replace('bib','hold'), "hold",
-                                                connUrl, extraHoldIds, pico.getComponent(PostgreSQLComponent),true)
+                                                connUrl, extraHoldIds, pico.getComponent(PostgreSQLComponent),false)
         }
 
         PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl,
-                                            vcopyIdsToImport, pico.getComponent(PostgreSQLComponent),true)
+                                            vcopyIdsToImport, pico.getComponent(PostgreSQLComponent),false)
     }
 
     /**
