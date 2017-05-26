@@ -41,7 +41,7 @@ class ElasticSearch {
     String defaultType = "record"
     String defaultIndex = null
 
-    boolean haltOnFailure = true
+    boolean haltOnFailure = false
 
     JsonLdLinkExpander expander
 

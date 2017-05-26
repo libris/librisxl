@@ -380,7 +380,7 @@ class PostgreSQLComponent {
     }
 
     /**
-     * Given a document, look up all it's dependencies (links/references) and return a list of those referencess that
+     * Given a document, look up all it's dependencies (links/references) and return a list of those references that
      * have Libris system IDs (fnrgls). You were probably looking for getDependencies() which is much more efficient
      * for a document that is already saved in lddb!
      */
