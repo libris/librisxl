@@ -78,6 +78,11 @@ class FileDumper implements MySQLLoader.LoadHandler {
                 if (recordMap != null) {
                     List<String> depencyIDs = postgreSQLComponent.calculateDependenciesSystemIDs(recordMap.document)
                     recordMap["dependencies"] = depencyIDs
+                    recordMap.document.setModified(new Date())
+                    if (depencyIDs.size() > 0)
+                        recordMap["depMinMaxModified"] = postgreSQLComponent.getMinMaxModified(depencyIDs)
+                    else
+                        recordMap["depMinMaxModified"] = [recordMap.document.getModified(), recordMap.document.getModified()]
                     writeBatch.add(recordMap)
                 }
             }
@@ -103,9 +108,14 @@ class FileDumper implements MySQLLoader.LoadHandler {
                         "${doc.dataAsString.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
                         "${coll.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
                         "${"vcopy"}\t" +
-                        "${nullString}\t" +
+                        nullString + delimiterString + // changed by
                         "${recordMap.checksum.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
-                        "${doc.created}\n")
+                        "${doc.created}\t" +
+                        "${doc.modified}\t" +
+                        "false\t" + // deleted
+                        recordMap["depMinMaxModified"][0] + delimiterString +
+                        recordMap["depMinMaxModified"][1] + "\n"
+                )
 
                 for (String identifier : doc.getRecordIdentifiers()) {
                     if (identifier == mainRecordId)
