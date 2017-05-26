@@ -48,6 +48,8 @@ class PostgreSQLComponent {
     protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
     protected String GET_SYSTEMID_BY_IRI
+    protected String GET_MINMAX_MODIFIED
+    protected String UPDATE_MINMAX_MODIFIED
 
     // Deprecated
     protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
@@ -138,6 +140,9 @@ class PostgreSQLComponent {
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
         GET_DEPENDERS = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ?"
         GET_DEPENDENCIES = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ?"
+        GET_MINMAX_MODIFIED = "SELECT MIN(modified), MAX(modified) from $mainTableName WHERE id IN (?)"
+        UPDATE_MINMAX_MODIFIED = "WITH dependsOn AS (SELECT modified FROM $dependenciesTableName JOIN $mainTableName ON " + dependenciesTableName + ".dependsOnId = " + mainTableName+ ".id WHERE " + dependenciesTableName + ".id = ?) " +
+                "UPDATE $mainTableName SET depMinModified = (SELECT COALESCE(MIN(modified), " + mainTableName + ".modified) FROM dependsOn), depMaxModified = (SELECT COALESCE(MAX(modified), " + mainTableName + ".modified) FROM dependsOn) WHERE id = ?"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -235,6 +240,9 @@ class PostgreSQLComponent {
             }
             saveIdentifiers(doc, connection)
             saveDependencies(doc, connection)
+            for (String dependerId : getDependers(doc.getShortId())) {
+                updateMinMaxDepModified(dependerId)
+            }
             connection.commit()
             def status = status(doc.getURI(), connection)
             if (status.exists) {
@@ -342,6 +350,9 @@ class PostgreSQLComponent {
             saveVersion(doc, connection, modTime, changedIn, changedBy, collection, deleted)
             saveIdentifiers(doc, connection)
             saveDependencies(doc, connection)
+            for (String dependerId : getDependers(doc.getShortId())) {
+                updateMinMaxDepModified(dependerId)
+            }
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
@@ -441,6 +452,28 @@ class PostgreSQLComponent {
             log.error("Failed saving dependencies for ${doc.getShortId()}")
             throw bue.getNextException()
         } finally { insertDependencies.close() }
+    }
+
+    private void updateMinMaxDepModified(String id) {
+        Connection connection
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(UPDATE_MINMAX_MODIFIED)
+            preparedStatement.setString(1, id)
+            preparedStatement.setString(2, id)
+            preparedStatement.execute()
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+            if (connection != null)
+                connection.close()
+        }
+
     }
 
     private void saveIdentifiers(Document doc, Connection connection) {
@@ -581,6 +614,9 @@ class PostgreSQLComponent {
                 batch.addBatch()
                 saveIdentifiers(doc, connection)
                 saveDependencies(doc, connection)
+                for (String dependerId : getDependers(doc.getShortId())) {
+                    updateMinMaxDepModified(dependerId)
+                }
             }
             batch.executeBatch()
             ver_batch.executeBatch()
@@ -822,6 +858,36 @@ class PostgreSQLComponent {
             doc = loadFromSql(GET_DOCUMENT, [1: id])
         }
         return doc
+    }
+
+    String[] getMinMaxModified(List<String> ids) {
+        Connection connection
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            connection = getConnection()
+            String expandedSql = GET_MINMAX_MODIFIED.replace('?', ids.collect { it -> '?' }.join(','))
+            preparedStatement = connection.prepareStatement(expandedSql)
+            for (int i = 0; i < ids.size(); ++i) {
+                preparedStatement.setString(i+1, ids.get(i))
+            }
+            rs = preparedStatement.executeQuery()
+            if (rs.next()) {
+                String min = rs.getString(1)
+                String max = rs.getString(2)
+                return [min, max]
+            }
+            else
+                return  [null, null]
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+            if (connection != null)
+                connection.close()
+        }
     }
 
     List<String> getDependencies(String id) {
