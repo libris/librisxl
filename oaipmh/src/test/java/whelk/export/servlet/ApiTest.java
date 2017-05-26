@@ -253,4 +253,25 @@ public class ApiTest
         Assert.assertTrue( response.contains("bib:Gbg"));
         Assert.assertTrue( response.contains("bib:S"));
     }
+
+    @Test
+    public void testAuthSet() throws Exception
+    {
+        String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&set=auth&metadataPrefix=oai_dc");
+        Assert.assertTrue( !response.contains("noRecordsMatch") );
+    }
+
+    @Test
+    public void testBibSet() throws Exception
+    {
+        String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&set=bib&metadataPrefix=oai_dc");
+        Assert.assertTrue( !response.contains("noRecordsMatch") );
+    }
+
+    @Test
+    public void testHoldSet() throws Exception
+    {
+        String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&set=hold&metadataPrefix=oai_dc");
+        Assert.assertTrue( !response.contains("noRecordsMatch") );
+    }
 }
