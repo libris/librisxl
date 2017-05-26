@@ -2706,31 +2706,51 @@
     },
 
     "034": {
-      "NOTE:domainIncludes": "Cartography",
-      "addLink": "marc:cartographicAscensionAndDeclination",
-      "embedded": true,
-      "resourceType": "marc:CartographicCoordinates",
-      "TODO": "draft",
-      "TODO:i1": {},
+      "aboutEntity": "?work",
+      "embedded": "true",
+      "i1": { "ignored": "true"},
       "i2": {
+        "ignored": "true",
         "property": "marc:ringType",
         "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
       },
       "$2": {"property": "source"},
-      "$3": {"property": "part"},
+      "$3": {"property": "part", "TODO": "How to generally handle 'Materials speciefied (NR)'"},
       "$a": {
-        "property": "marc:scaleType", "tokenMap": {
+        "link": "scale",
+        "property": "@type",
+        "tokenMap": {
           "a": "marc:LinearScale",
           "b": "marc:AngularScale",
-          "z": "marc:Other"
+          "z": "Scale"
         }
       },
-      "$b": {"addProperty": "marc:constantRatioLinearHorizontalScale"},
-      "$c": {"addProperty": "marc:constantRatioLinearVerticalScale"},
-      "$d": {"property": "marc:westernmostLongitudeCoordinates"},
-      "$e": {"property": "marc:easternmostLongitudeCoordinates"},
-      "$f": {"property": "marc:northernmostLatitudeCoordinates"},
-      "$g": {"property": "marc:southernmostLatitudeCoordinates"},
+      "$b": {"addLink": "scale", "property": "label"},
+      "$c": {"addLink": "scale", "property": "label"},
+      "$d":
+      {
+        "link": "cartographicAttributes",
+        "property": "coordinates",
+        "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes 255, 006 and 008"
+      },
+      "$e":
+      {
+        "link": "cartographicAttributes",
+        "property": "coordinates",
+        "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes 255, 006 and 008"
+      },
+      "$f":
+      {
+        "link": "cartographicAttributes",
+        "property": "coordinates",
+        "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes 255, 006 and 008"
+      },
+      "$g":
+      {
+        "link": "cartographicAttributes",
+        "property": "coordinates",
+        "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes 255, 006 and 008"
+      },
       "$h": {"addProperty": "marc:angularScale"},
       "$j": {"property": "marc:declinationNorthernLimit"},
       "$k": {"property": "marc:declinationSouthernLimit"},
@@ -2747,10 +2767,27 @@
           "resourceType": "PlanetaryObject",
           "property": "name"
       },
+      "TODO:_spec": "Why is @type needed??",
       "_spec": [
         {
-          "result": {"mainEntity": {
-          }}
+          "source": [
+            {"034": {"subfields": [{"a": "a", "b": "110000"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "scale": [
+                  {
+                    "@type": "marc:LinearScale"
+                  },
+                  {
+                    "label": "110000"
+                  }
+                ]
+              }
+            }
+          }
         }
       ]
     },
@@ -3264,17 +3301,15 @@
     "254": {},
 
     "255": {
-      "NOTE:domainIncludes": "Cartography",
-      "addLink": "cartographicAttributes",
-      "resourceType": "Cartographic",
+      "aboutEntity": "?work",
       "embedded": true,
-      "$a": {"property": "scale"},
-      "$c": {"property": "coordinates"},
-      "$b": {"property": "projection"},
-      "$e": {"property": "equinox"},
-      "$d": {"property": "cartographicZone"},
-      "$g": {"property": "exclusionGRing"},
-      "$f": {"property": "outerGRing"}
+      "$a": {"link": "scale", "property": "label"},
+      "$b": {"link": "cartographicAttributes", "property": "projection"},
+      "$c": {"link": "cartographicAttributes", "property": "coordinates"},
+      "$d": {"link": "cartographicAttributes", "property": "ascensionAndDeclination"},
+      "$e": {"link": "cartographicAttributes", "property": "equinox"},
+      "$f": {"link": "cartographicAttributes", "property": "outerGRing"},
+      "$g": {"link": "cartographicAttributes", "property": "exclusionGRing"}
     },
 
     "256": {
@@ -3536,7 +3571,12 @@
     "346": {},
     "347": {},
     "351": {},
-    "352": {},
+    "352": {
+      "$a": {"link": "digitalCharacteristic", "resourceType": "CartographicDataType", "property": "label"},
+      "$b": {"addLink": "digitalCharacteristic", "resourceType": "CartographicObjectType", "property": "label"},
+      "$c": {"addLink": "digitalCharacteristic", "resourceType": "CartographicObjectType", "property": "count"},
+      "$q": {"addLink": "digitalCharacteristic", "resourceType": "EncodingFormat", "property": "label"}
+    },
     "355": {},
     "357": {},
     "362": {
