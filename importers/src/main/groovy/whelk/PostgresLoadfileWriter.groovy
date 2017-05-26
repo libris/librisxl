@@ -10,27 +10,24 @@ import whelk.importer.MySQLLoader
  */
 @Log
 class PostgresLoadfileWriter {
-    static void dumpToFile(String exportFileName, String collection, String connectionUrl,
+    public static void dumpToFile(String exportFileName, String collection, String connectionUrl,
                                   PostgreSQLComponent postgreSQLComponent) {
         String sqlQuery = MySQLLoader.selectByMarcType[collection]
         List<Object> queryParameters = [0]
         dump(collection, exportFileName, connectionUrl, sqlQuery, queryParameters, postgreSQLComponent)
     }
 
-    static void dumpToFile(String exportFileName, String collection,
-                           String connectionUrl, List<String> vcopyIdsToImport,
-                           PostgreSQLComponent postgreSQLComponent,
-                           boolean overwriteExistingFiles = true) {
-        String sqlQuery = MySQLLoader.selectExampleDataByMarcType[collection]
-                                     .replace('?', vcopyIdsToImport.collect { it -> '?' }.join(','))
-        dump(collection, exportFileName, connectionUrl, sqlQuery,
-                vcopyIdsToImport, postgreSQLComponent, overwriteExistingFiles)
+    public static void dumpToFile(String exportFileName, String collection, String connectionUrl, String exampleDataFileName,
+                                  PostgreSQLComponent postgreSQLComponent) {
+        List vcopyIdsToImport = collectIDsFromExampleFile(exampleDataFileName, collection)
+        String sqlQuery = MySQLLoader.selectExampleDataByMarcType[collection].replace('?', vcopyIdsToImport.collect { it -> '?' }.join(','))
+        dump(collection, exportFileName, connectionUrl, sqlQuery, vcopyIdsToImport, postgreSQLComponent)
     }
 
     private static void dump(String collection, String exportFileName, String connectionUrl, String sqlQuery,
-                             List<Object> queryParameters, PostgreSQLComponent postgreSQLComponent, boolean overwriteExistingFiles = true) {
+                             List<Object> queryParameters, PostgreSQLComponent postgreSQLComponent) {
 
-        FileDumper fileDumper = new FileDumper(exportFileName, postgreSQLComponent, overwriteExistingFiles)
+        FileDumper fileDumper = new FileDumper(exportFileName, postgreSQLComponent)
 
         MySQLLoader.run(fileDumper, sqlQuery, queryParameters, collection, connectionUrl)
 
