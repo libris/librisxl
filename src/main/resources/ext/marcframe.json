@@ -2720,8 +2720,8 @@
         "link": "scale",
         "property": "@type",
         "tokenMap": {
-          "a": "marc:LinearScale",
-          "b": "marc:AngularScale",
+          "a": "LinearScale",
+          "b": "AngularScale",
           "z": "Scale"
         }
       },
@@ -2779,7 +2779,7 @@
                 "@type": "Text",
                 "scale": [
                   {
-                    "@type": "marc:LinearScale"
+                    "@type": "LinearScale"
                   },
                   {
                     "label": "110000"
