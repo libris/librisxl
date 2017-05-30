@@ -141,8 +141,8 @@ class PostgreSQLComponent {
         GET_DEPENDERS = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ?"
         GET_DEPENDENCIES = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ?"
         GET_MINMAX_MODIFIED = "SELECT MIN(modified), MAX(modified) from $mainTableName WHERE id IN (?)"
-        UPDATE_MINMAX_MODIFIED = "WITH dependsOn AS (SELECT modified FROM $dependenciesTableName JOIN $mainTableName ON " + dependenciesTableName + ".dependsOnId = " + mainTableName+ ".id WHERE " + dependenciesTableName + ".id = ?) " +
-                "UPDATE $mainTableName SET depMinModified = (SELECT COALESCE(MIN(modified), " + mainTableName + ".modified) FROM dependsOn), depMaxModified = (SELECT COALESCE(MAX(modified), " + mainTableName + ".modified) FROM dependsOn) WHERE id = ?"
+        UPDATE_MINMAX_MODIFIED = "WITH dependsOn AS (SELECT modified FROM $dependenciesTableName JOIN $mainTableName ON " + dependenciesTableName + ".dependsOnId = " + mainTableName+ ".id WHERE " + dependenciesTableName + ".id = ? UNION SELECT modified FROM $mainTableName WHERE id = ?) " +
+                "UPDATE $mainTableName SET depMinModified = (SELECT MIN(modified) FROM dependsOn), depMaxModified = (SELECT MAX(modified) FROM dependsOn) WHERE id = ?"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -463,6 +463,7 @@ class PostgreSQLComponent {
             preparedStatement = connection.prepareStatement(UPDATE_MINMAX_MODIFIED)
             preparedStatement.setString(1, id)
             preparedStatement.setString(2, id)
+            preparedStatement.setString(3, id)
             preparedStatement.execute()
         }
         finally {
