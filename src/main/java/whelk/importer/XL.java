@@ -5,6 +5,7 @@ import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
 import whelk.Document;
 import whelk.IdGenerator;
+import whelk.Whelk;
 import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
@@ -20,8 +21,7 @@ import java.util.*;
 
 class XL
 {
-    private PostgreSQLComponent m_postgreSQLComponent;
-    private ElasticSearch m_elasticSearchComponent;
+    private Whelk m_whelk;
     private Parameters m_parameters;
     private Properties m_properties;
     private MarcFrameConverter m_marcFrameConverter;
@@ -32,8 +32,9 @@ class XL
     {
         m_parameters = parameters;
         m_properties = PropertyLoader.loadProperties("secret");
-        m_postgreSQLComponent = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
-        m_elasticSearchComponent = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
+        PostgreSQLComponent storage = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
+        ElasticSearch elastic = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
+        m_whelk = new Whelk(storage, elastic);
         m_marcFrameConverter = new MarcFrameConverter();
     }
 
@@ -117,8 +118,7 @@ class XL
 
         if (!m_parameters.getReadOnly())
         {
-            m_postgreSQLComponent.store(rdfDoc, false, IMPORT_SYSTEM_CODE, null, collection, false);
-            m_elasticSearchComponent.index(rdfDoc, collection);
+            m_whelk.store(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
         }
         else
             System.out.println("Would now (if --live had been specified) have written the following json-ld to whelk:"
@@ -140,7 +140,7 @@ class XL
         {
             try
             {
-                m_postgreSQLComponent.storeAtomicUpdate(ourId, false, IMPORT_SYSTEM_CODE, null, collection, false,
+                m_whelk.storeAtomicUpdate(ourId, false, IMPORT_SYSTEM_CODE, null, collection, false,
                         (Document doc) ->
                         {
                             if (collection.equals("bib"))
@@ -166,7 +166,7 @@ class XL
         }
         else
         {
-            Document doc = m_postgreSQLComponent.load( ourId );
+            Document doc = m_whelk.getStorage().load( ourId );
             enrich( doc, rdfDoc );
             System.out.println("Would now (if --live had been specified) have written the following (merged) json-ld to whelk:");
             System.out.println("id:\n" + doc.getShortId());
@@ -338,7 +338,7 @@ class XL
             librisId = Document.getBASE_URI().toString() + librisId;
         }
 
-        try(Connection connection = m_postgreSQLComponent.getConnection();
+        try(Connection connection = m_whelk.getStorage().getConnection();
             PreparedStatement statement = getOnId_ps(connection, librisId);
             ResultSet resultSet = statement.executeQuery())
         {
@@ -359,7 +359,7 @@ class XL
         if (candidate035aIDs.isEmpty())
             return new ArrayList<>();
 
-        try(Connection connection = m_postgreSQLComponent.getConnection();
+        try(Connection connection = m_whelk.getStorage().getConnection();
             PreparedStatement statement = getOnSystemNumber_ps(connection, candidate035aIDs);
             ResultSet resultSet = statement.executeQuery())
         {
@@ -374,7 +374,7 @@ class XL
             return new ArrayList<>();
 
         String numericIsbn = isbn.replaceAll("-", "");
-        try(Connection connection = m_postgreSQLComponent.getConnection();
+        try(Connection connection = m_whelk.getStorage().getConnection();
             PreparedStatement statement = getOnISBN_ps(connection, numericIsbn);
             ResultSet resultSet = statement.executeQuery())
         {
@@ -389,7 +389,7 @@ class XL
             return new ArrayList<>();
 
         String numericIssn = issn.replaceAll("-", "");
-        try(Connection connection = m_postgreSQLComponent.getConnection();
+        try(Connection connection = m_whelk.getStorage().getConnection();
             PreparedStatement statement = getOnISSN_ps(connection, numericIssn);
             ResultSet resultSet = statement.executeQuery())
         {
@@ -407,7 +407,7 @@ class XL
             return new ArrayList<>();
         String sigel = df.getSubfields("b").get(0).getData();
 
-        try(Connection connection = m_postgreSQLComponent.getConnection();
+        try(Connection connection = m_whelk.getStorage().getConnection();
             PreparedStatement statement = getOnHeldByHoldingFor_ps(connection, sigel, relatedWithBibResourceId);
             ResultSet resultSet = statement.executeQuery())
         {
