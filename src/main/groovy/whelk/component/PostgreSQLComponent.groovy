@@ -241,7 +241,7 @@ class PostgreSQLComponent {
             saveIdentifiers(doc, connection)
             saveDependencies(doc, connection)
             for (String dependerId : getDependers(doc.getShortId())) {
-                updateMinMaxDepModified(dependerId)
+                updateMinMaxDepModified(dependerId, connection)
             }
             connection.commit()
             def status = status(doc.getURI(), connection)
@@ -351,7 +351,7 @@ class PostgreSQLComponent {
             saveIdentifiers(doc, connection)
             saveDependencies(doc, connection)
             for (String dependerId : getDependers(doc.getShortId())) {
-                updateMinMaxDepModified(dependerId)
+                updateMinMaxDepModified(dependerId, connection)
             }
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
@@ -456,10 +456,20 @@ class PostgreSQLComponent {
 
     private void updateMinMaxDepModified(String id) {
         Connection connection
+        try {
+            connection = getConnection()
+            updateMinMaxDepModified(id, connection)
+        }
+        finally {
+            if (connection != null)
+                connection.close()
+        }
+    }
+
+    private void updateMinMaxDepModified(String id, Connection connection) {
         PreparedStatement preparedStatement
         ResultSet rs
         try {
-            connection = getConnection()
             preparedStatement = connection.prepareStatement(UPDATE_MINMAX_MODIFIED)
             preparedStatement.setString(1, id)
             preparedStatement.setString(2, id)
@@ -471,8 +481,6 @@ class PostgreSQLComponent {
                 rs.close()
             if (preparedStatement != null)
                 preparedStatement.close()
-            if (connection != null)
-                connection.close()
         }
 
     }
@@ -616,7 +624,7 @@ class PostgreSQLComponent {
                 saveIdentifiers(doc, connection)
                 saveDependencies(doc, connection)
                 for (String dependerId : getDependers(doc.getShortId())) {
-                    updateMinMaxDepModified(dependerId)
+                    updateMinMaxDepModified(dependerId, connection)
                 }
             }
             batch.executeBatch()
