@@ -8,6 +8,7 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 
 import io.prometheus.client.Counter;
 
@@ -79,8 +80,18 @@ public class ListRecords
             return;
         }
 
-        ZonedDateTime fromDateTime = Helpers.parseISO8601(from);
-        ZonedDateTime untilDateTime = Helpers.parseISO8601(until);
+        ZonedDateTime fromDateTime;
+        ZonedDateTime untilDateTime;
+        try
+        {
+            fromDateTime = Helpers.parseISO8601(from);
+            untilDateTime = Helpers.parseISO8601(until);
+        } catch (DateTimeParseException dtpe)
+        {
+            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
+            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT, "Allowed time formats are: YYYY-MM-DD and YYYY-MM-DDThh:mm:ssZ.", request, response);
+            return;
+        }
 
         try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection())
         {
