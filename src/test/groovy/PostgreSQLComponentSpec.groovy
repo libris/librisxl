@@ -34,6 +34,11 @@ class PostgreSQLComponentSpec extends Specification {
                 log.info("Getting connection ...")
                 conn
             }
+
+            @Override
+            List<String> getDependers(String id) {
+                return []
+            }
         }
     }
 
