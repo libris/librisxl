@@ -3621,7 +3621,7 @@
       "$l": {"link": "callno", "resourceType": "Concept", "property": "code"}
     },
 
-    "500": {"$a": {"aboutEntity": "?thing", "addProperty": "comment"}},
+    "500": {"$a": {"aboutEntity": "?thing", "addLink": "note", "property": "label"}},
     "501": {},
     "502": {
       "addLink": "dissertation", "resourceType": "Dissertation",
@@ -3637,7 +3637,14 @@
     "505": {
       "TOOO:i1": {},
       "TOOO:i2": {},
-      "$a": {"aboutEntity": "?thing", "addProperty": "listOfContents", "TODO": "$t, $r"}
+      "aboutEntity": "?thing",
+      "addLink": "tableOfContents",
+      "$a": {"property": "label"},
+      "$g": {"property": "label"},
+      "$r": {"property": "label"},
+      "$t": {"property": "label"},
+      "$u": {"TODO:ignore": "true??? As bf2"},
+      "TOOO:6": {}
     },
 
     "506": {
@@ -3670,22 +3677,28 @@
     "518": {},
 
     "520": {
+      "TODO:aboutEntity": "Could be ?work, ?thing and/or ?hold",
       "aboutEntity": "?thing",
       "TOOO:i1": {},
       "addLink": "summary",
       "resourceType": "Summary",
-      "$a": {"addProperty": "label"},
-      "$u": {"addProperty": "uri"},
+      "$a": {"property": "label"},
+      "$b": {"property": "label"},
+      "$c": {"link": "source", "property": "label"},
+      "$u": {"addLink": "source", "property": "uri"},
       "_spec": [
         {
           "source": {"520": {"ind1": " ", "ind2": " ", "subfields": [
-            {"u": "http://example.org/thing-page"}
+            {"u": "http://example.org/thing-page"}, {"u": "http://example.org/another-thing-page"}
           ]}},
           "result": {"mainEntity": {
             "summary": [
               {
                 "@type": "Summary",
-                "uri": ["http://example.org/thing-page"]
+                "source": [
+                  {"uri": "http://example.org/thing-page"},
+                  {"uri": "http://example.org/another-thing-page"}
+                ]
               }
             ]
           }}
