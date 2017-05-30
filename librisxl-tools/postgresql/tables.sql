@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS lddb (
     checksum text not null,
     created timestamp with time zone not null default now(),
     modified timestamp with time zone not null default now(),
-    deleted boolean default false
+    deleted boolean default false,
+    depMinModified timestamp with time zone not null default now(),
+    depMaxModified timestamp with time zone not null default now()
     );
 
 CREATE TABLE IF NOT EXISTS lddb__identifiers (

@@ -85,11 +85,11 @@ public class ListRecords
         try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection())
         {
             dbconn.setAutoCommit(false);
-            try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec, null);
+            boolean includeDependencies = metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX);
+            try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec, null, includeDependencies);
                  ResultSet resultSet = preparedStatement.executeQuery())
             {
-                respond(request, response, metadataPrefix, onlyIdentifiers,
-                        metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX), resultSet);
+                respond(request, response, metadataPrefix, onlyIdentifiers, includeDependencies, resultSet);
             } finally {
                 dbconn.commit();
             }

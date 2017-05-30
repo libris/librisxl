@@ -78,6 +78,16 @@ class FileDumper implements MySQLLoader.LoadHandler {
                 if (recordMap != null) {
                     List<String> depencyIDs = postgreSQLComponent.calculateDependenciesSystemIDs(recordMap.document)
                     recordMap["dependencies"] = depencyIDs
+                    recordMap.document.setModified(new Date())
+                    if (depencyIDs.size() > 0) {
+                        List<String> dependencyIDsIncludingThis = depencyIDs.clone()
+                        dependencyIDsIncludingThis.add( recordMap.document.getShortId() )
+                        String[] depMinMaxModified = postgreSQLComponent.getMinMaxModified(dependencyIDsIncludingThis)
+                        recordMap["depMinModified"] = depMinMaxModified[0]
+                        recordMap["depMaxModified"] = depMinMaxModified[1]
+                    }
+                    else
+                        recordMap["depMinModified"] = recordMap["depMaxModified"] = recordMap.document.getModified()
                     writeBatch.add(recordMap)
                 }
             }
@@ -103,9 +113,14 @@ class FileDumper implements MySQLLoader.LoadHandler {
                         "${doc.dataAsString.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
                         "${coll.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
                         "${"vcopy"}\t" +
-                        "${nullString}\t" +
+                        nullString + delimiterString + // changed by
                         "${recordMap.checksum.replace("\\", "\\\\").replace(delimiterString, "\\" + delimiterString)}\t" +
-                        "${doc.created}\n")
+                        "${doc.created}\t" +
+                        "${doc.modified}\t" +
+                        "false\t" + // deleted
+                        recordMap["depMinModified"] + delimiterString +
+                        recordMap["depMaxModified"] + "\n"
+                )
 
                 for (String identifier : doc.getRecordIdentifiers()) {
                     if (identifier == mainRecordId)

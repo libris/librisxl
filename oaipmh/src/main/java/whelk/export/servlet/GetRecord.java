@@ -83,7 +83,7 @@ public class GetRecord
         try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection())
         {
             dbconn.setAutoCommit(false);
-            try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, null, null, null, id);
+            try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, null, null, null, id, false);
                  ResultSet resultSet = preparedStatement.executeQuery())
             {
                 if (!resultSet.next())

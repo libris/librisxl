@@ -64,7 +64,7 @@ public class Helpers
         return preparedStatement;
     }
 
-    public static PreparedStatement getMatchingDocumentsStatement(Connection dbconn, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec, String id)
+    public static PreparedStatement getMatchingDocumentsStatement(Connection dbconn, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec, String id, boolean includeDependenciesInTimeInterval)
             throws SQLException
     {
         String mainTableName = OaiPmh.configuration.getProperty("sqlMaintable");
@@ -83,10 +83,19 @@ public class Helpers
         if (id != null)
             selectSQL += " AND lddb.id = ? ";
         if (fromDateTime != null)
-            selectSQL += " AND lddb.modified >= ? ";
+        {
+            if (includeDependenciesInTimeInterval)
+                selectSQL += " AND lddb.depMaxModified >= ? ";
+            else
+                selectSQL += " AND lddb.modified >= ? ";
+        }
         if (untilDateTime != null)
-            selectSQL += " AND lddb.modified <= ? ";
-
+        {
+            if (includeDependenciesInTimeInterval)
+                selectSQL += " AND lddb.depMinModified <= ? ";
+            else
+                selectSQL += " AND lddb.modified <= ? ";
+        }
         if (setSpec != null)
         {
             if (setSpec.getRootSet() != null)
