@@ -37,14 +37,6 @@
                         "numeric_keeper"
                     ],
                     "tokenizer": "numeric_keeper_tokenizer"
-                },
-                "default": {
-                    "filter": [
-                        "lowercase",
-                        "swe_light_stemmer"
-                    ],
-                    "stopwords": "_none_",
-                    "tokenizer": "standard"
                 }
             },
             "tokenizer": {
