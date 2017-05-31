@@ -2729,26 +2729,38 @@
       "$c": {"addLink": "scale", "property": "label"},
       "$d":
       {
-        "link": "cartographicAttributes",
+        "addLink": "cartographicAttributes",
+        "resourceType": "Cartographic",
+        "NOTE:subfield-repeatable": "false",
         "property": "coordinates",
+        "TODO:seperate-fields": "How to separate subfield $d, $e, $f and $g when using the same property",
         "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes 255, 006 and 008"
       },
       "$e":
       {
-        "link": "cartographicAttributes",
+        "addLink": "cartographicAttributes",
+        "resourceType": "Cartographic",
+        "NOTE:subfield-repeatable": "false",
         "property": "coordinates",
+        "TODO:seperate-fields": "How to separate subfield $d, $e, $f and $g when using the same property",
         "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes 255, 006 and 008"
       },
       "$f":
       {
-        "link": "cartographicAttributes",
+        "addLink": "cartographicAttributes",
+        "resourceType": "Cartographic",
+        "NOTE:subfield-repeatable": "false",
         "property": "coordinates",
+        "TODO:seperate-fields": "How to separate subfield $d, $e, $f and $g when using the same property",
         "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes 255, 006 and 008"
       },
       "$g":
       {
-        "link": "cartographicAttributes",
+        "addLink": "cartographicAttributes",
+        "resourceType": "Cartographic",
+        "NOTE:subfield-repeatable": "false",
         "property": "coordinates",
+        "TODO:seperate-fields": "How to separate subfield $d, $e, $f and $g when using the same property",
         "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes 255, 006 and 008"
       },
       "$h": {"addProperty": "marc:angularScale"},
@@ -3303,13 +3315,13 @@
     "255": {
       "aboutEntity": "?work",
       "embedded": true,
-      "$a": {"link": "scale", "property": "label"},
-      "$b": {"link": "cartographicAttributes", "property": "projection"},
-      "$c": {"link": "cartographicAttributes", "property": "coordinates"},
-      "$d": {"link": "cartographicAttributes", "property": "ascensionAndDeclination"},
-      "$e": {"link": "cartographicAttributes", "property": "equinox"},
-      "$f": {"link": "cartographicAttributes", "property": "outerGRing"},
-      "$g": {"link": "cartographicAttributes", "property": "exclusionGRing"}
+      "$a": {"link": "scale", "property": "label", "resourceType": "Scale"},
+      "$b": {"link": "cartographicAttributes", "property": "projection", "resourceType": "Cartographic"},
+      "$c": {"link": "cartographicAttributes", "property": "coordinates", "resourceType": "Cartographic"},
+      "$d": {"link": "cartographicAttributes", "property": "ascensionAndDeclination", "resourceType": "Cartographic"},
+      "$e": {"link": "cartographicAttributes", "property": "equinox", "resourceType": "Cartographic"},
+      "$f": {"link": "cartographicAttributes", "property": "outerGRing", "resourceType": "Cartographic"},
+      "$g": {"link": "cartographicAttributes", "property": "exclusionGRing", "resourceType": "Cartographic"}
     },
 
     "256": {
@@ -3572,10 +3584,26 @@
     "347": {},
     "351": {},
     "352": {
-      "$a": {"link": "digitalCharacteristic", "resourceType": "CartographicDataType", "property": "label"},
-      "$b": {"addLink": "digitalCharacteristic", "resourceType": "CartographicObjectType", "property": "label"},
-      "$c": {"addLink": "digitalCharacteristic", "resourceType": "CartographicObjectType", "property": "count"},
-      "$q": {"addLink": "digitalCharacteristic", "resourceType": "EncodingFormat", "property": "label"}
+      "$a": {
+        "addLink": "digitalCharacteristic",
+        "NOTE:subfield-repeatable": "false",
+        "resourceType": "CartographicDataType",
+        "property": "marc:directReferenceMethod"
+      },
+      "$b": {
+        "addLink": "digitalCharacteristic",
+        "resourceType": "CartographicObjectType",
+        "property": "marc:objectType"
+      },
+      "$c": {
+        "addLink": "digitalCharacteristic",
+        "resourceType": "CartographicObjectType",
+        "property": "count"},
+      "$q": {
+        "addLink": "digitalCharacteristic",
+        "resourceType": "EncodingFormat",
+        "property": "marc:formatOfTheDigitalImage"
+      }
     },
     "355": {},
     "357": {},
@@ -3682,10 +3710,10 @@
       "TOOO:i1": {},
       "addLink": "summary",
       "resourceType": "Summary",
-      "$a": {"property": "label"},
-      "$b": {"property": "label"},
-      "$c": {"link": "source", "property": "label"},
-      "$u": {"addLink": "source", "property": "uri"},
+      "$a": {"property": "marc:summaryEtcNote"},
+      "$b": {"property": "marc:expansionOfSummaryNote"},
+      "$c": {"addLink": "source", "NOTE:subfield-repeatable": "false", "property": "value", "resourceType": "Source"},
+      "$u": {"addLink": "source", "property": "uri", "resourceType": "Source"},
       "_spec": [
         {
           "source": {"520": {"ind1": " ", "ind2": " ", "subfields": [
@@ -3696,8 +3724,8 @@
               {
                 "@type": "Summary",
                 "source": [
-                  {"uri": "http://example.org/thing-page"},
-                  {"uri": "http://example.org/another-thing-page"}
+                  {"@type": "Source", "uri": "http://example.org/thing-page"},
+                  {"@type": "Source", "uri": "http://example.org/another-thing-page"}
                 ]
               }
             ]
