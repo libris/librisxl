@@ -1718,6 +1718,7 @@
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[13:14]": {
+          "TODO": "Ensure not to clash with 340 $d",
           "TODO:aboutEntity": "Work or Instance?",
           "link": "marc:soundCapture",
           "uriTemplate": "{_}",
@@ -2718,15 +2719,15 @@
       "$3": {"property": "part", "TODO": "How to generally handle 'Materials speciefied (NR)'"},
       "$a": {
         "link": "scale",
-        "property": "@type",
+        "property": "marc:scaleType",
         "tokenMap": {
-          "a": "LinearScale",
-          "b": "AngularScale",
-          "z": "Scale"
+          "a": "marc:LinearScale",
+          "b": "marc:AngularScale",
+          "z": "marc:OtherCartographicScale"
         }
       },
-      "$b": {"addLink": "scale", "property": "label"},
-      "$c": {"addLink": "scale", "property": "label"},
+      "$b": {"addLink": "scale", "property": "marc:linearHorizontalScale"},
+      "$c": {"addLink": "scale", "property": "marc:linearVerticalScale"},
       "$d":
       {
         "addLink": "cartographicAttributes",
@@ -2779,7 +2780,6 @@
           "resourceType": "PlanetaryObject",
           "property": "name"
       },
-      "TODO:_spec": "Why is @type needed??",
       "_spec": [
         {
           "source": [
@@ -2791,10 +2791,10 @@
                 "@type": "Text",
                 "scale": [
                   {
-                    "@type": "LinearScale"
+                    "marc:scaleType": "marc:LinearScale"
                   },
                   {
-                    "label": "110000"
+                    "marc:linearHorizontalScale": "110000"
                   }
                 ]
               }
@@ -3575,7 +3575,74 @@
       ]
     },
 
-    "340": {},
+    "340": {
+      "aboutEntity": "?thing",
+      "$a": {
+        "addLink": "baseMaterial",
+        "resourceType": "BaseMaterial",
+        "property": "value"
+      },
+      "$b": { "addProperty": "dimensions" },
+      "$c": {
+        "addLink": "appliedMaterial",
+        "resourceType": "AppliedMaterial",
+        "property": "value"
+      },
+      "$d": {
+        "TODO": "Ensure this doesn't clash with 007 13:14 Sound",
+        "addLink": "productionMethod",
+        "resourceType": "ProductionMethod",
+        "property": "value"
+      },
+      "$e": {
+        "addLink": "mount",
+        "resourceType": "Mount",
+        "property": "value"
+      },
+      "$f": {
+        "NOTE": "This mapping does not fit all media types",
+        "addLink": "reductionRatio",
+        "resourceType": "ReductionRatio",
+        "property": "value"
+      },
+      "$h": { "ignored": "true" },
+      "$i": { "addProperty": "systemRequirements" },
+      "$j": {
+        "addLink": "generation",
+        "resourceType": "Generation",
+        "property": "value"
+      },
+      "$k": {
+        "addLink": "layout",
+        "resourceType": "Layout",
+        "property": "value"
+      },
+      "$m": {
+        "addLink": "bookFormat",
+        "resourceType": "BookFormat",
+        "property": "value"
+      },
+      "$n": {
+        "addLink": "fontSize",
+        "resourceType": "FontSize",
+        "property": "value"
+      },
+      "$o": {
+        "addLink": "polarity",
+        "resourceType": "Polarity",
+        "property": "value"
+      },
+      "$0": { "ignored": "true" },
+      "TODO:subfield$2": "Source (NR)",
+      "$3": { "ignored": "true" },
+      "TODO:subfield$6": "Linkage (NR)",
+      "$g": {
+        "TODO": "draft",
+        "addLink": "colorContent",
+        "resourceType": "colorContent",
+        "property": "value"
+      }
+    },
     "342": {},
     "343": {},
     "344": {},
@@ -3649,7 +3716,7 @@
       "$l": {"link": "callno", "resourceType": "Concept", "property": "code"}
     },
 
-    "500": {"$a": {"aboutEntity": "?thing", "addLink": "note", "property": "label"}},
+    "500": {"$a": {"aboutEntity": "?thing", "addLink": "hasNote", "property": "label"}},
     "501": {},
     "502": {
       "addLink": "dissertation", "resourceType": "Dissertation",
@@ -3667,10 +3734,10 @@
       "TOOO:i2": {},
       "aboutEntity": "?thing",
       "addLink": "tableOfContents",
-      "$a": {"property": "label"},
-      "$g": {"property": "label"},
-      "$r": {"property": "label"},
-      "$t": {"property": "label"},
+      "$a": {"property": "marc:formattedContentsNote"},
+      "$g": {"property": "marc:miscellaneousInformation"},
+      "$r": {"property": "marc:statementOfResponsibility"},
+      "$t": {"property": "marc:title"},
       "$u": {"TODO:ignore": "true??? As bf2"},
       "TOOO:6": {}
     },
