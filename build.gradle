@@ -122,6 +122,12 @@ task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
     args(System.getProperty('args', "").split() as String[])
 }
 
+task vocabFromMarcFrame(dependsOn: 'classes', type: JavaExec) {
+    description "Extract a vocabulary from marcframe"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'whelk.converter.marc.MarcFrameVocabExtractor'
+}
+
 task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
     description "Convert a JSON-LD file to Turtle (USAGE: -Dargs='<context> <source>')"
     classpath = sourceSets.main.runtimeClasspath

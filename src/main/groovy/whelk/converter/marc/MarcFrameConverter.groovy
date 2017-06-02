@@ -9,7 +9,6 @@ import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
 import whelk.filter.LinkFinder
-import org.picocontainer.PicoContainer
 import whelk.util.PropertyLoader
 import whelk.util.URIWrapper
 
@@ -419,7 +418,7 @@ class MarcRuleSet {
     Set primaryTags = new HashSet()
     Map<String, Set<String>> aboutTypeMap = new HashMap<String, Set<String>>()
 
-    Map topPendingResources = [:]
+    Map<String, Map> topPendingResources = [:]
 
     Map oaipmhSetSpecPrefixMap = [:]
 
@@ -721,12 +720,15 @@ class ConversionPart {
     MarcRuleSet ruleSet
     String aboutEntityName
     Map tokenMap
+    String tokenMapName // TODO: remove in columns in favour of @type+code/uriTemplate ?
     Map reverseTokenMap
     boolean embedded = false
 
     void setTokenMap(BaseMarcFieldHandler fieldHandler, Map dfn) {
         def tokenMap = dfn.tokenMap
         if (tokenMap) {
+            if (tokenMap instanceof String)
+                tokenMapName = tokenMap
             reverseTokenMap = [:]
             this.tokenMap = (Map) ((tokenMap instanceof String) ?
                     fieldHandler.tokenMaps[tokenMap] : tokenMap)
@@ -906,6 +908,7 @@ class ConvertResult {
 @CompileStatic
 class MarcFixedFieldHandler {
 
+    MarcRuleSet ruleSet
     String tag
     static final String FIXED_UNDEF = "|"
     static final String FIXED_NONE = " "
@@ -914,6 +917,7 @@ class MarcFixedFieldHandler {
     int fieldSize = 0
 
     MarcFixedFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn) {
+        this.ruleSet = ruleSet
         this.tag = tag
         fieldDfn?.each { key, obj ->
             def m = (key =~ /^\[(\d+):(\d+)\]$/)
@@ -1512,7 +1516,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         value.subfields.each { Map it ->
             it.each { code, subVal ->
-                def subDfn = (MarcSubFieldHandler) subfields[code]
+                def subDfn = (MarcSubFieldHandler) subfields[code as String]
                 boolean ok = false
                 if (subDfn) {
                     def entKey = subDfn.aboutEntityName
@@ -1840,6 +1844,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             return null
         }
     }
+
 }
 
 @CompileStatic
