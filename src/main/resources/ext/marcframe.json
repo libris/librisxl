@@ -4885,6 +4885,7 @@
     },
     "065" : {
       "inherit": "bib:084",
+      "aboutEntity": "?thing",
       "addLink": "broadMatch"
     },
 
@@ -4899,10 +4900,12 @@
     },
 
     "082" : {
-      "inherit": "bib"
+      "inherit": "bib",
+      "aboutEntity": "?thing"
     },
     "083" : {
       "inherit": "bib",
+      "aboutEntity": "?thing",
       "addLink": "closeMatch",
       "TODO:match @type = ?": {
         "Concept": {"addLink": "closeMatch"},
@@ -5145,11 +5148,13 @@
     "410": {
       "inherit": "bib:610",
       "TODO:i2": null,
+      "aboutEntity": "?thing",
       "addLink": "hasVersion",
       "resourceType": "Organization"
     },
     "411": {
       "inherit": "bib:611",
+      "aboutEntity": "?thing",
       "addLink": "hasVersion",
       "resourceType": "Meeting"
     },
@@ -5184,7 +5189,7 @@
       }
     },
     "510" : {"inherit": "bib:110", "aboutEntity": null, "addLink": "seeAlso"},
-    "511" : {"inherit": "bib:111", "aboutType": null, "addLink": "seeAlso"},
+    "511" : {"inherit": "bib:111", "aboutEntity": null, "addLink": "seeAlso"},
     "550" : {
       "include": ["termbase", "relation_from_w"],
       "resourceType": "Topic",
@@ -5326,6 +5331,7 @@
 
     "856": {
       "inherit": "bib",
+      "aboutEntity": null,
       "addLink": "relatedTo",
       "resourceType": "Document",
       "TODO:i1": {},
@@ -5654,7 +5660,7 @@
 
     "035": {"inherit": "bib", "$9": null},
 
-    "084": {"inherit": "bib", "addLink": "callno"},
+    "084": {"inherit": "bib", "aboutEntity": null, "addLink": "callno"},
 
     "506": {
       "inherit": "bib"
@@ -5694,7 +5700,7 @@
         "_:agent": {"link": "subject", "resourceType": "Person"}
       }
     },
-    "650": {"inherit": "bib:650"},
+    "650": {"inherit": "bib:650", "aboutEntity": null},
     "653": {},
     "698": {},
 
