@@ -2718,7 +2718,7 @@
       "$2": {"property": "source"},
       "$3": {"property": "part", "TODO": "How to generally handle 'Materials speciefied (NR)'"},
       "$a": {
-        "link": "scale",
+        "addLink": "scale",
         "property": "marc:scaleType",
         "tokenMap": {
           "a": "marc:LinearScale",
@@ -3314,14 +3314,16 @@
 
     "255": {
       "aboutEntity": "?work",
+      "addLink": "cartographicAttributes",
+      "resourceType": "Cartographic",
       "embedded": true,
-      "$a": {"link": "scale", "property": "label", "resourceType": "Scale"},
-      "$b": {"link": "cartographicAttributes", "property": "projection", "resourceType": "Cartographic"},
-      "$c": {"link": "cartographicAttributes", "property": "coordinates", "resourceType": "Cartographic"},
-      "$d": {"link": "cartographicAttributes", "property": "ascensionAndDeclination", "resourceType": "Cartographic"},
-      "$e": {"link": "cartographicAttributes", "property": "equinox", "resourceType": "Cartographic"},
-      "$f": {"link": "cartographicAttributes", "property": "outerGRing", "resourceType": "Cartographic"},
-      "$g": {"link": "cartographicAttributes", "property": "exclusionGRing", "resourceType": "Cartographic"}
+      "$a": {"link": "scale", "resourceType": "Scale", "property": "label"},
+      "$b": {"property": "projection"},
+      "$c": {"property": "coordinates"},
+      "$d": {"property": "ascensionAndDeclination"},
+      "$e": {"property": "equinox"},
+      "$f": {"property": "outerGRing"},
+      "$g": {"property": "exclusionGRing"}
     },
 
     "256": {
@@ -3577,70 +3579,71 @@
 
     "340": {
       "aboutEntity": "?thing",
+      "TODO": "Add the separate lists used for cataloging, as enumerations",
       "$a": {
         "addLink": "baseMaterial",
         "resourceType": "BaseMaterial",
-        "property": "value"
+        "property": "label"
       },
       "$b": { "addProperty": "dimensions" },
       "$c": {
         "addLink": "appliedMaterial",
         "resourceType": "AppliedMaterial",
-        "property": "value"
+        "property": "label"
       },
       "$d": {
         "TODO": "Ensure this doesn't clash with 007 13:14 Sound",
         "addLink": "productionMethod",
         "resourceType": "ProductionMethod",
-        "property": "value"
+        "property": "label"
       },
       "$e": {
         "addLink": "mount",
         "resourceType": "Mount",
-        "property": "value"
+        "property": "label"
       },
       "$f": {
         "NOTE": "This mapping does not fit all media types",
         "addLink": "reductionRatio",
         "resourceType": "ReductionRatio",
-        "property": "value"
+        "property": "label"
       },
       "$h": { "ignored": "true" },
       "$i": { "addProperty": "systemRequirements" },
       "$j": {
         "addLink": "generation",
         "resourceType": "Generation",
-        "property": "value"
+        "property": "label"
       },
       "$k": {
         "addLink": "layout",
         "resourceType": "Layout",
-        "property": "value"
+        "property": "label"
       },
       "$m": {
         "addLink": "bookFormat",
         "resourceType": "BookFormat",
-        "property": "value"
+        "property": "label"
       },
       "$n": {
         "addLink": "fontSize",
         "resourceType": "FontSize",
-        "property": "value"
+        "property": "label"
       },
       "$o": {
         "addLink": "polarity",
         "resourceType": "Polarity",
-        "property": "value"
+        "property": "label"
       },
       "$0": { "ignored": "true" },
       "TODO:subfield$2": "Source (NR)",
       "$3": { "ignored": "true" },
       "TODO:subfield$6": "Linkage (NR)",
       "$g": {
-        "TODO": "draft",
+        "NOTE": "New subfield",
         "addLink": "colorContent",
         "resourceType": "colorContent",
-        "property": "value"
+        "property": "label"
       }
     },
     "342": {},
@@ -3716,7 +3719,8 @@
       "$l": {"link": "callno", "resourceType": "Concept", "property": "code"}
     },
 
-    "500": {"$a": {"aboutEntity": "?thing", "addLink": "hasNote", "property": "label"}},
+    "500": {
+      "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "Note", "property": "label"}},
     "501": {},
     "502": {
       "addLink": "dissertation", "resourceType": "Dissertation",
@@ -3779,8 +3783,8 @@
       "resourceType": "Summary",
       "$a": {"property": "marc:summaryEtcNote"},
       "$b": {"property": "marc:expansionOfSummaryNote"},
-      "$c": {"addLink": "source", "NOTE:subfield-repeatable": "false", "property": "value", "resourceType": "Source"},
-      "$u": {"addLink": "source", "property": "uri", "resourceType": "Source"},
+      "$c": {"addLink": "source", "resourceType": "Source", "NOTE:subfield-repeatable": "false", "property": "value"},
+      "$u": {"addLink": "source", "resourceType": "Source", "property": "uri"},
       "_spec": [
         {
           "source": {"520": {"ind1": " ", "ind2": " ", "subfields": [
