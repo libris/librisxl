@@ -1515,52 +1515,55 @@
           "tokenMap": "MotionPicMaterialType"
         },
         "[3:4]": {
-          "link": "marc:motionPicColor",
+          "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "MotionPicColorType"
         },
         "[4:5]": {
-          "link": "marc:motionPicFormat",
+          "link": "projectionCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "MotionPicFormatType"
+          "tokenMap": "MotionPicFormatType",
+          "TODO:resourceType": "PresentationFormat"
         },
         "[5:6]": {
-          "link": "marc:motionPicSound",
+          "link": "soundContent",
           "uriTemplate": "{_}",
           "tokenMap": "SoundType"
         },
         "[6:7]": {
-          "link": "marc:motionPicMedium",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "MediumType"
+          "tokenMap": "MediumType",
+          "TODO:resourceType": "RecordingMedium"
         },
         "[7:8]": {
-          "link": "marc:motionPicDimensions",
+          "link": "dimensions",
           "uriTemplate": "{_}",
           "tokenMap": "MotionPicDimensionsType"
         },
         "[8:9]": {
-          "link": "marc:motionPicConfiguration",
+          "link": "soundCharacteristic",
           "uriTemplate": "{_}",
-          "tokenMap": "MotionPicConfigurationOrVideoPlaybackType"
+          "tokenMap": "MotionPicConfigurationOrVideoPlaybackType",
+          "TODO:resourceType": "PlaybackChannels"
         },
         "[9:10]": {
-          "link": "marc:motionPicElements",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MotionPicElementsType"
         },
         "[10:11]": {
-          "link": "marc:motionPicPosNeg",
+          "link": "polarity",
           "uriTemplate": "{_}",
           "tokenMap": "MotionPicPosNegType"
         },
         "[11:12]": {
-          "link": "marc:motionPicGeneration",
+          "link": "generation",
           "uriTemplate": "{_}",
           "tokenMap": "MotionPicGenerationType"
         },
         "[12:13]": {
-          "link": "marc:motionPicBase",
+          "link": "baseMaterial",
           "uriTemplate": "{_}",
           "tokenMap": "FilmBaseType"
         },
@@ -1581,15 +1584,20 @@
         },
         "[16:17]": {
           "link": "marc:motionPicCompleteness",
+          "TODO:link (if it is enough to be understandable (hint: see values of the tokenMap)": "hasNote",
           "uriTemplate": "{_}",
           "tokenMap": "MotionPicCompletenessType"
         },
-        "[17:23]": {"property": "timeOfExamination"},
+        "[17:23]": {
+          "TODO:property (if enough?)": "note",
+          "property": "marc:timeOfExamination"
+        },
         "[2:3]": {
+          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
           "link": "marc:motionPicAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
-        "fixedDefault": " "
+          "fixedDefault": " "
         }
       },
       "Kit": {
