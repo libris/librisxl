@@ -42,7 +42,7 @@
         "m": "Multimedia",
         "o": "Kit",
         "p": "MixedMaterial",
-        "r": "Realia",
+        "r": "Object",
         "t": "ManuscriptText",
         "u": "Item",
         "v": "Item",
@@ -3313,12 +3313,13 @@
     "254": {},
 
     "255": {
+      "NOTE:domainIncludes": "Cartography",
       "aboutEntity": "?work",
       "addLink": "cartographicAttributes",
       "resourceType": "Cartographic",
       "embedded": true,
       "$a": {"link": "scale", "resourceType": "Scale", "property": "label"},
-      "$b": {"property": "projection"},
+      "$b": {"link": "projection", "resourceType": "Projection", "property": "label"},
       "$c": {"property": "coordinates"},
       "$d": {"property": "ascensionAndDeclination"},
       "$e": {"property": "equinox"},
@@ -3642,7 +3643,7 @@
       "$g": {
         "NOTE": "New subfield",
         "addLink": "colorContent",
-        "resourceType": "colorContent",
+        "resourceType": "ColorContent",
         "property": "label"
       }
     },
@@ -3698,7 +3699,7 @@
     "411": {},
 
     "440": {
-      "TODO:ignoreOnRevertInFavourOf": "490 or 773? See also mapping for 240",
+      "TODO:ignoreOnRevertInFavourOf": "490 or 773 or 830? See also mapping for 240",
       "addLink": "hasSeries",
       "embedded": true,
       "resourceType": "Serial",
@@ -4101,7 +4102,7 @@
     "655" : {
       "include": ["subjectbase", "termbase_noid"],
       "aboutEntity": "?work",
-      "addLink": "genre",
+      "addLink": "genreForm",
       "resourceType": "GenreForm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
