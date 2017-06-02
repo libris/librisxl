@@ -3755,7 +3755,7 @@
 
     "510": {
       "addProperty": "citedBy",
-      "resourceType": "CreativeWork",
+      "resourceType": "Instance",
       "TOOO:i1": {},
       "$a": {"property": "title"},
       "$c": {"property": "pagination"}
@@ -4394,8 +4394,8 @@
     "767": {"inherit": "772", "addLink": "translation"},
     "770": {"inherit": "772", "addLink": "contains"},
     "772": {
-      "addLink": "isPartOf",
-      "resourceType": "CreativeWork",
+      "addLink": "supplementTo",
+      "resourceType": "Work",
       "TOOO:i1": {},
       "TOOO:i2": {},
       "$a": {"property": "controlledLabel", "TODO:targetMatch": "1xx"},
@@ -4439,7 +4439,7 @@
           "result": {"mainEntity": {
             "isPartOf": [
               {
-                "@type": "CreativeWork",
+                "@type": "Work",
                 "uniformTitle": "Main Thing",
                 "isbn": ["00-0-000000-0"]
               }
@@ -4460,7 +4460,7 @@
       "inherit": "772",
       "addLink": "hasPart",
       "NOTE:domainIncludes": "Serial",
-      "resourceType": "CreativeWork"
+      "resourceType": "Work"
     },
     "775": {
       "inherit": "772",
@@ -5261,7 +5261,7 @@
       "aboutEntity": "?record",
       "addLink": "source",
       "embedded": true,
-      "resourceType": "CreativeWork",
+      "resourceType": "Instance",
       "$a": {"property": "label"},
       "$b": {"property": "citation"},
       "$u": {"property": "uri"}
