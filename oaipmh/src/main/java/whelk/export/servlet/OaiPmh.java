@@ -18,8 +18,8 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
@@ -93,7 +93,7 @@ public class OaiPmh extends HttpServlet
     public static PostgreSQLComponent s_postgreSqlComponent;
     public static JsonLd s_jsonld; // For model driven behaviour
     public static Whelk s_whelk;
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
