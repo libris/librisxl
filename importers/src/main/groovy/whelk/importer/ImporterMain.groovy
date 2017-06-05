@@ -11,7 +11,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 import groovy.sql.Sql
 import org.picocontainer.PicoContainer
 
@@ -195,10 +195,10 @@ class ImporterMain {
         def idgroups = new File(file).readLines()
                 .findAll { String line -> ['\t', '/'].every { it -> line.contains(it) } }
                 .collect { line ->
-            def split = line.substring(0, line.indexOf("\t")).split('/')
-            [collection: split[0], id: split[1]]
-        }
-        .groupBy { it -> it.collection }
+                            def split = line.substring(0, line.indexOf("\t")).split('/')
+                            [collection: split[0], id: split[1]]
+                         }
+                .groupBy { it -> it.collection }
                 .collect { k, v -> [key: k, value: v.collect { it -> it.id }] }
 
         def bibIds = idgroups.find{it->it.key == 'bib'}.value
@@ -206,7 +206,7 @@ class ImporterMain {
         importLinkedRecords(bibIds)
 
         idgroups.each { group ->
-            def importResult = importer.doImport(group.key, 'vcopy', connUrl, group.value as String[])
+            ImportResult importResult = importer.doImport(group.key, 'vcopy', connUrl, group.value as String[])
             println "Created ${importResult?.numberOfDocuments} documents from  ${group.key}."
         }
 
@@ -329,6 +329,8 @@ class ImporterMain {
         } catch (IllegalArgumentException e) {
             System.err.println "Missing arguments. Expected:"
             System.err.println "\t${method.name} ${method.getAnnotation(Command).args()}"
+            System.err.println e.message
+            org.codehaus.groovy.runtime.StackTraceUtils.sanitize(e).printStackTrace()
             System.exit(1)
         }
     }

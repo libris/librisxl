@@ -1,7 +1,7 @@
 package whelk.apix;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.Iso2709Serializer;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
@@ -28,7 +28,7 @@ public class Converter
     private final JsonLd m_jsonld;
     private final JsonLD2MarcXMLConverter m_converter = new JsonLD2MarcXMLConverter();
     private MarcFrameConverter m_toJsonConverter;
-    private final Logger s_logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger s_logger = LogManager.getLogger(this.getClass());
 
     public Converter(Whelk whelk)
     {

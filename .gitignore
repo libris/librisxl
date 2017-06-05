@@ -24,3 +24,4 @@ src/main/resources/whelk.json
 
 out/artifacts/librisxl/exploded/whelk-0.8.14.x.war/META-INF/MANIFEST.MF
 .venv
+logs

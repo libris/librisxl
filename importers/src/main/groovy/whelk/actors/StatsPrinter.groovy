@@ -1,7 +1,7 @@
 package whelk.actors
 
 import groovyx.gpars.actor.DefaultActor
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 /**
  * Created by theodortolstoy on 2017-01-11.
  * Actor from printing to stdout. Perhaps unnecessary.

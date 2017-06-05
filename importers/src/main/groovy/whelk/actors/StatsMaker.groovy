@@ -1,6 +1,6 @@
 package whelk.actors
 
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 import whelk.SetSpecMatcher
 import whelk.util.VCopyToWhelkConverter
 import whelk.converter.marc.MarcFrameConverter

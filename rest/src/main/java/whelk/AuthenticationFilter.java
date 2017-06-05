@@ -7,8 +7,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import whelk.util.PropertyLoader;
 
 import javax.servlet.*;
@@ -26,7 +26,7 @@ public class AuthenticationFilter implements Filter {
     private boolean mockAuthMode = false;
     private String url = null;
 
-    final static Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
+    final static Logger log = LogManager.getLogger(AuthenticationFilter.class);
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {

@@ -1,7 +1,7 @@
 package whelk
 
 import groovy.json.JsonBuilder
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 
 /**
  * Created by Theodor on 2016-11-21.
