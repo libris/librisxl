@@ -230,6 +230,16 @@ public class ResponseCommon
             emitAttachedHoldings(document.getThingIdentifiers(), writer);
         }
 
+        String itemOf = resultSet.getString("itemOf");
+        if (dataset.equals("hold") && itemOf != null)
+        {
+            writer.writeStartElement("about");
+            writer.writeStartElement("itemOf");
+            writer.writeAttribute("id", itemOf);
+            writer.writeEndElement(); // itemOf
+            writer.writeEndElement(); // about
+        }
+
         if (!onlyIdentifiers)
             writer.writeEndElement(); // record
     }
