@@ -1,27 +1,18 @@
 package whelk.component
 
-import groovy.util.logging.Slf4j as Log
+import groovy.json.JsonOutput
+import groovy.util.logging.Log4j2 as Log
 
 import org.apache.commons.codec.binary.Base64
+import org.apache.http.HttpHost
+import org.apache.http.entity.ContentType
+import org.apache.http.message.BasicHeader
+import org.apache.http.nio.entity.NStringEntity
+import org.apache.http.util.EntityUtils
 import org.codehaus.jackson.map.ObjectMapper
-import org.elasticsearch.action.ActionRequest
-import org.elasticsearch.action.ActionResponse
-import org.elasticsearch.action.bulk.BulkRequest
-import org.elasticsearch.action.bulk.BulkResponse
-import org.elasticsearch.action.delete.DeleteRequest
-import org.elasticsearch.action.deletebyquery.DeleteByQueryAction
-import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest
-import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse
-import org.elasticsearch.action.index.IndexRequest
-import org.elasticsearch.action.search.SearchRequest
-import org.elasticsearch.action.search.SearchType
-import org.elasticsearch.client.Client
-import org.elasticsearch.client.transport.NoNodeAvailableException
-import org.elasticsearch.client.transport.TransportClient
-import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.common.transport.InetSocketTransportAddress
-import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin
+import org.elasticsearch.client.Response
+import org.elasticsearch.client.RestClient
+
 import whelk.Document
 import whelk.JsonLd
 import whelk.exception.*
@@ -31,14 +22,12 @@ import whelk.Whelk
 @Log
 class ElasticSearch {
 
-    static final int WARN_AFTER_TRIES = 1000
-    static final int RETRY_TIMEOUT = 300
-    static final int MAX_RETRY_TIMEOUT = 60*60*1000
     static final int DEFAULT_PAGE_SIZE = 50
 
-    Client client
+    static final String BULK_CONTENT_TYPE = "application/x-ndjson"
+
+    RestClient restClient
     private String elastichost, elasticcluster
-    String defaultType = "record"
     String defaultIndex = null
 
     boolean haltOnFailure = false
@@ -53,144 +42,87 @@ class ElasticSearch {
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
         this.expander = ex
-        connectClient()
     }
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
         this.elastichost = elasticHost
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
-        connectClient()
     }
 
-    void connectClient() {
+    private void connectRestClient(){
         if (elastichost) {
-            log.info("Connecting to $elasticcluster using hosts $elastichost")
-            def sb = Settings.settingsBuilder()
+            restClient = RestClient.builder(new HttpHost(elastichost,elasticPort,"http")).build()
+        }
+    }
 
-            if (elasticcluster) {
-                sb = sb.put("cluster.name", elasticcluster)
+    Response performRequest(String method, String path, NStringEntity body, String contentType0 = null){
+        try {
+            connectRestClient()
+            String contentType
+            if (contentType0 == null) {
+                contentType = ContentType.APPLICATION_JSON.toString()
+            } else {
+                contentType = contentType0
             }
-            Settings elasticSettings = sb.build()
 
-            client = TransportClient.builder().settings(elasticSettings).addPlugin(DeleteByQueryPlugin.class).build()
-            try {
-                elastichost.split(",").each {
-                    def host, port
-                    if (it.contains(":")) {
-                        (host, port) = it.split(":")
-                    } else {
-                        host = it
-                        port = 9300
-                    }
-                    client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), port as int))
-                }
-            } catch (ArrayIndexOutOfBoundsException aioobe) {
-                throw new WhelkRuntimeException("Unable to initialize elasticsearch client. Host configuration might be missing port?")
-            }
-            log.debug("... connected.")
-        } else {
-            throw new WhelkRuntimeException("Unable to initialize ES client.")
+            return restClient.performRequest(method, path,
+                    Collections.<String, String> emptyMap(),
+                    body,
+                    new BasicHeader('content-type', contentType))
+        }
+        finally {
+            restClient.close()
         }
     }
 
-    /**
-     * Get configured mappings.
-     *
-     */
-    Map getMappings() {
-        def indexClient = client.admin().indices()
-        def mappingRequest = indexClient.prepareGetMappings(this.defaultIndex)
-        def mappings = mappingRequest.get().mappings()
-
-        Map result = [:]
-
-        mappings.keys().toArray().each { key ->
-            def mapping = mappings.get(key)
-            result[key.toString()] = convertMapping(mapping)
-        }
-
-        return result
-    }
-
-    private Map convertMapping(def mapping) {
-        Map result = [:]
-        mapping.keys().toArray().each { key ->
-            result[key] = mapping.get(key).getSourceAsMap()
-        }
-
-        return result
-    }
-
-    public ActionResponse performExecute(ActionRequest request) {
-        int failcount = 0
-        ActionResponse response = null
-        while (response == null) {
-            try {
-                if (request instanceof IndexRequest) {
-                    response = client.index(request).actionGet()
-                }
-                if (request instanceof BulkRequest) {
-                    response = client.bulk(request).actionGet()
-                }
-                if (request instanceof DeleteRequest) {
-                    response = client.delete(request).actionGet()
-                }
-            } catch (NoNodeAvailableException n) {
-                log.trace("Retrying server connection ...")
-                if (failcount++ > WARN_AFTER_TRIES) {
-                    log.warn("Failed to connect to elasticsearch after $failcount attempts.")
-                }
-                if (failcount % 100 == 0) {
-                    log.info("Server is not responsive. Still trying ...")
-                }
-                Thread.sleep(RETRY_TIMEOUT + failcount > MAX_RETRY_TIMEOUT ? MAX_RETRY_TIMEOUT : RETRY_TIMEOUT + failcount)
-            }
-        }
-        return response
-    }
-
-    public void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
+    void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
         assert collection
         if (docs) {
-            BulkRequest bulk = new BulkRequest()
-            for (doc in docs) {
-                try {
-                    Map shapedData = getShapeForIndex(doc, whelk)
-                    bulk.add(new IndexRequest(getIndexName(), collection, toElasticId(doc.getShortId())).source(shapedData))
-                } catch (Throwable e) {
-                    log.error("Failed to create indexrequest for document ${doc.getShortId()}. Reason: ${e.message}", e)
-                    if (haltOnFailure) {
-                        throw e
-                    }
-                }
-            }
-            BulkResponse response = performExecute(bulk)
-            if (response.hasFailures()) {
-                response.iterator().each {
-                    if (it.failed) {
-                        log.error("Indexing of ${it.id} failed: ${it.failureMessage}")
-                    }
-                }
-            }
+            String bulkString = docs.collect{ doc ->
+                String shapedData = JsonOutput.toJson(getShapeForIndex(doc, whelk))
+                String action = createActionRow(doc,collection)
+                "${action}\n${shapedData}\n"
+            }.join('')
+
+            def body = new NStringEntity(bulkString)
+            def response = performRequest('POST', '/_bulk',body, BULK_CONTENT_TYPE)
+            def eString = EntityUtils.toString(response.getEntity())
+            Map responseMap = mapper.readValue(eString, Map)
+            log.debug("Bulk indexed ${docs.count{it}} docs in ${responseMap.took}")
         }
     }
 
-    public void index(Document doc, String collection, Whelk whelk) {
-        Map shapedData = getShapeForIndex(doc, whelk)
-        def idxReq = new IndexRequest(getIndexName(), collection, toElasticId(doc.getShortId())).source(shapedData)
-        def response = performExecute(idxReq)
-        log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${response.getId()} as version ${response.getVersion()}")
+    String createActionRow(Document doc, String collection) {
+        def action = ["index" : [ "_index" : indexName,
+                                  "_type" : collection,
+                                  "_id" : toElasticId(doc.getShortId()) ]]
+        return mapper.writeValueAsString(action)
     }
 
-    public void remove(String identifier) {
+    void index(Document doc, String collection, Whelk whelk) {
+        Map shapedData = getShapeForIndex(doc, whelk)
+        def body = new NStringEntity(JsonOutput.toJson(shapedData), ContentType.APPLICATION_JSON)
+        def response = performRequest('PUT',
+                "/${indexName}/${collection}" +
+                "/${toElasticId(doc.getShortId())}?pipeline=libris",
+                body)
+        def eString = EntityUtils.toString(response.getEntity())
+        Map responseMap = mapper.readValue(eString, Map)
+        log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
+    }
+
+    void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
-        DeleteByQueryResponse rsp = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE)
-                .setIndices(defaultIndex)
-                .setSource(["query":["term":["_id":toElasticId(identifier)]]])
-                .execute()
-                .actionGet()
-        log.debug("Response: ${rsp.totalDeleted} objects deleted")
+        def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
+        def query = new NStringEntity(JsonOutput.toJson(dsl), ContentType.APPLICATION_JSON)
+        def response = performRequest('POST',
+                "/${indexName}/_delete_by_query?conflicts=proceed",
+                query)
+        def eString = EntityUtils.toString(response.getEntity())
+        Map responseMap = mapper.readValue(eString, Map)
+        log.debug("Response: ${responseMap.deleted} of ${responseMap.total} " +
+                  "objects deleted")
     }
 
     Map getShapeForIndex(Document document, Whelk whelk) {
@@ -208,25 +140,30 @@ class ElasticSearch {
     }
 
     Map query(Map jsonDsl, String collection) {
-        def idxlist = [defaultIndex] as String[]
-
-        byte[] dsl = mapper.writeValueAsBytes(jsonDsl)
-        SearchRequest sr = new SearchRequest(idxlist, dsl)
-        sr.searchType(SearchType.DFS_QUERY_THEN_FETCH)
-        if (collection) {
-          sr.types([collection] as String[])
-        }
-        def response = client.search(sr).actionGet()
+        def query = new NStringEntity(JsonOutput.toJson(jsonDsl), ContentType.APPLICATION_JSON)
+        def response = performRequest('POST',
+                getQueryUrl(collection),
+                query)
+        def eString = EntityUtils.toString(response.getEntity())
+        Map responseMap = mapper.readValue(eString, Map)
 
         def results = [:]
 
         results.startIndex = jsonDsl.from
-        results.searchCompletedInISO8601duration = "PT" + response.took.secondsFrac + "S"
-        results.totalHits = response.hits.totalHits
-        results.items = response.hits.hits.collect { it.source }
-        results.aggregations = response.aggregations
+        results.totalHits = responseMap.hits.total
+        results.items = responseMap.hits.hits.collect { it."_source" }
+        results.aggregations = responseMap.aggregations
 
         return results
+    }
+
+    private String getQueryUrl(String collection) {
+        String maybeCollection  = ""
+        if (collection) {
+            maybeCollection = "${collection}/"
+        }
+
+        return "/${indexName}/${maybeCollection}_search"
     }
 
     // TODO merge with logic in whelk.rest.api.SearchUtils
@@ -321,11 +258,9 @@ class ElasticSearch {
     }
 
 
-    public String getIndexName() { defaultIndex }
-    public String getElasticHost() { elastichost.split(":").first() }
-    public String getElasticCluster() { elasticcluster }
-    public int getElasticPort() {
-        try { new Integer(elastichost.split(",").first().split(":").last()).intValue() } catch (NumberFormatException nfe) { 9300 }
+    String getIndexName() { defaultIndex }
+    int getElasticPort() {
+        try { new Integer(elastichost.split(",").first().split(":").last()).intValue() } catch (NumberFormatException nfe) { 9200 }
     }
 
     static String toElasticId(String id) {
@@ -342,7 +277,7 @@ class ElasticSearch {
             log.warn("Using old style index id's for $id")
             def pathelements = []
             id.split("::").each {
-                pathelements << java.net.URLEncoder.encode(it, "UTF-8")
+                pathelements << URLEncoder.encode(it, "UTF-8")
             }
             return  new String("/"+pathelements.join("/"))
         } else {

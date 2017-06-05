@@ -2,7 +2,7 @@ package whelk.converter
 
 import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 
 import whelk.*
 import se.kb.libris.util.marc.*

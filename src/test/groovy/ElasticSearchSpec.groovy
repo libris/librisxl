@@ -2,7 +2,6 @@ package whelk.component
 
 import spock.lang.Specification
 
-//import whelk.ElasticSearch
 
 class ElasticSearchSpec extends Specification {
 

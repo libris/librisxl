@@ -11,7 +11,7 @@ import se.kb.libris.util.marc.impl.DatafieldImpl
 import se.kb.libris.util.marc.impl.MarcRecordImpl
 import se.kb.libris.util.marc.io.DomSerializer
 
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 
 import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.MarcRecord

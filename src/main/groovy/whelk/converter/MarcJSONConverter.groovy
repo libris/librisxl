@@ -1,7 +1,7 @@
 package whelk.converter
 
 import java.text.Normalizer
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 
 import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.MarcRecord

@@ -1,7 +1,7 @@
 package whelk.converter.marc
 
 import groovy.transform.CompileStatic
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
