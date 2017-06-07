@@ -301,7 +301,7 @@ class MarcConversion {
 
     def toFlatLinkedForm(state, marcRuleSet, extraData) {
         marcRuleSet.topPendingResources.each { key, dfn ->
-            if (dfn.about && dfn.link) {
+            if (dfn.about && dfn.link && !dfn.embedded) {
                 def ent = state.entityMap[dfn.about]
                 def linked = ent[dfn.link]
                 if (linked) {
@@ -336,7 +336,9 @@ class MarcConversion {
             log.debug "No linkfinder present"
         }
 
-        ArrayList entities = state.entityMap.values()
+        ArrayList entities = state.entityMap.findResults { key, ent ->
+            if (!marcRuleSet.topPendingResources[key].embedded) ent
+        }
         return [
                 '@graph': entities
         ]
@@ -698,10 +700,17 @@ class MarcRuleSet {
                 def about = entityMap[dfn.about]
                 def existing = about[dfn.link]
                 if (existing) {
-                    entity.each { k, v ->
-                        if (!existing.containsKey(k)) {
-                            existing[k] = v
+                    // Merge if there already is one (and only one) linked
+                    if (existing instanceof Map) {
+                        entity.each { k, v ->
+                            if (existing.containsKey(k)) {
+                                existing[k] = Util.asList(existing[k]) + [v]
+                            } else {
+                                existing[k] = v
+                            }
                         }
+                    } else if (existing instanceof List) {
+                        existing << entity
                     }
                     entityMap[key] = existing
                 } else {
