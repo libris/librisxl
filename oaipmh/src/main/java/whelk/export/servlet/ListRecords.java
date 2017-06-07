@@ -97,12 +97,14 @@ public class ListRecords
         {
             dbconn.setAutoCommit(false);
             boolean includeDependencies = metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX);
-            try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec, null, includeDependencies);
-                 ResultSet resultSet = preparedStatement.executeQuery())
+            PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec, null, includeDependencies);
+            try (ResultSet resultSet = preparedStatement.executeQuery())
             {
                 respond(request, response, metadataPrefix, onlyIdentifiers, includeDependencies, resultSet);
             } finally {
                 dbconn.commit();
+                preparedStatement.cancel();
+                preparedStatement.close();
             }
         }
     }
