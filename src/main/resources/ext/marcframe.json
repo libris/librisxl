@@ -3181,7 +3181,7 @@
       "addLink": "hasTitle",
       "embedded": true,
       "resourceType": "Title",
-      "i2": {"marcDefault": "0"},
+      "i2": {"TODO:titleSortKey": "bf2 implements this as: ($label,@ind2+1,(string-length($label)-@ind2)-1)", "marcDefault": "0"},
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
         "NOTE": "punctuation may include data about included parts (e.g. short stories)"
@@ -3489,20 +3489,35 @@
         "embedded": true
       },
       "$a": {
-        "property": "extent",
-        "TODO:bf2": {"link": "extent", "resourceType": "Extent", "property": "label"},
+        "addLink": "extent",
+        "resourceType": "Extent",
+        "property": "marc:extent",
         "punctuationChars": "+:;"
       },
-      "$b": {"property": "marc:otherPhysicalDetails", "punctuationChars": ";+"},
+      "$b": {
+        "TODO": "bf2 is mapping note/noteType: 'Physical details'. Do we want to do something similarily?",
+        "link": "hasNote",
+        "resourceType": "Note",
+        "property": "marc:otherPhysicalDetails",
+        "punctuationChars": ";+"
+      },
       "$c": {"property": "dimensions", "punctuationChars": ":;+"},
       "$e": {
         "TODO:previousSubfieldEndsWith": "+",
+        "TODO": "Map to accompaniedBy or kbv:hasNote (bf2 is mapping to note with noteType: 'Accompanying material')?",
         "link": "accompaniedBy", "property": "label", "embedded": true
       },
-      "$f": {"link": "device", "resourceType": "Device", "property": "label"},
+      "$f": {
+        "TODO": "Map to device or bf2:extent?",
+        "link": "extent", "resourceType": "Extent", "property": "marc:typeOfUnit"
+      },
+      "$g": {
+        "addLink": "extent", "resourceType": "Extent", "property": "marc:sizeOfUnit"
+      },
       "$3": {
         "property": "part"
-      }
+      },
+      "TODO:$6": "Linkage (NR)"
     },
 
     "306": {},
@@ -3668,26 +3683,36 @@
     "344": {},
     "345": {},
     "346": {},
-    "347": {},
+    "347": {
+      "aboutEntity": "?thing",
+      "addLink": "digitalCharacteristic",
+      "$a": {"resourceType": "FileType", "property": "label"},
+      "$b": {"resourceType": "EncodingFormat", "property": "label"},
+      "$c": {"resourceType": "FileSize", "property": "label"},
+      "$d": {"resourceType": "Resolution", "property": "label"},
+      "$e": {"resourceType": "RegionalEncoding", "property": "label"},
+      "$f": {"resourceType": "EncodedBitrate", "property": "label"},
+      "$0": {"TODO:ignored": "true???"},
+      "TODO:$2": "Source (NR)",
+      "TODO:$3": "Materials specified (NR)",
+      "TODO:$6": "Linkage (NR)"
+    },
     "351": {},
     "352": {
+      "addLink": "digitalCharacteristic",
       "$a": {
-        "addLink": "digitalCharacteristic",
         "NOTE:subfield-repeatable": "false",
         "resourceType": "CartographicDataType",
         "property": "marc:directReferenceMethod"
       },
       "$b": {
-        "addLink": "digitalCharacteristic",
         "resourceType": "CartographicObjectType",
         "property": "marc:objectType"
       },
       "$c": {
-        "addLink": "digitalCharacteristic",
         "resourceType": "CartographicObjectType",
         "property": "count"},
       "$q": {
-        "addLink": "digitalCharacteristic",
         "resourceType": "EncodingFormat",
         "property": "marc:formatOfTheDigitalImage"
       }
@@ -3884,7 +3909,22 @@
     "534": {},
     "535": {},
     "536": {},
-    "538": {"$a": {"aboutEntity": "?thing", "addProperty": "systemRequirements"}},
+    "538": {
+      "aboutEntity": "?thing",
+      "addLink": "systemRequirements",
+      "resourceType": "SystemRequirements",
+      "$a": {
+        "property": "marc:systemDetailsNote"
+      },
+      "$u": {
+        "addProperty": "marc:uniformResourceIdentifier",
+        "TODO": "Add  ^^xs:anyURI after URI as BF2??"
+      },
+      "TODO:$3": "Materials specified  (NR)",
+      "TODO:$5": "Institution to which field applies (NR)",
+      "TODO:$6": "Linkage (NR)",
+      "TODO:$8": ""
+    },
     "540": {},
     "541": {},
     "542": {},
