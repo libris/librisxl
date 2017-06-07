@@ -167,7 +167,7 @@ public class OaiPmh extends HttpServlet
         {
             // These exceptions are to be expected in every case where a client/harvester closes or loses connection
             // while a response is being sent.
-            logger.warn("Broken client pipe {}:{}, response feed interrupted.", req.getRemoteAddr(), req.getRemotePort(), e);
+            logger.warn("Broken client pipe {}:{}, response feed interrupted.", req.getRemoteAddr(), req.getRemotePort());
         }
         catch (SQLException e)
         {

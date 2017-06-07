@@ -11,6 +11,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 
 import io.prometheus.client.Counter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ListRecords
 {
@@ -23,6 +25,8 @@ public class ListRecords
     private static final Counter failedRequests = Counter.build()
             .name("oaipmh_failed_listrecords_requests_total").help("Total failed ListRecords requests.")
             .labelNames("error").register();
+
+    private final static Logger logger = LogManager.getLogger(ListRecords.class);
 
 
     /**
@@ -97,14 +101,21 @@ public class ListRecords
         {
             dbconn.setAutoCommit(false);
             boolean includeDependencies = metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX);
-            PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec, null, includeDependencies);
-            try (ResultSet resultSet = preparedStatement.executeQuery())
+            try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec, null, includeDependencies);
+                 ResultSet resultSet = preparedStatement.executeQuery())
             {
-                respond(request, response, metadataPrefix, onlyIdentifiers, includeDependencies, resultSet);
+                try
+                {
+                    respond(request, response, metadataPrefix, onlyIdentifiers, includeDependencies, resultSet);
+                }
+                catch (IOException | XMLStreamException e)
+                {
+                    logger.info("Attempting to cancel ongoing query due to broken client pipe.");
+                    preparedStatement.cancel();
+                    throw e;
+                }
             } finally {
                 dbconn.commit();
-                preparedStatement.cancel();
-                preparedStatement.close();
             }
         }
     }
