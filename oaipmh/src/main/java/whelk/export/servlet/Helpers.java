@@ -71,14 +71,12 @@ public class Helpers
         String identifiersTableName = mainTableName + "__identifiers";
 
         // Construct the query
-        String selectSQL = "SELECT lddb.id, lddb.data, lddb.collection, lddb.modified, lddb.deleted, lddb.data#>>'{@graph,1,heldBy,@id}' AS sigel, lddb.data#>>'{@graph,1,itemOf,@id}' AS itemOf, string_agg(DISTINCT(lddb_attached_holdings2.data#>>'{@graph,1,heldBy,@id}'), ',') AS sigel_list" +
+        String selectSQL = "SELECT lddb.id, lddb.data, lddb.collection, lddb.modified, lddb.deleted, lddb.data#>>'{@graph,1,heldBy,@id}' AS sigel, lddb.data#>>'{@graph,1,itemOf,@id}' AS itemOf" +
                 " FROM lddb " +
                 " INNER JOIN " +
                 identifiersTableName + " bib_iris ON lddb.id = bib_iris.id " +
                 " LEFT JOIN " +
                 mainTableName + " lddb_attached_holdings ON bib_iris.iri = lddb_attached_holdings.data#>>'{@graph,1,itemOf,@id}' " +
-                " LEFT JOIN " +
-                mainTableName + " lddb_attached_holdings2 ON bib_iris.iri = lddb_attached_holdings2.data#>>'{@graph,1,itemOf,@id}' " +
                 " WHERE lddb.collection <> 'definitions' ";
         if (id != null)
             selectSQL += " AND lddb.id = ? ";
@@ -109,8 +107,6 @@ public class Helpers
                     selectSQL += " AND lddb_attached_holdings.data->'@graph' @> ?";
             }
         }
-
-        selectSQL += " GROUP BY lddb.id ";
 
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setFetchSize(512);

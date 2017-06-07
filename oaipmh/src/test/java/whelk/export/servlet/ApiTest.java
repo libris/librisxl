@@ -240,6 +240,7 @@ public class ApiTest
         Assert.assertFalse( response.contains("noRecordsMatch"));
     }
 
+    /* This feature had to be disabled for performance reasons.
     @Test
     public void testBibSigelSetsInHeaderOnGetRecord() throws Exception
     {
@@ -254,7 +255,7 @@ public class ApiTest
         String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&set=bib:S&metadataPrefix=oai_dc");
         Assert.assertTrue( response.contains("bib:Gbg"));
         Assert.assertTrue( response.contains("bib:S"));
-    }
+    }*/
 
     @Test
     public void testAuthSet() throws Exception
