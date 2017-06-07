@@ -54,6 +54,7 @@ repositories {
 
 dependencies {
     def groovyVersion=GroovySystem.getVersion()
+    compile 'org.elasticsearch.client:rest:5.4.1'
 
     // KB tools
     compile 'com.github.libris:jmarctools:1.3.3'
@@ -69,16 +70,15 @@ dependencies {
     compile "stax:stax:1.2.0"
     compile "stax:stax-api:1.0.1"
     compile 'com.damnhandy:handy-uri-templates:2.0.4'
-    compile 'ch.qos.logback:logback-core:1.1.2'
-    compile 'ch.qos.logback:logback-classic:1.1.2'
-    compile 'org.slf4j:slf4j-api:1.7.6'
-    compile 'org.slf4j:log4j-over-slf4j:1.7.6'
     compile 'org.apache.commons:commons-dbcp2:2.0.1'
     compile 'org.apache.jena:apache-jena-libs:3.0.1'
 
+    // Logging
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
+
     // Integration
-    compile "org.elasticsearch:elasticsearch:2.4.1"
-    compile "org.elasticsearch.plugin:delete-by-query:2.4.1"
+
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile 'com.vividsolutions:jts:1.13'
     compile 'org.postgresql:postgresql:9.4.1212.jre7'
@@ -89,10 +89,6 @@ dependencies {
     testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"
     testCompile 'cglib:cglib-nodep:3.1'
     testCompile "org.spockframework:spock-core:1.0-groovy-2.4"
-}
-
-configurations {
-    all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {

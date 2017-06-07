@@ -1,8 +1,8 @@
 package whelk
 
 import org.codehaus.jackson.map.ObjectMapper
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.Datafield
 import whelk.converter.marc.JsonLD2MarcXMLConverter
@@ -49,7 +49,7 @@ public class JsonLd {
     static final ObjectMapper mapper = new ObjectMapper()
     static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter()
 
-    private static Logger log = LoggerFactory.getLogger(JsonLd.class)
+    private static Logger log = LogManager.getLogger(JsonLd.class)
 
     Map displayData
     Map vocabIndex

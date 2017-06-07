@@ -1,7 +1,6 @@
 package whelk
 
-import groovy.util.logging.Slf4j as Log
-import org.apache.lucene.analysis.util.CharArrayMap
+import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
