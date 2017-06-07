@@ -75,6 +75,12 @@ for col0 in 'cdij':
 # 006 Cartography:
 for col0 in 'ef':
     COLSPECS['bib']['006'][col0] = [
+        [1], # marc:relief
+        [2], # marc:relief
+        [3], # marc:relief
+        [4], # marc:relief
+        [5,7], # projection
+        [8], # marc:material
         [11], #marc:govtPub  (new: genreForm)
         [16], [17], # additionalType (new: genreForm)
     ]
@@ -128,19 +134,26 @@ for rt in 'aht':
 # 008 Digital:
 for bl in '9abcdimps':
     COLSPECS['bib']['008']['m' + bl] = [
-        [18],    # marc:frequencyCategory  (ta bort?)
-        [19],    # marc:regularity                  (ta bort?)
+        [18],    # marc:frequencyCategory  (UNUSED: remove?)
+        [19],    # marc:regularity                  (UNUSED: remove?)
     ]
 
 # 008 Cartography:
 for rt in 'ef':
     for bl in '9abcdimps':
         COLSPECS['bib']['008']['m' + bl] = [
-            [24], #    marc:primeMeridian          (ta bort?)
+            [18], # marc:relief
+            [19], # marc:relief
+            [20], # marc:relief
+            [21], # marc:relief
+            [22,24], # projection
+            [24], #    marc:primeMeridian          (UNUSED: remove?)
+            [25], # marc:material
+            [28], # genreForm
             [29], #    marc:additionalCarrierType  (new: carrierType)
             [31], #    marc:index                  (new: supplemantaryContent)
             [33], #    additionalType
-            [34], #    additionalType              (ta bort?)
+            [34], #    additionalType              (UNUSED: remove?)
         ]
 
 # 008 Mixed:
@@ -307,7 +320,7 @@ class Stats:
 
             self.process_field(rectypebiblevel, recstats, tag, value, record_id)
 
-            recstats[tag]['repeats']['x%s' % tag_count[tag]].count(record_id)
+            recstats[tag]['repeats']['x%s' % tag_count[tag]].count(record_id, rectypebiblevel)
 
         combos = sorted(set(
             tag if tag[0] == '2' or tag[0:2] == '00' else
@@ -317,7 +330,7 @@ class Stats:
             for tag in tag_count))
         combo_key = " ".join(combos)
 
-        recstats['combos'][rectypebiblevel + ' ' + combo_key].count(record_id)
+        recstats['combos'][rectypebiblevel + ' ' + combo_key].count(record_id, rectypebiblevel)
 
         self.process_field(rectypebiblevel, recstats, '000', leader, record_id)
 
@@ -340,30 +353,34 @@ class Stats:
                 if tag in {'000', '006', '007', '008'}:
                     self.measure_fixed(rectypebiblevel, fieldstats, tag, value, record_id)
             else:
-                fieldstats['errors']['expected_fixed'].count(record_id)
+                fieldstats['errors']['expected_fixed'].count(record_id, rectypebiblevel)
         else:
             if isinstance(value, unicode):
-                fieldstats['errors']['expected_subfields_got_fixed'].count(record_id)
+                fieldstats['errors']['expected_subfields_got_fixed'].count(record_id, rectypebiblevel)
             elif isinstance(value, dict):
                 codes = self.measure_subfields(fieldstats, tag, value)
                 code_combo = " ".join(codes)
-                subcombos[code_combo].count(record_id)
+                subcombos[code_combo].count(record_id, rectypebiblevel)
 
     def measure_fixed(self, rectypebiblevel, fieldstats, tag, value, record_id):
         colspecs = COLSPECS.get(self.marctype, {}).get(tag, ())
+        colspec_token = ""
         if isinstance(colspecs, dict):
-            colspecs = colspecs.get(rectypebiblevel) or colspecs.get(value[0]) or colspecs.get('*')
+            for colspec_token in [rectypebiblevel, value[0], '*']:
+                if colspec_token in colspecs:
+                    colspecs = colspecs.get(colspec_token)
+                    break
         for col in colspecs:
-            slicecode = '[%s]' % ':'.join(map(str, col))
+            slicecode = '{}-[{}]'.format(colspec_token, ':'.join(map(str, col)))
             colslice = col[0] if len(col) == 1 else slice(*col)
             try:
                 token = value[colslice]
             except IndexError:
-                fieldstats['errors']['failed_slice-%s' % slicecode].count(record_id)
+                fieldstats['errors']['failed_slice-%s' % slicecode].count(record_id, rectypebiblevel)
             else:
                 colstats = fieldstats.setdefault(slicecode, {})
                 counter = colstats[token] = colstats.get(token) or ExampleCounter()
-                counter.count(record_id)
+                counter.count(record_id, rectypebiblevel)
 
     def measure_subfields(self, fieldstats, tag, value):
         codes = []
@@ -387,7 +404,7 @@ class ExampleCounter:
     >>> counter = ExampleCounter()
     >>> for i in range(8):
     ...     counter.count(str(i + 1))
-    ...     print(', '.join(counter.examples))
+    ...     print(', '.join(counter.examples_by_bucket['']))
     1
     1, 2
     1, 2, 3
@@ -403,12 +420,13 @@ class ExampleCounter:
     def __init__(self):
         self.total = 0
         #self.examples = deque(maxlen=self.LIMIT) # Needs custom json serializer hook
-        self.examples = []
+        self.examples_by_bucket = defaultdict(list)
 
-    def count(self, example):
-        if len(self.examples) == self.LIMIT:
-            self.examples.pop(0)
-        self.examples.append(example)
+    def count(self, example, bucket=''):
+        examples = self.examples_by_bucket[bucket]
+        if len(examples) == self.LIMIT:
+            examples.pop(0)
+        examples.append(example)
         self.total += 1
 
 
