@@ -2717,8 +2717,19 @@
     },
 
     "034": {
+      "NOTE:domainIncludes": "Cartography",
       "aboutEntity": "?work",
-      "embedded": "true",
+      "addLink": "cartographicAttributes",
+      "resourceType": "Cartographic",
+      "embedded": true,
+      "TODO": "how is this intuitively different from 255 [255 is in plain text], 006 and/or 008 [those are coded projection and more...]",
+      "pendingResources": {
+        "_:scale": {
+          "TODO:aboutEntity?": "?work",
+          "link": "scale",
+          "resourceType": "Scale"
+        }
+      },
       "i1": { "ignored": "true"},
       "i2": {
         "ignored": "true",
@@ -2726,55 +2737,24 @@
         "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
       },
       "$2": {"property": "source"},
-      "$3": {"property": "part", "TODO": "How to generally handle 'Materials speciefied (NR)'"},
+      "$3": {"property": "part", "TODO": "How to generally handle 'Materials specified (NR)'"},
       "$a": {
-        "addLink": "scale",
-        "property": "marc:scaleType",
+        "about": "_:scale",
+        "property": "@type",
         "tokenMap": {
           "a": "marc:LinearScale",
           "b": "marc:AngularScale",
           "z": "marc:OtherCartographicScale"
         }
       },
-      "$b": {"addLink": "scale", "property": "marc:linearHorizontalScale"},
-      "$c": {"addLink": "scale", "property": "marc:linearVerticalScale"},
-      "$d":
-      {
-        "addLink": "cartographicAttributes",
-        "resourceType": "Cartographic",
-        "NOTE:subfield-repeatable": "false",
-        "property": "coordinates",
-        "TODO:seperate-fields": "How to separate subfield $d, $e, $f and $g when using the same property",
-        "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes 255, 006 and 008"
-      },
-      "$e":
-      {
-        "addLink": "cartographicAttributes",
-        "resourceType": "Cartographic",
-        "NOTE:subfield-repeatable": "false",
-        "property": "coordinates",
-        "TODO:seperate-fields": "How to separate subfield $d, $e, $f and $g when using the same property",
-        "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes 255, 006 and 008"
-      },
-      "$f":
-      {
-        "addLink": "cartographicAttributes",
-        "resourceType": "Cartographic",
-        "NOTE:subfield-repeatable": "false",
-        "property": "coordinates",
-        "TODO:seperate-fields": "How to separate subfield $d, $e, $f and $g when using the same property",
-        "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes 255, 006 and 008"
-      },
-      "$g":
-      {
-        "addLink": "cartographicAttributes",
-        "resourceType": "Cartographic",
-        "NOTE:subfield-repeatable": "false",
-        "property": "coordinates",
-        "TODO:seperate-fields": "How to separate subfield $d, $e, $f and $g when using the same property",
-        "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes 255, 006 and 008"
-      },
-      "$h": {"addProperty": "marc:angularScale"},
+      "$b": {"about": "_:scale", "addProperty": "marc:constantRatioLinearHorizontalScale"},
+      "$c": {"about": "_:scale", "addProperty": "marc:constantRatioLinearVerticalScale"},
+      "TODO:suggest": {"hasCoordinates": {"westLong": 1, "northLat": 1, "southLat": 1, "eastLong": 2}},
+      "$d": {"property": "marc:westernmostLongitudeCoordinates"},
+      "$e": {"property": "marc:easternmostLongitudeCoordinates"},
+      "$f": {"property": "marc:northernmostLatitudeCoordinates"},
+      "$g": {"property": "marc:southernmostLatitudeCoordinates"},
+      "$h": {"about": "_:scale", "addProperty": "marc:angularScale"},
       "$j": {"property": "marc:declinationNorthernLimit"},
       "$k": {"property": "marc:declinationSouthernLimit"},
       "$m": {"property": "marc:rightAscensionEasternLimit"},
@@ -2799,12 +2779,13 @@
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text",
-                "scale": [
+                "cartographicAttributes": [
                   {
-                    "marc:scaleType": "marc:LinearScale"
-                  },
-                  {
-                    "marc:linearHorizontalScale": "110000"
+                    "@type": "Cartographic",
+                    "scale": {
+                      "@type": "marc:LinearScale",
+                      "marc:linearHorizontalScale": "110000"
+                    }
                   }
                 ]
               }
@@ -3237,6 +3218,7 @@
       },
       "i2": {
         "property": "@type",
+        "FIXME": "let property @type override default resourceType? See also e.g. 034 scale",
         "TODO:if _": "use $i",
         "tokenMap": {
           "0": "marc:TitlePart",
@@ -3328,6 +3310,7 @@
       "NOTE:domainIncludes": "Cartography",
       "aboutEntity": "?work",
       "addLink": "cartographicAttributes",
+      "TODO:resourceType (to distinguish this 'free form' from 034)?": "marc:CartographicDescription",
       "resourceType": "Cartographic",
       "embedded": true,
       "$a": {"link": "scale", "resourceType": "Scale", "property": "label"},
@@ -3825,7 +3808,7 @@
       "resourceType": "Summary",
       "$a": {"property": "marc:summaryEtcNote"},
       "$b": {"property": "marc:expansionOfSummaryNote"},
-      "$c": {"addLink": "source", "resourceType": "Source", "NOTE:subfield-repeatable": "false", "property": "value"},
+      "$c": {"addLink": "source", "resourceType": "Source", "NOTE:subfield-repeatable": "false", "property": "label"},
       "$u": {"addLink": "source", "resourceType": "Source", "property": "uri"},
       "_spec": [
         {
@@ -4604,6 +4587,7 @@
 
     "856": {
       "addLink": true,
+      "TODO": "i2 might be empty, change addLink to a default value? Will it overeagerly revert if so?",
       "embedded": true,
       "TODO:i1": {
         "0": "mailto:",
