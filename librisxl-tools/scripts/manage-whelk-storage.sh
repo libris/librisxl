@@ -139,10 +139,20 @@ if [ "$RECREATE_DB" = true ]; then
     echo "(Re)creating ElasticSearch database..."
     echo ""
 
+    curl -XDELETE http://$ESHOST:9200/_ingest/pipeline/libris
     curl -XDELETE http://$ESHOST:9200/$ESINDEX
-    curl -XPOST http://$ESHOST:9200/$ESINDEX \
-         -d@$TOOLDIR/elasticsearch/libris_config.json
-
+    
+    echo ""
+    echo ""
+    curl -XPUT http://$ESHOST:9200/$ESINDEX \
+         -d@$TOOLDIR/elasticsearch/libris_config.json \
+         --header "Content-Type: application/json"
+    echo ""
+    echo ""
+    
+    curl -XPUT http://$ESHOST:9200/_ingest/pipeline/libris \
+         -d@$TOOLDIR/elasticsearch/libris_ingest_configuration.json \
+         --header "Content-Type: application/json"
     echo ""
     echo ""
 

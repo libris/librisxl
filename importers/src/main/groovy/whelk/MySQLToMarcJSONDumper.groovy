@@ -1,7 +1,7 @@
 package whelk
 
 import groovy.transform.CompileStatic
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 
 import java.nio.charset.Charset
 import java.nio.file.Files

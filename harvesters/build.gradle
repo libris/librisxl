@@ -98,10 +98,6 @@ dependencies {
     compile "org.apache.httpcomponents:httpclient:4.3.1"
     compile "stax:stax:1.2.0"
     compile "stax:stax-api:1.0.1"
-    compile 'ch.qos.logback:logback-core:1.1.2'
-    compile 'ch.qos.logback:logback-classic:1.1.2'
-    compile 'org.slf4j:slf4j-api:1.7.6'
-    compile 'org.slf4j:log4j-over-slf4j:1.7.6'
     compile 'org.apache.commons:commons-dbcp2:2.0.1'
     // Integration
     compile "org.apache.commons:commons-lang3:3.3.2"
@@ -118,6 +114,10 @@ dependencies {
     compile 'com.thetransactioncompany:cors-filter:2.1.2'
     providedCompile 'javax.servlet:servlet-api:2.5'
 
+    // Logging
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
+
     // profiling and test
     testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"
     testCompile 'cglib:cglib-nodep:3.1'
@@ -130,14 +130,9 @@ dependencies {
     executableWarDeps 'commons-cli:commons-cli:1.2'
 }
 
-configurations {
-    all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
-}
-
 war {
     baseName = archivesBaseName
 
-    // Prevent circular log redirection; use slf4j
     from {
         configurations.executableWarDeps.collect {
             //it.isDirectory() ? it : project.zipTree(it)

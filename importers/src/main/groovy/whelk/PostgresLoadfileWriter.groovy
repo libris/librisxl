@@ -1,6 +1,6 @@
 package whelk
 
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 import whelk.actors.FileDumper
 import whelk.component.PostgreSQLComponent
 import whelk.importer.MySQLLoader

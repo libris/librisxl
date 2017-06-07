@@ -1,8 +1,8 @@
 package whelk.apix;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -32,7 +32,7 @@ public class ExporterThread extends Thread
     private final UI m_ui;
     private final Whelk m_whelk;
     private final ObjectMapper m_mapper = new ObjectMapper();
-    private final Logger s_logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger s_logger = LogManager.getLogger(this.getClass());
     private final Converter m_converter;
 
     private enum ApixOp

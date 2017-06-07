@@ -1,5 +1,5 @@
 package whelk.rest.security
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 
 import whelk.Document
 import whelk.JsonLd

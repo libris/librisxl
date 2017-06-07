@@ -1,8 +1,8 @@
 package whelk.export.servlet;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.component.PostgreSQLComponent;
@@ -27,7 +27,7 @@ import java.util.Map;
 
 public class ResponseCommon
 {
-    private static final Logger logger = LoggerFactory.getLogger(ResponseCommon.class);
+    private static final Logger logger = LogManager.getLogger(ResponseCommon.class);
     private static final ObjectMapper mapper = new ObjectMapper();
 
     /**
@@ -228,6 +228,16 @@ public class ResponseCommon
         if (!onlyIdentifiers && requestedFormat.contains(OaiPmh.FORMAT_INCLUDE_HOLD_POSTFIX) && dataset.equals("bib"))
         {
             emitAttachedHoldings(document.getThingIdentifiers(), writer);
+        }
+
+        String itemOf = resultSet.getString("itemOf");
+        if (dataset.equals("hold") && itemOf != null)
+        {
+            writer.writeStartElement("about");
+            writer.writeStartElement("itemOf");
+            writer.writeAttribute("id", itemOf);
+            writer.writeEndElement(); // itemOf
+            writer.writeEndElement(); // about
         }
 
         if (!onlyIdentifiers)

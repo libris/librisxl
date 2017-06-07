@@ -71,7 +71,7 @@ public class Helpers
         String identifiersTableName = mainTableName + "__identifiers";
 
         // Construct the query
-        String selectSQL = "SELECT lddb.id, lddb.data, lddb.collection, lddb.modified, lddb.deleted, lddb.data#>>'{@graph,1,heldBy,@id}' AS sigel, string_agg(DISTINCT(lddb_attached_holdings2.data#>>'{@graph,1,heldBy,@id}'), ',') AS sigel_list" +
+        String selectSQL = "SELECT lddb.id, lddb.data, lddb.collection, lddb.modified, lddb.deleted, lddb.data#>>'{@graph,1,heldBy,@id}' AS sigel, lddb.data#>>'{@graph,1,itemOf,@id}' AS itemOf, string_agg(DISTINCT(lddb_attached_holdings2.data#>>'{@graph,1,heldBy,@id}'), ',') AS sigel_list" +
                 " FROM lddb " +
                 " INNER JOIN " +
                 identifiersTableName + " bib_iris ON lddb.id = bib_iris.id " +

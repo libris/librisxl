@@ -1,6 +1,6 @@
 package whelk.rest.api
 
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 
 import whelk.Document
 import whelk.JsonLd
@@ -201,9 +201,8 @@ class SearchUtils {
         }
 
         items = embellishItems(items)
-
         if (statsTree) {
-            stats = buildStats(esResult['aggregations'].asMap,
+            stats = buildStats(esResult['aggregations'],
                                makeFindUrl(SearchType.ELASTIC, pageParams))
         }
 
@@ -320,18 +319,17 @@ class SearchUtils {
         Map sliceMap = aggregations.inject([:]) { acc, key, aggregation ->
             List observations = []
             Map sliceNode = ['dimension': key.replace(".${JsonLd.ID_KEY}", '')]
-
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
                 String searchPageUrl = "${baseUrl}&${key}=${urlEncode(itemId)}"
 
-                Map observation = ['totalItems': bucket.getAt('docCount'),
+                Map observation = ['totalItems': bucket.getAt('doc_count'),
                                    'view': [(JsonLd.ID_KEY): searchPageUrl],
                                    'object': ld.toChip(lookup(itemId))]
 
-                Map bucketAggs = bucket.getAggregations().asMap
+                /*Map bucketAggs = bucket.getAggregations().asMap
 
-                observation = addSlices(observation, bucketAggs, searchPageUrl)
+                observation = addSlices(observation, bucketAggs, searchPageUrl)*/
                 observations << observation
             }
 
