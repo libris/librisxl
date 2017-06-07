@@ -108,9 +108,9 @@ public class ListRecords
                 {
                     respond(request, response, metadataPrefix, onlyIdentifiers, includeDependencies, resultSet);
                 }
-                catch (IOException | XMLStreamException e)
+                catch (Throwable e)
                 {
-                    logger.info("Attempting to cancel ongoing query due to broken client pipe.");
+                    logger.info("Attempting to cancel ongoing query due to failing to respond.");
                     preparedStatement.cancel();
                     throw e;
                 }
