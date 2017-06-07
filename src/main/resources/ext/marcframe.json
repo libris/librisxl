@@ -991,7 +991,7 @@
           "tokenMap": "MapsFormatType"
         },
         "[7:8]": {
-          "TODO:ignore": "Not used in 008",
+          "TODO:ignore": "Undefined for maps in MARC21/Voyager",
           "link": "marc:primeMeridian",
           "uriTemplate": "{_}",
           "tokenMap": "MapsPrimeMeridianType"
@@ -1028,31 +1028,31 @@
           "tokenMap": "VisualTechniqueType"
         },
         "[6:7]": {
-          "TODO:ignore": "Not used in 008",
+          "TODO:ignore": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[7:8]": {
-          "TODO:ignore": "Not used in 008",
+          "TODO:ignore": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[8:9]": {
-          "TODO:ignore": "Not used in 008",
+          "TODO:ignore": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[9:10]": {
-          "TODO:ignore": "Not used in 008",
+          "TODO:ignore": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[10:11]": {
-          "TODO:ignore": "Not used in 008",
+          "TODO:ignore": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
@@ -1087,6 +1087,7 @@
           "tokenMap": "ItemType"
         },
         "[7:8]": {
+          "TODO:ignore": "Undefined in MARC21/Voyager",
           "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
@@ -1611,13 +1612,14 @@
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "KitMaterialType"
+          "tokenMap": "NotatedMusicMaterialType"
         }
       },
       "RemoteSensingImage": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
+          "TODO:tokenMap": "RemoteSensingImageMaterialType",
           "tokenMap": "KitMaterialType"
         },
         "[3:4]": {
@@ -2033,13 +2035,13 @@
           "tokenMap": "GovernmentPublicationType"
         },
         "[18:19]": {
-          "TODO:ignore": true,
+          "TODO:ignored": "Undefined in MARC21/Voyager",
           "link": "marc:frequencyCategory",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerFrequencyType"
         },
         "[19:20]": {
-          "TODO:ignore": true,
+          "TODO:ignored": "Undefined in MARC21/Voyager",
           "link": "marc:regularity",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerRegularityType"
@@ -2112,7 +2114,7 @@
           "tokenMap": "MapsFormatType"
         },
         "[24:25]": {
-          "TODO:ignore": true,
+          "TODO:ignored": "Undefined in MARC21/Voyager",
           "link": "marc:primeMeridian",
           "uriTemplate": "{_}",
           "tokenMap": "MapsPrimeMeridianType"
@@ -2331,31 +2333,31 @@
           "tokenMap": "VisualTechniqueType"
         },
         "[23:24]": {
-          "TODO:ignore": true,
+          "TODO:ignored": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[24:25]": {
-          "TODO:ignore": true,
+          "TODO:ignored": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[25:26]": {
-          "TODO:ignore": true,
+          "TODO:ignored": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[26:27]": {
-          "TODO:ignore": true,
+          "TODO:ignored": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[27:28]": {
-          "TODO:ignore": true,
+          "TODO:ignored": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
@@ -2885,12 +2887,12 @@
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$h": {
-        "about": "_:translationSource",
+        "about": "_:original",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$k": {
-        "about": "_:original",
+        "about": "_:translationSource",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       }
@@ -3092,7 +3094,9 @@
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
       "$a": {"property": "name"},
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "TODO:$c": "Compare with 111 $c",
+      "TODO:$d": "Compare with 111 $d"
     },
 
     "111": {
@@ -3351,6 +3355,7 @@
         "?manufacture": {"resourceType": "Manufacture", "addLink": "manufacture", "embedded": true}
       },
       "TODO:groupByRepetitionAndPunctuationPattern": "$3 $a $b $c $e $f $g",
+      "TODO": "Need to handle when both $ef together with $ab is repeated for Serials. See ex. 8257615",
       "TODO:i1": {"property": "marc:isLatest", "tokenMap": {"2": false, "3": true}},
       "$a": {"about": "?publication", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:"},
       "$b": {"about": "?publication", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
@@ -3441,7 +3446,7 @@
         {"when": "i2=3", "addLink": "manufacture", "resourceType": "Manufacture"},
         {"when": "i2=4", "addLink": "copyright", "resourceType": "Copyright"}
       ],
-      "addLink": "provision",
+      "addLink": "provisionActivity",
       "embedded": true,
       "resourceType": "ProvisionActivity",
       "$a": {"link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:"},
@@ -3508,7 +3513,8 @@
       "$a": {
         "TODO:bf2": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
         "property": "frequency"
-      }
+      },
+      "TODO$b": "Compare with 321"
     },
 
     "321": {
@@ -3588,19 +3594,21 @@
 
     "340": {
       "aboutEntity": "?thing",
-      "TODO": "Add the separate lists used for cataloging, as enumerations",
       "$a": {
+        "TODO": "Add the separate lists used for cataloging, as enumerations",
         "addLink": "baseMaterial",
         "resourceType": "BaseMaterial",
         "property": "label"
       },
       "$b": { "addProperty": "dimensions" },
       "$c": {
+        "TODO": "Add the separate lists used for cataloging, as enumerations",
         "addLink": "appliedMaterial",
         "resourceType": "AppliedMaterial",
         "property": "label"
       },
       "$d": {
+        "TODO": "Add the separate lists used for cataloging, as enumerations",
         "TODO": "Ensure this doesn't clash with 007 13:14 Sound",
         "addLink": "productionMethod",
         "resourceType": "ProductionMethod",
@@ -3834,7 +3842,7 @@
       "embedded": true,
       "resourceType": "Instance",
       "pendingResources": {
-        "_:event": {"addLink": "provision", "resourceType": "ProvisionActivity"}
+        "_:event": {"addLink": "provisionActivity", "resourceType": "ProvisionActivity"}
       },
       "$a": {"property": "description", "punctuationChars": ":"},
       "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":", "embedded": false},
@@ -3861,7 +3869,7 @@
               {
                 "@type": "Instance",
                 "description":  "Digitalt faksimil och elektronisk text",
-                "provision":  [
+                "provisionActivity":  [
                     {"@type": "ProvisionActivity",
                         "date":  "2010",
                         "agent":  [{"@type": "Agent", "label": "Litteraturbanken"}]
@@ -4115,8 +4123,6 @@
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
 
-    "658": {},
-
     "656" : {
       "TOOO:i2": {},
       "resourceType": "Profession", "ignored": true
@@ -4125,6 +4131,8 @@
       "TOOO:i2": {},
       "resourceType": "FunctionOrRole", "ignored": true
     },
+
+    "658": {},
 
     "662": {},
     "690": {},
@@ -4446,7 +4454,7 @@
             {"z": "00-0-000000-0"}
           ]}},
           "result": {"mainEntity": {
-            "isPartOf": [
+            "supplementTo": [
               {
                 "@type": "Work",
                 "uniformTitle": "Main Thing",
@@ -4684,6 +4692,7 @@
         "tokenMap": "AuthorityEncLevelType",
         "uriTemplate": "{_}"
       },
+      "TODO:[18:19]": "NEW: Punctuation policy",
       "_spec": [
         {
           "originalLeader": "01341cz  a2200397n  4500",
@@ -5453,6 +5462,7 @@
         "tokenMap": "HoldingType"
       },
       "[7:8]": {
+        "TODO:ignored": "Undefined in MARC21/Voyager",
         "aboutEntity": "?record",
         "link": "marc:statistics",
         "uriTemplate": "{_}",
