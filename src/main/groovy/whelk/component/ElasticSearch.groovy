@@ -38,16 +38,20 @@ class ElasticSearch {
 
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex, JsonLdLinkExpander ex) {
-        this.elastichost = elasticHost
+        this.elastichost = parseElasticHost(elasticHost)
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
         this.expander = ex
     }
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
-        this.elastichost = elasticHost
+        this.elastichost = parseElasticHost(elasticHost)
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
+    }
+
+    private String parseElasticHost(String elasticHost) {
+        return elasticHost.split(',')[0]
     }
 
     private void connectRestClient(){
