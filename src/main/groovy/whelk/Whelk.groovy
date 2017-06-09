@@ -44,7 +44,9 @@ class Whelk {
         log.info("Whelk started with storage $storage")
     }
 
-    public Whelk() {}
+    public Whelk() {
+        this.docCache = new DocumentCache()
+    }
 
     private class DocumentCache {
         private Map cache
