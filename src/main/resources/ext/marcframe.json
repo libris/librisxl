@@ -2742,6 +2742,7 @@
       "$2": {"property": "source"},
       "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
       "$a": {
+        "FIXME": "let property @type override default resourceType? See also e.g. 246.i2",
         "about": "_:scale",
         "property": "@type",
         "tokenMap": {
@@ -3221,7 +3222,6 @@
       },
       "i2": {
         "property": "@type",
-        "FIXME": "let property @type override default resourceType? See also e.g. 034 scale",
         "TODO:if _": "use $i",
         "tokenMap": {
           "0": "marc:TitlePart",
@@ -3407,17 +3407,17 @@
             "fields": [
               {"260": {"ind1": "_", "ind2": "_", "subfields":
                 [{"3": "Sammanfattad utgivningstid:"}, {"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-"}, {"e": "(Stockholm :"}, {"f": "Fram)"}]}},
-              {"260": {"ind1": "_", "ind2": "_", "subfields": 
+              {"260": {"ind1": "_", "ind2": "_", "subfields":
                 [{"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-1925"}]}},
-              {"260": {"ind1": "2", "ind2": "_", "subfields": 
+              {"260": {"ind1": "2", "ind2": "_", "subfields":
                 [{"a": "Lund :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1926-1927"}]}},
-              {"260": {"ind1": "2", "ind2": "_", "subfields": 
+              {"260": {"ind1": "2", "ind2": "_", "subfields":
                 [{"a": "Stockholm :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1928-1931"}]}},
-              {"260": {"ind1": "2", "ind2": "_", "subfields": 
+              {"260": {"ind1": "2", "ind2": "_", "subfields":
                 [{"a": "Stockholm :"}, {"b": "Svenska Clartéförbundet,"}, {"c": "1932-1953"}]}},
-              {"260": {"ind1": "2", "ind2": "_", "subfields": 
+              {"260": {"ind1": "2", "ind2": "_", "subfields":
                 [{"a": "Hägersten :"}, {"b": "Clarté,"}, {"c": "1991-1995"}]}},
-              {"260": {"ind1": "3", "ind2": "_", "subfields": 
+              {"260": {"ind1": "3", "ind2": "_", "subfields":
                 [{"a": "Stockholm :"}, {"b": "Clarté,"}, {"c": "1953-1991, 1995-"}]}}
             ]
           },
@@ -3484,7 +3484,7 @@
       "$a": {
         "addLink": "extent",
         "resourceType": "Extent",
-        "property": "marc:extent",
+        "property": "value",
         "punctuationChars": "+:;"
       },
       "$b": {
@@ -3507,8 +3507,7 @@
       "$g": {
         "addLink": "extent", "resourceType": "Extent", "property": "marc:sizeOfUnit"
       },
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
-      "TODO:$6": "Linkage (NR)"
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"}
     },
 
     "306": {},
@@ -3520,7 +3519,7 @@
         "TODO:bf2": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
         "property": "frequency"
       },
-      "TODO$b": "Compare with 321"
+      "TODO:$b": "Compare with 321"
     },
 
     "321": {
@@ -3685,8 +3684,7 @@
       "$f": {"resourceType": "EncodedBitrate", "property": "label"},
       "$0": {"TODO:ignored": "true???"},
       "TODO:$2": "Source (NR)",
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
-      "TODO:$6": "Linkage (NR)"
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"}
     },
     "351": {},
     "352": {
@@ -3814,8 +3812,8 @@
       "TOOO:i1": {},
       "addLink": "summary",
       "resourceType": "Summary",
-      "$a": {"property": "marc:summaryEtcNote"},
-      "$b": {"property": "marc:expansionOfSummaryNote"},
+      "$a": {"property": "label"},
+      "$b": {"property": "comment"},
       "$c": {"addLink": "source", "resourceType": "Source", "NOTE:subfield-repeatable": "false", "property": "label"},
       "$u": {"addLink": "source", "resourceType": "Source", "property": "uri"},
       "_spec": [
@@ -3907,14 +3905,9 @@
       "$a": {
         "property": "marc:systemDetailsNote"
       },
-      "$u": {
-        "addProperty": "marc:uniformResourceIdentifier",
-        "TODO": "Add  ^^xs:anyURI after URI as BF2??"
-      },
+      "$u": {"addProperty": "uri"},
       "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
-      "TODO:$5": "Institution to which field applies (NR)",
-      "TODO:$6": "Linkage (NR)",
-      "TODO:$8": ""
+      "TODO:$5": "Institution to which field applies (NR)"
     },
     "540": {},
     "541": {},
