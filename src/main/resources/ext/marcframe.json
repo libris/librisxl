@@ -3669,35 +3669,50 @@
     "346": {},
     "347": {
       "aboutEntity": "?thing",
-      "addLink": "digitalCharacteristic",
-      "$a": {"resourceType": "FileType", "property": "label"},
-      "$b": {"resourceType": "EncodingFormat", "property": "label"},
-      "$c": {"resourceType": "FileSize", "property": "label"},
-      "$d": {"resourceType": "Resolution", "property": "label"},
-      "$e": {"resourceType": "RegionalEncoding", "property": "label"},
-      "$f": {"resourceType": "EncodedBitrate", "property": "label"},
+      "linkSubsequentRepeated": {
+        "addLink": "hasPart",
+        "resourceType": "Instance",
+        "embedded": true
+      },
+      "$a": {"addLink": "digitalCharacteristic", "resourceType": "FileType", "property": "label"},
+      "$b": {"addLink": "digitalCharacteristic", "resourceType": "EncodingFormat", "property": "label"},
+      "$c": {"addLink": "digitalCharacteristic", "resourceType": "FileSize", "property": "label"},
+      "$d": {"addLink": "digitalCharacteristic", "resourceType": "Resolution", "property": "label"},
+      "$e": {"addLink": "digitalCharacteristic", "resourceType": "RegionalEncoding", "property": "label"},
+      "$f": {"addLink": "digitalCharacteristic", "resourceType": "EncodedBitrate", "property": "label"},
       "$0": {"TODO:ignored": "true???"},
       "TODO:$2": "Source (NR)",
       "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"}
     },
     "351": {},
     "352": {
-      "addLink": "digitalCharacteristic",
+      "linkSubsequentRepeated": {
+        "addLink": "hasPart",
+        "resourceType": "Instance",
+        "embedded": true
+      },
+      "pendingResources": {
+        "_:cartographicobj": {"addLink": "digitalCharacteristic", "resourceType": "CartographicObjectType"}
+      },
       "$a": {
+        "addLink": "digitalCharacteristic",
         "NOTE:subfield-repeatable": "false",
         "resourceType": "CartographicDataType",
-        "property": "marc:directReferenceMethod"
+        "property": "label"
       },
       "$b": {
-        "resourceType": "CartographicObjectType",
-        "property": "marc:objectType"
+        "about": "_:cartographicobj",
+        "TODO:aboutNew (repeated $b appends new pending)": "_:cartographicobj",
+        "property": "label"
       },
       "$c": {
-        "resourceType": "CartographicObjectType",
-        "property": "count"},
+        "about": "_:cartographicobj",
+        "property": "count"
+      },
       "$q": {
+        "addLink": "digitalCharacteristic",
         "resourceType": "EncodingFormat",
-        "property": "marc:formatOfTheDigitalImage"
+        "property": "label"
       }
     },
     "355": {},
