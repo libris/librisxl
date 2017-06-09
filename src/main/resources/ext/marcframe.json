@@ -1205,7 +1205,7 @@
           "tokenMap": "MapMaterialType"
         },
         "[3:4]": {
-          "aboutEntity": "?work",
+          "TODO:aboutEntity (perhaps ideal for all colorContent (LoC does so), but more cumbersome and practically/statistically irrelevant)": "?work",
           "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "MapColorType"
@@ -1245,7 +1245,6 @@
           "tokenMap": "ComputerMaterialType"
         },
         "[3:4]": {
-          "aboutEntity": "?work",
           "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerColorType"
@@ -1304,7 +1303,6 @@
           "tokenMap": "GlobeMaterialType"
         },
         "[3:4]": {
-          "aboutEntity": "?work",
           "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "MapColorType"
@@ -1385,7 +1383,6 @@
           "tokenMap": "ProjGraphMaterialType"
         },
         "[3:4]": {
-          "aboutEntity": "?work",
           "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "ColorType"
@@ -1451,7 +1448,6 @@
           "parseZeroPaddedNumber": true
         },
         "[9:10]": {
-          "aboutEntity": "?work",
           "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "MicroformColorType"
@@ -1487,7 +1483,6 @@
           "tokenMap": "NonProjMaterialType"
         },
         "[3:4]": {
-          "aboutEntity": "?work",
           "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "ColorType"
@@ -1758,7 +1753,6 @@
           "tokenMap": "VideoMaterialType"
         },
         "[3:4]": {
-          "aboutEntity": "?work",
           "link": "colorContent",
           "uriTemplate": "{_}",
           "tokenMap": "VideoColorType"
