@@ -956,10 +956,11 @@
         "[5:7]": {
           "link": "projection",
           "uriTemplate": "{_}",
-          "tokenMap": "MapsProjectionType"
+          "tokenMap": "MapsProjectionType",
+          "TODO:resourceType": "Projection"
         },
         "[8:9]": {
-          "link": "marc:material",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MapsMaterialType"
         },
@@ -1352,28 +1353,28 @@
           "link": "notation",
           "uriTemplate": "{_}",
           "tokenMap": "TacBrailleMusicType",
-          "resourceType": "MusicNotation",
+          "TODO:resourceType": "MusicNotation",
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[7:8]": {
           "link": "notation",
           "uriTemplate": "{_}",
           "tokenMap": "TacBrailleMusicType",
-          "resourceType": "MusicNotation",
+          "TODO:resourceType": "MusicNotation",
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[8:9]": {
           "link": "notation",
           "uriTemplate": "{_}",
           "tokenMap": "TacBrailleMusicType",
-          "resourceType": "MusicNotation",
+          "TODO:resourceType": "MusicNotation",
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[9:10]": {
           "link": "notation",
           "uriTemplate": "{_}",
           "tokenMap": "TacSpecPhysicalCharType",
-          "resourceType": "TactileNotation",
+          "TODO:resourceType": "TactileNotation",
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         }
       },
@@ -1403,7 +1404,7 @@
           "link": "soundCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "MediumType",
-          "resourceType": "RecordingMedium",
+          "TODO:resourceType": "RecordingMedium",
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[7:8]": {
@@ -1612,15 +1613,16 @@
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "tokenMap": "NotatedMusicMaterialType"
+          "tokenMap": "KitMaterialType",
+          "TODO:tokenMap? (empty, just as KitMaterialType)": "NotatedMusicMaterialType"
         }
       },
       "RemoteSensingImage": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
-          "TODO:tokenMap": "RemoteSensingImageMaterialType",
-          "tokenMap": "KitMaterialType"
+          "tokenMap": "KitMaterialType",
+          "TODO:tokenMap? (empty, just as KitMaterialType)": "RemoteSensingImageMaterialType"
         },
         "[3:4]": {
           "link": "marc:remoteSensImageAltitude",
@@ -1668,21 +1670,21 @@
           "link": "soundCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "SoundSpeedType",
-          "resourceType": "PlayingSpeed",
+          "TODO:resourceType": "PlayingSpeed",
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[4:5]": {
           "link": "soundCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "SoundPlaybackChannelType",
-          "resourceType": "PlaybackChannels",
+          "TODO:resourceType": "PlaybackChannels",
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[5:6]": {
           "link": "soundCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "SoundGrooveType",
-          "resourceType": "GrooveCharacteristic",
+          "TODO:resourceType": "GrooveCharacteristic",
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[6:7]": {
@@ -1699,7 +1701,7 @@
           "link": "soundCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "SoundTapeConfigurationType",
-          "resourceType": "TapeConfig",
+          "TODO:resourceType": "TapeConfig",
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[9:10]": {
@@ -1717,14 +1719,14 @@
           "link": "soundCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "SoundKindOfCuttingType",
-          "resourceType": "GrooveCharacteristic",
+          "TODO:resourceType": "GrooveCharacteristic",
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[12:13]": {
           "link": "soundCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "SoundPlaybackCharacterType",
-          "resourceType": "PlaybackCharacteristic",
+          "TODO:resourceType": "PlaybackCharacteristic",
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[13:14]": {
@@ -1765,7 +1767,7 @@
           "link": "videoCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "VideoFormatType",
-          "resourceType": "VideoFormat"
+          "TODO:resourceType": "VideoFormat"
         },
         "[5:6]": {
           "link": "soundContent",
@@ -1776,7 +1778,7 @@
           "link": "soundCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "MediumType",
-          "resourceType": "RecordingMedium"
+          "TODO:resourceType": "RecordingMedium"
         },
         "[7:8]": {
           "link": "dimensions",
@@ -1787,7 +1789,7 @@
           "link": "soundCharacteristic",
           "uriTemplate": "{_}",
           "tokenMap": "MotionPicConfigurationOrVideoPlaybackType",
-          "resourceType": "PlaybackChannels"
+          "TODO:resourceType": "PlaybackChannels"
         }
       },
       "marc:Unspecified": {},
@@ -2074,12 +2076,13 @@
         },
         "[22:24]": {
           "link": "projection",
+          "TODO:resourceType": "Projection",
           "uriTemplate": "{_}",
           "tokenMap": "MapsProjectionType"
         },
         "[25:26]": {
           "TODO": "Add condition to 'link': (a|b|c|f|g|z) should be issuance. (d|e) should be genreForm",
-          "link": "marc:material",
+          "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MapsMaterialType"
         },
