@@ -2716,7 +2716,7 @@
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
       "$2": {"property": "marc:placeCodeSource"},
-      "$3": {"property": "part"}
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"}
     },
 
     "034": {
@@ -2740,7 +2740,7 @@
         "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
       },
       "$2": {"property": "source"},
-      "$3": {"property": "part", "TODO": "How to generally handle 'Materials specified (NR)'"},
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
       "$a": {
         "about": "_:scale",
         "property": "@type",
@@ -3278,7 +3278,7 @@
       },
       "$a": {"property": "editionStatement", "punctuationChars": "/"},
       "$b": {"property": "editionEnumeration"},
-      "$3": {"property": "part"},
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
       "_spec": [
         {
           "source": {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "New ed."}, {"b": "2. pr."}]}},
@@ -3343,13 +3343,20 @@
       "TODO:groupByRepetitionAndPunctuationPattern": "$3 $a $b $c $e $f $g",
       "TODO": "Need to handle when both $ef together with $ab is repeated for Serials. See ex. 8257615",
       "TODO:i1": {"property": "marc:isLatest", "tokenMap": {"2": false, "3": true}},
+      "$3": {
+        "about": "?publication",
+        "link": "appliesTo",
+        "resourceType": "Part",
+        "property": "label",
+        "position": 0,
+        "TODO": "put in first out-split entity"
+      },
       "$a": {"about": "?publication", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:"},
       "$b": {"about": "?publication", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
       "$c": {"about": "?publication", "property": "date", "punctuationChars": ",;"},
       "$e": {"about": "?manufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":;", "surroundingChars" : "()"},
       "$f": {"about": "?manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
       "$g": {"about": "?manufacture", "property": "date", "punctuationChars": ",;"},
-      "$3": {"about": "?publication", "property": "part", "position": 0, "TODO": "put in first out-split entity"},
       "_spec": [
         {
           "source": {
@@ -3500,9 +3507,7 @@
       "$g": {
         "addLink": "extent", "resourceType": "Extent", "property": "marc:sizeOfUnit"
       },
-      "$3": {
-        "property": "part"
-      },
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
       "TODO:$6": "Linkage (NR)"
     },
 
@@ -3655,7 +3660,7 @@
       },
       "$0": { "ignored": "true" },
       "TODO:subfield$2": "Source (NR)",
-      "$3": { "ignored": "true" },
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
       "TODO:subfield$6": "Linkage (NR)",
       "$g": {
         "NOTE": "New subfield",
@@ -3680,7 +3685,7 @@
       "$f": {"resourceType": "EncodedBitrate", "property": "label"},
       "$0": {"TODO:ignored": "true???"},
       "TODO:$2": "Source (NR)",
-      "TODO:$3": "Materials specified (NR)",
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
       "TODO:$6": "Linkage (NR)"
     },
     "351": {},
@@ -3863,7 +3868,7 @@
       "$f": {"addProperty": "seriesStatement"},
       "$m": {"addProperty": "datesAndOrSequentialDesignationOfIssuesReproduced"},
       "$n": {"addProperty": "note"},
-      "$3": {"property": "materialsSpecified"},
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
       "$5": {"property": "institutionToWhichFieldApplies"},
       "$7": {"TODO:fixedField": "fixedLengthDataElementsOfReproduction"},
       "_spec": [
@@ -3906,7 +3911,7 @@
         "addProperty": "marc:uniformResourceIdentifier",
         "TODO": "Add  ^^xs:anyURI after URI as BF2??"
       },
-      "TODO:$3": "Materials specified  (NR)",
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
       "TODO:$5": "Institution to which field applies (NR)",
       "TODO:$6": "Linkage (NR)",
       "TODO:$8": ""
@@ -3937,7 +3942,7 @@
       "$c": {"addProperty": "versionIdentification"},
       "$d": {"addProperty": "presentationFormat"},
       "$e": {"addProperty": "inventoryLevel"},
-      "$3": {"property": "materialsSpecified"}
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"}
     },
     "563": {},
     "565": {},
@@ -4613,7 +4618,7 @@
         "if $x=digipic or $y=bild": {"addLink": "depiction"},
         "if $z=Wikipedia|IMDB": {"addLink": "isPrimaryTopicOf"}
       },
-      "$3": {"property": "description"},
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
       "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"property": "altLabel"},
@@ -5762,7 +5767,7 @@
         "property": "shelfOrder"
       },
       "$2": {"property": "sourceOfClassificationOrShelfMarkScheme"},
-      "$3": {"property": "materialsSpecified"},
+      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
       "$8": {"property": "sequenceNumber"},
       "$a": {"property": "location"},
       "$b": {
