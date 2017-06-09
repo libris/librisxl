@@ -42,7 +42,7 @@ class MarcFrameConverter implements FormatConverter {
 
     Map readConfig(String path) {
         return getClass().classLoader.getResourceAsStream(path).withStream {
-            mapper.readValue(it, Map)
+            mapper.readValue(it, SortedMap)
         }
     }
 
@@ -521,9 +521,10 @@ class MarcRuleSet {
     }
 
     static Map processInclude(Map config, Map fieldDfn, String tag = "N/A") {
-        def merged = [:] + fieldDfn
+        def merged = [:]
 
-        def includes = merged['include']
+        def includes = fieldDfn['include']
+
         if (includes) {
             for (include in Util.asList(includes)) {
                 def baseDfn = config['patterns'][include]
@@ -533,9 +534,11 @@ class MarcRuleSet {
                 }
                 assert tag && !(baseDfn.keySet().intersect(fieldDfn.keySet()) - 'include')
                 merged += baseDfn
-                merged.remove('include')
             }
         }
+
+        merged += fieldDfn
+        merged.remove('include')
 
         def matchRules = merged['match']
         if (matchRules) {
@@ -1534,6 +1537,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                             (subDfn.requiresI2 && subDfn.requiresI2 != value.ind2)) {
                         ok = true // rule does not apply here
                     } else {
+                        // TODO: if codePatternReset, aboutNew: true
                         ok = subDfn.convertSubValue(state, subVal, ent,
                                 uriTemplateParams, localEntites)
                     }
