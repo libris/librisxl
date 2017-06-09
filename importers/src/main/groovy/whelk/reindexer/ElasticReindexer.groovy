@@ -1,5 +1,6 @@
 package whelk.reindexer
 
+import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.Whelk
 import whelk.util.Tools
@@ -7,6 +8,7 @@ import whelk.util.Tools
 /**
  * Created by markus on 2015-12-10.
  */
+@Log
 class ElasticReindexer {
 
     static final int BATCH_SIZE = 5000
@@ -39,6 +41,10 @@ class ElasticReindexer {
             if (documents.size() > 0) {
                 whelk.elastic.bulkIndex(documents, collection, whelk, useDocumentCache)
             }
+            log.info("Cache size: ${whelk.cacheSize()}, " +
+                     "cache hits: ${whelk.cacheHits()}, " +
+                     "stale cache reads: ${whelk.cacheStaleCount()} " +
+                     "(after ${collection})")
         }
         println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
     }
