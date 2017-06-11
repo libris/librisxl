@@ -3475,16 +3475,18 @@
         "resourceType": "Instance",
         "embedded": true
       },
+      "pendingResources": {
+        "_:extent": {"addLink": "extent", "resourceType": "Extent"}
+      },
       "$a": {
-        "addLink": "extent",
-        "resourceType": "Extent",
-        "property": "value",
+        "about": "_:extent",
+        "property": "label",
         "punctuationChars": "+:;"
       },
       "$b": {
         "TODO": "bf2 is mapping note/noteType: 'Physical details'. Do we want to do something similarily?",
-        "link": "hasNote",
-        "resourceType": "Note",
+        "TODO:link": "hasNote",
+        "TODO:resourceType": "Note",
         "property": "marc:otherPhysicalDetails",
         "punctuationChars": ";+"
       },
@@ -3495,11 +3497,12 @@
         "link": "accompaniedBy", "property": "label", "embedded": true
       },
       "$f": {
-        "TODO": "Map to device or bf2:extent?",
-        "link": "extent", "resourceType": "Extent", "property": "marc:typeOfUnit"
+        "about": "_:extent",
+        "property": "typeNote"
       },
       "$g": {
-        "addLink": "extent", "resourceType": "Extent", "property": "marc:sizeOfUnit"
+        "about": "_:extent",
+        "property": "marc:sizeOfUnit"
       },
       "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"}
     },
