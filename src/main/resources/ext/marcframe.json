@@ -5868,7 +5868,7 @@
       "resourceType": "Note",
       "TODO:i1": {},
       "TODO:i2": {},
-      "$a": {"property": "value"},
+      "$a": {"property": "label"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"}
     },
@@ -5879,7 +5879,7 @@
       "resourceType": "Note",
       "TODO:i1": {},
       "TODO:i2": {},
-      "$a": {"property": "value"},
+      "$a": {"property": "label"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"}
     },
@@ -5889,7 +5889,7 @@
       "resourceType": "Note",
       "TODO:i1": {},
       "TODO:i2": {},
-      "$a": {"property": "value"},
+      "$a": {"property": "label"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"}
     },
@@ -5899,7 +5899,7 @@
       "resourceType": "Note",
       "TODO:i1": {},
       "TODO:i2": {},
-      "$a": {"property": "value"},
+      "$a": {"property": "label"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"}
     }
