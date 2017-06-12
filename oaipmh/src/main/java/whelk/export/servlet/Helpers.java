@@ -72,12 +72,18 @@ public class Helpers
 
         // Construct the query
         String selectSQL = "SELECT lddb.id, lddb.data, lddb.collection, lddb.modified, lddb.deleted, lddb.data#>>'{@graph,1,heldBy,@id}' AS sigel, lddb.data#>>'{@graph,1,itemOf,@id}' AS itemOf" +
-                " FROM lddb " +
-                " INNER JOIN " +
+                " FROM lddb ";
+
+        // These JOINS are only useful if a bib:[location] set is requested.
+        // If they are included in any other query (without then being bounded by conditions) they
+        // completely murder performance.
+        if (setSpec != null && setSpec.getRootSet() != null && setSpec.getRootSet().startsWith(SetSpec.SET_BIB) && setSpec.getSubset() != null)
+        selectSQL += " INNER JOIN " +
                 identifiersTableName + " bib_iris ON lddb.id = bib_iris.id " +
                 " LEFT JOIN " +
-                mainTableName + " lddb_attached_holdings ON bib_iris.iri = lddb_attached_holdings.data#>>'{@graph,1,itemOf,@id}' " +
-                " WHERE lddb.collection <> 'definitions' ";
+                mainTableName + " lddb_attached_holdings ON bib_iris.iri = lddb_attached_holdings.data#>>'{@graph,1,itemOf,@id}' ";
+
+        selectSQL += " WHERE lddb.collection <> 'definitions' ";
         if (id != null)
             selectSQL += " AND lddb.id = ? ";
         if (fromDateTime != null)
