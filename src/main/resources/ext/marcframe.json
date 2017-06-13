@@ -829,14 +829,14 @@
           "tokenMap": "GovernmentPublicationType"
         },
         "[12:13]": {
-          "property": "marc:confPub",
-          "fixedDefault": "0",
-          "tokenMap": {"1": true, "0": false}
+          "addLink": "genreForm",
+          "tokenMap": "ConferencePublicationType",
+          "fixedDefault": "0"
         },
         "[13:14]": {
-          "property": "marc:festschrift",
-          "fixedDefault": "0",
-          "tokenMap": {"1": true, "0": false}
+          "addLink": "genreForm",
+          "tokenMap": "BooksFestschriftType",
+          "fixedDefault": "0"
         },
         "[14:15]": {
           "link": "marc:index",
@@ -1156,9 +1156,9 @@
           "tokenMap": "GovernmentPublicationType"
         },
         "[12:13]": {
-          "property": "marc:confPub",
-          "fixedDefault": "0",
-          "tokenMap": {"1": true, "0": false}
+          "addLink": "genreForm",
+          "tokenMap": "ConferencePublicationType",
+          "fixedDefault": "0"
         },
         "[16:17]": {
           "link": "marc:alphabet",
@@ -1976,15 +1976,15 @@
         },
         "[29:30]": {
           "aboutEntity": "?work",
-          "property": "marc:confPub",
-          "fixedDefault": "0",
-          "tokenMap": {"1": true, "0": false}
+          "addLink": "genreForm",
+          "tokenMap": "ConferencePublicationType",
+          "fixedDefault": "0"
         },
         "[30:31]": {
           "aboutEntity": "?work",
-          "property": "marc:festschrift",
-          "fixedDefault": "0",
-          "tokenMap": {"1": true, "0": false}
+          "addLink": "genreForm",
+          "tokenMap": "BooksFestschriftType",
+          "fixedDefault": "0"
         },
         "[31:32]": {
           "link": "supplementaryContent",
@@ -2281,9 +2281,9 @@
         },
         "[29:30]": {
           "aboutEntity": "?work",
-          "property": "marc:confPub",
-          "fixedDefault": "0",
-          "tokenMap": {"1": true, "0": false}
+          "addLink": "genreForm",
+          "tokenMap": "ConferencePublicationType",
+          "fixedDefault": "0"
         },
         "[33:34]": {
           "link": "marc:alphabet",
