@@ -1218,17 +1218,17 @@
           "tokenMap": "MapMediumType"
         },
         "[5:6]": {
-          "link": "marc:reproduction",
+          "link": "generation",
           "uriTemplate": "{_}",
           "tokenMap": "ReproductionType"
         },
         "[6:7]": {
-          "link": "marc:details",
+          "link": "generation",
           "uriTemplate": "{_}",
           "tokenMap": "MapDetailsType"
         },
         "[7:8]": {
-          "link": "marc:posNeg",
+          "link": "polarity",
           "uriTemplate": "{_}",
           "tokenMap": "PolarityType"
         },
@@ -1315,7 +1315,7 @@
           "tokenMap": "GlobeMediumType"
         },
         "[5:6]": {
-          "link": "marc:reproduction",
+          "link": "generation",
           "uriTemplate": "{_}",
           "tokenMap": "ReproductionType"
         },
@@ -1583,12 +1583,10 @@
         },
         "[16:17]": {
           "link": "marc:motionPicCompleteness",
-          "TODO:link (if it is enough to be understandable (hint: see values of the tokenMap)": "hasNote",
           "uriTemplate": "{_}",
           "tokenMap": "MotionPicCompletenessType"
         },
         "[17:23]": {
-          "TODO:property (if enough?)": "note",
           "property": "marc:timeOfExamination"
         },
         "[2:3]": {
@@ -2077,7 +2075,7 @@
           "tokenMap": "MapsProjectionType"
         },
         "[25:26]": {
-          "TODO": "Add condition to 'link': (a|b|c|f|g|z) should be issuance. (d|e) should be genreForm",
+          "TODO": "Add condition to 'link' to MapsMaterialType: (a|b|c|f|g|z) should be issuance. (d|e) should be genreForm (see also 006)",
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "MapsMaterialType"
