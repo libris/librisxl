@@ -295,8 +295,10 @@
         },
         {
           "when": "i1=3",
-          "resourceType": "Family",
-          "$a": {"about": "_:agent", "property": "name", "required": true}
+          "TODO: @update pendingResources": {
+            "@update _:agent": {"resourceType": "Family"}
+          },
+          "$a": {"about": "_:agent", "property": "familyName", "required": true}
         }
       ],
       "$a": {"required": true},
@@ -2691,7 +2693,7 @@
       "NOTE:record-count": 852,
       "TODO": "should be used more? See also free text form in 518",
       "aboutEntity": "?work",
-      "addProperty": "eventContent",
+      "addLink": "eventContentOf",
       "resourceType": "Event",
       "TODO:i1": {"NOTE": "0: one, 1: multiple, 2: interval"},
       "i2": {
@@ -3797,7 +3799,7 @@
     "508": {"$a": {"aboutEntity": "?thing", "addProperty": "creditsNote"}},
 
     "510": {
-      "addProperty": "citedBy",
+      "addLink": "citedBy",
       "resourceType": "Instance",
       "TOOO:i1": {},
       "$a": {"property": "title"},
@@ -5148,10 +5150,7 @@
     "180" : {
       "include": "termid",
       "aboutType": "Subdivision",
-      "$x": {
-        "property": "prefLabel",
-        "defaults": {"inCollection": {"@id": "https://id.kb.se/term/subdivisions", "code": "subdivisions"}}
-      }
+      "$x": {"property": "prefLabel"}
     },
     "181" : {
       "include": "termid",
@@ -5303,10 +5302,9 @@
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
     "580" : {
-      "TODO": "incomplete",
-      "inherit": "180",
-      "aboutType": null,
-      "resourceType": "Subdivision"
+      "include": ["relation_from_w"],
+      "resourceType": "Subdivision",
+      "$x": {"property": "prefLabel"}
     },
     "667" : {
       "aboutEntity": "?record",

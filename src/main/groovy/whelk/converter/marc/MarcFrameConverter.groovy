@@ -834,6 +834,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     Map tokenMaps
     String definesDomainEntityType
     String link
+    Map computeLinks
     boolean repeatable = false
     String resourceType
     Map linkRepeated = null
@@ -1424,7 +1425,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     String uriTemplate
     Set<String> uriTemplateKeys
     Map uriTemplateDefaults
-    Map computeLinks
     Map<String, MarcSubFieldHandler> subfields = [:]
     List<MatchRule> matchRules
     Map<String, Map> pendingResources
@@ -1455,7 +1455,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             computeLinks.use = computeLinks.use.replaceFirst(/^\$/, '')
         }
 
-
         matchRules = MatchRule.parseRules(this, fieldDfn) ?: Collections.emptyList()
 
         def aboutAlias = fieldDfn['about']
@@ -1469,6 +1468,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 addSubfield(m.group(1), obj)
             }
         }
+
+        assert !resourceType || link || computeLinks != null, "Expected link on $fieldId with resourceType: $resourceType"
+        assert !embedded || link || computeLinks != null, "Expected link on embedded $fieldId"
     }
 
     void addSubfield(String code, Map dfn) {
