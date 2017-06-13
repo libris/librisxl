@@ -994,7 +994,7 @@
           "tokenMap": "MapsFormatType"
         },
         "[7:8]": {
-          "TODO:ignore": "Undefined for maps in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:primeMeridian",
           "uriTemplate": "{_}",
           "tokenMap": "MapsPrimeMeridianType"
@@ -1031,31 +1031,31 @@
           "tokenMap": "VisualTechniqueType"
         },
         "[6:7]": {
-          "TODO:ignore": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[7:8]": {
-          "TODO:ignore": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[8:9]": {
-          "TODO:ignore": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[9:10]": {
-          "TODO:ignore": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[10:11]": {
-          "TODO:ignore": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
@@ -1090,7 +1090,7 @@
           "tokenMap": "ItemType"
         },
         "[7:8]": {
-          "TODO:ignore": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:additionalCarrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ItemType"
@@ -1233,7 +1233,7 @@
           "tokenMap": "PolarityType"
         },
         "[2:3]": {
-          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:aspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1291,7 +1291,7 @@
           "tokenMap": "ComputerReformattingQualityType"
         },
         "[2:3]": {
-          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:fileAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1320,7 +1320,7 @@
           "tokenMap": "ReproductionType"
         },
         "[2:3]": {
-          "TODO:ignore": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:aspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1417,7 +1417,7 @@
           "tokenMap": "ProjGraphSupportType"
         },
         "[2:3]": {
-          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:projGraphAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1470,7 +1470,7 @@
           "tokenMap": "FilmBaseType"
         },
         "[2:3]": {
-          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:aspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1500,7 +1500,7 @@
           "tokenMap": "NonProjectedType"
         },
         "[2:3]": {
-          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:nonProjAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1590,7 +1590,7 @@
           "property": "marc:timeOfExamination"
         },
         "[2:3]": {
-          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:motionPicAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -1732,7 +1732,7 @@
           "tokenMap": "SoundCaptureType"
         },
         "[2:3]": {
-          "TODO:ignored": "Add functionality to ignore, since it's undefined in Marc21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:soundAspect",
           "uriTemplate": "{_}",
           "tokenMap": "MapAspectType",
@@ -2031,13 +2031,13 @@
           "tokenMap": "GovernmentPublicationType"
         },
         "[18:19]": {
-          "TODO:ignored": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:frequencyCategory",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerFrequencyType"
         },
         "[19:20]": {
-          "TODO:ignored": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:regularity",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerRegularityType"
@@ -2111,7 +2111,7 @@
           "tokenMap": "MapsFormatType"
         },
         "[24:25]": {
-          "TODO:ignored": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:primeMeridian",
           "uriTemplate": "{_}",
           "tokenMap": "MapsPrimeMeridianType"
@@ -2330,31 +2330,31 @@
           "tokenMap": "VisualTechniqueType"
         },
         "[23:24]": {
-          "TODO:ignored": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[24:25]": {
-          "TODO:ignored": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[25:26]": {
-          "TODO:ignored": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[26:27]": {
-          "TODO:ignored": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
         },
         "[27:28]": {
-          "TODO:ignored": "Undefined in MARC21/Voyager",
+          "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "{_}",
           "tokenMap": "VisualMatterType"
@@ -5504,7 +5504,7 @@
         "tokenMap": "HoldingType"
       },
       "[7:8]": {
-        "TODO:ignored": "Undefined in MARC21/Voyager",
+        "NOTE": "Undefined in MARC21/Voyager",
         "aboutEntity": "?record",
         "link": "marc:statistics",
         "uriTemplate": "{_}",
