@@ -1874,6 +1874,7 @@ class MarcSubFieldHandler extends ConversionPart {
     boolean repeatable
     String property
     boolean repeatProperty
+    boolean overwrite
     String resourceType
     String subUriTemplate
     Pattern splitValuePattern
@@ -1912,6 +1913,7 @@ class MarcSubFieldHandler extends ConversionPart {
             property = subDfn.addProperty
             repeatProperty = true
         }
+        overwrite = subDfn.overwrite == true
         resourceType = subDfn.resourceType
         if (subDfn.uriTemplate) {
             subUriTemplate = subDfn.uriTemplate
@@ -1990,7 +1992,11 @@ class MarcSubFieldHandler extends ConversionPart {
             }
         }
         if (!didSplit && property) {
-            fieldHandler.addValue(ent, property, subVal, repeatProperty)
+            if (overwrite) {
+                ent[property] = subVal
+            } else {
+                fieldHandler.addValue(ent, property, subVal, repeatProperty)
+            }
             fieldHandler.addValue(uriTemplateParams, uriTemplateKeyBase + property, subVal, true)
             ok = true
         }

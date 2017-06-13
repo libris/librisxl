@@ -2740,9 +2740,9 @@
       "$2": {"property": "source"},
       "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
       "$a": {
-        "FIXME": "let property @type override default resourceType? See also e.g. 246.i2",
         "about": "_:scale",
         "property": "@type",
+        "overwrite": true,
         "tokenMap": {
           "a": "marc:LinearScale",
           "b": "marc:AngularScale",
@@ -2786,7 +2786,7 @@
                     "@type": "Cartographic",
                     "scale": {
                       "@type": "marc:LinearScale",
-                      "marc:linearHorizontalScale": "110000"
+                      "marc:constantRatioLinearHorizontalScale": ["110000"]
                     }
                   }
                 ]
@@ -3220,6 +3220,7 @@
       },
       "i2": {
         "property": "@type",
+        "overwrite": true,
         "TODO:if _": "use $i",
         "tokenMap": {
           "0": "marc:TitlePart",
