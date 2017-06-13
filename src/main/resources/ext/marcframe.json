@@ -935,27 +935,31 @@
       },
       "Cartography": {
         "[1:2]": {
-          "TODO": "do these fixed cartographicAttributes values clash with cartographicAttributes from 255?",
-          "link": "cartographicAttributes",
+          "TODO:about": "_:cartographic",
+          "link": "marc:relief",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[2:3]": {
-          "link": "cartographicAttributes",
+          "TODO:about": "_:cartographic",
+          "link": "marc:relief",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[3:4]": {
-          "link": "cartographicAttributes",
+          "TODO:about": "_:cartographic",
+          "link": "marc:relief",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[4:5]": {
-          "link": "cartographicAttributes",
+          "TODO:about": "_:cartographic",
+          "link": "marc:relief",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[5:7]": {
+          "TODO:about": "_:cartographic",
           "link": "projection",
           "uriTemplate": "{_}",
           "tokenMap": "MapsProjectionType",
@@ -2045,26 +2049,26 @@
       },
       "Cartography": {
         "[18:19]": {
-          "TODO": "Ensure we group them correctly",
-          "link": "cartographicAttributes",
-          "uriTemplate": "{_}",
+          "TODO:aboutEntity": "?cartographic",
+          "addLink": "marc:relief",
+          "uriTemplate":"{_}",
           "tokenMap": "MapsReliefType"
         },
         "[19:20]": {
-          "TODO": "Ensure we group them correctly",
-          "link": "cartographicAttributes",
+          "TODO:aboutEntity": "?cartographic",
+          "addLink": "marc:relief",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[20:21]": {
-          "TODO": "Ensure we group them correctly",
-          "link": "cartographicAttributes",
+          "TODO:aboutEntity": "?cartographic",
+          "addLink": "marc:relief",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
         "[21:22]": {
-          "TODO": "Ensure we group them correctly",
-          "link": "cartographicAttributes",
+          "TODO:aboutEntity": "?cartographic",
+          "addLink": "marc:relief",
           "uriTemplate": "{_}",
           "tokenMap": "MapsReliefType"
         },
