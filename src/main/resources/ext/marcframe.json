@@ -3816,7 +3816,16 @@
     "514": {},
     "515": {},
     "516": {},
-    "518": {},
+    "518": {
+      "aboutEntity": "?work",
+      "addLink": "eventContentOf",
+      "resourceType": "Event",
+      "$a": {"property": "label"},
+      "$o": {"addProperty": "date"},
+      "$d": {"addProperty": "comment"},
+      "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+    },
 
     "520": {
       "TODO:aboutEntity": "Could be ?work, ?thing and/or ?hold",
