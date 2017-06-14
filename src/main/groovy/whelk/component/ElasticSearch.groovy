@@ -38,16 +38,20 @@ class ElasticSearch {
 
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex, JsonLdLinkExpander ex) {
-        this.elastichost = elasticHost
+        this.elastichost = parseElasticHost(elasticHost)
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
         this.expander = ex
     }
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
-        this.elastichost = elasticHost
+        this.elastichost = parseElasticHost(elasticHost)
         this.elasticcluster = elasticCluster
         this.defaultIndex = elasticIndex
+    }
+
+    private String parseElasticHost(String elasticHost) {
+        return elasticHost.split(',')[0]
     }
 
     private void connectRestClient(){
@@ -76,11 +80,13 @@ class ElasticSearch {
         }
     }
 
-    void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
+    void bulkIndex(List<Document> docs, String collection, Whelk whelk,
+	               boolean useDocumentCache = false) {
         assert collection
         if (docs) {
             String bulkString = docs.collect{ doc ->
-                String shapedData = JsonOutput.toJson(getShapeForIndex(doc, whelk))
+                String shapedData = JsonOutput.toJson(
+                    getShapeForIndex(doc, whelk, useDocumentCache))
                 String action = createActionRow(doc,collection)
                 "${action}\n${shapedData}\n"
             }.join('')
@@ -89,7 +95,7 @@ class ElasticSearch {
             def response = performRequest('POST', '/_bulk',body, BULK_CONTENT_TYPE)
             def eString = EntityUtils.toString(response.getEntity())
             Map responseMap = mapper.readValue(eString, Map)
-            log.debug("Bulk indexed ${docs.count{it}} docs in ${responseMap.took}")
+            log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
         }
     }
 
@@ -125,11 +131,13 @@ class ElasticSearch {
                   "objects deleted")
     }
 
-    Map getShapeForIndex(Document document, Whelk whelk) {
+    Map getShapeForIndex(Document document, Whelk whelk,
+                         boolean useDocumentCache = false) {
 
         List externalRefs = document.getExternalRefs()
         List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
-        Map referencedData = whelk.bulkLoad(convertedExternalLinks).collectEntries { id, doc -> [id, doc.data] }
+        Map referencedData = whelk.bulkLoad(convertedExternalLinks, useDocumentCache)
+                                  .collectEntries { id, doc -> [id, doc.data] }
         whelk.jsonld.embellish(document.data, referencedData)
 
         log.debug("Framing ${document.getShortId()}")

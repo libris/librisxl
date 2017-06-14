@@ -1,6 +1,7 @@
 package whelk
 
 import groovy.util.logging.Log4j2 as Log
+import org.apache.commons.collections4.map.LRUMap
 import org.picocontainer.Characteristics
 import org.picocontainer.DefaultPicoContainer
 import org.picocontainer.containers.PropertiesPicoContainer
@@ -26,18 +27,104 @@ class Whelk {
     String vocabDisplayUri = "https://id.kb.se/vocab/display" // TODO: encapsulate and configure (LXL-260)
     String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
 
+    private DocumentCache docCache
+    private static final int CACHE_MAX_SIZE = 500000
+    private static final int CACHE_LIFETIME_MILLIS = 2 * 60 * 60 * 1000
+
     public Whelk(PostgreSQLComponent pg, ElasticSearch es) {
         this.storage = pg
         this.elastic = es
+        this.docCache = new DocumentCache()
         log.info("Whelk started with storage $storage and index $elastic")
     }
 
     public Whelk(PostgreSQLComponent pg) {
         this.storage = pg
+        this.docCache = new DocumentCache()
         log.info("Whelk started with storage $storage")
     }
 
-    public Whelk() {}
+    public Whelk() {
+        this.docCache = new DocumentCache()
+    }
+
+    private class DocumentCache {
+        private Map cache
+        private int staleCount
+        private int cacheHits
+
+        private class Entry {
+            Document doc
+            long lastAccessed
+
+            Entry(Document doc) {
+                this.doc = doc
+                this.lastAccessed = System.currentTimeMillis()
+            }
+        }
+
+        DocumentCache() {
+            this.cache = Collections.synchronizedMap(
+                new LRUMap<String, Entry>(CACHE_MAX_SIZE))
+            this.staleCount = 0
+            this.cacheHits = 0
+        }
+
+        Document get(String key) {
+            synchronized(cache) {
+                Entry entry = cache[key]
+                if (entry) {
+                    cacheHits += 1
+                    if(isStale(entry)) {
+                        cache.remove(key)
+                        staleCount += 1
+                        return null
+                    } else {
+                        return entry.doc
+                    }
+                } else {
+                    return null
+                }
+            }
+        }
+
+        void put(String key, Document doc) {
+            synchronized(cache) {
+                cache[key] = new Entry(doc)
+            }
+        }
+
+        int getSize() {
+            synchronized(cache) {
+                return cache.size()
+            }
+        }
+
+        int getStaleCount() {
+            return staleCount
+        }
+
+        int getCacheHits() {
+            return cacheHits
+        }
+
+        private boolean isStale(Entry entry) {
+            return (entry.lastAccessed + CACHE_LIFETIME_MILLIS) <
+                   System.currentTimeMillis()
+        }
+    }
+
+    int cacheSize() {
+        return docCache.getSize()
+    }
+
+    int cacheStaleCount() {
+        return docCache.getStaleCount()
+    }
+
+    int cacheHits() {
+        return docCache.getCacheHits()
+    }
 
     public static DefaultPicoContainer getPreparedComponentsContainer(Properties properties) {
         DefaultPicoContainer pico = new DefaultPicoContainer(new PropertiesPicoContainer(properties))
@@ -66,19 +153,25 @@ class Whelk {
         this.vocabData = this.storage.locate(vocabUri, true).document.data
     }
 
-    Map<String, Document> bulkLoad(List ids) {
+    Map<String, Document> bulkLoad(List ids, boolean useDocumentCache = false) {
         Map result = [:]
         ids.each { id ->
             Document doc
-            if (id.startsWith(Document.BASE_URI.toString())) {
-                id = Document.BASE_URI.resolve(id).getPath().substring(1)
-                doc = storage.load(id)
+            Document cached = docCache.get(id)
+            if (useDocumentCache && cached) {
+                result[id] = cached
             } else {
-                doc = storage.locate(id, true)?.document
-            }
+                if (id.startsWith(Document.BASE_URI.toString())) {
+                    id = Document.BASE_URI.resolve(id).getPath().substring(1)
+                    doc = storage.load(id)
+                } else {
+                    doc = storage.locate(id, true)?.document
+                }
 
-            if (doc && !doc.deleted) {
-                result[id] = doc
+                if (doc && !doc.deleted) {
+                    result[id] = doc
+                    docCache.put(id, doc)
+                }
             }
         }
         return result
@@ -134,10 +227,12 @@ class Whelk {
         return updated
     }
 
-    void bulkStore(final List<Document> documents, String changedIn, String changedBy, String collection, boolean createOrUpdate = true) {
+    void bulkStore(final List<Document> documents, String changedIn,
+                   String changedBy, String collection,
+                   boolean createOrUpdate = true, boolean useDocumentCache = false) {
         if (storage.bulkStore(documents, createOrUpdate, changedIn, changedBy, collection)) {
             if (elastic) {
-                elastic.bulkIndex(documents, collection, this)
+                elastic.bulkIndex(documents, collection, this, useDocumentCache)
                 for (Document doc : documents) {
                     reindexDependers(doc)
                 }

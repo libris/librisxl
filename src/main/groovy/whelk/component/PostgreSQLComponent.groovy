@@ -1,6 +1,7 @@
 package whelk.component
 
 import groovy.util.logging.Log4j2 as Log
+import groovy.json.StringEscapeUtils
 import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
@@ -822,7 +823,15 @@ class PostgreSQLComponent {
                 return new Location(doc)
             }
 
-            URIWrapper uri = Document.BASE_URI.resolve(identifier)
+            URIWrapper uri = null
+            try {
+                uri = Document.BASE_URI.resolve(identifier)
+            } catch (IllegalArgumentException iae) {
+                log.warn("Locate called with invalid identifier " +
+                         "\"${StringEscapeUtils.escapeJava(identifier)}\": " +
+                         "${iae.getMessage()}")
+                return null
+            }
 
             log.debug("Finding location status for $uri")
 
