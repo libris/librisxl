@@ -830,11 +830,13 @@
         },
         "[12:13]": {
           "addLink": "genreForm",
+          "uriTemplate": "{_}",
           "tokenMap": "ConferencePublicationType",
           "fixedDefault": "0"
         },
         "[13:14]": {
           "addLink": "genreForm",
+          "uriTemplate": "{_}",
           "tokenMap": "BooksFestschriftType",
           "fixedDefault": "0"
         },
@@ -1161,6 +1163,7 @@
         },
         "[12:13]": {
           "addLink": "genreForm",
+          "uriTemplate": "{_}",
           "tokenMap": "ConferencePublicationType",
           "fixedDefault": "0"
         },
@@ -1981,12 +1984,14 @@
         "[29:30]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
+          "uriTemplate": "{_}",
           "tokenMap": "ConferencePublicationType",
           "fixedDefault": "0"
         },
         "[30:31]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
+          "uriTemplate": "{_}",
           "tokenMap": "BooksFestschriftType",
           "fixedDefault": "0"
         },
@@ -2286,6 +2291,7 @@
         "[29:30]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
+          "uriTemplate": "{_}",
           "tokenMap": "ConferencePublicationType",
           "fixedDefault": "0"
         },
