@@ -398,6 +398,8 @@ bib/7279285	Maskinhandboken (titelbiuppslag med angivna roller (trl, adp))
 bib/20149544	Supressed record - Digitalisering av svenska dagstidningar (utgiven 2017-02-25)
 bib/20146507	Supressed record - Digitalisering av svenska dagstidningar : bevarandedigitalisering (utgiven 1880-07-29)
 bib/327953	Innehåller @id (sameAs) med icke URI-tillåtna ASCII-tecken '{}'
+bib/12299701	Innehåller unicode escape-tecken
+bib/14218082	Innehåller unicode escape-tecken
 
 bib/861	Aufstieg und Niedergang der römischen… huvudpost - REGINA TESTPOST
 bib/949	Aufstieg und Niedergang der römischen… delpost - REGINA TESTPOST
