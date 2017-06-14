@@ -2278,9 +2278,9 @@
           "link": "genreForm",
           "uriTemplate": "{_}",
           "tokenMap": "GovernmentPublicationType",
-          "TODO": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values",
+          "TODO": "If we remove tokenMap, we need @id linking to type+code (or embed those), and resourceType here to ensure proper match on revert (or else rely on parsing the @id value)",
           "TODO:uriTemplate": "marc:GovernmentPublicationType-{_}",
-          "TODO:resourceType": "GovernmentPublicationType",
+          "TODO:resourceType": "marc:GovernmentPublicationType",
           "TODO:property": "code"
         },
         "[29:30]": {
@@ -2715,7 +2715,7 @@
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
       "$2": {"property": "marc:placeCodeSource"},
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
 
     "034": {
@@ -2739,7 +2739,7 @@
         "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
       },
       "$2": {"property": "source"},
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$a": {
         "about": "_:scale",
         "property": "@type",
@@ -3278,7 +3278,7 @@
       },
       "$a": {"property": "editionStatement", "punctuationChars": "/"},
       "$b": {"property": "editionEnumeration"},
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "_spec": [
         {
           "source": {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "New ed."}, {"b": "2. pr."}]}},
@@ -3346,7 +3346,7 @@
       "$3": {
         "about": "?publication",
         "link": "appliesTo",
-        "resourceType": "Part",
+        "resourceType": "Resource",
         "property": "label",
         "position": 0,
         "TODO": "put in first out-split entity"
@@ -3484,6 +3484,7 @@
       "pendingResources": {
         "_:extent": {"addLink": "extent", "resourceType": "Extent"}
       },
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$a": {
         "about": "_:extent",
         "property": "label",
@@ -3505,7 +3506,10 @@
       "$e": {
         "TODO:previousSubfieldEndsWith": "+",
         "TODO": "Map to accompaniedBy or kbv:hasNote (bf2 is mapping to note with noteType: 'Accompanying material')?",
-        "link": "accompaniedBy", "property": "label", "embedded": true
+        "link": "accompaniedBy",
+        "resourceType": "Resource",
+        "property": "label",
+        "embedded": true
       },
       "$f": {
         "about": "_:extent",
@@ -3514,8 +3518,7 @@
       "$g": {
         "about": "_:extent",
         "property": "marc:sizeOfUnit"
-      },
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"}
+      }
     },
 
     "306": {},
@@ -3672,7 +3675,7 @@
       },
       "$0": { "ignored": "true" },
       "TODO:subfield$2": "Source (NR)",
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "TODO:subfield$6": "Linkage (NR)",
       "$g": {
         "NOTE": "New subfield",
@@ -3701,7 +3704,7 @@
       "$f": {"addLink": "digitalCharacteristic", "resourceType": "EncodedBitrate", "property": "label"},
       "$0": {"TODO:ignored": "true???"},
       "TODO:$2": "Source (NR)",
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "351": {},
     "352": {
@@ -3903,7 +3906,7 @@
       "$f": {"addProperty": "seriesStatement"},
       "$m": {"addProperty": "datesAndOrSequentialDesignationOfIssuesReproduced"},
       "$n": {"addProperty": "note"},
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"property": "institutionToWhichFieldApplies"},
       "$7": {"TODO:fixedField": "fixedLengthDataElementsOfReproduction"},
       "_spec": [
@@ -3943,7 +3946,7 @@
         "property": "marc:systemDetailsNote"
       },
       "$u": {"addProperty": "uri"},
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "TODO:$5": "Institution to which field applies (NR)"
     },
     "540": {},
@@ -3972,7 +3975,7 @@
       "$c": {"addProperty": "versionIdentification"},
       "$d": {"addProperty": "presentationFormat"},
       "$e": {"addProperty": "inventoryLevel"},
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "563": {},
     "565": {},
@@ -4648,7 +4651,7 @@
         "if $x=digipic or $y=bild": {"addLink": "depiction"},
         "if $z=Wikipedia|IMDB": {"addLink": "isPrimaryTopicOf"}
       },
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"property": "altLabel"},
@@ -5793,7 +5796,7 @@
         "property": "shelfOrder"
       },
       "$2": {"property": "sourceOfClassificationOrShelfMarkScheme"},
-      "$3": {"link": "appliesTo", "resourceType": "Part", "property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$8": {"property": "sequenceNumber"},
       "$a": {"property": "location"},
       "$b": {
