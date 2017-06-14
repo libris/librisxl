@@ -1931,6 +1931,8 @@ class MarcSubFieldHandler extends ConversionPart {
         requiresI1 = subDfn['requires-i1']
         requiresI2 = subDfn['requires-i2']
         itemPos = subDfn.itemPos
+
+        assert !resourceType || link, "Expected link on ${fieldHandler.fieldId}-$code"
     }
 
     boolean convertSubValue(Map state, def subVal, Map ent,
