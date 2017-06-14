@@ -1,8 +1,0 @@
-if ('useLocalDeps' in System.properties.keySet()) {
-    if (new File('../whelk-core').directory) {
-        include ':../whelk-core'
-    }
-    /*if (new File('../jmarctools').directory) {
-        include ':../jmarctools'
-    }*/
-}
