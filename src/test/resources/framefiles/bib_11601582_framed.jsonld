@@ -1,0 +1,209 @@
+{
+  "about": {
+    "comment": [
+      "Titel och upphovsuppgift från DVD-ROM",
+      "Ersätter: Lantmäteriets vägkarta : CD-ROM för Windows",
+      "Rasterkarta",
+      "Upplösning: 1 pixel motsvarar 20 x 20 m på marken"
+    ],
+    "mediaTerm": "Elektronisk resurs] :",
+    "projection": {
+      "@id": "/def/enum/content/GaussKruger"
+    },
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Nc%28ya%29"
+      },
+      {
+        "@id": "/topic/kssb/8/Prad-c"
+      }
+    ],
+    "attributedTo": {
+      "@id": "_:b-0"
+    },
+    "cartographicCoordinates": "(Ö 12°08'-Ö 24°20'/N 69°11'-N 63°34')",
+    "cartographicScale": "Skala 1:100 000",
+    "subject": [
+      {
+        "@id": "/topic/sao/Sverige/kartor"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/IndexPresent"
+    },
+    "listOfContents": [
+      "Innehåll: Kartex version 5.4 (karthanteringsprogram med funktioner för reseplanering) och Pocket kartex version 5 (karthanteringsprogram). - Tätortskartor med sökbara adresser. - Sevärdheter. - Ortnamnsregister"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=G%C3%A4vle"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Lantmäteriet",
+        "providerDate": "cop. 2009"
+      }
+    ],
+    "additionalCarrierType": {
+      "@id": "/def/enum/content/Electronic"
+    },
+    "fileType": "Kartor",
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Norra%20Sverige"
+      }
+    ],
+    "_providerYear": "2009",
+    "cartographer": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "hasPart": [
+      {
+        "@id": "/some?type=Digital"
+      }
+    ],
+    "responsibilityStatement": "[producerad av] Lantmäteriet",
+    "material": {
+      "@id": "/def/enum/content/SingleMap"
+    },
+    "copyNote": [
+      "Omslagsbild"
+    ],
+    "hasFormat": [
+      {
+        "@id": "/some?type=Electronic"
+      },
+      {
+        "accompanyingMaterial": "handledning ([4] s. ; 18 cm)",
+        "otherPhysicalDetails": "färg",
+        "@type": "Product",
+        "extent": "1 DVD-ROM",
+        "dimensions": "kapsel 19 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "systemRequirements": [
+      "Systemkrav för PC: Windows 2000/XP/Vista",
+      "Systemkrav för handdator: Windows Mobile 5 för Pocket PC eller Windows Mobile 6 Classic eller Professional"
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/V%C3%A4gkartor"
+      }
+    ],
+    "@id": "/resource/bib/11601582",
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "instanceTitle": {
+      "partTitle": [
+        "Norra Sverige"
+      ],
+      "subtitle": "DVD-ROM för Windows & Windows Mobile",
+      "@type": "Title",
+      "titleValue": "Vägkartan."
+    },
+    "relief": {
+      "@id": "/def/enum/content/Contour"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "DVD-ROM och handledning i kapsel",
+        "@type": "Identifier",
+        "identifierValue": "978-91-588-9292-7"
+      }
+    ],
+    "@type": [
+      "Cartography",
+      "Monograph"
+    ],
+    "cartographicAscensionAndDeclination": [
+      {
+        "northernmostLatitudeCoordinates": "n0691100",
+        "westernmostLongitudeCoordinates": "e0120800",
+        "constantRatioLinearHorizontalScale": [
+          "100000"
+        ],
+        "southernmostLatitudeCoordinates": "n0633400",
+        "easternmostLongitudeCoordinates": "e0242000",
+        "cartographicScale": "a",
+        "@type": "CartographyCoordinates"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2009-09-17T00:00:00.0+02:00",
+  "technicalNote": [
+    "S: ISBN från kapsel"
+  ],
+  "modified": "2015-04-10T11:00:09.0+02:00",
+  "controlNumber": "11601582",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "651": {
+        "subfields": [
+          {
+            "a": "Sverige"
+          },
+          {
+            "v": "kartor"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Vägkartor"
+          },
+          {
+            "2": "gmgpc//swe"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=LGEN"
+  },
+  "@id": "/bib/11601582",
+  "@type": "Record"
+}

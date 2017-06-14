@@ -1,0 +1,134 @@
+{
+  "about": {
+    "@id": "/resource/bib/11875183",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "600 s."
+      }
+    ],
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Hccdc.01"
+      }
+    ],
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "translator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/ice"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "series": [
+      {
+        "@type": "Serial",
+        "title": "Millennium"
+      }
+    ],
+    "responsibilityStatement": "Stieg Larsson ; þýðandi: Halla Kjartansdóttir",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Larsson&givenName=Stieg&birthYear=1954&deathYear=2004"
+    },
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/ic"
+      }
+    ],
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=Flickan%20som%20lekte%20med%20elden."
+    },
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Stúlkan sem lék sér að eldinum"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/Novel"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9789979657729"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Reykjav%C3%ADk"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Bjartur",
+        "providerDate": "2009"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SUEC"
+    }
+  ],
+  "created": "2010-06-11T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "11875183",
+  "modified": "2012-08-06T13:20:10.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "800": {
+        "subfields": [
+          {
+            "a": "Larsson, Stieg,"
+          },
+          {
+            "d": "1954-2004."
+          },
+          {
+            "t": "Millennium."
+          },
+          {
+            "l": "Isländska"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/bib/11875183",
+  "@type": "Record"
+}

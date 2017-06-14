@@ -1,0 +1,102 @@
+{
+  "about": {
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Uddevalla"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Risberg)"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "classification": [
+      {
+        "@id": "/topic/kssb/6/Hc.016"
+      },
+      {
+        "@id": "/topic/sab/Hc.016"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "responsibilityStatement": "Tove Jansson",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Jansson&givenName=Tove&birthYear=1914&deathYear=2001"
+    },
+    "comment": [
+      "Utg. till Bok och biblioteksmässan i Göteborg 1987"
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "@type": "Title",
+      "titleValue": "Karin, min vän"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "enbart faks.",
+        "@type": "Product",
+        "extent": "26, [1] bl.",
+        "dimensions": "30 cm"
+      }
+    ],
+    "@id": "/resource/bib/664491",
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Bonnier",
+        "providerDate": "1987"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=BULB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "1987-09-25T00:00:00.0+02:00",
+  "technicalNote": [
+    "Li:S"
+  ],
+  "controlNumber": "664491",
+  "librisIIINumber": [
+    "9906811366"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/664491",
+  "@type": "Record"
+}

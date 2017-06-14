@@ -1,0 +1,123 @@
+{
+  "about": {
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Falun"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Scandbook)"
+      }
+    ],
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "375 s.",
+        "dimensions": "22 cm"
+      }
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/813.54/e23/"
+      }
+    ],
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "translator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "@id": "/resource/bib/14011798",
+    "responsibilityStatement": "John Grisham ; översättning av Kjell Waltman",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Grisham&givenName=John"
+    },
+    "comment": [
+      "Första svenska upplaga 2013"
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=The%20racketeer."
+    },
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Svindlaren"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/Novel"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "inb.",
+        "@type": "Identifier",
+        "identifierValue": "9789100136468"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Bonnier",
+        "providerDate": "2013"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2013-09-18T00:00:00.0+02:00",
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "14011798",
+  "modified": "2015-10-07T09:05:36.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=L"
+  },
+  "systemNumber": [
+    "(BOKR)9789100136468"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=BOKR"
+  },
+  "@id": "/bib/14011798",
+  "@type": "Record"
+}

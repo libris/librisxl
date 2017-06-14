@@ -1,0 +1,65 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2012-01-19T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "inScheme": {
+    "@id": "/scheme/saogf"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "focus": {
+    "@id": "/resource/auth/349968",
+    "@type": [
+      "Authority"
+    ]
+  },
+  "controlNumber": "349968",
+  "related": [
+    {
+      "@id": "/topic/saogf/Fabler"
+    }
+  ],
+  "modified": "2013-04-18T11:02:29.0+02:00",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "sameAs": [
+    {
+      "@id": "/topic/saogf/Allegorier"
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "inCollection": [
+    {
+      "@id": "/some?type=TermCollection&notation=Skon"
+    }
+  ],
+  "scopeNote": [
+    "Genre/formterm för skönlitteratur.",
+    "Berättelser som vill åskådliggöra något annat än det som konkret framställs"
+  ],
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/auth/349968",
+  "@type": "GenreTerm",
+  "prefLabel": "Allegorier"
+}

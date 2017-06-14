@@ -1,0 +1,169 @@
+{
+  "about": {
+    "comment": [
+      "Första svenska upplaga 2010"
+    ],
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Heq.016%28s%29%3Dc"
+      }
+    ],
+    "series": [
+      {
+        "@type": "Serial",
+        "title": "Lust"
+      }
+    ],
+    "hasUniformWork": {
+      "@id": "/some?type=UniformWork&uniformTitle=Blazing%20bedtime%20stories."
+    },
+    "listOfContents": [
+      "I fullmånens sken / Kimberly Raye -- Mellan fantasi och verklighet / Leslie Kelly -- I hans ögon / Rhonda Nelson"
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/ShortStory"
+    },
+    "isPartOf": [
+      {
+        "@id": "/some?type=PublicationVolume&uniformTitle=Harlequin%20lust"
+      }
+    ],
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "influencedBy": [
+      {
+        "influencedBy": [
+          {
+            "@id": "/some?type=Person&familyName=Raye&givenName=Kimberly."
+          }
+        ],
+        "@type": "UniformWork",
+        "language": {
+          "@id": "/some?type=Language&label=Svenska"
+        },
+        "title": "Once upon a bite."
+      },
+      {
+        "influencedBy": [
+          {
+            "@id": "/some?type=Person&familyName=Kelly&givenName=Leslie."
+          }
+        ],
+        "@type": "UniformWork",
+        "language": {
+          "@id": "/some?type=Language&label=Svenska"
+        },
+        "title": "My, what a big- you have!."
+      },
+      {
+        "influencedBy": [
+          {
+            "@id": "/some?type=Person&familyName=Nelson&givenName=Rhonda."
+          }
+        ],
+        "@type": "UniformWork",
+        "language": {
+          "@id": "/some?type=Language&label=Svenska"
+        },
+        "title": "Sexily ever after."
+      },
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "_providerYear": "2010",
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Litauen"
+        },
+        "@type": "ProviderEvent"
+      }
+    ],
+    "responsibilityStatement": "Kimberly Raye, Leslie Kelly, Rhonda Nelson ; översatt av Jenny Lövenius",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "269 s.",
+        "dimensions": "19 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "@id": "/resource/bib/11714976",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Harlequin",
+        "providerDate": "cop. 2010"
+      }
+    ],
+    "translator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Det var en gång-"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9789164062093"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2009-12-14T00:00:00.0+01:00",
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "11714976",
+  "modified": "2012-11-30T13:00:58.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=L"
+  },
+  "@id": "/bib/11714976",
+  "@type": "Record"
+}

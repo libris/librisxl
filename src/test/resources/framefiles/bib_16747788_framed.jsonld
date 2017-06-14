@@ -1,0 +1,232 @@
+{
+  "about": {
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Rum%C3%A4nien"
+        },
+        "@type": "ProviderEvent"
+      }
+    ],
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "176 s.",
+        "dimensions": "21 cm"
+      }
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/949.802092/e23/"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/rum"
+      }
+    ],
+    "responsibilityStatement": "Silvia Constantinescu",
+    "_providerYear": "2014",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Constantinescu&givenName=Silvia&birthYear=1940"
+    },
+    "subject": [
+      {
+        "@id": "/some?type=Person&name=Mikael&numeration=1%2C&personTitle=kung%20av%20Rum%C3%A4nien%2C&birthYear=1921"
+      },
+      {
+        "@id": "/topic/sao/1900-talet"
+      },
+      {
+        "@id": "/topic/sao/Kungahus/historia"
+      },
+      {
+        "@id": "/topic/sao/Kungar"
+      },
+      {
+        "@id": "/topic/sao/Politiska%20f%C3%B6rh%C3%A5llanden"
+      },
+      {
+        "@id": "/topic/_/Rum%C3%A4nien"
+      }
+    ],
+    "comment": [
+      "Texterna är tidigare publicerade i Curierul Românesc"
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "interviurile mele cu Majestatea Sa Regele Mihai şi alte texte legate de Casa Regală a României, pe care le-am publicat iniţial în Curierul Românesc",
+      "@type": "Title",
+      "titleValue": "\"Rămâne de înlăturat urmările mentalităţii comuniste!\""
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "genre": [
+      {
+        "@id": "/topic/saogf/Intervjuer"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "978-91-972440-9-1"
+      }
+    ],
+    "@id": "/resource/bib/16747788",
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "biography": {
+      "@id": "/def/enum/content/ContainsBiographicalInformation"
+    },
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Finner%C3%B6dja"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Silvia & Octavian",
+        "providerDate": "cop. 2014"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2014-08-01T00:00:00.0+02:00",
+  "modified": "2014-08-01T14:41:37.0+02:00",
+  "controlNumber": "16747788",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "648": {
+        "subfields": [
+          {
+            "a": "1900-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      },
+      "_unhandled": [
+        "ind2"
+      ]
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Kungahus"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Kungar"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Politiska förhållanden"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "651": {
+        "subfields": [
+          {
+            "a": "Rumänien"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Intervjuer"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/bib/16747788",
+  "@type": "Record"
+}

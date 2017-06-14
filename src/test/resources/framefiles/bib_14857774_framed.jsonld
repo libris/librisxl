@@ -1,0 +1,201 @@
+{
+  "about": {
+    "comment": [
+      "Translation of: The wind in the willows."
+    ],
+    "classification": [
+      {
+        "@id": "/topic/kssb%208/Hrbee"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Grahame&givenName=Kenneth&birthYear=1859&deathYear=1932"
+    },
+    "subject": [
+      {
+        "@id": "/topic/lcsh/Animals/Fiction."
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=Wind%20in%20the%20willows."
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/FictionNotFurtherSpecified"
+    },
+    "illustrations": {
+      "@id": "/def/enum/content/Illustration"
+    },
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "_providerYear": "2012",
+    "responsibilityStatement": "Kʻenetʻ Grehem ; Tʻargmanutʻyuně anglerenitsʻ, Sona Seferyani, nkarazardumnerě Ara Baghdasaryani.",
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "277 p.",
+        "dimensions": "21 cm."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/ai"
+      }
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/Kapitelb%C3%B6cker"
+      },
+      {
+        "@id": "/topic/saogf/Filmade%20b%C3%B6cker"
+      }
+    ],
+    "@id": "/resource/bib/14857774",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Erevan"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Zangak-97 Hratarakchʻutʻyun",
+        "providerDate": "2012."
+      }
+    ],
+    "translator": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "illustrator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/arm"
+      }
+    ],
+    "summary": [
+      "The escapades of four animal friends who live along a river in the English countryside--Toad, Mole, Rat and Badger."
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "audience": {
+      "@id": "/def/enum/content/Juvenile"
+    },
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Kʻamin uṛenineri mej"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9789994119806"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "999411980X"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "languageNote": [
+      "In Modern East Armenian."
+    ]
+  },
+  "created": "2012-10-31T00:00:00.0+01:00",
+  "technicalNote": [
+    "Imported from: z3950.library.ucla.edu:7090/voyager (Do not remove)"
+  ],
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "transcribingAgency": {
+    "@id": "/some?type=Organization&name=LPU"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/OtherSource"
+  },
+  "controlNumber": "14857774",
+  "modified": "2013-12-13T13:25:17.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Kapitelböcker"
+          },
+          {
+            "2": "barn"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Filmade böcker"
+          },
+          {
+            "2": "barn"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=UtOrBLW"
+  },
+  "systemNumber": [
+    "7154727"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=LPU"
+  },
+  "@id": "/bib/14857774",
+  "@type": "Record"
+}

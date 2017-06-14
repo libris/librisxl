@@ -1,0 +1,84 @@
+{
+  "about": {
+    "acquisitionStatus": {
+      "@id": "/def/enum/content/CurrentlyReceived"
+    },
+    "completeness": {
+      "@id": "/def/enum/content/Complete"
+    },
+    "holdingFor": {
+      "@id": "/resource/bib/2944641"
+    },
+    "generalRetentionPolicy": {
+      "@id": "/def/enum/content/PermanentlyRetained"
+    },
+    "workExample": [
+      {
+        "@type": "Product",
+        "custodialHistoryOfItem": [
+          "Ex. A: Thomas Reinold Hischensis Dn (?); Andreas Dudith 1584. Ex. B: N.N.; drottning Kristina"
+        ]
+      },
+      {
+        "@type": "Product",
+        "itemCondition": [
+          "Ex. A: Med handskrivna anteckningar"
+        ]
+      },
+      {
+        "@type": "Product",
+        "itemCondition": [
+          "Ex. B: Stamberg: D5: 126"
+        ]
+      },
+      {
+        "@type": "Product",
+        "itemCondition": [
+          "Krigsbyteskatalogen: 202"
+        ]
+      },
+      {
+        "bindingInformation": [
+          "Ex. A: Samtida vitt skinnband, blindtryck, titel på främre pärm, spår av handskriven ryggtitel, spännen (defekta). Ex. B:  Träpärmar, delvis klädda med brunt skinn, blindryck, handskriven ryggtitel, versalt B på ryggen, spännen (defekta)"
+        ],
+        "@type": "Product"
+      }
+    ],
+    "offers": [
+      {
+        "heldBy": [
+          {
+            "@id": "/some?type=Organization&notation=Vasb"
+          }
+        ],
+        "shelfLocation": [
+          "Paleotyper 1525"
+        ],
+        "@type": "Offer",
+        "classificationPart": "Stiftsbiblioteket"
+      }
+    ],
+    "numberOfItems": 1,
+    "heldBy": {
+      "@type": "Organization",
+      "notation": "Vasb"
+    },
+    "copyReport": {
+      "@id": "/def/enum/content/Separate"
+    },
+    "@id": "/resource/hold/28174569",
+    "@type": "HeldMaterial"
+  },
+  "created": "2011-02-15T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/HoldingsLevel4"
+  },
+  "controlNumber": "28174569",
+  "modified": "2011-02-15T14:43:07.0+01:00",
+  "holdingType": {
+    "@id": "/def/enum/record/SinglePartItemHolding"
+  },
+  "date": "1990-11-28T00:00:00.0+01:00",
+  "@id": "/hold/28174569",
+  "@type": "Record"
+}

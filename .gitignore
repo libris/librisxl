@@ -21,7 +21,6 @@ src/main/resources/logback.xml
 catalina.base_IS_UNDEFINED
 *.*~
 src/main/resources/whelk.json
-
 out/artifacts/librisxl/exploded/whelk-0.8.14.x.war/META-INF/MANIFEST.MF
 .venv
 logs

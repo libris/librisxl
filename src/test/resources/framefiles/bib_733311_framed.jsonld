@@ -1,0 +1,109 @@
+{
+  "about": {
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "classification": [
+      {
+        "@id": "/topic/kssb/6/Lz%20P%C3%A9tur%20G.%20Gu%C3%B0mundsson"
+      },
+      {
+        "@id": "/topic/kssb/6/Ohai-dc%3Ak"
+      },
+      {
+        "@id": "/topic/sab/Lz"
+      },
+      {
+        "@id": "/topic/sab/Ohai-dc%3Ak"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "8",
+        "@type": "Title",
+        "titleValue": "Pétur G. Guðmundsson."
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/ice"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "@id": "/resource/bib/733311",
+    "responsibilityStatement": "Haraldur Jóhannsson",
+    "attributedTo": {
+      "@id": "/some?type=Person&name=Haraldur%20J%C3%B3hannsson"
+    },
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/ic"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "subtitle": "viðtöl við Þorstein Pétursson",
+      "@type": "Title",
+      "titleValue": "Pétur G. Guðmundsson og upphaf samtaka alþýðu"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "218 s."
+      }
+    ],
+    "subject": [
+      {
+        "@id": "/some?type=Person&name=P%C3%A9tur%20G.%20Gu%C3%B0mundsson"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Reykjav%C3%ADk"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Iðunn",
+        "providerDate": "1978"
+      }
+    ]
+  },
+  "created": "1988-05-20T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "733311",
+  "librisIIINumber": [
+    "9907512265"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=U"
+  },
+  "@id": "/bib/733311",
+  "@type": "Record"
+}

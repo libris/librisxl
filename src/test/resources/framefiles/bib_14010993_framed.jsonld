@@ -1,0 +1,191 @@
+{
+  "about": {
+    "comment": [
+      "Título original: Flickan som lekte med elden"
+    ],
+    "classification": [
+      {
+        "@id": "/some?type=Concept&notation=821.113.6-31%2219%22"
+      },
+      {
+        "@id": "http://dewey.info/class/839.7374/e23/"
+      }
+    ],
+    "series": [
+      {
+        "@type": "Serial",
+        "title": "Booket"
+      },
+      {
+        "volumeNumberSequentialDesignation": "2",
+        "@type": "Serial",
+        "title": "Millennium"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Larsson&givenName=Stieg&birthYear=1954&deathYear=2004"
+    },
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=1%C2%AA%20ed.%20en%20Colecci%C3%B3n%20Booket"
+      }
+    ],
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=Flickan%20som%20lekte%20med%20elden."
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/Novel"
+    },
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "responsibilityStatement": "Stieg Larsson ; traducción de Martin Lexell y Juan José Ortega Román",
+    "translator": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sp"
+      }
+    ],
+    "@id": "/resource/bib/14010993",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Barcelona"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Destino",
+        "providerDate": "2011"
+      }
+    ],
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "772 p.",
+        "dimensions": "20 cm"
+      }
+    ],
+    "nationalBibliographicNumber": "MON1104",
+    "language": [
+      {
+        "@id": "/def/languages/spa"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "La chica que soñaba con una cerilla y un bidón de gasolina"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "978-84-233-4324-9"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SUEC"
+    }
+  ],
+  "language": [
+    {
+      "@id": "/def/languages/spa"
+    }
+  ],
+  "created": "2011-04-19T00:00:00.0+02:00",
+  "transcribingAgency": {
+    "@id": "/some?type=Organization&name=SpMaBN"
+  },
+  "technicalNote": [
+    "S: Förvärvas ej av KB (annan utgåva finns)",
+    "Imported from: sigb.bne.es:2200/unicorn (Do not remove)"
+  ],
+  "modified": "2013-09-06T11:34:36.0+02:00",
+  "controlNumber": "14010993",
+  "catForm": {
+    "@id": "/def/enum/record/ISBDPunctuationOmitted"
+  },
+  "_marcUncompleted": [
+    {
+      "017": {
+        "subfields": [
+          {
+            "a": "B 1507-2011"
+          },
+          {
+            "b": "Oficina Depósito Legal Barcelona"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "800": {
+        "subfields": [
+          {
+            "a": "Larsson, Stieg"
+          },
+          {
+            "d": "1954-2004"
+          },
+          {
+            "t": "Millennium"
+          },
+          {
+            "l": "Español"
+          },
+          {
+            "v": "2"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "systemNumber": [
+    "a5034884"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SpMaBN"
+  },
+  "@id": "/bib/14010993",
+  "@type": "Record",
+  "descriptionRules": "rdc"
+}

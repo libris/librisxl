@@ -1,0 +1,266 @@
+{
+    "leader": "00887cam a2200277 a 4500",
+    "fields": [
+        {
+            "001": "7149593"
+        },
+        {
+            "005": "20040809152032.0"
+        },
+        {
+            "008": "960214s1996    sw            000 0aswe  "
+        },
+        {
+            "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "91-0-056322-6 (inb.) ;"
+                    },
+                    {
+                        "c": "310:00"
+                    }
+                ]
+            }
+        },
+        {
+            "035": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "9": "9100563226"
+                    }
+                ]
+            }
+        },
+        {
+            "040": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "NB"
+                    }
+                ]
+            }
+        },
+        {
+            "042": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "9": "BULB"
+                    },
+                    {
+                        "9": "NB"
+                    },
+                    {
+                        "9": "SEE"
+                    },
+                    {
+                        "9": "SLB"
+                    },
+                    {
+                        "9": "KVIN"
+                    }
+                ]
+            }
+        },
+        {
+            "084": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Gcdz Jansson, Tove"
+                    },
+                    {
+                        "2": "kssb/6"
+                    }
+                ]
+            }
+        },
+        {
+            "084": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Ibz Pietilä, Tuulikki"
+                    },
+                    {
+                        "2": "kssb/6"
+                    }
+                ]
+            }
+        },
+        {
+            "084": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Lz"
+                    }
+                ]
+            }
+        },
+        {
+            "100": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Jansson, Tove,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "245": {
+                "ind1": "0",
+                "ind2": "0",
+                "subfields": [
+                    {
+                        "a": "Anteckningar från en ö /"
+                    },
+                    {
+                        "c": "Tove Jansson, Tuulikki Pietilä"
+                    }
+                ]
+            }
+        },
+        {
+            "260": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Stockholm :"
+                    },
+                    {
+                        "b": "Bonnier,"
+                    },
+                    {
+                        "c": "1996 ;"
+                    },
+                    {
+                        "e": "(Finland)"
+                    }
+                ]
+            }
+        },
+        {
+            "300": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "102, [1] s. :"
+                    },
+                    {
+                        "b": "ill. ;"
+                    },
+                    {
+                        "c": "25 cm"
+                    }
+                ]
+            }
+        },
+        {
+            "500": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Även tillg. med tryckår: 2. uppl., 1996"
+                    }
+                ]
+            }
+        },
+        {
+            "599": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Li:S"
+                    }
+                ]
+            }
+        },
+        {
+            "600": {
+                "ind1": "1",
+                "ind2": "4",
+                "subfields": [
+                    {
+                        "a": "Jansson, Tove,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "600": {
+                "ind1": "1",
+                "ind2": "4",
+                "subfields": [
+                    {
+                        "a": "Pietilä, Tuulikki"
+                    }
+                ]
+            }
+        },
+        {
+            "700": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Pietilä, Tuulikki,"
+                    },
+                    {
+                        "d": "1917-"
+                    }
+                ]
+            }
+        },
+        {
+            "976": {
+                "ind1": " ",
+                "ind2": "2",
+                "subfields": [
+                    {
+                        "a": "Gcdz"
+                    },
+                    {
+                        "b": "Litteraturhistoria Finlandssvensk"
+                    }
+                ]
+            }
+        },
+        {
+            "976": {
+                "ind1": " ",
+                "ind2": "2",
+                "subfields": [
+                    {
+                        "a": "Ibz"
+                    },
+                    {
+                        "b": "Konst Konsthistoria"
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,115 @@
+{
+  "about": {
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "[8] s.",
+        "dimensions": "4:o"
+      }
+    ],
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Hoc.03"
+      },
+      {
+        "@id": "/topic/kssb/8/Hoa.03"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/lat"
+      }
+    ],
+    "@id": "/resource/bib/10724158",
+    "_providerYear": "1640",
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "... cùm divinâ disponente providentiâ, ex clementissimo s. r. m:tis indultu, admodum reverendus & præcellens vir dn. Laurentius Paulinus Gothus ... sub magnificentissimo, perillustris, celsi ac generosi domini, dn. Magni Gabrielis de la Gardie comitis de Lecköö, l. bar. de Eekholmen, domini de Hapsal, Dagdön, Kolta, Kydha, Runßön, &c. Rectoratu Academico, 4. non. junij anni post natum Mundi salvatorem M DC XL. Summis dignè oblatis, solenniter investiret honorîbus ac sacro sanctæ theologiæ doctores, Ubsaliæ Sveonum, inauguraret."
+    },
+    "contributor": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      },
+      {
+        "@id": "_:b-5"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=%5BUppsala%5D"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "[s. n.]",
+        "providerDate": "[1640]"
+      }
+    ]
+  },
+  "created": "2008-03-27T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "10724158",
+  "modified": "2008-03-27T10:23:08.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Osz"
+  },
+  "@id": "/bib/10724158",
+  "@type": "Record"
+}

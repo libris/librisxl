@@ -1,0 +1,124 @@
+{
+  "about": {
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/786.21542/e23/"
+      },
+      {
+        "@id": "/topic/kssb/6/Xrea"
+      },
+      {
+        "@id": "/topic/kssb/6/Xda"
+      },
+      {
+        "@id": "/topic/sab/Xrea"
+      },
+      {
+        "@id": "/topic/sab/Xda"
+      }
+    ],
+    "mediaTerm": "Musiktryck] :",
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/zxx"
+      }
+    ],
+    "responsibilityStatement": "Michael Nyman",
+    "_providerYear": "1993",
+    "attributedTo": {
+      "@id": "_:b-0"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Big%20my%20secret"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=The%20mood%20that%20passes%20through%20you"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=Deep%20sleep%20playing"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=The%20attraction%20of%20the%20pedalling%20ankle"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=The%20heart%20asks%20pleasure%20first"
+      }
+    ],
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "31 s."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxk"
+      }
+    ],
+    "listOfContents": [
+      "Innehåll: Big my secret ; The mood that passes through you ; Deep sleep playing ; Silver-fingered fling ; The attraction of pedalling ankle ; The heart asks pleasure first"
+    ],
+    "instanceTitle": {
+      "subtitle": "original compositions for solo piano from the award-winning film by Jane Campion",
+      "@type": "Title",
+      "titleValue": "The piano"
+    },
+    "composer": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "0-7119-3322-7"
+      }
+    ],
+    "@id": "/resource/bib/5485896",
+    "@type": [
+      "NotatedMusic",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=London"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Chester",
+        "providerDate": "cop. 1993"
+      }
+    ]
+  },
+  "created": "1993-11-15T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "5485896",
+  "modified": "2012-10-24T11:25:41.0+02:00",
+  "librisIIINumber": [
+    "0711933227"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Omu"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=X"
+  },
+  "@id": "/bib/5485896",
+  "@type": "Record"
+}

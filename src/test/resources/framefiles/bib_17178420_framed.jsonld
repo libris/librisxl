@@ -1,0 +1,111 @@
+{
+  "about": {
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "307 s."
+      }
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/839.738/e23/"
+      }
+    ],
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "translator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/pol"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "@id": "/resource/bib/17178420",
+    "responsibilityStatement": "Tove Alsterdal ; przekłożyła Beata Walczak-Larsson",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Alsterdal&givenName=Tove&birthYear=1960"
+    },
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=Wyd.%201."
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/pl"
+      }
+    ],
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=Kvinnorna%20p%C3%A5%20stranden."
+    },
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Kobiety na plaży"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/Novel"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9788377586853"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Warszawa"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Akurat",
+        "providerDate": "2014"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SUEC"
+    }
+  ],
+  "created": "2014-11-21T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "17178420",
+  "modified": "2014-11-24T13:12:11.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/bib/17178420",
+  "@type": "Record"
+}

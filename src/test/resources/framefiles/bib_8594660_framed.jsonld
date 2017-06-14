@@ -1,0 +1,205 @@
+{
+  "about": {
+    "classification": [
+      {
+        "@id": "/topic/fiaf/2/F79"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/MotionPicture"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "responsibilityStatement": "directed by John Ford ; screenplay by Frank Nugent, Patrick Ford.",
+    "@id": "/resource/bib/8594660",
+    "_providerYear": "1985",
+    "technique": {
+      "@id": "/def/enum/content/LiveAction"
+    },
+    "subject": [
+      {
+        "@id": "/topic/lcsh/Mormons/Drama"
+      },
+      {
+        "@id": "/topic/sfit/Filmer"
+      }
+    ],
+    "hasFormat": [
+      {
+        "@id": "/some?type=MovingImage"
+      },
+      {
+        "@id": "/some?type=MovingImage"
+      },
+      {
+        "@id": "/some?type=MovingImage"
+      },
+      {
+        "@id": "/some?type=MovingImage"
+      },
+      {
+        "@id": "/some?type=MovingImage"
+      },
+      {
+        "@id": "/some?type=MovingImage"
+      },
+      {
+        "@id": "/some?type=MovingImage"
+      },
+      {
+        "@id": "/some?type=MovingImage"
+      },
+      {
+        "@id": "/some?type=MovingImage"
+      },
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "99 s."
+      }
+    ],
+    "runningTime": "086",
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxu"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "@type": "Title",
+      "titleValue": "Wagonmaster"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "0-8044-6166-X"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "/some?type=Person&familyName=Ford&givenName=John&birthYear=1894&deathYear=1973"
+      },
+      {
+        "@id": "/some?type=Person&familyName=Nugent&givenName=Frank%20S."
+      },
+      {
+        "@id": "/some?type=Person&familyName=Ford&givenName=Patrick"
+      }
+    ],
+    "@type": [
+      "ProjectedImage",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=New%20York"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Ungar",
+        "providerDate": "[1985]"
+      }
+    ]
+  },
+  "created": "1992-01-08T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "controlNumber": "8594660",
+  "modified": "2002-09-10T10:18:46.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Filmer"
+          },
+          {
+            "2": "sfit"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "e"
+      ],
+      "700": {
+        "subfields": [
+          {
+            "a": "Ford, John,"
+          },
+          {
+            "d": "1894-1973,"
+          },
+          {
+            "e": "pro"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "e"
+      ],
+      "700": {
+        "subfields": [
+          {
+            "a": "Nugent, Frank S.,"
+          },
+          {
+            "e": "aut"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "e"
+      ],
+      "700": {
+        "subfields": [
+          {
+            "a": "Ford, Patrick,"
+          },
+          {
+            "e": "aut"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Sfi"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=DLC"
+  },
+  "@id": "/bib/8594660",
+  "@type": "Record"
+}
