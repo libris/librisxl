@@ -1,0 +1,277 @@
+{
+  "about": {
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/364.15230973/e22/"
+      },
+      {
+        "@id": "http://dewey.info/class/364.152%2F320973/e22/"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Fox&givenName=James%20Alan."
+    },
+    "summary": [
+      "Filled with contemporary and classic case studies, this fully updated Second Edition illustrates the many violent expressions of power, revenge, terror, greed, and loyalty. Throughout the book, renowned experts James Alan Fox and Jack Levin examine the theories of criminal behavior and apply them to a multitude of well-known and lesser-known multiple homicide cases from around the world. The book shows readers the commonalities and variations among multiple murders; addresses the characteristics of both killers and their victims; and, in the concluding chapter, discusses the special concerns of multiple murder victims and their survivors. --",
+      "New to This Edition --",
+      "New or expanded discussions of theories and conceptual frameworks, such as the roles of self-control and social control and the impact of shame and humiliation in the etiology of the serial killer, bring the book fully up to date --",
+      "New coverage includes the latest research on the impact of the unemployment rate on family annihilations, as well as discussions of mass killings at colleges and universities, the link between animal cruelty and human violence, biological predispositions toward extreme violence, and more --",
+      "New and updated cases of serial and mass murderers include the tragic Tucson shootings, during which Congresswoman Gabrielle Giffords was critically wounded and 6 others were killed; Professor Amy Bishop, who decided to get even with her colleagues at the University of Alabama; the terrorist attack by Major Nidal Hasan, who was charged with slaughtering 13 members of the Fort Hood community in November 2009; and the rampage of Seung-Hui Cho, a student at Virginia Tech, who shot and killed 32 students and faculty --",
+      "Updated tables and figures characterize patterns and trends in extreme killing --",
+      "The book's authors are world-renowned experts in the field of multiple homicide --",
+      "An engaging writing style and a multitude of interesting case studies immerse students in the book's content --",
+      "Photos of offenders and crime scenes are included --Book Jacket."
+    ],
+    "subject": [
+      {
+        "@id": "/topic/lcsh/Serial%20murders/United%20States."
+      },
+      {
+        "@id": "/topic/lcsh/Serial%20murders/United%20States/Case%20studies."
+      },
+      {
+        "@id": "/topic/lcsh/Mass%20murder/United%20States."
+      },
+      {
+        "@id": "/topic/lcsh/Mass%20murder/United%20States/Case%20studies."
+      },
+      {
+        "@id": "/topic/sao/Seriemord/F%C3%B6renta%20staterna/fallstudier"
+      },
+      {
+        "@id": "/topic/sao/Seriem%C3%B6rdare/F%C3%B6renta%20staterna/fallstudier"
+      },
+      {
+        "@id": "/topic/sao/Massmord/F%C3%B6renta%20staterna/fallstudier"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/IndexPresent"
+    },
+    "listOfContents": [
+      "Multiple murder -- America's fascination with multiple homicide -- Defining multiple murder -- Serial murder -- An anatomy of serial murder -- With deliberation and purpose -- Murder without guilt -- Partners in murder -- Killing for company -- Fantasyland -- The making of a serial killer -- Nonsexual control -- Killing cults -- So many victims -- Massacres -- For love, money, or revenge -- Family annihilation -- Firing back -- Schooled in mass murder -- Fighting city hall -- Hate-motivated mass murder -- Going berserk -- Epilogue -- Remembering the victims."
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=2nd%20ed."
+      }
+    ],
+    "@id": "/resource/bib/12384646",
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "illustrations": {
+      "@id": "/def/enum/content/Illustration"
+    },
+    "influencedBy": [
+      {
+        "@id": "/some?type=Person&familyName=Levin&givenName=Jack&birthYear=1941"
+      }
+    ],
+    "_providerYear": "2012",
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Bibliography"
+      }
+    ],
+    "responsibilityStatement": "James Alan Fox, Jack Levin.",
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "xiv, 262 p.",
+        "dimensions": "26 cm."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/cau"
+      }
+    ],
+    "supplementaryContentNote": [
+      "Includes bibliographical references (p. 240-247) and index."
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Thousand%20Oaks%2C%20Calif."
+        },
+        "@type": "ProviderEvent",
+        "providerName": "SAGE",
+        "providerDate": "c2012."
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "lccn": "2010044628",
+    "classificationLcc": "HV6529",
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "subtitle": "understanding serial and mass murder",
+      "@type": "Title",
+      "titleValue": "Extreme killing"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "pbk.",
+        "@type": "Identifier",
+        "identifierValue": "9781412980319"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "pbk.",
+        "@type": "Identifier",
+        "identifierValue": "1412980313"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "created": "2010-10-21T00:00:00.0+02:00",
+  "technicalNote": [
+    "Dawson"
+  ],
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "transcribingAgency": {
+    "@id": "/some?type=Organization&name=DLC"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "12384646",
+  "modified": "2012-03-16T08:03:41.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "043": {
+        "subfields": [
+          {
+            "a": "n-us---"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "b"
+      ],
+      "050": {
+        "subfields": [
+          {
+            "a": "HV6529"
+          },
+          {
+            "b": ".F685 2012"
+          }
+        ],
+        "ind1": "0",
+        "ind2": "0"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Seriemord"
+          },
+          {
+            "z": "Förenta staterna"
+          },
+          {
+            "v": "fallstudier"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Seriemördare"
+          },
+          {
+            "z": "Förenta staterna"
+          },
+          {
+            "v": "fallstudier"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Massmord"
+          },
+          {
+            "z": "Förenta staterna"
+          },
+          {
+            "v": "fallstudier"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=YDX"
+  },
+  "systemNumber": [
+    "(OCoLC)ocn671573423",
+    "16512536"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=DLC"
+  },
+  "@id": "/bib/12384646",
+  "@type": "Record"
+}

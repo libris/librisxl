@@ -1,0 +1,161 @@
+{
+  "about": {
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/332.4/e23/"
+      },
+      {
+        "@id": "/topic/kssb/8/Qaea"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "@id": "/resource/bib/48077",
+    "responsibilityStatement": "[edited by] William E. Gibson, George G. Kaufman",
+    "subject": [
+      {
+        "@id": "/topic/lcsh/Money"
+      },
+      {
+        "@id": "/topic/lcsh/Monetary%20policy"
+      },
+      {
+        "@id": "/topic/sao/Pengar"
+      },
+      {
+        "@id": "/topic/sao/Penningpolitik"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxu"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "subtitle": "readings on current issues",
+      "@type": "Title",
+      "titleValue": "Monetary economics"
+    },
+    "editor": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "diagr., tab.",
+        "@type": "Product",
+        "extent": "xiv, 509 s"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "0-07-023182-6"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=New%20York"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "McGraw-Hill",
+        "providerDate": "1971"
+      }
+    ]
+  },
+  "created": "1973-12-28T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "48077",
+  "modified": "2013-08-12T13:32:52.0+02:00",
+  "librisIIINumber": [
+    "9900449177"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Pengar"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Penningpolitik"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Lehl"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=L%2A"
+  },
+  "@id": "/bib/48077",
+  "@type": "Record"
+}

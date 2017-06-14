@@ -1,0 +1,55 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2009-05-28T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "inScheme": {
+    "@id": "/scheme/barn"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "focus": {
+    "@id": "/resource/auth/323836",
+    "@type": [
+      "Authority"
+    ]
+  },
+  "controlNumber": "323836",
+  "modified": "2009-05-28T08:38:58.0+02:00",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "sameAs": [
+    {
+      "@id": "/topic/barn/All%C3%A5ldersb%C3%B6cker"
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "scopeNote": [
+    "Genreämnesord för barn- och ungdomslitteratur.",
+    "Hit böcker utgivna för barn och vuxna, där avsikten att vända sig till både barn och vuxna är uttryckligen formulerad (av förlaget eller författaren)"
+  ],
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/auth/323836",
+  "@type": "GenreTerm",
+  "prefLabel": "Allåldersböcker"
+}

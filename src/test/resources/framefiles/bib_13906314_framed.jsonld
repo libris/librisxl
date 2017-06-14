@@ -1,0 +1,165 @@
+{
+  "about": {
+    "mediaTerm": "Kombinerat material",
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Hc.01%2FO"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "@id": "/resource/bib/13906314",
+    "responsibilityStatement": "/ av Kerstin Erlandsson-Svevar",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Erlandsson-Svevar&givenName=Kerstin&birthYear=1950"
+    },
+    "audience": {
+      "@id": "/def/enum/content/Juvenile"
+    },
+    "summary": [
+      "Mystiska mejl börjar dyka upp i Agnes inkorg. Korta dikter från en hemlig beundrare som kallar sig Enni. Agnes blir nyfiken men vill helst inte berätta för någon. Samtidigt har hennes mamma fått ett nytt jobb och flyttar till Berlin. Till slut pratar Agnes med sin kompis Kim om dikterna. Tillsammans bestämmer de att Agnes ska ta reda på vem Enni egentligen är. Kanske kan de bli vänner eller mer! [Barnbokskatalogen]"
+    ],
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "1 textbok (147 s.) + 1 MP3-CD (1 tim. 23 min.)"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "performerNote": [
+      "Inläsare: Susanne Karlsson"
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Jag vet vem du är"
+    },
+    "genre": [
+      {
+        "@id": "/topic/saogf/Romaner"
+      },
+      {
+        "@id": "/topic/saogf/Ungdomsb%C3%B6cker"
+      },
+      {
+        "@id": "/topic/saogf/L%C3%A4ttl%C3%A4sta%20b%C3%B6cker"
+      }
+    ],
+    "narrator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "inb.",
+        "@type": "Identifier",
+        "identifierValue": "9789175430263"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "@type": [
+      "Kit",
+      "Collection"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Helsingborg"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Hegas",
+        "providerDate": "2013"
+      }
+    ]
+  },
+  "created": "2014-01-11T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "13906314",
+  "modified": "2015-10-01T08:59:24.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Romaner"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Ungdomsböcker"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Lättlästa böcker"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Kld1"
+  },
+  "systemNumber": [
+    "(BOKR)9789175430263"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=BOKR"
+  },
+  "@id": "/bib/13906314",
+  "@type": "Record"
+}

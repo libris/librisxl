@@ -1,0 +1,151 @@
+{
+  "about": {
+    "comment": [
+      "Originally published: Garden City, N.Y. : Doubleday, 1968; London : Rapp and Whiting, 1969."
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/813.54/e21/"
+      },
+      {
+        "@id": "/topic/kssb/8/Heq.01"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Dick&givenName=Philip%20K."
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "subject": [
+      {
+        "@id": "/topic/lcsh/Androids/Fiction."
+      },
+      {
+        "@id": "/topic/lcsh/Twenty-first%20century/Fiction."
+      },
+      {
+        "@id": "/topic/lcsh/Deckard%2C%20Rick%20%28Fictitious%20character%29/Fiction."
+      }
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=London"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Millennium",
+        "providerDate": "1999."
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/Novel"
+    },
+    "_providerYear": "1999",
+    "titleVariation": [
+      {
+        "titleType": "8",
+        "@type": "Title",
+        "titleValue": "Blade runner"
+      }
+    ],
+    "responsibilityStatement": "Philip K. Dick",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "210 p.",
+        "dimensions": "18 cm."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxk"
+      }
+    ],
+    "_providerOtherYear": "1968",
+    "@id": "/resource/bib/11925719",
+    "nationalBibliographicNumber": "GB98-V0029",
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/ReprintReissueDateOrOriginalDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "classificationLcc": "PS3554.I3",
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "subtitle": "filmed as Blade Runner",
+      "@type": "Title",
+      "titleValue": "Do androids dream of electric sheep?"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "1857988124"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9781857988123"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "created": "2000-02-28T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "transcribingAgency": {
+    "@id": "/some?type=Organization&name=UKM"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "11925719",
+  "modified": "2010-10-14T10:17:29.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "b"
+      ],
+      "050": {
+        "subfields": [
+          {
+            "a": "PS3554.I3"
+          },
+          {
+            "b": "D57 1999"
+          }
+        ],
+        "ind1": "1",
+        "ind2": "4"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=YDXCP"
+  },
+  "systemNumber": [
+    "(OCoLC)ocm43541436"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=UKM"
+  },
+  "@id": "/bib/11925719",
+  "@type": "Record"
+}

@@ -1,0 +1,173 @@
+{
+  "about": {
+    "comment": [
+      "Zugl.: Regensburg, Univ., Diss., 1998"
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "classification": [
+      {
+        "@id": "/topic/kssb/6/G.096z%20Metamorfoser"
+      },
+      {
+        "@id": "/topic/kssb/6/Gocz%20Ovidius%20Naso%2C%20Publius"
+      },
+      {
+        "@id": "/topic/kssb/6/Gfz%20Kafka%2C%20Franz"
+      },
+      {
+        "@id": "/topic/kssb/6/Gfz%20Ranmayr%2C%20Christoph"
+      },
+      {
+        "@id": "/topic/sab/G.096z"
+      },
+      {
+        "@id": "/topic/sab/Gocz"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Thesis"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/ger"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "series": [
+      {
+        "issn": "0081-7236",
+        "volumeNumberSequentialDesignation": "157",
+        "@type": "Serial",
+        "title": "Studien zur deutschen Literatur"
+      }
+    ],
+    "responsibilityStatement": "Friedmann Harzer",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Harzer&givenName=Friedmann"
+    },
+    "subject": [
+      {
+        "title": "Metamorphoses",
+        "@type": "UniformWork",
+        "subject": [
+          {
+            "@id": "/some?type=Person&name=Ovidius%20Naso%2C%20Publius%2C&birthYear=43"
+          }
+        ]
+      },
+      {
+        "title": "Verwandlung",
+        "@type": "UniformWork",
+        "subject": [
+          {
+            "@id": "/some?type=Person&familyName=Kafka&givenName=Franz&birthYear=1883&deathYear=1924"
+          }
+        ]
+      },
+      {
+        "title": "Die letze Welt",
+        "@type": "UniformWork",
+        "subject": [
+          {
+            "@id": "/some?type=Person&familyName=Ransmayr&givenName=Christoph&birthYear=1954"
+          }
+        ]
+      },
+      {
+        "@id": "/topic/sao/Metamorfoser%20i%20litteraturen"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "termsOfAvailability": "ca. DM 76.00",
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/gw"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "subtitle": "eine Poetik epischer Metamorphosen (Ovid - Kafka - Ransmayr)",
+      "@type": "Title",
+      "titleValue": "Erzählte Verwandlung"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "viii, 231 S.",
+        "dimensions": "22 cm"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "brosch.",
+        "@type": "Identifier",
+        "identifierValue": "3-484-18157-5"
+      }
+    ],
+    "@id": "/resource/bib/5299954",
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=T%C3%BCbingen"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Niemeyer",
+        "providerDate": "2000"
+      }
+    ]
+  },
+  "created": "2000-07-20T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "5299954",
+  "modified": "2011-07-14T09:53:10.0+02:00",
+  "librisIIINumber": [
+    "3484181575"
+  ],
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Metamorfoser i litteraturen"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=U"
+  },
+  "@id": "/bib/5299954",
+  "@type": "Record"
+}

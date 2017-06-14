@@ -1,0 +1,158 @@
+{
+  "focus": {
+    "note": [
+      "De äldsta samlingarna härstammar från olika boksamlingar som regenter byggde upp under 1500- och 1600-talen. Blev egen myndighet 1877."
+    ],
+    "nationality": {
+      "@id": "/def/nationalities/e-sw---"
+    },
+    "@id": "/resource/auth/121848",
+    "@type": "Organization",
+    "name": "Kungl. biblioteket"
+  },
+  "modified": "2015-01-29T12:06:11.0+01:00",
+  "closeMatch": [
+    {
+      "@id": "http://dewey.info/class/027.5485/e23/"
+    }
+  ],
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "hasVersion": [
+    {
+      "@id": "/some?type=OrganizationTerm&name=Kungl.%20biblioteket"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=KB"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=Kungliga%20biblioteket"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=Kungliga%20Biblioteket%20%28Sweden%29"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=Kongl.%20Biblioteket"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=Kongl.%20bibliotheket"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=Riks-biblioteket"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=Kungl.%20biblioteket%20-%20National%20Library%20of%20Sweden"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=Bibliotheca%20regia%20Stockholmiensis"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=National%20Library%20of%20Sweden"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=Sveriges%20nationalbibliotek"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=K%C3%B6nigl.%20Bibliothek%20%28Stockholm%29"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=Kgl.%20Bibliothek%20in%20Stockholm"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=Schwedische%20Nationalbibliothek"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=Royal%20Library%20%28Stockholm%29"
+    },
+    {
+      "@id": "/some?type=OrganizationTerm&name=Biblioteca%20Real%20de%20Suecia"
+    }
+  ],
+  "editorialNote": [
+    "Uppdaterat 2014-01-21. S/NB/evaabr"
+  ],
+  "source": [
+    {
+      "citation": "(Kungliga biblioteket)",
+      "@type": "CreativeWork",
+      "label": "NE"
+    },
+    {
+      "citation": "(Kungliga Biblioteket (Sweden))",
+      "@type": "CreativeWork",
+      "label": "LC"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Katalog der Inkunabeln der Kgl. Bibliothek in Stockholm, 1914-1916"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Acta Bibliothecae regiae Stockholmiensis, 1961-"
+    },
+    {
+      "citation": "manuscript no. 6 fol. in the Royal library, Stockholm, and the Norwegian fragments / ed. by Magnus Rindal, 1980",
+      "@type": "CreativeWork",
+      "label": "Barlaams ok Josaphats saga :"
+    },
+    {
+      "citation": "die Schwedische Nationalbibliothek / Verfasser: Bo-Ingemar Darlin ... ; [aus dem Schwedischen ins Deutsche: Sven-Göran Heikka], 1997",
+      "@type": "CreativeWork",
+      "label": "Die Geschichte der Königlichen Bibliothek :"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Kongl. Bibliotekets tidningar om lärda saker / utgifne af Carl Christof. Gjörwell, 1767-1768"
+    },
+    {
+      "citation": "[Red. av G.E.Klemming.], 1870",
+      "@type": "CreativeWork",
+      "label": "Om Kungliga eller Riks-biblioteket :"
+    },
+    {
+      "citation": "[Av J.E. Rydqvist.], 1857",
+      "@type": "CreativeWork",
+      "label": "Pro memoria angående Kongl. bibliotheket år 1857 :"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "systemNumber": [
+    "(LIBRIS)A000090802"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/auth/121848",
+  "govtAgency": {
+    "@id": "/def/enum/content/FederalNational"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2001-12-06T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "121848",
+  "@type": "OrganizationTerm",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  }
+}

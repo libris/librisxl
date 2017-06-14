@@ -1,0 +1,201 @@
+{
+  "about": {
+    "comment": [
+      "Årsbok"
+    ],
+    "classification": [
+      {
+        "@id": "/some?type=Concept&notation=658"
+      },
+      {
+        "@id": "http://dewey.info/class/650.422/e23/"
+      },
+      {
+        "@id": "/topic/kssb/6/Qbab%28p%29"
+      },
+      {
+        "@id": "/topic/kssb/6/Qbcf%28p%29"
+      },
+      {
+        "@id": "/topic/sab/Qbab%28p%29"
+      },
+      {
+        "@id": "/topic/sab/Qbcf%28p%29"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "1",
+        "@type": "Title",
+        "titleValue": "Directors and auditors in Sweden's listed companies"
+      },
+      {
+        "titleType": "",
+        "subtitle": "Daniel Fristedt, Åsa Larsson, Sven-Ivan Sundqvist",
+        "@type": "Title",
+        "titleValue": "Styrelser och revisorer i Sveriges börsföretag"
+      }
+    ],
+    "regularity": {
+      "@id": "/def/enum/content/Regular"
+    },
+    "frequency": "Årlig",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "SIS ägarservice",
+        "providerDate": "[1990]-"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/SuccessiveEntry"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Styrelser%20och%20revisorer"
+      }
+    ],
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=Styrelser%20och%20revisorer%20i%20Sveriges%20b%C3%B6rsf%C3%B6retag"
+    },
+    "influencedBy": [
+      {
+        "@id": "/some?type=Person&familyName=Sundqvist&givenName=Sven-Ivan&birthYear=1939"
+      },
+      {
+        "@id": "/some?type=Person&familyName=Larsson&givenName=%C3%85sa"
+      },
+      {
+        "@id": "/some?type=Person&familyName=Sundin&givenName=Anneli&birthYear=1943"
+      },
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Halmstad"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Bull)"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Fristedt&givenName=Daniel"
+    },
+    "responsibilityStatement": "Anneli Sundin, Sven-Ivan Sundqvist",
+    "temporalCoverageNote": "1990-",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "dimensions": "24 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "frequencyCategory": {
+      "@id": "/def/enum/content/Annual"
+    },
+    "@id": "/resource/bib/1513208",
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      },
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "subtitle": "Directors and auditors in Sweden's listed companies",
+      "@type": "Title",
+      "titleValue": "Styrelser och revisorer i Sveriges börsföretag ="
+    },
+    "issueNumber": [
+      "1990/1991-"
+    ],
+    "@type": [
+      "Text",
+      "Serial"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "1992-11-11T00:00:00.0+01:00",
+  "modified": "2014-10-01T08:44:01.0+02:00",
+  "controlNumber": "1513208",
+  "librisIIINumber": [
+    "9915737874"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "037": {
+        "subfields": [
+          {
+            "c": "200:00 exkl. moms (2001)"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "270": {
+        "subfields": [
+          {
+            "a": "(105 15 Stockholm)"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "545": {
+        "subfields": [
+          {
+            "a": "Tidigare utg. av Dagens nyheter"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "547": {
+        "subfields": [
+          {
+            "a": "Gr. 1990 med årgångsbeteckning 1990/1991"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/1513208",
+  "@type": "Record"
+}

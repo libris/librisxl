@@ -1,0 +1,68 @@
+{
+  "sameAs": [
+    {
+      "@id": "/topic/saogf/Biografiska%20romaner"
+    }
+  ],
+  "scopeNote": [
+    "Genre/formterm för skönlitteratur.",
+    "Beskrivningar av (känd) persons liv och verksamhet."
+  ],
+  "narrower": [
+    {
+      "@id": "/topic/saogf/Sj%C3%A4lvbiografiska%20romaner"
+    }
+  ],
+  "focus": {
+    "@id": "/resource/auth/245329",
+    "@type": [
+      "Authority"
+    ]
+  },
+  "modified": "2013-09-09T13:49:41.0+02:00",
+  "inScheme": {
+    "@id": "/scheme/saogf"
+  },
+  "prefLabel": "Biografiska romaner",
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "altLabel": [
+    "Romantiserade biografier"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "inCollection": [
+    {
+      "@id": "/some?type=TermCollection&notation=Skon"
+    }
+  ],
+  "@id": "/auth/245329",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2004-10-27T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "245329",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "GenreTerm"
+}

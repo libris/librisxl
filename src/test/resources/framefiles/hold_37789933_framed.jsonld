@@ -1,0 +1,78 @@
+{
+  "about": {
+    "acquisitionStatus": {
+      "@id": "/def/enum/content/CurrentlyReceived"
+    },
+    "completeness": {
+      "@id": "/def/enum/content/Complete"
+    },
+    "holdingFor": {
+      "@id": "/resource/bib/14854711"
+    },
+    "generalRetentionPolicy": {
+      "@id": "/def/enum/content/PermanentlyRetained"
+    },
+    "heldBy": {
+      "@type": "Organization",
+      "notation": "S"
+    },
+    "offers": [
+      {
+        "heldBy": [
+          {
+            "@id": "/some?type=Organization&notation=S"
+          }
+        ],
+        "cataloguersNote": [
+          "nb2014mon",
+          "parobe"
+        ],
+        "@type": "Offer",
+        "shelfControlNumber": "15",
+        "classificationPart": "Sv2014F"
+      }
+    ],
+    "numberOfItems": 1,
+    "copyReport": {
+      "@id": "/def/enum/content/Separate"
+    },
+    "@id": "/resource/hold/37789933",
+    "@type": "HeldMaterial"
+  },
+  "created": "2014-02-18T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/HoldingsLevel4"
+  },
+  "controlNumber": "37789933",
+  "modified": "2014-02-18T10:31:40.0+01:00",
+  "holdingType": {
+    "@id": "/def/enum/record/SinglePartItemHolding"
+  },
+  "_marcUncompleted": [
+    {
+      "599": {
+        "subfields": [
+          {
+            "a": "nbv201408"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "599": {
+        "subfields": [
+          {
+            "a": "nbx48"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    }
+  ],
+  "date": "1990-11-28T00:00:00.0+01:00",
+  "@id": "/hold/37789933",
+  "@type": "Record"
+}

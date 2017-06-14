@@ -1,0 +1,182 @@
+{
+  "about": {
+    "classification": [
+      {
+        "@id": "/topic/kssb/5/Hj"
+      },
+      {
+        "@id": "/topic/sab/Hj"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "6",
+        "@type": "Title",
+        "titleValue": "Collection des œuvres complètes."
+      },
+      {
+        "titleType": "8",
+        "@type": "Title",
+        "titleValue": "Œuvres complètes."
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=%C5%92uvres%20critiques"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=Le%20roman%20exp%C3%A9rimental"
+      }
+    ],
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "editor": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "isPartOf": [
+      {
+        "@id": "/some?type=CreativeWork&controlledLabel=Zola%2C%20%C3%89mile%2C%201840-1902&title=%C5%93uvres%20compl%C3%A8tes&qualifyingNote=notes%20et%20commentaires%20de%20Maurice%20Le%20Blond%20%3B%20texte%20de%20l%27%C3%A9dition%20Eug%C3%A8ne%20Fasquelle&placePublisherAndDateOfPublication=Paris%2C%201927-1929&partNumber=41"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "manufacture": [
+      {
+        "@type": "ProviderEvent",
+        "providerName": "(Bernouard)"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Zola&givenName=%C3%89mile&birthYear=1840&deathYear=1902"
+    },
+    "_providerYear": "1928",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "358 s."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/fr"
+      }
+    ],
+    "@id": "/resource/bib/480417",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Paris"
+        },
+        "@type": "ProviderEvent",
+        "providerDate": "1928 :"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/fre"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "searchElement": false,
+      "partNumber": [
+        "41,"
+      ],
+      "partTitle": [
+        "Œuvres critiques.",
+        "Le roman expérimental"
+      ],
+      "@type": "Title",
+      "titleValue": "Les œuvres complètes."
+    },
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "created": "1990-09-18T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/AbbreviatedLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "480417",
+  "@type": "Record",
+  "librisIIINumber": [
+    "9909435349"
+  ],
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "7"
+      ],
+      "772": {
+        "subfields": [
+          {
+            "7": "p1"
+          },
+          {
+            "a": "Zola, Émile, 1840-1902"
+          },
+          {
+            "t": "œuvres complètes"
+          },
+          {
+            "c": "notes et commentaires de Maurice Le Blond ; texte de l'édition Eugène Fasquelle"
+          },
+          {
+            "d": "Paris, 1927-1929"
+          },
+          {
+            "w": "9904977275"
+          },
+          {
+            "9": "41"
+          }
+        ],
+        "ind1": "0",
+        "ind2": "0"
+      }
+    }
+  ],
+  "modified": "2003-10-17T17:05:33.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=H"
+  },
+  "@id": "/bib/480417",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

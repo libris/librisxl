@@ -1,0 +1,159 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "editorialNote": [
+    "Titel enl. form i Anonymous classics. Den bibliografiska posten kompletteras med titeluppslaget \"Rävsagan (djurepos)\" i 730 + språk. Detta för att samla alla olika versioner av sagan enl. AACR 25.12B. Även som ämnesord i 630. 060612/BUS/EA"
+  ],
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2006-04-11T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "271591",
+  "focus": {
+    "@id": "/resource/auth/271591",
+    "@type": "UniformWork",
+    "uniformTitle": "Reynard the Fox"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "source": [
+    {
+      "citation": "(Translitteration by Caxton of the Dutch Reynaert die Vos (1479), used as a basis for many anonymous English retellings of the story.)",
+      "@type": "CreativeWork",
+      "label": "Anonymous classics, 2. ed."
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "The booke of Raynarde the foxe, 1969"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Encyclopaedia Britannica online"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "_marcUncompleted": [
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Raynarde the foxe"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "History of Reynard the Fox"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för tysk version:"
+          },
+          {
+            "a": "Reineke Fuchs"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för svensk version:"
+          },
+          {
+            "a": "Rävsagan"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för dansk version:"
+          },
+          {
+            "a": "Rævebogen"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för nederländsk version:"
+          },
+          {
+            "a": "Reinaert"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för fransk version:"
+          },
+          {
+            "a": "Roman de Renart"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "modified": "2006-06-19T13:49:16.0+02:00",
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/auth/271591",
+  "@type": "WorkTerm"
+}

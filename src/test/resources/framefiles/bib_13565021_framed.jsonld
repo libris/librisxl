@@ -1,0 +1,157 @@
+{
+  "about": {
+    "comment": [
+      "Undertitel från skyddsomslag",
+      "Första svenska upplaga 2013"
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/813.54/e23/"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=McLain&givenName=Paula"
+    },
+    "biography": {
+      "@id": "/def/enum/content/ContainsBiographicalInformation"
+    },
+    "subject": [
+      {
+        "@id": "/some?type=Person&familyName=Hemingway&givenName=Ernest&birthYear=1899&deathYear=1961"
+      },
+      {
+        "@id": "/some?type=Person&familyName=Mowrer&givenName=Hadley%20Hemingway&birthYear=1891&deathYear=1979"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=The%20Paris%20wife."
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/Novel"
+    },
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Falun"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Scandbook)"
+      }
+    ],
+    "responsibilityStatement": "Paula McLain ; översättning av Isa Lybeck",
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "391 s.",
+        "dimensions": "22 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/Biografiska%20romaner"
+      }
+    ],
+    "@id": "/resource/bib/13565021",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Bonnier",
+        "providerDate": "2013"
+      }
+    ],
+    "translator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "subtitle": "[roman]",
+      "@type": "Title",
+      "titleValue": "Åren i Paris"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "inb.",
+        "@type": "Identifier",
+        "identifierValue": "978-91-0-012848-7"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2012-10-30T00:00:00.0+01:00",
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "13565021",
+  "modified": "2015-09-04T14:53:38.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Biografiska romaner"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=L"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=LGEN"
+  },
+  "@id": "/bib/13565021",
+  "@type": "Record"
+}

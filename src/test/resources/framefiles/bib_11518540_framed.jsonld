@@ -1,0 +1,129 @@
+{
+  "about": {
+    "comment": [
+      "Titel från omslag"
+    ],
+    "mediaTerm": "Playstation 2",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "PAN Vision",
+        "providerDate": "2006"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/und"
+      },
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "audience": [
+      {
+        "@type": "Audience",
+        "label": "Rekommenderad ålder: 12+"
+      }
+    ],
+    "summary": [
+      "Speltillverkare: Konami"
+    ],
+    "hasFormat": [
+      {
+        "accompanyingMaterial": "manual",
+        "@type": "Product",
+        "extent": "1 DVD"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xx"
+      }
+    ],
+    "listOfContents": [
+      "Kompatibelt med Playstation 3"
+    ],
+    "instanceTitle": {
+      "subtitle": "curse of darkness",
+      "@type": "Title",
+      "titleValue": "Castlevania"
+    },
+    "systemRequirements": [
+      "Systemkrav: Playstation 2 konsol"
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/TV-spel"
+      }
+    ],
+    "@id": "/resource/bib/11518540",
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "languageNote": [
+      "Manual och menyer på engelska"
+    ],
+    "subject": [
+      {
+        "@id": "/topic/_/TV-spel/Playstation%202/Rollspel"
+      }
+    ]
+  },
+  "created": "2009-07-27T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/AbbreviatedLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "11518540",
+  "modified": "2009-07-27T12:22:16.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "TV-spel"
+          },
+          {
+            "x": "Playstation 2"
+          },
+          {
+            "x": "Rollspel"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "TV-spel"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Mo"
+  },
+  "@id": "/bib/11518540",
+  "@type": "Record"
+}

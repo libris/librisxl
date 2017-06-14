@@ -1,0 +1,203 @@
+{
+  "bib": {
+    "about.additionalCarrierType" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.alphabet" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.attributedTo" : {
+      "method": "query",
+      "dataset" : "auth",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["about.@type", "about.birthYear", "about.deathYear", "about.familyName", "about.givenName"]
+      },
+      "resultKey" : "about"
+    },
+    "about.audience" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.author" : {
+      "method": "query",
+      "dataset" : "auth",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["about.@type", "about.birthYear", "about.deathYear", "about.familyName", "about.givenName"]
+      },
+      "resultKey" : "about"
+    },
+    "about.biography" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.confPub" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.contentType" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.festschrift" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.frequencyCategory" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.illustrations" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.language" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.literaryForm" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.nature" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.originalItem" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.originalLanguage" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.publicationCountry" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.publicationStatus" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.regularity" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.typeOfEntry" : {
+      "method": "query",
+      "dataset" : "def",
+      "field" : "about.@id",
+      "queryProperties": {
+        "_source.include" : ["@id", "about.*"]
+      },
+      "resultKey" : "about"
+    },
+    "about.not.used.language" : {
+      "method" : "http",
+      "url" : "http://localhost:8180/whelk-webapi"
+    },
+    "about.nonsense.at.the.same.whelk" : {
+      "method" : "get"
+    }
+
+  },
+  "hold" : {
+    "about.holdingFor" : {
+      "method": "query",
+      "dataset" : "bib",
+      "field": "about.@id",
+      "queryProperties": {
+        "_source.include" : ["controlNumber", "about.@type"]
+      },
+      "resultKey" : "about"
+    }
+  }
+}

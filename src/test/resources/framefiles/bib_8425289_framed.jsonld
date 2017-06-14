@@ -1,0 +1,116 @@
+{
+  "about": {
+    "listOfContents": [
+      "Om värnpliktens historia"
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "classification": [
+      {
+        "@id": "/topic/kssb/7/S-c%3Ak.46"
+      },
+      {
+        "@id": "/topic/kssb/7/S-c%3Ak.5"
+      }
+    ],
+    "responsibilityStatement": "Lars Ericson",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Ericson%20Wolke&givenName=Lars&birthYear=1957"
+    },
+    "confPub": {
+      "@id": "/def/enum/content/ConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "the Swedish experience",
+      "@type": "Title",
+      "titleValue": "The nation at arms"
+    },
+    "publication": [
+      {
+        "providerDate": "2001"
+      }
+    ],
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&controlledLabel=International%20Congress%20on%20Military%20History%20%2826%20%3A%20Stockholm%20%3A%202000%29&title=La%20guerre%20totale%20%3A%20la%20d%C3%A9fense%20totale%2C%201789-2000%20%3A%20actes&placePublisherAndDateOfPublication=2001&scopeNote=S.%20253-262"
+      }
+    ],
+    "@id": "/resource/bib/8425289",
+    "@type": [
+      "Text",
+      "ComponentPart"
+    ],
+    "subject": [
+      {
+        "@id": "/topic/sao/V%C3%A4rnplikt/historia/Sverige/1800-talet/1900-talet"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SUEC"
+    }
+  ],
+  "created": "2002-05-14T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "8425289",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Värnplikt"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "y": "1800-talet"
+          },
+          {
+            "y": "1900-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modified": "2005-12-21T17:01:14.0+01:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SHB"
+  },
+  "@id": "/bib/8425289",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

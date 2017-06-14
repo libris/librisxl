@@ -1,0 +1,227 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "editorialNote": [
+    "Titel enl. form i Anonymous classics. Den bibliografiska posten kompletteras med titeluppslaget \"Rävsagan (djurepos)\" i 730 + språk. Detta för att samla alla olika versioner av sagan enl. AACR 25.12B. Även som ämnesord i 630. 060612/BUS/EA"
+  ],
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2006-04-07T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "271438",
+  "focus": {
+    "@id": "/resource/auth/271438",
+    "@type": "UniformWork",
+    "uniformTitle": "Reineke Fuchs"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "source": [
+    {
+      "citation": "(Used for a number of different works (epic poetry, prose versions and chapbooks) between 13th and 16th c. in Middle High German, Low German and Early New High German.)",
+      "@type": "CreativeWork",
+      "label": "Anonymous classics, 2. ed."
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "NE"
+    },
+    {
+      "citation": "t.p. (Reinke de vos / hrsg. von Friedrich Prien Halle,)",
+      "@type": "CreativeWork",
+      "label": "Reineke Fuchs. Reinke de vos, 1887:"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Reynke de vos : [Nachdruck des einzig vollständig erhaltenen Exemplars in der Herzog August Bibliothek, Wolfenbüttel (32.14. Poet)], 1976"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Reinke de vos nach der ältesten Ausgabe (Lübeck 1498) : Mit Einl., Anmerkungen und einer Wörterbuche von Aug. Lübben, 1867"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Reynike Voss de Olde, nyge gedrücket, mit sydlykem vorstande vnd schönen Figuren erlüchtet vnd vorbetert, 1575"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "_marcUncompleted": [
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Reinecke Fuchs"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Reineke der Fuchs"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Reynke de Vos"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Reinke de Vos"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Reineke de Vos"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Reinhart Fuchs"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Reynike Voss de Olde"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för svensk version:"
+          },
+          {
+            "a": "Rävsagan"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för dansk version:"
+          },
+          {
+            "a": "Rævebogen"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för nederländsk version:"
+          },
+          {
+            "a": "Reinaert"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för engelsk version:"
+          },
+          {
+            "a": "Reynad the Fox"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för fransk version:"
+          },
+          {
+            "a": "Roman de Renart"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "modified": "2006-06-19T13:22:11.0+02:00",
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/auth/271438",
+  "@type": "WorkTerm"
+}

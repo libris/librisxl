@@ -1,0 +1,92 @@
+{
+  "sameAs": [
+    {
+      "@id": "/topic/gmgpc//swe/Reseaffischer"
+    }
+  ],
+  "scopeNote": [
+    "Affischer som främjar allmän turism eller gör reklam för reseerbjudanden. Avbildar ofta transportmedel som järnvägar eller oceanfartyg."
+  ],
+  "focus": {
+    "@id": "/resource/auth/283867",
+    "@type": [
+      "Authority"
+    ]
+  },
+  "modified": "2007-10-31T11:12:23.0+01:00",
+  "closeMatch": [
+    {
+      "@id": "/topic/saogf/Travel%20posters"
+    }
+  ],
+  "broader": [
+    {
+      "@id": "/topic/saogf/Affischer"
+    }
+  ],
+  "inScheme": {
+    "@id": "/scheme/gmgpc%2F%2Fswe"
+  },
+  "prefLabel": "Reseaffischer",
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "755": {
+        "subfields": [
+          {
+            "a": "Travel posters"
+          },
+          {
+            "0": "(gmgpc)n"
+          },
+          {
+            "2": "gmgpc 001105"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "altLabel": [
+    "Affischer för turistnäringen",
+    "Transportaffischer",
+    "Turistaffischer",
+    "Turismaffischer"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/auth/283867",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2006-12-28T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "283867",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "GenreTerm"
+}

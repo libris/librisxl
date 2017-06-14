@@ -1,0 +1,1785 @@
+{
+  "AcquisitionMethodType": {
+    "c": "marc:CooperativeOrConsortialPurchase",
+    "d": "marc:Deposit",
+    "e": "marc:Exchange",
+    "f": "marc:Free",
+    "g": "marc:Gift",
+    "l": "marc:LegalDeposit",
+    "m": "marc:Membership",
+    "n": "marc:NonLibraryPurchase",
+    "p": "marc:Purchase",
+    "z": "marc:OtherMethodOfAcquisition"
+  },
+  "AcquisitionStatusType": {
+    "1": "marc:OtherReceiptOrAcquisitionStatu",
+    "2": "marc:Completed",
+    "3": "marc:OnOrder",
+    "4": "marc:CurrentlyReceived",
+    "5": "marc:NotCurrentlyReceived"
+  },
+  "AudienceType": {
+    "a": "marc:Preschool",
+    "b": "marc:Primary",
+    "c": "marc:PreAdolescent",
+    "d": "marc:Adolescent",
+    "e": "marc:Adult",
+    "f": "marc:Specialized",
+    "g": "marc:General",
+    "j": "marc:Juvenile"
+  },
+  "AuthorityCatalogingSourceType": {
+    "_": "marc:NationalBibliographicAgency",
+    "c": "marc:CooperativeCatalogingProgram",
+    "d": "marc:OtherSource"
+  },
+  "AuthorityCharacterCodingType": {
+    "_": "marc:MARC-8-VRLIN",
+    "a": "marc:UCS-Unicode"
+  },
+  "AuthorityEncLevelType": {
+    "n": "marc:CompleteAuthorityRecord",
+    "o": "marc:IncompleteAuthorityRecord"
+  },
+  "AuthorityStatusType": {
+    "a": "marc:IncreaseInEncodingLevel",
+    "c": "marc:CorrectedOrRevised",
+    "d": "marc:Deleted",
+    "n": "marc:New",
+    "o": "marc:Obsolete",
+    "s": "marc:DeletedHeadingSplitIntoTwoOrMoreHeading",
+    "x": "marc:DeletedHeadingReplacedByAnotherHeading"
+  },
+  "BibLevelType": {
+    "9": "marc:LicenseAgreementBoundDescription",
+    "a": "marc:MonographicComponentPart",
+    "b": "marc:SerialComponentPart",
+    "c": "marc:Collection",
+    "d": "marc:Subunit",
+    "i": "marc:IntegratingResource",
+    "m": "marc:MonographItem",
+    "p": "marc:Periodica",
+    "s": "marc:Serial"
+  },
+  "BooksBiographyType": {
+    "a": "marc:Autobiography",
+    "b": "marc:IndividualBiography",
+    "c": "marc:CollectiveBiography",
+    "d": "marc:ContainsBiographicalInformation"
+  },
+  "BooksContentsType": {
+    "2": "marc:Offprint",
+    "5": "marc:Calendar",
+    "6": "marc:ComicOrGraphicNovel",
+    "a": "marc:AbstractsSummary",
+    "b": "marc:Bibliography",
+    "c": "marc:Catalog",
+    "d": "marc:Dictionary",
+    "e": "marc:Encyclopedia",
+    "f": "marc:Handbook",
+    "g": "marc:LegalArticle",
+    "i": "marc:Index",
+    "j": "marc:PatentDocument",
+    "k": "marc:Discography",
+    "l": "marc:Legislation",
+    "m": "marc:Thesis",
+    "n": "marc:SurveysOfLiteratureInASubjectArea",
+    "o": "marc:Review",
+    "p": "marc:ProgrammedText",
+    "q": "marc:Filmography",
+    "r": "marc:Directory",
+    "s": "marc:Statistics",
+    "t": "marc:TechnicalReport",
+    "u": "marc:StandardsSpecification",
+    "v": "marc:LegalCaseOrCaseNote",
+    "w": "marc:LawReportOrDigest",
+    "y": "marc:Yearbook",
+    "z": "marc:Treaty"
+  },
+  "BooksFestschriftType": {
+    "0": false,
+    "1": "marc:Festschrift"
+  },
+  "BooksIllustrationsType": {
+    "a": "marc:Illustration",
+    "b": "marc:Map",
+    "c": "marc:Portrait",
+    "d": "marc:Chart",
+    "e": "marc:Plan",
+    "f": "marc:Plate",
+    "g": "marc:Music",
+    "h": "marc:Facsimile",
+    "i": "marc:CoatsOfArms",
+    "j": "marc:GenealogicalTable",
+    "k": "marc:Form",
+    "l": "marc:Sample",
+    "m": "marc:PhonodiscPhonowireEtc",
+    "o": "marc:Photograph",
+    "p": "marc:Illumination"
+  },
+  "BooksItemType": {
+    "a": "marc:Microfilm",
+    "b": "marc:Microfiche",
+    "c": "marc:Microopaque",
+    "d": "marc:LargePrint",
+    "f": "marc:Braille",
+    "o": "marc:Online",
+    "q": "marc:DirectElectronic",
+    "r": "marc:RegularPrintReproduction",
+    "s": "marc:Electronic"
+  },
+  "BooksLiteraryFormType": {
+    "0": "marc:NotFictionNotFurtherSpecified",
+    "1": "marc:FictionNotFurtherSpecified",
+    "c": "marc:ComicStrip",
+    "d": "marc:Drama",
+    "e": "marc:Essay",
+    "f": "marc:Novel",
+    "h": "marc:HumorSatiresEtc",
+    "i": "marc:Letter",
+    "j": "marc:ShortStory",
+    "m": "marc:MixedForms",
+    "p": "marc:Poetry",
+    "s": "marc:Speech"
+  },
+  "CatFormType": {
+    "a": "marc:Aacr2",
+    "c": "marc:ISBDPunctuationOmitted",
+    "i": "marc:Isbd"
+  },
+  "CatalogingRulesType": {
+    "a": "marc:EarlierRule",
+    "b": "marc:Aacr1",
+    "c": "marc:CatalogingRulesType-c",
+    "d": "marc:Aacr2CompatibleHeading",
+    "z": "marc:Other"
+  },
+  "CatalogingSourceType": {
+    "_": "marc:NationalBibliographicAgency",
+    "c": "marc:CooperativeCatalogingProgram",
+    "d": "marc:CatalogingSourceType-d"
+  },
+  "CharacterCodingType": {
+    "a": "marc:UCS-Unicode"
+  },
+  "ColorType": {
+    "a": "marc:OneColor",
+    "b": "marc:BlackAndWhite",
+    "c": "marc:Multicolored",
+    "h": "marc:HandColored",
+    "m": "marc:Mixed",
+    "z": "marc:Other"
+  },
+  "CompletenessType": {
+    "0": "marc:CompletenessType-0",
+    "1": "marc:CompletenessType-1",
+    "2": "marc:CompletenessType-2",
+    "3": "marc:Scattered"
+  },
+  "ComputerAntecedentType": {
+    "a": "marc:FileReproducedFromOriginal",
+    "b": "marc:FileReproducedFromMicroform",
+    "c": "marc:FileReproducedFromElectronicResource",
+    "d": "marc:FileReproducedFromIntermediate",
+    "m": "marc:MixedSources"
+  },
+  "ComputerColorType": {
+    "a": "marc:OneColor",
+    "b": "marc:BlackAndWhite",
+    "c": "marc:Multicolored",
+    "g": "marc:GrayScale",
+    "m": "marc:MixedColors",
+    "z": "marc:Other"
+  },
+  "ComputerCompressionType": {
+    "a": "marc:Uncompressed",
+    "b": "marc:LosslessCompression",
+    "d": "marc:LossyCompression",
+    "m": "marc:MixedCompression"
+  },
+  "ComputerDimensionsType": {
+    "a": "marc:3,5_in",
+    "e": "marc:12_in",
+    "g": "marc:4,75_in_or_12_cm_(CD)",
+    "i": "marc:1,125_x_2,375_in",
+    "j": "marc:3,875_x_2,5_in",
+    "o": "marc:5,25_in",
+    "v": "marc:8_in",
+    "z": "marc:Other"
+  },
+  "ComputerFileAntecedentType": {
+    "a": "marc:FileReproducedFromOriginal",
+    "b": "marc:FileReproducedFromMicroform",
+    "c": "marc:FileReproducedFromAnElectronicResource",
+    "d": "marc:FileReproducedFromAnIntermediateNotMicroform",
+    "m": "marc:Mixed"
+  },
+  "ComputerFileColorType": {
+    "a": "marc:OneColor",
+    "b": "marc:BlackAndWhite",
+    "c": "marc:Multicolored",
+    "g": "marc:GrayScale",
+    "m": "marc:Mixed",
+    "z": "marc:Other"
+  },
+  "ComputerFileCompressionType": {
+    "a": "marc:Uncompressed",
+    "b": "marc:Lossless",
+    "d": "marc:Lossy",
+    "m": "marc:Mixed"
+  },
+  "ComputerFileDimensionsType": {
+    "a": "marc:312In",
+    "e": "marc:12In",
+    "g": "marc:434InOr12Cm",
+    "i": "marc:118X238In",
+    "j": "marc:378X212In",
+    "o": "marc:514In",
+    "v": "marc:8In",
+    "z": "marc:Other"
+  },
+  "ComputerFileFileFormatsType": {
+    "a": "marc:One",
+    "m": "marc:ComputerFileFileFormatsType-m"
+  },
+  "ComputerFileFormatsType": {
+    "a": "marc:OneFileFormat",
+    "m": "marc:MultipleFileFormats"
+  },
+  "ComputerFileImageBitDepthType": {
+    "001~999": "marc:ExactBitDepth",
+    "mmm": "marc:Multiple"
+  },
+  "ComputerFileMaterialType": {
+    "a": "marc:TapeCartridge",
+    "b": "marc:ChipCartridge",
+    "c": "marc:ComputerOpticalDiscCartridge",
+    "f": "marc:TapeCassette",
+    "h": "marc:TapeReel",
+    "j": "marc:MagneticDisc",
+    "m": "marc:MagnetoOpticalDisc",
+    "o": "marc:OpticalDisc",
+    "r": "marc:Remote",
+    "z": "marc:Other"
+  },
+  "ComputerFileQATargetType": {
+    "a": "marc:Absent",
+    "p": "marc:Present"
+  },
+  "ComputerFileReformattingQualityType": {
+    "a": "marc:Access",
+    "p": "marc:Preservation",
+    "r": "marc:Replacement"
+  },
+  "ComputerFileSoundType": {
+    "a": "marc:SoundOnMedium"
+  },
+  "ComputerFrequencyType": {
+    "a": "marc:Annual-Obsolete",
+    "b": "marc:Bimonthly-Obsolete",
+    "c": "marc:Semiweekly-Obsolete",
+    "d": "marc:Daily-Obsolete",
+    "e": "marc:Biweekly-Obsolete",
+    "f": "marc:Semiannual-Obsolete",
+    "g": "marc:Biennial-Obsolete",
+    "h": "marc:Triennial-Obsolete",
+    "i": "marc:ThreeTimesAWeek-Obsolete",
+    "j": "marc:ThreeTimesAMonth-Obsolete",
+    "m": "marc:Monthly-Obsolete",
+    "q": "marc:Quarterly-Obsolete",
+    "s": "marc:Semimonthly-Obsolete",
+    "t": "marc:ThreeTimesAYear-Obsolete",
+    "w": "marc:Weekly-Obsolete",
+    "z": "marc:OtherFrequencies-Obsolete"
+  },
+  "ComputerImageBitDepthType": {
+    "001~999": "marc:BitDepth",
+    "mmm": "marc:MultipleImageBitDepths"
+  },
+  "ComputerItemType": {
+    "o": "marc:Online",
+    "q": "marc:DirectElectronic",
+    "s": "marc:Electronic"
+  },
+  "ComputerMaterialType": {
+    "a": "marc:TapeCartridge",
+    "b": "marc:ChipCartridge",
+    "c": "marc:ComputerOpticalDiscCartridge",
+    "d": "marc:ComputerDisc",
+    "e": "marc:ComputerDiscCartridge",
+    "f": "marc:TapeCassette",
+    "h": "marc:TapeReel",
+    "j": "marc:MagneticDisk",
+    "k": "marc:ComputerCard",
+    "m": "marc:MagnetoOpticalDisc",
+    "o": "marc:OpticalDisc",
+    "r": "marc:OnlineResource",
+    "z": "marc:Other"
+  },
+  "ComputerQATargetType": {
+    "a": "marc:TestImagesEtcAbsent",
+    "p": "marc:TestImagesEtcPresent"
+  },
+  "ComputerReformattingQualityType": {
+    "a": "marc:AccessFormatQuality",
+    "p": "marc:PreservationFormatQuality",
+    "r": "marc:ReplacementFormatQuality"
+  },
+  "ComputerRegularityType": {
+    "n": "marc:NormalizedIrregular-Obsolete",
+    "r": "marc:Regular-Obsolete",
+    "x": "marc:CompletelyIrregular-Obsolete"
+  },
+  "ComputerSoundType": {
+    "a": "marc:ComputerSoundType-a"
+  },
+  "ComputerTypeOfFileType": {
+    "a": "marc:NumericData",
+    "b": "marc:ComputerProgram",
+    "c": "marc:Representational",
+    "d": "marc:Document",
+    "e": "marc:BibliographicData",
+    "f": "marc:Font",
+    "g": "marc:ComputerTypeOfFileType-g",
+    "h": "marc:ComputerTypeOfFileType-h",
+    "i": "marc:InteractiveMultimedia",
+    "j": "marc:OnlineSystemOrService",
+    "m": "marc:Combination",
+    "z": "marc:Other"
+  },
+  "ConferencePublicationType": {
+    "0": false,
+    "1": "marc:ConferencePublication"
+  },
+  "CopyReportType": {
+    "0": "marc:Separate",
+    "1": "marc:Composite"
+  },
+  "EncLevelType": {
+    "1": "marc:FullLevelMaterialNotExamined",
+    "2": "marc:LessThanFullLevelMaterialNotExamined",
+    "3": "marc:AbbreviatedLevel",
+    "4": "marc:CoreLevel",
+    "5": "marc:PartialPreliminaryLevel",
+    "7": "marc:MinimalLevel",
+    "8": "marc:PrepublicationLevel",
+    "_": "marc:FullLevel",
+    "e": "marc:SystemIdentifiedMarcErrorInABatchloadedRecordLocal",
+    "i": "marc:FullLevelInputByOclcParticipantsLocal",
+    "j": "marc:DeletedRecordLocal",
+    "k": "marc:LessThanFullLevelInputByOclcParticipantsLocal",
+    "l": "marc:FullLevelInputAddedFromABatchProcessLocal",
+    "m": "marc:LessThanFullLevelInputAddedFromABatchProcessLocal"
+  },
+  "EntryMapType": {
+    "4500": "marc:EntryMap"
+  },
+  "FilmBaseType": {
+    "a": "marc:SafetyBaseUndetermined",
+    "c": "marc:SafetyBaseAcetateUndetermined",
+    "d": "marc:SafetyBaseDiacetate",
+    "i": "marc:NitrateBase",
+    "m": "marc:MixedBaseNitrateAndSafety",
+    "p": "marc:SafetyBasePolyester",
+    "r": "marc:SafetyBaseMixed",
+    "t": "marc:SafetyBaseTriacetate",
+    "z": "marc:Other"
+  },
+  "GlobeMaterialType": {
+    "a": "marc:CelestialGlobe",
+    "b": "marc:PlanetaryOrLunarGlobe",
+    "c": "marc:TerrestrialGlobe",
+    "e": "marc:EarthMoonGlobe",
+    "z": "marc:Other"
+  },
+  "GlobeMediumType": {
+    "a": "marc:Paper",
+    "b": "marc:Wood",
+    "c": "marc:Stone",
+    "d": "marc:Metal",
+    "e": "marc:Synthetic",
+    "f": "marc:Skin",
+    "g": "marc:Textile",
+    "i": "marc:Plastic",
+    "l": "marc:Vinyl",
+    "n": "marc:Vellum",
+    "p": "marc:Plaster",
+    "v": "marc:Leather",
+    "w": "marc:Parchment",
+    "z": "marc:Other"
+  },
+  "GovernmentPublicationType": {
+    "a": "marc:AutonomousOrSemiAutonomousComponent",
+    "c": "marc:Multilocal",
+    "f": "marc:FederalNational",
+    "i": "marc:InternationalIntergovernmental",
+    "l": "marc:Local",
+    "m": "marc:Multistate",
+    "o": "marc:GovernmentPublicationLevelUndetermined",
+    "s": "marc:StateProvincialTerritorialDependentEtc",
+    "u": "marc:UnknownIfItemIsGovernmentPublication",
+    "z": "marc:Other"
+  },
+  "GovtAgencyType": {
+    "a": "marc:AutonomousOrSemiAutonomousComponentOfMalaysia",
+    "c": "marc:Multilocal",
+    "f": "marc:FederalNational",
+    "i": "marc:InternationalIntergovernmental",
+    "l": "marc:Local",
+    "m": "marc:Multistate",
+    "o": "marc:GovernmentAgencyTypeUndetermined",
+    "s": "marc:StateProvincialTerritorialDependentEtc",
+    "u": "marc:UnknownIfHeadingIsGovernmentAgency",
+    "z": "marc:OtherTypeOfGovernmentAgency"
+  },
+  "HeadingType": {
+    "a": "marc:Appropriate",
+    "b": false
+  },
+  "HoldingCharacterCodingType": {
+    "_": "marc:MARC-8-VRLIN",
+    "a": "marc:UCS-Unicode"
+  },
+  "HoldingComputerSoundType": {
+    "a": "marc:HoldingComputerSoundType-a"
+  },
+  "HoldingEncLevelType": {
+    "1": "marc:HoldingsLevel1",
+    "2": "marc:HoldingsLevel2",
+    "3": "marc:HoldingsLevel3",
+    "4": "marc:HoldingsLevel4",
+    "5": "marc:HoldingsLevel4WithPieceDesignation",
+    "m": "marc:MixedLevels",
+    "z": "marc:OtherLevel"
+  },
+  "HoldingMicroformRangeType": {
+    "a": "marc:LowReduction",
+    "b": "marc:NormalReduction",
+    "c": "marc:HighReduction",
+    "d": "marc:VeryHighReduction",
+    "e": "marc:UltraHighReduction",
+    "v": "marc:ReductionRateVary"
+  },
+  "HoldingProjGraphMaterialType": {
+    "c": "marc:FilmstripCartridge",
+    "d": "marc:Filmslip",
+    "f": "marc:OtherFilmstripType",
+    "o": "marc:FilmstripRoll",
+    "s": "marc:Slide",
+    "t": "marc:Transparency",
+    "z": "marc:Other"
+  },
+  "HoldingRemoteSensImageAltitudeType": {
+    "a": "marc:Surface",
+    "b": "marc:Airborne",
+    "c": "marc:Spaceborne",
+    "z": "marc:Other"
+  },
+  "HoldingRemoteSensImageConstructionType": {
+    "a": "marc:Balloon",
+    "b": "marc:AircraftLowAltitude",
+    "c": "marc:AircraftMediumAltitude",
+    "d": "marc:AircraftHighAltitude",
+    "e": "marc:MannedSpacecraft",
+    "f": "marc:UnmannedSpacecraft",
+    "g": "marc:LandBasedRemoteSensingDevice",
+    "h": "marc:WaterSurfaceBasedRemoteSensingDevice",
+    "i": "marc:SubmersibleRemoteSensingDevice",
+    "z": "marc:Other"
+  },
+  "HoldingRemoteSensImageUseType": {
+    "a": "marc:Meteorological",
+    "b": "marc:SurfaceObserving",
+    "c": "marc:SpaceObserving",
+    "m": "marc:MixedUses",
+    "z": "marc:Other"
+  },
+  "HoldingReproductionType": {
+    "f": "marc:HoldingReproductionType-f",
+    "z": "marc:Other"
+  },
+  "HoldingSoundKindOfMaterialType": {
+    "a": "marc:LacquerCoating",
+    "b": "marc:CelluloseNitrate",
+    "c": "marc:AcetateTapeWithFerrousOxide",
+    "g": "marc:GlassWithLacquer",
+    "i": "marc:AluminumWithLacquer",
+    "l": "marc:HoldingSoundKindOfMaterialType-l",
+    "m": "marc:PlasticWithMetal",
+    "p": "marc:HoldingSoundKindOfMaterialType-p",
+    "r": "marc:PaperWithLacquerOrFerrousOxide",
+    "s": "marc:Shellac",
+    "w": "marc:Wax",
+    "z": "marc:Other"
+  },
+  "HoldingSoundTapeWidthType": {
+    "l": "marc:18In",
+    "m": "marc:14In",
+    "o": "marc:HoldingSoundTapeWidthType-o",
+    "p": "marc:1In",
+    "z": "marc:Other"
+  },
+  "HoldingStatusType": {
+    "c": "marc:CorrectedOrRevised",
+    "d": "marc:Deleted",
+    "n": "marc:New"
+  },
+  "HoldingType": {
+    "v": "marc:MultipartItemHolding",
+    "x": "marc:SinglePartItemHolding",
+    "y": "marc:SerialItemHolding"
+  },
+  "HoldingVideoFormatType": {
+    "a": "marc:Beta12InVideocassette",
+    "b": "marc:Vhs12InVideocassette",
+    "c": "marc:UMatic34InVideocassette",
+    "d": "marc:Eiaj12InReel",
+    "e": "marc:TypeC1InReel",
+    "f": "marc:Quadruplex1InOr2InReel",
+    "g": "marc:Laserdisc",
+    "h": "marc:CedCapacitanceElectronicDiscVideodisc",
+    "i": "marc:Betacam12InVideocassette",
+    "j": "marc:BetacamSp12InVideocassette",
+    "k": "marc:SuperVhs12InVideocassette",
+    "m": "marc:MIi12InVideocassette",
+    "o": "marc:D234InVideocassette",
+    "p": "marc:HoldingVideoFormatType-p",
+    "q": "marc:Hi8Mm",
+    "s": "marc:BluRayDisc",
+    "v": "marc:Dvd",
+    "z": "marc:Other"
+  },
+  "IndexType": {
+    "0": false,
+    "1": "marc:IndexPresent"
+  },
+  "ItemInfoInRecordType": {
+    "i": "marc:ItemInfoInRecord",
+    "n": false
+  },
+  "ItemType": {
+    "a": "marc:Microfilm",
+    "b": "marc:Microfiche",
+    "c": "marc:Microopaque",
+    "d": "marc:LargePrint",
+    "f": "marc:Braille",
+    "o": "marc:Online",
+    "q": "marc:DirectElectronic",
+    "r": "marc:RegularPrintReproductionEyeReadablePrint",
+    "s": "marc:Electronic"
+  },
+  "KindOfRecordType": {
+    "a": "marc:EstablishedHeadingRecord",
+    "b": "marc:ReferenceRecordUntracedRecord",
+    "c": "marc:ReferenceRecordTracedRecord",
+    "d": "marc:SubdivisionRecord",
+    "e": "marc:NodeLabelRecord",
+    "f": "marc:EstablishedHeadingAndSubdivisionRecord",
+    "g": "marc:ReferenceAndSubdivisionRecord"
+  },
+  "KitMaterialType": {},
+  "LanguageOfCatalogType": {
+    "b": "marc:EnglishAndFrench",
+    "e": "marc:EnglishOnly",
+    "f": "marc:FrenchOnly"
+  },
+  "LendingPolicyType": {
+    "a": "marc:WillLend",
+    "b": "marc:WillNotLend",
+    "c": "marc:WillLendHardCopyOnly",
+    "l": "marc:LimitedLendingPolicy"
+  },
+  "LevelType": {
+    "a": "marc:FullyEstablishedHeading",
+    "b": "marc:Memorandum",
+    "c": "marc:Provisional",
+    "d": "marc:Preliminary"
+  },
+  "LinkedRecordReqType": {
+    "a": "marc:Set",
+    "b": "marc:PartWithIndependentTitle",
+    "c": "marc:PartWithDependentTitle",
+    "r": "marc:RelatedRecordRequired-Obsolete"
+  },
+  "LinkedType": {
+    "a": "marc:Set",
+    "b": "marc:PartWithIndependentTitle",
+    "c": "marc:PartWithDependentTitle",
+    "r": "marc:RecordHasLinks-Obsolete"
+  },
+  "MapAspectType": {
+    "f": "marc:Facsimile-Obsolete",
+    "o": "marc:Original-Obsolete",
+    "r": "marc:Reproduction-Obsolete"
+  },
+  "MapColorType": {
+    "a": "marc:OneColor",
+    "c": "marc:Multicolored"
+  },
+  "MapDetailsType": {
+    "a": "marc:PhotocopyBluelinePrint",
+    "b": "marc:Photocopy",
+    "c": "marc:PreProduction",
+    "d": "marc:Film",
+    "z": "marc:Other"
+  },
+  "MapMaterialType": {
+    "d": "marc:MapMaterialType-d",
+    "g": "marc:Diagram",
+    "j": "marc:MapATwoDimensionalMap",
+    "k": "marc:Profile",
+    "q": "marc:Model",
+    "r": "marc:RemoteSensingImage",
+    "s": "marc:Section",
+    "y": "marc:View",
+    "z": "marc:Other"
+  },
+  "MapMediumType": {
+    "a": "marc:Paper",
+    "b": "marc:Wood",
+    "c": "marc:Stone",
+    "d": "marc:Metal",
+    "e": "marc:Synthetic",
+    "f": "marc:Skin",
+    "g": "marc:Textile",
+    "i": "marc:Plastic",
+    "j": "marc:Glass",
+    "l": "marc:Vinyl",
+    "n": "marc:Vellum",
+    "p": "marc:Plaster",
+    "q": "marc:FlexibleBasePhotographicPositive",
+    "r": "marc:FlexibleBasePhotographicNegative",
+    "s": "marc:NonFlexibleBasePhotographicPositive",
+    "t": "marc:NonFlexibleBasePhotographicNegative",
+    "v": "marc:Leather",
+    "w": "marc:Parchment",
+    "y": "marc:MapMediumType-y",
+    "z": "marc:Other"
+  },
+  "MapsFormatType": {
+    "e": "marc:Manuscript",
+    "j": "marc:PictureCardPostCard",
+    "k": "marc:MapsFormatType-k",
+    "l": "marc:Puzzle",
+    "n": "marc:Game",
+    "o": "marc:WallMap",
+    "p": "marc:PlayingCard",
+    "r": "marc:LooseLeaf",
+    "z": "marc:Other"
+  },
+  "MapsMaterialType": {
+    "a": "marc:SingleMap",
+    "b": "marc:MapSeries",
+    "c": "marc:MapSerial",
+    "d": "marc:Globe",
+    "e": "marc:Atlas",
+    "f": "marc:SeparateMapSupplementToAnotherWork",
+    "g": "marc:MapBoundAsPartOfAnotherWork",
+    "z": "marc:Other"
+  },
+  "MapsPrimeMeridianType": {
+    "e": "marc:Greenwich-Obsolete",
+    "f": "marc:Ferro-Obsolete",
+    "g": "marc:Paris-Obsolete",
+    "p": "marc:Philadelphia-Obsolete",
+    "w": "marc:WashingtonDC-Obsolete",
+    "z": "marc:Other-Obsolete"
+  },
+  "MapsProjectionType": {
+    "__": "marc:ProjectionNotSpecified",
+    "aa": "marc:Aitoff",
+    "ab": "marc:Gnomic",
+    "ac": "marc:LambertsAzimuthalEqualArea",
+    "ad": "marc:Orthographic",
+    "ae": "marc:AzimuthalEquidistant",
+    "af": "marc:Stereographic",
+    "ag": "marc:GeneralVerticalNearSided",
+    "am": "marc:ModifiedStereographicForAlaska",
+    "an": "marc:ChamberlinTrimetric",
+    "ap": "marc:PolarStereographic",
+    "au": "marc:AzimuthalSpecificTypeUnknown",
+    "az": "marc:AzimuthalOther",
+    "ba": "marc:Gall",
+    "bb": "marc:GoodesHomolographic",
+    "bc": "marc:LambertsCylindricalEqualArea",
+    "bd": "marc:Mercator",
+    "be": "marc:Miller",
+    "bf": "marc:Mollweide",
+    "bg": "marc:Sinusoidal",
+    "bh": "marc:TransverseMercator",
+    "bi": "marc:GaussKruger",
+    "bj": "marc:Equirectangular",
+    "bk": "marc:Krovak",
+    "bl": "marc:CassiniSoldner",
+    "bo": "marc:ObliqueMercator",
+    "br": "marc:Robinson",
+    "bs": "marc:SpaceObliqueMercator",
+    "bu": "marc:CylindricalSpecificTypeUnknown",
+    "bz": "marc:CylindricalOther",
+    "ca": "marc:AlbersEqualArea",
+    "cb": "marc:Bonne",
+    "cc": "marc:LambertsConformalConic",
+    "ce": "marc:EquidistantConic",
+    "cp": "marc:Polyconic",
+    "cu": "marc:ConicSpecificTypeUnknown",
+    "cz": "marc:ConicOther",
+    "da": "marc:Armadillo",
+    "db": "marc:Butterfly",
+    "dc": "marc:Eckert",
+    "dd": "marc:GoodesHomolosine",
+    "de": "marc:MillersBipolarObliqueConformalConic",
+    "df": "marc:VanDerGrinten",
+    "dg": "marc:Dimaxion",
+    "dh": "marc:Cordiform",
+    "dl": "marc:LambertConformal",
+    "zz": "marc:MapsProjectionType-zz"
+  },
+  "MapsReliefType": {
+    "a": "marc:Contour",
+    "b": "marc:Shading",
+    "c": "marc:GradientOrBathymetricTint",
+    "d": "marc:Hachure",
+    "e": "marc:BathymetrySounding",
+    "f": "marc:FormLine",
+    "g": "marc:SpotHeight",
+    "i": "marc:Pictorially",
+    "j": "marc:LandForm",
+    "k": "marc:BathymetryIsoline",
+    "m": "marc:RockDrawing",
+    "z": "marc:OtherReliefType"
+  },
+  "MediumType": {
+    "a": "marc:OpticalSoundTrackOnMotionPictureFilm",
+    "b": "marc:MagneticSoundTrackOnMotionPictureFilm",
+    "c": "marc:MagneticAudioTapeInCartridge",
+    "d": "marc:SoundDisc",
+    "e": "marc:MagneticAudioTapeOnReel",
+    "f": "marc:MagneticAudioTapeInCassette",
+    "g": "marc:OpticalAndMagneticSoundTrackOnMotionPictureFilm",
+    "h": "marc:Videotape",
+    "i": "marc:Videodisc",
+    "z": "marc:Other"
+  },
+  "MicroformColorType": {
+    "b": "marc:BlackAndWhiteOrMonochrome",
+    "c": "marc:Multicolored",
+    "m": "marc:Mixed",
+    "z": "marc:Other"
+  },
+  "MicroformDimensionsType": {
+    "a": "marc:8Mm",
+    "d": "marc:16Mm",
+    "f": "marc:35Mm",
+    "g": "marc:70Mm",
+    "h": "marc:105Mm",
+    "l": "marc:3X5InOr8X13Cm",
+    "m": "marc:4X6InOr11X15Cm",
+    "o": "marc:6X9InOr16X23Cm",
+    "p": "marc:314X738InOr9X19Cm",
+    "z": "marc:Other"
+  },
+  "MicroformEmulsionType": {
+    "a": "marc:SilverHalide",
+    "b": "marc:Diazo",
+    "c": "marc:Vesicular",
+    "m": "marc:MixedEmulsion",
+    "z": "marc:Other"
+  },
+  "MicroformGenerationType": {
+    "a": "marc:FirstGenerationMaster",
+    "b": "marc:PrintingMaster",
+    "c": "marc:ServiceCopy",
+    "m": "marc:MixedGeneration"
+  },
+  "MicroformMaterialType": {
+    "a": "marc:ApertureCard",
+    "b": "marc:MicrofilmCartridge",
+    "c": "marc:MicrofilmCassette",
+    "d": "marc:MicrofilmReel",
+    "e": "marc:MicroformMaterialType-e",
+    "f": "marc:MicroficheCassette",
+    "g": "marc:MicroformMaterialType-g",
+    "h": "marc:MicrofilmSlip",
+    "j": "marc:MicrofilmRoll",
+    "z": "marc:Other"
+  },
+  "MicroformRangeType": {
+    "a": "marc:LowReduction",
+    "b": "marc:NormalReduction",
+    "c": "marc:HighReduction",
+    "d": "marc:VeryHighReduction",
+    "e": "marc:UltraHighReduction",
+    "v": "marc:ReductionRateVary"
+  },
+  "ModifiedRecordType": {
+    "d": "marc:DashedOnInformationOmitted",
+    "o": "marc:CompletelyRomanizedPrintedCardsRomanized",
+    "r": "marc:CompletelyRomanizedPrintedCardsInScript",
+    "s": "marc:Shortened",
+    "x": "marc:MissingCharacters"
+  },
+  "ModifiedType": {
+    "s": "marc:Shortened",
+    "x": "marc:MissingCharacters"
+  },
+  "MotionPicCategoriesType": {
+    "a": "marc:3LayerColor",
+    "b": "marc:2ColorSingleStrip",
+    "c": "marc:Undetermined2Color",
+    "d": "marc:Undetermined3Color",
+    "e": "marc:3StripColor",
+    "f": "marc:2StripColor",
+    "g": "marc:RedStrip",
+    "h": "marc:BlueOrGreenStrip",
+    "i": "marc:CyanStrip",
+    "j": "marc:MagentaStrip",
+    "k": "marc:YellowStrip",
+    "l": "marc:SEN2",
+    "m": "marc:SEN3",
+    "p": "marc:SepiaTone",
+    "q": "marc:OtherTone",
+    "r": "marc:Tint",
+    "s": "marc:TintedAndToned",
+    "t": "marc:StencilColor",
+    "v": "marc:MotionPicCategoriesType-v",
+    "z": "marc:Other"
+  },
+  "MotionPicColorStockType": {
+    "a": "marc:ImbibitionDyeTransferPrint",
+    "b": "marc:ThreeLayerStock",
+    "c": "marc:ThreeLayerStockLowFade",
+    "d": "marc:DuplitizedStock",
+    "z": "marc:Other"
+  },
+  "MotionPicColorType": {
+    "b": "marc:BlackAndWhite",
+    "c": "marc:Multicolored",
+    "h": "marc:HandColored",
+    "m": "marc:Mixed",
+    "z": "marc:Other"
+  },
+  "MotionPicCompletenessType": {
+    "c": "marc:Complete",
+    "i": "marc:Incomplete"
+  },
+  "MotionPicConfigurationOrVideoPlaybackType": {
+    "k": "marc:MotionPicConfigurationOrVideoPlaybackType-k",
+    "m": "marc:Monaural",
+    "q": "marc:QuadraphonicMultichannelOrSurround",
+    "s": "marc:Stereophonic",
+    "z": "marc:Other"
+  },
+  "MotionPicDeteriorationType": {
+    "a": "marc:NoneApparent",
+    "b": "marc:NitrateSuspiciousOdor",
+    "c": "marc:NitratePungentOdor",
+    "d": "marc:NitrateBrownishDiscolorationFadingDusty",
+    "e": "marc:NitrateSticky",
+    "f": "marc:NitrateFrothyBubblesBlisters",
+    "g": "marc:NitrateCongealed",
+    "h": "marc:NitratePowder",
+    "k": "marc:NonNitrateDetectableDeteriorationDiacetateOdor",
+    "l": "marc:NonNitrateAdvancedDeterioration",
+    "m": "marc:NonNitrateDisaster"
+  },
+  "MotionPicDimensionsType": {
+    "a": "marc:Standard8Mm",
+    "b": "marc:Super8MmSingle8Mm",
+    "c": "marc:95Mm",
+    "d": "marc:16Mm",
+    "e": "marc:28Mm",
+    "f": "marc:35Mm",
+    "g": "marc:70Mm",
+    "z": "marc:Other"
+  },
+  "MotionPicElementsType": {
+    "a": "marc:Workprint",
+    "b": "marc:Trim",
+    "c": "marc:Outtake",
+    "d": "marc:Rush",
+    "e": "marc:MixingTrack",
+    "f": "marc:TitleBandsIntertitleRoll",
+    "g": "marc:ProductionRoll",
+    "z": "marc:Other"
+  },
+  "MotionPicFormatType": {
+    "a": "marc:StandardSoundApertureReducedFrame",
+    "b": "marc:NonanamorphicWideScreen",
+    "c": "marc:3D",
+    "d": "marc:AnamorphicWideScreen",
+    "e": "marc:OtherWideScreenFormat",
+    "f": "marc:StandardSilentApertureFullFrame",
+    "z": "marc:Other"
+  },
+  "MotionPicGenerationType": {
+    "d": "marc:Duplicate",
+    "e": "marc:Master",
+    "o": "marc:Original",
+    "r": "marc:ReferencePrintViewingCopy",
+    "z": "marc:Other"
+  },
+  "MotionPicMaterialType": {
+    "c": "marc:FilmCartridge",
+    "f": "marc:FilmCassette",
+    "o": "marc:FilmRoll",
+    "r": "marc:FilmReel",
+    "z": "marc:Other"
+  },
+  "MotionPicPosNegType": {
+    "a": "marc:Positive",
+    "b": "marc:Negative",
+    "z": "marc:Other"
+  },
+  "MusicCompositionType": {
+    "an": "marc:Anthem",
+    "bd": "marc:Ballad",
+    "bg": "marc:BluegrassMusic",
+    "bl": "marc:Blues",
+    "bt": "marc:Ballet",
+    "ca": "marc:Chaconne",
+    "cb": "marc:ChantsOtherReligion",
+    "cc": "marc:ChantChristian",
+    "cg": "marc:ConcertiGrossi",
+    "ch": "marc:Chorale",
+    "cl": "marc:ChoralePrelude",
+    "cn": "marc:CanonOrRound",
+    "co": "marc:Concerto",
+    "cp": "marc:ChansonsPolyphonic",
+    "cr": "marc:Carol",
+    "cs": "marc:ChanceComposition",
+    "ct": "marc:Cantata",
+    "cy": "marc:CountryMusic",
+    "cz": "marc:Canzona",
+    "df": "marc:DanceForm",
+    "dv": "marc:DivertimentosSerenadesCassationsDivertissementsNotturni",
+    "fg": "marc:Fugue",
+    "fl": "marc:Flamenco",
+    "fm": "marc:FolkMusic",
+    "ft": "marc:Fantasia",
+    "gm": "marc:GospelMusic",
+    "hy": "marc:Hymn",
+    "jz": "marc:Jazz",
+    "mc": "marc:MusicalRevueOrComedy",
+    "md": "marc:Madrigal",
+    "mi": "marc:Minuet",
+    "mo": "marc:Motet",
+    "mp": "marc:MotionPictureMusic",
+    "mr": "marc:March",
+    "ms": "marc:Mass",
+    "mu": "marc:MultipleForms",
+    "mz": "marc:Mazurka",
+    "nc": "marc:Nocturne",
+    "op": "marc:Opera",
+    "or": "marc:Oratorio",
+    "ov": "marc:Overture",
+    "pg": "marc:ProgramMusic",
+    "pm": "marc:PassionMusic",
+    "po": "marc:Polonaise",
+    "pp": "marc:PopularMusic",
+    "pr": "marc:Prelude",
+    "ps": "marc:Passacaglia",
+    "pt": "marc:PartSong",
+    "pv": "marc:Pavan",
+    "rc": "marc:RockMusic",
+    "rd": "marc:Rondo",
+    "rg": "marc:RagtimeMusic",
+    "ri": "marc:Ricercar",
+    "rp": "marc:Rhapsody",
+    "rq": "marc:Requiem",
+    "sd": "marc:SquareDanceMusic",
+    "sg": "marc:Song",
+    "sn": "marc:Sonata",
+    "sp": "marc:SymphonicPoem",
+    "st": "marc:StudyOrExercise",
+    "su": "marc:Suite",
+    "sy": "marc:Symphony",
+    "tc": "marc:Toccata",
+    "tl": "marc:TeatroLirico",
+    "ts": "marc:TrioSonata",
+    "vl": "marc:Villancico",
+    "vr": "marc:Variation",
+    "wz": "marc:Waltz",
+    "za": "marc:Zarzuela",
+    "zz": "marc:MusicCompositionType-zz"
+  },
+  "MusicFormatType": {
+    "a": "marc:FullScore",
+    "b": "marc:FullScoreMiniatureOrStudySize",
+    "c": "marc:AccompanimentReducedForKeyboard",
+    "d": "marc:VoiceScore",
+    "e": "marc:CondensedScoreOrPianoConductorScore",
+    "g": "marc:CloseScore",
+    "h": "marc:ChoralScore",
+    "i": "marc:CondensedScore",
+    "j": "marc:PerformerConductorPart",
+    "k": "marc:VocalScore",
+    "l": "marc:CompleteMusicalNotationForScore",
+    "m": "marc:MultipleScoreFormats",
+    "z": "marc:Other"
+  },
+  "MusicMatterType": {
+    "a": "marc:MusicMatterType-a",
+    "b": "marc:Bibliography",
+    "c": "marc:ThematicIndex",
+    "d": "marc:LibrettoOrText",
+    "e": "marc:BiographyOfComposerOrAuthor",
+    "f": "marc:BiographyOfPerformerOrHistoryOfEnsemble",
+    "g": "marc:TechnicalOrOrHistoricalInformationOnInstrument",
+    "h": "marc:TechnicalInformationOnMusic",
+    "i": "marc:HistoricalInformation",
+    "k": "marc:EthnologicalInformation",
+    "r": "marc:InstructionalMaterial",
+    "s": "marc:MusicMatterType-s",
+    "z": "marc:Other"
+  },
+  "MusicPartsType": {
+    "d": "marc:InstrumentalOrVocalPart",
+    "e": "marc:InstrumentalPart",
+    "f": "marc:VocalPart"
+  },
+  "MusicTextType": {
+    "_": "marc:ItemIsAMusicalSoundRecording",
+    "a": "marc:Autobiography",
+    "b": "marc:Biography",
+    "c": "marc:ConferenceProceeding",
+    "d": "marc:Drama",
+    "e": "marc:Essay",
+    "f": "marc:Fiction",
+    "g": "marc:Reporting",
+    "h": "marc:History",
+    "i": "marc:Instruction",
+    "j": "marc:LanguageInstruction",
+    "k": "marc:Comedy",
+    "l": "marc:LecturesSpeech",
+    "m": "marc:Memoir",
+    "o": "marc:Folktale",
+    "p": "marc:Poetry",
+    "r": "marc:Rehearsal",
+    "s": "marc:Sound",
+    "t": "marc:Interview",
+    "z": "marc:Other"
+  },
+  "MusicTranspositionType": {
+    "a": "marc:Transposition",
+    "b": "marc:Arrangement",
+    "c": "marc:BothTransposedAndArranged"
+  },
+  "NonProjMaterialType": {
+    "a": "marc:ActivityCard",
+    "c": "marc:Collage",
+    "d": "marc:Drawing",
+    "e": "marc:Painting",
+    "f": "marc:PhotomechanicalPrint",
+    "g": "marc:Photonegative",
+    "h": "marc:Photoprint",
+    "i": "marc:Picture",
+    "j": "marc:Print",
+    "k": "marc:Poster",
+    "l": "marc:TechnicalDrawing",
+    "n": "marc:NonProjMaterialType-n",
+    "o": "marc:FlashCard",
+    "p": "marc:Postcard",
+    "q": "marc:Icon",
+    "r": "marc:Radiograph",
+    "s": "marc:StudyPrint",
+    "v": "marc:NonProjMaterialType-v",
+    "z": "marc:Other"
+  },
+  "NonProjectedType": {
+    "a": "marc:Canvas",
+    "b": "marc:BristolBoard",
+    "c": "marc:CardboardIllustrationBoard",
+    "d": "marc:NonProjectedType-d",
+    "e": "marc:Synthetic",
+    "f": "marc:Skin",
+    "g": "marc:Textile",
+    "h": "marc:NonProjectedType-h",
+    "i": "marc:Plastic",
+    "l": "marc:Vinyl",
+    "m": "marc:MixedCollection",
+    "n": "marc:Vellum",
+    "o": "marc:NonProjectedType-o",
+    "p": "marc:Plaster",
+    "q": "marc:Hardboard",
+    "r": "marc:Porcelain",
+    "s": "marc:NonProjectedType-s",
+    "t": "marc:NonProjectedType-t",
+    "v": "marc:Leather",
+    "w": "marc:Parchment",
+    "z": "marc:Other"
+  },
+  "NotatedMusicMaterialType": {},
+  "NumberUnitsType": {
+    "1": "marc:1",
+    "2": "marc:2",
+    "3": "marc:3",
+    "4": "marc:4",
+    "5": "marc:5",
+    "6": "marc:6",
+    "7": "marc:7",
+    "8": "marc:8",
+    "9": "marc:9"
+  },
+  "NumberedSeriesType": {
+    "a": "marc:NumberedSeries",
+    "b": "marc:UnnumberedSeries",
+    "c": "marc:SeriesNumberingVary"
+  },
+  "PersonalNameType": {
+    "a": "marc:DifferentiatedPersonalName",
+    "b": "marc:UndifferentiatedPersonalName"
+  },
+  "PolarityType": {
+    "a": "marc:Positive",
+    "b": "marc:Negative",
+    "m": "marc:MixedPolarity"
+  },
+  "ProjGraphDimensionsType": {
+    "a": "marc:Standard8Mm",
+    "b": "marc:Super8MmSingle8Mm",
+    "c": "marc:95Mm",
+    "d": "marc:16Mm",
+    "e": "marc:28Mm",
+    "f": "marc:35Mm",
+    "g": "marc:70Mm",
+    "j": "marc:2X2InOr5X5Cm",
+    "k": "marc:214X214InOr6X6Cm",
+    "s": "marc:4X5InOr10X13Cm",
+    "t": "marc:5X7InOr13X18Cm",
+    "v": "marc:8X10InOr21X26Cm",
+    "w": "marc:9X9InOr23X23Cm",
+    "x": "marc:10X10InOr26X26Cm",
+    "y": "marc:7X7InOr18X18Cm",
+    "z": "marc:Other"
+  },
+  "ProjGraphEmulsionType": {
+    "d": "marc:ProjGraphEmulsionType-d",
+    "e": "marc:Synthetic",
+    "j": "marc:SafetyFilm",
+    "k": "marc:FilmBaseOtherThanSafetyFilm",
+    "m": "marc:MixedCollection",
+    "o": "marc:ProjGraphEmulsionType-o",
+    "z": "marc:Other"
+  },
+  "ProjGraphMaterialType": {
+    "c": "marc:FilmstripCartridge",
+    "d": "marc:Filmslip",
+    "f": "marc:OtherFilmstripType",
+    "o": "marc:FilmstripRoll",
+    "s": "marc:Slide",
+    "t": "marc:Transparency",
+    "z": "marc:Other"
+  },
+  "ProjGraphSecondaryType": {
+    "c": "marc:Cardboard",
+    "d": "marc:ProjGraphSecondaryType-d",
+    "e": "marc:Synthetic",
+    "h": "marc:ProjGraphSecondaryType-h",
+    "j": "marc:MetalAndGlass",
+    "k": "marc:SyntheticAndGlass",
+    "m": "marc:MixedCollection",
+    "z": "marc:Other"
+  },
+  "ProjGraphSupportType": {
+    "c": "marc:ProjGraphSupportType-c",
+    "d": "marc:ProjGraphSupportType-d",
+    "e": "marc:Synthetic",
+    "h": "marc:ProjGraphSupportType-h",
+    "j": "marc:MetalAndGlass",
+    "k": "marc:SyntheticAndGlass",
+    "m": "marc:MixedMountSupport",
+    "z": "marc:Other"
+  },
+  "PublicationStatusType": {
+    "b": "marc:NoDatesGivenBCDateInvolved",
+    "c": "marc:ContinuingResourceCurrentlyPublished",
+    "d": "marc:ContinuingResourceCeasedPublication",
+    "e": "marc:DetailedDate",
+    "i": "marc:InclusiveDatesOfCollection",
+    "k": "marc:RangeOfYearsOfBulkOfCollection",
+    "m": "marc:MultipleDates",
+    "n": "marc:DatesUnknown",
+    "p": "marc:DateOfDistributionReleaseIssueAndProductionRecordingSessionWhenDifferent",
+    "q": "marc:QuestionableDate",
+    "r": "marc:ReprintReissueDateAndOriginalDate",
+    "s": "marc:SingleKnownDateProbableDate",
+    "t": "marc:PublicationDateAndCopyrightDate",
+    "u": "marc:ContinuingResourceStatusUnknown"
+  },
+  "RecordUpdateType": {
+    "a": "marc:RecordCanBeUsed",
+    "b": "marc:RecordIsBeingUpdated"
+  },
+  "ReferenceType": {
+    "a": "marc:TracingsAreConsistentWithTheHeading",
+    "b": "marc:TracingsAreNotNecessarilyConsistentWithTheHeading"
+  },
+  "RemoteSensImageAltitudeType": {
+    "a": "marc:Surface",
+    "b": "marc:Airborne",
+    "c": "marc:Spaceborne",
+    "z": "marc:Other"
+  },
+  "RemoteSensImageAttitudeType": {
+    "a": "marc:LowOblique",
+    "b": "marc:HighOblique",
+    "c": "marc:Vertical"
+  },
+  "RemoteSensImageCloudType": {
+    "0": "marc:09",
+    "1": "marc:1019",
+    "2": "marc:2029",
+    "3": "marc:3039",
+    "4": "marc:4049",
+    "5": "marc:5059",
+    "6": "marc:6069",
+    "7": "marc:7079",
+    "8": "marc:8089",
+    "9": "marc:90100"
+  },
+  "RemoteSensImageConstructionType": {
+    "a": "marc:Balloon",
+    "b": "marc:AircraftLowAltitude",
+    "c": "marc:AircraftMediumAltitude",
+    "d": "marc:AircraftHighAltitude",
+    "e": "marc:MannedSpacecraft",
+    "f": "marc:UnmannedSpacecraft",
+    "g": "marc:LandBasedRemoteSensingDevice",
+    "h": "marc:WaterSurfaceBasedRemoteSensingDevice",
+    "i": "marc:SubmersibleRemoteSensingDevice",
+    "z": "marc:Other"
+  },
+  "RemoteSensImageDataType": {
+    "aa": "marc:VisibleLight",
+    "da": "marc:NearInfrared",
+    "db": "marc:MiddleInfrared",
+    "dc": "marc:FarInfrared",
+    "dd": "marc:ThermalInfrared",
+    "de": "marc:ShortwaveInfraredSwir",
+    "df": "marc:ReflectiveInfrared",
+    "dv": "marc:RemoteSensImageDataType-dv",
+    "dz": "marc:OtherInfraredData",
+    "ga": "marc:SidelookingAirborneRadarSlar",
+    "gb": "marc:SyntheticApertureRadarSarSingleFrequency",
+    "gc": "marc:SarMultiFrequencyMultichannel",
+    "gd": "marc:SarLikePolarization",
+    "ge": "marc:SarCrossPolarization",
+    "gf": "marc:InfometricSar",
+    "gg": "marc:PolarmetricSar",
+    "gu": "marc:PassiveMicrowaveMapping",
+    "gz": "marc:OtherMicrowaveData",
+    "ja": "marc:FarUltraviolet",
+    "jb": "marc:MiddleUltraviolet",
+    "jc": "marc:NearUltraviolet",
+    "jv": "marc:UltravioletCombination",
+    "jz": "marc:OtherUltravioletData",
+    "ma": "marc:MultiSpectralMultidata",
+    "mb": "marc:MultiTemporal",
+    "mm": "marc:CombinationOfVariousDataType",
+    "pa": "marc:SonarWaterDepth",
+    "pb": "marc:SonarBottomTopographyImagesSidescan",
+    "pc": "marc:SonarBottomTopographyNearSurface",
+    "pd": "marc:SonarBottomTopographyNearBottom",
+    "pe": "marc:SeismicSurvey",
+    "pz": "marc:OtherAcousticalData",
+    "ra": "marc:GravityAnomaliesGeneral",
+    "rb": "marc:FreeAir",
+    "rc": "marc:Bouger",
+    "rd": "marc:Isostatic",
+    "sa": "marc:MagneticField",
+    "ta": "marc:RadiometricSurvey",
+    "zz": "marc:RemoteSensImageDataType-zz"
+  },
+  "RemoteSensImageMaterialType": {},
+  "RemoteSensImageSensorType": {
+    "a": "marc:Active",
+    "b": "marc:Passive",
+    "z": "marc:Other"
+  },
+  "RemoteSensImageUseType": {
+    "a": "marc:Meteorological",
+    "b": "marc:SurfaceObserving",
+    "c": "marc:SpaceObserving",
+    "m": "marc:MixedUses",
+    "z": "marc:Other"
+  },
+  "ReproductionPolicyType": {
+    "a": "marc:WillReproduce",
+    "b": "marc:WillNotReproduce"
+  },
+  "ReproductionType": {
+    "f": "marc:ReproductionType-f",
+    "z": "marc:Other"
+  },
+  "RetentionPolicyType": {
+    "1": "marc:OtherGeneralRetentionPolicy",
+    "2": "marc:RetainedExceptAsReplacedByUpdate",
+    "3": "marc:SampleIssueRetained",
+    "4": "marc:RetainedUntilReplacedByMicroform",
+    "5": "marc:RetainedUntilReplacedByCumulationReplacementVolumeOrRevision",
+    "6": "marc:RetainedForALimitedPeriod",
+    "7": "marc:NotRetained",
+    "8": "marc:PermanentlyRetained"
+  },
+  "RetentionPolicyUnitType": {
+    "e": "marc:EditionsPart",
+    "i": "marc:IssuesPart",
+    "m": "marc:MonthsTime",
+    "s": "marc:SupplementsPart",
+    "w": "marc:WeeksTime",
+    "y": "marc:YearsTime"
+  },
+  "RomanizationType": {
+    "a": "marc:InternationalStandard",
+    "b": "marc:NationalStandard",
+    "c": "marc:NationalLibraryAssociationAssociationStandard",
+    "d": "marc:NationalLibraryOrBibliographicAgencyStandard",
+    "e": "marc:LocalStandard",
+    "f": "marc:StandardOfUnknownOrigin",
+    "g": "marc:ConventionalRomanizationOrConventionalFormOfNameInLanguageOfCatalogingAgency"
+  },
+  "SerialsAlphabetType": {
+    "a": "marc:BasicRoman",
+    "b": "marc:ExtendedRoman",
+    "c": "marc:Cyrillic",
+    "d": "marc:Japanese",
+    "e": "marc:Chinese",
+    "f": "marc:Arabic",
+    "g": "marc:Greek",
+    "h": "marc:Hebrew",
+    "i": "marc:Thai",
+    "j": "marc:Devanagari",
+    "k": "marc:Korean",
+    "l": "marc:Tamil",
+    "z": "marc:Other"
+  },
+  "SerialsContentsType": {
+    "5": "marc:Calendar",
+    "6": "marc:ComicOrGraphicNovel",
+    "a": "marc:AbstractsSummary",
+    "b": "marc:Bibliography",
+    "c": "marc:Catalog",
+    "d": "marc:Dictionary",
+    "e": "marc:Encyclopedia",
+    "f": "marc:Handbook",
+    "g": "marc:LegalArticle",
+    "h": "marc:SerialsContentsType-h",
+    "i": "marc:Index",
+    "k": "marc:Discography",
+    "l": "marc:Legislation",
+    "m": "marc:Thesis",
+    "n": "marc:SurveysOfLiteratureInASubjectArea",
+    "o": "marc:Review",
+    "p": "marc:ProgrammedText",
+    "q": "marc:Filmography",
+    "r": "marc:Directory",
+    "s": "marc:Statistics",
+    "t": "marc:TechnicalReport",
+    "u": "marc:StandardsSpecification",
+    "v": "marc:LegalCaseOrCaseNote",
+    "w": "marc:LawReportOrDigest",
+    "y": "marc:Yearbook",
+    "z": "marc:Treaty"
+  },
+  "SerialsFrequencyType": {
+    "a": "marc:Annual",
+    "b": "marc:BimonthlyIncludes67Or8NumbersAYear",
+    "c": "marc:Semiweekly",
+    "d": "marc:Daily",
+    "e": "marc:Biweekly",
+    "f": "marc:SemiannualIncludes2NumbersAYear",
+    "g": "marc:Biennial",
+    "h": "marc:Triennial",
+    "i": "marc:ThreeTimesAWeek",
+    "j": "marc:ThreeTimesAMonth",
+    "k": "marc:ContinuouslyUpdated",
+    "m": "marc:MonthlyIncludes91011Or12NumbersAYear",
+    "q": "marc:QuarterlyIncludes4NumbersAYear",
+    "s": "marc:Semimonthly",
+    "t": "marc:ThreeTimesAYear",
+    "w": "marc:Weekly",
+    "z": "marc:Other"
+  },
+  "SerialsISSNType": {
+    "0": "marc:InternationalCenter",
+    "1": "marc:UnitedState",
+    "2": "marc:UnitedKingdom",
+    "4": "marc:Canada",
+    "f": "marc:Sweden-Obsolete",
+    "z": "marc:Other"
+  },
+  "SerialsNatureType": {
+    "6": "marc:ComicOrGraphicNovel",
+    "a": "marc:AbstractsSummary",
+    "b": "marc:Bibliography",
+    "c": "marc:Catalog",
+    "d": "marc:Dictionary",
+    "e": "marc:Encyclopedia",
+    "f": "marc:Handbook",
+    "g": "marc:LegalArticle",
+    "h": "marc:SerialsNatureType-h",
+    "i": "marc:Index",
+    "k": "marc:Discography",
+    "l": "marc:Legislation",
+    "m": "marc:Thesis",
+    "n": "marc:SurveysOfLiteratureInASubjectArea",
+    "o": "marc:Review",
+    "p": "marc:ProgrammedText",
+    "q": "marc:Filmography",
+    "r": "marc:Directory",
+    "s": "marc:Statistics",
+    "t": "marc:TechnicalReport",
+    "u": "marc:StandardsSpecification",
+    "v": "marc:LegalCaseOrCaseNote",
+    "w": "marc:LawReportOrDigest",
+    "y": "marc:Yearbook",
+    "z": "marc:Treaty"
+  },
+  "SerialsOriginalItemType": {
+    "a": "marc:Microfilm",
+    "b": "marc:Microfiche",
+    "c": "marc:Microopaque",
+    "d": "marc:LargePrint",
+    "e": "marc:NewspaperFormat",
+    "f": "marc:Braille",
+    "o": "marc:Online",
+    "q": "marc:DirectElectronic",
+    "s": "marc:Electronic"
+  },
+  "SerialsRegularityType": {
+    "n": "marc:NormalizedIrregular",
+    "r": "marc:Regular",
+    "x": "marc:CompletelyIrregular"
+  },
+  "SerialsTypeOfEntryType": {
+    "0": "marc:SuccessiveEntry",
+    "1": "marc:LatestEntry",
+    "2": "marc:IntegratingEntry"
+  },
+  "SerialsTypeOfSerialType": {
+    "d": "marc:UpdatingDatabase",
+    "l": "marc:UpdatingLooseLeaf",
+    "m": "marc:MonographicSeries",
+    "n": "marc:Newspaper",
+    "p": "marc:Periodical",
+    "w": "marc:UpdatingWebSite"
+  },
+  "SoundCaptureType": {
+    "a": "marc:AcousticalCaptureDirectStorage",
+    "b": "marc:DirectStorageNotAcoustical",
+    "d": "marc:DigitalStorage",
+    "e": "marc:AnalogElectricalStorage",
+    "z": "marc:Other"
+  },
+  "SoundDimensionsType": {
+    "a": "marc:3In",
+    "b": "marc:5In",
+    "c": "marc:7In",
+    "d": "marc:10In",
+    "e": "marc:12In",
+    "f": "marc:16In",
+    "g": "marc:434InOr12Cm",
+    "j": "marc:378X212In",
+    "o": "marc:514X378In",
+    "s": "marc:234X4In",
+    "z": "marc:Other"
+  },
+  "SoundGrooveType": {
+    "m": "marc:MicrogrooveFine",
+    "s": "marc:CoarseStandard",
+    "z": "marc:Other"
+  },
+  "SoundKindOfCuttingType": {
+    "h": "marc:HillAndDaleCutting",
+    "l": "marc:LateralOrCombinedCutting"
+  },
+  "SoundKindOfDiscType": {
+    "a": "marc:MasterTape",
+    "b": "marc:TapeDuplicationMaster",
+    "d": "marc:DiscMasterNegative",
+    "i": "marc:InstantaneousRecordedOnTheSpot",
+    "m": "marc:MassProduced",
+    "r": "marc:MotherPositive",
+    "s": "marc:StamperNegative",
+    "t": "marc:TestPressing",
+    "z": "marc:Other"
+  },
+  "SoundKindOfMaterialType": {
+    "a": "marc:LacquerCoating",
+    "b": "marc:CelluloseNitrate",
+    "c": "marc:AcetateTapeWithFerrousOxide",
+    "g": "marc:GlassWithLacquer",
+    "i": "marc:AluminumWithLacquer",
+    "l": "marc:SoundKindOfMaterialType-l",
+    "m": "marc:PlasticWithMetal",
+    "p": "marc:SoundKindOfMaterialType-p",
+    "r": "marc:PaperWithLacquerOrFerrousOxide",
+    "s": "marc:Shellac",
+    "w": "marc:Wax",
+    "z": "marc:Other"
+  },
+  "SoundMaterialType": {
+    "d": "marc:SoundDisc",
+    "e": "marc:Cylinder",
+    "g": "marc:SoundCartridge",
+    "i": "marc:SoundTrackFilm",
+    "q": "marc:Roll",
+    "s": "marc:SoundCassette",
+    "t": "marc:SoundTapeReel",
+    "w": "marc:WireRecording",
+    "z": "marc:Other"
+  },
+  "SoundPlaybackChannelType": {
+    "m": "marc:Monaural",
+    "q": "marc:Quadraphonic",
+    "s": "marc:Stereophonic",
+    "z": "marc:Other"
+  },
+  "SoundPlaybackCharacterType": {
+    "a": "marc:NabStandard",
+    "b": "marc:CcirStandard",
+    "c": "marc:DolbyBEncoded",
+    "d": "marc:DbxEncoded",
+    "e": "marc:DigitalRecording",
+    "f": "marc:DolbyAEncoded",
+    "g": "marc:DolbyCEncoded",
+    "h": "marc:CxEncoded",
+    "z": "marc:Other"
+  },
+  "SoundSpeedType": {
+    "a": "marc:16Rpm",
+    "b": "marc:3313Rpm",
+    "c": "marc:45Rpm",
+    "d": "marc:78Rpm",
+    "e": "marc:8Rpm",
+    "f": "marc:14MPerSec",
+    "h": "marc:120Rpm",
+    "i": "marc:160Rpm",
+    "k": "marc:1516Ips",
+    "l": "marc:178Ips",
+    "m": "marc:334Ips",
+    "o": "marc:712Ips",
+    "p": "marc:15Ips",
+    "r": "marc:30Ips",
+    "z": "marc:Other"
+  },
+  "SoundTapeConfigurationType": {
+    "a": "marc:Full1Track",
+    "b": "marc:Half2Track",
+    "c": "marc:Quarter4Track",
+    "d": "marc:EightTrack",
+    "e": "marc:TwelveTrack",
+    "f": "marc:SixteenTrack",
+    "z": "marc:Other"
+  },
+  "SoundTapeWidthType": {
+    "l": "marc:18In",
+    "m": "marc:14In",
+    "o": "marc:SoundTapeWidthType-o",
+    "p": "marc:1In",
+    "z": "marc:Other"
+  },
+  "SoundType": {
+    "a": "marc:SoundOnMedium",
+    "b": "marc:SoundSeparateFromMedium"
+  },
+  "SpecificRetentionPolicyType": {
+    "l": "marc:Latest",
+    "p": "marc:Previous"
+  },
+  "StatisticsType": {
+    "_": "marc:RunningCataloguingOrUndefined",
+    "o": "marc:SuppressedInNewAquisitionsList",
+    "r": "marc:RetrospectiveCataloguing"
+  },
+  "StatusType": {
+    "a": "marc:IncreaseInEncodingLevel",
+    "c": "marc:CorrectedOrRevised",
+    "d": "marc:Deleted",
+    "n": "marc:New",
+    "p": "marc:IncreaseInEncodingLevelFromPrepublication"
+  },
+  "SubdivisionType": {
+    "d": "marc:SubdividedGeographicallyDirect",
+    "i": "marc:SubdividedGeographicallyIndirect"
+  },
+  "SubjectHeadingType": {
+    "a": "marc:LibraryOfCongressSubjectHeading",
+    "b": "marc:LcSubjectHeadingsForChildrensLiterature",
+    "c": "marc:MedicalSubjectHeading",
+    "d": "marc:NationalAgriculturalLibrarySubjectAuthorityFile",
+    "k": "marc:CanadianSubjectHeading",
+    "r": "marc:ArtAndArchitectureThesaurus",
+    "s": "marc:SearsListOfSubjectHeading",
+    "v": "marc:RepertoireDesVedettesMatiere",
+    "z": "marc:Other"
+  },
+  "SubjectSubdivisionType": {
+    "a": "marc:Topical",
+    "b": "marc:SubjectSubdivisionType-b",
+    "c": "marc:Chronological",
+    "d": "marc:Geographic",
+    "e": "marc:Language"
+  },
+  "TacBrailleMusicType": {
+    "a": "marc:BarOverBar",
+    "b": "marc:BarByBar",
+    "c": "marc:LineOverLine",
+    "d": "marc:Paragraph",
+    "e": "marc:SingleLine",
+    "f": "marc:SectionBySection",
+    "g": "marc:LineByLine",
+    "h": "marc:OpenScore",
+    "i": "marc:SpannerShortFormScoring",
+    "j": "marc:ShortFormScoring",
+    "k": "marc:Outline",
+    "l": "marc:VerticalScore",
+    "z": "marc:OtherBrailleFormat"
+  },
+  "TacBrailleWritingType": {
+    "a": "marc:LiteraryBraille",
+    "b": "marc:FormatCodeBraille",
+    "c": "marc:MathematicOrScientificBraille",
+    "d": "marc:ComputerBraille",
+    "e": "marc:MusicBraille",
+    "m": "marc:MultipleBrailleTypes",
+    "z": "marc:Other"
+  },
+  "TacContractionType": {
+    "a": "marc:Uncontracted",
+    "b": "marc:Contracted",
+    "m": "marc:Combination",
+    "z": "marc:Other"
+  },
+  "TacMaterialType": {
+    "a": "marc:Moon",
+    "b": "marc:TacMaterialType-b",
+    "c": "marc:TacMaterialType-c",
+    "d": "marc:TactileWithNoWritingSystem",
+    "z": "marc:Other"
+  },
+  "TacSpecPhysicalCharType": {
+    "a": "marc:PrintBraille",
+    "b": "marc:JumboOrEnlargedBraille",
+    "z": "marc:Other"
+  },
+  "TextMaterialType": {
+    "a": "marc:RegularPrint",
+    "b": "marc:TextMaterialType-b",
+    "c": "marc:TextMaterialType-c",
+    "d": "marc:TextInLooseleafBinder",
+    "z": "marc:Other"
+  },
+  "TypeOfControlType": {
+    "a": "marc:ArchivalControl"
+  },
+  "TypeOfRecordType": {
+    "a": "marc:LanguageMaterial",
+    "b": "marc:ArchiveAndManuscriptsControl-Obsolete",
+    "c": "marc:PrintedMusic",
+    "d": "marc:ManuscriptMusic",
+    "e": "marc:PrintedCartographicMaterial",
+    "f": "marc:ManuscriptCartographicMaterial",
+    "g": "marc:ProjectedMedium",
+    "i": "marc:NonmusicalSoundRecording",
+    "j": "marc:MusicalSoundRecording",
+    "k": "marc:TwoDimensionalNonprojectableGraphic",
+    "m": "marc:ComputerFile",
+    "o": "marc:Kit",
+    "p": "marc:MixedMaterial",
+    "r": "marc:ThreeDimensionalArtifactOrNaturallyOccurringObject",
+    "t": "marc:ManuscriptLanguageMaterial"
+  },
+  "TypeOfSeriesType": {
+    "a": "marc:TypeOfSeriesType-a",
+    "b": "marc:MultipartItem",
+    "c": "marc:SeriesLikePhrase",
+    "z": "marc:Other"
+  },
+  "VideoColorType": {
+    "a": "marc:OneColor",
+    "b": "marc:BlackAndWhite",
+    "c": "marc:Multicolored",
+    "m": "marc:Mixed",
+    "z": "marc:Other"
+  },
+  "VideoDimensionsType": {
+    "a": "marc:8Mm",
+    "m": "marc:14In",
+    "o": "marc:VideoDimensionsType-o",
+    "p": "marc:1In",
+    "q": "marc:2In",
+    "r": "marc:34In",
+    "z": "marc:Other"
+  },
+  "VideoFormatType": {
+    "a": "marc:Beta12InVideocassette",
+    "b": "marc:Vhs12InVideocassette",
+    "c": "marc:UMatic34InVideocassette",
+    "d": "marc:Eiaj12InReel",
+    "e": "marc:TypeC1InReel",
+    "f": "marc:Quadruplex1InOr2InReel",
+    "g": "marc:Laserdisc",
+    "h": "marc:CedCapacitanceElectronicDiscVideodisc",
+    "i": "marc:Betacam12InVideocassette",
+    "j": "marc:BetacamSp12InVideocassette",
+    "k": "marc:SuperVhs12InVideocassette",
+    "m": "marc:MIi12InVideocassette",
+    "o": "marc:D234InVideocassette",
+    "p": "marc:VideoFormatType-p",
+    "q": "marc:Hi8Mm",
+    "s": "marc:BluRayDisc",
+    "v": "marc:Dvd",
+    "z": "marc:Other"
+  },
+  "VideoMaterialType": {
+    "c": "marc:Videocartridge",
+    "d": "marc:VideoMaterialType-d",
+    "f": "marc:Videocassette",
+    "r": "marc:Videoreel",
+    "z": "marc:Other"
+  },
+  "VisualMaterialType": {
+    "a": "marc:ArtOriginal",
+    "b": "marc:VisualMaterialType-b",
+    "c": "marc:ArtReproduction",
+    "d": "marc:Diorama",
+    "f": "marc:Filmstrip",
+    "g": "marc:VisualMaterialType-g",
+    "i": "marc:Picture",
+    "k": "marc:Graphic",
+    "l": "marc:TechnicalDrawing",
+    "m": "marc:MotionPicture",
+    "n": "marc:VisualMaterialType-n",
+    "o": "marc:FlashCard",
+    "p": "marc:MicroscopeSlide",
+    "q": "marc:Model",
+    "r": "marc:Realia",
+    "s": "marc:Slide",
+    "t": "marc:Transparency",
+    "v": "marc:Videorecording",
+    "w": "marc:Toy",
+    "z": "marc:Other"
+  },
+  "VisualMatterType": {
+    "l": "marc:Stills-Obsolete",
+    "m": "marc:ScriptsMaterial-Obsolete",
+    "o": "marc:Posters-Obsolete",
+    "p": "marc:Pressbooks-Obsolete",
+    "q": "marc:LobbyCards-Obsolete",
+    "r": "marc:InstructionalMaterials-Obsolete",
+    "s": "marc:Music-Obsolete",
+    "z": "marc:Other-Obsolete"
+  },
+  "VisualRunningTimeType": {
+    "---": "marc:RunningTimeUnknown",
+    "000": "marc:RunningTimeExceedsThreeCharacters",
+    "001~999": "marc:RunningTime"
+  },
+  "VisualTechniqueType": {
+    "a": "marc:Animation",
+    "c": "marc:AnimationAndLiveAction",
+    "l": "marc:LiveAction",
+    "z": "marc:OtherTechnique"
+  }
+}
