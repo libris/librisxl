@@ -60,12 +60,7 @@ dependencies {
     def groovyVersion = GroovySystem.getVersion()
 
     // LIBRISXL modules
-  //  compile project(':../harvesters')
-    if ('useLocalDeps' in System.properties.keySet()) {
-        compile project(':../../whelk-core')
-    } else {
-        compile 'com.github.libris:whelk-core:develop-SNAPSHOT'
-    }
+    compile project(':../whelk-core')
 
     // Common tools
     providedCompile 'javax.servlet:servlet-api:2.5'
