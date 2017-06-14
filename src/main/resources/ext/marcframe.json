@@ -1256,7 +1256,7 @@
           "tokenMap": "ComputerColorType"
         },
         "[4:5]": {
-          "link": "dimensions",
+          "link": "hasDimensions",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerDimensionsType"
         },
@@ -1411,7 +1411,7 @@
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[7:8]": {
-          "link": "dimensions",
+          "link": "hasDimensions",
           "uriTemplate": "{_}",
           "tokenMap": "ProjGraphDimensionsType"
         },
@@ -1440,7 +1440,7 @@
           "tokenMap": "PolarityType"
         },
         "[4:5]": {
-          "link": "dimensions",
+          "link": "hasDimensions",
           "uriTemplate": "{_}",
           "tokenMap": "MicroformDimensionsType"
         },
@@ -1540,7 +1540,7 @@
           "TODO:resourceType": "RecordingMedium"
         },
         "[7:8]": {
-          "link": "dimensions",
+          "link": "hasDimensions",
           "uriTemplate": "{_}",
           "tokenMap": "MotionPicDimensionsType"
         },
@@ -1687,12 +1687,12 @@
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         },
         "[6:7]": {
-          "link": "dimensions",
+          "link": "hasDimensions",
           "uriTemplate": "{_}",
           "tokenMap": "SoundDimensionsType"
         },
         "[7:8]": {
-          "link": "dimensions",
+          "link": "hasDimensions",
           "uriTemplate": "{_}",
           "tokenMap": "SoundTapeWidthType"
         },
@@ -1779,7 +1779,7 @@
           "TODO:resourceType": "RecordingMedium"
         },
         "[7:8]": {
-          "link": "dimensions",
+          "link": "hasDimensions",
           "uriTemplate": "{_}",
           "tokenMap": "VideoDimensionsType"
         },
@@ -3495,7 +3495,12 @@
         "property": "marc:otherPhysicalDetails",
         "punctuationChars": ";+"
       },
-      "$c": {"property": "dimensions", "punctuationChars": ":;+"},
+      "$c": {
+        "link": "hasDimensions",
+        "resourceType": "Dimensions",
+        "property": "label",
+        "punctuationChars": ":;+"
+      },
       "$e": {
         "TODO:previousSubfieldEndsWith": "+",
         "TODO": "Map to accompaniedBy or kbv:hasNote (bf2 is mapping to note with noteType: 'Accompanying material')?",
@@ -3607,7 +3612,12 @@
         "resourceType": "BaseMaterial",
         "property": "label"
       },
-      "$b": { "addProperty": "dimensions" },
+      "$b": {
+        "link": "hasDimensions",
+        "resourceType": "Dimensions",
+        "property": "label",
+        "punctuationChars": ":;+"
+      },
       "$c": {
         "TODO": "Add the separate lists used for cataloging, as enumerations",
         "addLink": "appliedMaterial",
