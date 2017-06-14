@@ -1,0 +1,41 @@
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'maven'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven { url "http://repository.codehaus.org/" }
+    maven { url "https://jitpack.io/" }
+}
+
+dependencies {
+
+    // XL dependencies
+    compile('../whelk-core' in project.subprojects*.name?
+            project(':../whelk-core') :
+            'com.github.libris:whelk-core:develop-SNAPSHOT')
+
+    /*
+    // local jmarctools
+    compile 'commons-io:commons-io:2.4'
+    compile('../jmarctools' in project.subprojects*.name?
+            project(':../jmarctools') :
+            'com.github.libris:jmarctools:90edfc74bcc006c2d45674cd67fbdc2db0964a97')
+            */
+}
+
+mainClassName = 'whelk.importer.Main'
+
+jar {
+    manifest {
+        attributes 'Implementation-Title':'Libris XL metadata importer',
+                'Implementation-Version': '1.0',
+                'Main-class': mainClassName
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}

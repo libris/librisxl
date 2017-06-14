@@ -296,4 +296,3 @@ all data again (even locally).)
 
 If the MARC conversion process has been updated and needs to be run anew, the only
 option is to reload the data from vcopy using the importers application.
-
