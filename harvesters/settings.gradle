@@ -1,1 +1,1 @@
-include ':../whelk-core'
+apply from: file('../localdeps.gradle')

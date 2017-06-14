@@ -81,7 +81,11 @@ dependencies {
     def groovyVersion = GroovySystem.getVersion()
     def jettyVersion = "8.1.16.v20140903"
 
-    compile project(':../whelk-core')
+    if ('useLocalDeps' in System.properties.keySet()) {
+        compile project(':../../whelk-core')
+    } else {
+        compile 'com.github.libris:whelk-core:develop-SNAPSHOT'
+    }
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"

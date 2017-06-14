@@ -1,1 +1,5 @@
-include ':../whelk-core'
+if ('useLocalDeps' in System.properties.keySet()) {
+    if (new File('../../whelk-core').directory) {
+        include ':../../whelk-core'
+    }
+}
