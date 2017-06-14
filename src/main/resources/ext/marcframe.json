@@ -2848,11 +2848,12 @@
       "$9": {"property": "license"}
     },
     "041": {
+      "aboutEntity": "?work",
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
+        "resourceType": "Work",
         "embedded": true
       },
-      "aboutEntity": "?work",
       "TODO:pending": "Merge entities from pending in similar fields (like bib 520)?",
       "pendingResources": {
         "_:original": {"link": "originalVersion", "resourceType": "Work"},
@@ -3578,6 +3579,7 @@
     "338": {
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
+        "resourceType": "Instance",
         "embedded": true
       },
       "pendingResources": {
