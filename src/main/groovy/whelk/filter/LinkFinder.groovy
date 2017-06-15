@@ -18,19 +18,19 @@ class LinkFinder {
     static String ENTITY_QUERY
     static final ObjectMapper mapper = new ObjectMapper()
 
-    static Map<String, String> CACHED_LINKS = new ConcurrentHashMap<String, String>()
-
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql
-        ENTITY_QUERY = """SELECT data -> '@graph' -> 1 ->> '@id' as thingUri
+        ENTITY_QUERY = """SELECT ids2.iri AS thingUri
                         FROM lddb
+                        JOIN lddb__identifiers ids1 ON lddb.data#>>'{@graph,1,@id}' = ids1.iri
+                        JOIN lddb__identifiers ids2 ON ids1.id = ids2.id
                         WHERE data -> '@graph' @> ?
-                        AND id IN (SELECT id
+                        AND ids2.mainid=true
+                        AND ids2.graphindex=1
+                        AND lddb.id IN (SELECT id
                                      FROM lddb__identifiers
                                      WHERE iri IN (€));"""
     }
-
-    int numCalls = 0
 
     List<URI> findLinks(List<Map> entities, List<String> recordIds) {
         if(recordIds.any() && entities.any()) {
