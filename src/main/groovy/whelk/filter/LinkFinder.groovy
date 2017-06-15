@@ -26,10 +26,10 @@ class LinkFinder {
                         JOIN lddb__identifiers ids2 ON ids1.id = ids2.id
                         WHERE data -> '@graph' @> ?
                         AND ids2.mainid=true
-                        AND ids2.graphindex=1
                         AND lddb.id IN (SELECT id
                                      FROM lddb__identifiers
-                                     WHERE iri IN (€));"""
+                                     WHERE iri IN (€))
+                        ORDER BY ids2.graphindex;"""
     }
 
     List<URI> findLinks(List<Map> entities, List<String> recordIds) {
@@ -48,11 +48,15 @@ class LinkFinder {
                 recordIds.each { recordId ->
                     stmt.setObject(++i, recordId)
                 }
+
                 def id
                 log.trace stmt.toString()
                 ResultSet rs = stmt.executeQuery()
                 if (rs.next()) {
-                    id = rs.getString("thingUri")
+                    id = rs.getString("thingUri") // set id to record id, as fallback
+                    if (rs.next()) {
+                        id = rs.getString("thingUri") // if there's a second row (mainEntity), use that id instead.
+                    }
                 }
 
                 return id ? Document.BASE_URI.resolve(id) : null
