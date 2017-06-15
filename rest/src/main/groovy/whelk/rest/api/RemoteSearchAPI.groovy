@@ -197,20 +197,12 @@ class RemoteSearchAPI extends HttpServlet {
                         //id = record.getControlfields("001").get(0).getData()
 
                         log.trace("Marcxmlrecordreader for done")
-
                         def jsonRec = MarcJSONConverter.toJSONString(record)
                         log.trace("Marcjsonconverter for done")
-                        def xMarcJsonDoc = new Document().withData(mapper.readValue(jsonRec.getBytes("UTF-8"), Map)).withContentType("application/x-marc-json")
-                        //Convert xMarcJsonDoc to ld+json
-                        def jsonDoc = marcFrameConverter.convert(xMarcJsonDoc)
-                        /* Necessary?
-                        if (!jsonDoc.id) {
-                            jsonDoc.id = new URIMinter().mint(jsonDoc)
-                        }
-                        */
+                        def jsonDoc = marcFrameConverter.convert(mapper.readValue(jsonRec.getBytes("UTF-8"), Map), null, null)
                         log.trace("Marcframeconverter done")
 
-                        results.addHit(jsonDoc)
+                        results.addHit(new Document(jsonDoc))
                     }
                 } else {
                     log.warn("Received errorMessage from metaproxy: $errorMessage")
