@@ -131,7 +131,13 @@ class MarcFrameConverter implements FormatConverter {
             }
             if (fpaths.size() > 1)
                 println "SOURCE: ${fpath}"
-            println converter.mapper.writeValueAsString(result)
+            try {
+                println converter.mapper.writeValueAsString(result)
+            } catch (e) {
+                System.err.println "Error in result:"
+                System.err.println result
+                throw e
+            }
         }
     }
 
