@@ -2702,12 +2702,12 @@
       "TODO": "should be used more? See also free text form in 518",
       "aboutEntity": "?work",
       "addLink": "eventContentOf",
-      "resourceType": "Event",
       "TODO:i1": {"NOTE": "0: one, 1: multiple, 2: interval"},
       "i2": {
         "property": "@type",
         "overwrite": true,
         "tokenMap": {
+          " ": "Event",
           "0": "RecordingEvent",
           "1": "BroadcastEvent",
           "2": "DiscoveryEvent"
@@ -2750,6 +2750,7 @@
         "about": "_:scale",
         "property": "@type",
         "overwrite": true,
+        "FIXME": "revert might miss this since resourceType doesn't match!",
         "tokenMap": {
           "a": "marc:LinearScale",
           "b": "marc:AngularScale",
@@ -3215,9 +3216,9 @@
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
       "embedded": true,
-      "resourceType": "VariantTitle",
       "i1": {
         "property": "marc:searchControl",
+        "FIXME": "cannot revert link refs!",
         "tokenMap": {
           "0": {"@id": "marc:NoteNoAddedEntry"},
           "1": {"@id": "marc:NoteAddedEntry"},
@@ -3231,6 +3232,7 @@
         "overwrite": true,
         "TODO:if _": "use $i",
         "tokenMap": {
+          " ": "VariantTitle",
           "0": "marc:TitlePart",
           "1": "ParallelTitle",
           "2": "marc:DistinctiveTitle",
