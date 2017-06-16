@@ -1772,7 +1772,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 abouts.each { about ->
                     def oneAboutMap = key ? [(key): about] : [:]
                     useEntities.each {
-                        def field = revertOne(data, it, null, oneAboutMap, usedMatchRule)
+                        def field = revertOne(data, it, oneAboutMap, usedMatchRule)
                         if (field) {
                             if (useLink.subfield) {
                                 field.subfields << useLink.subfield
@@ -1788,7 +1788,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    def revertOne(Map data, Map currentEntity, Set onlyCodes = null, Map aboutMap = null,
+    def revertOne(Map data, Map currentEntity, Map aboutMap = null,
                   MatchRule usedMatchRule = null) {
 
         def i1 = usedMatchRule?.ind1 ?: ind1 ? ind1.revert(data, currentEntity) : ' '
@@ -1805,9 +1805,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 return
 
             if (!subhandler)
-                return
-
-            if (onlyCodes && !onlyCodes.contains(code))
                 return
 
             if (subhandler.requiresI1) {
@@ -1827,6 +1824,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def selectedEntity = subhandler.about ? aboutMap[subhandler.about] : currentEntity
             if (!selectedEntity)
                 return
+            }
 
             if (selectedEntity != currentEntity && selectedEntity._revertedBy == thisTag) {
                 failedRequired = true
@@ -1855,7 +1853,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        if (!failedRequired && i1 != null && i2 != null && subs.length) {
+        if (!failedRequired && i1 != null && i2 != null && subs.size()) {
             // FIXME: store reverted input refs instead of tagging input data
             selectedEntities.each {
                 it._revertedBy = thisTag
