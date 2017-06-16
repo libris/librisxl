@@ -3533,10 +3533,7 @@
 
     "310": {
       "aboutEntity": "?thing",
-      "$a": {
-        "TODO:bf2": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
-        "property": "frequency"
-      },
+      "$a": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
       "TODO:$b": "Compare with 321"
     },
 
@@ -3544,10 +3541,7 @@
       "addLink": "replaces",
       "embedded": true,
       "resourceType": "Serial",
-      "$a": {
-        "TODO:bf2": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
-        "property": "frequency"
-      },
+      "$a": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
       "$b": {"property": "date"}
     },
 
