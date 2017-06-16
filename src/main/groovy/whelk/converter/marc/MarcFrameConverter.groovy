@@ -2014,9 +2014,9 @@ class MarcSubFieldHandler extends ConversionPart {
         return ok
     }
 
-    String clearChars(String subVal) {
-        def val = subVal.trim()
+    String clearChars(String val) {
         if (val.size() > 2) {
+            val = val.trim()
             if (punctuationChars) {
                 for (c in punctuationChars) {
                     if (val.size() < 2) {
@@ -2039,7 +2039,6 @@ class MarcSubFieldHandler extends ConversionPart {
                     }
                 }
             }
-            return val.toString()
         }
         return val
     }
