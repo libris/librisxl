@@ -1822,7 +1822,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
             def selectedEntity = subhandler.about ? aboutMap[subhandler.about] : currentEntity
-            if (!selectedEntity)
+            if (!selectedEntity) {
+                failedRequired = true
                 return
             }
 
