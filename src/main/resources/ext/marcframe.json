@@ -295,10 +295,10 @@
         },
         {
           "when": "i1=3",
-          "TODO: @update pendingResources": {
+          "FIXME: @update pendingResources": {
             "@update _:agent": {"resourceType": "Family"}
           },
-          "$a": {"about": "_:agent", "property": "familyName", "required": true}
+          "$a": {"about": "_:agent", "property": "nameOfTheFamily", "required": true}
         }
       ],
       "$a": {"required": true},
