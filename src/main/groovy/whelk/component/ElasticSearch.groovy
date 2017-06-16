@@ -27,8 +27,9 @@ class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
 
     RestClient restClient
-    private String elastichost, elasticcluster
     String defaultIndex = null
+    private String elasticHost
+    private String elasticCluster
 
     boolean haltOnFailure = false
 
@@ -37,26 +38,29 @@ class ElasticSearch {
     private static final ObjectMapper mapper = new ObjectMapper()
 
 
-    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex, JsonLdLinkExpander ex) {
-        this.elastichost = parseElasticHost(elasticHost)
-        this.elasticcluster = elasticCluster
+    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex,
+                    JsonLdLinkExpander expander=null) {
+        this.elasticHost = elasticHost.split(',').first()
+        this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
-        this.expander = ex
+        this.expander = expander
     }
 
-    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
-        this.elastichost = parseElasticHost(elasticHost)
-        this.elasticcluster = elasticCluster
-        this.defaultIndex = elasticIndex
+    String getIndexName() { defaultIndex }
+
+    String getElasticHostName() { elasticHost.split(":").first() }
+
+    int getElasticHostPort() {
+        try {
+            new Integer(elasticHost.split(":").last()).intValue()
+        } catch (NumberFormatException nfe) {
+            9200
+        }
     }
 
-    private String parseElasticHost(String elasticHost) {
-        return elasticHost.split(',')[0]
-    }
-
-    private void connectRestClient(){
-        if (elastichost) {
-            restClient = RestClient.builder(new HttpHost(elastichost,elasticPort,"http")).build()
+    private void connectRestClient() {
+        if (elasticHost) {
+            restClient = RestClient.builder(new HttpHost(elasticHostName, elasticHostPort, "http")).build()
         }
     }
 
@@ -265,11 +269,6 @@ class ElasticSearch {
         return result
     }
 
-
-    String getIndexName() { defaultIndex }
-    int getElasticPort() {
-        try { new Integer(elastichost.split(",").first().split(":").last()).intValue() } catch (NumberFormatException nfe) { 9200 }
-    }
 
     static String toElasticId(String id) {
         if (id.contains("/")) {

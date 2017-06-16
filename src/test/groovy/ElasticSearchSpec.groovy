@@ -5,6 +5,20 @@ import spock.lang.Specification
 
 class ElasticSearchSpec extends Specification {
 
+    def "Should be configurable"() {
+        when:
+        def es1 = new ElasticSearch("localhost", null, "whelk_1")
+        then:
+        es1.elasticHostName == "localhost"
+        es1.elasticHostPort == 9200
+        es1.indexName == "whelk_1"
+        when:
+        def es2 = new ElasticSearch("otherhost:9999", null, "whelk_2")
+        then:
+        es2.elasticHostName == "otherhost"
+        es2.elasticHostPort == 9999
+        es2.indexName == "whelk_2"
+    }
 
     def "Should make a nested request to ElasticSearch"() {
         when:
