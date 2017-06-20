@@ -635,7 +635,7 @@ class PostgreSQLComponent {
             return true
         } catch (Exception e) {
             log.error("Failed to save batch: ${e.message}. Rolling back..", e)
-            if (e instanceof SQLException) {
+            if (e instanceof SQLException && e.nextException) {
                 log.error("Note: next exception was: ${e.nextException.message}.", e.nextException)
             }
             connection.rollback()
