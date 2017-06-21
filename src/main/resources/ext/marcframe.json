@@ -760,7 +760,7 @@
           "k": "Visual",
           "o": "Visual",
           "r": "Visual",
-          "m": "Digital",
+          "m": "Multimedia",
           "p": "Mixed",
           "s": "Serial"
         },
@@ -1067,7 +1067,7 @@
           "tokenMap": "VisualMatterType"
         }
       },
-      "Digital": {
+      "Multimedia": {
         "[5:6]": {
           "link": "intendedAudience",
           "uriTemplate": "{_}",
@@ -1901,7 +1901,7 @@
           "Visual": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
         },
         "m": {
-          "Digital": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
+          "Multimedia": ["9", "a", "b", "c", "d", "i", "m", "p", "s"]
         },
         "p": {
           "Mixed": ["a", "c", "d", "i", "m", "p"],
@@ -2014,7 +2014,7 @@
           "tokenMap": "BooksBiographyType"
         }
       },
-      "Digital": {
+      "Multimedia": {
         "[22:23]": {
           "aboutEntity": "?work",
           "link": "intendedAudience",
