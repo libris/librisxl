@@ -6,9 +6,6 @@ import whelk.Document
 import whelk.IdGenerator
 import whelk.Whelk
 
-/**
- * Created by markus on 2015-12-10.
- */
 class DefinitionsImporter extends Importer {
 
     static final ObjectMapper mapper = new ObjectMapper()
@@ -26,19 +23,34 @@ class DefinitionsImporter extends Importer {
         int counter = 0
         defFile.eachLine {
             def data = mapper.readValue(it.getBytes("UTF-8"), Map)
-            def newId = Document.BASE_URI.toString() + IdGenerator.generate()
             Document doc = new Document(data)
-            doc.addRecordIdentifier(newId)
+            ensureAbsoluteSystemId(doc)
             documentList.add(doc)
             counter++
         }
         println("Created $counter documents from $definitionsFilename in ${(System.currentTimeMillis() - startTime) / 1000} seconds. Now storing to system.")
-        whelk.storage.bulkStore(documentList, false, "xl", null, collection)
+        whelk.storage.bulkStore(documentList, true, "xl", null, collection)
         println("Operation complete. Time elapsed: ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
     }
 
     @Override
     ImportResult doImport(String collection, String sourceSystem, Date from) {
         throw new NotImplementedException()
+    }
+    void ensureAbsoluteSystemId(Document doc) {
+        def sysBaseIri = Document.BASE_URI
+        // A system id is in place; do nothing and return.
+        if (doc.recordIdentifiers.any { it.startsWith(sysBaseIri.toString()) }) {
+            return
+        }
+        // A relative system id (slug) exists; make it absolute and return.
+        def slug = doc.recordIdentifiers.find { it =~ /^\w+$/ }
+        if (slug) {
+            doc.setId(slug)
+            return
+        }
+        // Mint a new system Id and set it.
+        def newId = sysBaseIri.resolve(IdGenerator.generate()).toString()
+        doc.addRecordIdentifier(newId)
     }
 }
