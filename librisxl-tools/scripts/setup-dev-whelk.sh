@@ -75,6 +75,30 @@ if [ -z "$WHELKNAME" ]; then
     exit 1
 fi
 
+# Recreate es index with definitions-based ES config
+JAR=build/libs/vcopyImporter.jar
+if [ "$FORCE_REBUILD" = true ] || [ ! -f $JAR ]; then
+    pushd importers
+    gradle jar
+    java -jar $JAR generateEsConfig ../librisxl-tools/elasticsearch/libris_config.json ../../definitions/source/vocab/display.jsonld ../../definitions/build/vocab.jsonld generated_es_config.json
+    echo ""
+    echo "Removing es configuration..."
+    echo ""
+    curl -XDELETE http://localhost:9200/$WHELKNAME
+    echo ""
+    echo "Done."
+    echo ""
+    echo "Adding definitions-based ES config..."
+    echo ""
+    curl -XPUT http://localhost:9200/$WHELKNAME \
+        -d@generated_es_config.json \
+        --header "Content-Type: application/json"
+    echo ""
+    echo "Done"
+    echo ""    
+    popd
+fi
+
 # Create definitions dataset unless it exists
 DEFS_FILE=../definitions/build/definitions.jsonld.lines
 if [ "$FORCE_REBUILD" = true ] || [ ! -f $DEFS_FILE ]; then
@@ -95,29 +119,20 @@ if [ "$FORCE_REBUILD" = true ] || [ ! -f $DEFS_FILE ]; then
     popd
 fi
 
-
 # Import OAIPMH data
+pushd importers
+java -Dxl.secret.properties=../secret.properties -jar $JAR \
+     defs ../$DEFS_FILE 
+java -Dxl.secret.properties=../secret.properties -jar $JAR reindex definitions
 echo ""
 echo "Importing example data..."
 echo ""
-
-pushd importers
-JAR=build/libs/vcopyImporter.jar
-if [ "$FORCE_REBUILD" = true ] || [ ! -f $JAR ]; then
-    gradle jar
-fi
-
-java -Dxl.secret.properties=../secret.properties -jar $JAR \
-     defs ../$DEFS_FILE
-
 java -Dxl.secret.properties=../secret.properties \
     -Dxl.mysql.properties=../mysql.properties \
      -jar build/libs/vcopyImporter.jar \
      vcopyloadexampledata ../librisxl-tools/scripts/example_records.tsv
 
 popd
-
-
 echo ""
-echo "Done!"
+echo "All Done!"
 echo ""
