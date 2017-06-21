@@ -5,6 +5,7 @@ import groovy.util.logging.Log4j2 as Log
 
 import org.apache.commons.codec.binary.Base64
 import org.apache.http.HttpHost
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.entity.ContentType
 import org.apache.http.message.BasicHeader
 import org.apache.http.nio.entity.NStringEntity
@@ -12,7 +13,7 @@ import org.apache.http.util.EntityUtils
 import org.codehaus.jackson.map.ObjectMapper
 import org.elasticsearch.client.Response
 import org.elasticsearch.client.RestClient
-
+import org.elasticsearch.client.RestClientBuilder
 import whelk.Document
 import whelk.JsonLd
 import whelk.exception.*
@@ -60,7 +61,16 @@ class ElasticSearch {
 
     private void connectRestClient() {
         if (elasticHost) {
-            restClient = RestClient.builder(new HttpHost(elasticHostName, elasticHostPort, "http")).build()
+            //TODO: Add all known hosts here according to constructor
+            def builder = RestClient.builder(new HttpHost(elasticHostName, elasticHostPort, "http"))
+                    .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
+                        @Override
+                        RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder requestConfigBuilder) {
+                            return requestConfigBuilder.setConnectionRequestTimeout(0)
+                        }
+            })
+
+            restClient = builder.build()
         }
     }
 
