@@ -28,8 +28,8 @@ class Whelk {
     String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
 
     private DocumentCache docCache
-    private static final int CACHE_MAX_SIZE = 500000
-    private static final int CACHE_LIFETIME_MILLIS = 2 * 60 * 60 * 1000
+    private static final int CACHE_MAX_SIZE = 1000
+    private static final int CACHE_LIFETIME_MILLIS = 30000
 
     public Whelk(PostgreSQLComponent pg, ElasticSearch es) {
         this.storage = pg
