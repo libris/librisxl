@@ -29,7 +29,7 @@ class ElasticSearch {
 
     RestClient restClient
     String defaultIndex = null
-    private String elasticHost
+    private List<HttpHost> elasticHosts
     private String elasticCluster
 
     boolean haltOnFailure = false
@@ -41,35 +41,24 @@ class ElasticSearch {
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex,
                     JsonLdLinkExpander expander=null) {
-        this.elasticHost = elasticHost.split(',').first()
+        this.elasticHosts = parseHosts(elasticHost)
         this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
         this.expander = expander
-    }
+        log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes"
+     }
 
     String getIndexName() { defaultIndex }
 
-    String getElasticHostName() { elasticHost.split(":").first() }
-
-    int getElasticHostPort() {
-        try {
-            new Integer(elasticHost.split(":").last()).intValue()
-        } catch (NumberFormatException nfe) {
-            9200
-        }
-    }
-
     private void connectRestClient() {
-        if (elasticHost) {
-            //TODO: Add all known hosts here according to constructor
-            def builder = RestClient.builder(new HttpHost(elasticHostName, elasticHostPort, "http"))
+        if (elasticHosts && elasticHosts.any()) {
+            def builder = RestClient.builder(*elasticHosts)
                     .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
                         @Override
                         RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder requestConfigBuilder) {
                             return requestConfigBuilder.setConnectionRequestTimeout(0)
                         }
             })
-
             restClient = builder.build()
         }
     }
@@ -90,7 +79,7 @@ class ElasticSearch {
                     new BasicHeader('content-type', contentType))
         }
         finally {
-            restClient.close()
+            restClient?.close()
         }
     }
 
@@ -301,6 +290,25 @@ class ElasticSearch {
             String decodedIdentifier = new String(Base64.decodeBase64(id), "UTF-8")
             log.debug("Decoded id $id into $decodedIdentifier")
             return decodedIdentifier
+        }
+    }
+
+    private int getPort(String hostString) {
+        try {
+            new Integer(hostString.split(":").last()).intValue()
+        } catch (NumberFormatException nfe) {
+            9200
+        }
+    }
+
+    private List<HttpHost> parseHosts(String elasticHosts) {
+        elasticHosts
+                .split(',')
+                .collect { String it ->
+            new HttpHost(
+                    it.split(':').first(),
+                    getPort(it),
+                    "http")
         }
     }
 }
