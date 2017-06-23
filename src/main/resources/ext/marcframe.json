@@ -264,6 +264,12 @@
     },
 
     "structuredtitle": {
+      "pendingResources": {
+        "_:titlePart": {
+          "addLink": "hasPart",
+          "resourceType": "TitlePart"
+        }
+      },
       "$a": {
         "property": "mainTitle",
         "punctuationChars": ":/.",
@@ -274,8 +280,8 @@
         }
       },
       "$b": {"property": "titleRemainder", "punctuationChars": "/"},
-      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
-      "$p": {"addProperty": "partTitle", "punctuationChars": "/"}
+      "$n": {"aboutNew": "_:titlePart", "property": "number", "punctuationChars": ","},
+      "$p": {"about": "_:titlePart", "property": "label", "punctuationChars": "/"}
     },
 
     "agentdata": {
@@ -1074,7 +1080,7 @@
           "tokenMap": "AudienceType"
         },
         "[6:7]": {
-          "link": "marc:additionalCarrierType",
+          "link": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "ComputerItemType"
         },
@@ -3804,12 +3810,54 @@
       "TOOO:i2": {},
       "aboutEntity": "?thing",
       "addLink": "tableOfContents",
-      "$a": {"property": "marc:formattedContentsNote"},
-      "$g": {"property": "marc:miscellaneousInformation"},
-      "$r": {"property": "marc:statementOfResponsibility"},
-      "$t": {"property": "marc:title"},
+      "resourceType": "TableOfContents",
+      "pendingResources": {
+        "_:tocEntry": {
+          "addLink": "hasPart",
+          "resourceType": "ToCEntry"
+        }
+      },
+      "$a": {"property": "label"},
+      "$t": {"aboutNew": "_:tocEntry", "property": "title"},
+      "$r": {"about": "_:tocEntry", "property": "responsibilityStatement"},
+      "$g": {"about": "_:tocEntry", "property": "comment"},
       "$u": {"TODO:ignore": "true??? As bf2"},
-      "TOOO:6": {}
+      "TOOO:6": {},
+      "_spec": [
+        {
+          "source": {"505": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Contents:"},
+            {"t": "Enoralehu"},
+            {"r": "(Gigi)"},
+            {"g": "(3:52) --"},
+            {"t": "Leroy"},
+            {"r": "(Tweak & Tony Allen)"},
+            {"g": "(5:47) --"}
+          ]}},
+          "result": {"mainEntity": {
+            "tableOfContents": [
+              {
+                "@type": "TableOfContents",
+                "label": "Contents:",
+                "hasPart": [
+                  {
+                    "@type": "ToCEntry",
+                    "title": "Enoralehu",
+                    "responsibilityStatement": "(Gigi)",
+                    "comment": "(3:52) --"
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "title": "Leroy",
+                    "responsibilityStatement": "(Tweak & Tony Allen)",
+                    "comment": "(5:47) --"
+                  }
+                ]
+              }
+            ]
+          }}
+        }
+      ]
     },
 
     "506": {

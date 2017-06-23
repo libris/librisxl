@@ -1662,9 +1662,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         ]
     }
 
-    Map getLocalEntity(Map state, Map owner, String id, Map localEntities) {
+    Map getLocalEntity(Map state, Map owner, String id, Map localEntities, boolean forceNew = false) {
         def entity = (Map) localEntities[id]
-        if (entity == null) {
+        if (entity == null || forceNew) {
             assert pendingResources, "Missing pendingResources in ${fieldId}, cannot use ${id}"
             def pending = pendingResources[id]
             entity = localEntities[id] = newEntity(state,
@@ -1729,9 +1729,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         for (useLink in useLinks) {
             def useEntities = [entity]
             if (useLink.link) {
-                useEntities = entity[useLink.link]
-                if (!(useEntities instanceof List)) // should be if repeat == true
-                    useEntities = useEntities ? [useEntities] : []
+                useEntities = Util.asList(entity[useLink.link])
                 if (useLink.resourceType) {
                     useEntities = useEntities.findAll {
                         if (!it) return false
@@ -1743,43 +1741,13 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
 
-            def aboutMap = [:]
-            if (pendingResources) {
-                pendingResources.each { key, pending ->
-                    def link = pending.link ?: pending.addLink
-                    def resourceType = pending.resourceType
-                    useEntities.each {
-                        def parent = it
-                        if (pending.about) {
-                            def pendingParent = pendingResources[pending.about]
-                            if (pendingParent) {
-                                def parentLink = pendingParent.link ?: pendingParent.addLink
-                                parent = it[parentLink]
-                            }
-                        }
-                        def about = parent ? parent[link] : null
-                        Util.asList(about).each {
-                            if (it && (!resourceType || it['@type'] == resourceType)) {
-                                aboutMap.get(key, []).add(it)
-                            }
-                        }
+            useEntities.each {
+                def field = revertOne(data, it, buildAboutMap(it), usedMatchRule)
+                if (field) {
+                    if (useLink.subfield) {
+                        field.subfields << useLink.subfield
                     }
-                }
-            }
-
-            aboutMap[null] = [null] // dummy to always enter loop... (refactor time...)
-            aboutMap.each { key, abouts ->
-                abouts.each { about ->
-                    def oneAboutMap = key ? [(key): about] : [:]
-                    useEntities.each {
-                        def field = revertOne(data, it, oneAboutMap, usedMatchRule)
-                        if (field) {
-                            if (useLink.subfield) {
-                                field.subfields << useLink.subfield
-                            }
-                            results << field
-                        }
-                    }
+                    results << field
                 }
             }
         }
@@ -1788,8 +1756,37 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    def revertOne(Map data, Map currentEntity, Map aboutMap = null,
-                  MatchRule usedMatchRule = null) {
+    Map<String, List> buildAboutMap(Map entity) {
+        Map<String, List> aboutMap = [:]
+        if (!pendingResources) {
+            return aboutMap
+        }
+        pendingResources.each { key, pending ->
+            def link = pending.link ?: pending.addLink
+            def resourceType = pending.resourceType
+
+            def parent = entity
+            if (pending.about) {
+                def pendingParent = pendingResources[pending.about]
+                // TODO: ensure nested pending work (any depth?)
+                if (pendingParent) {
+                    def parentLink = pendingParent.link ?: pendingParent.addLink
+                    parent = entity[parentLink]
+                }
+            }
+            def about = parent ? parent[link] : null
+            Util.asList(about).each {
+                if (it && (!resourceType || it['@type'] == resourceType)) {
+                    aboutMap.get(key, []).add(it)
+                }
+            }
+        }
+        return aboutMap
+    }
+
+    @CompileStatic(SKIP)
+    def revertOne(Map data, Map currentEntity, Map<String, List> aboutMap = null,
+                    MatchRule usedMatchRule = null) {
 
         def i1 = usedMatchRule?.ind1 ?: ind1 ? ind1.revert(data, currentEntity) : ' '
         def i2 = usedMatchRule?.ind2 ?: ind2 ? ind2.revert(data, currentEntity) : ' '
@@ -1797,72 +1794,92 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def subs = []
         def failedRequired = false
 
-        def selectedEntities = new HashSet()
+        def usedEntities = new HashSet()
         def thisTag = this.tag.split(':')[0]
 
-        subfields.each { code, subhandler ->
-            if (failedRequired)
-                return
+        Map<String, List> remainingAboutMap = [:]
 
-            if (!subhandler)
-                return
+        // TODO: exhaust local pending accordingly...
+        def subhandlersByAbout = subfields.values().findAll { it }.groupBy { it.about }.entrySet()
 
-            if (subhandler.requiresI1) {
-                if (i1 == null) {
-                    i1 = subhandler.requiresI1
-                } else if (i1 != subhandler.requiresI1) {
-                    return
+        subhandlersByAbout.sort { it.key != null }.each { it ->
+
+            def about = it.key
+            def subhandlers = it.value
+
+            def subhandlersByEntity
+            if (about == null) {
+                subhandlersByEntity = subhandlers.collect { [it, currentEntity ] }
+            } else {
+                def selectedEntities = aboutMap[about]
+                subhandlersByEntity = []
+                selectedEntities.each { entity ->
+                    subhandlers.each { subhandlersByEntity << [it, entity ] }
                 }
             }
-            if (subhandler.requiresI2) {
-                if (i2 == null) {
-                    i2 = subhandler.requiresI2
-                } else if (i2 != subhandler.requiresI2) {
+
+            subhandlersByEntity.each { MarcSubFieldHandler subhandler, Map selectedEntity ->
+                def code = subhandler.code
+                if (failedRequired)
                     return
-                }
-            }
-            def selectedEntity = subhandler.about ? aboutMap[subhandler.about] : currentEntity
-            if (!selectedEntity) {
-                failedRequired = true
-                return
-            }
 
-            if (selectedEntity != currentEntity && selectedEntity._revertedBy == thisTag) {
-                failedRequired = true
-                //return
-            }
-
-            def value = subhandler.revert(data, selectedEntity)
-            if (value instanceof List) {
-                value.each {
-                    if (!usedMatchRule || usedMatchRule.matchValue(code, it)) {
-                        subs << [(code): it]
+                if (subhandler.requiresI1) {
+                    if (i1 == null) {
+                        i1 = subhandler.requiresI1
+                    } else if (i1 != subhandler.requiresI1) {
+                        return
                     }
                 }
-            } else if (value != null) {
-                if (!usedMatchRule || usedMatchRule.matchValue(code, value)) {
-                    subs << [(code): value]
+                if (subhandler.requiresI2) {
+                    if (i2 == null) {
+                        i2 = subhandler.requiresI2
+                    } else if (i2 != subhandler.requiresI2) {
+                        return
+                    }
                 }
-            } else {
-                if (subhandler.required || subhandler.requiresI1 || subhandler.requiresI2) {
-                    failedRequired = true
-                }
-            }
 
-            if (!failedRequired) {
-                selectedEntities << selectedEntity
+                if (!selectedEntity) {
+                    failedRequired = true
+                    return
+                }
+
+                if (selectedEntity != currentEntity && selectedEntity._revertedBy == thisTag) {
+                    failedRequired = true
+                    return
+                }
+
+                def value = subhandler.revert(data, selectedEntity)
+                if (value instanceof List) {
+                    value.each {
+                        if (!usedMatchRule || usedMatchRule.matchValue(code, it)) {
+                            subs << [(code): it]
+                        }
+                    }
+                } else if (value != null) {
+                    if (!usedMatchRule || usedMatchRule.matchValue(code, value)) {
+                        subs << [(code): value]
+                    }
+                } else {
+                    if (subhandler.required || subhandler.requiresI1 || subhandler.requiresI2) {
+                        failedRequired = true
+                    }
+                }
+                if (!failedRequired) {
+                    usedEntities << selectedEntity
+                }
             }
         }
 
         if (!failedRequired && i1 != null && i2 != null && subs.size()) {
             // FIXME: store reverted input refs instead of tagging input data
-            selectedEntities.each {
-                it._revertedBy = thisTag
-            }
+            // TODO: if it._localPending, it._exhausted = true (do not use again in selectedEntities above)
+            usedEntities.each { it._revertedBy = thisTag }
+            //currentEntity._revertedBy = thisTag
             return [ind1: i1, ind2: i2, subfields: subs]
         } else {
             return null
         }
+
     }
 
 }
