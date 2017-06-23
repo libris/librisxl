@@ -1876,6 +1876,7 @@ class MarcSubFieldHandler extends ConversionPart {
     char[] surroundingChars
     String link
     String about
+    boolean newAbout
     boolean repeatable
     String property
     boolean repeatProperty
@@ -1905,7 +1906,14 @@ class MarcSubFieldHandler extends ConversionPart {
         surroundingChars = subDfn.surroundingChars?.toCharArray()
         super.setTokenMap(fieldHandler, subDfn)
         link = subDfn.link
-        about = subDfn.about
+
+        if (subDfn.aboutNew) {
+            about = subDfn.aboutNew
+            newAbout = true
+        } else {
+            about = subDfn.about
+        }
+
         required = subDfn.required
         repeatable = false
         if (subDfn.addLink) {
@@ -1961,7 +1969,7 @@ class MarcSubFieldHandler extends ConversionPart {
         }
 
         if (about) {
-            ent = fieldHandler.getLocalEntity(state, ent, about, localEntites)
+            ent = fieldHandler.getLocalEntity(state, ent, about, localEntites, newAbout)
         }
 
         if (link) {
