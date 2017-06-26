@@ -792,8 +792,7 @@ public class JsonLd {
         def subClasses = superClassOf[type]
         if (subClasses == null)
             return
-
-        println(type + " has subclasses: " + subClasses)
+        
         result.addAll(subClasses)
 
         for (String subClass : subClasses) {
