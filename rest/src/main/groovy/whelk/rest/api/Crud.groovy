@@ -124,7 +124,7 @@ class Crud extends HttpServlet {
         String callback = queryParameters.remove("callback")
 
         try {
-            Map results = search.doSearch(queryParameters, dataset)
+            Map results = search.doSearch(queryParameters, dataset, jsonld)
             def jsonResult
 
             if (callback) {

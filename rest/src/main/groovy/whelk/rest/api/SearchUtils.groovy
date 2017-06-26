@@ -38,12 +38,19 @@ class SearchUtils {
         }
     }
 
-    Map doSearch(Map queryParameters, String dataset) {
+    Map doSearch(Map queryParameters, String dataset, JsonLd jsonld) {
         String relation = getReservedQueryParameter('p', queryParameters)
         String reference = getReservedQueryParameter('o', queryParameters)
         String value = getReservedQueryParameter('value', queryParameters)
         String query = getReservedQueryParameter('q', queryParameters)
         String siteBaseUri = getReservedQueryParameter('_site_base_uri', queryParameters)
+
+        // Include all subclasses of @type
+        String type = getReservedQueryParameter('@type', queryParameters)
+        ArrayList<String> subClasses = []
+        jsonld.getSubClasses(type, subClasses)
+        subClasses.add(type)
+        queryParameters.put('@type', (String[]) subClasses.toArray())
 
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
         int limit = limitAndOffset.first
@@ -168,6 +175,7 @@ class SearchUtils {
         mappings << ['variable': 'q',
                      'predicate': ld.toChip(getVocabEntry('textQuery')),
                      'value': query]
+
         def dslQuery = ElasticSearch.createJsonDsl(queryParameters,
                                                    limit, offset)
 
