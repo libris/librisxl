@@ -47,10 +47,12 @@ class SearchUtils {
 
         // Include all subclasses of @type
         String type = getReservedQueryParameter('@type', queryParameters)
-        ArrayList<String> subClasses = []
-        jsonld.getSubClasses(type, subClasses)
-        subClasses.add(type)
-        queryParameters.put('@type', (String[]) subClasses.toArray())
+        if (type != null) {
+            ArrayList<String> subClasses = []
+            jsonld.getSubClasses(type, subClasses)
+            subClasses.add(type)
+            queryParameters.put('@type', (String[]) subClasses.toArray())
+        }
 
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
         int limit = limitAndOffset.first
