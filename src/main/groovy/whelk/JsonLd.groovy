@@ -53,6 +53,7 @@ public class JsonLd {
 
     Map displayData
     Map vocabIndex
+    Map superClassOf
     private String vocabId
 
     /**
@@ -68,6 +69,8 @@ public class JsonLd {
                 [toTermKey(it[JsonLd.ID_KEY]), it]
             }
             : Collections.emptyMap()
+
+        generateSubClassesLists()
 
         expandAliasesInLensProperties()
     }
@@ -743,5 +746,58 @@ public class JsonLd {
         }
 
         return true
+    }
+
+    public void getSuperClasses(String type, List<String> result) {
+        def termMap = vocabIndex[type]
+        if (termMap == null)
+            return
+
+        if (termMap["subClassOf"] != null) {
+            List superClasses = termMap["subClassOf"]
+
+            for (superClass in superClasses) {
+                if (superClass == null || superClass["@id"] == null) {
+                    continue
+                }
+                String superClassType = toTermKey( superClass["@id"] )
+                result.add(superClassType)
+                getSuperClasses(superClassType, result)
+            }
+        }
+    }
+
+    private generateSubClassesLists() {
+        superClassOf = [:]
+        for (String type : vocabIndex.keySet()) {
+            def termMap = vocabIndex[type]
+            List superClasses = termMap["subClassOf"]
+            for (superClass in superClasses) {
+                if (superClass == null || superClass["@id"] == null) {
+                    continue
+                }
+
+                String superClassType = toTermKey( superClass["@id"] )
+                if (superClassOf[superClassType] == null)
+                    superClassOf[superClassType] = []
+                superClassOf[superClassType].add(type)
+            }
+        }
+    }
+
+    public void getSubClasses(String type, List<String> result) {
+        if (type == null)
+            return
+
+        def subClasses = superClassOf[type]
+        if (subClasses == null)
+            return
+
+        println(type + " has subclasses: " + subClasses)
+        result.addAll(subClasses)
+
+        for (String subClass : subClasses) {
+            getSubClasses(subClass, result)
+        }
     }
 }
