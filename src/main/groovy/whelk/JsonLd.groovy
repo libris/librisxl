@@ -771,7 +771,12 @@ public class JsonLd {
         superClassOf = [:]
         for (String type : vocabIndex.keySet()) {
             def termMap = vocabIndex[type]
-            List superClasses = termMap["subClassOf"]
+            def superClasses = termMap["subClassOf"]
+
+            // Make list if not list already.
+            if (!(superClasses instanceof List))
+                superClasses = [superClasses]
+
             for (superClass in superClasses) {
                 if (superClass == null || superClass["@id"] == null) {
                     continue
@@ -792,7 +797,7 @@ public class JsonLd {
         def subClasses = superClassOf[type]
         if (subClasses == null)
             return
-        
+
         result.addAll(subClasses)
 
         for (String subClass : subClasses) {
