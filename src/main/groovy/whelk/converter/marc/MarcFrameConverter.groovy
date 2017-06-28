@@ -1904,7 +1904,6 @@ class MarcSubFieldHandler extends ConversionPart {
     List<String> splitValueProperties
     String rejoin
     boolean allowEmpty
-    Map defaults
     String definedElsewhereToken
     String marcDefault
     boolean required = false
@@ -1955,7 +1954,6 @@ class MarcSubFieldHandler extends ConversionPart {
             rejoin = subDfn.rejoin
             allowEmpty = subDfn.allowEmpty
         }
-        defaults = subDfn.defaults
         marcDefault = subDfn.marcDefault
         definedElsewhereToken = subDfn.definedElsewhereToken
         requiresI1 = subDfn['requires-i1']
@@ -2033,9 +2031,6 @@ class MarcSubFieldHandler extends ConversionPart {
             ok = true
         }
 
-        if (defaults) {
-            defaults.each { k, v -> if (v != null && !(k in ent)) ent[k] = v }
-        }
         return ok
     }
 
@@ -2094,10 +2089,6 @@ class MarcSubFieldHandler extends ConversionPart {
                 break
 
             if (resourceType && entity['@type'] != resourceType)
-                continue
-
-            // TODO: match defaults only if not set by other subfield...
-            if (defaults && defaults.any { p, o -> o == null && (p in entity) || entity[p] != o })
                 continue
 
             if (splitValueProperties && rejoin) {

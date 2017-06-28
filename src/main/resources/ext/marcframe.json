@@ -355,14 +355,9 @@
       "uriTemplate": "http://dewey.info/class/{code}/e{+inScheme.version}/",
       "$a": {"property": "code", "required": true},
       "$2": {
-        "note": "ignorable (just use defaults)?",
         "link": "inScheme", "resourceType": "ConceptScheme",
         "required": true,
         "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
-        "defaults": {
-          "code": "DDC",
-          "versionOf": {"@id": "http://dewey.info/scheme/ddc/"}
-        },
         "property": "version",
         "splitValuePattern": "(\\d+)(?:/(swe))?",
         "splitValueProperties": ["version", "language"],
