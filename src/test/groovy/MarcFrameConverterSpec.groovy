@@ -158,7 +158,11 @@ class MarcFrameConverterSpec extends Specification {
         converter.conversion.getRuleSetFromJsonLd(jsonld).name == marcType
         when:
         def result = converter.conversion.revert(jsonld)
-        def expected = deepcopy(marcSkeletons[marcType])
+
+        def expected = fieldSpec.tag == '000'
+                ? [leader: fieldSpec.source.leader]
+                : deepcopy(marcSkeletons[marcType])
+
         def source = fieldSpec.normalized ?: fieldSpec.source
         if (source instanceof List) {
             expected.fields += source
@@ -383,11 +387,13 @@ class MarcFrameConverterSpec extends Specification {
     def sorted(obj) {
         if (obj instanceof Map) {
             TreeMap sortedmap = new TreeMap()
-            obj.each { k, v ->
-                sortedmap[k] = (v instanceof List)?
-                    v.collect { sorted(it) } : sorted(v)
+            obj.keySet().sort().each { k ->
+                def v = obj[k]
+                sortedmap[k] = sorted(v)
             }
             return sortedmap
+        } else if (obj instanceof List) {
+            return obj.collect { sorted(it) }
         }
         return obj
     }
