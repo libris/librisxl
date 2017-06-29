@@ -2742,7 +2742,8 @@
       "i1": {"ignored": "true", "marcDefault": "1"},
       "i2": {
         "ignored": "true",
-        "property": "marc:ringType",
+        "link": "marc:ringType",
+        "uriTemplate": "{+_}",
         "marcDefault": " ",
         "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
       },
@@ -3221,13 +3222,13 @@
       "addLink": "hasTitle",
       "embedded": true,
       "i1": {
-        "property": "marc:searchControl",
-        "FIXME": "cannot revert link refs!",
+        "link": "marc:searchControl",
+        "uriTemplate": "{+_}",
         "tokenMap": {
-          "0": {"@id": "marc:NoteNoAddedEntry"},
-          "1": {"@id": "marc:NoteAddedEntry"},
-          "2": {"@id": "marc:NoNoteNoAddedEntry"},
-          "3": {"@id": "marc:NoNoteAddedEntry"}
+          "0": "marc:NoteNoAddedEntry",
+          "1": "marc:NoteAddedEntry",
+          "2": "marc:NoNoteNoAddedEntry",
+          "3": "marc:NoNoteAddedEntry"
         },
         "marcDefault": "1"
       },
@@ -3251,10 +3252,7 @@
       "$f": {"property": "qualifyingNote"},
       "$g": {"property": "comment"},
       "$h": {"property": "marc:mediaTerm", "surroundingChars": "[]"},
-      "$i": {"property": "typeNote"},
-      "$f": {"property": "coverage"},
-      "$g": {"property": "note"},
-      "$h": {"property": "marc:mediaTerm", "surroundingChars": "[]"}
+      "$i": {"property": "typeNote"}
     },
 
     "247": {
@@ -4146,12 +4144,13 @@
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "resourceType": "Topic",
       "i1": {
-        "property": "marc:subjectLevel",
+        "link": "marc:subjectLevel",
+        "uriTemplate": "{+_}",
         "marcDefault": " ",
         "tokenMap": {
-          "0": {"@id": "marc:Unspecified"},
-          "1": {"@id": "marc:Primary"},
-          "2": {"@id": "marc:Secondary"}
+          "0": "marc:Unspecified",
+          "1": "marc:Primary",
+          "2": "marc:Secondary"
         }
       },
       "_spec": [
@@ -4204,6 +4203,30 @@
                     "@type": "ConceptScheme",
                     "code": "lcsh"
                   }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "650": {"ind1": "2", "ind2": "0",
+              "subfields": [{"a": "Something secondary"}]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@id": "http://id.loc.gov/authorities/label/Something%20secondary",
+                  "@type": "Topic",
+                  "marc:subjectLevel": {"@id": "marc:Secondary"},
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "@id": "https://id.kb.se/term/lcsh",
+                    "code": "lcsh"
+                  },
+                  "prefLabel": "Something secondary"
                 }
               ]
             }
