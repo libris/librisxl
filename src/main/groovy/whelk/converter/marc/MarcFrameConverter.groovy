@@ -1910,6 +1910,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String code
     char[] punctuationChars
     char[] surroundingChars
+    String trailingPunctuation
     String link
     String about
     boolean newAbout
@@ -1937,7 +1938,8 @@ class MarcSubFieldHandler extends ConversionPart {
         this.fieldHandler = fieldHandler
         this.code = code
         aboutEntityName = subDfn.aboutEntity
-        punctuationChars = subDfn.punctuationChars?.toCharArray()
+        trailingPunctuation = subDfn.trailingPunctuation
+        punctuationChars = (subDfn.punctuationChars ?: trailingPunctuation?.trim())?.toCharArray()
         surroundingChars = subDfn.surroundingChars?.toCharArray()
         super.setTokenMap(fieldHandler, subDfn)
         link = subDfn.link
@@ -2090,7 +2092,7 @@ class MarcSubFieldHandler extends ConversionPart {
 
         def entities = link ? currentEntity[link] : [currentEntity]
         if (entities == null) {
-            return null
+            return marcDefault ?: null
         }
         if (entities instanceof Map) {
             entities = [entities]
@@ -2152,6 +2154,11 @@ class MarcSubFieldHandler extends ConversionPart {
                 }
                 value = revertObject(obj)
             }
+
+            if (value && trailingPunctuation) {
+                value += trailingPunctuation
+            }
+
             if (value != null) {
                 values << value
             } else if (marcDefault) {

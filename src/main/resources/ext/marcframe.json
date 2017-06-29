@@ -270,15 +270,26 @@
           "resourceType": "TitlePart"
         }
       },
-      "$a": {
-        "property": "mainTitle",
-        "punctuationChars": ":/.",
-        "TODO:punctuationRules": {
-          " :": {"$b": {"property": "subtitle"}},
-          " =": {"$b": {"property": "parallelTitle"}},
-          " .": {"TODO": "$a and $b represent equal titles"}
+      "match": [
+        {
+          "when": "$a =~ .+:\\s*$",
+          "$a": {"property": "mainTitle", "trailingPunctuation": " :"},
+          "$b": {"property": "subtitle", "required": true, "punctuationChars": "/"}
+        },
+        {
+          "when": "$a =~ .+=\\s*$",
+          "$a": {"property": "mainTitle", "trailingPunctuation": " ="},
+          "$b": {"property": "marc:parallelTitle", "required": true, "punctuationChars": "/"}
+        },
+        {
+          "when": "$a =~ .+\\.\\s*$",
+          "$a": {"property": "mainTitle", "trailingPunctuation": " ."},
+          "$b": {"property": "marc:equalTitle", "required": true, "punctuationChars": "/"},
+          "TODO": "$a and $b represent equal titles"
         }
-      },
+      ],
+      "TODO:orderAndPunctuation": ["$a", "$b", "/ $c", ". $p", ", $n"],
+      "$a": {"property": "mainTitle", "punctuationChars": "=:/."},
       "$b": {"property": "titleRemainder", "punctuationChars": "/"},
       "$n": {"aboutNew": "_:titlePart", "property": "partNumber", "punctuationChars": ","},
       "$p": {"about": "_:titlePart", "property": "partName", "punctuationChars": "/"}
