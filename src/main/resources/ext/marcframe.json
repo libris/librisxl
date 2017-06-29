@@ -257,9 +257,9 @@
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$m": {"addProperty": "musicPerformanceMedium"},
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
-      "$o": {"property": "musicArrangement"},
-      "$p": {"addProperty": "partTitle", "punctuationChars": "/"},
+      "$p": {"addProperty": "partName", "punctuationChars": "/"},
       "$r": {"property": "musicKey"},
+      "$o": {"property": "musicArrangement"},
       "$s": {"property": "version"}
     },
 
@@ -280,8 +280,8 @@
         }
       },
       "$b": {"property": "titleRemainder", "punctuationChars": "/"},
-      "$n": {"aboutNew": "_:titlePart", "property": "number", "punctuationChars": ","},
-      "$p": {"about": "_:titlePart", "property": "label", "punctuationChars": "/"}
+      "$n": {"aboutNew": "_:titlePart", "property": "partNumber", "punctuationChars": ","},
+      "$p": {"about": "_:titlePart", "property": "partName", "punctuationChars": "/"}
     },
 
     "agentdata": {
@@ -349,7 +349,6 @@
     },
 
     "classification-ddc": {
-      "TODO:$a": {"property": "classificationDdc", "note": "use this flattened form?"},
       "resourceType": "ClassificationDdc",
       "TOOO:i1": {},
       "uriTemplate": "http://dewey.info/class/{code}/e{+inScheme.version}/",
@@ -455,13 +454,6 @@
       "TODO:link": "meta",
       "resourceType": "Record",
       "uriTemplate": "http://libris.kb.se/{marcType}/{controlNumber}"
-    },
-    "?thing": {
-      "about": "?record",
-      "link": "mainEntity",
-      "resourceType": "Instance",
-      "fragmentId": "it",
-      "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
     }
   },
 
@@ -473,6 +465,13 @@
         "link": "instanceOf",
         "resourceType": "Work",
         "fragmentId": "work"
+      },
+      "?thing": {
+        "about": "?record",
+        "link": "mainEntity",
+        "resourceType": "Instance",
+        "fragmentId": "it",
+        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
       }
     },
 
@@ -693,7 +692,7 @@
           "originalLeader": "00887cam a2200277 i 4500",
           "source": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"040": {"subfields": [{"e": "rda"}]}}]
+            "fields": [{"001": "0000000"}, {"040": {"ind1": " ", "ind2": " ", "subfields": [{"e": "rda"}]}}]
           },
           "result": {
             "@type": "Record",
@@ -2397,7 +2396,7 @@
           "name": "do not use weird language token that does not fit in column",
           "source": [
             {"008": "160420s1995    fr |||||||||||000 0|   |c"},
-            {"041": {"ind1": "0", "ind2": " ", "subfields": [{"a": "freeng"}]}}
+            {"041": {"ind1": " ", "ind2": " ", "subfields": [{"a": "freeng"}]}}
           ],
           "result": {
             "created": "2016-04-20T00:00:00.0+02:00",
@@ -2471,7 +2470,7 @@
           },
           "normalized": {
             "020": {"ind1": " ", "ind2": " ", "subfields": [
-              {"a": "91-0-056322-6"}, {"c": "310:00"}, {"q": "inb."} ]}
+              {"a": "91-0-056322-6"}, {"q": "inb."}, {"c": "310:00"} ]}
           },
           "result": {"mainEntity": {
             "identifiedBy": [
@@ -2605,11 +2604,12 @@
           "4": "SICI",
           "7": "Identifier",
           "8": "Identifier"
-        }
+        },
+        "TODO:definedElsewhereToken": "7"
       },
       "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
       "$2": {
-        "requires-i1": "7",
+        "TODO:requires-i1": "7 (overwritten by 8)",
         "property": "typeNote",
         "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
       },
@@ -2736,13 +2736,14 @@
         "_:scale": {
           "TODO:aboutEntity?": "?work",
           "link": "scale",
-          "resourceType": "Scale"
+          "TODO:default:resourceType": "Scale"
         }
       },
-      "i1": { "ignored": "true"},
+      "i1": {"ignored": "true", "marcDefault": "1"},
       "i2": {
         "ignored": "true",
         "property": "marc:ringType",
+        "marcDefault": " ",
         "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
       },
       "$2": {"property": "source"},
@@ -2751,7 +2752,7 @@
         "about": "_:scale",
         "property": "@type",
         "overwrite": true,
-        "FIXME": "revert might miss this since resourceType doesn't match!",
+        "FIXME": "revert will miss if resourceType is given above and doesn't match!",
         "tokenMap": {
           "a": "marc:LinearScale",
           "b": "marc:AngularScale",
@@ -2784,7 +2785,7 @@
       "_spec": [
         {
           "source": [
-            {"034": {"subfields": [{"a": "a", "b": "110000"}]}}
+            {"034": {"ind1": "1", "ind2": " ", "subfields": [{"a": "a"}, {"b": "110000"}]}}
           ],
           "result": {
             "mainEntity": {
@@ -3818,7 +3819,7 @@
       "$t": {"aboutNew": "_:tocEntry", "property": "title"},
       "$r": {"about": "_:tocEntry", "property": "responsibilityStatement"},
       "$g": {"about": "_:tocEntry", "property": "comment"},
-      "$u": {"TODO:ignore": "true??? As bf2"},
+      "$u": {"about": "_:tocEntry", "addProperty": "uri"},
       "TOOO:6": {},
       "_spec": [
         {
@@ -5473,6 +5474,16 @@
   },
 
   "hold": {
+
+    "pendingResources": {
+      "?thing": {
+        "about": "?record",
+        "link": "mainEntity",
+        "resourceType": "Item",
+        "fragmentId": "it",
+        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
+      }
+    },
 
     "oaipmhSetSpecPrefixMap": {
       "bibid": {
