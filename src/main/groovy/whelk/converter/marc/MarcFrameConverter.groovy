@@ -424,6 +424,8 @@ class MarcRuleSet {
     List<MarcFramePostProcStep> postProcSteps
 
     Set primaryTags = new HashSet()
+
+    // aboutTypeMap is used on revert to determine which ruleSet to use
     Map<String, Set<String>> aboutTypeMap = new HashMap<String, Set<String>>()
 
     Map<String, Map> topPendingResources = [:]
@@ -470,7 +472,6 @@ class MarcRuleSet {
 
             dfn = processInclude(config, dfn, tag)
 
-            // aboutTypeMap is used on revert to determine which ruleSet to use
             if (dfn.aboutType && dfn.aboutType != 'Record') {
                 if (dfn.aboutEntity) {
                     assert tag && aboutTypeMap.containsKey(dfn.aboutEntity)
@@ -503,6 +504,11 @@ class MarcRuleSet {
                 assert handler.property || handler.uriTemplate, "Incomplete: $tag: $dfn"
             }
             fieldHandlers[tag] = handler
+        }
+
+        String defaultThingType = topPendingResources['?thing']?.resourceType
+        if (defaultThingType) {
+            aboutTypeMap['?thing'] << defaultThingType
         }
     }
 
