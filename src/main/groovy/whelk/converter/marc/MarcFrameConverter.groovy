@@ -1551,7 +1551,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                             (subDfn.requiresI2 && subDfn.requiresI2 != value.ind2)) {
                         ok = true // rule does not apply here
                     } else {
-                        // TODO: if codePatternReset, aboutNew: true
                         ok = subDfn.convertSubValue(state, subVal, ent,
                                 uriTemplateParams, localEntites)
                     }
@@ -1695,6 +1694,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def matchedResults = []
 
+        // NOTE: Each possible match rule might produce data from *different* entities.
+        // If this overproduces, it's because _revertedBy fails to prevent it.
         for (rule in matchRules) {
             def matchres = rule.handler.revert(data, result, rule)
             if (matchres) {
@@ -1774,10 +1775,15 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def parent = entity
             if (pending.about) {
                 def pendingParent = pendingResources[pending.about]
-                // TODO: ensure nested pending work (any depth?)
                 if (pendingParent) {
-                    def parentLink = pendingParent.link ?: pendingParent.addLink
-                    parent = entity[parentLink]
+                    def ownerEntity = entity
+                    if (pendingParent.about) {
+                        // FIXME: recurse instead, this only goes to depth 2!
+                        def grandParent = pendingResources[pendingParent.about]
+                        ownerEntity = entity[grandParent.link ?: grandParent.addLink]
+                        if (!ownerEntity) return
+                    }
+                    parent = ownerEntity[pendingParent.link ?: pendingParent.addLink]
                 }
             }
             def about = parent ? parent[link] : null
@@ -1801,7 +1807,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def failedRequired = false
 
         def usedEntities = new HashSet()
-        def thisTag = this.tag.split(':')[0]
+        def thisTag = this.tag.split(/[\[:]/)[0]
 
         Map<String, List> remainingAboutMap = [:]
 
@@ -1849,9 +1855,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     return
                 }
 
-                if (selectedEntity != currentEntity && selectedEntity._revertedBy == thisTag) {
+                // FIXME: selectedEntity != topEntity (otherwise a top property might block all other top properties?)
+                if (/*selectedEntity != currentEntity && */selectedEntity._revertedBy/* == thisTag*/) {
                     failedRequired = true
                     return
+                    //subs << ['DEBUG:wouldHaveBlockedOn': this.tag]
                 }
 
                 def value = subhandler.revert(data, selectedEntity)
@@ -1877,11 +1885,16 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (!failedRequired && i1 != null && i2 != null && subs.size()) {
-            // FIXME: store reverted input refs instead of tagging input data
-            // TODO: if it._localPending, it._exhausted = true (do not use again in selectedEntities above)
+            def field = [ind1: i1, ind2: i2, subfields: subs]
+
+            if (usedMatchRule && !usedMatchRule.matches(field)) {
+                return null
+            }
+
+            // TODO: store reverted input refs instead of tagging input data
             usedEntities.each { it._revertedBy = thisTag }
-            //currentEntity._revertedBy = thisTag
-            return [ind1: i1, ind2: i2, subfields: subs]
+            //field._revertedBy = this.tag
+            return field
         } else {
             return null
         }
@@ -2268,14 +2281,11 @@ class MatchRule {
             else if (whenTests.size() == 0)
                 return handler
         }
-        if (whenAll) {
-            if (whenTests.every { it(value) }) {
-                return handler
-            }
-        } else if (whenTests.any { it(value) }) {
-            return handler
-        }
-        return null
+        return  matches(value) ? handler : null
+    }
+
+    boolean matches(value) {
+        return whenAll ? whenTests.every { it(value) } : whenTests.any { it(value) }
     }
 
 }
