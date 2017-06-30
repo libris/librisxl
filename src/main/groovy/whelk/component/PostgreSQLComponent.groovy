@@ -7,6 +7,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
 import whelk.Document
+import whelk.IdType
 import whelk.JsonLd
 import whelk.Location
 import whelk.exception.StorageCreateFailedException
@@ -46,7 +47,7 @@ class PostgreSQLComponent {
                      LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
                      LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
                      GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, GET_DEPENDENCIES, GET_DEPENDERS,
-                     GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID
+                     GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
     protected String QUERY_LD_API
@@ -148,6 +149,16 @@ class PostgreSQLComponent {
         GET_RECORD_ID = "SELECT iri FROM $idTableName " +
                         "WHERE graphindex = 0 AND mainid = 't' " +
                         "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
+        GET_THING_ID = "SELECT iri FROM $idTableName " +
+                        "WHERE graphindex = 1 AND mainid = 't' " +
+                        "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
+        GET_MAIN_ID = "SELECT t2.iri FROM $idTableName t1 " +
+                      "JOIN $idTableName t2 " +
+                      "ON t2.id = t1.id " +
+                      "AND t2.graphindex = t1.graphindex " +
+                      "WHERE t1.iri = ? AND t2.mainid = true;"
+        GET_ID_TYPE = "SELECT graphindex, mainid FROM $idTableName " +
+                      "WHERE iri = ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
@@ -526,15 +537,18 @@ class PostgreSQLComponent {
             }
         }
         for (altThingId in doc.getThingIdentifiers()) {
-            altIdInsert.setString(1, doc.getShortId())
-            altIdInsert.setString(2, altThingId)
-            altIdInsert.setInt(3, 1) // thing id -> graphIndex = 1
-            if (altThingId == doc.getThingIdentifiers()[0]) {
-                altIdInsert.setBoolean(4, true) // Main ID
-                altIdInsert.addBatch()
-            } else if (!deleted) {
-                altIdInsert.setBoolean(4, false) // alternative ID
-                altIdInsert.addBatch()
+            // don't re-add thing identifiers if doc is deleted
+            if (!deleted) {
+                altIdInsert.setString(1, doc.getShortId())
+                altIdInsert.setString(2, altThingId)
+                altIdInsert.setInt(3, 1) // thing id -> graphIndex = 1
+                if (altThingId == doc.getThingIdentifiers()[0]) {
+                    altIdInsert.setBoolean(4, true) // Main ID
+                    altIdInsert.addBatch()
+                } else {
+                    altIdInsert.setBoolean(4, false) // alternative ID
+                    altIdInsert.addBatch()
+                }
             }
         }
         try {
@@ -908,18 +922,44 @@ class PostgreSQLComponent {
     }
 
     /**
-     * Get the corresponding main ID for supplied identifier
+     * Get the corresponding record main ID for supplied identifier
      *
      * Supplied identifier can be either the document ID, the thing ID, or a
      * sameAs ID.
      *
      */
+    String getRecordId(String id) {
+        return getRecordOrThingId(id, GET_RECORD_ID)
+    }
+
+    /**
+     * Get the corresponding thing main ID for supplied identifier
+     *
+     * Supplied identifier can be either the document ID, the thing ID, or a
+     * sameAs ID.
+     *
+     */
+    String getThingId(String id) {
+        return getRecordOrThingId(id, GET_THING_ID)
+    }
+
+    /**
+     * Get the corresponding main ID for supplied identifier
+     *
+     * If the supplied identifier is for the thing, return the thing main ID.
+     * If the supplied identifier is for the record, return the record main ID.
+     *
+     */
     String getMainId(String id) {
+        return getRecordOrThingId(id, GET_MAIN_ID)
+    }
+
+    private String getRecordOrThingId(String id, String sql) {
         Connection connection = getConnection()
         PreparedStatement selectstmt
         ResultSet rs
         try {
-            selectstmt = connection.prepareStatement(GET_RECORD_ID)
+            selectstmt = connection.prepareStatement(sql)
             selectstmt.setString(1, id)
             rs = selectstmt.executeQuery()
             List<String> ids = []
@@ -939,6 +979,48 @@ class PostgreSQLComponent {
             }
         } finally {
             connection.close()
+        }
+    }
+
+    /**
+     * Return ID type for identifier, if found.
+     *
+     */
+    IdType getIdType(String id) {
+        Connection connection = getConnection()
+        PreparedStatement selectstmt
+        ResultSet rs
+        try {
+            selectstmt = connection.prepareStatement(GET_ID_TYPE)
+            selectstmt.setString(1, id)
+            rs = selectstmt.executeQuery()
+            if (rs.next()) {
+                int graphIndex = rs.getInt('graphindex')
+                boolean isMainId = rs.getBoolean('mainid')
+                return determineIdType(graphIndex, isMainId)
+            } else {
+                return null
+            }
+        } finally {
+            connection.close()
+        }
+    }
+
+    private IdType determineIdType(int graphIndex, boolean isMainId) {
+        if (graphIndex == 0) {
+            if (isMainId) {
+                return IdType.RecordMainId
+            } else {
+                return IdType.RecordSameAsId
+            }
+        } else if (graphIndex == 1) {
+            if (isMainId) {
+                return IdType.ThingMainId
+            } else {
+                return IdType.ThingSameAsId
+            }
+        } else {
+            return null
         }
     }
 
