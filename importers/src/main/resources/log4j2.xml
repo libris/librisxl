@@ -5,7 +5,7 @@
     </Properties>
 
     <Appenders>
-        <Console name="STDOUT" target="SYSTEM_OUT">
+        <Console name="STDERR" target="SYSTEM_ERR">
             <PatternLayout pattern="%d{ISO8601} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
         <File name="File" fileName="${sys:catalina.base}/logs/vcopyImporterServlet.log">
@@ -15,7 +15,7 @@
 
     <Loggers>
         <Root level="info">
-            <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="STDERR"/>
             <AppenderRef ref="File" />
         </Root>
     </Loggers>
