@@ -3212,6 +3212,7 @@
       "subfieldOrder": "a b c p n ... h",
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
+        "leadingPunctuation": "/", "trailingPunctuation": ".",
         "NOTE": "punctuation may include data about included parts (e.g. short stories)"
       },
       "$f": {"aboutEntity": "?thing", "property": "temporalCoverage"},
@@ -3233,8 +3234,8 @@
         {
           "source": {
             "245": {"ind1": "0", "ind2": "0", "subfields": [
-              {"a": "Anteckningar från en ö"},
-              {"c": "Tove Jansson, Tuulikki Pietilä"}
+              {"a": "Anteckningar från en ö /"},
+              {"c": "Tove Jansson, Tuulikki Pietilä."}
           ]}},
           "result": {"mainEntity": {
             "hasTitle": [ {"@type": "Title",

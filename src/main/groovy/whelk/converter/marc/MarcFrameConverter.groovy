@@ -1490,6 +1490,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
+        completePunctuationRules(subfields.values())
+
         orderedAndGroupedSubfields = orderAndGroupSubfields(subfields, (String) fieldDfn.subfieldOrder)
 
         assert !resourceType || link || computeLinks != null, "Expected link on $fieldId with resourceType: $resourceType"
@@ -1511,6 +1513,22 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             getOrder(it.value[0])
         }.collect {
             it.value.sort(getOrder)
+        }
+    }
+
+    @CompileStatic(SKIP)
+    static void completePunctuationRules(Collection subfields) {
+        def charSet = new HashSet<Character>()
+        // This adds all possible leading to be stripped from all other subfields.
+        // IMPROVE: just add seen leading to all subfields preceding current?
+        // (Pro: might remove chars too aggressively. Con: might miss some
+        // punctuation in weirdly ordered subfields.)
+        subfields.each {
+            def lead = it.leadingPunctuation
+            if (lead) charSet.addAll(lead.toCharArray())
+        }
+        subfields.each {
+            it.punctuationChars = (((it.punctuationChars ?: []) as Set) + charSet) as char[]
         }
     }
 
@@ -1713,6 +1731,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     @CompileStatic(SKIP)
     def revert(Map data, Map result, MatchRule usedMatchRule = null) {
 
+        // TODO:IMPROVE: only ignore if the one in favour succeeds.
         if (ignoreOnRevertInFavourOf) {
             return null
         }
@@ -1886,15 +1905,22 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
 
                 def value = subhandler.revert(data, selectedEntity)
+
+                def justAdded = null
+
                 if (value instanceof List) {
-                    value.each {
-                        if (!usedMatchRule || usedMatchRule.matchValue(code, it)) {
-                            subs << [(code): it]
+                    value.each { v ->
+                        if (!usedMatchRule || usedMatchRule.matchValue(code, v)) {
+                            def sub = [(code): v]
+                            subs << sub
+                            justAdded = [code, sub]
                         }
                     }
                 } else if (value != null) {
                     if (!usedMatchRule || usedMatchRule.matchValue(code, value)) {
-                        subs << [(code): value]
+                        def sub = [(code): value]
+                        subs << sub
+                        justAdded = [code, sub]
                     }
                 } else {
                     if (subhandler.required || subhandler.requiresI1 || subhandler.requiresI2) {
@@ -1903,7 +1929,13 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
                 if (!failedRequired) {
                     usedEntities << selectedEntity
+                    if (prevAdded && justAdded &&  subhandler.leadingPunctuation) {
+                        def (prevCode, prevSub) = prevAdded
+                        def prevValue = prevSub[prevCode]
+                        prevSub[prevCode] = prevValue + " " + subhandler.leadingPunctuation
+                    }
                 }
+                if (justAdded) prevAdded = justAdded
             }
         }
 
@@ -1934,6 +1966,7 @@ class MarcSubFieldHandler extends ConversionPart {
     char[] punctuationChars
     char[] surroundingChars
     String trailingPunctuation
+    String leadingPunctuation
     String link
     String about
     boolean newAbout
@@ -1962,6 +1995,7 @@ class MarcSubFieldHandler extends ConversionPart {
         this.code = code
         aboutEntityName = subDfn.aboutEntity
         trailingPunctuation = subDfn.trailingPunctuation
+        leadingPunctuation = subDfn.leadingPunctuation
         punctuationChars = (subDfn.punctuationChars ?: trailingPunctuation?.trim())?.toCharArray()
         surroundingChars = subDfn.surroundingChars?.toCharArray()
         super.setTokenMap(fieldHandler, subDfn)
