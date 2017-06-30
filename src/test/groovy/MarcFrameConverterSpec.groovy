@@ -59,6 +59,7 @@ class MarcFrameConverterSpec extends Specification {
                             fieldSpecs << [source: it.source,
                                            normalized: it.normalized,
                                            result: it.result,
+                                           addOnRevert: it.addOnRevert,
                                            name: it.name ?: "",
                                            marcType: marcType, tag: tag,
                                            thingLink: thingLink]
@@ -149,10 +150,12 @@ class MarcFrameConverterSpec extends Specification {
         given:
         def marcType = fieldSpec.marcType
         def jsonld = deepcopy(marcResults[marcType])
-        fieldSpec.result.each { prop, obj ->
-            def value = jsonld[prop]
-            if (value instanceof Map) value.putAll(obj)
-            else jsonld[prop] = obj
+        [fieldSpec.result, fieldSpec.addOnRevert].each {
+            it.each { prop, obj ->
+                def value = jsonld[prop]
+                if (value instanceof Map) value.putAll(obj)
+                else jsonld[prop] = obj
+            }
         }
         expect:
         converter.conversion.getRuleSetFromJsonLd(jsonld).name == marcType

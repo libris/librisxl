@@ -4872,6 +4872,9 @@
             "marc:encLevel": {"@id": "marc:CompleteAuthorityRecord"},
             "marc:status": {"@id": "marc:CorrectedOrRevised"},
             "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Concept"}
           }
         }
       ]
