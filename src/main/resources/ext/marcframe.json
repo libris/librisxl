@@ -399,7 +399,11 @@
     },
     "termbase_noid": {
       "$a": {"property": "prefLabel"},
-      "$9": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "code"},
+      "$9": {
+        "addLink": "inCollection",
+        "resourceType": "TermCollection",
+        "property": "code"
+      },
       "constructProperties": {
         "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
       },
@@ -432,9 +436,19 @@
     "termbase_with_uri_from_i2": {
       "match": [
         {
+          "when": "i2=7 & $2",
+          "NOTE": "if possible to revert to, prefer this form over i2=0",
+          "include": ["termbase_noid", "termid"]
+        },
+        {
+          "when": "i2=4",
+          "include": ["termbase_noid"]
+        },
+        {
           "when": "i2=0",
           "include": ["termbase_noid"],
-          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
+          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}",
+          "TODO": "Check if the two above are sound; better to match on uriTemplate on revert!"
         },
         {
           "when": null,
@@ -444,6 +458,10 @@
     },
     "uri_from_i2": {
       "match": [
+        {
+          "when": "i2=7 & $2",
+          "NOTE": "if possible to revert to, prefer this form over i2=0"
+        },
         {
           "when": "i2=0",
           "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
@@ -3117,6 +3135,7 @@
     "130": {
       "aboutEntity": "?work",
       "link": "expressionOf",
+      "TODO:include?": ["titledetails"],
       "resourceType": "Work",
       "TODO": "Similar to 240. Could use link:expressionOf if 130 XOR 240",
       "$a": {"property": "uniformTitle"},
@@ -4222,7 +4241,7 @@
         },
         {
           "source": {
-            "650": {"ind1": "2", "ind2": "0",
+            "650": {"ind1": "2", "ind2": "4",
               "subfields": [{"a": "Something secondary"}]}
           },
           "result": {"mainEntity": {
@@ -4230,14 +4249,8 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@id": "http://id.loc.gov/authorities/label/Something%20secondary",
                   "@type": "Topic",
                   "marc:subjectLevel": {"@id": "marc:Secondary"},
-                  "inScheme": {
-                    "@type": "ConceptScheme",
-                    "@id": "https://id.kb.se/term/lcsh",
-                    "code": "lcsh"
-                  },
                   "prefLabel": "Something secondary"
                 }
               ]
