@@ -1504,7 +1504,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     @CompileStatic(SKIP)
     static List<List<MarcSubFieldHandler>> orderAndGroupSubfields(Map<String, MarcSubFieldHandler> subfields, String subfieldOrderRepr) {
-        Map order = (subfieldOrderRepr?.split(/\s+/) as Iterable)?.withIndex()?.collectEntries() ?: [:]
+        Map order = [:]
+        if (subfieldOrderRepr) {
+            subfieldOrderRepr.split(/\s+/).eachWithIndex { code, i ->
+                order[code] = i
+            }
+        }
         Closure getOrder = {
             [order.get(it.code, order['...']), !it.code.isNumber(), it.code]
         }
