@@ -166,7 +166,7 @@ class Crud extends HttpServlet {
         requests.labels("GET").inc()
         ongoingRequests.labels("GET").inc()
         Summary.Timer requestTimer = requestsLatency.labels("GET").startTimer()
-        log.info("Handling GET request for ${request.pathInfo}.")
+        log.info("Handling GET request for ${request.pathInfo}")
         try {
             doGet2(request, response)
         } finally {
@@ -606,7 +606,7 @@ class Crud extends HttpServlet {
         requests.labels("POST").inc()
         ongoingRequests.labels("POST").inc()
         Summary.Timer requestTimer = requestsLatency.labels("POST").startTimer()
-        log.info("Handling POST request for ${request.pathInfo}.")
+        log.info("Handling POST request for ${request.pathInfo}")
 
         try {
             doPost2(request, response)
@@ -710,7 +710,7 @@ class Crud extends HttpServlet {
         requests.labels("PUT").inc()
         ongoingRequests.labels("PUT").inc()
         Summary.Timer requestTimer = requestsLatency.labels("PUT").startTimer()
-        log.info("Handling PUT request for ${request.pathInfo}.")
+        log.info("Handling PUT request for ${request.pathInfo}")
 
         try {
             doPut2(request, response)
@@ -1046,7 +1046,7 @@ class Crud extends HttpServlet {
         requests.labels("DELETE").inc()
         ongoingRequests.labels("DELETE").inc()
         Summary.Timer requestTimer = requestsLatency.labels("DELETE").startTimer()
-        log.info("Handling DELETE request for ${request.pathInfo}.")
+        log.info("Handling DELETE request for ${request.pathInfo}")
 
         try {
             doDelete2(request, response)
