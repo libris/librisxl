@@ -3845,6 +3845,7 @@
           "resourceType": "ToCEntry"
         }
       },
+      "subfieldOrder": "a t r g u",
       "$a": {"property": "label"},
       "$t": {"aboutNew": "_:tocEntry", "property": "title"},
       "$r": {"about": "_:tocEntry", "property": "responsibilityStatement"},
