@@ -7,6 +7,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
 import whelk.Document
+import whelk.IdType
 import whelk.JsonLd
 import whelk.Location
 import whelk.exception.StorageCreateFailedException
@@ -38,12 +39,15 @@ class PostgreSQLComponent {
     protected String UPSERT_DOCUMENT, UPDATE_DOCUMENT, INSERT_DOCUMENT,
                      INSERT_DOCUMENT_VERSION, GET_DOCUMENT,
                      GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS,
+                     GET_DOCUMENT_VERSION_BY_MAIN_ID,
+                     GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID,
                      GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
                      LOAD_ALL_DOCUMENTS_BY_COLLECTION,
                      DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
                      LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
                      LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
-                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, GET_DEPENDENCIES, GET_DEPENDERS
+                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, GET_DEPENDENCIES, GET_DEPENDERS,
+                     GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
     protected String QUERY_LD_API
@@ -123,11 +127,38 @@ class PostgreSQLComponent {
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ? FOR UPDATE"
         GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
-        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,data->>'created' AS created,modified" +
+        GET_DOCUMENT_VERSION_BY_MAIN_ID = "SELECT id,data FROM $versionsTableName " +
+                                          "WHERE id = (SELECT id FROM $idTableName " +
+                                                      "WHERE iri = ? AND mainid = 't') " +
+                                          "AND checksum = ?"
+        // FIXME fix created read (join with lddb?)
+        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,deleted,data->>'created' AS created,modified " +
                 "FROM $versionsTableName WHERE id = ? ORDER BY modified"
+        GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = "SELECT id,data,deleted,data->>'created' AS created,modified " +
+                                               "FROM $versionsTableName " +
+                                               "WHERE id = (SELECT id FROM $idTableName " +
+                                                           "WHERE iri = ? AND mainid = 't') " +
+                                               "ORDER BY modified"
         GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE data->'@graph' @> ?"
         GET_RECORD_ID_BY_THING_ID = "SELECT id FROM $idTableName WHERE iri = ? AND graphIndex = 1"
+        GET_DOCUMENT_BY_MAIN_ID = "SELECT id,data,created,modified,deleted " +
+                                  "FROM $mainTableName " +
+                                  "WHERE id = (SELECT id FROM $idTableName " +
+                                              "WHERE mainid = 't' AND iri = ?)"
+        GET_RECORD_ID = "SELECT iri FROM $idTableName " +
+                        "WHERE graphindex = 0 AND mainid = 't' " +
+                        "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
+        GET_THING_ID = "SELECT iri FROM $idTableName " +
+                        "WHERE graphindex = 1 AND mainid = 't' " +
+                        "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
+        GET_MAIN_ID = "SELECT t2.iri FROM $idTableName t1 " +
+                      "JOIN $idTableName t2 " +
+                      "ON t2.id = t1.id " +
+                      "AND t2.graphindex = t1.graphindex " +
+                      "WHERE t1.iri = ? AND t2.mainid = true;"
+        GET_ID_TYPE = "SELECT graphindex, mainid FROM $idTableName " +
+                      "WHERE iri = ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
@@ -137,7 +168,7 @@ class PostgreSQLComponent {
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
-                "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
+                "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ? AND graphIndex = 0"
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
         GET_DEPENDERS = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ?"
         GET_DEPENDENCIES = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ?"
@@ -239,7 +270,7 @@ class PostgreSQLComponent {
                 insert.executeUpdate()
                 saveVersion(doc, connection, now, changedIn, changedBy, collection, deleted)
             }
-            saveIdentifiers(doc, connection)
+            saveIdentifiers(doc, connection, deleted)
             saveDependencies(doc, connection)
             for (String dependerId : getDependers(doc.getShortId())) {
                 updateMinMaxDepModified(dependerId, connection)
@@ -349,7 +380,7 @@ class PostgreSQLComponent {
 
             // The versions and identifiers tables are NOT under lock. Synchronization is only maintained on the main table.
             saveVersion(doc, connection, modTime, changedIn, changedBy, collection, deleted)
-            saveIdentifiers(doc, connection)
+            saveIdentifiers(doc, connection, deleted)
             saveDependencies(doc, connection)
             for (String dependerId : getDependers(doc.getShortId())) {
                 updateMinMaxDepModified(dependerId, connection)
@@ -486,31 +517,39 @@ class PostgreSQLComponent {
 
     }
 
-    private void saveIdentifiers(Document doc, Connection connection) {
+    private void saveIdentifiers(Document doc, Connection connection, boolean deleted) {
         PreparedStatement removeIdentifiers = connection.prepareStatement(DELETE_IDENTIFIERS)
         removeIdentifiers.setString(1, doc.getShortId())
         int numRemoved = removeIdentifiers.executeUpdate()
         log.debug("Removed $numRemoved identifiers for id ${doc.getShortId()}")
+
         PreparedStatement altIdInsert = connection.prepareStatement(INSERT_IDENTIFIERS)
         for (altId in doc.getRecordIdentifiers()) {
             altIdInsert.setString(1, doc.getShortId())
             altIdInsert.setString(2, altId)
             altIdInsert.setInt(3, 0) // record id -> graphIndex = 0
-            if (altId == doc.getCompleteId())
+            if (altId == doc.getCompleteId()) {
                 altIdInsert.setBoolean(4, true) // Main ID
-            else
+                altIdInsert.addBatch()
+            } else if (!deleted) {
                 altIdInsert.setBoolean(4, false) // alternative ID, not the main ID
-            altIdInsert.addBatch()
+                altIdInsert.addBatch()
+            }
         }
         for (altThingId in doc.getThingIdentifiers()) {
-            altIdInsert.setString(1, doc.getShortId())
-            altIdInsert.setString(2, altThingId)
-            altIdInsert.setInt(3, 1) // thing id -> graphIndex = 1
-            if (altThingId == doc.getThingIdentifiers()[0])
-                altIdInsert.setBoolean(4, true) // Main ID
-            else
-                altIdInsert.setBoolean(4, false) // alternative ID
-            altIdInsert.addBatch()
+            // don't re-add thing identifiers if doc is deleted
+            if (!deleted) {
+                altIdInsert.setString(1, doc.getShortId())
+                altIdInsert.setString(2, altThingId)
+                altIdInsert.setInt(3, 1) // thing id -> graphIndex = 1
+                if (altThingId == doc.getThingIdentifiers()[0]) {
+                    altIdInsert.setBoolean(4, true) // Main ID
+                    altIdInsert.addBatch()
+                } else {
+                    altIdInsert.setBoolean(4, false) // alternative ID
+                    altIdInsert.addBatch()
+                }
+            }
         }
         try {
             altIdInsert.executeBatch()
@@ -622,7 +661,7 @@ class PostgreSQLComponent {
                     batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
                 }
                 batch.addBatch()
-                saveIdentifiers(doc, connection)
+                saveIdentifiers(doc, connection, false)
                 saveDependencies(doc, connection)
                 for (String dependerId : getDependers(doc.getShortId())) {
                     updateMinMaxDepModified(dependerId, connection)
@@ -811,6 +850,7 @@ class PostgreSQLComponent {
     }
 
     // TODO: Update to real locate
+    @Deprecated
     Location locate(String identifier, boolean loadDoc) {
         log.debug("Locating $identifier")
         if (identifier) {
@@ -856,6 +896,132 @@ class PostgreSQLComponent {
         }
 
         return null
+    }
+
+    /**
+     * Load document using supplied identifier as main ID
+     *
+     * Supplied identifier can be either record ID or thing ID.
+     *
+     */
+    Document loadDocumentByMainId(String mainId, String version=null) {
+        Document doc = null
+        if (version && version.isInteger()) {
+            int v = version.toInteger()
+            def docList = loadAllVersionsByMainId(mainId)
+            if (v < docList.size()) {
+                doc = docList[v]
+            }
+        } else if (version) {
+            doc = loadFromSql(GET_DOCUMENT_VERSION_BY_MAIN_ID,
+                              [1: mainId, 2: version])
+        } else {
+            doc = loadFromSql(GET_DOCUMENT_BY_MAIN_ID, [1: mainId])
+        }
+        return doc
+    }
+
+    /**
+     * Get the corresponding record main ID for supplied identifier
+     *
+     * Supplied identifier can be either the document ID, the thing ID, or a
+     * sameAs ID.
+     *
+     */
+    String getRecordId(String id) {
+        return getRecordOrThingId(id, GET_RECORD_ID)
+    }
+
+    /**
+     * Get the corresponding thing main ID for supplied identifier
+     *
+     * Supplied identifier can be either the document ID, the thing ID, or a
+     * sameAs ID.
+     *
+     */
+    String getThingId(String id) {
+        return getRecordOrThingId(id, GET_THING_ID)
+    }
+
+    /**
+     * Get the corresponding main ID for supplied identifier
+     *
+     * If the supplied identifier is for the thing, return the thing main ID.
+     * If the supplied identifier is for the record, return the record main ID.
+     *
+     */
+    String getMainId(String id) {
+        return getRecordOrThingId(id, GET_MAIN_ID)
+    }
+
+    private String getRecordOrThingId(String id, String sql) {
+        Connection connection = getConnection()
+        PreparedStatement selectstmt
+        ResultSet rs
+        try {
+            selectstmt = connection.prepareStatement(sql)
+            selectstmt.setString(1, id)
+            rs = selectstmt.executeQuery()
+            List<String> ids = []
+
+            while (rs.next()) {
+                ids << rs.getString('iri')
+            }
+
+            if (ids.size() > 1) {
+                log.warn("Multiple main IDs found for ID ${id}")
+            }
+
+            if (ids.isEmpty()) {
+                return null
+            } else {
+                return ids[0]
+            }
+        } finally {
+            connection.close()
+        }
+    }
+
+    /**
+     * Return ID type for identifier, if found.
+     *
+     */
+    IdType getIdType(String id) {
+        Connection connection = getConnection()
+        PreparedStatement selectstmt
+        ResultSet rs
+        try {
+            selectstmt = connection.prepareStatement(GET_ID_TYPE)
+            selectstmt.setString(1, id)
+            rs = selectstmt.executeQuery()
+            if (rs.next()) {
+                int graphIndex = rs.getInt('graphindex')
+                boolean isMainId = rs.getBoolean('mainid')
+                return determineIdType(graphIndex, isMainId)
+            } else {
+                return null
+            }
+        } finally {
+            connection.close()
+        }
+    }
+
+    private IdType determineIdType(int graphIndex, boolean isMainId) {
+        if (graphIndex == 0) {
+            if (isMainId) {
+                return IdType.RecordMainId
+            } else {
+                return IdType.RecordSameAsId
+            }
+        } else if (graphIndex == 1) {
+            if (isMainId) {
+                return IdType.ThingMainId
+            } else {
+                return IdType.ThingSameAsId
+            }
+        } else {
+            return null
+        }
     }
 
     Document load(String id) {
@@ -1008,12 +1174,21 @@ class PostgreSQLComponent {
     }
 
     List<Document> loadAllVersions(String identifier) {
+        return doLoadAllVersions(identifier, GET_ALL_DOCUMENT_VERSIONS)
+    }
+
+    List<Document> loadAllVersionsByMainId(String identifier) {
+        return doLoadAllVersions(identifier,
+                                 GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID)
+    }
+
+    private List<Document> doLoadAllVersions(String identifier, String sql) {
         Connection connection = getConnection()
         PreparedStatement selectstmt
         ResultSet rs
         List<Document> docList = []
         try {
-            selectstmt = connection.prepareStatement(GET_ALL_DOCUMENT_VERSIONS)
+            selectstmt = connection.prepareStatement(sql)
             selectstmt.setString(1, identifier)
             rs = selectstmt.executeQuery()
             int v = 0
@@ -1041,6 +1216,7 @@ class PostgreSQLComponent {
         doc.setDeleted(rs.getBoolean("deleted"))
 
         try {
+            // FIXME better handling of null values
             doc.setCreated(new Date(rs.getTimestamp("created")?.getTime()))
         } catch (SQLException sqle) {
             log.trace("Resultset didn't have created. Probably a version request.")
