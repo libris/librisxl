@@ -4,6 +4,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import spock.lang.Ignore
 import spock.lang.Specification
 import whelk.Document
+import whelk.IdType
 import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
@@ -179,7 +180,7 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/ld+json"
     }
 
-    def "GET /<sameAs ID> should return 200 OK"() {
+    def "GET /<sameAs ID> should return 302 Found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def altId = BASE_URI.resolve("/alt_1234").toString()
@@ -204,10 +205,13 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return id
         }
+        storage.getIdType(_) >> {
+            return IdType.RecordSameAsId
+        }
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_OK
+        response.getStatus() == HttpServletResponse.SC_FOUND
     }
 
     def "GET /<id> should return 404 Not Found if document can't be found"() {
@@ -1408,7 +1412,7 @@ class CrudSpec extends Specification {
         assert response.getStatus() == HttpServletResponse.SC_NO_CONTENT
     }
 
-    def "PUT to /<alternate_id> should return 405 Method Not Allowed"() {
+    def "PUT to /<alternate_id> should return 302 Found"() {
         given:
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
@@ -1462,6 +1466,9 @@ class CrudSpec extends Specification {
         }
         storage.getMainId(_) >> {
             return id
+        }
+        storage.getIdType(_) >> {
+            return IdType.RecordSameAsId
         }
         storage.store(_, _) >> {
             Document doc = new Document(newContent)
@@ -1570,11 +1577,14 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
 
-    def "PUT to /<id> should return 400 Bad Request if ID in document does not match ID in URL"() {
+    def "PUT to /<id> should return 400 Bad Request if record ID has been changed"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
         def id = BASE_URI.resolve("/some_id").toString()
-        def putData = ["@graph": [["@id": id,
+        def doc = ["@graph": [["@id": id,
+                               "@type": "Record",
+                               "contains": "some new data"]]]
+        def putData = ["@graph": [["@id": id + "_changed",
                                    "@type": "Record",
                                    "contains": "some new data"]]]
         is.getBytes() >> {
@@ -1607,10 +1617,13 @@ class CrudSpec extends Specification {
             return null
         }
         storage.loadDocumentByMainId(_) >> {
-            return new Document(putData)
+            return new Document(doc)
         }
         storage.getMainId(_) >> {
             return id
+        }
+        storage.getIdType(_) >> {
+            return IdType.RecordMainId
         }
         when:
         crud.doPut(request, response)
@@ -3061,6 +3074,9 @@ class CrudSpec extends Specification {
         }
         storage.getMainId(_) >> {
             return id
+        }
+        storage.getIdType(_) >> {
+            return IdType.RecordSameAsId
         }
         when:
         crud.doDelete(request, response)

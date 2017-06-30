@@ -10,6 +10,7 @@ import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
 
 import whelk.Document
+import whelk.IdType
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.IdGenerator
@@ -236,6 +237,9 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_NOT_FOUND,
                     "Document not found.")
             return
+        } else if (!doc && loc) {
+            sendRedirect(request, response, loc)
+            return
         } else if (doc && doc.deleted) {
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_GONE.toString()).inc()
@@ -447,7 +451,7 @@ class Crud extends HttpServlet {
     }
 
     /**
-     * Get (Document, String) from storage for specified ID and version.
+     * Get (document, location) from storage for specified ID and version.
      *
      * If version is null, we look for the latest version.
      * Document and String in the response may be null.
@@ -456,26 +460,45 @@ class Crud extends HttpServlet {
     // TODO Handle version requests (See LXL-460)
     Tuple2<Document, String> getDocumentFromStorage(String id,
                                                     String version = null) {
+        Tuple2<Document, String> result = new Tuple2(null, null)
+
         // Document doc = whelk.storage.load(id, version)
         Document doc = whelk.storage.load(id)
         if (doc) {
             return new Tuple2(doc, null)
         }
 
-        // doc = whelk.storage.loadDocumentByMainId(id, version)
-        doc = whelk.storage.loadDocumentByMainId(id)
-        if (doc) {
-            return new Tuple2(doc, null)
+        // we couldn't find the document directly, so we look it up using the
+        // identifiers table instead
+        switch (whelk.storage.getIdType(id)) {
+            case IdType.RecordMainId:
+                // doc = whelk.storage.loadDocumentByMainId(id, version)
+                doc = whelk.storage.loadDocumentByMainId(id)
+                if (doc) {
+                    result = new Tuple2(doc, null)
+                }
+                break
+            case IdType.ThingMainId:
+                // doc = whelk.storage.loadDocumentByMainId(id, version)
+                doc = whelk.storage.loadDocumentByMainId(id)
+                if (doc) {
+                    String contentLocation = whelk.storage.getRecordId(id)
+                    result = new Tuple2(doc, contentLocation)
+                }
+                break
+            case IdType.RecordSameAsId:
+            case IdType.ThingSameAsId:
+                String location = whelk.storage.getMainId(id)
+                if (location) {
+                    result = new Tuple2(null, location)
+                }
+                break
+            default:
+                // 404
+                break
         }
 
-        String mainId = whelk.storage.getMainId(id)
-        if (mainId) {
-            // doc = whelk.storage.loadDocumentByMainId(mainId, version)
-            doc = whelk.storage.loadDocumentByMainId(mainId)
-            return new Tuple2(doc, mainId)
-        }
-
-        return new Tuple2(null, null)
+        return result
     }
 
     private HttpServletResponse maybeAddProposal25Headers(HttpServletResponse response,
@@ -769,29 +792,25 @@ class Crud extends HttpServlet {
         Document existingDoc = docAndLoc.first
         String location = docAndLoc.second
 
-        if (!existingDoc) {
+        if (!existingDoc && !location) {
             failedRequests.labels("PUT", request.getRequestURI(),
                     HttpServletResponse.SC_NOT_FOUND.toString()).inc()
             response.sendError(HttpServletResponse.SC_NOT_FOUND,
                     "Document not found.")
             return
-        } else if (existingDoc && location) {
+        } else if (!existingDoc && location) {
             sendRedirect(request, response, location)
             return
-        } else {
-            // FIXME not needed? should be handled by 303 See Other
-            log.debug("Identifier was ${documentId}. Setting to ${existingDoc.id}")
-            documentId = existingDoc.id
-
-            if (idFromUrl != documentId) {
-                if (Document.BASE_URI.resolve(idFromUrl).toString() != documentId) {
-                    log.debug("Document ID does not match ID in URL.")
-                    failedRequests.labels("PUT", request.getRequestURI(),
-                            HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-                    response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                            "ID in document does not match ID in URL.")
-                    return
-                }
+        } else  {
+            String fullPutId = JsonLd.findFullIdentifier(requestBody)
+            if (fullPutId != existingDoc.id) {
+                log.debug("Record ID for ${existingDoc.id} changed to " +
+                          "${fullPutId} in PUT body")
+                failedRequests.labels("PUT", request.getRequestURI(),
+                        HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                        "Record ID was modified")
+                return
             }
         }
 
@@ -1073,12 +1092,12 @@ class Crud extends HttpServlet {
 
             log.debug("Checking permissions for ${doc}")
 
-            if (!doc) {
+            if (!doc && loc) {
+                sendRedirect(request, response, loc)
+            } else if (!doc) {
                 failedRequests.labels("DELETE", request.getRequestURI(),
                         HttpServletResponse.SC_NOT_FOUND.toString()).inc()
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
-            } else if (doc && loc) {
-                sendRedirect(request, response, loc)
             } else if (doc && !hasDeletePermission(doc, request.getAttribute("user"))) {
                 failedRequests.labels("DELETE", request.getRequestURI(),
                         HttpServletResponse.SC_FORBIDDEN.toString()).inc()
