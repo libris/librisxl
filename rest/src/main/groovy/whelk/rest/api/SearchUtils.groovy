@@ -45,15 +45,6 @@ class SearchUtils {
         String query = getReservedQueryParameter('q', queryParameters)
         String siteBaseUri = getReservedQueryParameter('_site_base_uri', queryParameters)
 
-        // Include all subclasses of @type
-        String type = getReservedQueryParameter('@type', queryParameters)
-        if (type != null) {
-            ArrayList<String> subClasses = []
-            jsonld.getSubClasses(type, subClasses)
-            subClasses.add(type)
-            queryParameters.put('@type', (String[]) subClasses.toArray())
-        }
-
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
         int limit = limitAndOffset.first
         int offset = limitAndOffset.second
@@ -78,7 +69,7 @@ class SearchUtils {
                 results = queryElasticSearch(queryParameters,
                                              pageParams,
                                              dataset, siteBaseUri,
-                                             limit, offset)
+                                             limit, offset, jsonld)
             } else {
                 throw new WhelkRuntimeException("ElasticSearch not configured.")
             }
@@ -168,9 +159,20 @@ class SearchUtils {
     private Map queryElasticSearch(Map queryParameters,
                                    Map pageParams,
                                    String dataset, String siteBaseUri,
-                                   int limit, int offset) {
+                                   int limit, int offset, JsonLd jsonld) {
         String query = getReservedQueryParameter('q', queryParameters)
         log.debug("Querying ElasticSearch")
+
+        // Include all subclasses of @type
+        String[] types = queryParameters.get('@type')
+        if (types != null) {
+            ArrayList<String> subClasses = []
+            for (String type : types) {
+                jsonld.getSubClasses(type, subClasses)
+                subClasses.add(type)
+            }
+            queryParameters.put('@type', (String[]) subClasses.toArray())
+        }
 
         Map stats = null
         List mappings = []
@@ -180,6 +182,12 @@ class SearchUtils {
 
         def dslQuery = ElasticSearch.createJsonDsl(queryParameters,
                                                    limit, offset)
+
+        // If there was an @type parameter, all subclasses of that type were added as well,
+        // let's clean that up and "hide" it from the caller.
+        if (types != null) {
+            queryParameters.put('@type', types)
+        }
 
         Tuple2 mappingsAndPageParams = mapParams(queryParameters)
         mappings.addAll(mappingsAndPageParams.first)
