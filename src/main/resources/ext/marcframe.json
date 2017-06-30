@@ -471,18 +471,18 @@
   "bib": {
 
     "pendingResources": {
-      "?work": {
-        "about": "?thing",
-        "link": "instanceOf",
-        "resourceType": "Work",
-        "fragmentId": "work"
-      },
       "?thing": {
         "about": "?record",
         "link": "mainEntity",
         "resourceType": "Instance",
         "fragmentId": "it",
         "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
+      },
+      "?work": {
+        "about": "?thing",
+        "link": "instanceOf",
+        "resourceType": "Work",
+        "fragmentId": "work"
       }
     },
 

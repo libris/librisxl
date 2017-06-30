@@ -147,6 +147,7 @@ class MarcFrameConverter implements FormatConverter {
 class MarcConversion {
 
     static MARC_CATEGORIES = ['bib', 'auth', 'hold']
+    static Map<String, Integer> ENTITY_ORDER = ['?record': 0, '?thing': 1]
 
     MarcFrameConverter converter
     List<MarcFramePostProcStep> sharedPostProcSteps
@@ -342,12 +343,17 @@ class MarcConversion {
             log.debug "No linkfinder present"
         }
 
-        ArrayList entities = state.entityMap.findResults { key, ent ->
-            if (!marcRuleSet.topPendingResources[key].embedded) ent
+        ArrayList entities = []
+
+        state.entityMap.entrySet().sort {
+            ENTITY_ORDER.get(it.key, ENTITY_ORDER.size())
+        }.findResults {
+            if (!marcRuleSet.topPendingResources[it.key].embedded) {
+                entities << it.value
+            }
         }
-        return [
-                '@graph': entities
-        ]
+
+        return ['@graph': entities]
     }
 
     void collectUriData(Map obj, Map acc, String path = '') {
