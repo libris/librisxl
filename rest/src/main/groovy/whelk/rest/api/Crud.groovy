@@ -10,8 +10,8 @@ import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
 
 import whelk.Document
+import whelk.IdType
 import whelk.JsonLd
-import whelk.Location
 import whelk.Whelk
 import whelk.IdGenerator
 import whelk.component.ElasticSearch
@@ -114,7 +114,7 @@ class Crud extends HttpServlet {
         whelk.loadCoreData()
         displayData = whelk.displayData
         vocabData = whelk.vocabData
-        jsonld = new JsonLd(displayData, vocabData)
+        jsonld = whelk.jsonld
         search = new SearchUtils(whelk, displayData, vocabData)
     }
 
@@ -167,7 +167,7 @@ class Crud extends HttpServlet {
         requests.labels("GET").inc()
         ongoingRequests.labels("GET").inc()
         Summary.Timer requestTimer = requestsLatency.labels("GET").startTimer()
-        log.info("Handling GET request for ${request.pathInfo}.")
+        log.info("Handling GET request for ${request.pathInfo}")
         try {
             doGet2(request, response)
         } finally {
@@ -227,9 +227,9 @@ class Crud extends HttpServlet {
         String version = request.getParameter("version")
 
         // TODO: return already loaded displayData and vocabData (cached on modified)? (LXL-260)
-        Tuple2 docAndLocation = getDocumentFromStorage(id, version)
+        Tuple2<Document, String> docAndLocation = getDocumentFromStorage(id, version)
         Document doc = docAndLocation.first
-        Location loc = docAndLocation.second
+        String loc = docAndLocation.second
 
         if (!doc && !loc) {
             failedRequests.labels("GET", request.getRequestURI(),
@@ -250,6 +250,7 @@ class Crud extends HttpServlet {
             String contentType = CrudUtils.getBestContentType(request)
             def responseBody = getFormattedResponseBody(doc, path, contentType)
             String modified = doc.getModified()
+            response = maybeAddProposal25Headers(response, loc)
             sendGetResponse(request, response, responseBody, modified,
                     path, contentType)
             return
@@ -450,26 +451,72 @@ class Crud extends HttpServlet {
     }
 
     /**
-     * Get (Document, Location) from storage for specified ID and version.
+     * Get (document, location) from storage for specified ID and version.
      *
      * If version is null, we look for the latest version.
-     * Document and Location in the response may be null.
+     * Document and String in the response may be null.
      *
      */
-    Tuple2 getDocumentFromStorage(String id, String version = null) {
-        if (version) {
-            Document doc = whelk.storage.load(id, version)
+    // TODO Handle version requests (See LXL-460)
+    Tuple2<Document, String> getDocumentFromStorage(String id,
+                                                    String version = null) {
+        Tuple2<Document, String> result = new Tuple2(null, null)
+
+        // Document doc = whelk.storage.load(id, version)
+        Document doc = whelk.storage.load(id)
+        if (doc) {
             return new Tuple2(doc, null)
+        }
+
+        // we couldn't find the document directly, so we look it up using the
+        // identifiers table instead
+        switch (whelk.storage.getIdType(id)) {
+            case IdType.RecordMainId:
+                // doc = whelk.storage.loadDocumentByMainId(id, version)
+                doc = whelk.storage.loadDocumentByMainId(id)
+                if (doc) {
+                    result = new Tuple2(doc, null)
+                }
+                break
+            case IdType.ThingMainId:
+                // doc = whelk.storage.loadDocumentByMainId(id, version)
+                doc = whelk.storage.loadDocumentByMainId(id)
+                if (doc) {
+                    String contentLocation = whelk.storage.getRecordId(id)
+                    result = new Tuple2(doc, contentLocation)
+                }
+                break
+            case IdType.RecordSameAsId:
+            case IdType.ThingSameAsId:
+                String location = whelk.storage.getMainId(id)
+                if (location) {
+                    result = new Tuple2(null, location)
+                }
+                break
+            default:
+                // 404
+                break
+        }
+
+        return result
+    }
+
+    private HttpServletResponse maybeAddProposal25Headers(HttpServletResponse response,
+                                                          String location) {
+        if (location) {
+            response.addHeader('Content-Location',
+                               getDataURI(location))
+            response.addHeader('Document', location)
+            response.addHeader('Link', "<${location}>; rel=describedby")
+        }
+        return response
+    }
+
+    private String getDataURI(String location) {
+        if (location.endsWith('/')) {
+            return location + 'data.jsonld'
         } else {
-            Location location = whelk.storage.locate(id, true)
-            Document document = location?.document
-            if (!document && location?.uri) {
-                return new Tuple2(null, location)
-            } else if (!document) {
-                return new Tuple2(null, null)
-            } else {
-                return new Tuple2(document, location)
-            }
+            return location + '/data.jsonld'
         }
     }
 
@@ -564,17 +611,16 @@ class Crud extends HttpServlet {
      *
      */
     void sendRedirect(HttpServletRequest request,
-                      HttpServletResponse response, Location location) {
-        String redirUrl = location.uri.toString()
-        if (location.getUri().getScheme() == null) {
+                      HttpServletResponse response, String location) {
+        if (new URI(location).getScheme() == null) {
             def locationRef = request.getScheme() + "://" +
                     request.getServerName() +
                     (request.getServerPort() != 80 ? ":" + request.getServerPort() : "") +
                     request.getContextPath()
-            redirUrl = locationRef + location.uri.toString()
+            location = locationRef + location
         }
-        response.setHeader("Location", redirUrl)
-        log.debug("Redirecting to document location: ${redirUrl}")
+        response.setHeader("Location", location)
+        log.debug("Redirecting to document location: ${location}")
         sendResponse(response, new byte[0], null, HttpServletResponse.SC_FOUND)
     }
 
@@ -583,7 +629,7 @@ class Crud extends HttpServlet {
         requests.labels("POST").inc()
         ongoingRequests.labels("POST").inc()
         Summary.Timer requestTimer = requestsLatency.labels("POST").startTimer()
-        log.info("Handling POST request for ${request.pathInfo}.")
+        log.info("Handling POST request for ${request.pathInfo}")
 
         try {
             doPost2(request, response)
@@ -687,7 +733,7 @@ class Crud extends HttpServlet {
         requests.labels("PUT").inc()
         ongoingRequests.labels("PUT").inc()
         Summary.Timer requestTimer = requestsLatency.labels("PUT").startTimer()
-        log.info("Handling PUT request for ${request.pathInfo}.")
+        log.info("Handling PUT request for ${request.pathInfo}")
 
         try {
             doPut2(request, response)
@@ -740,34 +786,32 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Missing @id in request.")
             return
-        } else if (idFromUrl != documentId) {
-            log.debug("Document ID does not match ID in URL.")
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "ID in document does not match ID in URL.")
-            return
         }
 
-        // FIXME don't use locate && handle alternate IDs
-        Location location = whelk.storage.locate(documentId, true)
-        Document existingDoc = location?.document
-        if (!existingDoc && location?.uri) {
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_METHOD_NOT_ALLOWED.toString()).inc()
-            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                    "PUT does not support alternate IDs.")
-            return
-        } else if (!existingDoc) {
+        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(idFromUrl)
+        Document existingDoc = docAndLoc.first
+        String location = docAndLoc.second
+
+        if (!existingDoc && !location) {
             failedRequests.labels("PUT", request.getRequestURI(),
                     HttpServletResponse.SC_NOT_FOUND.toString()).inc()
             response.sendError(HttpServletResponse.SC_NOT_FOUND,
                     "Document not found.")
             return
-        } else {
-            // FIXME not needed? should be handled by 303 See Other
-            log.debug("Identifier was ${documentId}. Setting to ${existingDoc.id}")
-            documentId = existingDoc.id
+        } else if (!existingDoc && location) {
+            sendRedirect(request, response, location)
+            return
+        } else  {
+            String fullPutId = JsonLd.findFullIdentifier(requestBody)
+            if (fullPutId != existingDoc.id) {
+                log.debug("Record ID for ${existingDoc.id} changed to " +
+                          "${fullPutId} in PUT body")
+                failedRequests.labels("PUT", request.getRequestURI(),
+                        HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                        "Record ID was modified")
+                return
+            }
         }
 
         Document updatedDoc = new Document(requestBody)
@@ -1021,7 +1065,7 @@ class Crud extends HttpServlet {
         requests.labels("DELETE").inc()
         ongoingRequests.labels("DELETE").inc()
         Summary.Timer requestTimer = requestsLatency.labels("DELETE").startTimer()
-        log.info("Handling DELETE request for ${request.pathInfo}.")
+        log.info("Handling DELETE request for ${request.pathInfo}")
 
         try {
             doDelete2(request, response)
@@ -1042,19 +1086,18 @@ class Crud extends HttpServlet {
         }
         try {
             String id = request.pathInfo.substring(1)
-            def doc = whelk.storage.load(id)
+            Tuple2<Document, String> docAndLocation = getDocumentFromStorage(id)
+            Document doc = docAndLocation.first
+            String loc = docAndLocation.second
 
             log.debug("Checking permissions for ${doc}")
 
-            if (!doc) {
-                Location loc = whelk.storage.locate(id, true)
-                if (loc) {
-                    sendRedirect(request, response, loc)
-                } else {
-                    failedRequests.labels("DELETE", request.getRequestURI(),
-                            HttpServletResponse.SC_NOT_FOUND.toString()).inc()
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
-                }
+            if (!doc && loc) {
+                sendRedirect(request, response, loc)
+            } else if (!doc) {
+                failedRequests.labels("DELETE", request.getRequestURI(),
+                        HttpServletResponse.SC_NOT_FOUND.toString()).inc()
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Document not found.")
             } else if (doc && !hasDeletePermission(doc, request.getAttribute("user"))) {
                 failedRequests.labels("DELETE", request.getRequestURI(),
                         HttpServletResponse.SC_FORBIDDEN.toString()).inc()
@@ -1065,9 +1108,9 @@ class Crud extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_GONE,
                         "Document has been deleted.")
             } else {
-                log.debug("Removing resource at ${id}")
+                log.debug("Removing resource at ${doc.getShortId()}")
                 // FIXME don't hardcode collection
-                whelk.remove(id, "xl", null, "xl")
+                whelk.remove(doc.getShortId(), "xl", null, "xl")
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
         } catch (ModelValidationException mve) {

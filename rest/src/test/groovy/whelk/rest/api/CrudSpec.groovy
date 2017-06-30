@@ -1,8 +1,10 @@
 package whelk.rest.api
 
 import org.codehaus.jackson.map.ObjectMapper
+import spock.lang.Ignore
 import spock.lang.Specification
 import whelk.Document
+import whelk.IdType
 import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
@@ -70,10 +72,14 @@ class CrudSpec extends Specification {
                                  'some_term': 'some_value'
                              ],
                              'lensGroups': ['chips': [:]]]
+        whelk.vocabData = ['@graph': []]
+        whelk.jsonld = new JsonLd(whelk.displayData, whelk.vocabData)
         GroovySpy(LegacyIntegrationTools.class, global: true)
         crud = new Crud()
         crud.whelk = whelk
         crud.displayData = whelk.displayData
+        crud.vocabData = whelk.vocabData
+        crud.jsonld = whelk.jsonld
         crud.accessControl = accessControl
     }
 
@@ -164,9 +170,8 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.locate(_, _) >> {
-            new Location(
-                new Document(["@graph": [["@id": id, "foo": "bar"]]]))
+        storage.load(_) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
         when:
         crud.doGet(request, response)
@@ -175,24 +180,38 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/ld+json"
     }
 
-    def "GET /<alternate_id> should return 302 Found"() {
+    def "GET /<sameAs ID> should return 302 Found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def altId = BASE_URI.resolve("/alt_1234").toString()
+        request.pathInfo >> {
+            altId
+        }
         request.getRequestURI() >> {
             altId
         }
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.locate(_, _) >> {
-            new Location().withURI(id)
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(altId) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(id) >> {
+            new Document(['@graph': [['@id': id, 'sameAs': [['@id': altId]]]]])
+        }
+        storage.getMainId(_) >> {
+            return id
+        }
+        storage.getIdType(_) >> {
+            return IdType.RecordSameAsId
         }
         when:
         crud.doGet(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_FOUND
-        response.getHeader("Location") == id
     }
 
     def "GET /<id> should return 404 Not Found if document can't be found"() {
@@ -201,8 +220,14 @@ class CrudSpec extends Specification {
         request.getRequestURI() >> {
             id
         }
-        storage.locate(_, _) >> {
-            null
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
+            return null
         }
         when:
         crud.doGet(request, response)
@@ -219,8 +244,14 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.locate(_, _) >> {
-            new Location()
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
+            return null
         }
         when:
         crud.doGet(request, response)
@@ -237,10 +268,10 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(["@graph": [["@id": id, "foo": "bar"]]])
             doc.deleted = true
-            new Location(doc)
+            return doc
         }
         when:
         crud.doGet(request, response)
@@ -248,6 +279,7 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_GONE
     }
 
+    @Ignore
     def "GET /<id>?version=1 should display requested document if it exists"() {
         given:
         def id = BASE_URI.resolve("/1234?version=1").toString()
@@ -276,8 +308,14 @@ class CrudSpec extends Specification {
         request.getRequestURI() >> {
             id
         }
-        storage.locate(_, _) >> {
-            null
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
+            return null
         }
         when:
         crud.doGet(request, response)
@@ -295,9 +333,8 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "application/ld+json"
         }
-        storage.locate(_, _) >> {
-            new Location(
-                new Document(["@graph": [["@id": id, "foo": "bar"]]]))
+        storage.load(_) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
         when:
         crud.doGet(request, response)
@@ -316,9 +353,8 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.locate(_, _) >> {
-            new Location(
-                new Document(["@graph": [["@id": id, "foo": "bar"]]]))
+        storage.load(_) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
         when:
         crud.doGet(request, response)
@@ -337,19 +373,18 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.locate(_, _) >> {
-            new Location(
-                new Document(["@graph": [["@id": id,
-                                          "foo": "bar",
-                                          "baz": [
-                                            "@id": "examplevocab:"
-                                          ],
-                                          "quux": [
-                                            "@id": "some_term"
-                                          ],
-                                          "bad_ref": [
-                                            "@id": "invalid:ref"
-                                          ]]]]))
+        storage.load(_) >> {
+            new Document(["@graph": [["@id": id,
+                                      "foo": "bar",
+                                      "baz": [
+                                        "@id": "examplevocab:"
+                                      ],
+                                      "quux": [
+                                        "@id": "some_term"
+                                      ],
+                                      "bad_ref": [
+                                        "@id": "invalid:ref"
+                                      ]]]])
         }
         when:
         crud.doGet(request, response)
@@ -367,9 +402,8 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.locate(_, _) >> {
-            new Location(
-                new Document(["@graph": [["@id": id, "foo": "bar"]]]))
+        storage.load(_) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
         when:
         crud.doGet(request, response)
@@ -386,9 +420,8 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.locate(_, _) >> {
-            new Location(
-                new Document(["@graph": [["@id": id, "foo": "bar"]]]))
+        storage.load(_) >> {
+            return new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
         when:
         crud.doGet(request, response)
@@ -405,7 +438,7 @@ class CrudSpec extends Specification {
         request.getRequestURI() >> { id }
         request.getHeader("Accept") >> { "*/*" }
         request.getHeader("If-None-Match") >> { etag }
-        storage.locate(_, _) >> { new Location(doc) }
+        storage.load(_) >> { return doc }
         when:
         crud.doGet(request, response)
         then:
@@ -563,7 +596,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         storage.store(_, _) >> {
@@ -675,7 +714,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         storage.store(_, _) >> {
@@ -734,7 +779,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         storage.store(_, _) >> {
@@ -785,7 +836,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         storage.store(_, _) >> {
@@ -836,7 +893,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         storage.store(_, _) >> {
@@ -892,7 +955,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         storage.store(_, _) >> {
@@ -948,7 +1017,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         storage.store(_, _) >> {
@@ -1010,7 +1085,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         storage.store(_, _) >> {
@@ -1063,7 +1144,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         storage.store(_, _) >> {
@@ -1122,7 +1209,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         storage.store(_, _) >> {
@@ -1174,7 +1267,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         storage.store(_, _) >> {
@@ -1295,10 +1394,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             Document doc = new Document(newContent)
@@ -1313,18 +1412,20 @@ class CrudSpec extends Specification {
         assert response.getStatus() == HttpServletResponse.SC_NO_CONTENT
     }
 
-    def "PUT to /<alternate_id> should return 405 Method Not Allowed"() {
+    def "PUT to /<alternate_id> should return 302 Found"() {
         given:
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
         def id = BASE_URI.resolve("/1234").toString()
         def altId = BASE_URI.resolve("/alt1234").toString()
-        def oldContent = ["@graph": [["@id": altId,
+        def oldContent = ["@graph": [["@id": id,
                                       "@type": "Record",
+                                      "sameAs": [["@id": altId]],
                                       "contains": "some data"]]]
-        def newContent = ["@graph": [["@id": altId,
+        def newContent = ["@graph": [["@id": id,
                                       "@type": "Record",
+                                      "sameAs": [["@id": altId]],
                                       "created": createdDate,
                                       "contains": "some updated data"]]]
         def is = GroovyMock(ServletInputStream.class)
@@ -1335,10 +1436,10 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/alt1234"
+            altId
         }
         request.getRequestURI() >> {
-            "/alt1234"
+            altId
         }
         request.getMethod() >> {
             "PUT"
@@ -1354,8 +1455,20 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
-            return new Location().withURI(id)
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(altId) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(id) >> {
+            return new Document(oldContent)
+        }
+        storage.getMainId(_) >> {
+            return id
+        }
+        storage.getIdType(_) >> {
+            return IdType.RecordSameAsId
         }
         storage.store(_, _) >> {
             Document doc = new Document(newContent)
@@ -1366,7 +1479,7 @@ class CrudSpec extends Specification {
         when:
         crud.doPut(request, response)
         then:
-        assert response.getStatus() == HttpServletResponse.SC_METHOD_NOT_ALLOWED
+        assert response.getStatus() == HttpServletResponse.SC_FOUND
     }
 
     def "PUT to /<id> should return 404 Not Found if document does not exist"() {
@@ -1402,7 +1515,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         when:
@@ -1443,7 +1562,13 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
             return null
         }
         when:
@@ -1452,11 +1577,14 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
 
-    def "PUT to /<id> should return 400 Bad Request if ID in document does not match ID in URL"() {
+    def "PUT to /<id> should return 400 Bad Request if record ID has been changed"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
         def id = BASE_URI.resolve("/some_id").toString()
-        def putData = ["@graph": [["@id": id,
+        def doc = ["@graph": [["@id": id,
+                               "@type": "Record",
+                               "contains": "some new data"]]]
+        def putData = ["@graph": [["@id": id + "_changed",
                                    "@type": "Record",
                                    "contains": "some new data"]]]
         is.getBytes() >> {
@@ -1485,8 +1613,17 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             return null
+        }
+        storage.loadDocumentByMainId(_) >> {
+            return new Document(doc)
+        }
+        storage.getMainId(_) >> {
+            return id
+        }
+        storage.getIdType(_) >> {
+            return IdType.RecordMainId
         }
         when:
         crud.doPut(request, response)
@@ -1550,10 +1687,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -1623,10 +1760,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -1696,10 +1833,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -1769,10 +1906,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -1842,10 +1979,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -1913,10 +2050,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -1984,10 +2121,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -2050,10 +2187,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -2123,10 +2260,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -2197,10 +2334,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -2271,10 +2408,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -2343,10 +2480,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -2415,10 +2552,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -2481,10 +2618,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.locate(_, _) >> {
+        storage.load(_) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
-            return new Location(doc)
+            return doc
         }
         storage.store(_, _) >> {
             throw new Exception("This shouldn't happen")
@@ -2903,17 +3040,17 @@ class CrudSpec extends Specification {
         def data = ["@graph": [["@id": id,
                                 "@type": "Record",
                                 "creationDate": "2002-01-08T00:00:00.0+01:00",
-                                "sameAs": redirectId],
+                                "sameAs": [["@id": redirectId]]],
                                ["@id": workId,
                                 "@type": "Work",
                                 "contains": "some new data",
                                 "heldBy":
                                         ["notation": "S"]]]]
         request.getPathInfo() >> {
-            "/5678"
+            redirectId
         }
         request.getRequestURI() >> {
-            "/5678"
+            redirectId
         }
         request.getMethod() >> {
             "DELETE"
@@ -2929,8 +3066,17 @@ class CrudSpec extends Specification {
         storage.load(_) >> {
             return null
         }
-        storage.locate(_, _) >> {
-            return new Location().withURI(redirectId)
+        storage.loadDocumentByMainId(redirectId) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(id) >> {
+            return new Document(data)
+        }
+        storage.getMainId(_) >> {
+            return id
+        }
+        storage.getIdType(_) >> {
+            return IdType.RecordSameAsId
         }
         when:
         crud.doDelete(request, response)
