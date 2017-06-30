@@ -1444,6 +1444,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Set<String> uriTemplateKeys
     Map uriTemplateDefaults
     Map<String, MarcSubFieldHandler> subfields = [:]
+    List<List<MarcSubFieldHandler>> orderedAndGroupedSubfields
     List<MatchRule> matchRules
     Map<String, Map> pendingResources
     String ignoreOnRevertInFavourOf
@@ -1483,16 +1484,34 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 if (obj && obj['about'] == aboutAlias) {
                     obj = obj.findAll { it.key != 'about' }
                 }
-                addSubfield(m.group(1), obj)
+                if (obj) {
+                    addSubfield(m.group(1), obj)
+                }
             }
         }
+
+        orderedAndGroupedSubfields = orderAndGroupSubfields(subfields, (String) fieldDfn.subfieldOrder)
 
         assert !resourceType || link || computeLinks != null, "Expected link on $fieldId with resourceType: $resourceType"
         assert !embedded || link || computeLinks != null, "Expected link on embedded $fieldId"
     }
 
     void addSubfield(String code, Map dfn) {
-        subfields[code] = dfn ? new MarcSubFieldHandler(this, code, dfn) : null
+        subfields[code] = new MarcSubFieldHandler(this, code, dfn)
+    }
+
+    @CompileStatic(SKIP)
+    static List<List<MarcSubFieldHandler>> orderAndGroupSubfields(Map<String, MarcSubFieldHandler> subfields, String subfieldOrderRepr) {
+        Map order = (subfieldOrderRepr?.split(/\s+/) as Iterable)?.withIndex()?.collectEntries() ?: [:]
+        Closure getOrder = {
+            [order.get(it.code, order['...']), !it.code.isNumber(), it.code]
+        }
+        // Only the first subfield in a group is used to determine the order of the group
+        return subfields.values().groupBy { it.about ?: it.code }.entrySet().sort {
+            getOrder(it.value[0])
+        }.collect {
+            it.value.sort(getOrder)
+        }
     }
 
     ConvertResult convert(Map state, value) {
@@ -1817,13 +1836,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         Map<String, List> remainingAboutMap = [:]
 
-        // TODO: exhaust local pending accordingly...
-        def subhandlersByAbout = subfields.values().findAll { it }.groupBy { it.about }.entrySet()
+        def prevAdded = null
 
-        subhandlersByAbout.sort { it.key != null }.each { it ->
+        orderedAndGroupedSubfields.each { subhandlers ->
 
-            def about = it.key
-            def subhandlers = it.value
+            def about = subhandlers[0].about
 
             def subhandlersByEntity
             if (about == null) {

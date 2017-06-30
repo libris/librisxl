@@ -288,7 +288,6 @@
           "TODO": "$a and $b represent equal titles"
         }
       ],
-      "TODO:orderAndPunctuation": ["$a", "$b", "/ $c", ". $p", ", $n"],
       "$a": {"property": "mainTitle", "punctuationChars": "=:/."},
       "$b": {"property": "titleRemainder", "punctuationChars": "/"},
       "$n": {"aboutNew": "_:titlePart", "property": "partNumber", "punctuationChars": ","},
@@ -2473,6 +2472,7 @@
       "include": ["identifier"],
       "resourceType": "ISBN",
       "$c": {"property": "acquisitionTerms"},
+      "subfieldOrder": "a q c z",
       "_spec": [
         {
           "source": {
@@ -3190,6 +3190,7 @@
       "embedded": true,
       "resourceType": "Title",
       "i2": {"TODO:titleSortKey": "bf2 implements this as: ($label,@ind2+1,(string-length($label)-@ind2)-1)", "marcDefault": "0"},
+      "subfieldOrder": "a b c p n ... h",
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
         "NOTE": "punctuation may include data about included parts (e.g. short stories)"
@@ -4357,6 +4358,7 @@
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
+      "subfieldOrder": "i ... t e",
       "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
       "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "_spec": [
@@ -4384,9 +4386,9 @@
         {
           "source": {
             "700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"i": "Parafraserar"},
               {"a": "Jansson, Tove"},
               {"t": "Anteckningar från en ö"},
-              {"i": "Parafraserar"},
               {"e": "Skapad av"}
           ]}},
           "result": {"mainEntity": {
@@ -4488,9 +4490,9 @@
         {
           "source": {
             "700": {"ind1": "1", "ind2": "2", "subfields": [
+              {"i": "Parafraserar"},
               {"a": "Jansson, Tove"},
-              {"t": "Anteckningar från en ö"},
-              {"i": "Parafraserar"}
+              {"t": "Anteckningar från en ö"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
