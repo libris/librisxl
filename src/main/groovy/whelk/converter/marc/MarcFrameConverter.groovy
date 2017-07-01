@@ -2288,6 +2288,17 @@ class MatchRule {
             tag += "[${when}]"
         }
         handler = new MarcFieldHandler(parent.ruleSet, tag, dfn)
+        // Fixate matched indicator values in nested match rules
+        handler.matchRules.each {
+            if (ind1) {
+                if (it.ind1) assert ind1 == it.ind1
+                it.ind1 = ind1
+            }
+            if (ind2) {
+                if (it.ind2) assert ind2 == it.ind2
+                it.ind2 = ind2
+            }
+        }
     }
 
     private Pattern whenPattern = ~/(?:(?:\$(\w+)|i(1|2)|(\S+))(?:\s*(=~?)\s*(\S+))?)(?:\s*(\&|\|)\s*)?/
