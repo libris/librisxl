@@ -68,16 +68,16 @@
     </xsl:template>
     
     <!-- 150209 KP, filter some fields (match with no output) -->
-    <xsl:template match="marc:datafield[(@tag='082' or @tag='084') and contains(./marc:subfield[@code='2'], 'machine generated')]">
+    <xsl:template match="marc:datafield[(@tag='082' or @tag='084') and contains(./marc:subfield[@code='2'], 'machine generated') and not(parent::marc:record[@type = 'Holdings'])]">
     </xsl:template>
 
-    <xsl:template match="marc:datafield[starts-with(@tag, '9')]">
+    <xsl:template match="marc:datafield[starts-with(@tag, '9') and not(parent::marc:record[@type = 'Holdings'])]">
     </xsl:template>
 
-    <xsl:template match="marc:datafield[count(./marc:subfield[@code='5']) &gt; 0]">
+    <xsl:template match="marc:datafield[count(./marc:subfield[@code='5']) &gt; 0 and not(parent::marc:record[@type = 'Holdings'])]">
     </xsl:template>
 
-    <xsl:template match="marc:subfield[@code='0']">
+    <xsl:template match="marc:subfield[@code='0' and not(parent::marc:record[@type = 'Holdings'])]">
 	<xsl:variable name="p" select="../@tag"/>
 	<xsl:if test="not($p = '100' or $p ='110' or $p ='111' or $p ='130' or $p ='600' or $p ='610' or $p ='611' or $p ='630' or $p ='648' or $p ='650' or $p ='651' or $p ='653' or $p ='654' or $p ='655' or $p ='700' or $p ='710' or $p ='711' or $p ='720' or $p ='730')">
 		<xsl:copy-of select="."/>

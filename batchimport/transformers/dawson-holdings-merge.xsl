@@ -18,15 +18,27 @@
                 <xsl:apply-templates select="old_record/marc:record[@type='Holdings']/marc:datafield[@tag > '852' and @tag &lt; '856']"/>
                 <xsl:apply-templates select="old_record/marc:record[@type='Holdings']/marc:datafield[@tag = '856' and count(marc:subfield[@code='z' and normalize-space(.) = 'Dawsonera']) = 0]"/>
                 <xsl:apply-templates select="new_record/marc:record[@type='Holdings']/marc:datafield[@tag = '856']"/>
-                <xsl:apply-templates select="old_record/marc:record[@type='Holdings']/marc:datafield[@tag > '856']"/>
-                <xsl:if test="count(old_record/marc:record[@type='Holdings']/marc:datafield[@tag = '948']) = 0">
+                <xsl:apply-templates select="old_record/marc:record[@type='Holdings']/marc:datafield[@tag > '856' and @tag != '948']"/>
+                <!--<xsl:if test="(count(old_record/marc:record[@type='Holdings']/marc:datafield[@tag = '948']) = 0) or (new_record/marc:record[@type='Holdings']/marc:datafield[@tag = '948'] and new_record/marc:record[@type='Holdings']/marc:datafield[@tag = '948'] != old_record/marc:record[@type='Holdings']/marc:datafield[@tag = '948'])">
                     <xsl:apply-templates select="new_record/marc:record[@type='Holdings']/marc:datafield[@tag = '948']"/>
-                </xsl:if>
+                </xsl:if> -->
+                <xsl:apply-templates select="old_record/marc:record[@type='Holdings']/marc:datafield[@tag = '948']"/>
+                <xsl:apply-templates select="new_record/marc:record[@type='Holdings']/marc:datafield[@tag = '948']"/>
                 <xsl:if test="count(old_record/marc:record[@type='Holdings']/marc:datafield[@tag = '951']) = 0">
                     <xsl:apply-templates select="new_record/marc:record[@type='Holdings']/marc:datafield[@tag = '951']"/>
                 </xsl:if>
             </record>
         </collection>
+    </xsl:template>
+    <xsl:template match="old_record/marc:record[@type='Holdings']/marc:datafield[@tag='948']">
+		<xsl:if test="count(/merge/new_record/marc:record[@type='Holdings']/marc:datafield[@tag = '948']) = 0 or . = /merge/new_record/marc:record[@type='Holdings']/marc:datafield[@tag = '948']">
+			<xsl:copy-of select="."/>
+		</xsl:if>
+    </xsl:template>
+    <xsl:template match="new_record/marc:record[@type='Holdings']/marc:datafield[@tag='948']">
+		<xsl:if test="count(/merge/old_record/marc:record[@type='Holdings']/marc:datafield[@tag = '948']) = 0 or . != /merge/old_record/marc:record[@type='Holdings']/marc:datafield[@tag = '948']">
+			<xsl:copy-of select="."/>
+		</xsl:if>
     </xsl:template>
     <xsl:template match="new_record/marc:record[@type='Holdings']/marc:datafield[@tag='852']" mode="checkdouble">
         <xsl:variable name="old852b" select="normalize-space(marc:subfield[@code='b'])"/>

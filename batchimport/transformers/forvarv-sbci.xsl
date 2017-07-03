@@ -21,7 +21,7 @@
 
     <!-- KP: special leader treatment -->
     <xsl:template match="marc:leader">
-	<leader xmlns="http://www.loc.gov/MARC21/slim"><xsl:value-of select="substring(.,1,9)"/>a<xsl:value-of select="substring(.,11,7)"/>7<xsl:value-of select="substring(.,19,5)"/>0</leader>
+	<leader xmlns="http://www.loc.gov/MARC21/slim"><xsl:value-of select="substring(.,1,9)"/>a<xsl:value-of select="substring(.,11,7)"/>5<xsl:value-of select="substring(.,19,5)"/>0</leader>
     </xsl:template>
 
     <!-- KP: remove non 245 records -->
