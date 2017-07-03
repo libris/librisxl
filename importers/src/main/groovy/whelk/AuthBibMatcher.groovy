@@ -42,19 +42,11 @@ class AuthBibMatcher {
         }
     }
 
-    static boolean hasValidAuthRecords(List authRecords) {
-        return (authRecords != null && authRecords.any {
-            authRecord -> authRecord != null && !ignoredAuthFields.contains(authRecord.field)
-        })
-    }
-
-    static List matchAuthToBib(Map doc, List allAuthRecords, boolean generateStats = false) {
+    static List matchAuthToBib(Map doc, List authRecords, boolean generateStats = false) {
         List statsResults = []
-        if (doc != null && hasValidAuthRecords(allAuthRecords)) {
-            List authRecords = allAuthRecords.findAll { it -> !ignoredAuthFields.contains(it.field) }
-
+        if (doc != null) {
             //Prepare authRecords groups
-            def groupedAuthRecords = prepareAuthRecords(authRecords)
+            def groupedAuthRecords = prepareAuthRecords(authRecords.findAll{it})
             def groupedBibFields = prepareBibRecords(doc, fieldRules)
 
             groupedAuthRecords.each { specGroup ->
@@ -141,6 +133,7 @@ class AuthBibMatcher {
 
         authRecords.each { Map authRecord ->
             authRecord = composeAuthData(authRecord)
+            assert authRecord?.field
             if (!ignoredAuthFields.contains(authRecord.field) &&
                     fieldRules[authRecord.field] != null &&
                     fieldRules[authRecord.field].subFieldsToIgnore != null) {
@@ -228,8 +221,6 @@ class AuthBibMatcher {
         for (Map bibField in map.data.fields) {
             String key = bibField.keySet()[0]
             if (key.startsWith('1')) {
-                if(key == '148')
-                    log.info "148 funnen"
                 map.field = key
                 map.subfields = bibField[key].subfields
                 if (fieldRules.containsKey(key) && fieldRules[key].authFieldsToAdd != null) {

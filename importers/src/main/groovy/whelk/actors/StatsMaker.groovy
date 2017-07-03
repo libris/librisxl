@@ -1,8 +1,6 @@
 package whelk.actors
-import whelk.SetSpecMatcher
-import whelk.converter.marc.MarcFrameConverter
 import whelk.AuthBibMatcher
-import whelk.VCopyDataRow
+import whelk.util.VCopyToWhelkConverter
 import whelk.importer.MySQLLoader
 import whelk.util.ThreadPool
 
@@ -34,7 +32,6 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                      ignoredAuthRecords : 0,
                      MissingBibFields: 0]
 
-    def lacksValidAuthRecords = 0
     def docIsNull = 0
 
     StatsMaker() {
@@ -61,15 +58,8 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                 if (doc == null)
                     docIsNull++
 
-                if (!AuthBibMatcher.hasValidAuthRecords(allAuthRecords))
-                    lacksValidAuthRecords++
-
-                if (doc != null && AuthBibMatcher.hasValidAuthRecords(allAuthRecords)) {
+                if (doc != null) {
                     List<Map> matchResults = AuthBibMatcher.matchAuthToBib(doc, allAuthRecords, true)
-
-                    List authRecords = allAuthRecords.findAll {
-                        !AuthBibMatcher.ignoredAuthFields.contains(it.field)
-                    }
 
                     def uncertainMatches = matchResults.findAll { Map match ->
                         ((match.hasOnlyDiff || match.hasOnlyReverseDiff || match.hasDoubleDiff)
@@ -102,7 +92,6 @@ class StatsMaker implements MySQLLoader.LoadHandler {
 
                     resultMap.specAndDoc++
                     resultMap.allAuth = allAuthRecords.size()
-                    resultMap.ignoredAuthRecords = allAuthRecords.size() - authRecords.size()
                     resultMap.MissingBibFields = missingBibFields
 
                     printDiffResultsToFile(uncertainMatches, completeMatches)
