@@ -116,8 +116,8 @@ class MySQLLoader {
             if (recordCount % 1000 == 1) {
                 def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
                 if (elapsedSecs > 0) {
-                    def docsPerSec = recordCount / elapsedSecs
-                    def message = "Working. Currently ${rowCount} rows recieved and ${recordCount} records sent. Crunching ${docsPerSec} records / s."
+                    Double docsPerSec = recordCount / elapsedSecs
+                    def message = "Working. Currently ${rowCount} rows recieved and ${recordCount} records sent. Crunching ${docsPerSec.round(1)} records / s."
                     log.info message
                 }
             }
