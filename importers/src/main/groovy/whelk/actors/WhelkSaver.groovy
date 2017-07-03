@@ -68,35 +68,7 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
                                 importResult.numberOfDocumentsDeleted++
                             }
                         } else {
-
-                            // At this point doc.id will have been generated based on the incoming Voyager ID. This
-                            // ensures that it correctly matches the ID of the stored XL post that is now to be updated
-                            // _IF_ the post was first created in Voyager.
-                            //
-                            // If the post was however first created in XL, then the stored XL post that is now to be
-                            // updated will have a timestamp-based ID, not related to the Voyager ID (which would only
-                            // have been added to the post later).
-                            // This means that doc.id and the XL id that we now want to update do _not_ match.
-                            // Therefore we must search for existing XL posts based on the voyager-id based thing sameAs
-                            // and, if any are found, replace doc.id.
-
-                            String voyagerBasedThingSameAs = "http://libris.kb.se/resource/" + record.collection + "/" + record.controlNumber
-                            String duplicateWithId = whelk.storage.getSystemIdByThingId(voyagerBasedThingSameAs)
-                            if (duplicateWithId != null) {
-                                log.debug("Incoming document is actually a duplicate of " + duplicateWithId + ". Replacing ID before saving.")
-                                doc.setId(duplicateWithId)
-                            }
-
-                            log.trace "Storing record "
-                            if (duplicateWithId == null)
-                                whelk.store(doc, sourceSystem, null, record.collection as String, false, false)
-                            else
-                                whelk.storeAtomicUpdate(duplicateWithId, false, sourceSystem, null,
-                                        record.collection, false, {
-                                    Document _doc ->
-                                        // Replace stored data with the incoming data.
-                                        _doc.data = doc.data
-                                })
+                            whelk.store(doc, sourceSystem, null, record.collection as String, false, true)
                         }
                         importResult.numberOfDocuments++
 
