@@ -1,2 +1,20 @@
 # temporary entry, for testing purposes.
-* * * * * ./scripts/temp.sh >/dev/null 2>&1
+#* * * * * ./scripts/temp.sh >/dev/null 2>&1
+
+#59 23 * * * ./scripts/oai_harvest.sh DATE=today > /log/oai_harvest.log 2>&1
+#00 02,06,10,14,18,19,22 * * * ./scripts/getfiles.sh /appl/import2/etc/getfiles.txt > /log/getfiles.log 2>&1
+#* 08-18 * * 01,02,04,05,06 ./scripts/batchimport.sh >> /log/import.`date +\%Y\%m\%d`.log 2>&1
+#* 09-18 * * 03 ./scripts/batchimport.sh >> /log/import.`date +\%Y\%m\%d`.log 2>&1
+#50 23 * * * ./scripts/getdivafiles.sh >> /log/divaimport.`date +\%Y\%m\%d`.log 2>&1
+#00 07,08,12,18,19,21,22,23 * * * /scripts/getfiles.sh >>/scripts/getfiles.`date +\%Y\%m\%d`.log 2>&1 # redo to 0
+#30 08,09,10,11,12,13,14,15,16,17,18,19 * * * /usr/local/scripts/tpb_special_external.sh >> /log/import_external_tpb.`date +\%Y\%m\%d`.log 2>&1
+#40 12 * * 06 ./scripts/get_ur.sh > /log/get_ur.log 2>&1
+#0 17 * * 01-05 ./scripts/get_publit.sh > /log/get_publit.log 2>&1
+#00 15 * * 01-05 ./scripts/elib_total.pl > /log/elib_total.log 2>&1
+#50 6 * * 01-05 ./scripts/batchimport_load_resume.sh elib elibxml >/log/elib_resume.log 2>&1
+#20 6 * * 01-05 ./scripts/batchimport_load_resume.sh linkserv xml >/log/linkserv_resume.log 2>&1
+
+# Dubious
+#00 08,10,12,14,16,18,19,20,22 * * * /usr/local/scripts/import_external_files.sh >> /log/import_external.`date +\%Y\%m\%d`.log 2>&1
+#00 05 * * 01-06 /usr/local/scripts/create_auth_dump.sh > /log/authdump.log.`date +\%Y\%m\%d_\%H\%M`.log 2>&1
+#50 12 * * 06 /appl/import2/queues/ur/omstart.sh > /appl/import2/queues/ur/ur-om.log 2>&1
