@@ -198,15 +198,7 @@ class Crud extends HttpServlet {
         }
 
         try {
-            def path = request.getRequestURI()
-
-            // Tomcat incorrectly strips away double slashes from the pathinfo.
-            // Compensate here.
-            if (path ==~ "/http:/[^/].+") {
-                path = path.replace("http:/", "http://")
-            } else if (path ==~ "/https:/[^/].+") {
-                path = path.replace("https:/", "https://")
-            }
+            def path = getRequestPath(request)
 
             handleGetRequest(request, response, path)
         } catch (UnsupportedContentTypeException ucte) {
@@ -335,6 +327,23 @@ class Crud extends HttpServlet {
         } else {
             return null
         }
+    }
+
+    /**
+     * Return request URI
+     *
+     */
+    private String getRequestPath(HttpServletRequest request) {
+        String path = request.getRequestURI()
+        // Tomcat incorrectly strips away double slashes from the pathinfo.
+        // Compensate here.
+        if (path ==~ "/http:/[^/].+") {
+            path = path.replace("http:/", "http://")
+        } else if (path ==~ "/https:/[^/].+") {
+            path = path.replace("https:/", "https://")
+        }
+
+        return path
     }
 
     /**
@@ -777,7 +786,7 @@ class Crud extends HttpServlet {
         }
 
         String documentId = JsonLd.findIdentifier(requestBody)
-        String idFromUrl = request.pathInfo.substring(1)
+        String idFromUrl = getRequestPath(request).substring(1)
 
         if (!documentId) {
             log.debug("Missing document ID in PUT request.")
@@ -1085,7 +1094,7 @@ class Crud extends HttpServlet {
             return
         }
         try {
-            String id = request.pathInfo.substring(1)
+            String id = getRequestPath(request).substring(1)
             Tuple2<Document, String> docAndLocation = getDocumentFromStorage(id)
             Document doc = docAndLocation.first
             String loc = docAndLocation.second
