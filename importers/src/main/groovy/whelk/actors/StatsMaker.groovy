@@ -76,7 +76,6 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                         log.debug "miss! Diff: ${diff.inspect()}"
                     }
 
-
                     def completeMatches = matchResults.findAll { it.isMatch }
 
                     def misMatchesOnA = matchResults.findAll { it.hasMisMatchOnA }

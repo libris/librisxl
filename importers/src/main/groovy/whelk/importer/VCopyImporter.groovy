@@ -35,7 +35,6 @@ class VCopyImporter {
         List<Object> queryParameters = [0, dateString, dateString]
         MySQLLoader.run(whelkSaver, sqlQuery, queryParameters, collection, connectionUrl)
 
-
         ImportResult result = whelkSaver.importResult
         log.debug new JsonBuilder(result).toPrettyString()
         return result

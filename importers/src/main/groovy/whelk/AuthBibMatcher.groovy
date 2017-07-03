@@ -57,7 +57,6 @@ class AuthBibMatcher {
                             statsResults.addAll(doMatch(spec, bibFieldGroup.value, fieldRules, doc, true))
                         else
                             doMatch(spec, bibFieldGroup.value, fieldRules, doc)
-
                     }
                 }
             }
@@ -310,4 +309,3 @@ class AuthBibMatcher {
     }
 
 }
-
