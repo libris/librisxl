@@ -1118,8 +1118,7 @@ class Crud extends HttpServlet {
                         "Document has been deleted.")
             } else {
                 log.debug("Removing resource at ${doc.getShortId()}")
-                // FIXME don't hardcode collection
-                whelk.remove(doc.getShortId(), "xl", null, "xl")
+                whelk.remove(doc.getShortId(), "xl", null, LegacyIntegrationTools.determineLegacyCollection(doc, jsonld))
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
         } catch (ModelValidationException mve) {
