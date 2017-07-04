@@ -100,17 +100,7 @@ public class ApiTest
         String records = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=jsonld&set=hold:S");
         String expandedRecords = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=jsonld_expanded&set=hold:S");
 
-        final String inExpandedOnly[] = {
-                "Sveriges ledande magasin om kultur och samhälle",
-                "Anteckningar från en ö",
-                "Stålmannens jätte-tidning"
-        };
-
-        for (String s : inExpandedOnly)
-        {
-            Assert.assertTrue( ! records.contains(s) );
-            Assert.assertTrue( expandedRecords.contains(s) );
-        }
+        Assert.assertTrue(expandedRecords.length() > (records.length() + "_expanded".length()));
     }
 
     /* Temporarily disabled due to XML schema BS.
