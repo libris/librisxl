@@ -77,7 +77,7 @@ fi
 
 # Recreate es index with definitions-based ES config
 JAR=build/libs/vcopyImporter.jar
-if [ "$FORCE_REBUILD" = true ] || [ ! -f $JAR ]; then
+if [ "$FORCE_REBUILD" = true ] || [ ! -f importers/$JAR ]; then
     pushd importers
     gradle jar
     java -jar $JAR generateEsConfig ../librisxl-tools/elasticsearch/libris_config.json ../../definitions/source/vocab/display.jsonld ../../definitions/build/vocab.jsonld generated_es_config.json
