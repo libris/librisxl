@@ -168,7 +168,7 @@ class PostgreSQLComponent {
 
         DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
-                "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ? AND graphIndex = 0"
+                "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
         GET_DEPENDERS = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ?"
         GET_DEPENDENCIES = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ?"
