@@ -3,7 +3,6 @@ package whelk.importer
 import groovy.sql.Sql
 import groovy.util.logging.Log4j2 as Log
 import whelk.util.VCopyToWhelkConverter
-import java.text.Normalizer
 import java.sql.ResultSet
 import java.sql.Statement
 
