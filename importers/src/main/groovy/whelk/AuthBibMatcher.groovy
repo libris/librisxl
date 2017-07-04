@@ -296,16 +296,4 @@ class AuthBibMatcher {
         }
 
     }
-
-    static String getSubfieldValue(Map p, String s) {
-
-        for (subfield in p.subfields) {
-            String key = subfield.keySet()[0]
-            if (key == s) {
-                return subfield[key]
-            }
-        }
-        return ""
-    }
-
 }
