@@ -53,7 +53,8 @@ class StatsMaker implements MySQLLoader.LoadHandler {
             batch.each { rows ->
 
                 VCopyToWhelkConverter.VCopyDataRow row = rows.last()
-                def allAuthRecords = VCopyToWhelkConverter.getAuthDocsFromRows(rows)
+                List<Map> allAuthRecords = VCopyToWhelkConverter.getAuthDocsFromRows(rows)
+                resultMap.allAuth = allAuthRecords.size()
                 Map doc = VCopyToWhelkConverter.getMarcDocMap(row.data)
                 if (doc == null)
                     docIsNull++
@@ -66,38 +67,37 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                                 && !match.hasMisMatchOnA && !match.isMatch)
                     }
 
-                    matchResults.findAll { Map match ->
-                        !match.hasOnlyDiff &&
-                                !match.hasOnlyReverseDiff &&
-                                !match.hasDoubleDiff &&
-                                !match.hasMisMatchOnA &&
-                                !match.isMatch
-                    }.each { diff ->
-                        log.debug "miss! Diff: ${diff.inspect()}"
-                    }
-
                     def completeMatches = matchResults.findAll { it.isMatch }
-
-                    def misMatchesOnA = matchResults.findAll { it.hasMisMatchOnA }
-
-
-                    resultMap.possibleMatches += matchResults.count { it }
-
                     resultMap.matches += completeMatches.size()
-                    resultMap.MisMatchesOnA += misMatchesOnA.size()
-                    resultMap.bibInAukt += uncertainMatches.count { it.hasOnlyDiff }
-                    resultMap.auktInBib += uncertainMatches.count { it.hasOnlyReverseDiff }
-                    resultMap.doubleDiff += uncertainMatches.count { it.hasDoubleDiff }
 
-                    resultMap.specAndDoc++
-                    resultMap.allAuth = allAuthRecords.size()
-                    resultMap.MissingBibFields = missingBibFields
-
+                    populateResults(matchResults,uncertainMatches)
                     printDiffResultsToFile(uncertainMatches, completeMatches)
 
                 }
             }
         })
+    }
+
+    void populateResults(matchResults, uncertainMatches){
+        matchResults.findAll { Map match ->
+            !match.hasOnlyDiff &&
+                    !match.hasOnlyReverseDiff &&
+                    !match.hasDoubleDiff &&
+                    !match.hasMisMatchOnA &&
+                    !match.isMatch
+        }.each { diff ->
+            log.debug "miss! Diff: ${diff.inspect()}"
+        }
+
+        def misMatchesOnA = matchResults.findAll { it.hasMisMatchOnA }
+
+        resultMap.possibleMatches += matchResults.count { it }
+        resultMap.MisMatchesOnA += misMatchesOnA.size()
+        resultMap.bibInAukt += uncertainMatches.count { it.hasOnlyDiff }
+        resultMap.auktInBib += uncertainMatches.count { it.hasOnlyReverseDiff }
+        resultMap.doubleDiff += uncertainMatches.count { it.hasDoubleDiff }
+        resultMap.specAndDoc++
+        resultMap.MissingBibFields = missingBibFields
     }
 
     synchronized void printDiffResultsToFile(uncertainMatches, completeMatches) {
