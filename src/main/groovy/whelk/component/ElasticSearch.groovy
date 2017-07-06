@@ -32,8 +32,6 @@ class ElasticSearch {
     private List<HttpHost> elasticHosts
     private String elasticCluster
 
-    boolean haltOnFailure = false
-
     JsonLdLinkExpander expander
 
     private static final ObjectMapper mapper = new ObjectMapper()
@@ -110,15 +108,21 @@ class ElasticSearch {
     }
 
     void index(Document doc, String collection, Whelk whelk) {
-        Map shapedData = getShapeForIndex(doc, whelk)
-        def body = new NStringEntity(JsonOutput.toJson(shapedData), ContentType.APPLICATION_JSON)
-        def response = performRequest('PUT',
-                "/${indexName}/${collection}" +
-                "/${toElasticId(doc.getShortId())}?pipeline=libris",
-                body)
-        def eString = EntityUtils.toString(response.getEntity())
-        Map responseMap = mapper.readValue(eString, Map)
-        log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
+        // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
+        // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
+        try {
+            Map shapedData = getShapeForIndex(doc, whelk)
+            def body = new NStringEntity(JsonOutput.toJson(shapedData), ContentType.APPLICATION_JSON)
+            def response = performRequest('PUT',
+                    "/${indexName}/${collection}" +
+                            "/${toElasticId(doc.getShortId())}?pipeline=libris",
+                    body)
+            def eString = EntityUtils.toString(response.getEntity())
+            Map responseMap = mapper.readValue(eString, Map)
+            log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
+        } catch (Exception e) {
+            log.error("Failed to index ${doc.getShortId()} in elastic.", e)
+        }
     }
 
     void remove(String identifier) {
