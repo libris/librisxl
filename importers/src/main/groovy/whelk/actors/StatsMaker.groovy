@@ -68,6 +68,7 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                     }
 
                     def completeMatches = matchResults.findAll { it.isMatch }
+                    //TODO: handle writes to resultmap in threaded environment.
                     resultMap.matches += completeMatches.size()
 
                     populateResults(matchResults,uncertainMatches)
@@ -78,7 +79,7 @@ class StatsMaker implements MySQLLoader.LoadHandler {
         })
     }
 
-    void populateResults(matchResults, uncertainMatches){
+    synchronized void populateResults(matchResults, uncertainMatches){
         matchResults.findAll { Map match ->
             !match.hasOnlyDiff &&
                     !match.hasOnlyReverseDiff &&
