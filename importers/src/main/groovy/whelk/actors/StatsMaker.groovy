@@ -107,16 +107,17 @@ class StatsMaker implements MySQLLoader.LoadHandler {
     }
 
     String header = "MatchType" +
-            "\tAuthNotInBib" +
+            "\tMatchPattern" +
+            //"\tAuthNotInBib" +
             "\tAuktfält" +
             "\tBibfält" +
             "\tÖverensstämmandeDelfält" +
             "\tSubfieldsInDiff" +
             "\tSubfieldsInReverseDiff" +
-            "\tReverseDiffCount" +
-            "\tOverlapCount" +
-            "\tAntalBibdelfält" +
-            "\tAntalAuktdelfält" +
+            //"\tReverseDiffCount" +
+            //"\tOverlapCount" +
+            //"\tAntalBibdelfält" +
+            //"\tAntalAuktdelfält" +
             "\tHasPartialD" +
             "\tbibdelfält" +
             "\tauktdelfält" +
@@ -128,18 +129,19 @@ class StatsMaker implements MySQLLoader.LoadHandler {
             "\n"
 
     synchronized void appendtofile(BufferedWriter fileWriter, matches) {
-        matches.each { match ->
+        matches.each { Map match ->
             fileWriter.write("${match.type}" +
-                    "\t${match.diff.count { it }}" +
+                    "\t${getMatchPattern(match)}" +
+                    //"\t${match.diff.count { it }}" +
                     "\t${match.spec.field}" +
                     "\t${match.bibField}" +
                     "\t${match.subfieldsInOverlap}" +
                     "\t${match.subfieldsInDiff}" +
                     "\t${match.subfieldsInReversediff}" +
-                    "\t${match.reverseDiff.count { it }}" +
-                    "\t${match.overlap.count { it }}" +
-                    "\t${match.numBibFields}" +
-                    "\t${match.numAuthFields}" +
+                    //"\t${match.reverseDiff.count { it }}" +
+                    //"\t${match.overlap.count { it }}" +
+                    //"\t${match.numBibFields}" +
+                    //"\t${match.numAuthFields}" +
                     "\t${match.partialD}" +
                     "\t${match.bibSet} " +
                     "\t${match.authSet} " +
@@ -152,5 +154,14 @@ class StatsMaker implements MySQLLoader.LoadHandler {
 
         }
     }
+
+    static String getMatchPattern(match){
+        def formatPropery = { String s -> s ? s : '_' }
+        def r = formatPropery(match.subfieldsInDiff) + '-' + formatPropery(match.subfieldsInOverlap) + '-' + formatPropery(match.subfieldsInReversediff)
+        return r
+
+    }
+
+
 }
 
