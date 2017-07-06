@@ -791,6 +791,9 @@ class CrudSpec extends Specification {
         storage.store(_, _) >> {
             return null
         }
+        storage.getDependers(_) >> {
+            []
+        }
         when:
         crud.doPost(request, response)
         then:
@@ -2664,6 +2667,9 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
           return true
         }
+        storage.getDependers(_) >> {
+            []
+        }
         when:
         crud.doDelete(request, response)
         then:
@@ -2932,6 +2938,9 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
             return true
         }
+        storage.getDependers(_) >> {
+            []
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -2979,6 +2988,9 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
             return true
         }
+        storage.getDependers(_) >> {
+            []
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -3022,6 +3034,9 @@ class CrudSpec extends Specification {
         }
         storage.remove(_, _) >> {
             return true
+        }
+        storage.getDependers(_) >> {
+            []
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -3166,6 +3181,9 @@ class CrudSpec extends Specification {
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
         }
+        storage.getDependers(_) >> {
+            []
+        }
         when:
         crud.doDelete(request, response)
         then:
@@ -3247,6 +3265,9 @@ class CrudSpec extends Specification {
         }
         storage.remove(_, _) >> {
             return true
+        }
+        storage.getDependers(_) >> {
+            []
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
