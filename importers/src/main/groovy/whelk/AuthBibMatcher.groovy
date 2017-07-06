@@ -17,7 +17,7 @@ class AuthBibMatcher {
             '100': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['100', '600', '700', '800']],
             '110': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
-                    subFieldsToMatch:  ['a','b'],
+                    subFieldsToMatch : ['a', 'b'],
                     bibFields        : ['110', '610', '710']],
             '111': [subFieldsToIgnore: [bib: ['0', '4'], auth: ['6']],
                     bibFields        : ['111', '611', '711']],
@@ -36,10 +36,10 @@ class AuthBibMatcher {
     ]
 
     static List matchCombinationsToIgnore = [
-           [authField:'150', pattern:['2','a','2']],
-           [authField:'155', pattern:['2','a','2']],
-           [authField:'155', pattern:['2','a','']],
-           [authField:'155', pattern:['','a','2']],
+            [authField: '150', pattern: ['2', 'a', '2']],
+            [authField: '155', pattern: ['2', 'a', '2']],
+            [authField: '155', pattern: ['2', 'a', '']],
+            [authField: '155', pattern: ['', 'a', '2']],
 
     ]
 
@@ -47,7 +47,7 @@ class AuthBibMatcher {
      * Filters the fieldrules for the field names that we will match
      * @return
      */
-     static ArrayList getAuthLinkableFields() {
+    static ArrayList getAuthLinkableFields() {
         fieldRules.collectMany { rule ->
             rule.getValue().bibFields.collect { s ->
                 [authfield: rule.getKey(), bibField: s]
@@ -66,11 +66,15 @@ class AuthBibMatcher {
         List statsResults = []
         if (bibRecord != null) {
             //Prepare authRecords groups
-            def groupedAuthRecords = prepareAuthRecords(authRecords.findAll{it})
+            def groupedAuthRecords = prepareAuthRecords(authRecords.findAll {
+                it
+            })
             def groupedBibFields = prepareBibRecords(bibRecord, fieldRules)
 
             groupedAuthRecords.each { authRecordGroup ->
-                def bibFieldGroup = groupedBibFields.find { it.key == authRecordGroup.key }
+                def bibFieldGroup = groupedBibFields.find {
+                    it.key == authRecordGroup.key
+                }
                 if (bibFieldGroup?.value) {
                     authRecordGroup.value.each { authRecord ->
                         statsResults.addAll(doMatch(authRecord, bibFieldGroup.value, fieldRules, bibRecord))
@@ -94,20 +98,20 @@ class AuthBibMatcher {
 
                 addMatchResult(sets)
 
-                handleMultipleLinkedFields(sets,bibRecord, authRecord, bibField)
+                handleMultipleLinkedFields(sets, bibRecord, authRecord, bibField)
 
-                statsResults.add(composeStatsResult(sets,authRecord,bibRecord,bibField))
+                statsResults.add(composeStatsResult(sets, authRecord, bibRecord, bibField))
             }
         }
         return statsResults
     }
 
-    static void handleMultipleLinkedFields(sets, bibRecord, authRecord, bibField){
+    static void handleMultipleLinkedFields(sets, bibRecord, authRecord, bibField) {
         if (sets.isMatch) {
             def bibFieldKey = bibField.keySet()[0]
             Map matchedField = bibRecord.fields.find { it -> it == bibField } as Map
-            if (hasSubfield(matchedField,'0')) {
-                def linkedAuthIds = getSubfields(matchedField,'0').collect { Map it -> it[it.keySet()[0]] }
+            if (hasSubfield(matchedField, '0')) {
+                def linkedAuthIds = getSubfields(matchedField, '0').collect { Map it -> it[it.keySet()[0]] }
                 if (!linkedAuthIds.contains(authRecord.id)) {
                     linkedAuthIds.add(authRecord.id)
                     log.info "Likely multiple authority Links for bib record\t${authRecord.bibid}\t${linkedAuthIds}\t${bibFieldKey}"
@@ -117,9 +121,9 @@ class AuthBibMatcher {
         }
     }
 
-   static def collectSets(List<Map> bibSubFields, Map authRecord){
+    static def collectSets(List<Map> bibSubFields, Map authRecord) {
         def authSet = authRecord.normalizedSubfields.toSet()
-        def bibSet= bibSubFields.toSet()
+        def bibSet = bibSubFields.toSet()
         return [
                 authSet    : authSet,
                 bibSet     : bibSet,
@@ -129,14 +133,12 @@ class AuthBibMatcher {
         ]
     }
 
-    static void addMatchResult(Map sets){
+    static void addMatchResult(Map sets) {
         boolean isMatch = (sets.diff.count { it } == 0 &&
                 sets.reverseDiff.count { it } == 0 &&
-                sets.overlap.count {it} == sets.bibSet.count { it })
+                sets.overlap.count { it } == sets.bibSet.count { it })
         sets['isMatch'] = isMatch
     }
-
-
 
     /**
      * Prepares bibRecords for matching. Groups, sorts, and normalizes
@@ -181,11 +183,12 @@ class AuthBibMatcher {
             }
         }
 
-        return authRecords.groupBy { it.field }
+        return authRecords
+                .groupBy { it.field }
                 .toSorted {
-            -(it.hasProperty('normalizedSubfields') ?
-                    it.normalizedSubfields.count { it } : 0)
-        }
+                    -(it.hasProperty('normalizedSubfields') ?
+                                    it.normalizedSubfields.count { it } : 0)
+                }
     }
 
     static Map composeStatsResult(sets, setSpec, doc, bibField) {
@@ -194,7 +197,6 @@ class AuthBibMatcher {
             boolean hasOnlyDiff = sets.diff.count { it } > 0 && sets.reverseDiff.count { it } == 0
             boolean hasOnlyReverseDiff = sets.diff.count { it } == 0 && sets.reverseDiff.count { it } > 0
             boolean hasDoubleDiff = sets.diff.count { it } > 0 && sets.reverseDiff.count { it } > 0
-
             boolean partialMatchOnSubfieldD = getPartialMatchOnSubfieldD(sets.diff, sets.reverseDiff, setSpec.field)
 
             def result = [
@@ -244,8 +246,12 @@ class AuthBibMatcher {
     static boolean getPartialMatchOnSubfieldD(Set diff, Set reverseDiff, specField) {
         boolean partialD = false
         try {
-            String bibD = reverseDiff.find { it.d != null && it?.d.length() > 3 }?.d
-            String authorityD = diff.find { it.d != null && it?.d.length() > 3 }?.d
+            String bibD = reverseDiff.find {
+                it.d != null && it?.d.length() > 3
+            }?.d
+            String authorityD = diff.find {
+                it.d != null && it?.d.length() > 3
+            }?.d
             if (specField == '100' && bibD && authorityD) {
                 partialD = (bibD.substring(0, 4) == authorityD.substring(0, 4))
             }
@@ -293,14 +299,15 @@ class AuthBibMatcher {
         def fields = doc.get("fields")
         for (def f : fields) {
             if (f.get(field) != null && f.get(field).subfields.any { it -> it.get('f') })
-                return f.get(field).subfields.findAll { it -> it.get('f') }.collect { it.find().value }
+                return f.get(field).subfields.findAll { it -> it.get('f') }.collect {
+                    it.find().value
+                }
         }
         return null
     }
 
 
     static boolean getHas240a(p) {
-
         try {
             def a = p.fields?.'240'?.subfields?.a
             return a && a.any() && a.first() && a.first().any()
@@ -313,7 +320,7 @@ class AuthBibMatcher {
 
     static String getMatchType(Map map) {
         switch (map) {
-            case {isIgnored(map)}:
+            case { isIgnored(map) }:
                 return "ignored"
             case { it.isMatch }:
                 return "match"
@@ -330,16 +337,23 @@ class AuthBibMatcher {
         }
 
     }
-    static boolean isIgnored(Map map){
+
+    static boolean isIgnored(Map map) {
         matchCombinationsToIgnore.any { Map combo ->
             if (!map.isMatch && combo.authField == map.authField) {
-                String recordCombo = map.subfieldsInDiff + '-' + map.subfieldsInOverlap + '-'+ map.subfieldsInReversediff
-                String comboString = combo.pattern.join('-')
-                boolean result = recordCombo.equals(comboString)
-                return result
+                return (matchPattern(combo.pattern[0], map.subfieldsInDiff) &&
+                        matchPattern(combo.pattern[1], map.subfieldsInOverlap) &&
+                        matchPattern(combo.pattern[2], map.subfieldsInReversediff))
+            } else {
+                return false
             }
-            else return false
         }
+    }
+
+    static boolean matchPattern(String pattern, String target) {
+        def patternChars = pattern[0].split('')
+        def diffChars = target.split('')
+        return patternChars.every { pChar -> diffChars.contains(pChar) }
     }
 
     static def normaliseSubfields(subfields) {
@@ -353,8 +367,7 @@ class AuthBibMatcher {
         field[field.keySet()[0]].subfields.findAll { it -> it.keySet().first() == key }
     }
 
-    static boolean hasSubfield(Map field, String key){
+    static boolean hasSubfield(Map field, String key) {
         return field[field.keySet()[0]].subfields.any { it -> it.keySet().first() == key }
     }
-
 }
