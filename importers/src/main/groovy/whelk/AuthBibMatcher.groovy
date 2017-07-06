@@ -117,8 +117,8 @@ class AuthBibMatcher {
         }
     }
 
-   static def collectSets(List<Map> bibSubFields, Map normalizedAuthSubFields){
-        def authSet = normalizedAuthSubFields.normalizedSubfields.toSet()
+   static def collectSets(List<Map> bibSubFields, Map authRecord){
+        def authSet = authRecord.normalizedSubfields.toSet()
         def bibSet= bibSubFields.toSet()
         return [
                 authSet    : authSet,
