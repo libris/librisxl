@@ -1116,10 +1116,13 @@ class Crud extends HttpServlet {
                         HttpServletResponse.SC_GONE.toString()).inc()
                 response.sendError(HttpServletResponse.SC_GONE,
                         "Document has been deleted.")
+            } else if(!whelk.storage.getDependers(doc.getShortId()).isEmpty()) {
+                failedRequests.labels("DELETE", request.getRequestURI(),
+                        HttpServletResponse.SC_FORBIDDEN.toString()).inc()
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "This record may not be deleted, because it is referenced by other records.")
             } else {
                 log.debug("Removing resource at ${doc.getShortId()}")
-                // FIXME don't hardcode collection
-                whelk.remove(doc.getShortId(), "xl", null, "xl")
+                whelk.remove(doc.getShortId(), "xl", null, LegacyIntegrationTools.determineLegacyCollection(doc, jsonld))
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
         } catch (ModelValidationException mve) {
