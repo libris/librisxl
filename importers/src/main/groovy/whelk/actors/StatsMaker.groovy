@@ -111,16 +111,16 @@ class StatsMaker implements MySQLLoader.LoadHandler {
             //"\tAuthNotInBib" +
             "\tAuktfält" +
             "\tBibfält" +
-            "\tÖverensstämmandeDelfält" +
             "\tSubfieldsInDiff" +
+            "\tÖverensstämmandeDelfält" +
             "\tSubfieldsInReverseDiff" +
             //"\tReverseDiffCount" +
             //"\tOverlapCount" +
             //"\tAntalBibdelfält" +
             //"\tAntalAuktdelfält" +
             "\tHasPartialD" +
-            "\tbibdelfält" +
             "\tauktdelfält" +
+            "\tbibdelfält" +
             "\thas240a" +
             "\tbibId" +
             "\tauktId" +
@@ -135,16 +135,16 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                     //"\t${match.diff.count { it }}" +
                     "\t${match.spec.field}" +
                     "\t${match.bibField}" +
-                    "\t${match.subfieldsInOverlap}" +
-                    "\t${match.subfieldsInDiff}" +
-                    "\t${match.subfieldsInReversediff}" +
+                    "\t${formatSubfieldDiff(match.subfieldsInDiff)}" +
+                    "\t${formatSubfieldDiff(match.subfieldsInOverlap)}" +
+                    "\t${formatSubfieldDiff(match.subfieldsInReversediff)}" +
                     //"\t${match.reverseDiff.count { it }}" +
                     //"\t${match.overlap.count { it }}" +
                     //"\t${match.numBibFields}" +
                     //"\t${match.numAuthFields}" +
                     "\t${match.partialD}" +
-                    "\t${match.bibSet} " +
                     "\t${match.authSet} " +
+                    "\t${match.bibSet} " +
                     "\t${match.bibHas240a}" +
                     "\t${match.bibId} " +
                     "\t${match.authId} " +
@@ -160,6 +160,14 @@ class StatsMaker implements MySQLLoader.LoadHandler {
         def r = formatPropery(match.subfieldsInDiff) + '-' + formatPropery(match.subfieldsInOverlap) + '-' + formatPropery(match.subfieldsInReversediff)
         return r
 
+    }
+
+    static String formatSubfieldDiff(String diff) {
+        if (!diff) {
+            return '_'
+        } else {
+            return diff
+        }
     }
 
 
