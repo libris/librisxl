@@ -104,11 +104,14 @@ class AuthBibMatcher {
 
     static void handleMultipleLinkedFields(sets, bibRecord, authRecord, bibField){
         if (sets.isMatch) {
+            def bibFieldKey = bibField.keySet()[0]
             Map matchedField = bibRecord.fields.find { it -> it == bibField } as Map
             if (hasSubfield(matchedField,'0')) {
                 def linkedAuthIds = getSubfields(matchedField,'0').collect { Map it -> it[it.keySet()[0]] }
-                if (!linkedAuthIds.contains(authRecord.id))
-                    log.info "Probable double authorityLink for bib record ${authRecord.bibid}: ${linkedAuthIds} and ${authRecord.id}"
+                if (!linkedAuthIds.contains(authRecord.id)) {
+                    linkedAuthIds.add(authRecord.id)
+                    log.info "Likely multiple authority Links for bib record\t${authRecord.bibid}\t${linkedAuthIds}\t${bibFieldKey}"
+                }
             }
             matchedField[matchedField.keySet()[0]].subfields.add(['0': authRecord.id])
         }
