@@ -1339,7 +1339,6 @@ class PostgreSQLComponent {
                     { Document doc ->
                         // Add a tombstone marker (without removing anything) perhaps?
                     })
-                return true
             } catch (Throwable e) {
                 log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
                 return false
@@ -1350,6 +1349,23 @@ class PostgreSQLComponent {
                             "make the APIX-exporter (which will pickup the delete after the fact) not know what to delete in Voyager," +
                             "which is unacceptable as long as Voyager still lives.")
         }
+
+        // Clear out dependencies
+        Connection connection = getConnection()
+        try {
+            PreparedStatement removeDependencies = connection.prepareStatement(DELETE_DEPENDENCIES)
+            try {
+                removeDependencies.setString(1, identifier)
+                int numRemoved = removeDependencies.executeUpdate()
+                log.debug("Removed $numRemoved dependencies for id ${identifier}")
+            } finally {
+                removeDependencies.close()
+            }
+        } finally {
+            connection.close()
+        }
+
+        return true
     }
 
 
