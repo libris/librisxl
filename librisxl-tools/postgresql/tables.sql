@@ -43,3 +43,8 @@ CREATE TABLE IF NOT EXISTS lddb__settings (
     key text not null unique primary key,
     settings jsonb not null
 );
+
+CREATE TABLE IF NOT EXISTS lddb__profiles (
+    library_id text not null unique primary key,
+    profile text not null
+);
