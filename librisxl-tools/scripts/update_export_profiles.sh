@@ -11,6 +11,7 @@ SOURCE_PASSWD=""
 
 TEMP_AREA="/tmp/profiles"
 
+PSQL_HOST=""
 PSQL_USERNAME=""
 PSQL_DB=""
 
@@ -36,4 +37,4 @@ IFS=""
 query="$query COMMIT;"
 
 echo $query > $TEMP_AREA/reload.sql
-psql -U $PSQL_USERNAME -d $PSQL_DB < $TEMP_AREA/reload.sql
+psql -h $PSQL_HOST -U $PSQL_USERNAME -d $PSQL_DB < $TEMP_AREA/reload.sql
