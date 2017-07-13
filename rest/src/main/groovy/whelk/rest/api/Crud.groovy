@@ -902,13 +902,6 @@ class Crud extends HttpServlet {
     Document saveDocument(Document doc, HttpServletRequest request,
                           HttpServletResponse response, String collection,
                           boolean isUpdate, String httpMethod) {
-        if (collection == null){
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "The 'collection' parameter is mandatory.")
-            log.warn("Tried to save a dcoument without a collection (not saving anything).")
-            return null
-        }
-
         try {
             if (doc) {
 
