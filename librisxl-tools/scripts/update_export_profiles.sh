@@ -35,7 +35,7 @@ do
     query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES ('https://libris.kb.se/library/$profile_no_ext', '$data');"
 done
 popd
-IFS=$ORIG_IFS
+IFS=""
 query="$query COMMIT;"
 
 echo $query > $TEMP_AREA/reload.sql
