@@ -23,6 +23,8 @@ class LegacyIntegrationTools {
     static final String BASE_LIBRARY_URI = "https://libris.kb.se/library/"
 
     static String legacySigelToUri(String sigel) {
+        if (sigel.startsWith(BASE_LIBRARY_URI))
+            return sigel
         return BASE_LIBRARY_URI + sigel
     }
 
