@@ -3943,6 +3943,8 @@
       "aboutEntity": "?thing",
       "ignoreOnRevertInFavourOf": "264",
       "pendingResources": {
+        "_:hasPublication": {"addLink": "hasPublication", "about": "?publication"},
+        "_:hasManufacture": {"addLink": "hasManufacture", "about": "?manufacture"},
         "?publication": {"resourceType": "Publication", "addLink": "publication", "embedded": true},
         "?manufacture": {"resourceType": "Manufacture", "addLink": "manufacture", "embedded": true}
       },
@@ -3957,17 +3959,19 @@
         "position": 0,
         "TODO": "put in first out-split entity"
       },
-      "$a": {"about": "?publication", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:"},
-      "$b": {"about": "?publication", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
-      "$c": {"about": "?publication", "property": "date", "punctuationChars": ",;"},
-      "$e": {"about": "?manufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":;", "surroundingChars" : "()"},
-      "$f": {"about": "?manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
-      "$g": {"about": "?manufacture", "property": "date", "punctuationChars": ",;"},
+      "$a": {"aboutNew": "_:hasPublication", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:"},
+      "$b": {"about": "_:hasPublication", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
+      "$c": {"about": "_:hasPublication", "property": "date", "punctuationChars": ",;"},
+      "$e": {"aboutNew": "_:hasManufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":;", "surroundingChars" : "()"},
+      "$f": {"about": "_:hasManufacture", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
+      "$g": {"about": "_:hasManufacture", "property": "date", "punctuationChars": ",;"},
+      "TODO:revert": "Need to fix the revert. Depends on field 264. Wait until we have decided about provisionActivity",
       "_spec": [
         {
           "source": {
             "260": {"ind1": " ", "ind2": " ", "subfields": [
-              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}, {"e": "Finland"}
+              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}, {"e": "Finland"}, {"a": "Stockholm"},
+              {"b": "Wolters Kluwer"}, {"e": "Stockholm"}, {"f": "Fram"}
             ]}
           },
           "normalized": [
@@ -3976,18 +3980,64 @@
             ]}},
             {"264": {"ind1": " ", "ind2": "3", "subfields": [
               {"a": "Finland"}
+            ]}},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm"}, {"b": "Wolters Kluwer"}
+            ]}},
+            {"264": {"ind1": " ", "ind2": "3", "subfields": [
+              {"a": "Stockholm"}, {"b": "Fram"}
             ]}}
           ],
           "result": {"mainEntity": {
-            "publication": [
-              {"@type": "Publication",
-                "place": {"@type": "Place", "label":  "Stockholm"},
-                  "agent":  {"@type": "Agent", "label": "Bonnier"},
-                  "date":  "1996"}
-            ],
+            "publication":[
+              {
+                "@type": "Publication",
+                "hasPublication": [
+                  {
+                    "place": {
+                      "@type": "Place",
+                      "label": "Stockholm"
+                    },
+                    "agent": {
+                      "@type": "Agent",
+                      "label": "Bonnier"
+                    },
+                    "date": "1996"
+                  },
+                  {
+                    "place": {
+                      "@type": "Place",
+                      "label": "Stockholm"
+                    },
+                    "agent": {
+                      "@type": "Agent",
+                      "label": "Wolters Kluwer"
+                    }
+                  }
+                ]
+              }],
             "manufacture": [
-              {"@type": "Manufacture",
-                "place": {"@type": "Place", "label":  "Finland"}}
+              {
+                "@type": "Manufacture",
+                "hasManufacture": [
+                  {
+                    "place": {
+                      "@type": "Place",
+                      "label":  "Finland"
+                    }
+                  },
+                  {
+                    "place": {
+                      "@type": "Place",
+                      "label":  "Stockholm"
+                    },
+                    "agent": {
+                      "@type": "Agent",
+                      "label":  "Fram"
+                    }
+                  }
+                ]
+              }
             ]
           }}
         }, {
