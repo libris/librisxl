@@ -55,6 +55,7 @@ public class JsonLd {
     Map vocabIndex
     Map superClassOf
     private String vocabId
+    Set forcedSetTerms
 
     /**
      * Make an instance to incapsulate model driven behaviour.
@@ -73,6 +74,8 @@ public class JsonLd {
         generateSubClassesLists()
 
         expandAliasesInLensProperties()
+
+        loadForcedSetTerms()
     }
 
     private void expandAliasesInLensProperties() {
@@ -802,6 +805,39 @@ public class JsonLd {
 
         for (String subClass : subClasses) {
             getSubClasses(subClass, result)
+        }
+    }
+
+    private void loadForcedSetTerms()
+            throws IOException
+    {
+        forcedSetTerms = new HashSet<>()
+        InputStream marcFrameStream = getClass().getClassLoader().getResourceAsStream("ext/marcframe.json")
+
+        ObjectMapper mapper = new ObjectMapper()
+        Map marcFrame = mapper.readValue(marcFrameStream, HashMap.class)
+        parseForcedSetTerms(marcFrame)
+    }
+
+    private void parseForcedSetTerms(Map marcFrame) {
+        for (Object key : marcFrame.keySet()) {
+            Object value = marcFrame.get(key)
+            if ( (key.equals("addLink") || key.equals("addProperty")) && value instanceof String )
+                forcedSetTerms.add((String) value)
+
+            if (value instanceof Map)
+                parseForcedSetTerms( (Map) value )
+            if (value instanceof List)
+                parseForcedSetTerms( (List) value )
+        }
+    }
+
+    private void parseForcedSetTerms(List marcFrame) {
+        for (Object entry : marcFrame) {
+            if (entry instanceof Map)
+                parseForcedSetTerms( (Map) entry )
+            if (entry instanceof List)
+                parseForcedSetTerms( (List) entry )
         }
     }
 }
