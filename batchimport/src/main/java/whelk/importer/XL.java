@@ -1,11 +1,11 @@
 package whelk.importer;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
 import whelk.Document;
 import whelk.IdGenerator;
+import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
@@ -15,7 +15,6 @@ import whelk.util.LegacyIntegrationTools;
 import whelk.util.PropertyLoader;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.sql.*;
 import java.util.*;
@@ -29,7 +28,7 @@ class XL
 
     // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
     // has only a single member.
-    private Set<String> m_alwaysSets = new HashSet<>();
+    private Set<String> m_forcedSetTerms;
 
     private final static String IMPORT_SYSTEM_CODE = "batch import";
 
@@ -40,8 +39,9 @@ class XL
         PostgreSQLComponent storage = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
         ElasticSearch elastic = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
         m_whelk = new Whelk(storage, elastic);
+        m_whelk.loadCoreData();
+        m_forcedSetTerms = new JsonLd(m_whelk.getDisplayData(), m_whelk.getVocabData()).getForcedSetTerms();
         m_marcFrameConverter = new MarcFrameConverter();
-        loadAlwaysSetPredicates();
     }
 
     /**
@@ -204,7 +204,7 @@ class XL
 
         originalGraph.enrichWith(withGraph, specialRules);
 
-        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), m_alwaysSets);
+        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), m_forcedSetTerms);
         JsonldSerializer.normalize(enrichedData, mutableDocument.getShortId());
         mutableDocument.data = enrichedData;
     }
@@ -487,43 +487,6 @@ class XL
             ids.add(resultSet.getString("id"));
         }
         return ids;
-    }
-
-    private void loadAlwaysSetPredicates()
-            throws IOException
-    {
-        m_alwaysSets = new HashSet<>();
-        InputStream marcFrameStream = getClass().getClassLoader().getResourceAsStream("ext/marcframe.json");
-
-        ObjectMapper mapper = new ObjectMapper();
-        Map marcFrame = mapper.readValue(marcFrameStream, HashMap.class);
-        parseAlwaysSetPredicates(marcFrame);
-    }
-
-    private void parseAlwaysSetPredicates(Map marcFrame)
-    {
-        for (Object key : marcFrame.keySet())
-        {
-            Object value = marcFrame.get(key);
-            if ( (key.equals("addLink") || key.equals("addProperty")) && value instanceof String )
-                m_alwaysSets.add((String) value);
-
-            if (value instanceof Map)
-                parseAlwaysSetPredicates( (Map) value );
-            if (value instanceof List)
-                parseAlwaysSetPredicates( (List) value );
-        }
-    }
-
-    private void parseAlwaysSetPredicates(List marcFrame)
-    {
-        for (Object entry : marcFrame)
-        {
-            if (entry instanceof Map)
-                parseAlwaysSetPredicates( (Map) entry );
-            if (entry instanceof List)
-                parseAlwaysSetPredicates( (List) entry );
-        }
     }
 
     private class TooHighEncodingLevelException extends RuntimeException {}
