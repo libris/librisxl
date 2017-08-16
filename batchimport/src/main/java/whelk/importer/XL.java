@@ -1,5 +1,6 @@
 package whelk.importer;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
@@ -10,11 +11,11 @@ import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
-import whelk.filter.LinkFinder;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.PropertyLoader;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.sql.*;
 import java.util.*;
@@ -26,9 +27,13 @@ class XL
     private Properties m_properties;
     private MarcFrameConverter m_marcFrameConverter;
 
+    // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
+    // has only a single member.
+    private Set<String> m_alwaysSets = new HashSet<>();
+
     private final static String IMPORT_SYSTEM_CODE = "batch import";
 
-    XL(Parameters parameters)
+    XL(Parameters parameters) throws IOException
     {
         m_parameters = parameters;
         m_properties = PropertyLoader.loadProperties("secret");
@@ -36,6 +41,7 @@ class XL
         ElasticSearch elastic = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
         m_whelk = new Whelk(storage, elastic);
         m_marcFrameConverter = new MarcFrameConverter();
+        loadAlwaysSetPredicates();
     }
 
     /**
@@ -196,19 +202,9 @@ class XL
         specialRules.put("modified", Graph.PREDICATE_RULES.RULE_PREFER_INCOMING);
         specialRules.put("marc:encLevel", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
 
-        // These should also be retrieved from whelk-core's marcframe.json.
-        // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
-        // has only a single member.
-        Set<String> alwaysSets = new HashSet<>();
-        alwaysSets.add("sameAs");
-        alwaysSets.add("genre");
-        alwaysSets.add("comment");
-        alwaysSets.add("hasComponent");
-        alwaysSets.add("heldBy");
-
         originalGraph.enrichWith(withGraph, specialRules);
 
-        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), alwaysSets);
+        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), m_alwaysSets);
         JsonldSerializer.normalize(enrichedData, mutableDocument.getShortId());
         mutableDocument.data = enrichedData;
     }
@@ -473,7 +469,7 @@ class XL
     {
         String libraryUri = LegacyIntegrationTools.legacySigelToUri(heldBy);
 
-        String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' = ? AND data#>>'{@graph,1,holdingFor,@id}' = ? AND collection = 'hold'";
+        String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,heldBy,@id}' = ? AND data#>>'{@graph,1,itemOf,@id}' = ? AND collection = 'hold'";
         PreparedStatement statement = connection.prepareStatement(query);
 
         statement.setString(1, libraryUri);
@@ -491,6 +487,43 @@ class XL
             ids.add(resultSet.getString("id"));
         }
         return ids;
+    }
+
+    private void loadAlwaysSetPredicates()
+            throws IOException
+    {
+        m_alwaysSets = new HashSet<>();
+        InputStream marcFrameStream = getClass().getClassLoader().getResourceAsStream("ext/marcframe.json");
+
+        ObjectMapper mapper = new ObjectMapper();
+        Map marcFrame = mapper.readValue(marcFrameStream, HashMap.class);
+        parseAlwaysSetPredicates(marcFrame);
+    }
+
+    private void parseAlwaysSetPredicates(Map marcFrame)
+    {
+        for (Object key : marcFrame.keySet())
+        {
+            Object value = marcFrame.get(key);
+            if ( (key.equals("addLink") || key.equals("addProperty")) && value instanceof String )
+                m_alwaysSets.add((String) value);
+
+            if (value instanceof Map)
+                parseAlwaysSetPredicates( (Map) value );
+            if (value instanceof List)
+                parseAlwaysSetPredicates( (List) value );
+        }
+    }
+
+    private void parseAlwaysSetPredicates(List marcFrame)
+    {
+        for (Object entry : marcFrame)
+        {
+            if (entry instanceof Map)
+                parseAlwaysSetPredicates( (Map) entry );
+            if (entry instanceof List)
+                parseAlwaysSetPredicates( (List) entry );
+        }
     }
 
     private class TooHighEncodingLevelException extends RuntimeException {}
