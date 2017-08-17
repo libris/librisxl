@@ -312,35 +312,129 @@
         {
           "when": "i1=3",
           "FIXME: @update pendingResources": {
-            "@update _:agent": {"resourceType": "Family"}
+            "@update _:agent": {"link": "agent", "resourceType": "Family"}
           },
           "$a": {"about": "_:agent", "property": "nameOfTheFamily", "required": true}
         }
       ],
       "$a": {"required": true},
       "$b": {"about": "_:agent", "property": "numeration"},
-      "$c": {"about": "_:agent", "addProperty": "qualifyingNote"},
+      "$c": {"about": "_:agent", "addProperty": "titleOther"},
       "$d": {
         "about": "_:agent",
         "property": "lifeSpan",
         "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
-          "splitValueProperties": ["birthYear", "deathYear"],
-          "rejoin": "-",
-          "allowEmpty": true
+        "splitValueProperties": ["birthYear", "deathYear"],
+        "rejoin": "-",
+        "allowEmpty": true
       },
-      "$j": {"about": "_:agent", "property": "comment"},
-      "$q": {"about": "_:agent", "property": "label"}
+      "$j": {"about": "_:agent", "property": "attributionQualifier"},
+      "$q": {"about": "_:agent", "property": "fullerFormName"},
+      "$u": {"about": "_:agent", "property": "affiliation"}
     },
 
-    "contribution": {
-      "include": "agentdata",
+    "agentdataPersonFamily": {
+      "match": [
+        {
+          "when": "i1=0",
+          "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"}
+        },
+        {
+          "when": "i1=1",
+          "$a": {
+            "about": "_:agent",
+            "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
+            "required": true
+          }
+        },
+        {
+          "when": "i1=3",
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Family"}
+          },
+          "$a": {"about": "_:agent", "property": "nameOfTheFamily", "required": true}
+        }
+      ],
+      "$a": {"required": true},
+      "$b": {"about": "_:agent", "property": "numeration"},
+      "$c": {"about": "_:agent", "addProperty": "titleOther"},
+      "$d": {
+        "about": "_:agent",
+        "property": "lifeSpan",
+        "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
+        "splitValueProperties": ["birthYear", "deathYear"],
+        "rejoin": "-",
+        "allowEmpty": true
+      },
+      "$j": {"about": "_:agent", "property": "attributionQualifier"},
+      "$q": {"about": "_:agent", "property": "fullerFormName"},
+      "$u": {"about": "_:agent", "property": "affiliation"}
+    },
+
+    "agentdataOrganization": {
+      "match": [
+        {
+          "when": "i1=0",
+          "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"}
+        },
+        {
+          "when": "i1=1",
+          "$a": { "about": "_:agent", "property": "name", "required": true}
+        },
+        {
+          "when": "i1=2",
+          "$a": {"about": "_:agent", "property": "name", "required": true}
+        }
+      ],
+      "$a": {"required": true},
+      "$b": {"about": "_:agent", "property": "subordinateUnit"},
+      "$c": {"addLink": "place", "resourceType": "Place", "property": "label"},
+      "$d": {"about": "_:agent", "property": "date"},
+      "$n": {"about": "_:agent", "property": "numberOfPartSectionMeeting"},
+      "$g": {"about": "_:agent", "property": "comment"},
+      "$u": {"about": "_:agent", "property": "affiliation"}
+    },
+
+    "agentdataMeeting": {
+      "NOTE": "Used by: Bib 111, 611, 711, 811, Auth 111, 411, 511",
+      "match": [
+        {
+          "when": "i1=0",
+          "$a": {"about": "_:agent", "property": "invertedName", "required": true, "punctuationChars": ")"}
+        },
+        {
+          "when": "i1=1",
+          "$a": { "about": "_:agent", "property": "jurisdictionName", "required": true}
+        },
+        {
+          "when": "i1=2",
+          "$a": {"about": "_:agent", "property": "directName", "required": true}
+        }
+      ],
+
+      "$a": {"required": true},
+      "$c": {"addLink": "place", "resourceType": "Place", "property": "label"},
+      "$d": {"about": "_:agent", "property": "date"},
+      "$e": {"about":"_:agent", "property": "subordinateUnit"},
+      "$g":	{"about": "_:agent", "property": "comment"},
+      "$n": {"about": "_:agent", "property": "numberOfPartSectionMeeting"},
+      "$q":	{"about":"_:agent", "property": "nameMeeting"},
+      "$u":	{"about": "_:agent", "property": "affiliation"}
+    },
+
+    "contributiondata": {
+      "NOTE": "Used by 100 + 700. Keep it?",
+      "NOTE:include": "changed from agentdata",
+      "include": "agentdataPersonFamily",
       "addLink": "contribution",
       "embedded": true,
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Person"}
       },
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "$e": {"addLink": "role", "property": "label"}
+      "$e": {"addLink": "role", "property": "label"},
+      "TODO:eAnd4": "make a pattern for role?"
     },
 
     "splicedworkentity": {
@@ -3090,9 +3184,10 @@
 
     "100": {
       "aboutEntity": "?work",
-      "include": "contribution",
+      "include": "contributiondata",
       "resourceType": "PrimaryContribution",
       "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
+      "TODO:subfieldOrder": "Sortering ska göras efter inläggningsordning i listade delfält, dvs abcdjq - $u affiliation innehåller en adress, typ gatuadress",
       "_spec": [
         {
           "source": {
@@ -3120,48 +3215,106 @@
               ]
             }
           }}
+        },
+        {
+          "source": {
+            "100": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Dr. X."}
+            ]}},
+          "normalized": {
+            "100": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Dr. X."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "PrimaryContribution",
+                  "agent": {"@type": "Person",
+                    "name":  "Dr. X."
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "100": {"ind1": "3", "ind2": " ", "subfields": [
+              {"a": "Bexelius"}
+            ]}},
+          "normalized": {
+            "100": {"ind1": "3", "ind2": " ", "subfields": [
+              {"a": "Bexelius"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "PrimaryContribution",
+                  "agent": {"@type": "Family",
+                    "nameOfTheFamily":  "Bexelius"
+                  }
+                }
+              ]
+            }
+          }}
         }
       ]
     },
 
     "110": {
       "aboutEntity": "?work",
-      "resourceType": "Organization",
-      "link": "contributor",
+      "addLink": "contribution",
+      "resourceType": "Contribution",
+      "include": "agentdataOrganization",
+      "pendingResources": {
+        "_:agent": {"addLink": "agent", "resourceType": "Organization"}
+      },
       "TODO": [
         "change splitValueProperties to work on result, to handle match combo",
-        "groupByRepetitionAndPunctuationPattern ($n $d ...)?"
-      ],
-      "match": [
-        {
-          "when": "$b",
-          "$a": {"link": "isPartOf", "resourceType": "Organization", "property": "name"},
-          "$b": {"property": "name"}
-        },
-        {
-          "when": "i1=0",
-          "$a": {"property": "name", "required": true}
-        },
-        {
-          "when": "i1=1",
-          "$a": {
-            "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
-            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
-            "required": true
-          }
-        }
+        "subfieldorder ($n $d ...)?"
       ],
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
-      "$a": {"property": "name"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
-      "TODO:$c": "Compare with 111 $c",
-      "TODO:$d": "Compare with 111 $d"
+      "_spec": [
+        {
+          "source": {
+            "110": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Sverige."},
+              {"b": "Kulturdepartementet"}
+            ]}},
+          "normalized": {
+            "110": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Sverige."},
+              {"b": "Kulturdepartementet"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent": [{
+                    "@type": "Organization",
+                    "name": "Sverige.",
+                    "subordinateUnit" : "Kulturdepartementet"
+                  }]
+                }]
+            }
+          }}
+        }
+      ]
     },
 
     "111": {
-      "inherit": "110",
+      "TODO:include": "agentdataMeeting",
+      "TODO:inherit": "110",
       "resourceType": "Meeting",
+      "TODO:cAndd": "remove. Defined in agentdataMeeting",
       "$c": {"link": "location", "resourceType": "Place", "property": "label"},
       "$d": {"property": "date"}
     },
@@ -4116,6 +4269,7 @@
 
     "600": {
       "include": ["subjectbase", "agentdata", "splicedworkentity"],
+      "TODO:include": ["subjectbase", "agentdataPersonFamily", "splicedworkentity"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "about": "_:agent",
@@ -4346,6 +4500,7 @@
       "match": [
         {
           "when": "$t & i2=2 & $i",
+          "TODO": "remove this part",
           "inherit-match": "$t",
           "TODO": "i2=2 in conjunction with $i is probably wrong?",
           "resourceType": "PartitiveRelationship"
@@ -4353,6 +4508,7 @@
         {
           "when": "$t & i2=2",
           "include": "agentdata",
+          "TODO:include": "agentdataPersonFamily",
           "addLink": "hasPart",
           "resourceType": "Work",
           "$t": {"property": "title"},
@@ -4362,6 +4518,7 @@
             "_:contribution": {
               "addLink": "contribution",
               "resourceType": "PrimaryContribution",
+              "TODO:resourceType": "Contribution",
               "embedded": true
             },
             "_:agent": {
@@ -4374,8 +4531,12 @@
         },
         {
           "when": "$t",
-          "include": "agentdata",
           "addLink": "relationship",
+          "TODO:addLink": "relatedTo",
+          "include": "agentdata",
+          "TODO:include": "agentdataPersonFamily",
+          "TODO:relatedTo": "Should we implement relatedTo as SymmetricProperty?",
+          "FIXME": "What to do with PrimaryContribution and _:work? Keep?",
           "resourceType": "Relationship",
           "pendingResources": {
             "_:work": {
@@ -4387,6 +4548,7 @@
               "about": "_:work",
               "addLink": "contribution",
               "resourceType": "PrimaryContribution",
+              "TODO:resourceType": "Contribution",
               "embedded": true
             },
             "_:agent": {
@@ -4399,21 +4561,21 @@
           "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
-        },
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}        },
         {
           "when": "i2=2",
           "inherit-match": "$t & i2=2",
-          "NOTE": "An egent is not a part; we add an untitled, intermediary hasPart"
+          "NOTE": "An agent is not a part; we add an untitled, intermediary hasPart"
         },
         {
           "when": null,
-          "include": "contribution",
+          "include": "contributiondata",
           "resourceType": "Contribution",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
       "subfieldOrder": "i ... t e",
+      "TODO:subfieldOrder": "Sortering ska göras efter inläggningsordning i listade delfält, dvs abcdjq - $u affiliation innehåller en adress, typ gatuadress",
       "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
       "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "_spec": [
@@ -4728,6 +4890,7 @@
       "resourceType": "Serial",
       "TODO:aboutEntity?": "?series",
       "include": "agentdata",
+      "TODO:include": "agentdataPersonFamily",
       "$t": {"property": "title"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
@@ -5146,6 +5309,7 @@
         {
           "when": "$t",
           "include": "agentdata",
+          "TODO:include": "agentdataPersonFamily",
           "aboutType": "Work",
           "$t": {"property": "title"},
           "$l": {"link": "language", "resourceType": "Language", "property": "label"},
@@ -5170,6 +5334,7 @@
           "aboutType": "Person",
           "about": "_:agent",
           "include": "agentdata",
+          "TODO:include": "agentdataPersonFamily",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
@@ -5347,6 +5512,7 @@
         {
           "when": "$t",
           "include": "agentdata",
+          "TODO:include": "agentdataPersonFamily",
           "pendingResources": {
             "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
             "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
@@ -5361,6 +5527,7 @@
             "_:agent": {"link": "exactMatch", "resourceType": "Person"}
           },
           "include": "agentdata",
+          "TODO:include": "agentdataPersonFamily",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
@@ -5406,6 +5573,7 @@
     "500": {
       "TODO:remnants-of-inherit": "bib:100",
       "include": ["agentdata", "splicedworkentity"],
+      "TODO:include": ["agentdataPersonFamily", "splicedworkentity"],
       "TODO": "this is really a link to other auth post..",
       "NOTE": "not really though - see 100",
       "pendingResources": {
