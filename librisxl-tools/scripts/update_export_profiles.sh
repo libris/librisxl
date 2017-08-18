@@ -15,7 +15,7 @@ PSQL_HOST=""
 PSQL_USERNAME=""
 PSQL_DB=""
 # note: the PGPASSWORD env variable is a "magic" name looked for by psql.
-PGPASSWORD=""
+export PGPASSWORD=""
 
 mkdir -p $TEMP_AREA
 sshpass -p $SOURCE_PASSWD scp  $SOURCE_LOGIN@$SOURCE_HOST:$SOURCE_PATH/*.properties $TEMP_AREA
