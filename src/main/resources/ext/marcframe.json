@@ -337,6 +337,7 @@
       "match": [
         {
           "when": "i1=0",
+          "TODO": "Remove this part, but first need to fix the 'unhandled' spec",
           "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"}
         },
         {
@@ -373,54 +374,75 @@
     },
 
     "agentdataOrganization": {
+      "pendingResources": {
+        "_:agent": {"addLink": "agent", "resourceType": "Organization"},
+        "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+      },
       "match": [
-        {
-          "when": "i1=0",
-          "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"}
-        },
+
         {
           "when": "i1=1",
-          "$a": { "about": "_:agent", "property": "name", "required": true}
+          "pendingResources": {
+            "_:agent": {"addLink": "agent", "resourceType": "Jurisdiction"},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+          },
+
+          "match": [
+            {
+              "when": "$b",
+              "$b": {"about": "_:agent", "property": "name"},
+              "$a": {"about": "_:isPartOf", "property": "name"}
+            }
+          ],
+
+          "$a": { "about": "_:agent", "property": "name", "required": true},
+          "$c": {"about": "_:place", "property": "label"}
         },
+
         {
-          "when": "i1=2",
-          "$a": {"about": "_:agent", "property": "name", "required": true}
+          "when": "i1=0 | i1=2",
+          "pendingResources": {
+            "_:agent": {"addLink": "agent", "resourceType": "Organization"},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+            "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+          },
+
+          "match": [
+            {
+              "when": "$b",
+              "$b": {"about": "_:agent", "property": "name"},
+              "$a": {"about": "_:isPartOf", "property": "name"}
+            }
+          ],
+
+          "$a": { "about": "_:agent", "property": "name", "required": true},
+          "$c": {"about": "_:place", "property": "label"}
         }
       ],
       "$a": {"required": true},
-      "$b": {"about": "_:agent", "property": "subordinateUnit"},
-      "$c": {"addLink": "place", "resourceType": "Place", "property": "label"},
+      "$b": {"about": "_:agent", "property": "name"},
+      "$c": {"about": "_:place", "property": "label"},
       "$d": {"about": "_:agent", "property": "date"},
       "$n": {"about": "_:agent", "property": "numberOfPartSectionMeeting"},
       "$g": {"about": "_:agent", "property": "comment"},
-      "$u": {"about": "_:agent", "property": "affiliation"}
+      "$u": {"about": "_:agent", "property": "affiliation"},
+
+      "TODO:role": "e och 4. Även för Family och Person"
     },
 
     "agentdataMeeting": {
       "NOTE": "Used by: Bib 111, 611, 711, 811, Auth 111, 411, 511",
-      "match": [
-        {
-          "when": "i1=0",
-          "$a": {"about": "_:agent", "property": "invertedName", "required": true, "punctuationChars": ")"}
-        },
-        {
-          "when": "i1=1",
-          "$a": { "about": "_:agent", "property": "jurisdictionName", "required": true}
-        },
-        {
-          "when": "i1=2",
-          "$a": {"about": "_:agent", "property": "directName", "required": true}
-        }
-      ],
-
-      "$a": {"required": true},
-      "$c": {"addLink": "place", "resourceType": "Place", "property": "label"},
+      "$a": {"about": "_:agent", "property": "name", "required": true},
+      "$c": {"about": "_:place", "property": "label"},
       "$d": {"about": "_:agent", "property": "date"},
       "$e": {"about":"_:agent", "property": "subordinateUnit"},
       "$g":	{"about": "_:agent", "property": "comment"},
       "$n": {"about": "_:agent", "property": "numberOfPartSectionMeeting"},
-      "$q":	{"about":"_:agent", "property": "nameMeeting"},
+      "$q":	{"about":"_:agent", "property": "additionalName"},
       "$u":	{"about": "_:agent", "property": "affiliation"}
+
+
     },
 
     "contributiondata": {
@@ -3268,11 +3290,9 @@
     "110": {
       "aboutEntity": "?work",
       "addLink": "contribution",
-      "resourceType": "Contribution",
+      "resourceType": "PrimaryContribution",
       "include": "agentdataOrganization",
-      "pendingResources": {
-        "_:agent": {"addLink": "agent", "resourceType": "Organization"}
-      },
+
       "TODO": [
         "change splitValueProperties to work on result, to handle match combo",
         "subfieldorder ($n $d ...)?"
@@ -3284,24 +3304,80 @@
         {
           "source": {
             "110": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Sverige."},
-              {"b": "Kulturdepartementet"}
-            ]}},
-          "normalized": {
-            "110": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Sverige."},
-              {"b": "Kulturdepartementet"}
+              {"b": "Norstedts Juridik"},
+              {"a": "Wolters Kluwer"},
+              {"c": "Sthlm"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "contribution": [
                 {
-                  "@type": "Contribution",
+                  "@type": "PrimaryContribution",
                   "agent": [{
                     "@type": "Organization",
-                    "name": "Sverige.",
-                    "subordinateUnit" : "Kulturdepartementet"
+                    "name" : "Norstedts Juridik",
+                    "isPartOf": {
+                      "@type": "Organization",
+                      "name": "Wolters Kluwer"
+                    },
+                    "place" : {
+                      "@type" : "Place",
+                      "label" : "Sthlm"
+                    }
+                  }]
+                }]
+            }
+          }}
+        },
+        {
+          "source": {
+            "110": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Sverige."},
+              {"b": "Kulturdepartementet"},
+              {"c": "Sthlm"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "PrimaryContribution",
+                  "agent": [{
+                    "@type": "Jurisdiction",
+                    "name" : "Kulturdepartementet",
+                    "isPartOf": {
+                      "@type": "Jurisdiction",
+                      "name": "Sverige."
+                    },
+                    "place" : {
+                      "@type" : "Place",
+                      "label" : "Sthlm"
+                    }
+                  }]
+                }]
+            }
+          }}
+        },
+        {
+          "source": {
+            "110": {"ind1": "2", "subfields": [
+              {"a": "Wolters Kluwer"},
+              {"b": "Norstedts Juridik"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "PrimaryContribution",
+                  "agent": [{
+                    "@type": "Organization",
+                    "name" : "Norstedts Juridik",
+                    "isPartOf": {
+                      "@type": "Organization",
+                      "name": "Wolters Kluwer"
+                    }
                   }]
                 }]
             }
@@ -3311,12 +3387,72 @@
     },
 
     "111": {
-      "TODO:include": "agentdataMeeting",
-      "TODO:inherit": "110",
-      "resourceType": "Meeting",
-      "TODO:cAndd": "remove. Defined in agentdataMeeting",
-      "$c": {"link": "location", "resourceType": "Place", "property": "label"},
-      "$d": {"property": "date"}
+      "aboutEntity": "?work",
+      "addLink": "contribution",
+      "include": "agentdataMeeting",
+      "resourceType": "PrimaryContribution",
+      "pendingResources": {
+        "_:agent": {"addLink": "agent", "resourceType": "Meeting"},
+        "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+      },
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "i1": {"marcDefault": "2"},
+      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "_spec": [
+        {
+          "source": {
+            "111": {"ind1": "1", "subfields": [
+              {"a": "Paris"},
+              {"q": "Peace Conference"},
+              {"d": "1919"},
+              {"g": "Projected, not held"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "PrimaryContribution",
+                  "agent": [{
+                    "@type": "Meeting",
+                    "name": "Paris",
+                    "additionalName": "Peace Conference",
+                    "date": "1919",
+                    "comment" : "Projected, not held"
+                  }]
+                }]
+            }
+          }}
+        },
+        {
+          "source": {
+            "111": {"ind1": "2", "subfields": [
+              {"a": "World Peace Conference"},
+              {"c": "Paris, France"},
+              {"d": "1959"},
+              {"n": "1st"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "PrimaryContribution",
+                  "agent": [{
+                    "@type": "Meeting",
+                    "name": "World Peace Conference",
+                    "place" : {
+                      "@type" : "Place",
+                      "label" : "Paris, France"
+                    },
+                    "date": "1959",
+                    "numberOfPartSectionMeeting": "1st"}
+                  ]
+                }]
+            }
+          }}
+        }
+      ]
     },
 
     "130": {
