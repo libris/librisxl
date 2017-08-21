@@ -270,8 +270,7 @@ class PostgreSQLComponent {
                 insert.executeUpdate()
                 saveVersion(doc, connection, now, changedIn, changedBy, collection, deleted)
             }
-            saveIdentifiers(doc, connection, deleted)
-            saveDependencies(doc, connection)
+            refreshDerivativeTables(doc, connection, deleted)
             for (String dependerId : getDependers(doc.getShortId())) {
                 updateMinMaxDepModified(dependerId, connection)
             }
@@ -380,8 +379,7 @@ class PostgreSQLComponent {
 
             // The versions and identifiers tables are NOT under lock. Synchronization is only maintained on the main table.
             saveVersion(doc, connection, modTime, changedIn, changedBy, collection, deleted)
-            saveIdentifiers(doc, connection, deleted)
-            saveDependencies(doc, connection)
+            refreshDerivativeTables(doc, connection, deleted)
             for (String dependerId : getDependers(doc.getShortId())) {
                 updateMinMaxDepModified(dependerId, connection)
             }
@@ -420,6 +418,15 @@ class PostgreSQLComponent {
         }
 
         return doc
+    }
+
+    public refreshDerivativeTables(Document doc) {
+        refreshDerivativeTables(doc, getConnection(), doc.deleted)
+    }
+
+    public refreshDerivativeTables(Document doc, Connection connection, boolean deleted) {
+        saveIdentifiers(doc, connection, deleted)
+        saveDependencies(doc, connection)
     }
 
     /**
@@ -661,8 +668,7 @@ class PostgreSQLComponent {
                     batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
                 }
                 batch.addBatch()
-                saveIdentifiers(doc, connection, false)
-                saveDependencies(doc, connection)
+                refreshDerivativeTables(doc, connection, false)
                 for (String dependerId : getDependers(doc.getShortId())) {
                     updateMinMaxDepModified(dependerId, connection)
                 }
