@@ -177,7 +177,7 @@ class Whelk {
         return result
     }
 
-    private void reindexDependers(Document document) {
+    public void reindexDependers(Document document) {
         List<String> dependingIDs = storage.getDependers(document.getShortId())
 
         // If the number of dependers isn't too large. Update them synchronously
