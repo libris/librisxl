@@ -1,5 +1,7 @@
 package whelk.rest.api
 
+import org.codehaus.jackson.JsonParseException
+import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
@@ -14,14 +16,15 @@ import javax.servlet.http.HttpServletResponse
 
 /**
  * The purpose of this class is to facilitate refreshing of records that have been modified in authoritative storage
- * (postgresql) by some non-standard measure (for example by hand). A GET request is made to this class with a ?mode=[loud|quiet]
- * parameter and a linebreak-separated list of the IDs (or sameAs-IDs) that are to be refreshed as request body.
+ * (postgresql) by some non-standard measure (for example by hand). A POST request is made to this class with a ?mode=[loud|quiet]
+ * parameter and a json list of the IDs (or sameAs-IDs) that are to be refreshed as request body.
  *
  * Refreshing a record in this context means updating all derivative data of that record in the various places where
  * such data is stored. For example: id/sameAs-tables, dependency-tables, ElasticSearch etc.
  */
 class RefreshAPI extends HttpServlet
 {
+    public final static mapper = new ObjectMapper()
     private Whelk whelk
     private JsonLd jsonld
 
@@ -41,34 +44,39 @@ class RefreshAPI extends HttpServlet
     }
 
     @Override
-    void doGet(HttpServletRequest request, HttpServletResponse response) {
+    void doPost(HttpServletRequest request, HttpServletResponse response) {
 
-        boolean loudMode
-        String mode = request.getParameter("mode")
-        switch (mode) {
-            case "loud":
-                loudMode = true
-                break
-            case "quiet":
-                loudMode = false
-                break
-            default:
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                        "You need to specify the \"mode\" parameter as either \"loud\" or \"quiet\". \"Loud\" in this " +
-                                "context means modified-timestamps for the refreshed records are to be updated. " +
-                                "This in turn will result in all touched documents being pushed out (again) through the " +
-                                "various export channels.")
-                return
+        Boolean loudMode = parseLoudMode(request.getQueryString())
+        if (loudMode == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "You need to specify the \"mode\" parameter as either \"loud\" or \"quiet\". \"Loud\" in this " +
+                            "context means modified-timestamps for the refreshed records are to be updated. " +
+                            "This in turn will result in all touched documents being pushed out (again) through the " +
+                            "various export channels.")
+            return
         }
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(request.getInputStream()))
         response.setStatus(HttpServletResponse.SC_OK)
         OutputStream out = response.getOutputStream()
 
-        long count = 0
+        Reader reader = request.getReader()
+        StringBuilder builder = new StringBuilder()
         String line
-        while ( (line = reader.readLine()) != null ) {
-            String recordId = whelk.storage.getRecordId(line)
+        while( (line = reader.readLine()) != null )
+            builder.append(line)
+
+        List ids
+        try {
+            ids = mapper.readValue(builder.toString(), ArrayList)
+        } catch (JsonParseException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Malformed json body: " + e)
+            return
+        }
+
+        long count = 0
+        for (String id : ids) {
+            String recordId = whelk.storage.getRecordId(id)
+
             if (recordId != null) {
                 Document document = whelk.storage.loadDocumentByMainId(recordId)
                 if (document != null) {
@@ -76,13 +84,13 @@ class RefreshAPI extends HttpServlet
                         refreshLoudly(document)
                     else
                         refreshQuietly(document)
+                    ++count
                 } else {
                     out.println(recordId + " - Failed to load (received as: " + line + ")")
                 }
             } else {
                 out.println(line + " - No such ID/sameAs")
             }
-            ++count
         }
 
         if (loudMode)
@@ -90,6 +98,14 @@ class RefreshAPI extends HttpServlet
         else
             out.println("Refreshed " + count + " records (quietly).")
         out.close()
+    }
+
+    Boolean parseLoudMode(String queryString) {
+        if (queryString.equals("mode=loud"))
+            return true
+        if (queryString.equals("mode=quiet"))
+            return false
+        return null
     }
 
     void refreshLoudly(Document doc) {
