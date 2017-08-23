@@ -3685,7 +3685,11 @@
         "property": "label"
       },
       "$h": { "ignored": "true" },
-      "$i": { "addProperty": "systemRequirements" },
+      "$i":
+      {
+        "addProperty": "marc:technicalSpecificationsOfMedium",
+        "NOTE": "Not mapped to systemRequirement because of conversion of 538"
+      },
       "$j": {
         "addLink": "generation",
         "resourceType": "Generation",
@@ -4021,8 +4025,8 @@
     "536": {},
     "538": {
       "aboutEntity": "?thing",
-      "addLink": "systemRequirements",
-      "resourceType": "SystemRequirements",
+      "addLink": "systemRequirement",
+      "resourceType": "SystemRequirement",
       "$a": {
         "property": "marc:systemDetailsNote"
       },
