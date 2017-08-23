@@ -5,12 +5,12 @@ import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
 import whelk.Document;
 import whelk.IdGenerator;
+import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
-import whelk.filter.LinkFinder;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.PropertyLoader;
 
@@ -26,15 +26,21 @@ class XL
     private Properties m_properties;
     private MarcFrameConverter m_marcFrameConverter;
 
+    // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
+    // has only a single member.
+    private Set<String> m_forcedSetTerms;
+
     private final static String IMPORT_SYSTEM_CODE = "batch import";
 
-    XL(Parameters parameters)
+    XL(Parameters parameters) throws IOException
     {
         m_parameters = parameters;
         m_properties = PropertyLoader.loadProperties("secret");
         PostgreSQLComponent storage = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
         ElasticSearch elastic = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
         m_whelk = new Whelk(storage, elastic);
+        m_whelk.loadCoreData();
+        m_forcedSetTerms = new JsonLd(m_whelk.getDisplayData(), m_whelk.getVocabData()).getForcedSetTerms();
         m_marcFrameConverter = new MarcFrameConverter();
     }
 
@@ -196,19 +202,9 @@ class XL
         specialRules.put("modified", Graph.PREDICATE_RULES.RULE_PREFER_INCOMING);
         specialRules.put("marc:encLevel", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
 
-        // These should also be retrieved from whelk-core's marcframe.json.
-        // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
-        // has only a single member.
-        Set<String> alwaysSets = new HashSet<>();
-        alwaysSets.add("sameAs");
-        alwaysSets.add("genre");
-        alwaysSets.add("comment");
-        alwaysSets.add("hasComponent");
-        alwaysSets.add("heldBy");
-
         originalGraph.enrichWith(withGraph, specialRules);
 
-        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), alwaysSets);
+        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), m_forcedSetTerms);
         JsonldSerializer.normalize(enrichedData, mutableDocument.getShortId());
         mutableDocument.data = enrichedData;
     }
@@ -473,7 +469,7 @@ class XL
     {
         String libraryUri = LegacyIntegrationTools.legacySigelToUri(heldBy);
 
-        String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,hasComponent,0,heldBy,0,@id}' = ? AND data#>>'{@graph,1,holdingFor,@id}' = ? AND collection = 'hold'";
+        String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,heldBy,@id}' = ? AND data#>>'{@graph,1,itemOf,@id}' = ? AND collection = 'hold'";
         PreparedStatement statement = connection.prepareStatement(query);
 
         statement.setString(1, libraryUri);

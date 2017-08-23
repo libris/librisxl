@@ -167,7 +167,7 @@ public class ResponseCommon
             for (Object key : referencedData.keySet())
                 referencedData2.put(key, ((Document)referencedData.get(key)).data );
 
-            OaiPmh.s_jsonld.embellish(document.data, referencedData2);
+            OaiPmh.s_jsonld.embellish(document.data, referencedData2, false);
         }
 
         if (!onlyIdentifiers)
