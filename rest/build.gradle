@@ -73,6 +73,13 @@ configurations {
     executableWarDeps
 }
 
+// Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
+configurations.all {
+    resolutionStrategy {
+        force "xml-apis:xml-apis:1.4.01"
+    }
+}
+
 dependencies {
 
     def groovyVersion=GroovySystem.getVersion()
@@ -87,6 +94,7 @@ dependencies {
     // Dependencies inherited from classic libris, due to profile handling
     compile group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
     compile group: 'org.dspace', name: 'xoai', version: '3.2.10'
+    compile group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
     compile fileTree(dir: 'libs', include: '*.jar')
 
     // Common tools
