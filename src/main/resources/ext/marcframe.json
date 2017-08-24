@@ -374,54 +374,16 @@
     },
 
     "agentdataOrganization": {
-      "pendingResources": {
-        "_:agent": {"addLink": "agent", "resourceType": "Organization"},
-        "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
-      },
       "match": [
-
         {
-          "when": "i1=1",
-          "pendingResources": {
-            "_:agent": {"addLink": "agent", "resourceType": "Jurisdiction"},
-            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
-            "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
-          },
+          "when": "$b",
+          "$b": {"about": "_:agent", "addProperty": "name"},
+          "$a": {"about": "_:isPartOf", "property": "name"}
 
-          "match": [
-            {
-              "when": "$b",
-              "$b": {"about": "_:agent", "property": "name"},
-              "$a": {"about": "_:isPartOf", "property": "name"}
-            }
-          ],
-
-          "$a": { "about": "_:agent", "property": "name", "required": true},
-          "$c": {"about": "_:place", "property": "label"}
-        },
-
-        {
-          "when": "i1=0 | i1=2",
-          "pendingResources": {
-            "_:agent": {"addLink": "agent", "resourceType": "Organization"},
-            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
-            "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
-          },
-
-          "match": [
-            {
-              "when": "$b",
-              "$b": {"about": "_:agent", "property": "name"},
-              "$a": {"about": "_:isPartOf", "property": "name"}
-            }
-          ],
-
-          "$a": { "about": "_:agent", "property": "name", "required": true},
-          "$c": {"about": "_:place", "property": "label"}
         }
       ],
-      "$a": {"required": true},
-      "$b": {"about": "_:agent", "property": "name"},
+      "$a": { "about": "_:agent", "property": "name", "required": true},
+      "$b": { "about": "_:agent", "property": "name"},
       "$c": {"about": "_:place", "property": "label"},
       "$d": {"about": "_:agent", "property": "date"},
       "$n": {"about": "_:agent", "property": "numberOfPartSectionMeeting"},
@@ -432,6 +394,10 @@
     },
 
     "agentdataMeeting": {
+      "pendingResources": {
+        "_:agent": {"addLink": "agent", "resourceType": "Meeting"},
+        "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+      },
       "NOTE": "Used by: Bib 111, 611, 711, 811, Auth 111, 411, 511",
       "$a": {"about": "_:agent", "property": "name", "required": true},
       "$c": {"about": "_:place", "property": "label"},
@@ -3291,15 +3257,37 @@
       "aboutEntity": "?work",
       "addLink": "contribution",
       "resourceType": "PrimaryContribution",
-      "include": "agentdataOrganization",
 
-      "TODO": [
-        "change splitValueProperties to work on result, to handle match combo",
-        "subfieldorder ($n $d ...)?"
+      "match":[
+      {
+        "when": "i1=1",
+        "pendingResources": {
+          "_:agent": {"addLink": "agent", "resourceType": "Jurisdiction"},
+          "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+          "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+        },
+        "include": "agentdataOrganization",
+        "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+        "i1": {"marcDefault": "2"},
+        "$0": {"addLink": "identifiedBy", "property": "value"}
+      },
+      {
+        "when": null,
+        "pendingResources": {
+          "_:agent": {"addLink": "agent", "resourceType": "Organization"},
+          "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+          "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+        },
+        "include": "agentdataOrganization",
+        "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+        "i1": {"marcDefault": "2"},
+        "$0": {"addLink": "identifiedBy", "property": "value"},
+        "TODO": [
+          "change splitValueProperties to work on result, to handle match combo",
+          "subfieldorder ($n $d ...)?"
+        ]
+      }
       ],
-      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-      "i1": {"marcDefault": "2"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
       "_spec": [
         {
           "source": {
@@ -3316,7 +3304,7 @@
                   "@type": "PrimaryContribution",
                   "agent": [{
                     "@type": "Organization",
-                    "name" : "Norstedts Juridik",
+                    "name" : ["Norstedts Juridik"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Wolters Kluwer"
@@ -3345,7 +3333,7 @@
                   "@type": "PrimaryContribution",
                   "agent": [{
                     "@type": "Jurisdiction",
-                    "name" : "Kulturdepartementet",
+                    "name" : ["Kulturdepartementet"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -3373,7 +3361,7 @@
                   "@type": "PrimaryContribution",
                   "agent": [{
                     "@type": "Organization",
-                    "name" : "Norstedts Juridik",
+                    "name" : ["Norstedts Juridik"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Wolters Kluwer"
@@ -3391,10 +3379,6 @@
       "addLink": "contribution",
       "include": "agentdataMeeting",
       "resourceType": "PrimaryContribution",
-      "pendingResources": {
-        "_:agent": {"addLink": "agent", "resourceType": "Meeting"},
-        "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
-      },
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
@@ -4635,16 +4619,8 @@
       "aboutEntity": "?work",
       "match": [
         {
-          "when": "$t & i2=2 & $i",
-          "TODO": "remove this part",
-          "inherit-match": "$t",
-          "TODO": "i2=2 in conjunction with $i is probably wrong?",
-          "resourceType": "PartitiveRelationship"
-        },
-        {
           "when": "$t & i2=2",
-          "include": "agentdata",
-          "TODO:include": "agentdataPersonFamily",
+          "include": "agentdataPersonFamily",
           "addLink": "hasPart",
           "resourceType": "Work",
           "$t": {"property": "title"},
@@ -4667,12 +4643,8 @@
         },
         {
           "when": "$t",
-          "addLink": "relationship",
-          "TODO:addLink": "relatedTo",
-          "include": "agentdata",
-          "TODO:include": "agentdataPersonFamily",
-          "TODO:relatedTo": "Should we implement relatedTo as SymmetricProperty?",
-          "FIXME": "What to do with PrimaryContribution and _:work? Keep?",
+          "addLink": "relatedTo",
+          "include": "agentdataPersonFamily",
           "resourceType": "Relationship",
           "pendingResources": {
             "_:work": {
@@ -4697,7 +4669,8 @@
           "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}        },
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
         {
           "when": "i2=2",
           "inherit-match": "$t & i2=2",
@@ -4747,7 +4720,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relationship": [
+              "relatedTo": [
                 {
                   "@type": "Relationship",
                   "relation": [{"label": "Parafraserar"}],
@@ -4776,7 +4749,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relationship": [
+              "relatedTo": [
                 {
                   "@type": "Relationship",
                   "entity": {
@@ -4842,7 +4815,7 @@
         },
         {
           "source": {
-            "700": {"ind1": "1", "ind2": "2", "subfields": [
+            "700": {"ind1": "1", "ind2": " ", "subfields": [
               {"i": "Parafraserar"},
               {"a": "Jansson, Tove"},
               {"t": "Anteckningar från en ö"}
@@ -4850,9 +4823,38 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relationship": [
+              "relatedTo": [
                 {
-                  "@type": "PartitiveRelationship",
+                  "@type": "Relationship",
+                  "relation": [{"label": "Parafraserar"}],
+                  "entity": {
+                    "@type": "Work",
+                    "title": "Anteckningar från en ö",
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
+                        "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"i": "Parafraserar"},
+              {"a": "Jansson, Tove"},
+              {"t": "Anteckningar från en ö"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [
+                {
+                  "@type": "Relationship",
                   "relation": [{"label": "Parafraserar"}],
                   "entity": {
                     "@type": "Work",
@@ -4873,13 +4875,218 @@
     },
 
     "710": {
-      "TODO": "change to 700 - Person + Organization!",
-      "inherit": "110",
+      "aboutEntity": "?work",
+      "match": [
+        {
+          "when": "$t & i1=1",
+          "addLink": "relatedTo",
+          "include": "agentdataOrganization",
+          "resourceType": "Relationship",
+          "pendingResources": {
+            "_:work": {
+              "link": "entity",
+              "resourceType": "Work",
+              "embedded": false
+            },
+            "_:contribution": {
+              "about": "_:work",
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "TODO:resourceType": "Contribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "addLink": "agent",
+              "resourceType": "Jurisdiction",
+              "embedded": false
+            }
+          },
+          "$i": {"addLink": "relation", "property": "label"},
+          "$t": {"about": "_:work", "property": "title"},
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t",
+          "addLink": "relatedTo",
+          "include": "agentdataOrganization",
+          "resourceType": "Relationship",
+          "pendingResources": {
+            "_:work": {
+              "link": "entity",
+              "resourceType": "Work",
+              "embedded": false
+            },
+            "_:contribution": {
+              "about": "_:work",
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "TODO:resourceType": "Contribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "addLink": "agent",
+              "resourceType": "Organization",
+              "embedded": false
+            }
+          },
+          "$i": {"addLink": "relation", "property": "label"},
+          "$t": {"about": "_:work", "property": "title"},
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "i1=1",
+          "include": "agentdataOrganization",
+          "pendingResources": {
+            "_:agent": {"addLink": "agent", "resourceType": "Jurisdiction"},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+          },
+          "addLink": "contribution",
+          "resourceType": "Contribution"
+        },
+        {
+          "when": null,
+          "include": "agentdataOrganization",
+          "pendingResources": {
+            "_:agent": {"addLink": "agent", "resourceType": "Organization"},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+            "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+          },
+          "addLink": "contribution",
+          "resourceType": "Contribution"
+        }
+      ],
+
+      "TODO": [
+        "change splitValueProperties to work on result, to handle match combo",
+        "subfieldorder ($n $d ...)?"
+      ],
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "i1": {"marcDefault": "2"},
+      "$0": {"addLink": "identifiedBy", "property": "value"},
       "TOOO:i2": {},
-      "addLink": "relatedTo"
+
+      "_spec": [
+        {
+          "source": {
+            "710": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "National Fire Protection Association."},
+              {"t": "National electrical code (1993)"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "title": "National electrical code (1993)",
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
+                        "agent": [
+                          {
+                            "@type": "Jurisdiction",
+                            "name": "National Fire Protection Association."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "National Fire Protection Association."},
+              {"t": "National electrical code (1993)"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "title": "National electrical code (1993)",
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
+                        "agent": [
+                          {
+                            "@type": "Organization",
+                            "name": "National Fire Protection Association."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "National Fire Protection Association."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+                "contribution": [
+                  {
+                    "@type": "Contribution",
+                    "agent": [
+                      {
+                        "@type": "Jurisdiction",
+                        "name": "National Fire Protection Association."
+                      }
+                    ]
+                  }
+                ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Chalmers tekniska högskola."},
+              {"b": "Institutionen för teknikens ekonomi och organisation."},
+              {"b": "Industriell organisation och ekonomi"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent": [{
+                    "@type": "Organization",
+                    "name" : ["Institutionen för teknikens ekonomi och organisation.",
+                              "Industriell organisation och ekonomi"],
+                    "isPartOf": {
+                      "@type": "Organization",
+                      "name": "Chalmers tekniska högskola."
+                    }
+                  }]
+                }]
+            }
+          }}
+        }
+      ]
     },
-    "711": {
-      "TODO": "change to 700 - Person + Meeting!",
+
+      "711": {
       "inherit": "111"
     },
 
