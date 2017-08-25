@@ -263,6 +263,28 @@
       "$s": {"property": "version"}
     },
 
+    "titledetailsPersonFamily": {
+      "$f": {"property": "originDate"},
+      "$g": {"addProperty": "genreForm"},
+      "$k": {"addProperty": "formSubheading"},
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+      "$p": {"addProperty": "partName", "punctuationChars": "/"}
+    },
+
+    "titledetailsOrganization": {
+      "$f": {"property": "originDate"},
+      "$k": {"addProperty": "formSubheading"},
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+      "$p": {"addProperty": "partName", "punctuationChars": "/"}
+    },
+
+    "titledetailsMeeting": {
+      "$f": {"property": "originDate"},
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+      "$p": {"addProperty": "partName", "punctuationChars": "/"}
+    },
+
     "structuredtitle": {
       "pendingResources": {
         "_:titlePart": {
@@ -337,7 +359,7 @@
       "match": [
         {
           "when": "i1=0",
-          "TODO": "Remove this part, but first need to fix the 'unhandled' spec",
+          "FIXME": "Remove this part, but first need to fix the 'unhandled' spec",
           "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"}
         },
         {
@@ -385,26 +407,22 @@
       "$a": { "about": "_:agent", "property": "name", "required": true},
       "$b": { "about": "_:agent", "property": "name"},
       "$c": {"about": "_:place", "property": "label"},
-      "$d": {"about": "_:agent", "property": "date"},
-      "$n": {"about": "_:agent", "property": "numberOfPartSectionMeeting"},
-      "$g": {"about": "_:agent", "property": "comment"},
+      "$d": {"about": "_:agent", "addProperty": "date"},
+      "$n": {"about": "_:agent", "addProperty": "numberOfPartSectionMeeting"},
+      "$g": {"about": "_:agent", "addProperty": "comment"},
       "$u": {"about": "_:agent", "property": "affiliation"},
 
       "TODO:role": "e och 4. Även för Family och Person"
     },
 
     "agentdataMeeting": {
-      "pendingResources": {
-        "_:agent": {"addLink": "agent", "resourceType": "Meeting"},
-        "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
-      },
       "NOTE": "Used by: Bib 111, 611, 711, 811, Auth 111, 411, 511",
       "$a": {"about": "_:agent", "property": "name", "required": true},
       "$c": {"about": "_:place", "property": "label"},
-      "$d": {"about": "_:agent", "property": "date"},
-      "$e": {"about":"_:agent", "property": "subordinateUnit"},
-      "$g":	{"about": "_:agent", "property": "comment"},
-      "$n": {"about": "_:agent", "property": "numberOfPartSectionMeeting"},
+      "$d": {"about": "_:agent", "addProperty": "date"},
+      "$e": {"about":"_:agent", "addProperty": "subordinateUnit"},
+      "$g":	{"about": "_:agent", "addProperty": "comment"},
+      "$n": {"about": "_:agent", "addProperty": "numberOfPartSectionMeeting"},
       "$q":	{"about":"_:agent", "property": "additionalName"},
       "$u":	{"about": "_:agent", "property": "affiliation"}
 
@@ -3172,7 +3190,7 @@
 
     "100": {
       "aboutEntity": "?work",
-      "include": "contributiondata",
+      "include": ["contributiondata", "titledetailsPersonFamily"],
       "resourceType": "PrimaryContribution",
       "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
       "TODO:subfieldOrder": "Sortering ska göras efter inläggningsordning i listade delfält, dvs abcdjq - $u affiliation innehåller en adress, typ gatuadress",
@@ -3249,6 +3267,71 @@
               ]
             }
           }}
+        },
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Andersson, Lars,"},
+              {"c": "1961-,"},
+              {"c": "arkeolog"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "PrimaryContribution",
+                  "agent": {"@type": "Person",
+                    "familyName":  "Andersson",
+                    "givenName":  "Lars",
+                    "titleOther": ["1961-,", "arkeolog"]}
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Andersson, Lars,"},
+              {"c": "1961-,"},
+              {"c": "arkeolog"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "PrimaryContribution",
+                  "agent": {"@type": "Person",
+                    "familyName":  "Andersson",
+                    "givenName":  "Lars",
+                    "titleOther": ["1961-,", "arkeolog"]}
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Wetherell, Elizabeth,"},
+              {"g": "pseud. för Susan Warner."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "PrimaryContribution",
+                  "agent": {"@type": "Person",
+                    "familyName":  "Wetherell",
+                    "givenName":  "Elizabeth"},
+                  "genreForm": ["pseud. för Susan Warner."]
+                }
+              ]
+            }
+          }}
         }
       ]
     },
@@ -3256,15 +3339,16 @@
     "110": {
       "aboutEntity": "?work",
       "addLink": "contribution",
+      "include": "titledetailsOrganization",
       "resourceType": "PrimaryContribution",
 
       "match":[
       {
         "when": "i1=1",
         "pendingResources": {
-          "_:agent": {"addLink": "agent", "resourceType": "Jurisdiction"},
+          "_:agent": {"link": "agent", "resourceType": "Jurisdiction"},
           "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
-          "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+          "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
         },
         "include": "agentdataOrganization",
         "computeLinks": {"use": "$4", "mapping": "relatorCode"},
@@ -3274,9 +3358,9 @@
       {
         "when": null,
         "pendingResources": {
-          "_:agent": {"addLink": "agent", "resourceType": "Organization"},
+          "_:agent": {"link": "agent", "resourceType": "Organization"},
           "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
-          "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+          "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
         },
         "include": "agentdataOrganization",
         "computeLinks": {"use": "$4", "mapping": "relatorCode"},
@@ -3302,18 +3386,18 @@
               "contribution": [
                 {
                   "@type": "PrimaryContribution",
-                  "agent": [{
+                  "agent": {
                     "@type": "Organization",
                     "name" : ["Norstedts Juridik"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Wolters Kluwer"
                     },
-                    "place" : {
+                    "place" : [{
                       "@type" : "Place",
                       "label" : "Sthlm"
-                    }
-                  }]
+                    }]
+                  }
                 }]
             }
           }}
@@ -3331,18 +3415,18 @@
               "contribution": [
                 {
                   "@type": "PrimaryContribution",
-                  "agent": [{
+                  "agent": {
                     "@type": "Jurisdiction",
                     "name" : ["Kulturdepartementet"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
                     },
-                    "place" : {
+                    "place" : [{
                       "@type" : "Place",
                       "label" : "Sthlm"
-                    }
-                  }]
+                    }]
+                  }
                 }]
             }
           }}
@@ -3351,7 +3435,8 @@
           "source": {
             "110": {"ind1": "2", "subfields": [
               {"a": "Wolters Kluwer"},
-              {"b": "Norstedts Juridik"}
+              {"b": "Norstedts Juridik"},
+              {"k": "Grupptitel"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -3359,14 +3444,15 @@
               "contribution": [
                 {
                   "@type": "PrimaryContribution",
-                  "agent": [{
+                  "agent": {
                     "@type": "Organization",
                     "name" : ["Norstedts Juridik"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Wolters Kluwer"
                     }
-                  }]
+                  },
+                  "formSubheading": ["Grupptitel"]
                 }]
             }
           }}
@@ -3376,12 +3462,17 @@
 
     "111": {
       "aboutEntity": "?work",
+      "pendingResources": {
+        "_:agent": {"link": "agent", "resourceType": "Meeting"},
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+      },
       "addLink": "contribution",
       "include": "agentdataMeeting",
       "resourceType": "PrimaryContribution",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
+      "TODO:$j": "",
       "_spec": [
         {
           "source": {
@@ -3397,13 +3488,13 @@
               "contribution": [
                 {
                   "@type": "PrimaryContribution",
-                  "agent": [{
+                  "agent": {
                     "@type": "Meeting",
                     "name": "Paris",
                     "additionalName": "Peace Conference",
-                    "date": "1919",
-                    "comment" : "Projected, not held"
-                  }]
+                    "date": ["1919"],
+                    "comment" : ["Projected, not held"]
+                  }
                 }]
             }
           }}
@@ -3422,16 +3513,15 @@
               "contribution": [
                 {
                   "@type": "PrimaryContribution",
-                  "agent": [{
+                  "agent": {
                     "@type": "Meeting",
                     "name": "World Peace Conference",
-                    "place" : {
+                    "place" : [{
                       "@type" : "Place",
                       "label" : "Paris, France"
-                    },
-                    "date": "1959",
-                    "numberOfPartSectionMeeting": "1st"}
-                  ]
+                    }],
+                    "date": ["1959"],
+                    "numberOfPartSectionMeeting": ["1st"]}
                 }]
             }
           }}
@@ -4620,17 +4710,15 @@
       "match": [
         {
           "when": "$t & i2=2",
-          "include": "agentdataPersonFamily",
+          "include": ["agentdataPersonFamily", "titledetailsPersonFamily"],
           "addLink": "hasPart",
           "resourceType": "Work",
           "$t": {"property": "title"},
-          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
           "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
             "_:contribution": {
               "addLink": "contribution",
               "resourceType": "PrimaryContribution",
-              "TODO:resourceType": "Contribution",
               "embedded": true
             },
             "_:agent": {
@@ -4644,7 +4732,7 @@
         {
           "when": "$t",
           "addLink": "relatedTo",
-          "include": "agentdataPersonFamily",
+          "include": ["agentdataPersonFamily", "titledetailsPersonFamily"],
           "resourceType": "Relationship",
           "pendingResources": {
             "_:work": {
@@ -4656,10 +4744,10 @@
               "about": "_:work",
               "addLink": "contribution",
               "resourceType": "PrimaryContribution",
-              "TODO:resourceType": "Contribution",
               "embedded": true
             },
             "_:agent": {
+              "FIXME:resourceType": "When ind1=1 change resourceType to Family. Concerns ~00000,16 ‰ of bib data",
               "about": "_:contribution",
               "link": "agent",
               "resourceType": "Person",
@@ -4668,7 +4756,6 @@
           },
           "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
-          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -4678,21 +4765,24 @@
         },
         {
           "when": null,
-          "include": "contributiondata",
+          "include": ["contributiondata", "titledetailsPersonFamily"],
           "resourceType": "Contribution",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
       "subfieldOrder": "i ... t e",
       "TODO:subfieldOrder": "Sortering ska göras efter inläggningsordning i listade delfält, dvs abcdjq - $u affiliation innehåller en adress, typ gatuadress",
+      "$h": {"property": "medium"},
+      "$m": {"addProperty": "musicMedium"},
+      "$o": {"property": "version"},
+      "$r": {"property": "musicKey"},
+      "$s": {"property": "marc:version"},
+      "$x": {"property": "issn"},
       "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
       "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "_spec": [
         {
-          "source": {"700":
-            {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}
-            ]}
+          "source": {"700": {"ind1": "1", "ind2": " ", "subfields": [ {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}]}
           },
           "result": {"mainEntity": {
             "instanceOf": {
@@ -4769,9 +4859,78 @@
         },
         {
           "source": {
+            "700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Munro, Alice"},
+              {"d": "1931-"},
+              {"t": "Progress of love."},
+              {"l": "Svenska."},
+              {"k": "Urval"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "title": "Progress of love.",
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
+                        "agent": {"@type": "Person", "familyName":  "Munro", "givenName":  "Alice", "birthYear":  "1931"}
+                      }
+                    ]
+                  },
+                  "formSubheading" : [ "Urval" ],
+                  "language" : {
+                    "@type" : "Language",
+                    "label" : "Svenska."
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Cyprianus av Kartago,"},
+              {"d": "1914-1987"},
+              {"t": "De idolorum vanitate."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "title": "De idolorum vanitate.",
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
+                        "agent": {
+                          "@type": "Person",
+                          "name":  "Cyprianus av Kartago,",
+                          "birthYear": "1914",
+                          "deathYear": "1987"
+                          }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
             "700": {"ind1": "1", "ind2": "2", "subfields": [
               {"a": "Jansson, Tove"},
-              {"t": "Anteckningar från en ö"}
+              {"t": "Anteckningar från en ö"},
+              {"d": "1914-2001"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -4783,7 +4942,12 @@
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
-                      "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                      "agent": {
+                        "@type": "Person",
+                        "familyName":  "Jansson",
+                        "givenName":  "Tove",
+                        "birthYear":  "1914",
+                        "deathYear":  "2001"}
                     }
                   ]
                 }
@@ -4813,6 +4977,7 @@
             }
           }}
         },
+
         {
           "source": {
             "700": {"ind1": "1", "ind2": " ", "subfields": [
@@ -4820,35 +4985,6 @@
               {"a": "Jansson, Tove"},
               {"t": "Anteckningar från en ö"}
           ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [
-                {
-                  "@type": "Relationship",
-                  "relation": [{"label": "Parafraserar"}],
-                  "entity": {
-                    "@type": "Work",
-                    "title": "Anteckningar från en ö",
-                    "contribution": [
-                      {
-                        "@type": "PrimaryContribution",
-                        "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          }}
-        },
-        {
-          "source": {
-            "700": {"ind1": "1", "ind2": " ", "subfields": [
-              {"i": "Parafraserar"},
-              {"a": "Jansson, Tove"},
-              {"t": "Anteckningar från en ö"}
-            ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -4880,7 +5016,7 @@
         {
           "when": "$t & i1=1",
           "addLink": "relatedTo",
-          "include": "agentdataOrganization",
+          "include": ["agentdataOrganization", "titledetailsOrganization"],
           "resourceType": "Relationship",
           "pendingResources": {
             "_:work": {
@@ -4897,20 +5033,19 @@
             },
             "_:agent": {
               "about": "_:contribution",
-              "addLink": "agent",
+              "link": "agent",
               "resourceType": "Jurisdiction",
               "embedded": false
             }
           },
           "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
-          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": "$t",
           "addLink": "relatedTo",
-          "include": "agentdataOrganization",
+          "include": ["agentdataOrganization", "titledetailsOrganization"],
           "resourceType": "Relationship",
           "pendingResources": {
             "_:work": {
@@ -4927,34 +5062,33 @@
             },
             "_:agent": {
               "about": "_:contribution",
-              "addLink": "agent",
+              "link": "agent",
               "resourceType": "Organization",
               "embedded": false
             }
           },
           "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
-          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": "i1=1",
-          "include": "agentdataOrganization",
+          "include": ["agentdataOrganization", "titledetailsOrganization"],
           "pendingResources": {
-            "_:agent": {"addLink": "agent", "resourceType": "Jurisdiction"},
+            "_:agent": {"link": "agent", "resourceType": "Jurisdiction"},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
-            "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "addLink": "contribution",
           "resourceType": "Contribution"
         },
         {
           "when": null,
-          "include": "agentdataOrganization",
+          "include": ["agentdataOrganization", "titledetailsOrganization"],
           "pendingResources": {
-            "_:agent": {"addLink": "agent", "resourceType": "Organization"},
+            "_:agent": {"link": "agent", "resourceType": "Organization"},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
-            "_:place": {"about": "_:agent", "link": "place", "resourceType": "Place"}
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "addLink": "contribution",
           "resourceType": "Contribution"
@@ -4967,7 +5101,14 @@
       ],
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
+      "$h": {"property": "medium"},
+      "$m": {"addProperty": "musicMedium"},
+      "$o": {"property": "version"},
+      "$r": {"property": "musicKey"},
+      "$s": {"property": "marc:version"},
+      "$x": {"property": "issn"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
+      "TOOO:$e": {},
       "TOOO:i2": {},
 
       "_spec": [
@@ -4989,12 +5130,8 @@
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
-                        "agent": [
-                          {
-                            "@type": "Jurisdiction",
-                            "name": "National Fire Protection Association."
-                          }
-                        ]
+                        "agent":
+                          {"@type": "Jurisdiction", "name": "National Fire Protection Association."}
                       }
                     ]
                   }
@@ -5021,12 +5158,8 @@
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
-                        "agent": [
-                          {
-                            "@type": "Organization",
-                            "name": "National Fire Protection Association."
-                          }
-                        ]
+                        "agent":
+                          {"@type": "Organization", "name": "National Fire Protection Association."}
                       }
                     ]
                   }
@@ -5046,14 +5179,33 @@
                 "contribution": [
                   {
                     "@type": "Contribution",
-                    "agent": [
-                      {
-                        "@type": "Jurisdiction",
-                        "name": "National Fire Protection Association."
-                      }
-                    ]
+                    "agent":
+                      {"@type": "Jurisdiction", "name": "National Fire Protection Association."}
                   }
                 ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "National Fire Protection Association."},
+              {"l": "Finska"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent":
+                  {"@type": "Jurisdiction", "name": "National Fire Protection Association."},
+                  "language" : {
+                    "@type" : "Language",
+                    "label" : "Finska"
+                  }
+                }
+              ]
             }
           }}
         },
@@ -5062,7 +5214,8 @@
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Chalmers tekniska högskola."},
               {"b": "Institutionen för teknikens ekonomi och organisation."},
-              {"b": "Industriell organisation och ekonomi"}
+              {"b": "Industriell organisation och ekonomi"},
+              {"l": "Finska"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -5070,7 +5223,7 @@
               "contribution": [
                 {
                   "@type": "Contribution",
-                  "agent": [{
+                  "agent": {
                     "@type": "Organization",
                     "name" : ["Institutionen för teknikens ekonomi och organisation.",
                               "Industriell organisation och ekonomi"],
@@ -5078,16 +5231,128 @@
                       "@type": "Organization",
                       "name": "Chalmers tekniska högskola."
                     }
-                  }]
+                  },
+                  "language" : {
+                    "@type" : "Language",
+                    "label" : "Finska"
+                  }
                 }]
+            }
+          }}
+        },
+        {
+          "source": [
+            {"710": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Sverige."}, {"b": "Riksdagen."},
+                                                             {"b": "Konstitutionsutskottet"}, {"d": "(1996-04-13)"}]}},
+            {"710": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Sverige."}, {"b": "Regeringen i Bremen-Verden"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent": {
+                    "@type": "Jurisdiction",
+                    "name" : ["Riksdagen.", "Konstitutionsutskottet"],
+                    "isPartOf": {
+                      "@type": "Jurisdiction",
+                      "name": "Sverige."
+                    },
+                    "date": ["(1996-04-13)"]
+                  }
+                },
+                {
+                  "@type": "Contribution",
+                  "agent": {
+                    "@type": "Jurisdiction",
+                    "name" : ["Regeringen i Bremen-Verden"],
+                    "isPartOf": {
+                      "@type": "Jurisdiction",
+                      "name": "Sverige."
+                    }
+                  }
+                }
+              ]
             }
           }}
         }
       ]
     },
 
-      "711": {
-      "inherit": "111"
+    "711": {
+      "aboutEntity": "?work",
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "i1": {"marcDefault": "2"},
+      "pendingResources": {
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+      },
+      "match": [
+        {
+          "when": "$t",
+          "addLink": "relatedTo",
+          "include": ["agentdataMeeting", "titledetailsMeeting"],
+          "resourceType": "Relationship",
+          "pendingResources": {
+            "_:work": {
+              "link": "entity",
+              "resourceType": "Work",
+              "embedded": false
+            },
+            "_:contribution": {
+              "about": "_:work",
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "TODO:resourceType": "Contribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Meeting",
+              "embedded": false
+            }
+          },
+          "$i": {"addLink": "relation", "property": "label"},
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": null,
+          "addLink": "contribution",
+          "resourceType": "Contribution",
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Meeting"}
+          },
+          "include": ["agentdataMeeting", "titledetailsMeeting"],
+          "$t": {"property": "title"}
+        }
+      ],
+      "$i": {"addLink": "relation", "property": "label"},
+      "$s": {"property": "marc:version"},
+      "$x": {"property": "issn"},
+      "_spec": [
+        {
+          "source": {
+            "711": {"ind1": "2", "subfields": [
+              {"a": "Mostly Mozart Festival."},
+              {"e": "Orchestra."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent": {
+                    "@type": "Meeting",
+                    "name": "Mostly Mozart Festival.",
+                    "subordinateUnit": ["Orchestra."]}
+                }]
+            }
+          }}
+        }
+      ]
     },
 
     "720": {},
