@@ -60,7 +60,7 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                     docIsNull++
 
                 if (doc != null) {
-                        List<Map> matchResults = AuthBibMatcher.matchAuthToBib(doc, allAuthRecords)
+                    List<Map> matchResults = AuthBibMatcher.matchAuthToBib(doc, allAuthRecords)
 
                     def uncertainMatches = matchResults.findAll { Map match ->
                         ((match.hasOnlyDiff || match.hasOnlyReverseDiff || match.hasDoubleDiff)
@@ -71,7 +71,7 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                     //TODO: handle writes to resultmap in threaded environment.
                     resultMap.matches += completeMatches.size()
 
-                    populateResults(matchResults,uncertainMatches)
+                    populateResults(matchResults, uncertainMatches)
                     printDiffResultsToFile(uncertainMatches, completeMatches)
 
                 }
