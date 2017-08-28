@@ -55,6 +55,7 @@ class PostgreSQLComponent {
     protected String GET_SYSTEMID_BY_IRI
     protected String GET_MINMAX_MODIFIED
     protected String UPDATE_MINMAX_MODIFIED
+    protected String GET_LEGACY_PROFILE
 
     // Deprecated
     protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
@@ -80,6 +81,7 @@ class PostgreSQLComponent {
         String versionsTableName = mainTableName + "__versions"
         String settingsTableName = mainTableName + "__settings"
         String dependenciesTableName = mainTableName + "__dependencies"
+        String profilesTableName = mainTableName + "__profiles"
 
 
         connectionPool = new BasicDataSource()
@@ -196,6 +198,8 @@ class PostgreSQLComponent {
                    "OR data->'@graph' @> ?"
 
         GET_SYSTEMID_BY_IRI = "SELECT id FROM $idTableName WHERE iri = ?"
+
+        GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
      }
 
 
@@ -1135,6 +1139,81 @@ class PostgreSQLComponent {
             if (connection != null)
                 connection.close()
         }
+    }
+
+    String getProfileByLibraryUri(String libraryUri) {
+        Connection connection
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(GET_LEGACY_PROFILE)
+            preparedStatement.setString(1, libraryUri)
+            rs = preparedStatement.executeQuery()
+            if (rs.next()) {
+                return rs.getString(1)
+            }
+            return null
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+            if (connection != null)
+                connection.close()
+        }
+    }
+
+    /**
+     * Returns a list of holdings documents, for any of the passed thingIdentifiers
+     */
+    List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
+        // Build the query
+        StringBuilder selectSQL = new StringBuilder("SELECT id,data,created,modified,deleted FROM ")
+        selectSQL.append(mainTableName)
+        selectSQL.append(" WHERE collection = 'hold' AND deleted = false AND (")
+        for (int i = 0; i < thingIdentifiers.size(); ++i)
+        {
+            selectSQL.append(" data#>>'{@graph,1,itemOf,@id}' = ? ")
+
+            // If this is the last id
+            if (i+1 == thingIdentifiers.size())
+                selectSQL.append(")")
+            else
+                selectSQL.append("OR")
+        }
+
+        // Assemble results
+        Connection connection
+        ResultSet rs
+        PreparedStatement preparedStatement
+        try {
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(selectSQL.toString())
+
+            for (int i = 0; i < thingIdentifiers.size(); ++i)
+            {
+                preparedStatement.setString(i+1, thingIdentifiers.get(i))
+            }
+
+            rs = preparedStatement.executeQuery()
+            List<Document> holdings = []
+            while (rs.next()) {
+                Document holding = assembleDocument(rs)
+                holdings.add(holding)
+            }
+            return holdings
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+            if (connection != null)
+                connection.close()
+        }
+        return []
     }
 
     private Document loadFromSql(String sql, Map<Integer, Object> parameters) {
