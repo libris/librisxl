@@ -233,67 +233,22 @@ public class ResponseCommon
     private static void emitAttachedHoldings(List<String> itIds, XMLStreamWriter writer)
             throws SQLException, XMLStreamException, IOException
     {
-        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
-             PreparedStatement preparedStatement = getAttachedHoldings(dbconn, itIds);
-             ResultSet resultSet = preparedStatement.executeQuery())
+        List<Document> holdings = OaiPmh.s_postgreSqlComponent.getAttachedHoldings(itIds);
+        writer.writeStartElement("about");
+        for (Document holding : holdings)
         {
-            // Is the resultset empty?
-            if (!resultSet.isBeforeFirst())
-                return;
-
-            writer.writeStartElement("about");
-            while(resultSet.next())
+            String sigel = holding.getSigel();
+            if (sigel == null)
             {
-                String sigelUri = resultSet.getString("sigel");
-                if (sigelUri == null)
-                {
-                    logger.warn("Holding post without sigel/library-URI, which is not allowed. hold id: {}", resultSet.getString("id"));
-                    continue;
-                }
-                String sigel = LegacyIntegrationTools.uriToLegacySigel(sigelUri.replace("\"", ""));
-                if (sigel == null)
-                {
-                    logger.warn("Holding post library-URI that could not be mapped to a classic sigel. hold id: {}", resultSet.getString("id"));
-                    continue;
-                }
-
-                writer.writeStartElement("holding");
-                writer.writeAttribute("sigel", sigel);
-                writer.writeAttribute("id", resultSet.getString("id"));
-                writer.writeEndElement(); // holding
+                logger.warn("Holding post without valid sigel! hold id: {}", holding.getShortId());
+                continue;
             }
-            writer.writeEndElement(); // about
+
+            writer.writeStartElement("holding");
+            writer.writeAttribute("sigel", sigel);
+            writer.writeAttribute("id", holding.getShortId());
+            writer.writeEndElement(); // holding
         }
-    }
-
-    private static PreparedStatement getAttachedHoldings(Connection dbconn, List<String> itIds)
-            throws SQLException
-    {
-        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-
-        StringBuilder selectSQL = new StringBuilder("SELECT id, data#>>'{@graph,1,heldBy,@id}' AS sigel FROM ");
-        selectSQL.append(tableName);
-        selectSQL.append(" WHERE collection = 'hold' AND deleted = false AND (");
-
-        for (int i = 0; i < itIds.size(); ++i)
-        {
-            selectSQL.append(" data#>>'{@graph,1,itemOf,@id}' = ? ");
-
-            // If this is the last id
-            if (i+1 == itIds.size())
-                selectSQL.append(")");
-            else
-                selectSQL.append("OR");
-        }
-
-        PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL.toString());
-
-        for (int i = 0; i < itIds.size(); ++i)
-        {
-            preparedStatement.setString(i+1, itIds.get(i));
-        }
-
-        preparedStatement.setFetchSize(32);
-        return preparedStatement;
+        writer.writeEndElement(); // about
     }
 }

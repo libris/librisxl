@@ -2,6 +2,7 @@ package whelk.rest.api
 
 import groovy.xml.XmlUtil
 import se.kb.libris.util.marc.MarcRecord
+import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
 import whelk.Document
 import whelk.JsonLd
@@ -10,6 +11,9 @@ import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
+
+import se.kb.libris.export.ExportProfile
+import se.kb.libris.export.MergeRecords
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -63,8 +67,50 @@ class LegacyMarcAPI extends HttpServlet {
         }
 
         library = LegacyIntegrationTools.legacySigelToUri(library)
+        String profileString = whelk.storage.getProfileByLibraryUri(library)
+        File tempFile = File.createTempFile("profile", ".tmp")
+        tempFile.write(profileString)
+        ExportProfile profile = new ExportProfile(tempFile)
+        tempFile.delete()
 
-        response.getOutputStream().println("Wiring ok.")
+        Vector<MarcRecord> result = compileVirtualMarcRecord(profile, rootDocument)
+
+        response.setContentType("application/octet-stream")
+        Iso2709MarcRecordWriter writer = new Iso2709MarcRecordWriter(response.getOutputStream(), "UTF-8")
+        for (MarcRecord record : result) {
+            writer.writeRecord(record)
+        }
+        response.getOutputStream().close()
+    }
+
+    Vector<MarcRecord> compileVirtualMarcRecord(ExportProfile profile, Document rootDocument) {
+        String bibXmlString = toXmlString(rootDocument)
+        def xmlRecord = new XmlSlurper(false, false).parseText(bibXmlString)
+
+        List auth_ids = []
+        xmlRecord.datafield.subfield.each {
+            if (it.@code.text().equals("0") && (it.text().startsWith("https://id.kb.se/") || it.text().startsWith("https://libris.kb.se/"))) {
+                auth_ids.add(it.text())
+            }
+        }
+
+        def auths = new HashSet<MarcRecord>()
+        if (!profile.getProperty("authtype", "NONE").equalsIgnoreCase("NONE")) {
+            auth_ids.each { String auth_id ->
+                auths.add(MarcXmlRecordReader.fromXml(toXmlString(getDocument(auth_id))))
+            }
+        }
+
+        List<Document> holdingDocuments = whelk.storage.getAttachedHoldings(rootDocument.getThingIdentifiers())
+        def holdings = new TreeMap<String, MarcRecord>()
+
+        if (!profile.getProperty("holdtype", "NONE").equalsIgnoreCase("NONE")) {
+            for (Document holding : holdingDocuments) {
+                holdings.put(holding.getSigel(), MarcXmlRecordReader.fromXml(toXmlString(holding)))
+            }
+        }
+
+        return profile.mergeRecord(MarcXmlRecordReader.fromXml(bibXmlString), holdings, auths)
     }
 
     /**
@@ -74,7 +120,7 @@ class LegacyMarcAPI extends HttpServlet {
         String recordId = whelk.storage.getRecordId(idOrSameAs)
         if (recordId == null)
             return null
-        return whelk.storage.load(recordId)
+        return whelk.storage.loadDocumentByMainId(recordId)
     }
 
     /**
@@ -87,17 +133,5 @@ class LegacyMarcAPI extends HttpServlet {
         catch (Exception | Error e) { // Depending on the converter, a variety of problems may arise here
             return null
         }
-    }
-
-    /**
-     * Make a marc xml string out of a XmlSlurper node
-     */
-    String toXmlString(node) {
-        XmlUtil.serialize(node)
-    }
-
-    void compileVirtualMarcRecord(String bibXmlString) {
-        MarcRecord marcRecord = MarcXmlRecordReader.fromXml(bibXmlString)
-
     }
 }
