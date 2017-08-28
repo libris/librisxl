@@ -402,9 +402,13 @@
           "$b": {"about": "_:agent", "addProperty": "name"},
           "$a": {"about": "_:isPartOf", "property": "name"}
 
+        },
+        {
+          "when": null,
+          "$a": { "about": "_:agent", "property": "name", "required": true}
+
         }
       ],
-      "$a": { "about": "_:agent", "property": "name", "required": true},
       "$b": { "about": "_:agent", "property": "name"},
       "$c": {"about": "_:place", "property": "label"},
       "$d": {"about": "_:agent", "addProperty": "date"},
@@ -3272,7 +3276,7 @@
           "source": {
             "100": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Andersson, Lars,"},
-              {"c": "1961-,"},
+              {"d": "1961-,"},
               {"c": "arkeolog"}
             ]}},
           "result": {"mainEntity": {
@@ -3284,7 +3288,8 @@
                   "agent": {"@type": "Person",
                     "familyName":  "Andersson",
                     "givenName":  "Lars",
-                    "titleOther": ["1961-,", "arkeolog"]}
+                    "birthYear":  "1961",
+                    "titleOther": ["arkeolog"]}
                 }
               ]
             }
@@ -3292,9 +3297,9 @@
         },
         {
           "source": {
-            "100": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Andersson, Lars,"},
-              {"c": "1961-,"},
+            "100": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Andersson"},
+              {"d": "1961-,"},
               {"c": "arkeolog"}
             ]}},
           "result": {"mainEntity": {
@@ -3304,9 +3309,9 @@
                 {
                   "@type": "PrimaryContribution",
                   "agent": {"@type": "Person",
-                    "familyName":  "Andersson",
-                    "givenName":  "Lars",
-                    "titleOther": ["1961-,", "arkeolog"]}
+                    "name":  "Andersson",
+                    "birthYear":  "1961",
+                    "titleOther": ["arkeolog"]}
                 }
               ]
             }
@@ -4929,8 +4934,8 @@
           "source": {
             "700": {"ind1": "1", "ind2": "2", "subfields": [
               {"a": "Jansson, Tove"},
-              {"t": "Anteckningar från en ö"},
-              {"d": "1914-2001"}
+              {"d": "1914-2001"},
+              {"t": "Anteckningar från en ö"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -5014,6 +5019,27 @@
       "aboutEntity": "?work",
       "match": [
         {
+          "when": "$t & i2=2 & i1=1",
+          "include": ["agentdataOrganization", "titledetailsOrganization"],
+          "addLink": "hasPart",
+          "resourceType": "Work",
+          "$t": {"property": "title"},
+          "$0": {"addLink": "identifiedBy", "property": "value"},
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Jurisdiction",
+              "embedded": false
+            }
+          }
+        },
+        {
           "when": "$t & i1=1",
           "addLink": "relatedTo",
           "include": ["agentdataOrganization", "titledetailsOrganization"],
@@ -5041,6 +5067,27 @@
           "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t & i2=2",
+          "include": ["agentdataOrganization", "titledetailsOrganization"],
+          "addLink": "hasPart",
+          "resourceType": "Work",
+          "$t": {"property": "title"},
+          "$0": {"addLink": "identifiedBy", "property": "value"},
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Organization",
+              "embedded": false
+            }
+          }
         },
         {
           "when": "$t",
@@ -5083,6 +5130,16 @@
           "resourceType": "Contribution"
         },
         {
+          "when": "i2=2 & i1=1",
+          "inherit-match": "$t & i2=2 & i1=1",
+          "NOTE": "An agent is not a part; we add an untitled, intermediary hasPart"
+        },
+        {
+          "when": "i2=2",
+          "inherit-match": "$t & i2=2",
+          "NOTE": "An agent is not a part; we add an untitled, intermediary hasPart"
+        },
+        {
           "when": null,
           "include": ["agentdataOrganization", "titledetailsOrganization"],
           "pendingResources": {
@@ -5109,7 +5166,7 @@
       "$x": {"property": "issn"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
       "TOOO:$e": {},
-      "TOOO:i2": {},
+      "TOOO:i2": "How to map when no $t?",
 
       "_spec": [
         {
@@ -5241,6 +5298,56 @@
           }}
         },
         {
+          "source": {
+            "710": {"ind1": "1", "ind2": "2", "subfields": [
+              {"a": "Sverige."},
+              {"t": "Lagen om vissa kommunala befogenheter"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "title": "Lagen om vissa kommunala befogenheter",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Jurisdiction",
+                        "name":  "Sverige."}
+                    }
+                  ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "2", "ind2": "2", "subfields": [
+              {"a": "Sverige."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Organization",
+                        "name":  "Sverige."}
+                    }
+                  ]
+                }
+              ]
+            }
+          }}
+        },
+        {
           "source": [
             {"710": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Sverige."}, {"b": "Riksdagen."},
                                                              {"b": "Konstitutionsutskottet"}, {"d": "(1996-04-13)"}]}},
@@ -5334,7 +5441,7 @@
       "_spec": [
         {
           "source": {
-            "711": {"ind1": "2", "subfields": [
+            "711": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Mostly Mozart Festival."},
               {"e": "Orchestra."}
             ]}},
@@ -5349,6 +5456,31 @@
                     "name": "Mostly Mozart Festival.",
                     "subordinateUnit": ["Orchestra."]}
                 }]
+            }
+          }}
+        },
+        {
+          "source": {
+            "711": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Westminster Assembly"},
+              {"t": "Larger catechism."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "title": "Larger catechism.",
+                    "contribution": [
+                      {"@type": "PrimaryContribution",
+                        "agent": {"@type": "Meeting", "name": "Westminster Assembly"}}
+                    ]
+                  }
+                }
+              ]
             }
           }}
         }
