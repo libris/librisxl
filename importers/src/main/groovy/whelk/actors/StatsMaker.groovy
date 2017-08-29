@@ -108,16 +108,9 @@ class StatsMaker implements MySQLLoader.LoadHandler {
 
     String header = "MatchType" +
             "\tMatchPattern" +
-            //"\tAuthNotInBib" +
             "\tAuktfält" +
             "\tBibfält" +
-            "\tSubfieldsInDiff" +
-            "\tÖverensstämmandeDelfält" +
-            "\tSubfieldsInReverseDiff" +
-            //"\tReverseDiffCount" +
-            //"\tOverlapCount" +
-            //"\tAntalBibdelfält" +
-            //"\tAntalAuktdelfält" +
+            "\tAllaDelfält" +
             "\tHasPartialD" +
             "\tauktdelfält" +
             "\tbibdelfält" +
@@ -127,21 +120,14 @@ class StatsMaker implements MySQLLoader.LoadHandler {
             "\tauktUrl" +
             "\tbibUrl" +
             "\n"
-
+    
     synchronized void appendtofile(BufferedWriter fileWriter, matches) {
         matches.each { Map match ->
             fileWriter.write("${match.type}" +
                     "\t${getMatchPattern(match)}" +
-                    //"\t${match.diff.count { it }}" +
                     "\t${match.spec.field}" +
                     "\t${match.bibField}" +
-                    "\t${formatSubfieldDiff(match.subfieldsInDiff)}" +
-                    "\t${formatSubfieldDiff(match.subfieldsInOverlap)}" +
-                    "\t${formatSubfieldDiff(match.subfieldsInReversediff)}" +
-                    //"\t${match.reverseDiff.count { it }}" +
-                    //"\t${match.overlap.count { it }}" +
-                    //"\t${match.numBibFields}" +
-                    //"\t${match.numAuthFields}" +
+                    "\t${formatSubfieldDiff(match.subfieldsInDiff)} - ${formatSubfieldDiff(match.subfieldsInOverlap)} - ${formatSubfieldDiff(match.subfieldsInReversediff)}" +
                     "\t${match.partialD}" +
                     "\t${match.authSet} " +
                     "\t${match.bibSet} " +
@@ -151,7 +137,6 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                     "\thttp://data.libris.kb.se/auth/oaipmh?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/auth/${match.authId}" +
                     "\thttp://data.libris.kb.se/bib/oaipmh?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/bib/${match.bibId}" +
                     "\n")
-
         }
     }
 
