@@ -47,6 +47,7 @@ class Document {
     static final List failedApixExportPath = ["@graph", 0, "apixExportFailedAt"]
     static final List controlNumberPath = ["@graph", 0, "controlNumber"]
     static final List holdingForPath = ["@graph", 1, "itemOf", "@id"]
+    static final List heldByPath = ["@graph", 1, "heldBy", "@id"]
     static final List createdPath = ["@graph", 0, "created"]
     static final List modifiedPath = ["@graph", 0, "modified"]
     static final List encLevelPath = ["@graph", 0, "marc:encLevel", "@id"]
@@ -91,6 +92,8 @@ class Document {
     void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor, LinkedHashMap) }
 
     String getHoldingFor() { get(holdingForPath) }
+
+    String getHeldBy() { get(heldByPath) }
 
     void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, LinkedHashMap) }
 
