@@ -65,9 +65,14 @@ class LegacyMarcAPI extends HttpServlet {
                     "The supplied \"id\"-parameter must refer to an existing bibliographic record.")
             return
         }
-
         library = LegacyIntegrationTools.legacySigelToUri(library)
         String profileString = whelk.storage.getProfileByLibraryUri(library)
+        if (profileString == null){
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Could not find a profile for the supplied \"library\"-parameter.")
+            return
+        }
+
         File tempFile = File.createTempFile("profile", ".tmp")
         tempFile.write(profileString)
         ExportProfile profile = new ExportProfile(tempFile)
