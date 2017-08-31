@@ -53,6 +53,8 @@ class LegacyMarcAPI extends HttpServlet {
                     "\"library\" (sigel) and \"id\" parameters required.")
             return
         }
+        id = LegacyIntegrationTools.fixUri(id)
+        library = LegacyIntegrationTools.fixUri(library)
         Document rootDocument = getDocument(id)
         if (rootDocument == null){
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
@@ -65,7 +67,6 @@ class LegacyMarcAPI extends HttpServlet {
                     "The supplied \"id\"-parameter must refer to an existing bibliographic record.")
             return
         }
-        library = LegacyIntegrationTools.legacySigelToUri(library)
         String profileString = whelk.storage.getProfileByLibraryUri(library)
         if (profileString == null){
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,

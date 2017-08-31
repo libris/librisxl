@@ -49,11 +49,7 @@ public class Helpers
     public static PreparedStatement prepareSameAsStatement(Connection dbconn, String id)
             throws SQLException
     {
-        if (id.matches("/http:/[^/].+")) {
-            id = id.replace("http:/", "http://");
-        } else if (id.matches("/https:/[^/].+")) {
-            id = id.replace("https:/", "https://");
-        }
+        id = LegacyIntegrationTools.fixUri(id);
 
         String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
 
