@@ -36,18 +36,23 @@ class AuthBibMatcher {
                     authFieldsToAdd  : [[field: '040', subfield: 'f', targetField: '2']]]
     ]
 
+    /**
+     * Note!
+     * The patterns below are greedy in the way that the pattern '2 - a - 2'
+     * also matches patterns like '2t - ad - 2'
+     */
     static List matchCombinationsToIgnore = [
-            [authField: '150', pattern: ['2', 'a', '2']],
-            [authField: '150', pattern: ['2', 'a', '']],
-            [authField: '150', pattern: ['', 'a', '2']],
-            [authField: '151', pattern: ['2', 'a', '2']],
-            [authField: '151', pattern: ['2', 'a', '']],
-            [authField: '151', pattern: ['', 'a', '2']],
-            [authField: '155', pattern: ['2', 'a', '2']],
-            [authField: '155', pattern: ['2', 'a', '']],
-            [authField: '155', pattern: ['', 'a', '2']],
-            [authField: '100', pattern: ['t', 'a', 't']], //
-            [authField: '110', pattern: ['b', 'a', 'b']] // Same organisation
+            [authField: '150', pattern: ['2', 'a', '2']],   // Same term, but from different source. No match
+            [authField: '150', pattern: ['2', 'a', '']],    // Bibfield lacks source. No Match
+            [authField: '150', pattern: ['', 'a', '2']],    // "Decoded" authority term. Bibfield still has info on source. No match
+            [authField: '151', pattern: ['2', 'a', '2']],   // Same term, but from different thesauri. No match
+            [authField: '151', pattern: ['2', 'a', '']],    // Bibfield lacks source. No Match
+            [authField: '151', pattern: ['', 'a', '2']],    // "Decoded" authority term. Bibfield still has info on source
+            [authField: '155', pattern: ['2', 'a', '2']],   // Same term, but from different thesauri. No match
+            [authField: '155', pattern: ['2', 'a', '']],    // Bibfield lacks source. No Match
+            [authField: '155', pattern: ['', 'a', '2']],    // "Decoded" authority term. Bibfield still has info on source
+           // [authField: '100', pattern: ['t', 'a', 't']],   // TODO: Write down reason for ignorgi
+            [authField: '110', pattern: ['b', 'a', 'b']] // Same main organisation, different suborganisation. No match.
     ]
 
     /**
