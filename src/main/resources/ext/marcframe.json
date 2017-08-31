@@ -263,26 +263,17 @@
       "$s": {"property": "version"}
     },
 
-    "titledetailsPersonFamily": {
+    "titledetails1xx7xx": {
       "$f": {"property": "originDate"},
-      "$g": {"addProperty": "genreForm"},
+      "$h": {"property": "medium"},
       "$k": {"addProperty": "formSubheading"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+      "$m": {"addProperty": "musicMedium"},
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
-      "$p": {"addProperty": "partName", "punctuationChars": "/"}
-    },
-
-    "titledetailsOrganization": {
-      "$f": {"property": "originDate"},
-      "$k": {"addProperty": "formSubheading"},
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$p": {"addProperty": "partName", "punctuationChars": "/"}
-    },
-
-    "titledetailsMeeting": {
-      "$f": {"property": "originDate"},
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$p": {"addProperty": "partName", "punctuationChars": "/"}
+      "$o": {"property": "version"},
+      "$p": {"addProperty": "partName", "punctuationChars": "/"},
+      "$r": {"property": "musicKey"},
+      "$s": {"property": "marc:version"}
     },
 
     "structuredtitle": {
@@ -390,6 +381,7 @@
         "rejoin": "-",
         "allowEmpty": true
       },
+      "$g": {"about": "_:agent", "addProperty": "comment"},
       "$j": {"about": "_:agent", "property": "attributionQualifier"},
       "$q": {"about": "_:agent", "property": "fullerFormName"},
       "$u": {"about": "_:agent", "property": "affiliation"}
@@ -399,7 +391,7 @@
       "match": [
         {
           "when": "$b",
-          "$b": {"about": "_:agent", "addProperty": "name"},
+          "$b": {"about": "_:agent", "addProperty": "subordinateUnit"},
           "$a": {"about": "_:isPartOf", "property": "name"}
 
         },
@@ -409,9 +401,10 @@
 
         }
       ],
-      "$b": { "about": "_:agent", "property": "name"},
+      "$a": { "about": "_:agent", "property": "name", "required": true},
       "$c": {"about": "_:place", "property": "label"},
       "$d": {"about": "_:agent", "addProperty": "date"},
+      "$g": {"about": "_:agent", "addProperty": "genreForm"},
       "$n": {"about": "_:agent", "addProperty": "numberOfPartSectionMeeting"},
       "$g": {"about": "_:agent", "addProperty": "comment"},
       "$u": {"about": "_:agent", "property": "affiliation"},
@@ -3194,10 +3187,10 @@
 
     "100": {
       "aboutEntity": "?work",
-      "include": ["contributiondata", "titledetailsPersonFamily"],
+      "include": ["contributiondata", "titledetails1xx7xx"],
       "resourceType": "PrimaryContribution",
       "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
-      "TODO:subfieldOrder": "Sortering ska göras efter inläggningsordning i listade delfält, dvs abcdjq - $u affiliation innehåller en adress, typ gatuadress",
+      "subfieldOrder": "a b c q d j g u e 4 t n p l k f",
       "_spec": [
         {
           "source": {
@@ -3330,9 +3323,9 @@
                 {
                   "@type": "PrimaryContribution",
                   "agent": {"@type": "Person",
+                    "comment": ["pseud. för Susan Warner."],
                     "familyName":  "Wetherell",
-                    "givenName":  "Elizabeth"},
-                  "genreForm": ["pseud. för Susan Warner."]
+                    "givenName":  "Elizabeth"}
                 }
               ]
             }
@@ -3343,8 +3336,8 @@
 
     "110": {
       "aboutEntity": "?work",
+      "include": "titledetails1xx7xx",
       "addLink": "contribution",
-      "include": "titledetailsOrganization",
       "resourceType": "PrimaryContribution",
 
       "match":[
@@ -3372,11 +3365,11 @@
         "i1": {"marcDefault": "2"},
         "$0": {"addLink": "identifiedBy", "property": "value"},
         "TODO": [
-          "change splitValueProperties to work on result, to handle match combo",
-          "subfieldorder ($n $d ...)?"
+          "change splitValueProperties to work on result, to handle match combo"
         ]
       }
       ],
+      "subfieldOrder": "a b n d c g u e 4 t p l k f",
       "_spec": [
         {
           "source": {
@@ -3393,7 +3386,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Organization",
-                    "name" : ["Norstedts Juridik"],
+                    "subordinateUnit" : ["Norstedts Juridik"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Wolters Kluwer"
@@ -3422,7 +3415,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Jurisdiction",
-                    "name" : ["Kulturdepartementet"],
+                    "subordinateUnit" : ["Kulturdepartementet"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -3451,7 +3444,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Organization",
-                    "name" : ["Norstedts Juridik"],
+                    "subordinateUnit" : ["Norstedts Juridik"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Wolters Kluwer"
@@ -3467,16 +3460,17 @@
 
     "111": {
       "aboutEntity": "?work",
+      "include": "agentdataMeeting",
+      "addLink": "contribution",
+      "resourceType": "PrimaryContribution",
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Meeting"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
-      "addLink": "contribution",
-      "include": "agentdataMeeting",
-      "resourceType": "PrimaryContribution",
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
+      "subfieldOrder": "a q n d c g e u j 4 t p l k f",
       "TODO:$j": "",
       "_spec": [
         {
@@ -4715,11 +4709,9 @@
       "match": [
         {
           "when": "$t & i2=2",
-          "include": ["agentdataPersonFamily", "titledetailsPersonFamily"],
+          "include": ["agentdataPersonFamily", "titledetails1xx7xx"],
           "addLink": "hasPart",
           "resourceType": "Work",
-          "$t": {"property": "title"},
-          "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
             "_:contribution": {
               "addLink": "contribution",
@@ -4732,12 +4724,14 @@
               "resourceType": "Person",
               "embedded": false
             }
-          }
+          },
+          "$t": {"property": "title"},
+          "$0": {"addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": "$t",
+          "include": ["agentdataPersonFamily", "titledetails1xx7xx"],
           "addLink": "relatedTo",
-          "include": ["agentdataPersonFamily", "titledetailsPersonFamily"],
           "resourceType": "Relationship",
           "pendingResources": {
             "_:work": {
@@ -4759,7 +4753,6 @@
               "embedded": false
             }
           },
-          "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
@@ -4770,21 +4763,16 @@
         },
         {
           "when": null,
-          "include": ["contributiondata", "titledetailsPersonFamily"],
+          "include": ["contributiondata", "titledetails1xx7xx"],
           "resourceType": "Contribution",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
-      "subfieldOrder": "i ... t e",
-      "TODO:subfieldOrder": "Sortering ska göras efter inläggningsordning i listade delfält, dvs abcdjq - $u affiliation innehåller en adress, typ gatuadress",
-      "$h": {"property": "medium"},
-      "$m": {"addProperty": "musicMedium"},
-      "$o": {"property": "version"},
-      "$r": {"property": "musicKey"},
-      "$s": {"property": "marc:version"},
+      "$i": {"addLink": "relation", "property": "label"},
       "$x": {"property": "issn"},
       "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
       "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
+      "subfieldOrder": "i a b c q d j 4 t g m n p r s l k f o ",
       "_spec": [
         {
           "source": {"700": {"ind1": "1", "ind2": " ", "subfields": [ {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}]}
@@ -4811,7 +4799,7 @@
               {"a": "Jansson, Tove"},
               {"t": "Anteckningar från en ö"},
               {"e": "Skapad av"}
-          ]}},
+            ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -4840,7 +4828,7 @@
             "700": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Jansson, Tove"},
               {"t": "Anteckningar från en ö"}
-          ]}},
+            ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -4921,7 +4909,7 @@
                           "name":  "Cyprianus av Kartago,",
                           "birthYear": "1914",
                           "deathYear": "1987"
-                          }
+                        }
                       }
                     ]
                   }
@@ -4936,7 +4924,7 @@
               {"a": "Jansson, Tove"},
               {"d": "1914-2001"},
               {"t": "Anteckningar från en ö"}
-          ]}},
+            ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -4964,7 +4952,7 @@
           "source": {
             "700": {"ind1": "1", "ind2": "2", "subfields": [
               {"a": "Jansson, Tove"}
-          ]}},
+            ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -4989,7 +4977,7 @@
               {"i": "Parafraserar"},
               {"a": "Jansson, Tove"},
               {"t": "Anteckningar från en ö"}
-          ]}},
+            ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -5020,11 +5008,9 @@
       "match": [
         {
           "when": "$t & i2=2 & i1=1",
-          "include": ["agentdataOrganization", "titledetailsOrganization"],
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
           "addLink": "hasPart",
           "resourceType": "Work",
-          "$t": {"property": "title"},
-          "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
             "_:contribution": {
               "addLink": "contribution",
@@ -5037,12 +5023,14 @@
               "resourceType": "Jurisdiction",
               "embedded": false
             }
-          }
+          },
+          "$t": {"property": "title"},
+          "$0": {"addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": "$t & i1=1",
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
           "addLink": "relatedTo",
-          "include": ["agentdataOrganization", "titledetailsOrganization"],
           "resourceType": "Relationship",
           "pendingResources": {
             "_:work": {
@@ -5064,17 +5052,14 @@
               "embedded": false
             }
           },
-          "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": "$t & i2=2",
-          "include": ["agentdataOrganization", "titledetailsOrganization"],
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
           "addLink": "hasPart",
           "resourceType": "Work",
-          "$t": {"property": "title"},
-          "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
             "_:contribution": {
               "addLink": "contribution",
@@ -5087,12 +5072,14 @@
               "resourceType": "Organization",
               "embedded": false
             }
-          }
+          },
+          "$t": {"property": "title"},
+          "$0": {"addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": "$t",
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
           "addLink": "relatedTo",
-          "include": ["agentdataOrganization", "titledetailsOrganization"],
           "resourceType": "Relationship",
           "pendingResources": {
             "_:work": {
@@ -5114,57 +5101,42 @@
               "embedded": false
             }
           },
-          "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": "i1=1",
-          "include": ["agentdataOrganization", "titledetailsOrganization"],
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "addLink": "contribution",
+          "resourceType": "Contribution",
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Jurisdiction"},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-          },
-          "addLink": "contribution",
-          "resourceType": "Contribution"
-        },
-        {
-          "when": "i2=2 & i1=1",
-          "inherit-match": "$t & i2=2 & i1=1",
-          "NOTE": "An agent is not a part; we add an untitled, intermediary hasPart"
-        },
-        {
-          "when": "i2=2",
-          "inherit-match": "$t & i2=2",
-          "NOTE": "An agent is not a part; we add an untitled, intermediary hasPart"
+          }
         },
         {
           "when": null,
-          "include": ["agentdataOrganization", "titledetailsOrganization"],
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "addLink": "contribution",
+          "resourceType": "Contribution",
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Organization"},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-          },
-          "addLink": "contribution",
-          "resourceType": "Contribution"
+          }
         }
       ],
 
       "TODO": [
-        "change splitValueProperties to work on result, to handle match combo",
-        "subfieldorder ($n $d ...)?"
+        "change splitValueProperties to work on result, to handle match combo"
       ],
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
-      "$h": {"property": "medium"},
-      "$m": {"addProperty": "musicMedium"},
-      "$o": {"property": "version"},
-      "$r": {"property": "musicKey"},
-      "$s": {"property": "marc:version"},
+      "$i": {"addLink": "relation", "property": "label"},
       "$x": {"property": "issn"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
+      "subfieldOrder": "i a b c d g u e 4 t m n p r s l k f o x",
       "TOOO:$e": {},
       "TOOO:i2": "How to map when no $t?",
 
@@ -5282,7 +5254,7 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Organization",
-                    "name" : ["Institutionen för teknikens ekonomi och organisation.",
+                    "subordinateUnit" : ["Institutionen för teknikens ekonomi och organisation.",
                               "Industriell organisation och ekonomi"],
                     "isPartOf": {
                       "@type": "Organization",
@@ -5324,30 +5296,6 @@
           }}
         },
         {
-          "source": {
-            "710": {"ind1": "2", "ind2": "2", "subfields": [
-              {"a": "Sverige."}
-            ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasPart": [
-                {
-                  "@type": "Work",
-                  "contribution": [
-                    {
-                      "@type": "PrimaryContribution",
-                      "agent": {
-                        "@type": "Organization",
-                        "name":  "Sverige."}
-                    }
-                  ]
-                }
-              ]
-            }
-          }}
-        },
-        {
           "source": [
             {"710": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Sverige."}, {"b": "Riksdagen."},
                                                              {"b": "Konstitutionsutskottet"}, {"d": "(1996-04-13)"}]}},
@@ -5361,7 +5309,7 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Jurisdiction",
-                    "name" : ["Riksdagen.", "Konstitutionsutskottet"],
+                    "subordinateUnit" : ["Riksdagen.", "Konstitutionsutskottet"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -5373,7 +5321,7 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Jurisdiction",
-                    "name" : ["Regeringen i Bremen-Verden"],
+                    "subordinateUnit" : ["Regeringen i Bremen-Verden"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -5389,16 +5337,14 @@
 
     "711": {
       "aboutEntity": "?work",
-      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-      "i1": {"marcDefault": "2"},
       "pendingResources": {
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "match": [
         {
           "when": "$t",
+          "include": ["agentdataMeeting", "titledetails1xx7xx"],
           "addLink": "relatedTo",
-          "include": ["agentdataMeeting", "titledetailsMeeting"],
           "resourceType": "Relationship",
           "pendingResources": {
             "_:work": {
@@ -5420,24 +5366,25 @@
               "embedded": false
             }
           },
-          "$i": {"addLink": "relation", "property": "label"},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": null,
+          "include": ["agentdataMeeting", "titledetails1xx7xx"],
           "addLink": "contribution",
           "resourceType": "Contribution",
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Meeting"}
           },
-          "include": ["agentdataMeeting", "titledetailsMeeting"],
           "$t": {"property": "title"}
         }
       ],
       "$i": {"addLink": "relation", "property": "label"},
-      "$s": {"property": "marc:version"},
       "$x": {"property": "issn"},
+      "i1": {"marcDefault": "2"},
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "subfieldOrder": "i a n d c e g u j 4 t n s l k f x",
       "_spec": [
         {
           "source": {
