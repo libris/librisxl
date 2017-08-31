@@ -114,20 +114,22 @@ class AuthBibMatcher {
         return statsResults
     }
 
-    static void handleMultipleLinkedFields(sets, bibRecord, authRecord, bibField) {
+    static Map handleMultipleLinkedFields(sets, bibRecord, authRecord, bibField) {
+        Map results = [multipleMatch : false]
         if (sets.isMatch) {
             def bibFieldKey = bibField.keySet()[0]
             Map matchedField = bibRecord.fields.find { it -> it == bibField } as Map
             if (hasSubfield(matchedField, '0')) {
                 def linkedAuthIds = getSubfields(matchedField, '0').collect { Map it -> it[it.keySet()[0]] }
-                if (!linkedAuthIds.contains(authRecord.id)) {
-                    linkedAuthIds.add(authRecord.id)
+                if (!linkedAuthIds.any{ it -> it.startsWith(authRecord.id.toString())}) {
+                    linkedAuthIds.add("${authRecord.id} : ${authRecord.data.fields."008".find{it->it}[33]}")
                     linkedAuthIds.sort()
                     log.info "Likely multiple authority Links for bib record\t${bibFieldKey}\t${authRecord.bibid}\t${linkedAuthIds.join('\t')}"
                 }
             }
-            matchedField[matchedField.keySet()[0]].subfields.add(['0': authRecord.id])
+            matchedField[matchedField.keySet()[0]].subfields.add(['0': "${authRecord.id} : ${authRecord.data.fields."008".find{it->it}[33]} : ${authRecord.data.fields."667"?.subfields?.'a'?.find{it->it}?.first()} : ${authRecord.data.fields."670"?.subfields?.'a'?.find{it->it}?.first()}"])
         }
+        return results
     }
 
     static def collectSets(List<Map> bibSubFields, Map authRecord) {
