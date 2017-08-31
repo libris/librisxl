@@ -3,7 +3,6 @@ package whelk.importer
 import groovy.sql.Sql
 import groovy.util.logging.Log4j2 as Log
 import whelk.util.VCopyToWhelkConverter
-import java.text.Normalizer
 import java.sql.ResultSet
 import java.sql.Statement
 
@@ -109,13 +108,15 @@ class MySQLLoader {
             }
             catch (any) {
                 log.error("Batch failed" , any)
+                // we might want to throw the exception 
+                // here eventually in order to not hide failed records
             }
 
             if (recordCount % 1000 == 1) {
                 def elapsedSecs = (System.currentTimeMillis() - startTime) / 1000
                 if (elapsedSecs > 0) {
-                    def docsPerSec = recordCount / elapsedSecs
-                    def message = "Working. Currently ${rowCount} rows recieved and ${recordCount} records sent. Crunching ${docsPerSec} records / s."
+                    Double docsPerSec = recordCount / elapsedSecs
+                    def message = "Working. Currently ${rowCount} rows recieved and ${recordCount} records sent. Crunching ${docsPerSec.round(1)} records / s."
                     log.info message
                 }
             }

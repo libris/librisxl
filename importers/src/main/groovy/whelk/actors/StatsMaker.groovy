@@ -1,15 +1,13 @@
 package whelk.actors
-
-import groovy.util.logging.Log4j2 as Log
-import whelk.SetSpecMatcher
+import whelk.AuthBibMatcher
 import whelk.util.VCopyToWhelkConverter
-import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
 import whelk.util.ThreadPool
-
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
+
+import groovy.util.logging.Slf4j as Log
 
 /**
  * Created by theodortolstoy on 2017-01-11.
@@ -29,10 +27,9 @@ class StatsMaker implements MySQLLoader.LoadHandler {
                      doubleDiff      : 0,
                      specAndDoc      : 0,
                      allAuth         : 0,
-                     ignoredSetSpecs : 0,
+                     ignoredAuthRecords : 0,
                      MissingBibFields: 0]
 
-    def lacksValidAuthRecords = 0
     def docIsNull = 0
 
     StatsMaker() {
@@ -40,10 +37,11 @@ class StatsMaker implements MySQLLoader.LoadHandler {
         threadPool = new ThreadPool(THREAD_COUNT)
         uncertainFileWriter = Files.newBufferedWriter(
                 Paths.get("uncertainMatches.tsv"), Charset.forName("UTF-8"))
+        uncertainFileWriter.write(header)
         completeFileWriter = Files.newBufferedWriter(
                 Paths.get("completeMatches.tsv"), Charset.forName("UTF-8"))
+        completeFileWriter.write(header)
     }
-
 
     void handle(List<List<VCopyToWhelkConverter.VCopyDataRow>> batch) {
         threadPool.executeOnThread(batch, { _batch, threadIndex ->
@@ -51,56 +49,25 @@ class StatsMaker implements MySQLLoader.LoadHandler {
             batch.each { rows ->
 
                 VCopyToWhelkConverter.VCopyDataRow row = rows.last()
-                def allAuthRecords = VCopyToWhelkConverter.getAuthDocsFromRows(rows)
+                List<Map> allAuthRecords = VCopyToWhelkConverter.getAuthDocsFromRows(rows)
+                resultMap.allAuth = allAuthRecords.size()
                 Map doc = VCopyToWhelkConverter.getMarcDocMap(row.data)
                 if (doc == null)
                     docIsNull++
 
-                if (!SetSpecMatcher.hasValidAuthRecords(allAuthRecords))
-                    lacksValidAuthRecords++
-
-                if (doc != null && SetSpecMatcher.hasValidAuthRecords(allAuthRecords)) {
-
-                    List<Map> matchResults = SetSpecMatcher.matchAuthToBib(doc, allAuthRecords, true)
-
-                    List authRecords = allAuthRecords.findAll {
-                        !SetSpecMatcher.ignoredAuthFields.contains(it.field)
-                    }
+                if (doc != null) {
+                    List<Map> matchResults = AuthBibMatcher.matchAuthToBib(doc, allAuthRecords)
 
                     def uncertainMatches = matchResults.findAll { Map match ->
                         ((match.hasOnlyDiff || match.hasOnlyReverseDiff || match.hasDoubleDiff)
                                 && !match.hasMisMatchOnA && !match.isMatch)
                     }
 
-                    matchResults.findAll { Map match ->
-                        !match.hasOnlyDiff &&
-                                !match.hasOnlyReverseDiff &&
-                                !match.hasDoubleDiff &&
-                                !match.hasMisMatchOnA &&
-                                !match.isMatch
-                    }.each { diff ->
-                        log.debug "miss! Diff: ${diff.inspect()}"
-                    }
-
-
                     def completeMatches = matchResults.findAll { it.isMatch }
-
-                    def misMatchesOnA = matchResults.findAll { it.hasMisMatchOnA }
-
-
-                    resultMap.possibleMatches += matchResults.count { it }
-
+                    //TODO: handle writes to resultmap in threaded environment.
                     resultMap.matches += completeMatches.size()
-                    resultMap.MisMatchesOnA += misMatchesOnA.size()
-                    resultMap.bibInAukt += uncertainMatches.count { it.hasOnlyDiff }
-                    resultMap.auktInBib += uncertainMatches.count { it.hasOnlyReverseDiff }
-                    resultMap.doubleDiff += uncertainMatches.count { it.hasDoubleDiff }
 
-                    resultMap.specAndDoc++
-                    resultMap.allAuth = allAuthRecords.size()
-                    resultMap.ignoredSetSpecs = allAuthRecords.size() - authRecords.size()
-                    resultMap.MissingBibFields = missingBibFields
-
+                    populateResults(matchResults, uncertainMatches)
                     printDiffResultsToFile(uncertainMatches, completeMatches)
 
                 }
@@ -108,32 +75,78 @@ class StatsMaker implements MySQLLoader.LoadHandler {
         })
     }
 
+    synchronized void populateResults(matchResults, uncertainMatches){
+        matchResults.findAll { Map match ->
+            !match.hasOnlyDiff &&
+                    !match.hasOnlyReverseDiff &&
+                    !match.hasDoubleDiff &&
+                    !match.hasMisMatchOnA &&
+                    !match.isMatch
+        }.each { diff ->
+            log.debug "miss! Diff: ${diff.inspect()}"
+        }
+
+        def misMatchesOnA = matchResults.findAll { it.hasMisMatchOnA }
+
+        resultMap.possibleMatches += matchResults.count { it }
+        resultMap.MisMatchesOnA += misMatchesOnA.size()
+        resultMap.bibInAukt += uncertainMatches.count { it.hasOnlyDiff }
+        resultMap.auktInBib += uncertainMatches.count { it.hasOnlyReverseDiff }
+        resultMap.doubleDiff += uncertainMatches.count { it.hasDoubleDiff }
+        resultMap.specAndDoc++
+        resultMap.MissingBibFields = missingBibFields
+    }
+
     synchronized void printDiffResultsToFile(uncertainMatches, completeMatches) {
         appendtofile(uncertainFileWriter, uncertainMatches)
         appendtofile(completeFileWriter, completeMatches)
     }
 
+    String header = "MatchType" +
+            "\tMatchPattern" +
+            "\tAuktfält" +
+            "\tBibfält" +
+            "\tAllaDelfält" +
+            "\tHasPartialD" +
+            "\tauktdelfält" +
+            "\tbibdelfält" +
+            "\thas240a" +
+            "\tbibId" +
+            "\tauktId" +
+            "\tauktUrl" +
+            "\tbibUrl" +
+            "\n"
+
     synchronized void appendtofile(BufferedWriter fileWriter, matches) {
-        matches.each { match ->
+        matches.each { Map match ->
             fileWriter.write("${match.type}" +
-                    "'\t${match.diff.count { it }}" +
+                    "\t${getMatchPattern(match)}" +
                     "\t${match.spec.field}" +
                     "\t${match.bibField}" +
-                    "\t${match.subfieldsInOverlap}" +
-                    "\t${match.subfieldsInDiff}" +
-                    "\t${match.subfieldsInReversediff}" +
-                    "\t${match.reverseDiff.count { it }}" +
-                    "\t${match.overlap.count { it }}" +
-                    "\t${match.numBibFields}" +
-                    "\t${match.numAuthFields}" +
+                    "\t${formatSubfieldDiff(match.subfieldsInDiff)} - ${formatSubfieldDiff(match.subfieldsInOverlap)} - ${formatSubfieldDiff(match.subfieldsInReversediff)}" +
                     "\t${match.partialD}" +
-                    "\t${match.bibSet} " +
                     "\t${match.authSet} " +
-                    "\t${match.bibField} " +
-                    "\t${match.authField} " +
+                    "\t${match.bibSet} " +
                     "\t${match.bibHas240a}" +
+                    "\t${match.bibId} " +
+                    "\t${match.authId} " +
+                    "\thttp://data.libris.kb.se/auth/oaipmh?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/auth/${match.authId}" +
+                    "\thttp://data.libris.kb.se/bib/oaipmh?verb=GetRecord&metadataPrefix=marcxml&identifier=http://libris.kb.se/resource/bib/${match.bibId}" +
                     "\n")
+        }
+    }
 
+    static String getMatchPattern(match){
+        def formatPropery = { String s -> s ? s : '_' }
+        def r = formatPropery(match.subfieldsInDiff) + '-' + formatPropery(match.subfieldsInOverlap) + '-' + formatPropery(match.subfieldsInReversediff)
+        return r
+    }
+
+    static String formatSubfieldDiff(String diff) {
+        if (!diff) {
+            return '_'
+        } else {
+            return diff
         }
     }
 }
