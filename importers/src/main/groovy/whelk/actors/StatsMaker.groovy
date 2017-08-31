@@ -3,13 +3,11 @@ import whelk.AuthBibMatcher
 import whelk.util.VCopyToWhelkConverter
 import whelk.importer.MySQLLoader
 import whelk.util.ThreadPool
-
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
 
 import groovy.util.logging.Slf4j as Log
-
 
 /**
  * Created by theodortolstoy on 2017-01-11.
@@ -43,9 +41,7 @@ class StatsMaker implements MySQLLoader.LoadHandler {
         completeFileWriter = Files.newBufferedWriter(
                 Paths.get("completeMatches.tsv"), Charset.forName("UTF-8"))
         completeFileWriter.write(header)
-
     }
-
 
     void handle(List<List<VCopyToWhelkConverter.VCopyDataRow>> batch) {
         threadPool.executeOnThread(batch, { _batch, threadIndex ->
@@ -120,7 +116,7 @@ class StatsMaker implements MySQLLoader.LoadHandler {
             "\tauktUrl" +
             "\tbibUrl" +
             "\n"
-    
+
     synchronized void appendtofile(BufferedWriter fileWriter, matches) {
         matches.each { Map match ->
             fileWriter.write("${match.type}" +
@@ -144,7 +140,6 @@ class StatsMaker implements MySQLLoader.LoadHandler {
         def formatPropery = { String s -> s ? s : '_' }
         def r = formatPropery(match.subfieldsInDiff) + '-' + formatPropery(match.subfieldsInOverlap) + '-' + formatPropery(match.subfieldsInReversediff)
         return r
-
     }
 
     static String formatSubfieldDiff(String diff) {
@@ -154,7 +149,5 @@ class StatsMaker implements MySQLLoader.LoadHandler {
             return diff
         }
     }
-
-
 }
 
