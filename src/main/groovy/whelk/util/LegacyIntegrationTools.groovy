@@ -82,4 +82,16 @@ class LegacyIntegrationTools {
             default: return null
         }
     }
+
+    /**
+     * Tomcat incorrectly strips away double slashes from the pathinfo. Compensate here.
+     */
+    static String fixUri(String uri) {
+        if (uri ==~ "/http:/[^/].+") {
+            uri = uri.replace("http:/", "http://")
+        } else if (uri ==~ "/https:/[^/].+") {
+            uri = uri.replace("https:/", "https://")
+        }
+        return uri
+    }
 }
