@@ -63,13 +63,16 @@ class HoldAPI extends HttpServlet {
         }
 
         List<Document> holdings = whelk.storage.getAttachedHoldings(document.getThingIdentifiers())
-        for(Document holding : holdings) {
-            if (holding.getHeldBy().equals(library)) {
-                response.sendRedirect(holding.getCompleteId())
-                return
-            }
+        List<String> holdingIDs = []
+        for (Document holding in holdings) {
+            if (holding.getHeldBy().equals(library))
+                holdingIDs.add(holding.getCompleteId())
         }
 
-        response.sendError(HttpServletResponse.SC_NOT_FOUND)
+        String jsonString = PostgreSQLComponent.mapper.writeValueAsString(holdingIDs)
+        response.setContentType("application/json")
+        OutputStream out = response.getOutputStream()
+        out.write(jsonString.getBytes("UTF-8"))
+        out.close()
     }
 }
