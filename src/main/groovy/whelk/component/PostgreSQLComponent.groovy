@@ -72,6 +72,10 @@ class PostgreSQLComponent {
 
     String mainTableName
 
+    class AcquireLockException extends RuntimeException { AcquireLockException(String s) { super(s) } }
+
+    class ConflictingHoldException extends RuntimeException { ConflictingHoldException(String s) { super(s) } }
+
     // for testing
     PostgreSQLComponent() {}
 
@@ -272,7 +276,7 @@ class PostgreSQLComponent {
                 List<Document> otherHoldings = getAttachedHoldings(linkedBib.getThingIdentifiers())
                 for (Document otherHolding in otherHoldings) {
                     if ( otherHolding.getHeldBy() == doc.getHeldBy() )
-                        throw new RuntimeException("Already exists a holding post for ${doc.getHeldBy()} and bib: $recordSystemId")
+                        throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $recordSystemId")
                 }
             }
 
@@ -356,7 +360,7 @@ class PostgreSQLComponent {
         lockStatement.setString(1, id)
         ResultSet resultSet = lockStatement.executeQuery()
         if (!resultSet.next())
-            throw new SQLException("There is no document with the id $id (So no lock could be aquired)")
+            throw new AcquireLockException("There is no document with the id $id (So no lock could be aquired)")
 
         log.debug("Row lock aquired for $id")
         return new RowLock(connection: connection, statement: lockStatement, resultSet: resultSet)
