@@ -256,7 +256,26 @@ class PostgreSQLComponent {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
         Connection connection = getConnection()
         connection.setAutoCommit(false)
+
+        /*
+        If we're writing a holding post, obtain a (write) lock on the linked bibpost, and hold it until writing has finished.
+        While under lock: first check that there is not already a holding for this sigel/bib-id combination.
+         */
+        RowLock lock = null
+
         try {
+            if (collection == "hold") {
+                String recordSystemId = getRecordId(doc.getHoldingFor())
+                lock = acquireRowLock(recordSystemId)
+
+                Document linkedBib = load(recordSystemId)
+                List<Document> otherHoldings = getAttachedHoldings(linkedBib.getThingIdentifiers())
+                for (Document otherHolding in otherHoldings) {
+                    if ( otherHolding.getHeldBy() == doc.getHeldBy() )
+                        throw new RuntimeException("Already exists a holding post for ${doc.getHeldBy()} and bib: $recordSystemId")
+                }
+            }
+
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement((upsert ? UPSERT_DOCUMENT : INSERT_DOCUMENT))
 
@@ -309,9 +328,45 @@ class PostgreSQLComponent {
             throw e
         } finally {
             connection.close()
+            if (lock != null)
+                releaseRowLock(lock)
             log.debug("[store] Closed connection.")
         }
         return false
+    }
+
+    private class RowLock {
+        Connection connection
+        PreparedStatement statement
+        ResultSet resultSet
+    }
+
+    /**
+     * HERE BE DRAGONS.
+     * Locks the row with the given ID in the database (for updates), until releaseRowLock is called.
+     * It is absolutely essential that releaseRowLock be explicitly called after each call to this function.
+     * Preferably this should be done in a try/finally block.
+     */
+    RowLock acquireRowLock(String id) {
+        Connection connection = getConnection()
+        PreparedStatement lockStatement
+
+        connection.setAutoCommit(false)
+        lockStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
+        lockStatement.setString(1, id)
+        ResultSet resultSet = lockStatement.executeQuery()
+        if (!resultSet.next())
+            throw new SQLException("There is no document with the id $id (So no lock could be aquired)")
+
+        log.debug("Row lock aquired for $id")
+        return new RowLock(connection: connection, statement: lockStatement, resultSet: resultSet)
+    }
+
+    void releaseRowLock(RowLock rowlock) {
+        rowlock.connection.rollback()
+        try { rowlock.resultSet.close() } catch (Exception e) {}
+        try { rowlock.statement.close() } catch (Exception e) {}
+        try { rowlock.connection.close() } catch (Exception e) {}
     }
 
     String getContext() {
