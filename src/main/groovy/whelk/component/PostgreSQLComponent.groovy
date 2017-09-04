@@ -269,7 +269,7 @@ class PostgreSQLComponent {
 
         try {
             if (collection == "hold") {
-                String recordSystemId = getRecordId(doc.getHoldingFor())
+                String recordSystemId = getRecordId(doc.getHoldingFor()).substring(Document.BASE_URI.toString().length())
                 lock = acquireRowLock(recordSystemId)
 
                 Document linkedBib = load(recordSystemId)
@@ -360,7 +360,7 @@ class PostgreSQLComponent {
         lockStatement.setString(1, id)
         ResultSet resultSet = lockStatement.executeQuery()
         if (!resultSet.next())
-            throw new AcquireLockException("There is no document with the id $id (So no lock could be aquired)")
+            throw new AcquireLockException("There is no document with the id $id (So no lock could be acquired)")
 
         log.debug("Row lock aquired for $id")
         return new RowLock(connection: connection, statement: lockStatement, resultSet: resultSet)
