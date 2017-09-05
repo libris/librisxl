@@ -1798,12 +1798,19 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             useEntities.each {
-                def field = revertOne(data, it, buildAboutMap(it), usedMatchRule)
-                if (field) {
-                    if (useLink.subfield) {
-                        field.subfields << useLink.subfield
+                def aboutMap = buildAboutMap(it)
+                // If pendingResources exists, aboutMap can not be empty to continue to revertOne().
+                // If pendingResources NOT exist there is no dependency to aboutMap and can
+                // continue to revertOne().
+                if ((pendingResources && !aboutMap.isEmpty()) || !pendingResources)
+                {
+                    def field = revertOne(data, it, aboutMap, usedMatchRule)
+                    if (field) {
+                        if (useLink.subfield) {
+                            field.subfields << useLink.subfield
+                        }
+                        results << field
                     }
-                    results << field
                 }
             }
         }
@@ -1814,6 +1821,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     @CompileStatic(SKIP)
     Map<String, List> buildAboutMap(Map entity) {
         Map<String, List> aboutMap = [:]
+        boolean noMapping = false
         if (!pendingResources) {
             return aboutMap
         }
@@ -1837,12 +1845,17 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
             def about = parent ? parent[link] : null
             Util.asList(about).each {
+                if (it['@type'] != resourceType)
+                    noMapping = true
                 if (it && (!resourceType || it['@type'] == resourceType)) {
                     aboutMap.get(key, []).add(it)
                 }
             }
         }
-        return aboutMap
+        if (noMapping)
+            return [:]
+        else
+            return aboutMap
     }
 
     @CompileStatic(SKIP)

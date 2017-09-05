@@ -3268,9 +3268,9 @@
         {
           "source": {
             "100": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Andersson, Lars,"},
-              {"d": "1961-,"},
-              {"c": "arkeolog"}
+              {"a": "Andersson, Lars"},
+              {"c": "arkeolog"},
+              {"d": "1961-"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -3292,8 +3292,8 @@
           "source": {
             "100": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Andersson"},
-              {"d": "1961-,"},
-              {"c": "arkeolog"}
+              {"c": "arkeolog"},
+              {"d": "1961-"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -3313,7 +3313,7 @@
         {
           "source": {
             "100": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Wetherell, Elizabeth,"},
+              {"a": "Wetherell, Elizabeth"},
               {"g": "pseud. för Susan Warner."}
             ]}},
           "result": {"mainEntity": {
@@ -3336,37 +3336,35 @@
 
     "110": {
       "aboutEntity": "?work",
-      "include": "titledetails1xx7xx",
       "addLink": "contribution",
       "resourceType": "PrimaryContribution",
 
       "match":[
+        {
+          "when": "i1=0 | i1=2",
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Organization"},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+          "i1": {"marcDefault": "2"},
+          "$0": {"addLink": "identifiedBy", "property": "value"},
+          "TODO": [
+            "change splitValueProperties to work on result, to handle match combo"
+          ]
+        },
       {
         "when": "i1=1",
+        "include": ["agentdataOrganization", "titledetails1xx7xx"],
         "pendingResources": {
           "_:agent": {"link": "agent", "resourceType": "Jurisdiction"},
           "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
           "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
         },
-        "include": "agentdataOrganization",
         "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-        "i1": {"marcDefault": "2"},
         "$0": {"addLink": "identifiedBy", "property": "value"}
-      },
-      {
-        "when": null,
-        "pendingResources": {
-          "_:agent": {"link": "agent", "resourceType": "Organization"},
-          "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
-          "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-        },
-        "include": "agentdataOrganization",
-        "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-        "i1": {"marcDefault": "2"},
-        "$0": {"addLink": "identifiedBy", "property": "value"},
-        "TODO": [
-          "change splitValueProperties to work on result, to handle match combo"
-        ]
       }
       ],
       "subfieldOrder": "a b n d c g u e 4 t p l k f",
@@ -3374,8 +3372,14 @@
         {
           "source": {
             "110": {"ind1": "0", "ind2": " ", "subfields": [
-              {"b": "Norstedts Juridik"},
               {"a": "Wolters Kluwer"},
+              {"b": "Norstedts Juridik"},
+              {"c": "Sthlm"}
+            ]}},
+          "normalized": {
+            "110": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Wolters Kluwer"},
+              {"b": "Norstedts Juridik"},
               {"c": "Sthlm"}
             ]}},
           "result": {"mainEntity": {
@@ -3431,7 +3435,7 @@
         },
         {
           "source": {
-            "110": {"ind1": "2", "subfields": [
+            "110": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Wolters Kluwer"},
               {"b": "Norstedts Juridik"},
               {"k": "Grupptitel"}
@@ -3470,12 +3474,20 @@
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
+      "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
       "subfieldOrder": "a q n d c g e u j 4 t p l k f",
       "TODO:$j": "",
       "_spec": [
         {
           "source": {
-            "111": {"ind1": "1", "subfields": [
+            "111": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Paris"},
+              {"q": "Peace Conference"},
+              {"d": "1919"},
+              {"g": "Projected, not held"}
+            ]}},
+          "normalized": {
+            "111": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Paris"},
               {"q": "Peace Conference"},
               {"d": "1919"},
@@ -3500,11 +3512,11 @@
         },
         {
           "source": {
-            "111": {"ind1": "2", "subfields": [
+            "111": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "World Peace Conference"},
-              {"c": "Paris, France"},
+              {"n": "1st"},
               {"d": "1959"},
-              {"n": "1st"}
+              {"c": "Paris, France"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -3514,13 +3526,13 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Meeting",
+                    "date": ["1959"],
                     "name": "World Peace Conference",
+                    "numberOfPartSectionMeeting": ["1st"],
                     "place" : [{
                       "@type" : "Place",
                       "label" : "Paris, France"
-                    }],
-                    "date": ["1959"],
-                    "numberOfPartSectionMeeting": ["1st"]}
+                    }]}
                 }]
             }
           }}
@@ -3633,6 +3645,11 @@
               {"a": "Anteckningar från en ö /"},
               {"c": "Tove Jansson, Tuulikki Pietilä."}
           ]}},
+          "normalized": {
+            "245": {"ind1": "2", "ind2": "0", "subfields": [
+              {"a": "Anteckningar från en ö /"},
+              {"c": "Tove Jansson, Tuulikki Pietilä."}
+            ]}},
           "result": {"mainEntity": {
             "hasTitle": [ {"@type": "Title",
               "mainTitle":  "Anteckningar från en ö",
@@ -4772,7 +4789,7 @@
       "$x": {"property": "issn"},
       "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
       "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "subfieldOrder": "i a b c q d j 4 t g m n p r s l k f o ",
+      "subfieldOrder": "i a b c q d j e 4 t g m n p r s l k f o",
       "_spec": [
         {
           "source": {"700": {"ind1": "1", "ind2": " ", "subfields": [ {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}]}
@@ -4797,8 +4814,8 @@
             "700": {"ind1": "1", "ind2": " ", "subfields": [
               {"i": "Parafraserar"},
               {"a": "Jansson, Tove"},
-              {"t": "Anteckningar från en ö"},
-              {"e": "Skapad av"}
+              {"e": "Skapad av"},
+              {"t": "Anteckningar från en ö"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -5008,9 +5025,6 @@
       "match": [
         {
           "when": "$t & i2=2 & i1=1",
-          "include": ["agentdataOrganization", "titledetails1xx7xx"],
-          "addLink": "hasPart",
-          "resourceType": "Work",
           "pendingResources": {
             "_:contribution": {
               "addLink": "contribution",
@@ -5024,14 +5038,14 @@
               "embedded": false
             }
           },
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "addLink": "hasPart",
+          "resourceType": "Work",
           "$t": {"property": "title"},
           "$0": {"addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": "$t & i1=1",
-          "include": ["agentdataOrganization", "titledetails1xx7xx"],
-          "addLink": "relatedTo",
-          "resourceType": "Relationship",
           "pendingResources": {
             "_:work": {
               "link": "entity",
@@ -5052,14 +5066,14 @@
               "embedded": false
             }
           },
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "addLink": "relatedTo",
+          "resourceType": "Relationship",
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": "$t & i2=2",
-          "include": ["agentdataOrganization", "titledetails1xx7xx"],
-          "addLink": "hasPart",
-          "resourceType": "Work",
           "pendingResources": {
             "_:contribution": {
               "addLink": "contribution",
@@ -5073,14 +5087,14 @@
               "embedded": false
             }
           },
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "addLink": "hasPart",
+          "resourceType": "Work",
           "$t": {"property": "title"},
           "$0": {"addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": "$t",
-          "include": ["agentdataOrganization", "titledetails1xx7xx"],
-          "addLink": "relatedTo",
-          "resourceType": "Relationship",
           "pendingResources": {
             "_:work": {
               "link": "entity",
@@ -5101,30 +5115,33 @@
               "embedded": false
             }
           },
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "addLink": "relatedTo",
+          "resourceType": "Relationship",
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": "i1=1",
-          "include": ["agentdataOrganization", "titledetails1xx7xx"],
-          "addLink": "contribution",
-          "resourceType": "Contribution",
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Jurisdiction"},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-          }
+          },
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "addLink": "contribution",
+          "resourceType": "Contribution"
         },
         {
           "when": null,
-          "include": ["agentdataOrganization", "titledetails1xx7xx"],
-          "addLink": "contribution",
-          "resourceType": "Contribution",
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Organization"},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-          }
+          },
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "addLink": "contribution",
+          "resourceType": "Contribution"
         }
       ],
 
@@ -5136,6 +5153,7 @@
       "$i": {"addLink": "relation", "property": "label"},
       "$x": {"property": "issn"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
+      "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
       "subfieldOrder": "i a b c d g u e 4 t m n p r s l k f o x",
       "TOOO:$e": {},
       "TOOO:i2": "How to map when no $t?",
@@ -5144,8 +5162,8 @@
         {
           "source": {
             "710": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "National Fire Protection Association."},
-              {"t": "National electrical code (1993)"}
+              {"t": "National electrical code (1993)"},
+              {"a": "National Fire Protection Association."}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -5171,9 +5189,47 @@
         },
         {
           "source": {
+            "710": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Nationell gammaldags organisation."},
+              {"t": "Handlingar 1920-1950"}
+            ]}},
+          "normalized": {
+            "710": {"ind1": "2", "ind2": " ", "subfields": [
+              {"t": "Handlingar 1920-1950"},
+              {"a": "Nationell gammaldags organisation."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "title": "Handlingar 1920-1950",
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
+                        "agent":
+                        {"@type": "Organization", "name": "Nationell gammaldags organisation."}
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "National Fire Protection Association."},
               {"t": "National electrical code (1993)"}
+            ]}},
+          "normalized": {
+            "710": {"ind1": "2", "ind2": " ", "subfields": [
+              {"t": "National electrical code (1993)"},
+              {"a": "National Fire Protection Association."}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -5191,6 +5247,38 @@
                           {"@type": "Organization", "name": "National Fire Protection Association."}
                       }
                     ]
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Umeå universitet."},
+              {"b": "Institutionen för ABM."},
+              {"b": "Kulturgeografi"}
+            ]}},
+          "normalized": {
+            "710": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Umeå universitet."},
+              {"b": "Institutionen för ABM."},
+              {"b": "Kulturgeografi"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent":{
+                    "@type": "Organization",
+                    "subordinateUnit" : ["Institutionen för ABM.", "Kulturgeografi"],
+                    "isPartOf": {
+                      "@type": "Organization",
+                      "name": "Umeå universitet."
+                    }
                   }
                 }
               ]
@@ -5288,6 +5376,63 @@
                       "agent": {
                         "@type": "Jurisdiction",
                         "name":  "Sverige."}
+                    }
+                  ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "2", "ind2": "2", "subfields": [
+              {"a": "Arbetsmarknadsverket."},
+              {"t": "Arbetsmiljölagen"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "title": "Arbetsmiljölagen",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Organization",
+                        "name":  "Arbetsmarknadsverket."}
+                    }
+                  ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "0", "ind2": "2", "subfields": [
+              {"a": "Namngalen organisation."},
+              {"t": "Söderbykyrka"}
+            ]}},
+          "normalized": {
+            "710": {"ind1": "2", "ind2": "2", "subfields": [
+              {"a": "Namngalen organisation."},
+              {"t": "Söderbykyrka"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "title": "Söderbykyrka",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Organization",
+                        "name":  "Namngalen organisation."}
                     }
                   ]
                 }
