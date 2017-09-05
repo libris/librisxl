@@ -15,6 +15,7 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.IdGenerator
 import whelk.component.ElasticSearch
+import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
 import whelk.converter.marc.JsonLD2MarcConverter
 import whelk.converter.marc.JsonLD2MarcXMLConverter
@@ -961,6 +962,17 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED,
                                         "The resource has been updated by someone " +
                                                 "else. Please refetch.")
+            return null
+        } catch (PostgreSQLComponent.AcquireLockException e) {
+            failedRequests.labels(httpMethod, request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Failed to acquire a necessary lock. Did you submit a holding record without a valid bib link? " + e.message)
+            return null
+        } catch (PostgreSQLComponent.ConflictingHoldException e) {
+            failedRequests.labels(httpMethod, request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage())
             return null
         } catch (Exception e) {
             log.error("Operation failed", e)
