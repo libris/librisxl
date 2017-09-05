@@ -65,7 +65,14 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
                                 importResult.numberOfDocumentsDeleted++
                             }
                         } else {
-                            whelk.store(doc, sourceSystem, null, record.collection as String, false, true)
+                            Document conflictingDocument = whelk.storage.load(doc.getShortId())
+                            if (conflictingDocument == null)
+                                whelk.store(doc, sourceSystem, null, record.collection as String, false, true)
+                            else
+                                whelk.storeAtomicUpdate(doc.getShortId(), false, sourceSystem, null, record.collection as String, false, {
+                                    Document _doc ->
+                                        _doc.data = doc.data
+                                })
                         }
                         importResult.numberOfDocuments++
                     }
