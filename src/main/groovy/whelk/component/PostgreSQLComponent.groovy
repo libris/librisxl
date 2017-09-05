@@ -270,12 +270,16 @@ class PostgreSQLComponent {
         try {
             if (collection == "hold") {
                 String recordSystemId = getRecordId(doc.getHoldingFor()).substring(Document.BASE_URI.toString().length())
+                if (recordSystemId == null) {
+                    log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    return false
+                }
                 lock = acquireRowLock(recordSystemId)
 
                 Document linkedBib = load(recordSystemId)
                 List<Document> otherHoldings = getAttachedHoldings(linkedBib.getThingIdentifiers())
                 for (Document otherHolding in otherHoldings) {
-                    if ( otherHolding.getHeldBy() == doc.getHeldBy() )
+                    if ( otherHolding.getHeldBy() == doc.getHeldBy())
                         throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $recordSystemId")
                 }
             }
@@ -331,9 +335,9 @@ class PostgreSQLComponent {
             connection.rollback()
             throw e
         } finally {
-            connection.close()
             if (lock != null)
                 releaseRowLock(lock)
+            connection.close()
             log.debug("[store] Closed connection.")
         }
         return false
@@ -367,7 +371,7 @@ class PostgreSQLComponent {
     }
 
     void releaseRowLock(RowLock rowlock) {
-        rowlock.connection.rollback()
+        try { rowlock.connection.rollback() } catch (Exception e) {}
         try { rowlock.resultSet.close() } catch (Exception e) {}
         try { rowlock.statement.close() } catch (Exception e) {}
         try { rowlock.connection.close() } catch (Exception e) {}
