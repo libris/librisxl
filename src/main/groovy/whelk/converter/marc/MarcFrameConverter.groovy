@@ -1798,11 +1798,15 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             useEntities.each {
-                def aboutMap = buildAboutMap(it)
+                Tuple2<Boolean, Map<String, List>> buildResult = buildAboutMap(it)
+                boolean shouldMap = buildResult.first
+                Map aboutMap = buildResult.second
                 // If pendingResources exists, aboutMap can not be empty to continue to revertOne().
+                // Not always true :( See field 245.
+
                 // If pendingResources NOT exist there is no dependency to aboutMap and can
                 // continue to revertOne().
-                if ((pendingResources && !aboutMap.isEmpty()) || !pendingResources)
+                if (shouldMap)
                 {
                     def field = revertOne(data, it, aboutMap, usedMatchRule)
                     if (field) {
@@ -1819,11 +1823,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    Map<String, List> buildAboutMap(Map entity) {
+    Tuple2<Boolean, Map<String, List>> buildAboutMap(Map entity) {
         Map<String, List> aboutMap = [:]
-        boolean noMapping = false
+        boolean shouldMap = true
         if (!pendingResources) {
-            return aboutMap
+            return new Tuple2<Boolean, Map>(shouldMap, aboutMap)
         }
         pendingResources.each { key, pending ->
             def link = pending.link ?: pending.addLink
@@ -1846,16 +1850,13 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def about = parent ? parent[link] : null
             Util.asList(about).each {
                 if (it['@type'] != resourceType)
-                    noMapping = true
+                    shouldMap = false
                 if (it && (!resourceType || it['@type'] == resourceType)) {
                     aboutMap.get(key, []).add(it)
                 }
             }
         }
-        if (noMapping)
-            return [:]
-        else
-            return aboutMap
+        return new Tuple2<Boolean, Map>(shouldMap, aboutMap)
     }
 
     @CompileStatic(SKIP)
