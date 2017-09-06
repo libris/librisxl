@@ -208,8 +208,8 @@ class Whelk {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    Document store(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean createOrUpdate = true) {
-        if (storage.store(document, createOrUpdate, changedIn, changedBy, collection, deleted)) {
+    Document store(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
+        if (storage.store(document, changedIn, changedBy, collection, deleted)) {
             if (elastic) {
                 elastic.index(document, collection, this)
                 reindexDependers(document)
@@ -228,9 +228,8 @@ class Whelk {
     }
 
     void bulkStore(final List<Document> documents, String changedIn,
-                   String changedBy, String collection,
-                   boolean createOrUpdate = true, boolean useDocumentCache = false) {
-        if (storage.bulkStore(documents, createOrUpdate, changedIn, changedBy, collection)) {
+                   String changedBy, String collection, boolean useDocumentCache = false) {
+        if (storage.bulkStore(documents, changedIn, changedBy, collection)) {
             if (elastic) {
                 elastic.bulkIndex(documents, collection, this, useDocumentCache)
                 for (Document doc : documents) {

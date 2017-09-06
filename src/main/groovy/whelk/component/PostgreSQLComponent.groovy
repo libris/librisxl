@@ -36,7 +36,7 @@ class PostgreSQLComponent {
     boolean versioning = true
 
     // SQL statements
-    protected String UPSERT_DOCUMENT, UPDATE_DOCUMENT, INSERT_DOCUMENT,
+    protected String UPDATE_DOCUMENT, INSERT_DOCUMENT,
                      INSERT_DOCUMENT_VERSION, GET_DOCUMENT,
                      GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS,
                      GET_DOCUMENT_VERSION_BY_MAIN_ID,
@@ -115,9 +115,6 @@ class PostgreSQLComponent {
         }
 
         // Setting up sql-statements
-        UPSERT_DOCUMENT = "WITH upsert AS (UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ? " +
-                "RETURNING *) " +
-                "INSERT INTO $mainTableName (id, data, collection, changedIn, changedBy, checksum, deleted) SELECT ?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT * FROM upsert)"
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
         INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted) VALUES (?,?,?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
@@ -252,11 +249,11 @@ class PostgreSQLComponent {
         return collections
     }
 
-    boolean store(Document doc, boolean upsert, String changedIn, String changedBy, String collection, boolean deleted) {
-        store(doc, upsert, false, changedIn, changedBy, collection, deleted)
+    boolean store(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
+        store(doc, false, changedIn, changedBy, collection, deleted)
     }
 
-    boolean store(Document doc, boolean upsert, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean store(Document doc, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
         Connection connection = getConnection()
         connection.setAutoCommit(false)
@@ -285,22 +282,14 @@ class PostgreSQLComponent {
             }
 
             Date now = new Date()
-            PreparedStatement insert = connection.prepareStatement((upsert ? UPSERT_DOCUMENT : INSERT_DOCUMENT))
+            PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
 
             if (minorUpdate) {
                 now = status(doc.getURI(), connection)['modified']
             }
-            if (upsert) {
-                if (!saveVersion(doc, connection, now, changedIn, changedBy, collection, deleted)) {
-                    return // Same document already in storage.
-                }
-                insert = rigUpsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted)
-                insert.executeUpdate()
-            } else {
-                insert = rigInsertStatement(insert, doc, changedIn, changedBy, collection, deleted)
-                insert.executeUpdate()
-                saveVersion(doc, connection, now, changedIn, changedBy, collection, deleted)
-            }
+            insert = rigInsertStatement(insert, doc, changedIn, changedBy, collection, deleted)
+            insert.executeUpdate()
+            saveVersion(doc, connection, now, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
             for (String dependerId : getDependers(doc.getShortId())) {
                 updateMinMaxDepModified(dependerId, connection)
@@ -655,31 +644,6 @@ class PostgreSQLComponent {
         update.setObject(8, doc.getShortId(), java.sql.Types.OTHER)
     }
 
-    private PreparedStatement rigUpsertStatement(PreparedStatement insert, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
-
-        insert.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
-
-        insert.setString(2, collection)
-        insert.setString(3, changedIn)
-        insert.setString(4, changedBy)
-        insert.setString(5, doc.getChecksum())
-
-        insert.setBoolean(6, deleted)
-        insert.setTimestamp(7, new Timestamp(modTime.getTime()))
-        insert.setString(8, doc.getShortId())
-        insert.setString(9, doc.getShortId())
-        insert.setObject(10, doc.dataAsString, java.sql.Types.OTHER)
-
-        insert.setString(11, collection)
-        insert.setString(12, changedIn)
-        insert.setString(13, changedBy)
-        insert.setString(14, doc.getChecksum())
-
-        insert.setBoolean(15, deleted)
-
-        return insert
-    }
-
     boolean saveVersion(Document doc, Connection connection, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
         if (versioning) {
             PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
@@ -713,14 +677,14 @@ class PostgreSQLComponent {
     }
 
     boolean bulkStore(
-            final List<Document> docs, boolean upsert, String changedIn, String changedBy, String collection) {
+            final List<Document> docs, String changedIn, String changedBy, String collection) {
         if (!docs || docs.isEmpty()) {
             return true
         }
         log.trace("Bulk storing ${docs.size()} documents.")
         Connection connection = getConnection()
         connection.setAutoCommit(false)
-        PreparedStatement batch = connection.prepareStatement((upsert ? UPSERT_DOCUMENT : INSERT_DOCUMENT))
+        PreparedStatement batch = connection.prepareStatement(INSERT_DOCUMENT)
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             docs.each { doc ->
@@ -729,11 +693,7 @@ class PostgreSQLComponent {
                     ver_batch = rigVersionStatement(ver_batch, doc, now, changedIn, changedBy, collection, false)
                     ver_batch.addBatch()
                 }
-                if (upsert) {
-                    batch = rigUpsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
-                } else {
-                    batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
-                }
+                batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
                 for (String dependerId : getDependers(doc.getShortId())) {
