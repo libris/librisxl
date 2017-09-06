@@ -183,7 +183,7 @@ class ImporterMain {
                 }
             }
             log.info("Saving ${storeList.size()} documents ...")
-            whelk.storage.bulkStore(storeList, true, "whelk?", "?", collection)
+            whelk.storage.bulkStore(storeList, "xl", null, collection)
         } as Runnable)
     }
 
