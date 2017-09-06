@@ -2690,12 +2690,12 @@
 
     "028": {
       "aboutEntity": "?thing",
-      "TODO": "repeatable, use identifiedBy",
+      "TODO": "repeatable, use identifiedBy. Do we need to do more?",
       "addLink": "identifiedBy",
       "i1": {
         "property": "@type",
         "tokenMap": {
-          "0": "IssueNumber",
+          "0": "AudioIssueNumber",
           "1": "MatrixNumber",
           "2": "MusicPlate",
           "3": "MusicPublisherNumber",
@@ -2708,11 +2708,12 @@
       "$b": {
         "link": "agent", "resourceType": "Organization", "property": "name"
       },
+      "$q": {"addProperty": "qualifier"},
       "_spec": [
         {
           "source": {"028": {"ind1": "0", "ind2": " ", "subfields": [{"a": "1"}]}},
           "result": {"mainEntity": {
-            "identifiedBy": [{"@type": "IssueNumber", "value": "1"}]
+            "identifiedBy": [{"@type": "AudioIssueNumber", "value": "1"}]
           }}
         }
       ]
@@ -2846,7 +2847,8 @@
           "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"}
         }
       ],
-      "$a": {"addProperty": "systemNumber"},
+      "$a": {"addLink": "identifiedBy", "resourceType": "SystemNumber", "property": "value"},
+      "TODO:a": "extract value from parantheses and source as rdfs:label",
       "$9": {"addProperty": "librisIIINumber"},
       "_spec": [
         {
@@ -2857,7 +2859,12 @@
               {"a": "http://dbpedia.org/resource/August_Strindberg"}]}}
           ],
           "result": {
-            "systemNumber": ["123"],
+            "identifiedBy": [
+              {
+                "@type": "SystemNumber",
+                "value": "123"
+              }
+            ],
             "mainEntity": {
               "sameAs":  [{"@id": "http://dbpedia.org/resource/August_Strindberg"}]
             }
@@ -2922,14 +2929,41 @@
       }
     },
     "042": {
-      "aboutEntity": "?thing",
-      "$a": {"property": "authenticationCode"},
+      "aboutEntity": "?record",
+      "link": "descriptionAuthentication",
+      "resourceType": "DescriptionAuthentication",
+      "pendingResources": {
+        "_:bibliography": {
+          "addLink": "bibliography",
+          "resourceType": "Library"
+        }
+      },
+      "$a": {"addProperty": "code"},
       "$9": {
-        "addLink": "bibliography",
-        "resourceType": "Library",
+        "about": "_:bibliography",
         "uriTemplate": "https://libris.kb.se/library/{_}",
         "property": "sigel"
-      }
+      },
+      "_spec": [
+        {
+          "source": {
+            "042": {"ind1": " ", "ind2": " ", "subfields": [{"9": "NB"}]}
+          },
+          "result": {
+            "descriptionAuthentication": {
+              "@type": "DescriptionAuthentication",
+              "bibliography": [
+                {"@type": "Library", "sigel": "NB"}
+              ]
+            },
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        }
+      ]
     },
     "043": {"ignored": true},
 
@@ -3320,14 +3354,14 @@
         "embedded": true
       },
       "$a": {"property": "editionStatement", "punctuationChars": "/"},
-      "$b": {"property": "editionEnumeration"},
+      "$b": {"property": "editionStatementRemainder"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "_spec": [
         {
           "source": {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "New ed."}, {"b": "2. pr."}]}},
           "result": {"mainEntity": {
             "editionStatement": "New ed.",
-            "editionEnumeration": "2. pr."
+            "editionStatementRemainder": "2. pr."
           }}
         },
         {
@@ -3475,6 +3509,7 @@
 
     "264": {
       "TOOO:i1": {},
+      "TODO:i2": "12=4 move copyright from provisionActivity to copyrightDate Literal?",
       "match": [
         {"when": "i2=0", "addLink": "production", "resourceType": "Production"},
         {"when": "i2=1", "addLink": "publication", "resourceType": "Publication"},
@@ -3687,8 +3722,9 @@
       "$h": { "ignored": "true" },
       "$i":
       {
-        "addProperty": "marc:technicalSpecificationsOfMedium",
-        "NOTE": "Not mapped to systemRequirement because of conversion of 538"
+        "addLink": "systemRequirement",
+        "resourceType": "SystemRequirement",
+        "addProperty": "marc:technicalSpecificationsOfMedium"
       },
       "$j": {
         "addLink": "generation",
@@ -4043,7 +4079,7 @@
       "$a": {"addProperty": "label"}
     },
     "545": {},
-    "546": {"aboutEntity": "?thing", "$a": {"addProperty": "languageNote"}},
+    "546": {"aboutEntity": "?work", "$a": {"addProperty": "languageNote"}},
     "547": {},
 
     "550": {},
@@ -4574,11 +4610,11 @@
     "754": {},
     "755": {},
 
-    "760": {"inherit": "772", "addLink": "subseriesOf", "resourceType": "Serial"},
-    "762": {"inherit": "772", "addLink": "subseries", "resourceType": "Serial"},
+    "760": {"NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSeries", "resourceType": "Instance"},
+    "762": {"NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSubseries", "resourceType": "Instance"},
     "765": {"inherit": "772", "addLink": "translationOf"},
     "767": {"inherit": "772", "addLink": "translation"},
-    "770": {"inherit": "772", "addLink": "contains"},
+    "770": {"inherit": "772", "addLink": "supplement"},
     "772": {
       "addLink": "supplementTo",
       "resourceType": "Work",
@@ -4662,19 +4698,19 @@
     },
     "777": {
       "inherit": "772",
-      "addLink": "inConjunctionWith", "TODO": "determine link"
+      "addLink": "issuedWith"
     },
     "780": {
       "inherit": "772",
       "TOOO:i1": {},
       "TOOO:i2": {},
       "addLink": "precededBy",
-      "resourceType": "Serial"
+      "resourceType": "Work"
     },
     "785": {
       "inherit": "780",
       "addLink": "succeededBy",
-      "resourceType": "Serial"
+      "resourceType": "Work"
     },
     "786": {
       "aboutEntity": "?record",
