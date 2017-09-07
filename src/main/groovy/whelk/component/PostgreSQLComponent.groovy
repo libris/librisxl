@@ -266,18 +266,28 @@ class PostgreSQLComponent {
 
         try {
             if (collection == "hold") {
-                String recordSystemId = getRecordId(doc.getHoldingFor()).substring(Document.BASE_URI.toString().length())
-                if (recordSystemId == null) {
+                String holdingFor = doc.getHoldingFor()
+                if (holdingFor == null) {
                     log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
                 }
-                lock = acquireRowLock(recordSystemId)
+                String holdingForRecordId = getRecordId(holdingFor)
+                if (holdingForRecordId == null) {
+                    log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    return false
+                }
+                String holdingForSystemId = holdingForRecordId.substring(Document.BASE_URI.toString().length())
+                if (holdingForSystemId == null) {
+                    log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    return false
+                }
+                lock = acquireRowLock(holdingForSystemId)
 
-                Document linkedBib = load(recordSystemId)
+                Document linkedBib = load(holdingForSystemId)
                 List<Document> otherHoldings = getAttachedHoldings(linkedBib.getThingIdentifiers())
                 for (Document otherHolding in otherHoldings) {
                     if ( otherHolding.getHeldBy() == doc.getHeldBy())
-                        throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $recordSystemId")
+                        throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $holdingForSystemId")
                 }
             }
 
