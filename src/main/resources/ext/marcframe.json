@@ -3645,11 +3645,6 @@
               {"a": "Anteckningar från en ö /"},
               {"c": "Tove Jansson, Tuulikki Pietilä."}
           ]}},
-          "normalized": {
-            "245": {"ind1": "2", "ind2": "0", "subfields": [
-              {"a": "Anteckningar från en ö /"},
-              {"c": "Tove Jansson, Tuulikki Pietilä."}
-            ]}},
           "result": {"mainEntity": {
             "hasTitle": [ {"@type": "Title",
               "mainTitle":  "Anteckningar från en ö",

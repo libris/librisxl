@@ -1851,7 +1851,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             Util.asList(about).each {
                 if (it['@type'] != resourceType)
                     shouldMap = false
-                if (it && (!resourceType || it['@type'] == resourceType)) {
+                else if (it && (!resourceType || it['@type'] == resourceType)) {
                     aboutMap.get(key, []).add(it)
                 }
             }
