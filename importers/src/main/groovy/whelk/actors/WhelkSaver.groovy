@@ -77,6 +77,14 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
                         importResult.numberOfDocuments++
                     }
                 }
+                catch (PostgreSQLComponent.AcquireLockException e) {
+                    exceptionsThrown++
+                    log.info(e.message + " -> Failed to import/save the post.")
+                }
+                catch (PostgreSQLComponent.ConflictingHoldException e) {
+                    exceptionsThrown++
+                    log.info(e.message + " -> Failed to import/save the post.")
+                }
                 catch (any) {
                     exceptionsThrown++
                     log.error "Error saving to Whelk", any
