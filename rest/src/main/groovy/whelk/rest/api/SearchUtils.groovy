@@ -169,16 +169,16 @@ class SearchUtils {
         String[] types = queryParameters.get('@type')
         if (types != null) {
             // Select types to prune
-            Set<String> deathRow = []
+            Set<String> toBeRemoved = []
             for (String c1 : types) {
                 ArrayList<String> c1SuperClasses = []
                 jsonld.getSuperClasses(c1, c1SuperClasses)
-                deathRow.addAll(c1SuperClasses)
+                toBeRemoved.addAll(c1SuperClasses)
             }
             // Make a new pruned list without the undesired superclasses
             List<String> prunedTypes = []
             for (String type : types) {
-                if (!deathRow.contains(type))
+                if (!toBeRemoved.contains(type))
                     prunedTypes.add(type)
             }
             // Add all subclasses of the remaining types
