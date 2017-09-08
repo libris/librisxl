@@ -269,7 +269,6 @@
       "$k": {"addProperty": "formSubheading"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$m": {"addProperty": "musicMedium"},
-      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "$o": {"property": "version"},
       "$p": {"addProperty": "partName", "punctuationChars": "/"},
       "$r": {"property": "musicKey"},
@@ -2863,7 +2862,7 @@
         "_:scale": {
           "TODO:aboutEntity?": "?work",
           "link": "scale",
-          "TODO:default:resourceType": "Scale"
+          "resourceType": "Scale"
         }
       },
       "i1": {"ignored": "true", "marcDefault": "1"},
@@ -2924,6 +2923,27 @@
                     "@type": "Cartographic",
                     "scale": {
                       "@type": "marc:LinearScale",
+                      "marc:constantRatioLinearHorizontalScale": ["110000"]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": [
+            {"034": {"ind1": "1", "ind2": " ", "subfields": [{"b": "110000"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "cartographicAttributes": [
+                  {
+                    "@type": "Cartographic",
+                    "scale": {
+                      "@type": "Scale",
                       "marc:constantRatioLinearHorizontalScale": ["110000"]
                     }
                   }
@@ -3189,6 +3209,7 @@
       "aboutEntity": "?work",
       "include": ["contributiondata", "titledetails1xx7xx"],
       "resourceType": "PrimaryContribution",
+      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
       "subfieldOrder": "a b c q d j g u e 4 t n p l k f",
       "_spec": [
@@ -4758,7 +4779,7 @@
               "embedded": true
             },
             "_:agent": {
-              "FIXME:resourceType": "When ind1=1 change resourceType to Family. Concerns ~00000,16 ‰ of bib data",
+              "FIXME:resourceType": "When ind1=3 change resourceType to Family. Concerns ~00000,16 ‰ of bib data",
               "about": "_:contribution",
               "link": "agent",
               "resourceType": "Person",
@@ -4781,6 +4802,7 @@
         }
       ],
       "$i": {"addLink": "relation", "property": "label"},
+      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "$x": {"property": "issn"},
       "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
       "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
@@ -5477,10 +5499,29 @@
 
     "711": {
       "aboutEntity": "?work",
-      "pendingResources": {
-        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-      },
       "match": [
+        {
+          "when": "$t & i2=2",
+          "include": ["agentdataMeeting", "titledetails1xx7xx"],
+          "addLink": "hasPart",
+          "resourceType": "Work",
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Meeting",
+              "embedded": false
+            },
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$t": {"property": "title"},
+          "$0": {"addLink": "identifiedBy", "property": "value"}
+        },
         {
           "when": "$t",
           "include": ["agentdataMeeting", "titledetails1xx7xx"],
@@ -5504,7 +5545,8 @@
               "link": "agent",
               "resourceType": "Meeting",
               "embedded": false
-            }
+            },
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
@@ -5515,7 +5557,8 @@
           "addLink": "contribution",
           "resourceType": "Contribution",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Meeting"}
+            "_:agent": {"link": "agent", "resourceType": "Meeting"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "$t": {"property": "title"}
         }
@@ -5543,6 +5586,85 @@
                     "name": "Mostly Mozart Festival.",
                     "subordinateUnit": ["Orchestra."]}
                 }]
+            }
+          }}
+        },
+        {
+          "source": {
+            "711": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Olympic Games."},
+              {"n": "21st : "},
+              {"d": "1976: "},
+              {"c": "Montréal, Québec)."},
+              {"e": "Organizing Committee."},
+              {"e": "Arts and Culture Program."},
+              {"e": "Visual Arts Section."}
+            ]}},
+          "normalized": {
+            "711": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Olympic Games."},
+              {"d": "1976:"},
+              {"e": "Organizing Committee."},
+              {"e": "Arts and Culture Program."},
+              {"e": "Visual Arts Section."},
+              {"n": "21st :"},
+              {"c": "Montréal, Québec)."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent": {
+                    "@type": "Meeting",
+                    "name": "Olympic Games.",
+                    "place": [{
+                      "@type": "Place",
+                      "label": "Montréal, Québec)."
+                    }],
+                    "numberOfPartSectionMeeting": ["21st :"],
+                    "date": ["1976:"],
+                    "subordinateUnit": ["Organizing Committee." , "Arts and Culture Program." ,  "Visual Arts Section."]
+                  }
+                }]
+            }
+          }
+          }
+        },
+        {
+          "source": {
+            "711": {"ind1": "2", "ind2": "2", "subfields": [
+              {"a": "Vatican Council"},
+              {"n": "(2nd : "},
+              {"d": "1962-1965 : "},
+              {"c": "Basilica di San Pietro in Vaticano)."},
+              {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
+              {"i": "Facsimile (manifestation): "}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "relation": [{"label": "Facsimile (manifestation):"}],
+                  "title": "Constitutio pastoralis de ecclesia in mundo huius temporis.",
+                  "contribution": [
+                    {"@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Meeting",
+                        "name": "Vatican Council",
+                        "place": [{
+                          "@type": "Place",
+                          "label": "Basilica di San Pietro in Vaticano)."
+                        }],
+                        "numberOfPartSectionMeeting": ["(2nd :"],
+                        "date": ["1962-1965 :"]}
+                    }
+                  ]
+                }
+              ]
             }
           }}
         },
@@ -6332,6 +6454,7 @@
 
     "400": {
       "TODO:remnants-of-inherit": "bib:100",
+      "TODO": "Ensure bib 100 does not match with auth 400",
       "pendingResources": {
         "_:agent": {"link": "contributor", "resourceType": "Person"}
       },

@@ -1849,7 +1849,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
             def about = parent ? parent[link] : null
             Util.asList(about).each {
-                if (it['@type'] != resourceType)
+                if (it && (it['@type'] != resourceType))
                     shouldMap = false
                 else if (it && (!resourceType || it['@type'] == resourceType)) {
                     aboutMap.get(key, []).add(it)
