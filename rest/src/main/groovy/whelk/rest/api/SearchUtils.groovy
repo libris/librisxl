@@ -163,14 +163,31 @@ class SearchUtils {
         String query = getReservedQueryParameter('q', queryParameters)
         log.debug("Querying ElasticSearch")
 
-        // Include all subclasses of @type
+        // Filter out all @types that have (more specific) subclasses that are also in the list
+        // So for example [Instance, Electronic] should be reduced to just [Electronic].
+        // Afterwards, include all subclasses of the remaining @types
         String[] types = queryParameters.get('@type')
         if (types != null) {
-            ArrayList<String> subClasses = []
+            // Select types to prune
+            Set<String> deathRow = []
+            for (String c1 : types) {
+                ArrayList<String> c1SuperClasses = []
+                jsonld.getSuperClasses(c1, c1SuperClasses)
+                deathRow.addAll(c1SuperClasses)
+            }
+            // Make a new pruned list without the undesired superclasses
+            List<String> prunedTypes = []
             for (String type : types) {
+                if (!deathRow.contains(type))
+                    prunedTypes.add(type)
+            }
+            // Add all subclasses of the remaining types
+            ArrayList<String> subClasses = []
+            for (String type : prunedTypes) {
                 jsonld.getSubClasses(type, subClasses)
                 subClasses.add(type)
             }
+
             queryParameters.put('@type', (String[]) subClasses.toArray())
         }
 
