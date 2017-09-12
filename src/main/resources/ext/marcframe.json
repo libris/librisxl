@@ -2881,6 +2881,7 @@
         "overwrite": true,
         "FIXME": "revert will miss if resourceType is given above and doesn't match!",
         "tokenMap": {
+          "TODO": "In revert process: Override resourceType",
           "a": "marc:LinearScale",
           "b": "marc:AngularScale",
           "z": "marc:OtherCartographicScale"
