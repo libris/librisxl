@@ -89,6 +89,7 @@ class LegacyMarcAPI extends HttpServlet {
             Vector<MarcRecord> result = compileVirtualMarcRecord(profile, rootDocument)
 
             response.setContentType("application/octet-stream")
+            response.setHeader("Content-Disposition", "attachment; filename=\"libris_marc_" + rootDocument.getShortId() + "\"")
             Iso2709MarcRecordWriter writer = new Iso2709MarcRecordWriter(response.getOutputStream(), "UTF-8")
             for (MarcRecord record : result) {
                 writer.writeRecord(record)
