@@ -1,5 +1,6 @@
 package whelk.rest.api
 
+import groovy.util.logging.Log4j2
 import groovy.xml.XmlUtil
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter
@@ -24,6 +25,7 @@ import javax.servlet.http.HttpServletResponse
  *
  * The purpose of this API is to fill the vacuum left by "librisXP".
  */
+@Log4j2
 class LegacyMarcAPI extends HttpServlet {
 
     private Whelk whelk
@@ -46,47 +48,56 @@ class LegacyMarcAPI extends HttpServlet {
      */
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
-        String library = request.getParameter("library")
-        String id = request.getParameter("id")
-        if (id == null || library == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "\"library\" (sigel) and \"id\" parameters required.")
-            return
-        }
-        id = LegacyIntegrationTools.fixUri(id)
-        library = LegacyIntegrationTools.fixUri(library)
-        Document rootDocument = getDocument(id)
-        if (rootDocument == null){
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "The supplied \"id\"-parameter must refer to an existing bibliographic record.")
-            return
-        }
-        String collection = LegacyIntegrationTools.determineLegacyCollection(rootDocument, jsonld)
-        if (!collection.equals("bib")){
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "The supplied \"id\"-parameter must refer to an existing bibliographic record.")
-            return
-        }
-        String profileString = whelk.storage.getProfileByLibraryUri(library)
-        if (profileString == null){
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Could not find a profile for the supplied \"library\"-parameter.")
-            return
-        }
+        try {
+            String library = request.getParameter("library")
+            String id = request.getParameter("id")
+            if (id == null || library == null) {
+                String message = "\"library\" (sigel) and \"id\" parameters required."
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, message)
+                log.warn("Bad client request to LegacyMarcAPI: " + message)
+                return
+            }
+            id = LegacyIntegrationTools.fixUri(id)
+            library = LegacyIntegrationTools.fixUri(library)
+            Document rootDocument = getDocument(id)
+            if (rootDocument == null) {
+                String message = "The supplied \"id\"-parameter must refer to an existing bibliographic record."
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, message)
+                log.warn("Bad client request to LegacyMarcAPI: " + message)
+                return
+            }
+            String collection = LegacyIntegrationTools.determineLegacyCollection(rootDocument, jsonld)
+            if (!collection.equals("bib")) {
+                String message = "The supplied \"id\"-parameter must refer to an existing bibliographic record."
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, message)
+                log.warn("Bad client request to LegacyMarcAPI: " + message)
+                return
+            }
+            String profileString = whelk.storage.getProfileByLibraryUri(library)
+            if (profileString == null) {
+                String message = "Could not find a profile for the supplied \"library\"-parameter."
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, message)
+                log.warn("Bad client request to LegacyMarcAPI: " + message)
+                return
+            }
 
-        File tempFile = File.createTempFile("profile", ".tmp")
-        tempFile.write(profileString)
-        ExportProfile profile = new ExportProfile(tempFile)
-        tempFile.delete()
+            File tempFile = File.createTempFile("profile", ".tmp")
+            tempFile.write(profileString)
+            ExportProfile profile = new ExportProfile(tempFile)
+            tempFile.delete()
 
-        Vector<MarcRecord> result = compileVirtualMarcRecord(profile, rootDocument)
+            Vector<MarcRecord> result = compileVirtualMarcRecord(profile, rootDocument)
 
-        response.setContentType("application/octet-stream")
-        Iso2709MarcRecordWriter writer = new Iso2709MarcRecordWriter(response.getOutputStream(), "UTF-8")
-        for (MarcRecord record : result) {
-            writer.writeRecord(record)
+            response.setContentType("application/octet-stream")
+            Iso2709MarcRecordWriter writer = new Iso2709MarcRecordWriter(response.getOutputStream(), "UTF-8")
+            for (MarcRecord record : result) {
+                writer.writeRecord(record)
+            }
+            response.getOutputStream().close()
+        } catch (Throwable e) {
+            log("Failed handling _compilemarc request: ", e)
+            throw e
         }
-        response.getOutputStream().close()
     }
 
     Vector<MarcRecord> compileVirtualMarcRecord(ExportProfile profile, Document rootDocument) {
@@ -103,7 +114,12 @@ class LegacyMarcAPI extends HttpServlet {
         def auths = new HashSet<MarcRecord>()
         if (!profile.getProperty("authtype", "NONE").equalsIgnoreCase("NONE")) {
             auth_ids.each { String auth_id ->
-                auths.add(MarcXmlRecordReader.fromXml(toXmlString(getDocument(auth_id))))
+                Document authDoc = getDocument(auth_id)
+                if (authDoc != null) {
+                    String xmlString = toXmlString(authDoc)
+                    if (xmlString != null)
+                        auths.add(MarcXmlRecordReader.fromXml(xmlString))
+                }
             }
         }
 
