@@ -62,6 +62,11 @@
         <servlet-class>whelk.rest.api.HoldAPI</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
+    <servlet>
+        <servlet-name>RelationsAPI</servlet-name>
+        <servlet-class>whelk.rest.api.RecordRelationAPI</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
 
     <servlet>
         <servlet-name>PrometheusSimpleClientServlet</servlet-name>
@@ -87,6 +92,11 @@
     <servlet-mapping>
         <servlet-name>HoldAPI</servlet-name>
         <url-pattern>/_findhold</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>RelationsAPI</servlet-name>
+        <url-pattern>/_dependencies</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
