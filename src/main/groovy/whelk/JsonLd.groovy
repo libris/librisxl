@@ -825,33 +825,42 @@ public class JsonLd {
     private void loadForcedSetTerms()
             throws IOException
     {
+        /*
+        forcedNoSetTerms are those that are used at some point with property/link (as opposed to addProperty/addLink).
+        The intersection of forcedNoSetTerms and forcedSetTerms are in conflict, dealing with these remains an issue.
+         */
+        Set forcedNoSetTerms = new HashSet<>()
         forcedSetTerms = new HashSet<>()
+
         InputStream marcFrameStream = getClass().getClassLoader().getResourceAsStream("ext/marcframe.json")
 
         ObjectMapper mapper = new ObjectMapper()
         Map marcFrame = mapper.readValue(marcFrameStream, HashMap.class)
-        parseForcedSetTerms(marcFrame)
+        parseForcedSetTerms(marcFrame, forcedNoSetTerms)
+
+        // As an interim solution conflicted terms are considered no-set-terms.
+        forcedSetTerms.removeAll(forcedNoSetTerms)
     }
 
-    private void parseForcedSetTerms(Map marcFrame) {
+    private void parseForcedSetTerms(Map marcFrame, Set forcedNoSetTerms) {
         for (Object key : marcFrame.keySet()) {
             Object value = marcFrame.get(key)
             if ( (key.equals("addLink") || key.equals("addProperty")) && value instanceof String )
                 forcedSetTerms.add((String) value)
 
             if (value instanceof Map)
-                parseForcedSetTerms( (Map) value )
+                parseForcedSetTerms( (Map) value, forcedNoSetTerms )
             if (value instanceof List)
-                parseForcedSetTerms( (List) value )
+                parseForcedSetTerms( (List) value, forcedNoSetTerms )
         }
     }
 
-    private void parseForcedSetTerms(List marcFrame) {
+    private void parseForcedSetTerms(List marcFrame, Set forcedNoSetTerms) {
         for (Object entry : marcFrame) {
             if (entry instanceof Map)
-                parseForcedSetTerms( (Map) entry )
+                parseForcedSetTerms( (Map) entry, forcedNoSetTerms )
             if (entry instanceof List)
-                parseForcedSetTerms( (List) entry )
+                parseForcedSetTerms( (List) entry, forcedNoSetTerms )
         }
     }
 }
