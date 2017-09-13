@@ -121,7 +121,7 @@ class PostgreSQLComponent {
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
         DELETE_DEPENDENCIES = "DELETE FROM $dependenciesTableName WHERE id = ?"
-        INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, dependsOnId) VALUES (?,?)"
+        INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, relation, dependsOnId) VALUES (?,?,?)"
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, modified, deleted) SELECT ?,?,?,?,?,?,?,? " +
                 "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
@@ -497,10 +497,11 @@ class PostgreSQLComponent {
 
     /**
      * Given a document, look up all it's dependencies (links/references) and return a list of those references that
-     * have Libris system IDs (fnrgls). You were probably looking for getDependencies() which is much more efficient
+     * have Libris system IDs (fnrgls), in String[2] form. First element is the relation and second is the link.
+     * You were probably looking for getDependencies() which is much more efficient
      * for a document that is already saved in lddb!
      */
-    public List<String> calculateDependenciesSystemIDs(Document doc) {
+    public List<String[]> calculateDependenciesSystemIDs(Document doc) {
         Connection connection = getConnection()
         try {
             return _calculateDependenciesSystemIDs(doc, connection)
@@ -509,9 +510,11 @@ class PostgreSQLComponent {
         }
     }
 
-    private List<String> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
-        List<String> dependencies = []
-        for (String iri : doc.getExternalRefs()) {
+    private List<String[]> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
+        List<String[]> dependencies = []
+        for (String[] reference : doc.getRefsWithRelation()) {
+            String relation = reference[0]
+            String iri = reference[1]
             if (!iri.startsWith("http"))
                 continue
             PreparedStatement getSystemId
@@ -521,8 +524,10 @@ class PostgreSQLComponent {
                 ResultSet rs
                 try {
                     rs = getSystemId.executeQuery()
-                    if (rs.next())
-                        dependencies.add(rs.getString(1))
+                    if (rs.next()) {
+                        if (!rs.getString(1).equals(doc.getShortId())) // Exclude A -> A (self-references)
+                            dependencies.add([relation, rs.getString(1)] as String[])
+                    }
                 } finally {
                     if (rs != null) rs.close()
                 }
@@ -546,9 +551,10 @@ class PostgreSQLComponent {
 
         // Insert the dependency list
         PreparedStatement insertDependencies = connection.prepareStatement(INSERT_DEPENDENCIES)
-        for (String dependsOnId : dependencies) {
+        for (String[] dependsOn : dependencies) {
             insertDependencies.setString(1, doc.getShortId())
-            insertDependencies.setString(2, dependsOnId)
+            insertDependencies.setString(2, dependsOn[0])
+            insertDependencies.setString(3, dependsOn[1])
             insertDependencies.addBatch()
         }
         try {
