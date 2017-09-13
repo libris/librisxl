@@ -49,6 +49,7 @@ class PostgreSQLComponent {
                      GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, GET_DEPENDENCIES, GET_DEPENDERS,
                      GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE
     protected String LOAD_SETTINGS, SAVE_SETTINGS
+    protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
     protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
@@ -175,6 +176,8 @@ class PostgreSQLComponent {
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
         GET_DEPENDERS = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ?"
         GET_DEPENDENCIES = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ?"
+        GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
+        GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
         GET_MINMAX_MODIFIED = "SELECT MIN(modified), MAX(modified) from $mainTableName WHERE id IN (?)"
         UPDATE_MINMAX_MODIFIED = "WITH dependsOn AS (SELECT modified FROM $dependenciesTableName JOIN $mainTableName ON " + dependenciesTableName + ".dependsOnId = " + mainTableName+ ".id WHERE " + dependenciesTableName + ".id = ? UNION SELECT modified FROM $mainTableName WHERE id = ?) " +
                 "UPDATE $mainTableName SET depMinModified = (SELECT MIN(modified) FROM dependsOn), depMaxModified = (SELECT MAX(modified) FROM dependsOn) WHERE id = ?"
@@ -1123,6 +1126,29 @@ class PostgreSQLComponent {
         }
     }
 
+    String getSystemIdByIri(String iri) {
+        Connection connection
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(GET_SYSTEMID_BY_IRI)
+            preparedStatement.setString(1, iri)
+            rs = preparedStatement.executeQuery()
+            if (rs.next())
+                return rs.getString(1)
+            return null
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+            if (connection != null)
+                connection.close()
+        }
+    }
+
     List<String> getDependencies(String id) {
         return getDependencyData(id, GET_DEPENDENCIES)
     }
@@ -1139,6 +1165,40 @@ class PostgreSQLComponent {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
+            rs = preparedStatement.executeQuery()
+            List<String> dependecies = []
+            while (rs.next()) {
+                dependecies.add( rs.getString(1) )
+            }
+            return dependecies
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+            if (connection != null)
+                connection.close()
+        }
+    }
+
+    List<String> getDependenciesOfType(String id, String typeOfRelation) {
+        return getDependencyDataOfType(id, typeOfRelation, GET_DEPENDENCIES_OF_TYPE)
+    }
+
+    List<String> getDependersOfType(String id, String typeOfRelation) {
+        return getDependencyDataOfType(id, typeOfRelation, GET_DEPENDERS_OF_TYPE)
+    }
+
+    private List<String> getDependencyDataOfType(String id, String typeOfRelation, String query) {
+        Connection connection
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(query)
+            preparedStatement.setString(1, id)
+            preparedStatement.setString(2, typeOfRelation)
             rs = preparedStatement.executeQuery()
             List<String> dependecies = []
             while (rs.next()) {
