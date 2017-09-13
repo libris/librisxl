@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS lddb__identifiers (
 CREATE TABLE IF NOT EXISTS lddb__dependencies (
     pk serial,
     id text not null,
+    relation text not null,
     dependsOnId text not null
 );
 

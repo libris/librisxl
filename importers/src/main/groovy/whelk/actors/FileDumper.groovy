@@ -76,11 +76,14 @@ class FileDumper implements MySQLLoader.LoadHandler {
                     log.error("Failed converting document with id: " + rowList.last().bib_id, e)
                 }
                 if (recordMap != null) {
-                    List<String> depencyIDs = postgreSQLComponent.calculateDependenciesSystemIDs(recordMap.document)
-                    recordMap["dependencies"] = depencyIDs
+                    List<String[]> externalDependencies = postgreSQLComponent.calculateDependenciesSystemIDs(recordMap.document)
+                    recordMap["dependencies"] = externalDependencies
                     recordMap.document.setModified(new Date())
-                    if (depencyIDs.size() > 0) {
-                        List<String> dependencyIDsIncludingThis = depencyIDs.clone()
+                    if (externalDependencies.size() > 0) {
+                        List<String> dependencyIDsIncludingThis = []
+                        for (String[] reference : externalDependencies) {
+                            dependencyIDsIncludingThis.add(reference[1])
+                        }
                         dependencyIDsIncludingThis.add( recordMap.document.getShortId() )
                         String[] depMinMaxModified = postgreSQLComponent.getMinMaxModified(dependencyIDsIncludingThis)
                         recordMap["depMinModified"] = depMinMaxModified[0]
@@ -135,8 +138,8 @@ class FileDumper implements MySQLLoader.LoadHandler {
                         identifiersWriter.write("${doc.shortId}\t${identifier}\t1\tfalse\n")
                 }
 
-                for (String dependency : recordMap.dependencies) {
-                    dependenciesWriter.write("${doc.shortId}\t${dependency}\n")
+                for (String[] dependency : recordMap.dependencies) {
+                    dependenciesWriter.write("${doc.shortId}\t${dependency[0]}\t${dependency[1]}\n")
                 }
             }
         }
