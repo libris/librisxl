@@ -32,7 +32,7 @@ class PostgresLoadfileWriter {
         MySQLLoader.run(fileDumper, sqlQuery, queryParameters, collection, connectionUrl)
 
         fileDumper.close()
-        println "Done."
+        System.err.println("Done.")
     }
 
     static List<String> collectIDsFromExampleFile(String exampleDataFileName, String collection) {

@@ -132,8 +132,8 @@ class ImporterMain {
 
     @Command(args='COLLECTION [SOURCE_SYSTEM]')
     void vcopyharvest(String collection, String sourceSystem = 'vcopy') {
-        println collection
-        println sourceSystem
+        System.err.println(collection)
+        System.err.println(sourceSystem)
         def connUrl = props.getProperty("mysqlConnectionUrl")
         def whelk = pico.getComponent(Whelk)
         def importer = pico.getComponent(VCopyImporter)
@@ -207,11 +207,11 @@ class ImporterMain {
 
         idgroups.each { group ->
             ImportResult importResult = importer.doImport(group.key, 'vcopy', connUrl, group.value as String[])
-            println "Created ${importResult?.numberOfDocuments} documents from  ${group.key}."
+            System.err.println("Created ${importResult?.numberOfDocuments} documents from  ${group.key}.")
         }
 
 
-        println "All done importing example data."
+        System.err.println("All done importing example data.")
     }
 
     def importLinkedRecords(List<String> bibIds) {
@@ -219,14 +219,14 @@ class ImporterMain {
         def importer = pico.getComponent(VCopyImporter)
 
         def extraAuthIds = getExtraAuthIds(connUrl,bibIds)
-        println "Found ${extraAuthIds.count {it}} linked authority records from bibliographic records. Importing..."
+        System.err.println("Found ${extraAuthIds.count {it}} linked authority records from bibliographic records. Importing...")
         ImportResult importResult = importer.doImport('auth', 'vcopy', connUrl, extraAuthIds as String[])
-        println "Created ${importResult?.numberOfDocuments} documents from linked authority records"
+        System.err.println("Created ${importResult?.numberOfDocuments} documents from linked authority records")
 
         def extraBibIds = getExtraHoldIds(connUrl,bibIds)
-        println "Found ${extraBibIds.count {it}} linked holding records from bibliographic records. Importing..."
+        System.err.println("Found ${extraBibIds.count {it}} linked holding records from bibliographic records. Importing...")
         importResult = importer.doImport('hold', 'vcopy', connUrl, extraBibIds as String[])
-        println "Created ${importResult?.numberOfDocuments} documents from linked holding records"
+        System.err.println("Created ${importResult?.numberOfDocuments} documents from linked holding records")
     }
 
     static List<String> getExtraAuthIds(String connUrl, List<String> bibIds){
@@ -283,7 +283,7 @@ class ImporterMain {
 
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
-        println "Linkfinding completed. Elapsed time: ${System.currentTimeMillis() - startTime}"
+        System.err.println("Linkfinding completed. Elapsed time: ${System.currentTimeMillis() - startTime}")
     }
 
     static COMMANDS = getMethods().findAll { it.getAnnotation(Command)
