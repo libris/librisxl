@@ -1,5 +1,6 @@
 package whelk.rest.api
 
+import whelk.Document
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.util.*
@@ -44,18 +45,23 @@ class RecordRelationAPI extends HttpServlet {
             return
         }
 
-        String result
+        List<String> dependencySystemIDs
         if (relation == null) {
             if (reverse)
-                result = whelk.storage.getDependers(systemId)
+                dependencySystemIDs = whelk.storage.getDependers(systemId)
             else
-                result = whelk.storage.getDependencies(systemId)
+                dependencySystemIDs = whelk.storage.getDependencies(systemId)
         }
         else {
             if (reverse)
-                result = whelk.storage.getDependersOfType(systemId, relation)
+                dependencySystemIDs = whelk.storage.getDependersOfType(systemId, relation)
             else
-                result = whelk.storage.getDependenciesOfType(systemId, relation)
+                dependencySystemIDs = whelk.storage.getDependenciesOfType(systemId, relation)
+        }
+
+        ArrayList<String> result = []
+        for (String dependencySystemId : dependencySystemIDs){
+            result.add(Document.getBASE_URI().toString() + dependencySystemId)
         }
 
         String jsonString = PostgreSQLComponent.mapper.writeValueAsString(result)
