@@ -1801,11 +1801,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 Tuple2<Boolean, Map<String, List>> buildResult = buildAboutMap(it)
                 boolean shouldMap = buildResult.first
                 Map aboutMap = buildResult.second
-                // If pendingResources exists, aboutMap can not be empty to continue to revertOne().
-                // Not always true :( See field 245.
 
-                // If pendingResources NOT exist there is no dependency to aboutMap and can
-                // continue to revertOne().
                 if (shouldMap)
                 {
                     def field = revertOne(data, it, aboutMap, usedMatchRule)
@@ -1849,6 +1845,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
             def about = parent ? parent[link] : null
             Util.asList(about).each {
+                //If @type of entity and resourceType of pendingResurce is not the same. Don't continue with revert.
                 if (it && (it['@type'] != resourceType))
                     shouldMap = false
                 else if (it && (!resourceType || it['@type'] == resourceType)) {
