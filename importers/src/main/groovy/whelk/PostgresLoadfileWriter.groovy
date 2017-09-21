@@ -40,8 +40,12 @@ class PostgresLoadfileWriter {
         File exampleFile = new File(exampleDataFileName)
         final String preamble = collection+"/"
         exampleFile.eachLine { line ->
-            if (line.startsWith(preamble))
-            ids.add(line.substring(preamble.length(), line.indexOf('\t')))
+            if (line.startsWith(preamble)) {
+                if (line.contains("\t"))
+                    ids.add(line.substring(preamble.length(), line.indexOf('\t')))
+                else
+                    ids.add(line.substring(preamble.length()))
+            }
         }
         return ids
     }

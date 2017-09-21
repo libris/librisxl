@@ -61,9 +61,9 @@ class ImporterMain {
     }
 
     @Command(args='DATA_SELECTION_TSVFILE')
-    void vcopyimportexampledependencies(String exampleDataFileName) {
+    void vcopydumpexampledependencies(String exampleDataFileName) {
         List vcopyIdsToImport = PostgresLoadfileWriter.collectIDsFromExampleFile(exampleDataFileName, "bib")
-        importLinkedRecords(vcopyIdsToImport)
+        dumpLinkedRecords(vcopyIdsToImport)
     }
 
     /**
@@ -212,6 +212,27 @@ class ImporterMain {
 
 
         System.err.println("All done importing example data.")
+    }
+
+    def dumpLinkedRecords(List<String> bibIds) {
+        def connUrl = props.getProperty("mysqlConnectionUrl")
+
+        def extraAuthIds = getExtraAuthIds(connUrl,bibIds)
+        File out = new File("authdeps")
+        String[] list = extraAuthIds as String[]
+        StringBuilder builder = new StringBuilder("")
+        for (String s : list)
+            builder.append("auth/" + s + "\n")
+        out.write(builder.toString())
+
+        def extraHoldIds = getExtraHoldIds(connUrl,bibIds)
+
+        out = new File("holddeps")
+        list = extraHoldIds as String[]
+        builder = new StringBuilder("")
+        for (String s : list)
+            builder.append("hold/" + s + "\n")
+        out.write(builder.toString())
     }
 
     def importLinkedRecords(List<String> bibIds) {
