@@ -4027,6 +4027,45 @@
           }
         },
         {
+          "source": [
+            {"260": {"subfields": [{"a": "Stockholm :"}, {"b": "Litteraturbanken,"}, {"c": "2012"}]}},
+            {"260": {"subfields": [{"a": "Stockholm :"}, {"b": "Norstedt,"}, {"c": "2012"}]}}
+          ],
+          "result": {"mainEntity": {
+            "provisionActivity": [{
+              "@type": "ProvisionActivity",
+              "publication":[
+                {
+                  "@type": "Publication",
+                  "dateOfPublicationStatement": "2012",
+                  "hasPublicationStatement": [
+                    {
+                      "placeOfPublication": "Stockholm",
+                      "nameOfPublisher": "Litteraturbanken"
+                    }
+                  ]
+                }]
+              },
+              {
+                "@type": "ProvisionActivity",
+                "publication":[
+                  {
+                    "@type": "Publication",
+                    "dateOfPublicationStatement": "2012",
+                    "hasPublicationStatement": [
+                      {
+                        "placeOfPublication": "Stockholm",
+                        "nameOfPublisher": "Norstedt"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+          }
+        },
+        {
           "source": {
             "260": {"subfields": [{"a": "London ;"}, {"a": "New York :"}, {"b": "Routledge Falmer ;"}, {"a": "[London] :"}, {"b": "Open University,"}, {"c": "2002"}]}
           },
@@ -4063,37 +4102,7 @@
               [{"a": "Stockholm :"}, {"b": "Clarté,"}, {"c": "1953-1991, 1995-"}]}}
             ]
           },
-          "TODO:result": {"mainEntity": {
-            "provisionActivity": [{
-              "@type": "ProvisionActivity",
-              "manufacture": [
-                {
-                  "@type": "Manufacture",
-                  "hasManufactureStatement": [
-                    {
-                      "placeOfManufacture": "Stockholm",
-                      "nameOfManufacturer": "Fram"
-                    }
-                  ]
-                }
-              ],
-              "publication":[
-                {
-                  "@type": "Publication",
-                  "appliesTo": {"@type": "Resource", "label": "Sammanfattad utgivningstid:"},
-                  "dateOfPublicationStatement": "1924-",
-                  "hasPublicationStatement": [
-                    {
-                      "placeOfPublication": "Lund",
-                      "nameOfPublisher": "Svenska Clartésektionen"
-                    }
-                  ]
-                }
-              ]
-            }
-            ]
-          }
-          }
+          "TODO:result": {}
         }
       ]
     },
