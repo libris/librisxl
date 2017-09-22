@@ -3942,11 +3942,14 @@
     "260": {
       "aboutEntity": "?thing",
       "ignoreOnRevertInFavourOf": "264",
+      "TODO:ignoreOnConvertInFavourOf": "264",
+      "addLink": "provisionActivity",
+      "resourceType": "ProvisionActivity",
       "pendingResources": {
-        "_:hasPublication": {"addLink": "hasPublication", "about": "?publication"},
-        "_:hasManufacture": {"addLink": "hasManufacture", "about": "?manufacture"},
-        "?publication": {"resourceType": "Publication", "addLink": "publication", "embedded": true},
-        "?manufacture": {"resourceType": "Manufacture", "addLink": "manufacture", "embedded": true}
+        "?publication": {"addLink": "publication", "resourceType": "Publication", "embedded": true},
+        "?manufacture": {"addLink": "manufacture", "resourceType": "Manufacture", "embedded": true},
+        "_:hasPublication": {"about": "?publication", "addLink": "hasPublicationStatement"},
+        "_:hasManufacture": {"about": "?manufacture", "addLink": "hasManufactureStatement"}
       },
       "TODO:groupByRepetitionAndPunctuationPattern": "$3 $a $b $c $e $f $g",
       "TODO": "Need to handle when both $ef together with $ab is repeated for Serials. See ex. 8257615",
@@ -3959,13 +3962,12 @@
         "position": 0,
         "TODO": "put in first out-split entity"
       },
-      "$a": {"aboutNew": "_:hasPublication", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:"},
-      "$b": {"about": "_:hasPublication", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
-      "$c": {"about": "_:hasPublication", "property": "date", "punctuationChars": ",;"},
-      "$e": {"aboutNew": "_:hasManufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":;", "surroundingChars" : "()"},
-      "$f": {"about": "_:hasManufacture", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
-      "$g": {"about": "_:hasManufacture", "property": "date", "punctuationChars": ",;"},
-      "TODO:revert": "Need to fix the revert. Depends on field 264. Wait until we have decided about provisionActivity",
+      "$a": {"aboutNew": "_:hasPublication", "property": "placeOfPublication", "punctuationChars": ",:"},
+      "$b": {"about": "_:hasPublication", "property": "nameOfPublisher", "punctuationChars": ",:;)"},
+      "$c": {"about": "?publication", "property": "dateOfPublicationStatement", "punctuationChars": ",;"},
+      "$e": {"aboutNew": "_:hasManufacture",  "property": "placeOfManufacture", "punctuationChars": ",:", "surroundingChars" : "()"},
+      "$f": {"about": "_:hasManufacture", "property": "nameOfManufacturer", "punctuationChars": ",:;)"},
+      "$g": {"about": "?manufacture", "property": "dateOfManufactureStatement", "punctuationChars": ",;"},
       "_spec": [
         {
           "source": {
@@ -3989,58 +3991,42 @@
             ]}}
           ],
           "result": {"mainEntity": {
-            "publication":[
-              {
-                "@type": "Publication",
-                "hasPublication": [
-                  {
-                    "place": {
-                      "@type": "Place",
-                      "label": "Stockholm"
-                    },
-                    "agent": {
-                      "@type": "Agent",
-                      "label": "Bonnier"
-                    },
-                    "date": "1996"
-                  },
-                  {
-                    "place": {
-                      "@type": "Place",
-                      "label": "Stockholm"
-                    },
-                    "agent": {
-                      "@type": "Agent",
-                      "label": "Wolters Kluwer"
+              "provisionActivity": [{
+                  "@type": "ProvisionActivity",
+                  "manufacture": [
+                    {
+                      "@type": "Manufacture",
+                      "hasManufactureStatement": [
+                        {"placeOfManufacture": "Finland"},
+                        {
+                          "placeOfManufacture": "Stockholm",
+                          "nameOfManufacturer": "Fram"
+                        }
+                      ]
                     }
-                  }
-                ]
-              }],
-            "manufacture": [
-              {
-                "@type": "Manufacture",
-                "hasManufacture": [
-                  {
-                    "place": {
-                      "@type": "Place",
-                      "label":  "Finland"
+                  ],
+                  "publication":[
+                    {
+                      "@type": "Publication",
+                      "dateOfPublicationStatement": "1996",
+                      "hasPublicationStatement": [
+                        {
+                          "placeOfPublication": "Stockholm",
+                          "nameOfPublisher": "Bonnier"
+                        },
+                        {
+                          "placeOfPublication": "Stockholm",
+                          "nameOfPublisher": "Wolters Kluwer"
+                        }
+                      ]
                     }
-                  },
-                  {
-                    "place": {
-                      "@type": "Place",
-                      "label":  "Stockholm"
-                    },
-                    "agent": {
-                      "@type": "Agent",
-                      "label":  "Fram"
-                    }
-                  }
-                ]
-              }
-            ]
-          }}
-        }, {
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
           "source": {
             "260": {"subfields": [{"a": "London ;"}, {"a": "New York :"}, {"b": "Routledge Falmer ;"}, {"a": "[London] :"}, {"b": "Open University,"}, {"c": "2002"}]}
           },
@@ -4064,20 +4050,50 @@
               {"260": {"ind1": "_", "ind2": "_", "subfields":
                 [{"3": "Sammanfattad utgivningstid:"}, {"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-"}, {"e": "(Stockholm :"}, {"f": "Fram)"}]}},
               {"260": {"ind1": "_", "ind2": "_", "subfields":
-                [{"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-1925"}]}},
+              [{"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-1925"}]}},
               {"260": {"ind1": "2", "ind2": "_", "subfields":
-                [{"a": "Lund :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1926-1927"}]}},
+              [{"a": "Lund :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1926-1927"}]}},
               {"260": {"ind1": "2", "ind2": "_", "subfields":
-                [{"a": "Stockholm :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1928-1931"}]}},
+              [{"a": "Stockholm :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1928-1931"}]}},
               {"260": {"ind1": "2", "ind2": "_", "subfields":
-                [{"a": "Stockholm :"}, {"b": "Svenska Clartéförbundet,"}, {"c": "1932-1953"}]}},
+              [{"a": "Stockholm :"}, {"b": "Svenska Clartéförbundet,"}, {"c": "1932-1953"}]}},
               {"260": {"ind1": "2", "ind2": "_", "subfields":
-                [{"a": "Hägersten :"}, {"b": "Clarté,"}, {"c": "1991-1995"}]}},
+              [{"a": "Hägersten :"}, {"b": "Clarté,"}, {"c": "1991-1995"}]}},
               {"260": {"ind1": "3", "ind2": "_", "subfields":
-                [{"a": "Stockholm :"}, {"b": "Clarté,"}, {"c": "1953-1991, 1995-"}]}}
+              [{"a": "Stockholm :"}, {"b": "Clarté,"}, {"c": "1953-1991, 1995-"}]}}
             ]
           },
-          "TODO:result": null
+          "TODO:result": {"mainEntity": {
+            "provisionActivity": [{
+              "@type": "ProvisionActivity",
+              "manufacture": [
+                {
+                  "@type": "Manufacture",
+                  "hasManufactureStatement": [
+                    {
+                      "placeOfManufacture": "Stockholm",
+                      "nameOfManufacturer": "Fram"
+                    }
+                  ]
+                }
+              ],
+              "publication":[
+                {
+                  "@type": "Publication",
+                  "appliesTo": {"@type": "Resource", "label": "Sammanfattad utgivningstid:"},
+                  "dateOfPublicationStatement": "1924-",
+                  "hasPublicationStatement": [
+                    {
+                      "placeOfPublication": "Lund",
+                      "nameOfPublisher": "Svenska Clartésektionen"
+                    }
+                  ]
+                }
+              ]
+            }
+            ]
+          }
+          }
         }
       ]
     },
@@ -4088,20 +4104,59 @@
 
     "264": {
       "TOOO:i1": {},
-      "TODO:i2": "12=4 move copyright from provisionActivity to copyrightDate Literal?",
-      "match": [
-        {"when": "i2=0", "addLink": "production", "resourceType": "Production"},
-        {"when": "i2=1", "addLink": "publication", "resourceType": "Publication"},
-        {"when": "i2=2", "addLink": "distribution", "resourceType": "Distribution"},
-        {"when": "i2=3", "addLink": "manufacture", "resourceType": "Manufacture"},
-        {"when": "i2=4", "addLink": "copyright", "resourceType": "Copyright"}
-      ],
       "addLink": "provisionActivity",
-      "embedded": true,
       "resourceType": "ProvisionActivity",
-      "$a": {"link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:"},
-      "$b": {"link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
-      "$c": {"property": "date", "punctuationChars": ",;"},
+      "embedded": true,
+      "match": [
+        {
+          "when": "i2=0",
+          "pendingResources": {
+            "_:provision": {"addLink": "production", "resourceType": "Production"},
+            "_:statement": {"about": "_:provision", "addLink": "hasProductionStatement"}
+          },
+          "$a": {"aboutNew": "_:statement", "property": "placeOfProduction", "punctuationChars": ",:"},
+          "$b": {"about": "_:statement", "property": "nameOfProducer", "punctuationChars": ",:;)"},
+          "$c": {"about": "_:provision", "property": "dateOfProductionStatement", "punctuationChars": ",;"}
+        },
+        {
+          "when": "i2=1",
+          "pendingResources": {
+            "_:provision": {"addLink": "publication", "resourceType": "Publication"},
+            "_:statement": {"about": "_:provision", "addLink": "hasPublicationStatement"}
+          },
+          "$a": {"aboutNew": "_:statement", "property": "placeOfPublication", "punctuationChars": ",:"},
+          "$b": {"about": "_:statement", "property": "nameOfPublisher", "punctuationChars": ",:;)"},
+          "$c": {"about": "_:provision", "property": "dateOfPublicationStatement", "punctuationChars": ",;"}
+        },
+        {
+          "when": "i2=2",
+          "pendingResources": {
+            "_:provision": {"addLink": "distribution", "resourceType": "Distribution"},
+            "_:statement": {"about": "_:provision", "addLink": "hasDistributionStatement"}
+          },
+          "$a": {"aboutNew": "_:statement", "property": "placeOfDistribution", "punctuationChars": ",:"},
+          "$b": {"about": "_:statement", "property": "nameOfDistributor", "punctuationChars": ",:;)"},
+          "$c": {"about": "_:provision", "property": "dateOfDistributionStatement", "punctuationChars": ",;"}
+        },
+        {
+          "when": "i2=3",
+          "pendingResources": {
+            "_:provision": {"addLink": "manufacture", "resourceType": "Manufacture"},
+            "_:statement": {"about": "_:provision", "addLink": "hasManufactureStatement"}
+          },
+          "$a": {"aboutNew": "_:statement", "property": "placeOfManufacture", "punctuationChars": ",:"},
+          "$b": {"about": "_:statement", "property": "nameOfManufacturer", "punctuationChars": ",:;)"},
+          "$c": {"about": "_:provision", "property": "dateOfManufactureStatement", "punctuationChars": ",;"}
+        },
+        {
+          "when": "i2=4",
+          "addLink": "copyright",
+          "resourceType": "Copyright",
+          "$a": {"link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:"},
+          "$b": {"link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
+          "$c": {"property": "date", "punctuationChars": ",;"}
+        }
+      ],
       "_spec": [
         {
           "source": [
@@ -4113,16 +4168,65 @@
             ]}}
           ],
           "result": {"mainEntity": {
-            "publication": [
-              {"@type": "Publication",
-                "place": {"@type": "Place", "label":  "Stockholm"},
-                  "agent":  {"@type": "Agent", "label": "Bonnier"},
-                  "date":  "1996"}
+            "provisionActivity": [{
+              "@type": "ProvisionActivity",
+              "publication": [
+                {
+                  "dateOfPublicationStatement":  "1996",
+                  "@type": "Publication",
+                  "hasPublicationStatement": [
+                    {
+                      "placeOfPublication": "Stockholm",
+                      "nameOfPublisher": "Bonnier"
+                    }
+                  ]}
+              ]},
+              {
+              "@type": "ProvisionActivity",
+              "manufacture": [
+                {
+                  "@type": "Manufacture",
+                  "hasManufactureStatement": [{
+                    "placeOfManufacture": "Finland"
+                  }]
+                }
+              ]
+            }]
+          }}
+        },
+        {
+          "source": [
+            {"264": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "Hoboken, New Jersey"}, {"b": "Wiley,"}, {"c": "[2012]"}
+            ]}},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}, {"a": "Stockholm"}, {"b": "Wolters Kluwer"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "copyright": [
+              {"@type": "Copyright",
+                "place": {"@type": "Place", "label": "Hoboken, New Jersey"},
+                "agent": {"@type": "Agent", "label": "Wiley"},
+                "date":  "[2012]"}
             ],
-            "manufacture": [
-              {"@type": "Manufacture",
-                "place": {"@type": "Place", "label":  "Finland"}}
-            ]
+            "provisionActivity": [{
+                "@type": "ProvisionActivity",
+                "publication": [
+                  {"@type": "Publication",
+                    "dateOfPublicationStatement":  "1996",
+                    "hasPublicationStatement": [
+                      {
+                        "placeOfPublication": "Stockholm",
+                        "nameOfPublisher": "Bonnier"
+
+                      },{
+                        "placeOfPublication": "Stockholm",
+                        "nameOfPublisher": "Wolters Kluwer"
+                      }]
+                  }
+                ]
+              }]
           }}
         }
       ]
