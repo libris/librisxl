@@ -3941,8 +3941,8 @@
 
     "260": {
       "aboutEntity": "?thing",
+      "ignoreOnConvertInFavourOf": "264",
       "ignoreOnRevertInFavourOf": "264",
-      "TODO:ignoreOnConvertInFavourOf": "264",
       "addLink": "provisionActivity",
       "resourceType": "ProvisionActivity",
       "pendingResources": {
@@ -3969,6 +3969,30 @@
       "$f": {"about": "_:hasManufacture", "property": "nameOfManufacturer", "punctuationChars": ",:;)"},
       "$g": {"about": "?manufacture", "property": "dateOfManufactureStatement", "punctuationChars": ",;"},
       "_spec": [
+        {
+          "source": [
+            {"260": {"subfields": [{"a": "Stockholm :"}, {"b": "Litteraturbanken,"}, {"c": "2012"}]}},
+            {"264": {"subfields": [{"a": "Stockholm :"}, {"b": "Litteraturbanken,"}, {"c": "2012"}]}}
+          ],
+          "TODO:result": {"mainEntity": {
+            "provisionActivity": [{
+              "@type": "ProvisionActivity",
+              "publication":[
+                {
+                  "@type": "Publication",
+                  "dateOfPublicationStatement": "2012",
+                  "hasPublicationStatement": [
+                    {
+                      "placeOfPublication": "Stockholm",
+                      "nameOfPublisher": "Litteraturbanken"
+                    }
+                  ]
+                }]
+            }
+            ]
+          }
+          }
+        },
         {
           "source": {
             "260": {"ind1": " ", "ind2": " ", "subfields": [
@@ -4029,9 +4053,9 @@
         {
           "source": [
             {"260": {"subfields": [{"a": "Stockholm :"}, {"b": "Litteraturbanken,"}, {"c": "2012"}]}},
-            {"260": {"subfields": [{"a": "Stockholm :"}, {"b": "Norstedt,"}, {"c": "2012"}]}}
+            {"260": {"subfields": [{"a": "Stockholm :"}, {"b": "Norstedt,"}]}}
           ],
-          "result": {"mainEntity": {
+          "TODO:result": {"mainEntity": {
             "provisionActivity": [{
               "@type": "ProvisionActivity",
               "publication":[
@@ -4042,24 +4066,13 @@
                     {
                       "placeOfPublication": "Stockholm",
                       "nameOfPublisher": "Litteraturbanken"
+                    },
+                    {
+                      "placeOfPublication": "Stockholm",
+                      "nameOfPublisher": "Norstedt"
                     }
                   ]
                 }]
-              },
-              {
-                "@type": "ProvisionActivity",
-                "publication":[
-                  {
-                    "@type": "Publication",
-                    "dateOfPublicationStatement": "2012",
-                    "hasPublicationStatement": [
-                      {
-                        "placeOfPublication": "Stockholm",
-                        "nameOfPublisher": "Norstedt"
-                      }
-                    ]
-                  }
-                ]
               }
             ]
           }

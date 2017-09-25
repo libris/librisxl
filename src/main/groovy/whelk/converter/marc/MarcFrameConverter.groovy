@@ -627,13 +627,23 @@ class MarcRuleSet {
         for (field in fields) {
             try {
                 def result = null
+                boolean shouldPassConversion = false
+                def allFields = []
+                def allFieldsToConvert = []
+                fields.each { val ->
+                    allFields << val.keySet() as List
+                }
+                allFieldsToConvert = allFields.flatten()
                 field.each { tag, value ->
                     def handler = fieldHandlers[tag]
                     if (handler) {
-                        result = handler.convert(state, value)
+                        if (handler.ignoreOnConvertInFavourOf && allFieldsToConvert.contains(handler.ignoreOnConvertInFavourOf))
+                            shouldPassConversion = true
+                        else
+                            result = handler.convert(state, value)
                     }
                 }
-                if (!result || !result.ok) {
+                if (!shouldPassConversion && (!result || !result.ok)) {
                     field = field.clone()
                     if (result && result.unhandled) {
                         field['_unhandled'] = result.unhandled as List
@@ -852,6 +862,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     Map tokenMaps
     String definesDomainEntityType
     String link
+    String ignoreOnConvertInFavourOf
     Map computeLinks
     boolean repeatable = false
     String resourceType
@@ -867,6 +878,9 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         this.tokenMaps = ruleSet.conversion.tokenMaps
         if (fieldDfn.aboutType) {
             definesDomainEntityType = fieldDfn.aboutType
+        }
+        if (fieldDfn.ignoreOnConvertInFavourOf) {
+            ignoreOnConvertInFavourOf = fieldDfn.ignoreOnConvertInFavourOf
         }
         aboutEntityName = fieldDfn.aboutEntity ?: '?thing'
         if (fieldDfn.addLink) {
@@ -946,10 +960,15 @@ class MarcFixedFieldHandler {
     static final String FIXED_FAUX_NONE = "_"
     List<Column> columns = []
     int fieldSize = 0
+    String ignoreOnConvertInFavourOf
 
     MarcFixedFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn) {
         this.ruleSet = ruleSet
         this.tag = tag
+
+        if (ignoreOnConvertInFavourOf)
+            this.ignoreOnConvertInFavourOf = fieldDfn.ignoreOnConvertInFavourOf
+
         fieldDfn?.each { key, obj ->
             def m = (key =~ /^\[(\d+):(\d+)\]$/)
             if (m && obj) {
