@@ -5884,7 +5884,7 @@
       ]
     },
 
-    ["010"]: {"NOTE:record-count": 22, "ignored": true}, 
+    "010": {"NOTE:record-count": 22, "ignored": true},
 
     "014": {
       "aboutEntity": "?record",
@@ -5894,8 +5894,8 @@
 
     "016": {"ignored": true},
     "017": {"ignored": true},
-    "020": {"NOTE:record-count": 487},
-    "022": {"NOTE:record-count": 10},
+    "020": {},
+    "022": {},
     "024": {"inherit": "bib"},
     "027": {},
     "030": {},
@@ -5968,16 +5968,16 @@
     "655": {},
     "698": {},
 
-    "700": {"TODO:inherit": "bib", "NOTE:": "Libris locally defined holdingfield"},
-    "710": {"TODO:inherit": "bib", "NOTE:": "Libris locally defined holdingfield"},
+    "700": {},
+    "710": {},
     "752": {},
     "787": {},
 
     "841": {"ignored": true},
-    "842": {"NOTE:bf2-conversion": "nac", "NOTE:record-count": 27},
-    "843": {"NOTE:bf2-conversion": "nac", "NOTE:record-count": 288},
-    "844": {"NOTE:bf2-conversion": "nac", "NOTE:record-count": 20},
-    "845": {"NOTE:bf2-conversion": "nac", "NOTE:record-count": 31},
+    "842": {},
+    "843": {},
+    "844": {},
+    "845": {},
 
     "852": {
       "aboutType": "Item",
@@ -6129,19 +6129,19 @@
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"}
     },
-    "876": {"NOTE:bf2-conversion": "nac", "NOTE:record-count": 158690},
-    "877": {"NOTE:bf2-conversion": "nac", "NOTE:record-count": 705},
-    "878": {"NOTE:bf2-conversion": "nac", "NOTE:record-count": 9},
+    "876": {},
+    "877": {},
+    "878": {},
 
     "880": {},
     "883": {},
     "884": {},
-    "886": {"NOTE:bf2-conversion": "nac", "NOTE:record-count": 12619},
-    "887": {"NOTE": "Machine generated information from Libris XL", "NOTE:record-count": 1629},
+    "886": {},
+    "887": {},
 
-    "948": {"NOTE:": "Libris locally defined holdingfield"},
-    "949": {"NOTE:": "Libris locally defined holdingfield"},
-    "951": {"NOTE:": "Libris locally defined holdingfield"}
+    "948": {},
+    "949": {},
+    "951": {}
   }
 
 }
