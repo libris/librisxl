@@ -3945,6 +3945,8 @@
       "ignoreOnRevertInFavourOf": "264",
       "addLink": "provisionActivity",
       "resourceType": "ProvisionActivity",
+      "embedded": "true",
+      "TODO:appendToExistingEntity": "When repeated field, exist to existing provisionActivity and don't create new provisionActivity",
       "pendingResources": {
         "?publication": {"addLink": "publication", "resourceType": "Publication", "embedded": true},
         "?manufacture": {"addLink": "manufacture", "resourceType": "Manufacture", "embedded": true},
@@ -3970,6 +3972,7 @@
       "$g": {"about": "?manufacture", "property": "dateOfManufactureStatement", "punctuationChars": ",;"},
       "_spec": [
         {
+          "FIXME": "'ignoreOnConvertInFavourOf' is working, but not the test. Skips 260 and 264 becomed '_unhandled'",
           "source": [
             {"260": {"subfields": [{"a": "Stockholm :"}, {"b": "Litteraturbanken,"}, {"c": "2012"}]}},
             {"264": {"subfields": [{"a": "Stockholm :"}, {"b": "Litteraturbanken,"}, {"c": "2012"}]}}
@@ -4129,6 +4132,7 @@
       "addLink": "provisionActivity",
       "resourceType": "ProvisionActivity",
       "embedded": true,
+      "TODO:appendToExistingEntity": "When repeated field, exist to existing provisionActivity and don't create new provisionActivity",
       "match": [
         {
           "when": "i2=0",
