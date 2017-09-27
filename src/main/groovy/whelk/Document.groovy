@@ -449,8 +449,8 @@ class Document {
      * Expand the doc with the supplied extra info.
      *
      */
-    void embellish(Map additionalObjects, Map displayData) {
-        this.data = JsonLd.embellish(this.data, additionalObjects, displayData)
+    void embellish(Map additionalObjects, JsonLd jsonld, boolean filterOutNonChipTerms = true) {
+        this.data = jsonld.embellish(this.data, additionalObjects, filterOutNonChipTerms)
     }
 
 
