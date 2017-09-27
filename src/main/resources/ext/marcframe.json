@@ -252,7 +252,7 @@
       "$d": {"addProperty": "treatySigningDate"},
       "$f": {"property": "date"},
       "$g": {"property": "comment"},
-      "$h": {"property": "medium"},
+      "$h": {"property": "marc:mediaTerm"},
       "$k": {"addProperty": "qualifyingNote"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$m": {"addProperty": "musicPerformanceMedium"},
@@ -265,8 +265,9 @@
 
     "titledetails1xx7xx": {
       "$f": {"property": "originDate"},
-      "$h": {"property": "medium"},
-      "$k": {"addProperty": "formSubheading"},
+      "$h": {"property": "marc:mediaTerm"},
+      "$k": {"addProperty": "marc:formSubheading"},
+      "NOTE:k": "Should we map to bf2:natureOfContent instead?",
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$m": {"addProperty": "musicMedium"},
       "$o": {"property": "version"},
@@ -330,19 +331,19 @@
         }
       ],
       "$a": {"required": true},
-      "$b": {"about": "_:agent", "property": "numeration"},
-      "$c": {"about": "_:agent", "addProperty": "titleOther"},
+      "$b": {"about": "_:agent", "property": "marc:numeration"},
+      "$c": {"about": "_:agent", "addProperty": "marc:titleOther"},
       "$d": {
         "about": "_:agent",
-        "property": "lifeSpan",
+        "TODO:property": "lifeSpan",
         "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
         "splitValueProperties": ["birthYear", "deathYear"],
         "rejoin": "-",
         "allowEmpty": true
       },
-      "$j": {"about": "_:agent", "property": "attributionQualifier"},
-      "$q": {"about": "_:agent", "property": "fullerFormName"},
-      "$u": {"about": "_:agent", "property": "affiliation"}
+      "$j": {"about": "_:agent", "property": "marc:attributionQualifier"},
+      "$q": {"about": "_:agent", "property": "marc:fullerFormName"},
+      "$u": {"about": "_:agent", "property": "marc:affiliation"}
     },
 
     "agentdataPersonFamily": {
@@ -370,27 +371,27 @@
         }
       ],
       "$a": {"required": true},
-      "$b": {"about": "_:agent", "property": "numeration"},
-      "$c": {"about": "_:agent", "addProperty": "titleOther"},
+      "$b": {"about": "_:agent", "property": "marc:numeration"},
+      "$c": {"about": "_:agent", "addProperty": "marc:titleOther"},
       "$d": {
         "about": "_:agent",
-        "property": "lifeSpan",
+        "TODO:property": "lifeSpan",
         "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
         "splitValueProperties": ["birthYear", "deathYear"],
         "rejoin": "-",
         "allowEmpty": true
       },
       "$g": {"about": "_:agent", "addProperty": "comment"},
-      "$j": {"about": "_:agent", "property": "attributionQualifier"},
-      "$q": {"about": "_:agent", "property": "fullerFormName"},
-      "$u": {"about": "_:agent", "property": "affiliation"}
+      "$j": {"about": "_:agent", "property": "marc:attributionQualifier"},
+      "$q": {"about": "_:agent", "property": "marc:fullerFormName"},
+      "$u": {"about": "_:agent", "property": "marc:affiliation"}
     },
 
     "agentdataOrganization": {
       "match": [
         {
           "when": "$b",
-          "$b": {"about": "_:agent", "addProperty": "subordinateUnit"},
+          "$b": {"about": "_:agent", "addProperty": "marc:subordinateUnit"},
           "$a": {"about": "_:isPartOf", "property": "name"}
 
         },
@@ -404,9 +405,9 @@
       "$c": {"about": "_:place", "property": "label"},
       "$d": {"about": "_:agent", "addProperty": "date"},
       "$g": {"about": "_:agent", "addProperty": "genreForm"},
-      "$n": {"about": "_:agent", "addProperty": "numberOfPartSectionMeeting"},
+      "$n": {"about": "_:agent", "addProperty": "marc:numberOfPartSectionMeeting"},
       "$g": {"about": "_:agent", "addProperty": "comment"},
-      "$u": {"about": "_:agent", "property": "affiliation"},
+      "$u": {"about": "_:agent", "property": "marc:affiliation"},
 
       "TODO:role": "e och 4. Även för Family och Person"
     },
@@ -416,11 +417,11 @@
       "$a": {"about": "_:agent", "property": "name", "required": true},
       "$c": {"about": "_:place", "property": "label"},
       "$d": {"about": "_:agent", "addProperty": "date"},
-      "$e": {"about":"_:agent", "addProperty": "subordinateUnit"},
+      "$e": {"about":"_:agent", "addProperty": "marc:subordinateUnit"},
       "$g":	{"about": "_:agent", "addProperty": "comment"},
-      "$n": {"about": "_:agent", "addProperty": "numberOfPartSectionMeeting"},
+      "$n": {"about": "_:agent", "addProperty": "marc:numberOfPartSectionMeeting"},
       "$q":	{"about":"_:agent", "property": "additionalName"},
-      "$u":	{"about": "_:agent", "property": "affiliation"}
+      "$u":	{"about": "_:agent", "property": "marc:affiliation"}
     },
 
     "contributiondata": {
@@ -3288,8 +3289,8 @@
                 {
                   "@type": "PrimaryContribution",
                   "agent": {"@type": "Person",
-                    "numeration": "IV Haakonsson,",
-                    "titleOther":  ["King of Norway,"],
+                    "marc:numeration": "IV Haakonsson,",
+                    "marc:titleOther":  ["King of Norway,"],
                     "name":  "Haakon",
                     "birthYear": "1204",
                     "deathYear": "1263"
@@ -3344,7 +3345,7 @@
                     "familyName":  "Andersson",
                     "givenName":  "Lars",
                     "birthYear":  "1961",
-                    "titleOther": ["arkeolog"]}
+                    "marc:titleOther": ["arkeolog"]}
                 }
               ]
             }
@@ -3366,7 +3367,7 @@
                   "agent": {"@type": "Person",
                     "name":  "Andersson",
                     "birthYear":  "1961",
-                    "titleOther": ["arkeolog"]}
+                    "marc:titleOther": ["arkeolog"]}
                 }
               ]
             }
@@ -3456,7 +3457,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Organization",
-                    "subordinateUnit" : ["Norstedts Juridik"],
+                    "marc:subordinateUnit" : ["Norstedts Juridik"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Wolters Kluwer"
@@ -3485,7 +3486,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Jurisdiction",
-                    "subordinateUnit" : ["Kulturdepartementet"],
+                    "marc:subordinateUnit" : ["Kulturdepartementet"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -3514,13 +3515,13 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Organization",
-                    "subordinateUnit" : ["Norstedts Juridik"],
+                    "marc:subordinateUnit" : ["Norstedts Juridik"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Wolters Kluwer"
                     }
                   },
-                  "formSubheading": ["Grupptitel"]
+                  "marc:formSubheading": ["Grupptitel"]
                 }]
             }
           }}
@@ -3545,7 +3546,7 @@
                   "agent": {
                     "@type": "Organization",
                     "date": ["1998 :"],
-                    "subordinateUnit" : ["Conference"],
+                    "marc:subordinateUnit" : ["Conference"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Mujeres Ayudando la Raza (Organization : University of California, Davis)"
@@ -3554,7 +3555,7 @@
                       "@type" : "Place",
                       "label": "University of California, Davis"
                     }],
-                    "numberOfPartSectionMeeting": ["(2nd :"]
+                    "marc:numberOfPartSectionMeeting": ["(2nd :"]
                   },
                   "role" : [ {
                     "label" : "author"
@@ -3639,12 +3640,12 @@
                     "@type": "Meeting",
                     "date": ["1959"],
                     "name": "World Peace Conference",
-                    "numberOfPartSectionMeeting": ["1st"],
+                    "marc:numberOfPartSectionMeeting": ["1st"],
                     "place" : [{
                       "@type" : "Place",
                       "label" : "Paris, France"
                     }],
-                    "subordinateUnit" : [ "Delegation from Sweden" ]}
+                    "marc:subordinateUnit" : [ "Delegation from Sweden" ]}
                 }]
             }
           }}
@@ -3678,7 +3679,7 @@
                     "@type": "Meeting",
                     "date": ["1981"],
                     "name": "Conference on Occupational Health Issues Affecting Secretarial and Clerical Personnel",
-                    "subordinateUnit": ["2nd"],
+                    "marc:subordinateUnit": ["2nd"],
                     "place" : [{
                       "@type" : "Place",
                       "label" : "Cincinatti, Ohio"
@@ -3871,7 +3872,7 @@
       },
       "$f": {"property": "date"},
       "$g": {"property": "comment"},
-      "$h": {"property": "medium"},
+      "$h": {"property": "marc:mediaTerm"},
       "$x": {"addProperty": "issn"}
     },
 
@@ -4493,6 +4494,7 @@
       "$a": {"property": "label"},
       "$o": {"addProperty": "date"},
       "$d": {"addProperty": "comment"},
+      "TODO:d": "Change $d to date. Is not a comment",
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
@@ -4505,6 +4507,7 @@
       "resourceType": "Summary",
       "$a": {"property": "label"},
       "$b": {"property": "comment"},
+      "TODO:b": "Change to summaryNote?",
       "$c": {"addLink": "source", "resourceType": "Source", "NOTE:subfield-repeatable": "false", "property": "label"},
       "$u": {"addLink": "source", "resourceType": "Source", "property": "uri"},
       "_spec": [
@@ -4540,7 +4543,12 @@
     "525": {},
     "526": {},
 
-    "530": {"addLink": "hasInstance", "$a": {"addProperty": "comment"}, "embedded": true},
+    "530": {
+      "addLink": "hasInstance",
+      "TODO:a": "Change to a more appropriate name of the property",
+      "$a": {"addProperty": "comment"},
+      "embedded": true
+    },
 
     "533": {
       "addLink": "hasReproduction",
@@ -5044,7 +5052,7 @@
                       }
                     ]
                   },
-                  "formSubheading" : [ "Urval" ],
+                  "marc:formSubheading" : [ "Urval" ],
                   "language" : {
                     "@type" : "Language",
                     "label" : "Svenska."
@@ -5434,9 +5442,9 @@
                   "@type": "Contribution",
                   "agent":{
                     "@type": "Organization",
-                    "subordinateUnit" : ["Quinquennial Meeting"],
+                    "marc:subordinateUnit" : ["Quinquennial Meeting"],
                     "date": ["1904"],
-                    "numberOfPartSectionMeeting": ["(1st :"],
+                    "marc:numberOfPartSectionMeeting": ["(1st :"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "International Council of Nurses."
@@ -5493,7 +5501,7 @@
                   "@type": "Contribution",
                   "agent":{
                     "@type": "Organization",
-                    "subordinateUnit" : ["Institutionen för ABM.", "Kulturgeografi"],
+                    "marc:subordinateUnit" : ["Institutionen för ABM.", "Kulturgeografi"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Umeå universitet."
@@ -5561,7 +5569,7 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Organization",
-                    "subordinateUnit" : ["Institutionen för teknikens ekonomi och organisation.",
+                    "marc:subordinateUnit" : ["Institutionen för teknikens ekonomi och organisation.",
                               "Industriell organisation och ekonomi"],
                     "isPartOf": {
                       "@type": "Organization",
@@ -5673,7 +5681,7 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Jurisdiction",
-                    "subordinateUnit" : ["Riksdagen.", "Konstitutionsutskottet"],
+                    "marc:subordinateUnit" : ["Riksdagen.", "Konstitutionsutskottet"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -5685,7 +5693,7 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Jurisdiction",
-                    "subordinateUnit" : ["Regeringen i Bremen-Verden"],
+                    "marc:subordinateUnit" : ["Regeringen i Bremen-Verden"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -5788,7 +5796,7 @@
                   "agent": {
                     "@type": "Meeting",
                     "name": "Mostly Mozart Festival.",
-                    "subordinateUnit": ["Orchestra."]}
+                    "marc:subordinateUnit": ["Orchestra."]}
                 }]
             }
           }}
@@ -5829,9 +5837,9 @@
                       "@type": "Place",
                       "label": "Montréal, Québec)."
                     }],
-                    "numberOfPartSectionMeeting": ["21st :"],
+                    "marc:numberOfPartSectionMeeting": ["21st :"],
                     "date": ["1976:"],
-                    "subordinateUnit": ["Organizing Committee." , "Arts and Culture Program." ,  "Visual Arts Section."]
+                    "marc:subordinateUnit": ["Organizing Committee." , "Arts and Culture Program." ,  "Visual Arts Section."]
                   },
                   "role": [{
                     "label": "author."
@@ -5868,7 +5876,7 @@
                           "@type": "Place",
                           "label": "Basilica di San Pietro in Vaticano)."
                         }],
-                        "numberOfPartSectionMeeting": ["(2nd :"],
+                        "marc:numberOfPartSectionMeeting": ["(2nd :"],
                         "date": ["1962-1965 :"]}
                     }
                   ]
