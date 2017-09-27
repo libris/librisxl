@@ -1964,12 +1964,21 @@
         "tokenMap": "PublicationStatusType"
       },
       "[7:11]": {
+        "TODO:addLink": "provisionActivity",
+        "TODO:resourceType": "ProvisionActivity",
+        "TODO:embedded": "true",
+        "TODO:pendingResources": {
+          "?publication": {"addLink": "publication", "resourceType": "Publication", "embedded": true},
+          "_:hasPublication": {"about": "?publication", "addLink": "hasPublicationStatement"}
+        },
+        "TODO:appendToExistingEntity": "If entity provisionActivity already exists don't create new provisionActivity",
         "property": "marc:publishedYear"
       },
       "[11:15]": {
         "property": "marc:otherYear"
       },
       "[15:18]": {
+        "TODO:addLink": "provisionActivity, see [7:11]",
         "addLink": "publicationCountry",
         "uriTemplate": "https://id.kb.se/country/{_}",
         "TODO:linkedEntity": {
