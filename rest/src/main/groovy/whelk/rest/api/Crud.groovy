@@ -289,7 +289,8 @@ class Crud extends HttpServlet {
         List externalRefs = doc.getExternalRefs()
         List convertedExternalLinks = convertExternalLinks(externalRefs)
         Map referencedData = getReferencedData(convertedExternalLinks)
-        doc.embellish(referencedData, displayData)
+        boolean filterOutNonChipTerms = false
+        doc.embellish(referencedData, jsonld, filterOutNonChipTerms)
 
         return doc
     }
