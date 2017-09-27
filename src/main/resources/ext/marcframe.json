@@ -4816,7 +4816,177 @@
       "aboutEntity": "?work",
       "addLink": "subject",
       "about": "_:agent",
-      "resourceType": "Person"
+      "resourceType": "Person",
+      "_spec": [
+        {
+          "source": {
+            "600": {"ind1": "0", "ind2": "0", "subfields": [
+              {"a": "Ovid,"},
+              {"d": "43 B.C.-17 A.D. or 18 A.D."},
+              {"x": "Amores"},
+              {"l": "English."}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Person",
+                  "name": "Ovid",
+                  "date": "43 B.C.-17 A.D. or 18 A.D.",
+                  "subdivision": "Amores.",
+                  "language4": "English"
+                }
+              ],
+              "@id": "http://id.loc.gov/authorities/names/n85005984",
+              "inScheme": {
+                "@id": "http://id.loc.gov/authorities/names",
+                "@type": "ConceptScheme",
+                "code": "lsch"
+              }
+            }
+          }}
+        },
+        {
+          "source": {
+            "600": {"ind1": "3", "ind2": "0", "subfields": [
+              {"a": "Butler family."},
+              {"x": "Health"}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Family",
+                  "name": "Butler family.",
+                  "subdivision": "Health",
+                  "@id": "http://id.loc.gov/authorities/names/n85005984"
+                }
+              ],
+              "inScheme": {
+                "@id": "http://id.loc.gov/authorities/names",
+                "@type": "ConceptScheme",
+                "code": "lsch"
+              }
+            }
+          }}
+        },
+        {
+          "source": {
+            "600": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Harris, Andy "},
+              {"c": "(Composer)"},
+              {"x": "Travel"},
+              {"z": "Morocco"},
+              {"z": "Marrakech"}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Person",
+                  "name": "Harris, Andy ",
+                  "titleOther": "(Compose)",
+                  "subdivision": "Travel",
+                  "geographic": ["Morocco", "Marrakech"]
+                }
+              ],
+              "inScheme": {
+                "@id": "http://id.loc.gov/authorities/names",
+                "@type": "ConceptScheme",
+                "code": "lsch"
+              }
+            }
+          }}
+        },
+        {
+          "source": {
+            "600": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Mangunwijaya, Y. B.,"},
+              {"d": "1929-1999"},
+              {"x": "Criticism and interpretation"},
+              {"x": "History"},
+              {"y": "21st century."}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Person",
+                  "name": "Mangunwijaya, Y. B.",
+                  "date": "1929-1999",
+                  "subdivision": ["Criticism and interpretation", "History"],
+                  "temporal": "21st century"
+                }
+              ],
+              "inScheme": {
+                "@id": "http://id.loc.gov/authorities/names",
+                "@type": "ConceptScheme",
+                "code": "lsch"
+              }
+            }
+          }}
+        },
+        {
+          "source": {
+            "600": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Scarlatti, Domenico,"},
+              {"d": "1685-1757"},
+              {"t": "Sonatas,"},
+              {"m": "harpsichord"},
+              {"n": "K. 492, "},
+              {"r": "D major;"},
+              {"y": "21st century."}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Person",
+                  "name": "Scarlatti, Domenico",
+                  "date": "1685-1757",
+                  "title": "Sonatas",
+                  "partNumber": "K. 492",
+                  "musicMedium": "harpsichord",
+                  "musicKey": "D major;" ,
+                  "temporal": "21st century"
+                }
+              ],
+              "inScheme": {
+                "@id": "http://id.loc.gov/authorities/names",
+                "@type": "ConceptScheme",
+                "code": "lsch"
+              }
+            }
+          }}
+        },
+        {
+          "source": {
+            "600": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Black Foot,"},
+              {"c": "Chief,"},
+              {"d": "-1877"},
+              {"c": "(Spirit)"}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Person",
+                  "name": "Black Foot",
+                  "titleOther": ["Chief", "(Spirit)"],
+                  "date": "-1877"
+                }
+              ],
+              "@id": "http://id.loc.gov/authorities/names/n81020634",
+              "inScheme": {
+                "@id": "http://id.loc.gov/authorities/names",
+                "@type": "ConceptScheme",
+                "code": "lsch"
+              }
+            }
+          }}
+        }
+      ]
     },
     "610": {
       "include": "subjectbase",
