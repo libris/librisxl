@@ -308,6 +308,7 @@
     },
 
     "agentdata": {
+      "TODO:agentdataPersonFamily": "Should be removed in favour of agentdataPersonFamily",
       "match": [
         {
           "when": "i1=0",
@@ -364,8 +365,8 @@
         },
         {
           "when": "i1=3",
-          "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Family"}
+          "FIXME: @update pendingResources": {
+            "@update _:agent": {"link": "agent", "resourceType": "Family"}
           },
           "$a": {"about": "_:agent", "property": "nameOfTheFamily", "required": true}
         }
@@ -404,7 +405,6 @@
       "$a": { "about": "_:agent", "property": "name", "required": true},
       "$c": {"about": "_:place", "property": "label"},
       "$d": {"about": "_:agent", "addProperty": "date"},
-      "$g": {"about": "_:agent", "addProperty": "genreForm"},
       "$n": {"about": "_:agent", "addProperty": "marc:numberOfPartSectionMeeting"},
       "$g": {"about": "_:agent", "addProperty": "comment"},
       "$u": {"about": "_:agent", "property": "marc:affiliation"},
@@ -425,8 +425,6 @@
     },
 
     "contributiondata": {
-      "NOTE": "Used by 100 + 700. Keep it?",
-      "NOTE:include": "changed from agentdata",
       "include": "agentdataPersonFamily",
       "addLink": "contribution",
       "embedded": true,
@@ -3273,7 +3271,7 @@
               {"e": "author."},
               {"4": "aut"}
             ]}},
-          "source": {
+          "normalized": {
             "100": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Haakon"},
               {"b": "IV Haakonsson,"},
@@ -3314,7 +3312,7 @@
             "100": {"ind1": "3", "ind2": " ", "subfields": [
               {"a": "Bexelius"}
             ]}},
-          "result": {"mainEntity": {
+          "TODO:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "contribution": [
@@ -5265,7 +5263,6 @@
               "about": "_:work",
               "addLink": "contribution",
               "resourceType": "PrimaryContribution",
-              "TODO:resourceType": "Contribution",
               "embedded": true
             },
             "_:agent": {
