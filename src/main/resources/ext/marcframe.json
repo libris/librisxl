@@ -4541,7 +4541,7 @@
     "522": {},
     "524": {},
     "525": {},
-    "526": {},
+    "526": {"NOTE:record-count": 16, "ignored": true},
 
     "530": {
       "addLink": "hasInstance",
@@ -4610,7 +4610,7 @@
     },
     "540": {},
     "541": {},
-    "542": {},
+    "542": {"NOTE:record-count": 0, "ignored": true},
     "544": {
       "addLink": "hasNote",
       "resourceType": "marc:RelatedMaterialNote",
@@ -4621,9 +4621,12 @@
     "547": {},
 
     "550": {},
-    "552": {},
+    "552": {"NOTE:record-count": 2, "ignored": true},
     "555": {},
-    "556": {},
+    "556": {"NOTE:record-count": 7,
+      "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$z": {"ignored": true}
+    },
     "561": {},
     "562": {
       "addLink": "hasItem",
@@ -4637,12 +4640,12 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "563": {},
-    "565": {},
-    "567": {},
+    "565": {"NOTE:record-count": 2, "ignored": true},
+    "567": {"NOTE:record-count": 0, "ignored": true},
     "580": {},
     "581": {},
     "583": {},
-    "584": {},
+    "584": {"NOTE:record-count": 0, "ignored": true},
     "585": {},
     "586": {},
     "588": {"$a": {"aboutEntity": "?record", "addProperty": "sourceNote"}},
