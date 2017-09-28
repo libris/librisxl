@@ -1798,12 +1798,19 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             useEntities.each {
-                def field = revertOne(data, it, buildAboutMap(it), usedMatchRule)
-                if (field) {
-                    if (useLink.subfield) {
-                        field.subfields << useLink.subfield
+                Tuple2<Boolean, Map<String, List>> buildResult = buildAboutMap(it)
+                boolean shouldMap = buildResult.first
+                Map aboutMap = buildResult.second
+
+                if (shouldMap)
+                {
+                    def field = revertOne(data, it, aboutMap, usedMatchRule)
+                    if (field) {
+                        if (useLink.subfield) {
+                            field.subfields << useLink.subfield
+                        }
+                        results << field
                     }
-                    results << field
                 }
             }
         }
@@ -1812,10 +1819,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    Map<String, List> buildAboutMap(Map entity) {
+    Tuple2<Boolean, Map<String, List>> buildAboutMap(Map entity) {
         Map<String, List> aboutMap = [:]
+        boolean shouldMap = true
         if (!pendingResources) {
-            return aboutMap
+            return new Tuple2<Boolean, Map>(shouldMap, aboutMap)
         }
         pendingResources.each { key, pending ->
             def link = pending.link ?: pending.addLink
@@ -1837,12 +1845,15 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
             def about = parent ? parent[link] : null
             Util.asList(about).each {
-                if (it && (!resourceType || it['@type'] == resourceType)) {
+                //If @type of entity and resourceType of pendingResurce is not the same. Don't continue with revert.
+                if (it && (it['@type'] != resourceType))
+                    shouldMap = false
+                else if (it && (!resourceType || it['@type'] == resourceType)) {
                     aboutMap.get(key, []).add(it)
                 }
             }
         }
-        return aboutMap
+        return new Tuple2<Boolean, Map>(shouldMap, aboutMap)
     }
 
     @CompileStatic(SKIP)
