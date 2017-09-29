@@ -36,6 +36,9 @@ class PostgreSQLComponent {
     boolean versioning = true
 
     final int MAX_CONNECTION_COUNT = 40
+    final int CONNECTION_POOL_SEGMENTS = 5
+    final int CONNECTIONS_PER_SEGMENT = 5
+
 
     // SQL statements
     protected String UPDATE_DOCUMENT, INSERT_DOCUMENT,
@@ -1602,12 +1605,10 @@ class PostgreSQLComponent {
     /**
      * Get a database connection.
      *
-     * Taking more than one nested connection is not permitted and will return a null-connection if attempted
-     * (and produce error messages in your log).
+     * Taking more than CONNECTION_POOL_SEGMENTS-1 nested connections is not permitted and will return a null-connection
+     * if attempted (and produce error messages in your log).
      */
     Connection getConnection(){
-        int reserverdConnectionCount = MAX_CONNECTION_COUNT / 2
-
         pruneConnectionAllocations()
 
         List<ConnectionAllocation> connectionsHeldByThisThread
@@ -1618,28 +1619,25 @@ class PostgreSQLComponent {
         if (connectionsHeldByThisThread == null)
             connectionsHeldByThisThread = []
 
-        // If this is your "first" connection wait for the number of connections to go below the
-        // safe 'reserverdConnectionCount'
-        if (connectionsHeldByThisThread.size() == 0) {
+        if (connectionsHeldByThisThread.size() < CONNECTION_POOL_SEGMENTS-1) {
+
+            // Based on how many connections the thread already holds, how large a part of the pool is available?
+            // The more held connections, the more available, up to the cutoff at CONNECTION_POOL_SEGMENTS
+            int permittedConnectionsSegment = MAX_CONNECTION_COUNT -
+                    ( (CONNECTION_POOL_SEGMENTS - connectionsHeldByThisThread.size() - 1) * CONNECTIONS_PER_SEGMENT)
             while (true) {
                 synchronized (this) {
-                    if (connectionPool.getNumActive() < reserverdConnectionCount) {
+                    if (connectionPool.getNumActive() < permittedConnectionsSegment) {
                         return __getConnectionInternal(connectionsHeldByThisThread)
                     }
                 }
                 Thread.yield()
             }
         }
-        // If you're requesting a second (nested) connection, you get access to the complete pool
-        // (so you can progress and release both your connections).
-        else if (connectionsHeldByThisThread.size() == 1) {
-            synchronized (this) {
-                return __getConnectionInternal(connectionsHeldByThisThread)
-            }
-        }
-        else if (connectionsHeldByThisThread.size() > 1)
-            log.error("An attempt was made to allocate more than two nested connections, which is not allowed. " +
-                    "If this is not fixed you risk putting the entire application in a dead-locked state. " +
+        else
+            log.error("An attempt was made to allocate an additional nested connection, would be nr: " +
+                    connectionsHeldByThisThread.size() + 1 +
+                    " which is not allowed. " +
                     "The offending call to getConnection() was made here:\n" +
                     getFormattedCallStack(Thread.currentThread().getStackTrace()))
         return null
@@ -1668,7 +1666,7 @@ class PostgreSQLComponent {
      */
     private synchronized pruneConnectionAllocations() {
         Iterator<Thread> threadIterator = connectionAllocations.keySet().iterator()
-        
+
         while (threadIterator.hasNext()) { // For every (tracked) thread
             Thread thread = threadIterator.next()
             List<ConnectionAllocation> connectionsHeldByThisThread = connectionAllocations.get(thread)
