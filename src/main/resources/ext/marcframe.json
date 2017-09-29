@@ -4823,7 +4823,7 @@
             "600": {"ind1": "0", "ind2": "0", "subfields": [
               {"a": "Ovid,"},
               {"d": "43 B.C.-17 A.D. or 18 A.D."},
-              {"x": "Amores"},
+              {"t": "Amores"},
               {"l": "English."}]}},
           "TODO:result": {"mainEntity": {
             "instanceOf": {
@@ -4833,8 +4833,8 @@
                   "@type": "Person",
                   "name": "Ovid",
                   "date": "43 B.C.-17 A.D. or 18 A.D.",
-                  "subdivision": "Amores.",
-                  "language4": "English"
+                  "title": "Amores.",
+                  "language": "English"
                 }
               ],
               "@id": "http://id.loc.gov/authorities/names/n85005984",
@@ -5119,6 +5119,39 @@
               ]
             }
           }}
+        },
+        {
+          "source": {
+            "610": {
+              "ind1": "1",
+              "ind2": "7",
+              "subfields": [{"a": "Sverige"}, {"b": "Riksdagen"}, {"d": "(1792 : "}, {"c": "Gävle)"}, {"2": "sao"}]
+            }
+          },
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Organization",
+                  "subordinateUnit" : "Riksdagen",
+                  "isPartOf": {
+                    "@type": "Organization",
+                    "name": "Sverige" },
+                  "date": "1792",
+                  "place": {
+                    "@type": "Place",
+                    "label": "Gävle"
+                  },
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/sao",
+                    "@type": "ConceptScheme",
+                    "code": "sao"
+                  }
+                }
+              ]
+            }
+          }}
         }
       ]
     },
@@ -5230,6 +5263,84 @@
               ]
             }
           }}
+        },
+        {
+          "source": {
+            "650": {"ind1": " ", "ind2": "7",
+              "subfields": [{"a": "Fysik"}, {"2": "barn"}]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "@id": "https://id.kb.se/term/barn/Fysik",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/barn",
+                    "@type": "ConceptScheme",
+                    "code": "barn"
+                  },
+                  "prefLabel": "Fysik"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "650": {"ind1": " ", "ind2": "2",
+              "subfields": [{"a": "Cardiovascular Physiology"}, {"v": "Congresses."}]}
+          },
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "@id": "http://id.loc.gov/authorities/label/Information--Information%20Age",
+                  "prefLabel": "Cardiovascular Physiology--Congresses.",
+                  "termComponentList": [
+                    {
+                      "@type": "Topic",
+                      "prefLabel": "Cardiovascular Physiology"
+                    },
+                    {
+                      "@type": "GenreForm",
+                      "prefLabel": "Congresses."
+                    }
+                  ],
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/mesh",
+                    "@type": "ConceptScheme",
+                    "code": "mesh"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "650": {"ind1": " ", "ind2": "7",
+              "subfields": [{"a": "rye"}, {"2": "agrovoc"}]}
+          },
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "inScheme": {
+                    "@id": "http://aims.fao.org/standards/agrovoc/linked-open-data",
+                    "@type": "ConceptScheme",
+                    "code": "agrovoc"
+                  },
+                  "prefLabel": "rye"
+                }
+              ]
+            }
+          }}
         }
       ]
     },
@@ -5265,7 +5376,7 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "GenreTerm",
+                  "@type": "GenreForm",
                   "@id": "https://id.kb.se/term/saogf/Deckare",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/saogf",
@@ -5285,7 +5396,7 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "GenreTerm",
+                  "@type": "GenreForm",
                   "@id": "https://id.kb.se/term/barngf/Deckare",
                   "inScheme": {
                     "@type": "ConceptScheme",
@@ -5305,7 +5416,7 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "GenreTerm",
+                  "@type": "GenreForm",
                   "@id": "https://id.kb.se/term/gmgpc/swe/Postkartor",
                   "inScheme": {
                     "@type": "ConceptScheme",
@@ -5325,7 +5436,7 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "GenreTerm",
+                  "@type": "GenreForm",
                   "@id": "hhttp://id.loc.gov/authorities/genreForms/gf2014026203.html",
                   "inScheme": {
                     "@type": "ConceptScheme",
@@ -7061,7 +7172,23 @@
     "111" : {
       "inherit": "bib",
       "aboutEntity": "?thing", "link": null, "resourceType": null,
-      "aboutType": "Meeting"
+      "aboutType": "Meeting",
+      "_spec": [
+        {
+          "source": {
+            "111": {"ind1": " ", "ind2": "0", "subfields": [
+              {"a": "Manya K'Omalowete a Djonga,"},
+              {"d": "1950-"}
+            ]}},
+          "FIXME:result": {
+            "mainEntity": {
+              "agent": {
+                "@type": "Meeting", "name":  "Manya K'Omalowete a Djonga", "birthYear":  "1950"
+              }
+            }
+          }
+        }
+      ]
     },
     "130" : {
       "inherit": "bib",
