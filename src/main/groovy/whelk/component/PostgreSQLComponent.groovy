@@ -35,6 +35,8 @@ class PostgreSQLComponent {
 
     boolean versioning = true
 
+    final int MAX_CONNECTION_COUNT = 40
+
     // SQL statements
     protected String UPDATE_DOCUMENT, INSERT_DOCUMENT,
                      INSERT_DOCUMENT_VERSION, GET_DOCUMENT,
@@ -111,7 +113,7 @@ class PostgreSQLComponent {
             connectionPool.setUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
             // Remove the password part from the url or it won't be able to connect
             connectionPool.setInitialSize(10)
-            connectionPool.setMaxTotal(40)
+            connectionPool.setMaxTotal(MAX_CONNECTION_COUNT)
             connectionPool.setDefaultAutoCommit(true)
         }
 
@@ -1597,8 +1599,112 @@ class PostgreSQLComponent {
         }
     }
 
-    Connection getConnection() {
-        return connectionPool.getConnection()
+    /**
+     * Get a database connection.
+     *
+     * Taking more than one nested connection is not permitted and will return a null-connection if attempted
+     * (and produce error messages in your log).
+     */
+    Connection getConnection(){
+        int reserverdConnectionCount = MAX_CONNECTION_COUNT / 2
+
+        pruneConnectionAllocations()
+
+        List<ConnectionAllocation> connectionsHeldByThisThread
+        synchronized (this) {
+            connectionsHeldByThisThread = connectionAllocations[Thread.currentThread()]
+        }
+
+        if (connectionsHeldByThisThread == null)
+            connectionsHeldByThisThread = []
+
+        // If this is your "first" connection wait for the number of connections to go below the
+        // safe 'reserverdConnectionCount'
+        if (connectionsHeldByThisThread.size() == 0) {
+            while (true) {
+                synchronized (this) {
+                    if (connectionPool.getNumActive() < reserverdConnectionCount) {
+                        return __getConnectionInternal(connectionsHeldByThisThread)
+                    }
+                }
+                Thread.yield()
+            }
+        }
+        // If you're requesting a second (nested) connection, you get access to the complete pool
+        // (so you can progress and release both your connections).
+        else if (connectionsHeldByThisThread.size() == 1) {
+            synchronized (this) {
+                return __getConnectionInternal(connectionsHeldByThisThread)
+            }
+        }
+        else if (connectionsHeldByThisThread.size() > 1)
+            log.error("An attempt was made to allocate more than two nested connections, which is not allowed. " +
+                    "If this is not fixed you risk putting the entire application in a dead-locked state. " +
+                    "The offending call to getConnection() was made here:\n" +
+                    getFormattedCallStack(Thread.currentThread().getStackTrace()))
+        return null
+    }
+
+    /**
+     * This method is not thread safe and must be called under synchronization lock
+     * (it should only ever be called from getConnection()).
+     */
+    private Connection __getConnectionInternal(List<ConnectionAllocation> connectionsHeldByThisThread) {
+        // Allocate and track the requested connection
+        Connection connection = connectionPool.getConnection()
+        ConnectionAllocation allocation =
+                new ConnectionAllocation(
+                        connection,
+                        Thread.currentThread().getStackTrace())
+        connectionsHeldByThisThread.add(allocation)
+        connectionAllocations.put(Thread.currentThread(), connectionsHeldByThisThread)
+        return connection
+    }
+
+    /**
+     * Clear out old thread entries (and warn on connection leaks if any are found)
+     * Also clear out tracked allocations for each thread if the relevant connection
+     * has been closed.
+     */
+    private synchronized pruneConnectionAllocations() {
+        Iterator<Thread> threadIterator = connectionAllocations.keySet().iterator()
+        
+        while (threadIterator.hasNext()) { // For every (tracked) thread
+            Thread thread = threadIterator.next()
+            List<ConnectionAllocation> connectionsHeldByThisThread = connectionAllocations.get(thread)
+            Iterator<ConnectionAllocation> allocationIterator = connectionsHeldByThisThread.iterator()
+
+            while (allocationIterator.hasNext()) { // For every allocation (by that thread)
+                ConnectionAllocation allocation = allocationIterator.next()
+                if (!allocation.connection.isClosed()) {
+                    if (!thread.isAlive())
+                        log.error("Connection leak detected. The never released connection was allocated here:\n" +
+                                getFormattedCallStack(allocation.origin))
+                }
+                else // The connection is closed
+                    allocationIterator.remove()
+            }
+            if (!thread.isAlive()) {
+                threadIterator.remove()
+            }
+        }
+    }
+
+    private class ConnectionAllocation {
+        ConnectionAllocation(Connection connection, StackTraceElement[] origin) {
+            this.connection = connection
+            this.origin = origin
+        }
+        Connection connection
+        StackTraceElement[] origin
+    }
+    HashMap<Thread, List<ConnectionAllocation>> connectionAllocations = [:]
+
+    static String getFormattedCallStack(StackTraceElement[] callStackElementList) {
+        StringBuilder callStack = new StringBuilder("")
+        for (StackTraceElement frame : callStackElementList)
+            callStack.append(frame.toString() + "\n")
+        return callStack.toString()
     }
 
     List<Document> findByRelation(String relation, String reference,
