@@ -4402,7 +4402,15 @@
       "$d": {"property": "date"},
       "$g": {"property": "comment"}
     },
-    "504": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}},
+    "504": {
+      "$a": {
+        "aboutEntity": "?thing",
+        "addLink": "hasNote",
+        "TODO:resourceType": "BibliographyNote"
+      },
+      "NOTE:was": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}}
+    },
+
 
     "505": {
       "TOOO:i1": {},
@@ -4485,12 +4493,20 @@
 
     "513": {},
     "514": {},
-    "515": {},
+    "515": {
+      "$a": {
+        "aboutEntity": "?thing",
+        "addLink": "hasNote",
+        "TODO:resourceType": "IssuanceInformationNote",
+        "property": "label"
+      }
+    },
     "516": {},
     "518": {
       "aboutEntity": "?work",
       "addLink": "eventContentOf",
       "resourceType": "Event",
+      "TODO": "We are not mapping as bf2 (bf2:capture). Should we?",
       "$a": {"property": "label"},
       "$o": {"addProperty": "date"},
       "$d": {"addProperty": "comment"},
@@ -4540,7 +4556,7 @@
     },
     "522": {},
     "524": {},
-    "525": {},
+    "525": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}},
     "526": {"NOTE:record-count": 16, "ignored": true},
 
     "530": {
@@ -4608,7 +4624,55 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "TODO:$5": "Institution to which field applies (NR)"
     },
-    "540": {},
+    "540": {
+      "aboutEntity": "?thing", "addLink": "usageAndAccessPolicy", "resourceType": "UsePolicy", "repeatable": false,
+      "NOTE": "Formathandboken: 'Används normalt ej i bibliografiska poster'",
+      "pendingResources": {
+        "_:source": {"link": "source", "resourceType": "Source"}
+      },
+      "$a": {"property": "label"},
+      "$c": {"about": "_:source", "property": "label"},
+      "$u": {"property": "marc:uniformResourceIdentifier"},
+      "_spec": [
+        {
+          "source": {
+            "540": {"ind1": " ", "ind2": " ",
+              "subfields": [
+                {"a": "Current copyright fee: GBP12.50"},
+                {"c": "19"} ]}},
+          "result": {"mainEntity": {
+            "@type": "Instance",
+            "usageAndAccessPolicy":[
+              {
+                "@type": "UsePolicy",
+                "label": "Current copyright fee: GBP12.50",
+                "source": {
+                  "@type": "Source",
+                  "label": "19"
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "source": [
+            {"540": {"ind1": " ", "ind2": " ", "subfields": [{"a": "YYYY"} ]}},
+            {"540": {"ind1": " ", "ind2": " ", "subfields": [{"a": "XXXX"} ]}}],
+          "result": {"mainEntity": {
+            "@type": "Instance",
+            "usageAndAccessPolicy":[
+            {
+              "@type": "UsePolicy",
+              "label": "YYYY"
+            },
+              {
+                "@type": "UsePolicy",
+                "label": "XXXX"
+              }]
+          }}
+        }
+      ]
+    },
     "541": {},
     "542": {"NOTE:record-count": 0, "ignored": true},
     "544": {
@@ -4647,7 +4711,7 @@
     "583": {},
     "584": {"NOTE:record-count": 0, "ignored": true},
     "585": {},
-    "586": {},
+    "586": {"$a": {"aboutEntity": "?thing", "addProperty": "awardsNote"}},
     "588": {"$a": {"aboutEntity": "?record", "addProperty": "sourceNote"}},
     "590": {},
     "599": {
