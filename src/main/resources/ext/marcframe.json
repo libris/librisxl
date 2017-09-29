@@ -4811,7 +4811,7 @@
     },
 
     "600": {
-      "include": ["subjectbase", "agentdata", "splicedworkentity"],
+      "include": ["subjectbase", "agentdataPersonFamily", "splicedworkentity"],
       "TODO:include": ["subjectbase", "agentdataPersonFamily", "splicedworkentity"],
       "aboutEntity": "?work",
       "addLink": "subject",
@@ -4983,6 +4983,71 @@
                 "@type": "ConceptScheme",
                 "code": "lsch"
               }
+            }
+          }}
+        },
+        {
+          "source": {"600": {"ind1": "1", "ind2": "4", "subfields": [{"a": "Lindgren, Astrid"}, {"d": "1907-2002"}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Person",
+                  "familyName": "Lindgren",
+                  "givenName": "Astrid",
+                  "birthYear": "1907",
+                  "deathYear": "2002"
+                }
+              ],
+              "prefLabel":"lindgren, Astrid, 1907-2002"
+            }
+          }}
+        },
+        {
+          "source": {"600": {"ind1": "1", "ind2": "7", "subfields": [
+            {"a": "Lindgren, Astrid"},
+            {"d": "1907-2002"},
+            {"2": "kao"}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Person",
+                  "familyName": "Lindgren",
+                  "givenName": "Astrid",
+                  "birthYear": "1907",
+                  "deathYear": "2002"
+                }
+              ],
+              "inScheme": {
+                "@type": "ConceptScheme",
+                "code": "kao"
+              },
+              "prefLabel":"lindgren, Astrid, 1907-2002"
+            }
+          }}
+        },
+        {
+          "source": {"600": {"ind1": "1", "ind2": "2", "subfields": [{"a": "Lindgren, Astrid"}, {"d": "1907-2002"}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Person",
+                  "familyName": "Lindgren",
+                  "givenName": "Astrid",
+                  "birthYear": "1907",
+                  "deathYear": "2002"
+                }
+              ],
+              "inScheme": {
+                "@type": "ConceptScheme",
+                "code": "nlm"
+              },
+              "prefLabel":"lindgren, Astrid, 1907-2002"
             }
           }}
         }
@@ -5191,7 +5256,89 @@
       "aboutEntity": "?work",
       "addLink": "genreForm",
       "resourceType": "GenreForm",
-      "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
+      "_spec": [
+        {
+          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Deckare"}, {"2": "saogf"}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "GenreTerm",
+                  "@id": "https://id.kb.se/term/saogf/Deckare",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/saogf",
+                    "@type": "ConceptScheme",
+                    "code": "saogf",
+                    "prefLabel": "Deckare"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Deckare"}, {"2": "barngf"}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "GenreTerm",
+                  "@id": "https://id.kb.se/term/barngf/Deckare",
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "@id": "https://id.kb.se/term/barngf",
+                    "code": "barngf",
+                    "prefLabel": "Deckare"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Postkartor"}, {"2": "gmgpc"}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "GenreTerm",
+                  "@id": "https://id.kb.se/term/gmgpc/swe/Postkartor",
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "@id": "https://id.kb.se/term/gmgpc",
+                    "code": "gmgpc",
+                    "prefLabel": "Postkartor"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"655": {"ind1": " ", "ind2": " ", "subfields": [{"a": "True crime stories"}, {"2": "lcgft"}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "GenreTerm",
+                  "@id": "hhttp://id.loc.gov/authorities/genreForms/gf2014026203.html",
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "@id": "http://id.loc.gov/authorities/genreForms",
+                    "code": "lcgft",
+                    "prefLabel": "True crime stories"
+                  }
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
 
     "656" : {
