@@ -5100,7 +5100,7 @@
               "subfields": [{"a": "Kungl. biblioteket"}, {"x": "samlingar"}, {"2": "sao"}]
             }
           },
-          "result": {"mainEntity": {
+          "TODO:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
@@ -5152,6 +5152,59 @@
               ]
             }
           }}
+        },
+        {
+          "source": {
+            "610": {"ind1": "1", "ind2": "4", "subfields": [
+              {"a": "United States"},
+              {"t":  "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)"},
+              {"v": "catalogs"}]
+            }
+          },
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Organization",
+                  "name" : "United States",
+                  "title": "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)",
+                  "genreForm": "catalogs"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "610": {"ind1": "2", "ind2": "0", "subfields":[
+              {"a": "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."},
+              {"k": " Manuscript."},
+              {"t": "Egentitel"},
+              {"n": "Fond 1209"},
+              {"p": "Pomestnyĭ prikaz"}]
+            }
+          },
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Organization",
+                  "name": "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov.",
+                  "formSubheading": "Manuscript",
+                  "title": "Egentitel",
+                  "partNumber": "Fond 1209",
+                  "partName": "Pomestnyĭ prikaz"
+                }
+              ],
+              "inScheme": {
+                "@id": "http://id.loc.gov/authorities/names",
+                "@type": "ConceptScheme",
+                "code": "lsch"
+              }
+            }
+          }}
         }
       ]
     },
@@ -5160,14 +5213,117 @@
       "TOOO:i2": {},
       "inherit": "111",
       "aboutEntity": "?work",
-      "addLink": "subject", "resourceType": "Meeting"
+      "addLink": "subject", "resourceType": "Meeting",
+      "_spec": [
+        {
+          "source": {
+            "611": {"ind1": "2", "ind2": "0", "subfields":[
+              {"$a": "Rio+20 (Conference)"},
+              {"$d": "(2012 : "},
+              {"$c": "Rio de Janeiro, Brazil)"}]
+            }
+          },
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Meeting",
+                  "agent": {"@type": "Meeting", "name": "Rio+20 (Conference)"},
+                  "date": "2012",
+                  "place": "Rio de Janeiro, Brazil"
+                }
+              ],
+              "@id": "http://id.loc.gov/authorities/names/nb2013013299.html",
+              "inScheme": {
+                "@id": "http://id.loc.gov/authorities/names",
+                "@type": "ConceptScheme",
+                "code": "lsch"
+              }
+            }
+          }}
+        },
+        {
+          "source": {
+            "611": {"ind1": "2", "ind2": "0", "subfields":[
+              {"a": "Vatican Council"},
+              {"n": "(2nd : "},
+              {"d": "1962-1965 : "},
+              {"c": "Basilica di San Pietro in Vaticano)."},
+              {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
+              {"l": "Italian"}]
+            }
+          },
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Meeting",
+                  "@id": "http://id.loc.gov/authorities/names/n83067715.html",
+                  "name": "Vatican Council",
+                  "date": ["1962-1965 : "],
+                  "place": {
+                    "@type": "Place",
+                    "label": "Rio de Janeiro, Brazil"
+                  },
+                  "title": "Constitutio pastoralis de ecclesia in mundo huius temporis",
+                  "language": { "@type" : "Language", "label" : "Italian"}
+                }
+              ],
+              "inScheme": {
+                "@id": "http://id.loc.gov/authorities/names",
+                "@type": "ConceptScheme",
+                "code": "lcsh"
+              }
+            }
+          }}
+        }
+      ]
     },
     "630": {
       "TOOO:i1": {},
       "TOOO:i2": {},
       "inherit": "130",
       "aboutEntity": "?work",
-      "addLink": "subject", "resourceType": "Work"
+      "addLink": "subject", "resourceType": "Work",
+      "_spec": [
+        {
+          "source": {
+            "630": {"ind1": " ", "ind2": "0", "subfields":[
+              {"a": "Talmud"},
+              {"p": "Bava meẓia"}]
+            }
+          },
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "@id": "http://id.loc.gov/authorities/names/n81048431.html"
+                }
+              ],
+              "prefLabel": "Talmud--Bava meẓia",
+              "inScheme": {
+                "@id": "http://id.loc.gov/authorities/names",
+                "@type": "ConceptScheme",
+                "code": "lcsh"
+              },
+              "termComponentList": [
+                {
+                  "@type": "Topic",
+                  "prefLabel": "Talmud"
+                },
+                {
+                  "@type": "PartName",
+                  "prefLabel": "Bava meẓia"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "648": {
       "include": ["subjectbase", "termbase", "uri_from_i2"],
@@ -5196,7 +5352,7 @@
           "source": {"650": {"ind1": " ", "ind2": "7",
             "subfields": [{"a": "Fysik"}, {"2": "sao"}]}
           },
-          "result": {"mainEntity": {
+          "TODO:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
@@ -5218,7 +5374,7 @@
           "source": {"650": {"ind1": " ", "ind2": "0",
             "subfields": [{"a": "Information"}, {"y": "Information Age"}]}
           },
-          "result": {"mainEntity": {
+          "TODO:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
@@ -5251,7 +5407,7 @@
             "650": {"ind1": "2", "ind2": "4",
               "subfields": [{"a": "Something secondary"}]}
           },
-          "result": {"mainEntity": {
+          "TODO:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
@@ -5269,7 +5425,7 @@
             "650": {"ind1": " ", "ind2": "7",
               "subfields": [{"a": "Fysik"}, {"2": "barn"}]}
           },
-          "result": {"mainEntity": {
+          "TODO:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
@@ -5298,7 +5454,7 @@
               "subject": [
                 {
                   "@type": "Topic",
-                  "@id": "http://id.loc.gov/authorities/label/Information--Information%20Age",
+                  "@id": "http://id.loc.gov/authorities/label/Cardiovascular%20Physiology--Congresses.",
                   "prefLabel": "Cardiovascular Physiology--Congresses.",
                   "termComponentList": [
                     {
@@ -5331,6 +5487,7 @@
               "subject": [
                 {
                   "@type": "Topic",
+                  "@id": "http://aims.fao.org/standards/agrovoc/linked-open-data/rye",
                   "inScheme": {
                     "@id": "http://aims.fao.org/standards/agrovoc/linked-open-data",
                     "@type": "ConceptScheme",
@@ -5349,7 +5506,85 @@
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Geographic",
-      "i1": null
+      "i1": null,
+      "_spec": [
+        {
+        "source": {
+          "651": {"ind1": " ", "ind2": "7", "subfields":[
+            {"a": "Sydafrika"},
+            {"z": "Västra Kapprovinsen"},
+            {"2": "sao"}]
+          }
+        },
+        "TODO:result": {"mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "subject": [
+              {
+                "@type": "GeographicalTerm",
+                "@id": "https://id.kb.se/term/sao/Sydafrika--V%C3%A4stra%20Kapprovinsen"
+              }
+            ],
+            "prefLabel": "Sydafrika--Västra Kapprovinsen",
+            "inScheme": {
+              "@id": "https://id.kb.se/term/sao",
+              "@type": "ConceptScheme",
+              "code": "sao"
+            },
+            "termComponentList": [
+              {
+                "@type": "TopicalTerm",
+                "prefLabel": "Sydafrika"
+              },
+              {
+                "@type": "GeographicalTerm",
+                "prefLabel": "Västra Kapprovinsen"
+              }
+            ]
+          }
+        }}
+      },
+        {
+          "source": {
+            "651": {"ind1": " ", "ind2": "0", "subfields":[
+              {"a": "Aix-en-Provence (France)"},
+              {"x": "Social life and customs"},
+              {"v": "Early works to 1800"}]
+            }
+          },
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Geographic",
+                  "@id" : "http://id.loc.gov/authorities/label/Aix-en-Provence%20%28France%29"
+                }
+              ],
+              "prefLabel": "Aix-en-Provence--Social life and customs--Early works to 1800",
+              "inScheme": {
+                "@id": "http://id.loc.gov/authorities/names",
+                "@type": "ConceptScheme",
+                "code": "lcsh"
+              },
+              "termComponentList": [
+                {
+                  "@type": "TopicalTerm",
+                  "prefLabel": "Aix-en-Provence (France)"
+                },
+                {
+                  "@type": "Subdivision",
+                  "prefLabel": "Social life and customs"
+                },
+                {
+                  "@type": "GenreForm",
+                  "prefLabel": "Early work to 1800"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "653": {
       "TOOO:i1": {},
