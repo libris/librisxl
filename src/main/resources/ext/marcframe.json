@@ -4129,7 +4129,7 @@
     },
 
     "306": {},
-    "307": {},
+    "307": {"NOTE:record-count": 0, "ignored": true},
 
     "310": {
       "aboutEntity": "?thing",
@@ -4291,8 +4291,8 @@
         "property": "label"
       }
     },
-    "342": {},
-    "343": {},
+    "342": {"NOTE:record-count": 0, "ignored": true},
+    "343": {"NOTE:record-count": 0, "ignored": true},
     "344": {},
     "345": {},
     "346": {},
@@ -4344,7 +4344,7 @@
         "property": "label"
       }
     },
-    "355": {},
+    "355": {"NOTE:record-count": 0, "ignored": true},
     "357": {},
     "362": {
       "aboutEntity": "?thing",
@@ -4353,14 +4353,16 @@
     "363": {},
     "365": {},
     "366": {},
-    "377": {},
+    "370": {"NOTE:record-count": 0, "ignored": true},
+    "377": {"NOTE:record-count": 0, "ignored": true},
     "380": {},
-    "381": {},
+    "381": {"NOTE:record-count": 0, "ignored": true},
     "382": {},
     "383": {},
-    "384": {},
+    "384": {"NOTE:record-count": 0, "ignored": true},
     "385": {},
     "386": {},
+    "388": {"NOTE:record-count": 0, "ignored": true},
 
     "400": {},
     "410": {},
