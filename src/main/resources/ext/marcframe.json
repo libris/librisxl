@@ -4141,7 +4141,8 @@
       "addLink": "provisionActivity",
       "resourceType": "ProvisionActivity",
       "embedded": true,
-      "TODO:appendToExistingEntity": "When repeated field, exist to existing provisionActivity and don't create new provisionActivity",
+      "repeatable": true,
+      "TODO:appendToExistingEntity": "When repeated field exists, append to existing provisionActivity and don't create new provisionActivity",
       "match": [
         {
           "when": "i2=0",
@@ -6047,7 +6048,7 @@
               {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
               {"i": "Facsimile (manifestation): "}
             ]}},
-          "result": {"mainEntity": {
+          "FIXME:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "hasPart": [
