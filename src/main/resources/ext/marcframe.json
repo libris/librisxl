@@ -4406,7 +4406,7 @@
       "$a": {
         "aboutEntity": "?thing",
         "addLink": "hasNote",
-        "TODO:resourceType": "BibliographyNote"
+        "resourceType": "BibliographyNote"
       },
       "NOTE:was": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}}
     },
@@ -4472,7 +4472,7 @@
       "$a": {"addProperty": "acquisitionTerms"}
     },
 
-    "507": {},
+    "507": {"$a": {"aboutEntity": "?thing", "addProperty": "scaleNote", "NOTE:b": "concatenate with a, record-count: 2"}},
     "508": {"$a": {"aboutEntity": "?thing", "addProperty": "creditsNote"}},
 
     "510": {
@@ -4492,7 +4492,7 @@
     },
 
     "513": {},
-    "514": {},
+    "514": {"$a": {"aboutEntity": "?thing", "property": "marc:dataQualityNote"}},
     "515": {
       "$a": {
         "aboutEntity": "?thing",
@@ -4554,7 +4554,7 @@
       "TOOO:i1": {},
       "$a": {"property": "label"}
     },
-    "522": {},
+    "522": {"$a": {"aboutEntity": "?work", "addLink": "geographicCoverage", "resourceType": "GeographicCoverage", "property": "label"}},
     "524": {},
     "525": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}},
     "526": {"NOTE:record-count": 16, "ignored": true},
@@ -4680,13 +4680,30 @@
       "resourceType": "marc:RelatedMaterialNote",
       "$a": {"addProperty": "label"}
     },
-    "545": {},
+    "545": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:BiographicalOrHistoricalData",
+      "TODO:i1": "'0': BiographicalDataNote, '1': AdministrativeHistoryNote",
+      "$a": {"property": "label"}
+    },
     "546": {"aboutEntity": "?work", "$a": {"addProperty": "languageNote"}},
-    "547": {},
+    "547": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:FormerTitleComplexityNote",
+      "$a": {"property": "label"}
+    },
 
     "550": {},
     "552": {"NOTE:record-count": 2, "ignored": true},
-    "555": {},
+    "555": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:CumulativeIndexFindingAidsNote",
+      "$a": {"property": "label"},
+      "$c": {"property": "marc:degreeOfControl", "NOTE": "concatenate with $a", "NOTE:record-count": 2}
+    },
     "556": {"NOTE:record-count": 7,
       "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
       "$z": {"ignored": true}
@@ -4706,11 +4723,11 @@
     "563": {},
     "565": {"NOTE:record-count": 2, "ignored": true},
     "567": {"NOTE:record-count": 0, "ignored": true},
-    "580": {},
+    "580": {"$a": {"aboutEntity": "?work", "addLink": "hasNote", "resourceType": "marc:LinkingEntryComplexityNote", "property": "label"}},
     "581": {},
     "583": {},
     "584": {"NOTE:record-count": 0, "ignored": true},
-    "585": {},
+    "585": {"$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "marc:ExhibitionsNote", "property": "label"}},
     "586": {"$a": {"aboutEntity": "?thing", "addProperty": "awardsNote"}},
     "588": {"$a": {"aboutEntity": "?record", "addProperty": "sourceNote"}},
     "590": {},
