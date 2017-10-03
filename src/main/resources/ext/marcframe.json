@@ -4811,12 +4811,30 @@
     },
 
     "600": {
-      "include": ["subjectbase", "agentdataPersonFamily", "splicedworkentity"],
-      "TODO:include": ["subjectbase", "agentdataPersonFamily", "splicedworkentity"],
+      "include": "subjectbase",
       "aboutEntity": "?work",
-      "addLink": "subject",
-      "about": "_:agent",
-      "resourceType": "Person",
+      "match": [
+        {
+          "when": "$t",
+          "include": ["agentdataPersonFamily"],
+          "pendingResources": {
+            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
+            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
+        },
+        {
+          "when": null,
+          "include": "agentdataPersonFamily",
+          "addLink": "subject",
+          "resourceType": "Person",
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Person"}
+          }
+        }
+      ],
       "_spec": [
         {
           "source": {
@@ -4830,18 +4848,26 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "Person",
-                  "name": "Ovid",
-                  "date": "43 B.C.-17 A.D. or 18 A.D.",
+                  "@type": "Work",
                   "title": "Amores.",
-                  "language": "English"
+                  "language": {
+                    "@type": "Language",
+                    "label": "English."
+                  },
+                  "contribution": {
+                    "@type": "Contribution",
+                    "agent": {
+                      "@type": "Person",
+                      "name": "Ovid,",
+                      "date": ["43 B.C.-17 A.D. or 18 A.D."]
+                  }}
                 }
               ],
               "@id": "http://id.loc.gov/authorities/names/n85005984",
               "inScheme": {
                 "@id": "http://id.loc.gov/authorities/names",
                 "@type": "ConceptScheme",
-                "code": "lsch"
+                "code": "lcsh"
               }
             }
           }}
@@ -4856,17 +4882,20 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "Family",
-                  "name": "Butler family.",
+                  "@type": "Person",
+                  "agent": {
+                    "@type": "Person",
+                    "nameOfTheFamily": "Butler family."
+                  },
                   "subdivision": "Health",
-                  "@id": "http://id.loc.gov/authorities/names/n85005984"
+                  "@id": "http://id.loc.gov/authorities/names/n85005984",
+                  "inScheme": {
+                    "@id": "http://id.loc.gov/authorities/names",
+                    "@type": "ConceptScheme",
+                    "code": "lsch"
+                  }
                 }
-              ],
-              "inScheme": {
-                "@id": "http://id.loc.gov/authorities/names",
-                "@type": "ConceptScheme",
-                "code": "lsch"
-              }
+              ]
             }
           }}
         },
@@ -4884,17 +4913,21 @@
               "subject": [
                 {
                   "@type": "Person",
-                  "name": "Harris, Andy ",
-                  "titleOther": "(Compose)",
+                  "agent": {
+                    "@type": "Person",
+                    "familyName": "Harris",
+                    "givenName": "Andy"
+                  },
+                  "marc:titleOther": ["(Composer)"],
                   "subdivision": "Travel",
-                  "geographic": ["Morocco", "Marrakech"]
+                  "geographic": ["Morocco", "Marrakech"],
+                  "inScheme": {
+                    "@id": "http://id.loc.gov/authorities/names",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  }
                 }
-              ],
-              "inScheme": {
-                "@id": "http://id.loc.gov/authorities/names",
-                "@type": "ConceptScheme",
-                "code": "lsch"
-              }
+              ]
             }
           }}
         },
@@ -4912,17 +4945,21 @@
               "subject": [
                 {
                   "@type": "Person",
-                  "name": "Mangunwijaya, Y. B.",
-                  "date": "1929-1999",
+                  "agent": {
+                    "@type": "Person",
+                    "name": "Mangunwijaya, Y. B.",
+                    "birthYear": "1929",
+                    "deathYear": "1999"
+                  },
                   "subdivision": ["Criticism and interpretation", "History"],
-                  "temporal": "21st century"
+                  "temporal": "21st century",
+                  "inScheme": {
+                    "@id": "http://id.loc.gov/authorities/names",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  }
                 }
-              ],
-              "inScheme": {
-                "@id": "http://id.loc.gov/authorities/names",
-                "@type": "ConceptScheme",
-                "code": "lsch"
-              }
+              ]
             }
           }}
         },
@@ -4941,9 +4978,17 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "Person",
-                  "name": "Scarlatti, Domenico",
-                  "date": "1685-1757",
+                  "@type": "Work",
+                  "contribution": {
+                    "@type": "Contribution",
+                    "agent": {
+                      "@type": "Person",
+                      "birthYear": "1685",
+                      "deathYear": "1757",
+                      "familyName": "Scarlatti",
+                      "givenName": "Domenico"
+                    }
+                  },
                   "title": "Sonatas",
                   "partNumber": "K. 492",
                   "musicMedium": "harpsichord",
@@ -4972,17 +5017,20 @@
               "subject": [
                 {
                   "@type": "Person",
-                  "name": "Black Foot",
-                  "titleOther": ["Chief", "(Spirit)"],
-                  "date": "-1877"
+                  "agent": {
+                    "@type": "Person",
+                    "name": "Black Foot",
+                    "date": "-1877"
+                  },
+                  "titleOther": ["Chief,", "(Spirit)"],
+                  "@id": "http://id.loc.gov/authorities/names/n81020634",
+                  "inScheme": {
+                    "@id": "http://id.loc.gov/authorities/names",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  }
                 }
-              ],
-              "@id": "http://id.loc.gov/authorities/names/n81020634",
-              "inScheme": {
-                "@id": "http://id.loc.gov/authorities/names",
-                "@type": "ConceptScheme",
-                "code": "lsch"
-              }
+              ]
             }
           }}
         },
@@ -4994,13 +5042,16 @@
               "subject": [
                 {
                   "@type": "Person",
-                  "familyName": "Lindgren",
-                  "givenName": "Astrid",
-                  "birthYear": "1907",
-                  "deathYear": "2002"
+                  "agent": {
+                    "@type": "Person",
+                    "familyName": "Lindgren",
+                    "givenName": "Astrid",
+                    "birthYear": "1907",
+                    "deathYear": "2002"
+                  },
+                  "prefLabel":"lindgren, Astrid, 1907-2002"
                 }
-              ],
-              "prefLabel":"lindgren, Astrid, 1907-2002"
+              ]
             }
           }}
         },
@@ -5015,17 +5066,21 @@
               "subject": [
                 {
                   "@type": "Person",
-                  "familyName": "Lindgren",
-                  "givenName": "Astrid",
-                  "birthYear": "1907",
-                  "deathYear": "2002"
+                  "agent": {
+                    "@type": "Person",
+                    "familyName": "Lindgren",
+                    "givenName": "Astrid",
+                    "birthYear": "1907",
+                    "deathYear": "2002"
+                  },
+                  "inScheme": {
+                    "@id" : "https://id.kb.se/term/kao",
+                    "@type": "ConceptScheme",
+                    "code": "kao"
+                  },
+                  "prefLabel":"lindgren, Astrid, 1907-2002"
                 }
-              ],
-              "inScheme": {
-                "@type": "ConceptScheme",
-                "code": "kao"
-              },
-              "prefLabel":"lindgren, Astrid, 1907-2002"
+              ]
             }
           }}
         },
@@ -5037,17 +5092,21 @@
               "subject": [
                 {
                   "@type": "Person",
-                  "familyName": "Lindgren",
-                  "givenName": "Astrid",
-                  "birthYear": "1907",
-                  "deathYear": "2002"
+                  "agent": {
+                    "@type": "Person",
+                    "familyName": "Lindgren",
+                    "givenName": "Astrid",
+                    "birthYear": "1907",
+                    "deathYear": "2002"
+                  },
+                  "inScheme": {
+                    "@id" : "https://id.kb.se/term/mesh",
+                    "@type": "ConceptScheme",
+                    "code": "mesh"
+                  },
+                  "prefLabel":"lindgren, Astrid, 1907-2002"
                 }
-              ],
-              "inScheme": {
-                "@type": "ConceptScheme",
-                "code": "nlm"
-              },
-              "prefLabel":"lindgren, Astrid, 1907-2002"
+              ]
             }
           }}
         }
@@ -5218,9 +5277,9 @@
         {
           "source": {
             "611": {"ind1": "2", "ind2": "0", "subfields":[
-              {"$a": "Rio+20 (Conference)"},
-              {"$d": "(2012 : "},
-              {"$c": "Rio de Janeiro, Brazil)"}]
+              {"a": "Rio+20 (Conference)"},
+              {"d": "(2012 : "},
+              {"c": "Rio de Janeiro, Brazil)"}]
             }
           },
           "TODO:result": {"mainEntity": {
@@ -5229,16 +5288,21 @@
               "subject": [
                 {
                   "@type": "Meeting",
-                  "agent": {"@type": "Meeting", "name": "Rio+20 (Conference)"},
-                  "date": "2012",
-                  "place": "Rio de Janeiro, Brazil"
+                  "agent": {
+                    "@type": "Meeting",
+                    "name": "Rio+20 (Conference)",
+                    "date": ["(2012 :"],
+                    "place": {
+                      "@type": "Place",
+                      "label": "Rio de Janeiro, Brazil"
+                    }}
                 }
               ],
               "@id": "http://id.loc.gov/authorities/names/nb2013013299.html",
               "inScheme": {
                 "@id": "http://id.loc.gov/authorities/names",
                 "@type": "ConceptScheme",
-                "code": "lsch"
+                "code": "lcsh"
               }
             }
           }}
@@ -5261,11 +5325,15 @@
                 {
                   "@type": "Meeting",
                   "@id": "http://id.loc.gov/authorities/names/n83067715.html",
-                  "name": "Vatican Council",
-                  "date": ["1962-1965 : "],
-                  "place": {
-                    "@type": "Place",
-                    "label": "Rio de Janeiro, Brazil"
+                  "agent": {
+                    "@type": "Meeting",
+                    "name": "Vatican Council",
+                    "date": ["1962-1965 : "],
+                    "marc:numberOfPartSectionMeeting": [ "(2nd :" ],
+                    "place": {
+                      "@type": "Place",
+                      "label": "Basilica di San Pietro in Vaticano)."
+                    }
                   },
                   "title": "Constitutio pastoralis de ecclesia in mundo huius temporis",
                   "language": { "@type" : "Language", "label" : "Italian"}
