@@ -2823,18 +2823,18 @@
 
     "033": {
       "NOTE:record-count": 852,
-      "TODO": "should be used more? See also free text form in 518",
+      "TODO:revert": "To ensure 033 and 518 will not be mixed up when reverting",
       "aboutEntity": "?work",
-      "addLink": "eventContentOf",
+      "addLink": "capture",
       "TODO:i1": {"NOTE": "0: one, 1: multiple, 2: interval"},
       "i2": {
         "property": "@type",
         "overwrite": true,
         "tokenMap": {
-          " ": "Event",
-          "0": "RecordingEvent",
-          "1": "BroadcastEvent",
-          "2": "DiscoveryEvent"
+          " ": "Capture",
+          "0": "RecordingCapture",
+          "1": "BroadcastCapture",
+          "2": "DiscoveryCapture"
         }
       },
       "$a": {
@@ -2845,7 +2845,27 @@
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
       "$2": {"property": "marc:placeCodeSource"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": [{"033": {"ind1": " ", "ind2": "0", "subfields": [{"a": "198407--"}, {"b": "5754"}, {"c": "L7"}]}}],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "capture": [
+                  {
+                    "@type": "RecordingCapture",
+                    "date": ["198407--"],
+                    "marc:geographicClassificationAreaCode": ["5754"],
+                    "marc:geographicClassificationSubareaCode": ["L7"]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
 
     "034": {
@@ -4394,6 +4414,7 @@
       "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "Note", "property": "label"}},
     "501": {},
     "502": {
+      "aboutEntity": "?work",
       "addLink": "dissertation", "resourceType": "Dissertation",
       "embedded": true,
       "$a": {"property": "note"},
@@ -4406,11 +4427,11 @@
       "$a": {
         "aboutEntity": "?thing",
         "addLink": "hasNote",
-        "resourceType": "BibliographyNote"
+        "resourceType": "BibliographyNote",
+        "property": "label"
       },
       "NOTE:was": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}}
     },
-
 
     "505": {
       "TOOO:i1": {},
@@ -4472,7 +4493,7 @@
       "$a": {"addProperty": "acquisitionTerms"}
     },
 
-    "507": {"$a": {"aboutEntity": "?thing", "addProperty": "scaleNote", "NOTE:b": "concatenate with a, record-count: 2"}},
+    "507": {"$a": {"aboutEntity": "?thing", "property": "scaleNote", "NOTE:b": "concatenate with a, record-count: 2"}},
     "508": {"$a": {"aboutEntity": "?thing", "addProperty": "creditsNote"}},
 
     "510": {
@@ -4491,32 +4512,41 @@
       }
     },
 
-    "513": {},
+    "513": {
+      "aboutEntity": "?thing",
+      "$a": {
+        "addLink": "hasNote",
+        "resourceType": "marc:TypeOfReportAndPeriodCoveredNote",
+        "property": "label"
+      },
+      "$b": {"property": "marc:periodCovered", "TODO": "Concatenate with $b"}
+    },
     "514": {"$a": {"aboutEntity": "?thing", "property": "marc:dataQualityNote"}},
     "515": {
       "$a": {
         "aboutEntity": "?thing",
         "addLink": "hasNote",
-        "TODO:resourceType": "IssuanceInformationNote",
+        "resourceType": "IssuanceInformationNote",
         "property": "label"
       }
     },
-    "516": {},
+    "516": {
+      "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "marc:TypeOfComputerFileOrDataNote", "property": "label"},
+      "NOTE:i1": "ignore"
+    },
     "518": {
       "aboutEntity": "?work",
-      "addLink": "eventContentOf",
-      "resourceType": "Event",
-      "TODO": "We are not mapping as bf2 (bf2:capture). Should we?",
+      "addLink": "capture",
+      "resourceType": "Capture",
       "$a": {"property": "label"},
       "$o": {"addProperty": "date"},
       "$d": {"addProperty": "comment"},
-      "TODO:d": "Change $d to date. Is not a comment",
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
 
     "520": {
-      "TODO:aboutEntity": "Could be ?work, ?thing and/or ?hold",
+      "TODO:aboutEntity": "Could be ?work, ?thing and/or ?hold. bf2 maps to ?work",
       "aboutEntity": "?thing",
       "TOOO:i1": {},
       "addLink": "summary",
@@ -4552,11 +4582,12 @@
       "embedded": true,
       "resourceType": "IntendedAudience",
       "TOOO:i1": {},
-      "$a": {"property": "label"}
+      "$a": {"property": "label"},
+      "TODO:b": {"link": "source", "resourceType": "Source", "property": "label", "FIXME:peningResource": "Append to intendedAudience"}
     },
     "522": {"$a": {"aboutEntity": "?work", "addLink": "geographicCoverage", "resourceType": "GeographicCoverage", "property": "label"}},
     "524": {},
-    "525": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}},
+    "525": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote", "TODO": "supplementaryContentNote or supplementaryContent?"}},
     "526": {"NOTE:record-count": 16, "ignored": true},
 
     "530": {
@@ -4612,7 +4643,19 @@
 
     "534": {},
     "535": {},
-    "536": {},
+    "536": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:FundingInformationNote",
+      "$a": {"property": "marc:textOfNote"},
+      "$b": {"addProperty": "marc:contractNumber"},
+      "$c": {"addProperty": "marc:grantNumber"},
+      "$d": {"addProperty": "marc:undifferentiatedNumber"},
+      "$e": {"addProperty": "marc:programElementNumber"},
+      "$f": {"addProperty": "marc:projectNumber"},
+      "$g": {"addProperty": "marc:taskNumber"},
+      "$h": {"addProperty": "marc:workUnitNumber"}
+    },
     "538": {
       "aboutEntity": "?thing",
       "addLink": "systemRequirement",
@@ -4632,7 +4675,7 @@
       },
       "$a": {"property": "label"},
       "$c": {"about": "_:source", "property": "label"},
-      "$u": {"property": "marc:uniformResourceIdentifier"},
+      "$u": {"property": "marc:uniformResourceIdentifier", "TODO": "Map to uri instead?"},
       "_spec": [
         {
           "source": {
@@ -4677,7 +4720,7 @@
     "542": {"NOTE:record-count": 0, "ignored": true},
     "544": {
       "addLink": "hasNote",
-      "resourceType": "marc:RelatedMaterialNote",
+      "resourceType": "marc:LocationOfOtherArchivalMaterialsNote",
       "$a": {"addProperty": "label"}
     },
     "545": {
@@ -4724,12 +4767,22 @@
     "565": {"NOTE:record-count": 2, "ignored": true},
     "567": {"NOTE:record-count": 0, "ignored": true},
     "580": {"$a": {"aboutEntity": "?work", "addLink": "hasNote", "resourceType": "marc:LinkingEntryComplexityNote", "property": "label"}},
-    "581": {},
+    "581": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:PublicationsAboutDescribedMaterialsNote",
+      "$a": {"property": "marc:publicationsAboutDescribedMaterialsNote"},
+      "$z": {"property": "marc:internationalStandardBookNumber"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "NOTE:i1": "ignore"
+    },
     "583": {},
     "584": {"NOTE:record-count": 0, "ignored": true},
     "585": {"$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "marc:ExhibitionsNote", "property": "label"}},
     "586": {"$a": {"aboutEntity": "?thing", "addProperty": "awardsNote"}},
-    "588": {"$a": {"aboutEntity": "?record", "addProperty": "sourceNote"}},
+    "588": {
+      "$a": {"aboutEntity": "?record", "addLink": "hasNote", "resourceType": "DescriptionSourceNote", "property": "label"},
+      "NOTE:i1": "ignore"},
     "590": {},
     "599": {
       "TOOO:i1": {},
