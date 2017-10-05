@@ -4816,14 +4816,13 @@
       "match": [
         {
           "when": "$t",
-          "include": ["agentdataPersonFamily"],
+          "include": ["agentdataPersonFamily", "titledetails1xx7xx"],
           "pendingResources": {
             "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
             "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
             "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
           },
-          "$t": {"about": "_:work", "property": "title"},
-          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
+          "$t": {"about": "_:work", "property": "title"}
         },
         {
           "when": null,
@@ -4849,11 +4848,7 @@
               "subject": [
                 {
                   "@type": "Work",
-                  "title": "Amores.",
-                  "language": {
-                    "@type": "Language",
-                    "label": "English."
-                  },
+                  "title": "Amores",
                   "contribution": {
                     "@type": "Contribution",
                     "agent": {
@@ -4865,9 +4860,13 @@
               ],
               "@id": "http://id.loc.gov/authorities/names/n85005984",
               "inScheme": {
-                "@id": "http://id.loc.gov/authorities/names",
+                "@id": "https://id.kb.se/term/lcsh",
                 "@type": "ConceptScheme",
                 "code": "lcsh"
+              },
+              "language": {
+                "@type": "Language",
+                "label": "English."
               }
             }
           }}
@@ -4890,9 +4889,9 @@
                   "subdivision": "Health",
                   "@id": "http://id.loc.gov/authorities/names/n85005984",
                   "inScheme": {
-                    "@id": "http://id.loc.gov/authorities/names",
+                    "@id": "https://id.kb.se/term/lcsh",
                     "@type": "ConceptScheme",
-                    "code": "lsch"
+                    "code": "lcsh"
                   }
                 }
               ]
@@ -5420,7 +5419,7 @@
           "source": {"650": {"ind1": " ", "ind2": "7",
             "subfields": [{"a": "Fysik"}, {"2": "sao"}]}
           },
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
@@ -5442,7 +5441,7 @@
           "source": {"650": {"ind1": " ", "ind2": "0",
             "subfields": [{"a": "Information"}, {"y": "Information Age"}]}
           },
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
@@ -5475,7 +5474,7 @@
             "650": {"ind1": "2", "ind2": "4",
               "subfields": [{"a": "Something secondary"}]}
           },
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
@@ -5493,7 +5492,7 @@
             "650": {"ind1": " ", "ind2": "7",
               "subfields": [{"a": "Fysik"}, {"2": "barn"}]}
           },
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
@@ -5516,13 +5515,13 @@
             "650": {"ind1": " ", "ind2": "2",
               "subfields": [{"a": "Cardiovascular Physiology"}, {"v": "Congresses."}]}
           },
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
                 {
                   "@type": "Topic",
-                  "@id": "http://id.loc.gov/authorities/label/Cardiovascular%20Physiology--Congresses.",
+                  "@id": "https://id.kb.se/term/mesh/Cardiovascular%20Physiology--Congresses.",
                   "prefLabel": "Cardiovascular Physiology--Congresses.",
                   "termComponentList": [
                     {
@@ -5549,15 +5548,15 @@
             "650": {"ind1": " ", "ind2": "7",
               "subfields": [{"a": "rye"}, {"2": "agrovoc"}]}
           },
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
                 {
                   "@type": "Topic",
-                  "@id": "http://aims.fao.org/standards/agrovoc/linked-open-data/rye",
+                  "@id": "https://id.kb.se/term/agrovoc/rye",
                   "inScheme": {
-                    "@id": "http://aims.fao.org/standards/agrovoc/linked-open-data",
+                    "@id": "https://id.kb.se/term/agrovoc",
                     "@type": "ConceptScheme",
                     "code": "agrovoc"
                   },
@@ -7401,8 +7400,7 @@
       "match": [
         {
           "when": "$t",
-          "include": "agentdata",
-          "TODO:include": "agentdataPersonFamily",
+          "include": "agentdataPersonFamily",
           "aboutType": "Work",
           "$t": {"property": "title"},
           "$l": {"link": "language", "resourceType": "Language", "property": "label"},
@@ -7426,8 +7424,7 @@
           "aboutEntity": "?thing",
           "aboutType": "Person",
           "about": "_:agent",
-          "include": "agentdata",
-          "TODO:include": "agentdataPersonFamily",
+          "include": "agentdataPersonFamily",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
@@ -7468,26 +7465,114 @@
       ]
     },
     "110" : {
-      "inherit": "bib",
-      "aboutEntity": "?thing", "link": null, "resourceType": null,
-      "aboutType": "Organization"
+      "match": [
+        {
+          "when": "$t & i1=1",
+          "include": "agentdataOrganization",
+          "aboutType": "Work",
+          "$t": {"property": "title"},
+          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+          "$0": {"addLink": "identifiedBy", "property": "value"},
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Jurisdiction",
+              "embedded": false
+            }
+          }
+        },
+        {
+          "when": "$t",
+          "include": "agentdataOrganization",
+          "aboutType": "Work",
+          "$t": {"property": "title"},
+          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+          "$0": {"addLink": "identifiedBy", "property": "value"},
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Organization",
+              "embedded": false
+            }
+          }
+        },
+        {
+          "when": "i1=1",
+          "aboutEntity": "?thing",
+          "aboutType": "Jurisdiction",
+          "pendingResources": {"_:agent": {"link": "agent", "resourceType": "Jurisdiction"}},
+          "about": "_:agent",
+          "include": "agentdataOrganization",
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": null,
+          "aboutEntity": "?thing",
+          "aboutType": "Organization",
+          "pendingResources": {"_:agent": {"link": "agent", "resourceType": "Organization"}},
+          "about": "_:agent",
+          "include": "agentdataOrganization",
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        }
+      ]
     },
     "111" : {
-      "inherit": "bib",
-      "aboutEntity": "?thing", "link": null, "resourceType": null,
-      "aboutType": "Meeting",
+      "match": [
+        {
+          "when": "$t",
+          "include": "agentdataMeeting",
+          "aboutType": "Work",
+          "$t": {"property": "title"},
+          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+          "$0": {"addLink": "identifiedBy", "property": "value"},
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Meeting",
+              "embedded": false
+            }
+          }
+        },
+        {
+          "when": null,
+          "aboutEntity": "?thing",
+          "aboutType": "Meeting",
+          "pendingResources": {"_:agent": {"link": "agent", "resourceType": "Meeting"}},
+          "about": "_:agent",
+          "include": "agentdataMeeting",
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        }
+      ],
       "_spec": [
         {
           "source": {
-            "111": {"ind1": " ", "ind2": "0", "subfields": [
+            "111": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Manya K'Omalowete a Djonga,"},
               {"d": "1950-"}
             ]}},
-          "FIXME:result": {
+          "result": {
             "mainEntity": {
-              "agent": {
-                "@type": "Meeting", "name":  "Manya K'Omalowete a Djonga", "birthYear":  "1950"
-              }
+              "@type": "Meeting",
+              "name": "Manya K'Omalowete a Djonga,",
+              "date":  ["1950-"]
             }
           }
         }
