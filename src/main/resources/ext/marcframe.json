@@ -532,11 +532,16 @@
         {
           "when": "i2=7 & $2",
           "NOTE": "if possible to revert to, prefer this form over i2=0",
-          "include": ["termbase_noid", "termid"]
-        },
-        {
-          "when": "i2=4",
-          "include": ["termbase_noid"]
+          "match": [
+            {
+              "when": "$2=sao | $2=saof | $2=gmpfc | $2=barn",
+              "include": ["termbase_noid", "termid"]
+            },
+            {
+              "when": null,
+              "include": ["termbase_noid"]
+            }
+          ]
         },
         {
           "when": "i2=0",
@@ -545,8 +550,28 @@
           "TODO": "Check if the two above are sound; better to match on uriTemplate on revert!"
         },
         {
+          "when": "i2=1",
+          "include": ["termbase_noid"],
+          "uriTemplate": "http://id.loc.gov/authorities/childrensSubjects/{prefLabel}"
+        },
+        {
+          "when": "i2=2",
+          "include": ["termbase_noid"],
+          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
+        },
+        {
+          "when": "i2=3",
+          "include": ["termbase_noid"],
+          "TODO:uriTemplate": "https://id.nlm.nih.gov/mesh/",
+          "NOTE:uriTemplate": "beta sparql endpoint. Use this?"
+        },
+        {
+          "when": "i2=4 | i2=5 | i2=6",
+          "include": ["termbase_noid"]
+        },
+        {
           "when": null,
-          "include": ["termbase_noid", "termid"]
+          "include": ["termbase_noid"]
         }
       ]
     },
@@ -5521,7 +5546,7 @@
               "subject": [
                 {
                   "@type": "Topic",
-                  "@id": "https://id.kb.se/term/mesh/Cardiovascular%20Physiology--Congresses.",
+                  "@id": "http://id.loc.gov/authorities/label/Cardiovascular%20Physiology--Congresses.",
                   "prefLabel": "Cardiovascular Physiology--Congresses.",
                   "termComponentList": [
                     {
@@ -5548,7 +5573,7 @@
             "650": {"ind1": " ", "ind2": "7",
               "subfields": [{"a": "rye"}, {"2": "agrovoc"}]}
           },
-          "result": {"mainEntity": {
+          "TODO:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
@@ -5810,7 +5835,7 @@
               "embedded": true
             },
             "_:agent": {
-              "FIXME:resourceType": "When ind1=3 change resourceType to Family. Concerns ~00000,16 ‰ of bib data",
+              "FIXME:resourceType": "When ind1=3 change resourceType to Family. Record-count: 291.",
               "about": "_:contribution",
               "link": "agent",
               "resourceType": "Person",
@@ -7461,6 +7486,134 @@
               ]
             }
           }
+        },
+        {
+          "source": {
+            "100": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Lucifer,"},
+              {"t": "Skuggpojken"},
+              {"l": "Norska"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "title": "Skuggpojken",
+              "contribution": [
+                {
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Person", "name":  "Lucifer,"
+                  }
+                }
+              ],
+              "language": {
+                "@type": "Language",
+                "label": "Norska"
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "100": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Sokrates,"},
+              {"d": "470 eller 469 f.Kr-399 f.Kr."}
+            ]}},
+          "FIXME:result": {
+            "mainEntity": {
+              "@type": "Person",
+              "name":  "Sokrates",
+              "birthyear": "470 eller 469 f.Kr",
+              "deathyear": "399 f.Kr."
+            }
+          }
+        },
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "p'Bitek, Okot"},
+              {"d": "1931-1982"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Person",
+              "familyName":  "p'Bitek",
+              "givenName": "Okot",
+              "birthYear": "1931",
+              "deathYear": "1982"
+            }
+          }
+        },
+        {
+          "source": {
+            "100": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Gustav"},
+              {"b": "I,"},
+              {"c": "kung av Sverige"},
+              {"d": "1496-1560"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Person",
+              "name":  "Gustav",
+              "marc:numeration": "I,",
+              "marc:titleOther": ["kung av Sverige"],
+              "birthYear": "1496",
+              "deathYear": "1560"
+            }
+          }
+        },
+        {
+          "source": {
+            "100": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Diana"},
+              {"c": "prinsessa av Wales,"},
+              {"d": "1961-1997"},
+              {"c": "(ande)"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Person",
+              "name":  "Diana",
+              "marc:titleOther": ["prinsessa av Wales,", "(ande)"],
+              "birthYear": "1961",
+              "deathYear": "1997"
+            }
+          }
+        },
+        {
+          "source": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Eliot, T.S."},
+              {"q": "(Thomas Stearns)"},
+              {"d": "1888-1965"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Person",
+              "familyName":  "Eliot",
+              "givenName": "T.S.",
+              "marc:fullerFormName": "(Thomas Stearns)",
+              "birthYear": "1888",
+              "deathYear": "1965"
+            }
+          }
+        },
+        {
+          "source": {
+            "100": {"ind1": "3", "ind2": " ", "subfields": [
+              {"a": "Nilssom (släkt: "},
+              {"d": "1700-talet"},
+              {"c": "Krylbo, Sverige)"}
+            ]}},
+          "FIXME:result": {
+            "mainEntity": {
+              "@type": "Family",
+              "name":  "Nilsson (släkt:",
+              "date": "1700-talet",
+              "marc:titleOther": ["Krylbo, Sverige)"]
+            }
+          }
         }
       ]
     },
@@ -7468,10 +7621,9 @@
       "match": [
         {
           "when": "$t & i1=1",
-          "include": "agentdataOrganization",
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
           "aboutType": "Work",
           "$t": {"property": "title"},
-          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
           "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
             "_:contribution": {
@@ -7484,15 +7636,16 @@
               "link": "agent",
               "resourceType": "Jurisdiction",
               "embedded": false
-            }
+            },
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         },
         {
           "when": "$t",
-          "include": "agentdataOrganization",
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
           "aboutType": "Work",
           "$t": {"property": "title"},
-          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
           "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
             "_:contribution": {
@@ -7505,14 +7658,20 @@
               "link": "agent",
               "resourceType": "Organization",
               "embedded": false
-            }
+            },
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         },
         {
           "when": "i1=1",
           "aboutEntity": "?thing",
           "aboutType": "Jurisdiction",
-          "pendingResources": {"_:agent": {"link": "agent", "resourceType": "Jurisdiction"}},
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Jurisdiction"},
+            "_:isPartOf": {"link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"addLink": "place", "resourceType": "Place"}
+          },
           "about": "_:agent",
           "include": "agentdataOrganization",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
@@ -7521,10 +7680,104 @@
           "when": null,
           "aboutEntity": "?thing",
           "aboutType": "Organization",
-          "pendingResources": {"_:agent": {"link": "agent", "resourceType": "Organization"}},
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Organization"},
+            "_:isPartOf": {"link": "isPartOf", "resourceType": "Organization"},
+            "_:place": {"addLink": "place", "resourceType": "Place"}
+          },
           "about": "_:agent",
           "include": "agentdataOrganization",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        }
+      ],
+      "_spec": [
+        {
+          "source": {
+            "110": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Europeiska unionen"},
+              {"b": " Regionkommittén"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Organization",
+              "marc:subordinateUnit" : ["Regionkommittén"],
+              "isPartOf": {
+                "@type": "Organization",
+                "name": "Europeiska unionen"
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "110": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Sverige"},
+              {"b": "Armén"},
+              {"b": "Dalregementet"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Jurisdiction",
+              "marc:subordinateUnit" : ["Armén", "Dalregementet"],
+              "isPartOf": {
+                "@type": "Jurisdiction",
+                "name": "Sverige"
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "110": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Förenta staterna"},
+              {"b": "Congress"},
+              {"n": "(64: )"},
+              {"d": "1915-1916)"},
+              {"c": "Washington DC"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Jurisdiction",
+              "marc:subordinateUnit" : ["Congress"],
+              "isPartOf": {
+                "@type": "Jurisdiction",
+                "name": "Förenta staterna"
+              },
+              "marc:numberOfPartSectionMeeting": ["(64: )"],
+              "date": ["1915-1916)"],
+              "place": [{
+                "@type": "Place",
+                "label": "Washington DC"
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "110": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Great Britain"},
+              {"t": "Treaties, etc."},
+              {"g": "Poland"},
+              {"d": "1948 Mar.2."},
+              {"k": "Protocols, etc"},
+              {"d": "1951 Mar.6"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "title": "Treaties, etc.",
+              "marc:formSubheading": ["Protocols, etc"],
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Jurisdiction",
+                  "name": "Great Britain",
+                  "date": ["1948 Mar.2.", "1951 Mar.6"],
+                  "comment": ["Poland"]
+                }
+              }]
+            }
+          }
         }
       ]
     },
