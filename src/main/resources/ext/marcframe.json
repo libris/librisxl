@@ -377,6 +377,7 @@
       "$d": {
         "about": "_:agent",
         "TODO:property": "lifeSpan",
+        "FIXME:splitValuePattern": "Make the regex stricter, e.g. BC and F.Kr.",
         "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
         "splitValueProperties": ["birthYear", "deathYear"],
         "rejoin": "-",
@@ -6512,6 +6513,14 @@
       "repeatable": false
     },
 
+    "010" : {},
+    "014" : {},
+    "016" : {},
+    "020" : {},
+    "022" : {},
+    "024" : {},
+    "031" : {},
+    "034" : {},
     "035" : {"inherit": "bib"},
     "040" : {
       "inherit": "bib",
@@ -6573,14 +6582,22 @@
     "046" : {
         "TODO": "parseDateTimeUsingFormatHints",
         "$f": {"property": "birthDate"},
-        "$g": {"property": "deathDate"}
+        "$g": {"property": "deathDate"},
+        "$2": {"property": "marc:sourceOfDateScheme"},
+        "TODO:edtf": "?"
     },
+    "050" : {},
+    "052" : {},
+    "053" : {},
+    "055" : {},
+    "060" : {},
     "065" : {
       "inherit": "bib:084",
       "aboutEntity": "?thing",
       "addLink": "broadMatch"
     },
-
+    "070" : {},
+    "072" : {},
     "073": {
       "TODO": "ignore entirely (should be removed)",
       "ignoreOnRevertInFavourOf": "550",
@@ -6590,7 +6607,8 @@
       "$z": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "code"},
       "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
     },
-
+    "075" : {},
+    "080" : {},
     "082" : {
       "inherit": "bib",
       "aboutEntity": "?thing"
@@ -6605,7 +6623,9 @@
         "Work": {"addLink": "subject"}
       }
     },
-
+    "086" : {},
+    "087" : {},
+    "094" : {"ignored": true, "NOTE:record-count": 4, "NOTE": "Obsolete"},
     "100" : {
       "match": [
         {
@@ -6691,6 +6711,7 @@
       "aboutEntity": "?thing", "link": null, "resourceType": null,
       "aboutType": "Work"
     },
+    "147": {"ignored": true},
     "148" : {
       "include": "termbase",
       "dependsOn": ["040", "042"],
@@ -6804,7 +6825,45 @@
       "aboutType": "GenreSubdivision",
       "$v": {"property": "prefLabel"}
     },
-
+    "260": {},
+    "336": {},
+    "348": {},
+    "360": {},
+    "368": {
+      "addLink": "marc:otherAttributesOfPersonOrCorporateBody",
+      "$a": {"addProperty": "marc:typeOfCorporateBody"},
+      "$c": {"addProperty": "marc:otherDesignation"},
+      "$d": {"addProperty": "marc:titleOfPerson"},
+      "$2": {"property": "marc:source"}
+    },
+    "370": {},
+    "371": {},
+    "372": {},
+    "373": {},
+    "374": {
+      "TODO:about": "_:agent",
+      "addLink": "hasOccupation", "resourceType": "Occupation",
+      "$a": {"property": "label"},
+      "$2": {"property": "marc:sourceOfTerm"}
+    },
+    "375": {
+      "TODO:about": "_:agent",
+      "$a": {"property": "gender"}
+    },
+    "376": {},
+    "377": {},
+    "378": {
+      "TODO": "Depends on bib 100, 700 and auth 100 $q 'marc:fullerFormName'. See mads:fullNameElement ",
+      "$q": {"property": "marc:fullerFormName"}
+    },
+    "380": {},
+    "381": {},
+    "382": {},
+    "383": {},
+    "384": {},
+    "385": {},
+    "386": {},
+    "388": {},
     "400": {
       "TODO:remnants-of-inherit": "bib:100",
       "TODO": "Ensure bib 100 does not match with auth 400",
