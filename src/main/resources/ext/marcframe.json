@@ -6916,7 +6916,8 @@
       "ignored": true,
       "TODO": "alternativeForm a Work (like a structured altLabel)"
     },
-
+    "447": {"ignored": true},
+    "448": {},
     "450" : {
       "$a": {"addProperty": "altLabel"},
       "match": [
@@ -6931,7 +6932,13 @@
       ],
       "TODO": "whatIs w||e"
     },
+    "451" : {},
     "455" : {"inherit": "450"},
+    "462" : {"ignored": true},
+    "480" : {},
+    "481" : {},
+    "482" : {"ignored": true},
+    "485" : {},
     "500": {
       "TODO:remnants-of-inherit": "bib:100",
       "include": ["agentdata", "splicedworkentity"],
@@ -6944,6 +6951,9 @@
     },
     "510" : {"inherit": "bib:110", "aboutEntity": null, "addLink": "seeAlso"},
     "511" : {"inherit": "bib:111", "aboutEntity": null, "addLink": "seeAlso"},
+    "530" : {},
+    "547" : {"ignored": true},
+    "548" : {},
     "550" : {
       "include": ["termbase", "relation_from_w"],
       "resourceType": "Topic",
@@ -7001,11 +7011,27 @@
       "resourceType": "GenreForm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
+    "562" : {"ignored": true},
     "580" : {
       "include": ["relation_from_w"],
       "resourceType": "Subdivision",
       "$x": {"property": "prefLabel"}
     },
+    "581" : {"ignored": true},
+    "582" : {"ignored": true},
+    "585" : {},
+    "599" : {"ignored": true},
+    "640" : {"ignored": true},
+    "641" : {"ignored": true},
+    "642" : {"ignored": true},
+    "643" : {"ignored": true},
+    "644" : {"ignored": true},
+    "645" : {"ignored": true},
+    "646" : {"ignored": true},
+    "663" : {},
+    "664" : {"ignored": true},
+    "665" : {},
+    "666" : {},
     "667" : {
       "aboutEntity": "?record",
       "$a": {"addProperty": "editorialNote"}
@@ -7019,9 +7045,12 @@
       "$b": {"property": "citation"},
       "$u": {"property": "uri"}
     },
+    "672" : {"ignored": true, "NOTE": "No attempt to code"},
+    "673" : {"ignored": true, "NOTE": "No attempt to code"},
     "675" : {
       "$a": {"property": "label"}
     },
+    "677" : {"ignored": true},
     "678" : {
       "TODO:i1": {},
       "$a": {"addProperty": "note"}
@@ -7029,6 +7058,8 @@
     "680" : {
       "$i": {"addProperty": "scopeNote"}
     },
+    "681" : {"ignored": true},
+    "682" : {"ignored": true},
     "688" : {
       "$a": {"addProperty": "historyNote"}
     },
@@ -7037,6 +7068,11 @@
       "ignored": true,
       "TODO": "exactMatch a Person (external system)"
     },
+    "710" : {},
+    "711" : {},
+    "730" : {},
+    "747" : {"ignored": true},
+    "748" : {"ignored": true},
 
     "750" : {
       "i1": null,
@@ -7055,6 +7091,7 @@
       ],
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html"
     },
+    "751" : {},
     "755" : {
       "include": ["subjectbase", "termbase_noid"],
       "i1": null,
@@ -7063,6 +7100,7 @@
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
     },
+    "762" : {"ignored": true},
     "780" : {
       "inherit": "750",
       "$x": {"property": "prefLabel"}
