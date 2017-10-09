@@ -2578,7 +2578,6 @@
     },
 
     "017": {"NOTE:record-count": 2408, "ignored": true},
-
     "018": {"NOTE:record-count": 0, "ignored": true},
 
     "020": {
@@ -2678,7 +2677,7 @@
         "property": "marc:internationalInterest",
         "tokenMap": {"0": true, "1": false}, "marcDefault": " "
       },
-      "$l": {"property": "ISSNL", "repeatable": false},
+      "$l": {"property": "marc:issnL"},
       "$m": {"addProperty": "marc:canceledIssnL"},
       "$2": {"TODO:link": "typeNote"},
       "$y": {"TODO": "inherit:$z + specific: marc:incorrectIssn"},
