@@ -7119,6 +7119,7 @@
       "inherit": "755",
       "$v": {"property": "prefLabel"}
     },
+    "788" : {"ignored": true},
 
     "856": {
       "inherit": "bib",
@@ -7132,7 +7133,13 @@
         {"when": "i2=2", "addLink": "relatedTo"},
         {"when": "i2=8", "addLink": "seeAlso"}
       ]
-    }
+    },
+    "880": {"ignored": true, "NOTE:record-count": 15},
+    "883": {},
+    "884": {},
+    "885": {},
+    "886": {},
+    "887": {}
   },
 
   "hold": {
