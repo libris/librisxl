@@ -71,10 +71,26 @@ class ElasticSearch {
                 contentType = contentType0
             }
 
-            return restClient.performRequest(method, path,
-                    Collections.<String, String> emptyMap(),
-                    body,
-                    new BasicHeader('content-type', contentType))
+            Response response = null
+            int backOffTime = 0
+            while (response == null || response.getStatusLine().statusCode == 429) {
+                if (backOffTime != 0) {
+                    log.info("Bulk indexing request to ElasticSearch was throttled (http 429) waiting $backOffTime seconds before retry.")
+                    Thread.sleep(backOffTime * 1000)
+                }
+
+                response = restClient.performRequest(method, path,
+                        Collections.<String, String> emptyMap(),
+                        body,
+                        new BasicHeader('content-type', contentType))
+
+                if (backOffTime == 0)
+                    backOffTime = 1
+                else
+                    backOffTime *= 2
+            }
+
+            return response
         }
         finally {
             restClient?.close()
