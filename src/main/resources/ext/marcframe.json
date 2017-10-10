@@ -6538,7 +6538,19 @@
     "016" : {},
     "020" : {},
     "022" : {},
-    "024" : {},
+    "024" : {
+      "inherit": "bib",
+      "i1": {
+        "property": "@type",
+        "tokenMap": {
+          "7": "Identifier",
+          "8": "Identifier"
+        },
+        "TODO:definedElsewhereToken": "7"
+      },
+      "i2": null
+    },
+    
     "031" : {},
     "034" : {},
     "035" : {"inherit": "bib"},
