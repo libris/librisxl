@@ -377,6 +377,7 @@
       "$d": {
         "about": "_:agent",
         "TODO:property": "lifeSpan",
+        "FIXME:splitValuePattern": "Make the regex stricter, e.g. BC and F.Kr.",
         "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
         "splitValueProperties": ["birthYear", "deathYear"],
         "rejoin": "-",
@@ -2832,18 +2833,18 @@
 
     "033": {
       "NOTE:record-count": 852,
-      "TODO": "should be used more? See also free text form in 518",
+      "TODO:revert": "To ensure 033 and 518 will not be mixed up when reverting",
       "aboutEntity": "?work",
-      "addLink": "eventContentOf",
+      "addLink": "capture",
       "TODO:i1": {"NOTE": "0: one, 1: multiple, 2: interval"},
       "i2": {
         "property": "@type",
         "overwrite": true,
         "tokenMap": {
-          " ": "Event",
-          "0": "RecordingEvent",
-          "1": "BroadcastEvent",
-          "2": "DiscoveryEvent"
+          " ": "Capture",
+          "0": "RecordingCapture",
+          "1": "BroadcastCapture",
+          "2": "DiscoveryCapture"
         }
       },
       "$a": {
@@ -2854,7 +2855,27 @@
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
       "$2": {"property": "marc:placeCodeSource"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": [{"033": {"ind1": " ", "ind2": "0", "subfields": [{"a": "198407--"}, {"b": "5754"}, {"c": "L7"}]}}],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "capture": [
+                  {
+                    "@type": "RecordingCapture",
+                    "date": ["198407--"],
+                    "marc:geographicClassificationAreaCode": ["5754"],
+                    "marc:geographicClassificationSubareaCode": ["L7"]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
 
     "034": {
@@ -4584,6 +4605,7 @@
       "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "Note", "property": "label"}},
     "501": {},
     "502": {
+      "aboutEntity": "?work",
       "addLink": "dissertation", "resourceType": "Dissertation",
       "embedded": true,
       "$a": {"property": "note"},
@@ -4592,7 +4614,15 @@
       "$d": {"property": "date"},
       "$g": {"property": "comment"}
     },
-    "504": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}},
+    "504": {
+      "$a": {
+        "aboutEntity": "?thing",
+        "addLink": "hasNote",
+        "resourceType": "BibliographyNote",
+        "property": "label"
+      },
+      "NOTE:was": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}}
+    },
 
     "505": {
       "TOOO:i1": {},
@@ -4654,7 +4684,7 @@
       "$a": {"addProperty": "acquisitionTerms"}
     },
 
-    "507": {},
+    "507": {"$a": {"aboutEntity": "?thing", "property": "scaleNote", "NOTE:b": "concatenate with a, record-count: 2"}},
     "508": {"$a": {"aboutEntity": "?thing", "addProperty": "creditsNote"}},
 
     "510": {
@@ -4673,24 +4703,44 @@
       }
     },
 
-    "513": {},
-    "514": {},
-    "515": {},
-    "516": {},
+    "513": {
+      "addLink": "hasNote",
+      "resourceType": "marc:TypeOfReportAndPeriodCoveredNote",
+      "aboutEntity": "?thing",
+      "$a": {"property": "label"},
+      "$b": {"property": "marc:periodCovered", "TODO": "Concatenate with $b"}
+    },
+    "514": {
+      "aboutEntity": "?thing",
+      "$a": {"property": "marc:dataQualityNote"}
+    },
+    "515": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "IssuanceInformationNote",
+      "$a": {"property": "label"}
+    },
+    "516": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:TypeOfComputerFileOrDataNote", 
+      "$a": {"property": "label"},
+      "NOTE:i1": "ignore"
+    },
     "518": {
       "aboutEntity": "?work",
-      "addLink": "eventContentOf",
-      "resourceType": "Event",
+      "addLink": "capture",
+      "resourceType": "Capture",
       "$a": {"property": "label"},
       "$o": {"addProperty": "date"},
       "$d": {"addProperty": "comment"},
-      "TODO:d": "Change $d to date. Is not a comment",
+      "TODO:d": "Change $d to date?",
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
 
     "520": {
-      "TODO:aboutEntity": "Could be ?work, ?thing and/or ?hold",
+      "TODO:aboutEntity": "Could be ?work, ?thing and/or ?hold. bf2 maps to ?work",
       "aboutEntity": "?thing",
       "TOOO:i1": {},
       "addLink": "summary",
@@ -4726,12 +4776,21 @@
       "embedded": true,
       "resourceType": "IntendedAudience",
       "TOOO:i1": {},
+      "$a": {"property": "label"},
+      "TODO:b": {"link": "source", "resourceType": "Source", "property": "label", "FIXME:peningResource": "Append to intendedAudience"}
+    },
+    "522": {
+      "aboutEntity": "?work",
+      "addLink": "geographicCoverage",
+      "resourceType": "GeographicCoverage", 
       "$a": {"property": "label"}
     },
-    "522": {},
     "524": {},
-    "525": {},
-    "526": {},
+    "525": {
+      "aboutEntity": "?thing",
+      "$a": {"addProperty": "supplementaryContentNote", "TODO": "supplementaryContentNote or supplementaryContent?"}
+    },
+    "526": {"NOTE:record-count": 16, "ignored": true},
 
     "530": {
       "addLink": "hasInstance",
@@ -4786,7 +4845,19 @@
 
     "534": {},
     "535": {},
-    "536": {},
+    "536": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:FundingInformationNote",
+      "$a": {"property": "marc:textOfNote"},
+      "$b": {"addProperty": "marc:contractNumber"},
+      "$c": {"addProperty": "marc:grantNumber"},
+      "$d": {"addProperty": "marc:undifferentiatedNumber"},
+      "$e": {"addProperty": "marc:programElementNumber"},
+      "$f": {"addProperty": "marc:projectNumber"},
+      "$g": {"addProperty": "marc:taskNumber"},
+      "$h": {"addProperty": "marc:workUnitNumber"}
+    },
     "538": {
       "aboutEntity": "?thing",
       "addLink": "systemRequirement",
@@ -4798,22 +4869,90 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "TODO:$5": "Institution to which field applies (NR)"
     },
-    "540": {},
+    "540": {
+      "aboutEntity": "?thing", "addLink": "usageAndAccessPolicy", "resourceType": "UsePolicy", "repeatable": false,
+      "NOTE": "Formathandboken: 'Används normalt ej i bibliografiska poster'",
+      "pendingResources": {
+        "_:source": {"link": "source", "resourceType": "Source"}
+      },
+      "$a": {"property": "label"},
+      "$c": {"about": "_:source", "property": "label"},
+      "$u": {"property": "marc:uniformResourceIdentifier", "TODO": "Map to uri instead?"},
+      "_spec": [
+        {
+          "source": {
+            "540": {"ind1": " ", "ind2": " ",
+              "subfields": [
+                {"a": "Current copyright fee: GBP12.50"},
+                {"c": "19"} ]}},
+          "result": {"mainEntity": {
+            "@type": "Instance",
+            "usageAndAccessPolicy":[
+              {
+                "@type": "UsePolicy",
+                "label": "Current copyright fee: GBP12.50",
+                "source": {
+                  "@type": "Source",
+                  "label": "19"
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "source": [
+            {"540": {"ind1": " ", "ind2": " ", "subfields": [{"a": "YYYY"} ]}},
+            {"540": {"ind1": " ", "ind2": " ", "subfields": [{"a": "XXXX"} ]}}],
+          "result": {"mainEntity": {
+            "@type": "Instance",
+            "usageAndAccessPolicy":[
+            {
+              "@type": "UsePolicy",
+              "label": "YYYY"
+            },
+              {
+                "@type": "UsePolicy",
+                "label": "XXXX"
+              }]
+          }}
+        }
+      ]
+    },
     "541": {},
-    "542": {},
+    "542": {"NOTE:record-count": 0, "ignored": true},
     "544": {
       "addLink": "hasNote",
-      "resourceType": "marc:RelatedMaterialNote",
+      "resourceType": "marc:LocationOfOtherArchivalMaterialsNote",
       "$a": {"addProperty": "label"}
     },
-    "545": {},
+    "545": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:BiographicalOrHistoricalData",
+      "TODO:i1": "'0': BiographicalDataNote, '1': AdministrativeHistoryNote",
+      "$a": {"property": "label"}
+    },
     "546": {"aboutEntity": "?work", "$a": {"addProperty": "languageNote"}},
-    "547": {},
+    "547": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:FormerTitleComplexityNote",
+      "$a": {"property": "label"}
+    },
 
     "550": {},
-    "552": {},
-    "555": {},
-    "556": {},
+    "552": {"NOTE:record-count": 2, "ignored": true},
+    "555": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:CumulativeIndexFindingAidsNote",
+      "$a": {"property": "label"},
+      "$c": {"property": "marc:degreeOfControl", "NOTE": "concatenate with $a", "NOTE:record-count": 2}
+    },
+    "556": {"NOTE:record-count": 7,
+      "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$z": {"ignored": true}
+    },
     "561": {},
     "562": {
       "addLink": "hasItem",
@@ -4827,15 +4966,34 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "563": {},
-    "565": {},
-    "567": {},
-    "580": {},
-    "581": {},
+    "565": {"NOTE:record-count": 2, "ignored": true},
+    "567": {"NOTE:record-count": 0, "ignored": true},
+    "580": {"$a": {"aboutEntity": "?work", "addLink": "hasNote", "resourceType": "marc:LinkingEntryComplexityNote", "property": "label"}},
+    "581": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:PublicationsAboutDescribedMaterialsNote",
+      "$a": {"property": "marc:publicationsAboutDescribedMaterialsNote"},
+      "$z": {"property": "marc:internationalStandardBookNumber"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "NOTE:i1": "ignore"
+    },
     "583": {},
-    "584": {},
-    "585": {},
-    "586": {},
-    "588": {"$a": {"aboutEntity": "?record", "addProperty": "sourceNote"}},
+    "584": {"NOTE:record-count": 0, "ignored": true},
+    "585": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:ExhibitionsNote",
+      "$a": {"property": "label"}
+    },
+    "586": {"$a": {"aboutEntity": "?thing", "addProperty": "awardsNote"}},
+    "588": {
+      "aboutEntity": "?record",
+      "addLink": "hasNote",
+      "resourceType": "DescriptionSourceNote",
+      "$a": {"property": "label"},
+      "NOTE:i1": "ignore"
+    },
     "590": {},
     "599": {
       "TOOO:i1": {},
@@ -6565,6 +6723,14 @@
       "repeatable": false
     },
 
+    "010" : {},
+    "014" : {},
+    "016" : {},
+    "020" : {},
+    "022" : {},
+    "024" : {},
+    "031" : {},
+    "034" : {},
     "035" : {"inherit": "bib"},
     "040" : {
       "inherit": "bib",
@@ -6626,14 +6792,22 @@
     "046" : {
         "TODO": "parseDateTimeUsingFormatHints",
         "$f": {"property": "birthDate"},
-        "$g": {"property": "deathDate"}
+        "$g": {"property": "deathDate"},
+        "$2": {"property": "marc:sourceOfDateScheme"},
+        "TODO:edtf": "?"
     },
+    "050" : {},
+    "052" : {},
+    "053" : {},
+    "055" : {},
+    "060" : {},
     "065" : {
       "inherit": "bib:084",
       "aboutEntity": "?thing",
       "addLink": "broadMatch"
     },
-
+    "070" : {},
+    "072" : {},
     "073": {
       "TODO": "ignore entirely (should be removed)",
       "ignoreOnRevertInFavourOf": "550",
@@ -6643,7 +6817,8 @@
       "$z": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "code"},
       "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
     },
-
+    "075" : {},
+    "080" : {},
     "082" : {
       "inherit": "bib",
       "aboutEntity": "?thing"
@@ -6658,7 +6833,9 @@
         "Work": {"addLink": "subject"}
       }
     },
-
+    "086" : {},
+    "087" : {},
+    "094" : {"ignored": true, "NOTE:record-count": 4, "NOTE": "Obsolete"},
     "100" : {
       "match": [
         {
@@ -6744,6 +6921,7 @@
       "aboutEntity": "?thing", "link": null, "resourceType": null,
       "aboutType": "Work"
     },
+    "147": {"ignored": true},
     "148" : {
       "include": "termbase",
       "dependsOn": ["040", "042"],
@@ -6857,7 +7035,45 @@
       "aboutType": "GenreSubdivision",
       "$v": {"property": "prefLabel"}
     },
-
+    "260": {},
+    "336": {},
+    "348": {},
+    "360": {},
+    "368": {
+      "addLink": "marc:otherAttributesOfPersonOrCorporateBody",
+      "$a": {"addProperty": "marc:typeOfCorporateBody"},
+      "$c": {"addProperty": "marc:otherDesignation"},
+      "$d": {"addProperty": "marc:titleOfPerson"},
+      "$2": {"property": "marc:source"}
+    },
+    "370": {},
+    "371": {},
+    "372": {},
+    "373": {},
+    "374": {
+      "TODO:about": "_:agent",
+      "addLink": "hasOccupation", "resourceType": "Occupation",
+      "$a": {"property": "label"},
+      "$2": {"property": "marc:sourceOfTerm"}
+    },
+    "375": {
+      "TODO:about": "_:agent",
+      "$a": {"property": "gender"}
+    },
+    "376": {},
+    "377": {},
+    "378": {
+      "TODO": "Depends on bib 100, 700 and auth 100 $q 'marc:fullerFormName'. See mads:fullNameElement ",
+      "$q": {"property": "marc:fullerFormName"}
+    },
+    "380": {},
+    "381": {},
+    "382": {},
+    "383": {},
+    "384": {},
+    "385": {},
+    "386": {},
+    "388": {},
     "400": {
       "TODO:remnants-of-inherit": "bib:100",
       "TODO": "Ensure bib 100 does not match with auth 400",
@@ -6910,7 +7126,8 @@
       "ignored": true,
       "TODO": "alternativeForm a Work (like a structured altLabel)"
     },
-
+    "447": {"ignored": true},
+    "448": {},
     "450" : {
       "$a": {"addProperty": "altLabel"},
       "match": [
@@ -6925,7 +7142,13 @@
       ],
       "TODO": "whatIs w||e"
     },
+    "451" : {},
     "455" : {"inherit": "450"},
+    "462" : {"ignored": true},
+    "480" : {},
+    "481" : {},
+    "482" : {"ignored": true},
+    "485" : {},
     "500": {
       "TODO:remnants-of-inherit": "bib:100",
       "include": ["agentdata", "splicedworkentity"],
@@ -6938,6 +7161,9 @@
     },
     "510" : {"inherit": "bib:110", "aboutEntity": null, "addLink": "seeAlso"},
     "511" : {"inherit": "bib:111", "aboutEntity": null, "addLink": "seeAlso"},
+    "530" : {},
+    "547" : {"ignored": true},
+    "548" : {},
     "550" : {
       "include": ["termbase", "relation_from_w"],
       "resourceType": "Topic",
@@ -6995,11 +7221,27 @@
       "resourceType": "GenreForm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
+    "562" : {"ignored": true},
     "580" : {
       "include": ["relation_from_w"],
       "resourceType": "Subdivision",
       "$x": {"property": "prefLabel"}
     },
+    "581" : {"ignored": true},
+    "582" : {"ignored": true},
+    "585" : {},
+    "599" : {"ignored": true},
+    "640" : {"ignored": true},
+    "641" : {"ignored": true},
+    "642" : {"ignored": true},
+    "643" : {"ignored": true},
+    "644" : {"ignored": true},
+    "645" : {"ignored": true},
+    "646" : {"ignored": true},
+    "663" : {},
+    "664" : {"ignored": true},
+    "665" : {},
+    "666" : {},
     "667" : {
       "aboutEntity": "?record",
       "$a": {"addProperty": "editorialNote"}
@@ -7013,9 +7255,12 @@
       "$b": {"property": "citation"},
       "$u": {"property": "uri"}
     },
+    "672" : {"ignored": true, "NOTE": "No attempt to code"},
+    "673" : {"ignored": true, "NOTE": "No attempt to code"},
     "675" : {
       "$a": {"property": "label"}
     },
+    "677" : {"ignored": true},
     "678" : {
       "TODO:i1": {},
       "$a": {"addProperty": "note"}
@@ -7023,6 +7268,8 @@
     "680" : {
       "$i": {"addProperty": "scopeNote"}
     },
+    "681" : {"ignored": true},
+    "682" : {"ignored": true},
     "688" : {
       "$a": {"addProperty": "historyNote"}
     },
@@ -7031,6 +7278,11 @@
       "ignored": true,
       "TODO": "exactMatch a Person (external system)"
     },
+    "710" : {},
+    "711" : {},
+    "730" : {},
+    "747" : {"ignored": true},
+    "748" : {"ignored": true},
 
     "750" : {
       "i1": null,
@@ -7049,6 +7301,7 @@
       ],
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html"
     },
+    "751" : {},
     "755" : {
       "include": ["subjectbase", "termbase_noid"],
       "i1": null,
@@ -7057,6 +7310,7 @@
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
     },
+    "762" : {"ignored": true},
     "780" : {
       "inherit": "750",
       "$x": {"property": "prefLabel"}
@@ -7075,6 +7329,7 @@
       "inherit": "755",
       "$v": {"property": "prefLabel"}
     },
+    "788" : {"ignored": true},
 
     "856": {
       "inherit": "bib",
@@ -7088,7 +7343,13 @@
         {"when": "i2=2", "addLink": "relatedTo"},
         {"when": "i2=8", "addLink": "seeAlso"}
       ]
-    }
+    },
+    "880": {"ignored": true, "NOTE:record-count": 15},
+    "883": {},
+    "884": {},
+    "885": {},
+    "886": {},
+    "887": {}
   },
 
   "hold": {
