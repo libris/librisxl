@@ -336,11 +336,12 @@
       "$c": {"about": "_:agent", "addProperty": "marc:titleOther"},
       "$d": {
         "about": "_:agent",
-        "TODO:property": "lifeSpan",
-        "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
-        "splitValueProperties": ["birthYear", "deathYear"],
+        "property": "lifeSpan",
+        "splitValuePattern": "^(\\d+)(?:\\s*-\\s*(\\d+))?$|^(\\d+)-$",
+        "splitValueProperties": ["birthYear", "deathYear", "birthYear"],
         "rejoin": "-",
-        "allowEmpty": true
+        "allowEmpty": true,
+        "punctuationChars": ","
       },
       "$j": {"about": "_:agent", "property": "marc:attributionQualifier"},
       "$q": {"about": "_:agent", "property": "marc:fullerFormName"},
@@ -376,12 +377,12 @@
       "$c": {"about": "_:agent", "addProperty": "marc:titleOther"},
       "$d": {
         "about": "_:agent",
-        "TODO:property": "lifeSpan",
-        "FIXME:splitValuePattern": "Make the regex stricter, e.g. BC and F.Kr.",
-        "splitValuePattern": "(\\d+)(?:\\s*-\\s*(\\d+))?",
-        "splitValueProperties": ["birthYear", "deathYear"],
+        "property": "lifeSpan",
+        "splitValuePattern": "^(\\d+)(?:\\s*-\\s*(\\d+))?$|^(\\d+)-$",
+        "splitValueProperties": ["birthYear", "deathYear", "birthYear"],
         "rejoin": "-",
-        "allowEmpty": true
+        "allowEmpty": true,
+        "punctuationChars": ","
       },
       "$g": {"about": "_:agent", "addProperty": "comment"},
       "$j": {"about": "_:agent", "property": "marc:attributionQualifier"},
@@ -524,6 +525,35 @@
         }
       ]
     },
+    "termbase_noid_with_agent": {
+      "$9": {
+        "addLink": "inCollection",
+        "resourceType": "TermCollection",
+        "property": "code"
+      },
+      "constructProperties": {
+        "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
+      },
+      "match": [
+        {
+          "when": "$v | $x | $y | $z",
+          "$v": {"addLink": "termComponentList",
+            "TODO": "use /term/saogf/{_}, but only if $2=sao",
+            "resourceType": "GenreForm",
+            "property": "prefLabel"},
+          "$x": {"addLink": "termComponentList",
+            "resourceType": "Subdivision",
+            "property": "prefLabel"},
+          "$y": {"addLink": "termComponentList",
+            "resourceType": "Temporal",
+            "property": "prefLabel"},
+          "$z": {"addLink": "termComponentList",
+            "TODO": "use /place/{_}, but only if $2=sao",
+            "resourceType": "Geographic",
+            "property": "prefLabel"}
+        }
+      ]
+    },
     "termbase": {
       "include": ["termbase_noid", "termid"]
     },
@@ -534,7 +564,7 @@
           "NOTE": "if possible to revert to, prefer this form over i2=0",
           "match": [
             {
-              "when": "$2=sao | $2=saof | $2=gmpfc | $2=barn",
+              "when": "$2=sao | $2=saogf | $2=gmgpc | $2=barn | $2=barngf",
               "include": ["termbase_noid", "termid"]
             },
             {
@@ -572,6 +602,54 @@
         {
           "when": null,
           "include": ["termbase_noid"]
+        }
+      ]
+    },
+    "termbase_with_uri_from_i2_with_agent": {
+      "match": [
+        {
+          "when": "i2=7 & $2",
+          "NOTE": "if possible to revert to, prefer this form over i2=0",
+          "match": [
+            {
+              "when": "$2=sao | $2=saogf | $2=gmgpc | $2=barn | $2=barngf",
+              "include": ["termbase_noid_with_agent", "termid"]
+            },
+            {
+              "when": null,
+              "include": ["termbase_noid_with_agent"]
+            }
+          ]
+        },
+        {
+          "when": "i2=0",
+          "include": ["termbase_noid_with_agent"],
+          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}",
+          "TODO": "Check if the two above are sound; better to match on uriTemplate on revert!"
+        },
+        {
+          "when": "i2=1",
+          "include": ["termbase_noid_with_agent"],
+          "uriTemplate": "http://id.loc.gov/authorities/childrensSubjects/{prefLabel}"
+        },
+        {
+          "when": "i2=2",
+          "include": ["termbase_noid_with_agent"],
+          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
+        },
+        {
+          "when": "i2=3",
+          "include": ["termbase_noid_with_agent"],
+          "TODO:uriTemplate": "https://id.nlm.nih.gov/mesh/",
+          "NOTE:uriTemplate": "beta sparql endpoint. Use this?"
+        },
+        {
+          "when": "i2=4 | i2=5 | i2=6",
+          "include": ["termbase_noid_with_agent"]
+        },
+        {
+          "when": null,
+          "include": ["termbase_noid_with_agent"]
         }
       ]
     },
@@ -4836,12 +4914,11 @@
     },
 
     "600": {
-      "include": "subjectbase",
       "aboutEntity": "?work",
       "match": [
         {
           "when": "$t",
-          "include": ["agentdataPersonFamily", "titledetails1xx7xx"],
+          "include": ["termbase_with_uri_from_i2_with_agent", "agentdataPersonFamily", "titledetails1xx7xx", "subjectbase"],
           "pendingResources": {
             "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
             "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
@@ -4851,7 +4928,7 @@
         },
         {
           "when": null,
-          "include": "agentdataPersonFamily",
+          "include": ["termbase_with_uri_from_i2_with_agent", "agentdataPersonFamily", "subjectbase"],
           "addLink": "subject",
           "resourceType": "Person",
           "pendingResources": {
@@ -4859,6 +4936,7 @@
           }
         }
       ],
+      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
@@ -4879,7 +4957,7 @@
                     "agent": {
                       "@type": "Person",
                       "name": "Ovid,",
-                      "date": ["43 B.C.-17 A.D. or 18 A.D."]
+                      "lifespan": "43 B.C.-17 A.D. or 18 A.D."
                   }}
                 }
               ],
@@ -4911,7 +4989,7 @@
                     "@type": "Person",
                     "nameOfTheFamily": "Butler family."
                   },
-                  "subdivision": "Health",
+                  "marc:subdivision": "Health",
                   "@id": "http://id.loc.gov/authorities/names/n85005984",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
@@ -4940,10 +5018,10 @@
                   "agent": {
                     "@type": "Person",
                     "familyName": "Harris",
-                    "givenName": "Andy"
+                    "givenName": "Andy",
+                    "marc:titleOther": ["(Composer)"]
                   },
-                  "marc:titleOther": ["(Composer)"],
-                  "subdivision": "Travel",
+                  "marc:subdivision": "Travel",
                   "geographic": ["Morocco", "Marrakech"],
                   "inScheme": {
                     "@id": "http://id.loc.gov/authorities/names",
@@ -4975,7 +5053,7 @@
                     "birthYear": "1929",
                     "deathYear": "1999"
                   },
-                  "subdivision": ["Criticism and interpretation", "History"],
+                  "marc:subdivision": ["Criticism and interpretation", "History"],
                   "temporal": "21st century",
                   "inScheme": {
                     "@id": "http://id.loc.gov/authorities/names",
@@ -5015,15 +5093,15 @@
                   },
                   "title": "Sonatas",
                   "partNumber": "K. 492",
-                  "musicMedium": "harpsichord",
+                  "musicMedium": ["harpsichord"],
                   "musicKey": "D major;" ,
                   "temporal": "21st century"
                 }
               ],
               "inScheme": {
-                "@id": "http://id.loc.gov/authorities/names",
+                "@id": "https://id.kb.se/term/lcsh",
                 "@type": "ConceptScheme",
-                "code": "lsch"
+                "code": "lcsh"
               }
             }
           }}
@@ -5049,7 +5127,7 @@
                   "titleOther": ["Chief,", "(Spirit)"],
                   "@id": "http://id.loc.gov/authorities/names/n81020634",
                   "inScheme": {
-                    "@id": "http://id.loc.gov/authorities/names",
+                    "@id": "https://id.kb.se/term/lcsh",
                     "@type": "ConceptScheme",
                     "code": "lcsh"
                   }
@@ -5137,43 +5215,49 @@
       ]
     },
     "610": {
-      "include": "subjectbase",
       "aboutEntity": "?work",
-      "addLink": "subject",
-      "resourceType": "Organization",
       "i1": {"marcDefault": "2"},
       "match": [
         {
-          "when": "$x",
-          "include": "uri_from_i2",
-          "$a": {"addLink": "termComponentList", "resourceType": "Organization", "property": "name"},
-          "$x": {"addLink": "termComponentList", "resourceType": "Subdivision", "property": "prefLabel"}
+          "when": "i1=1 & $t",
+          "include": ["agentdataOrganization", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "pendingResources": {
+            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
+            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "embedded": false}
+          },
+          "$t": {"about": "_:work", "property": "title"}
         },
         {
-          "when": "i1=0",
-          "include": "uri_from_i2",
-          "$a": {
-            "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
-            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
-            "required": true
-          }
+          "when": "$t",
+          "include": ["agentdataOrganization", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "pendingResources": {
+            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
+            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "embedded": false}
+          },
+          "$t": {"about": "_:work", "property": "title"}
         },
         {
           "when": "i1=1",
-          "include": "uri_from_i2",
-          "TODO": "name of administrative unit",
-          "$a": {"property": "name", "required": true}
-        },
-        {
-          "when": "i1=2",
-          "$a": {"property": "name", "required": true}
+          "include": ["agentdataOrganization", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "addLink": "subject",
+          "resourceType": "Jurisdiction",
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Jurisdiction"}
+          }
         },
         {
           "when": null,
-          "include": "uri_from_i2"
+          "include": ["agentdataOrganization", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "addLink": "subject",
+          "resourceType": "Organization",
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Organization"}
+          }
         }
       ],
-      "$a": {"property": "name", "required": true},
+      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
@@ -5193,6 +5277,7 @@
                     {"@type": "Organization", "name": "Kungl. biblioteket"},
                     {"@type": "Subdivision", "prefLabel": "samlingar"}
                   ],
+                  "prefLabel" : "samlingar",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/sao",
                     "@type": "ConceptScheme",
@@ -5292,11 +5377,32 @@
       ]
     },
     "611": {
-      "TOOO:i1": {},
-      "TOOO:i2": {},
-      "inherit": "111",
       "aboutEntity": "?work",
-      "addLink": "subject", "resourceType": "Meeting",
+      "i1": {"marcDefault": "2"},
+      "match": [
+        {
+          "when": "$t",
+          "include": ["agentdataOrganization", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "pendingResources": {
+            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
+            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting", "embedded": false},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$t": {"about": "_:work", "property": "title"}
+        },
+        {
+          "when": null,
+          "include": ["agentdataOrganization", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "addLink": "subject",
+          "resourceType": "Meeting",
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Meeting"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          }
+        }
+      ],
+      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
@@ -5690,27 +5796,26 @@
     },
 
     "655" : {
-      "include": ["subjectbase", "termbase_noid"],
+      "include": ["subjectbase", "termbase_with_uri_from_i2"],
       "aboutEntity": "?work",
       "addLink": "genreForm",
       "resourceType": "GenreForm",
-      "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "_spec": [
         {
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Deckare"}, {"2": "saogf"}]}},
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "subject": [
+              "genreForm": [
                 {
                   "@type": "GenreForm",
                   "@id": "https://id.kb.se/term/saogf/Deckare",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/saogf",
                     "@type": "ConceptScheme",
-                    "code": "saogf",
-                    "prefLabel": "Deckare"
-                  }
+                    "code": "saogf"
+                  },
+                  "prefLabel": "Deckare"
                 }
               ]
             }
@@ -5718,19 +5823,19 @@
         },
         {
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Deckare"}, {"2": "barngf"}]}},
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "subject": [
+              "genreForm": [
                 {
                   "@type": "GenreForm",
                   "@id": "https://id.kb.se/term/barngf/Deckare",
                   "inScheme": {
                     "@type": "ConceptScheme",
                     "@id": "https://id.kb.se/term/barngf",
-                    "code": "barngf",
-                    "prefLabel": "Deckare"
-                  }
+                    "code": "barngf"
+                  },
+                  "prefLabel": "Deckare"
                 }
               ]
             }
@@ -5738,19 +5843,19 @@
         },
         {
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Postkartor"}, {"2": "gmgpc"}]}},
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "subject": [
+              "genreForm": [
                 {
                   "@type": "GenreForm",
-                  "@id": "https://id.kb.se/term/gmgpc/swe/Postkartor",
+                  "@id": "https://id.kb.se/term/gmgpc/Postkartor",
                   "inScheme": {
                     "@type": "ConceptScheme",
                     "@id": "https://id.kb.se/term/gmgpc",
-                    "code": "gmgpc",
-                    "prefLabel": "Postkartor"
-                  }
+                    "code": "gmgpc"
+                  },
+                  "prefLabel": "Postkartor"
                 }
               ]
             }
@@ -5761,16 +5866,16 @@
           "TODO:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "subject": [
+              "genreForm": [
                 {
                   "@type": "GenreForm",
                   "@id": "hhttp://id.loc.gov/authorities/genreForms/gf2014026203.html",
                   "inScheme": {
                     "@type": "ConceptScheme",
                     "@id": "http://id.loc.gov/authorities/genreForms",
-                    "code": "lcgft",
-                    "prefLabel": "True crime stories"
-                  }
+                    "code": "lcgft"
+                  },
+                  "prefLabel": "True crime stories"
                 }
               ]
             }
