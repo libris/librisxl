@@ -308,7 +308,7 @@
     },
 
     "agentdata": {
-      "TODO:agentdataPersonFamily": "Should be removed in favour of agentdataPersonFamily",
+      "TODO:agentdata": "Should be removed in favour of agentdataPerson and agentdataFamily",
       "match": [
         {
           "when": "i1=0",
@@ -348,31 +348,114 @@
       "$u": {"about": "_:agent", "property": "marc:affiliation"}
     },
 
-    "agentdataPersonFamily": {
-      "match": [
-        {
-          "when": "i1=0",
-          "FIXME": "Remove this part, but first need to fix the 'unhandled' spec",
-          "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"}
+    "hasPartPerson": {
+      "addLink": "hasPart",
+      "resourceType": "Work",
+      "pendingResources": {
+        "_:contribution": {
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
         },
-        {
-          "when": "i1=1",
-          "$a": {
-            "about": "_:agent",
-            "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
-            "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
-            "required": true
-          }
-        },
-        {
-          "when": "i1=3",
-          "FIXME: @update pendingResources": {
-            "@update _:agent": {"link": "agent", "resourceType": "Family"}
-          },
-          "$a": {"about": "_:agent", "property": "nameOfTheFamily", "required": true}
+        "_:agent": {
+          "about": "_:contribution",
+          "link": "agent",
+          "resourceType": "Person",
+          "embedded": false
         }
-      ],
-      "$a": {"required": true},
+      },
+      "$t": {"property": "title"},
+      "$0": {"addLink": "identifiedBy", "property": "value"}
+    },
+
+    "hasPartFamily": {
+      "addLink": "hasPart",
+      "resourceType": "Work",
+      "pendingResources": {
+        "_:contribution": {
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        },
+        "_:agent": {
+          "about": "_:contribution",
+          "link": "agent",
+          "resourceType": "Family",
+          "embedded": false
+        }
+      },
+      "$t": {"property": "title"},
+      "$0": {"addLink": "identifiedBy", "property": "value"}
+    },
+
+    "relatedToPerson": {
+      "addLink": "relatedTo",
+      "resourceType": "Relationship",
+      "pendingResources": {
+        "_:work": {
+          "link": "entity",
+          "resourceType": "Work",
+          "embedded": false
+        },
+        "_:contribution": {
+          "about": "_:work",
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        },
+        "_:agent": {
+          "about": "_:contribution",
+          "link": "agent",
+          "resourceType": "Person",
+          "embedded": false
+        }
+      },
+      "$t": {"about": "_:work", "property": "title"},
+      "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+    },
+
+    "relatedToFamily": {
+      "addLink": "relatedTo",
+      "resourceType": "Relationship",
+      "pendingResources": {
+        "_:work": {
+          "link": "entity",
+          "resourceType": "Work",
+          "embedded": false
+        },
+        "_:contribution": {
+          "about": "_:work",
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        },
+        "_:agent": {
+          "about": "_:contribution",
+          "link": "agent",
+          "resourceType": "Person",
+          "embedded": false
+        }
+      },
+      "$t": {"about": "_:work", "property": "title"},
+      "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+    },
+
+    "agentdataFamily": {
+      "include": "agentdataPersonFamily",
+      "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"}
+    },
+
+    "agentdataPerson": {
+      "include": "agentdataPersonFamily",
+      "$a": {
+        "about": "_:agent",
+        "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+        "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
+        "required": true
+      }
+    },
+
+    "agentdataPersonFamily": {
       "$b": {"about": "_:agent", "property": "marc:numeration"},
       "$c": {"about": "_:agent", "addProperty": "marc:titleOther"},
       "$d": {
@@ -427,12 +510,24 @@
     },
 
     "contributiondata": {
-      "include": "agentdataPersonFamily",
       "addLink": "contribution",
       "embedded": true,
-      "pendingResources": {
-        "_:agent": {"link": "agent", "resourceType": "Person"}
-      },
+      "match": [
+        {
+          "when": "i1=0 | i1=1",
+          "include": "agentdataPerson",
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Person"}
+          }
+        },
+        {
+          "when": "i1=3",
+          "include": "agentdataFamily",
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Family"}
+          }
+        }
+      ],
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "property": "label"},
       "TODO:eAnd4": "make a pattern for role?"
@@ -3436,14 +3531,14 @@
             "100": {"ind1": "3", "ind2": " ", "subfields": [
               {"a": "Bexelius"}
             ]}},
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "contribution": [
                 {
                   "@type": "PrimaryContribution",
                   "agent": {"@type": "Family",
-                    "nameOfTheFamily":  "Bexelius"
+                    "name":  "Bexelius"
                   }
                 }
               ]
@@ -4917,8 +5012,18 @@
       "aboutEntity": "?work",
       "match": [
         {
+          "when": "$t & i1=3",
+          "include": ["agentdataFamily", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "pendingResources": {
+            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
+            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Family", "embedded": false}
+          },
+          "$t": {"about": "_:work", "property": "title"}
+        },
+        {
           "when": "$t",
-          "include": ["termbase_with_uri_from_i2_with_agent", "agentdataPersonFamily", "titledetails1xx7xx", "subjectbase"],
+          "include": ["agentdataPerson", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
           "pendingResources": {
             "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
             "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
@@ -4927,12 +5032,24 @@
           "$t": {"about": "_:work", "property": "title"}
         },
         {
+          "when": "i1=3",
+          "include": ["agentdataFamily", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "addLink": "subject",
+          "resourceType": "Family",
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Family"}
+          }
+        },
+        {
           "when": null,
-          "include": ["termbase_with_uri_from_i2_with_agent", "agentdataPersonFamily", "subjectbase"],
+          "include": ["agentdataPerson", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
           "addLink": "subject",
           "resourceType": "Person",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Person"}
+            "_:agent": {
+              "link": "agent",
+              "resourceType": "Person"
+            }
           }
         }
       ],
@@ -4957,7 +5074,7 @@
                     "agent": {
                       "@type": "Person",
                       "name": "Ovid,",
-                      "lifespan": "43 B.C.-17 A.D. or 18 A.D."
+                      "lifeSpan": "43 B.C.-17 A.D. or 18 A.D."
                   }}
                 }
               ],
@@ -4979,18 +5096,22 @@
             "600": {"ind1": "3", "ind2": "0", "subfields": [
               {"a": "Butler family."},
               {"x": "Health"}]}},
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "Person",
+                  "@id" : "http://id.loc.gov/authorities/label/Health",
+                  "@type": "Family",
                   "agent": {
-                    "@type": "Person",
-                    "nameOfTheFamily": "Butler family."
+                    "@type": "Family",
+                    "name": "Butler family."
                   },
-                  "marc:subdivision": "Health",
-                  "@id": "http://id.loc.gov/authorities/names/n85005984",
+                  "prefLabel" : "Health",
+                  "termComponentList" : [{
+                    "@type" : "Subdivision",
+                    "prefLabel" : "Health"
+                  }],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
                     "@type": "ConceptScheme",
@@ -5009,11 +5130,12 @@
               {"x": "Travel"},
               {"z": "Morocco"},
               {"z": "Marrakech"}]}},
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
                 {
+                  "@id": "http://id.loc.gov/authorities/label/Travel--Morocco--Marrakech",
                   "@type": "Person",
                   "agent": {
                     "@type": "Person",
@@ -5021,10 +5143,13 @@
                     "givenName": "Andy",
                     "marc:titleOther": ["(Composer)"]
                   },
-                  "marc:subdivision": "Travel",
-                  "geographic": ["Morocco", "Marrakech"],
+                  "prefLabel" : "Travel--Morocco--Marrakech",
+                  "termComponentList" : [
+                    {"@type" : "Subdivision", "prefLabel" : "Travel"},
+                    {"@type" : "Geographic", "prefLabel" : "Morocco"},
+                    {"@type" : "Geographic", "prefLabel" : "Marrakech"}],
                   "inScheme": {
-                    "@id": "http://id.loc.gov/authorities/names",
+                    "@id" : "https://id.kb.se/term/lcsh",
                     "@type": "ConceptScheme",
                     "code": "lcsh"
                   }
@@ -5041,25 +5166,31 @@
               {"x": "Criticism and interpretation"},
               {"x": "History"},
               {"y": "21st century."}]}},
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
                 {
+                  "@id" : "http://id.loc.gov/authorities/label/Criticism%20and%20interpretation--History--21st%20century.",
                   "@type": "Person",
                   "agent": {
                     "@type": "Person",
-                    "name": "Mangunwijaya, Y. B.",
+                    "familyName" : "Mangunwijaya",
+                    "givenName" : "Y. B.",
                     "birthYear": "1929",
                     "deathYear": "1999"
                   },
-                  "marc:subdivision": ["Criticism and interpretation", "History"],
-                  "temporal": "21st century",
                   "inScheme": {
-                    "@id": "http://id.loc.gov/authorities/names",
+                    "@id" : "https://id.kb.se/term/lcsh",
                     "@type": "ConceptScheme",
                     "code": "lcsh"
-                  }
+                  },
+                  "prefLabel" : "Criticism and interpretation--History--21st century.",
+                  "termComponentList" : [
+                    {"@type" : "Subdivision", "prefLabel" : "Criticism and interpretation"},
+                    {"@type" : "Subdivision", "prefLabel" : "History"},
+                    {"@type" : "Temporal", "prefLabel" : "21st century."}
+                  ]
                 }
               ]
             }
@@ -5075,8 +5206,9 @@
               {"n": "K. 492, "},
               {"r": "D major;"},
               {"y": "21st century."}]}},
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
+              "@id": "http://id.loc.gov/authorities/label/21st%20century.",
               "@type": "Text",
               "subject": [
                 {
@@ -5091,18 +5223,22 @@
                       "givenName": "Domenico"
                     }
                   },
-                  "title": "Sonatas",
-                  "partNumber": "K. 492",
-                  "musicMedium": ["harpsichord"],
-                  "musicKey": "D major;" ,
-                  "temporal": "21st century"
+                  "title": "Sonatas,"
                 }
               ],
               "inScheme": {
                 "@id": "https://id.kb.se/term/lcsh",
                 "@type": "ConceptScheme",
                 "code": "lcsh"
-              }
+              },
+              "partNumber": ["K. 492"],
+              "musicMedium": ["harpsichord"],
+              "musicKey": "D major;",
+              "prefLabel": "21st century.",
+              "termComponentList" : [{
+                "@type" : "Temporal",
+                "prefLabel" : "21st century."
+              }]
             }
           }}
         },
@@ -5122,9 +5258,9 @@
                   "agent": {
                     "@type": "Person",
                     "name": "Black Foot",
-                    "date": "-1877"
+                    "titleOther": ["Chief,", "(Spirit)"],
+                    "lifeSpan": "-1877"
                   },
-                  "titleOther": ["Chief,", "(Spirit)"],
                   "@id": "http://id.loc.gov/authorities/names/n81020634",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
@@ -5902,53 +6038,51 @@
       "aboutEntity": "?work",
       "match": [
         {
+          "when": "$t & i1=0 & i2=2",
+          "include": ["hasPartPerson", "agentdataPerson", "titledetails1xx7xx"]
+        },
+        {
+          "when": "$t & i1=1 & i2=2",
+          "include": ["hasPartPerson", "agentdataPerson", "titledetails1xx7xx"]
+        },
+        {
+          "when": "$t & i1=3 & i2=2",
+          "include": ["hasPartFamily", "agentdataFamily", "titledetails1xx7xx"]
+        },
+        {
           "when": "$t & i2=2",
-          "include": ["agentdataPersonFamily", "titledetails1xx7xx"],
-          "addLink": "hasPart",
-          "resourceType": "Work",
-          "pendingResources": {
-            "_:contribution": {
-              "addLink": "contribution",
-              "resourceType": "PrimaryContribution",
-              "embedded": true
-            },
-            "_:agent": {
-              "about": "_:contribution",
-              "link": "agent",
-              "resourceType": "Person",
-              "embedded": false
-            }
-          },
-          "$t": {"property": "title"},
-          "$0": {"addLink": "identifiedBy", "property": "value"}
+          "include": ["hasPartPerson", "agentdataPerson", "titledetails1xx7xx"]
+        },
+        {
+          "when": "$t & i1=0",
+          "include": ["relatedToPerson", "agentdataPerson", "titledetails1xx7xx"]
+        },
+        {
+          "when": "$t & i1=1",
+          "include": ["relatedToPerson", "agentdataPerson", "titledetails1xx7xx"]
+        },
+        {
+          "when": "$t & i1=3",
+          "include": ["relatedToFamily", "agentdataPerson", "titledetails1xx7xx"]
         },
         {
           "when": "$t",
-          "include": ["agentdataPersonFamily", "titledetails1xx7xx"],
-          "addLink": "relatedTo",
-          "resourceType": "Relationship",
-          "pendingResources": {
-            "_:work": {
-              "link": "entity",
-              "resourceType": "Work",
-              "embedded": false
-            },
-            "_:contribution": {
-              "about": "_:work",
-              "addLink": "contribution",
-              "resourceType": "PrimaryContribution",
-              "embedded": true
-            },
-            "_:agent": {
-              "FIXME:resourceType": "When ind1=3 change resourceType to Family. Record-count: 291.",
-              "about": "_:contribution",
-              "link": "agent",
-              "resourceType": "Person",
-              "embedded": false
-            }
-          },
-          "$t": {"about": "_:work", "property": "title"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+          "include": ["relatedToPerson", "agentdataPerson", "titledetails1xx7xx"]
+        },
+        {
+          "when": "i1=0 & i2=2",
+          "inherit-match": "$t & i1=0 & i2=2",
+          "NOTE": "An agent is not a part; we add an untitled, intermediary hasPart"
+        },
+        {
+          "when": "i1=1 & i2=2",
+          "inherit-match": "$t & i1=1 & i2=2",
+          "NOTE": "An agent is not a part; we add an untitled, intermediary hasPart"
+        },
+        {
+          "when": "i1=3 & i2=2",
+          "inherit-match": "$t & i1=3 & i2=2",
+          "NOTE": "An agent is not a part; we add an untitled, intermediary hasPart"
         },
         {
           "when": "i2=2",
@@ -6165,7 +6299,6 @@
             }
           }}
         },
-
         {
           "source": {
             "700": {"ind1": "1", "ind2": " ", "subfields": [
@@ -6190,6 +6323,50 @@
                       }
                     ]
                   }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "3", "ind2": "2", "subfields": [
+              {"a": "Family X."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {"@type": "Family", "name":  "Family X."}
+                    }
+                  ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "700": {"ind1": "0", "ind2": "2", "subfields": [
+              {"a": "Tove Jansson"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {"@type": "Person", "name":  "Tove Jansson"}
+                    }
+                  ]
                 }
               ]
             }
@@ -7081,7 +7258,6 @@
       "resourceType": "Serial",
       "TODO:aboutEntity?": "?series",
       "include": "agentdata",
-      "TODO:include": "agentdataPersonFamily",
       "$t": {"property": "title"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
@@ -7529,11 +7705,30 @@
     "100" : {
       "match": [
         {
-          "when": "$t",
-          "include": "agentdataPersonFamily",
+          "when": "$t & i1=3",
+          "include": ["agentdataFamily", "titledetails1xx7xx"],
           "aboutType": "Work",
           "$t": {"property": "title"},
-          "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+          "$0": {"addLink": "identifiedBy", "property": "value"},
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Family",
+              "embedded": false
+            }
+          }
+        },
+        {
+          "when": "$t",
+          "include": ["agentdataPerson", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "$t": {"property": "title"},
           "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
             "_:contribution": {
@@ -7550,11 +7745,19 @@
           }
         },
         {
+          "when": "i1=3",
+          "aboutEntity": "?thing",
+          "aboutType": "Family",
+          "about": "_:agent",
+          "include": "agentdataFamily",
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
           "when": null,
           "aboutEntity": "?thing",
           "aboutType": "Person",
           "about": "_:agent",
-          "include": "agentdataPersonFamily",
+          "include": "agentdataPerson",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
@@ -7624,12 +7827,11 @@
               {"a": "Sokrates,"},
               {"d": "470 eller 469 f.Kr-399 f.Kr."}
             ]}},
-          "FIXME:result": {
+          "result": {
             "mainEntity": {
               "@type": "Person",
-              "name":  "Sokrates",
-              "birthyear": "470 eller 469 f.Kr",
-              "deathyear": "399 f.Kr."
+              "name":  "Sokrates,",
+              "lifeSpan": "470 eller 469 f.Kr-399 f.Kr."
             }
           }
         },
@@ -7711,11 +7913,11 @@
               {"d": "1700-talet"},
               {"c": "Krylbo, Sverige)"}
             ]}},
-          "FIXME:result": {
+          "result": {
             "mainEntity": {
               "@type": "Family",
-              "name":  "Nilsson (släkt:",
-              "date": "1700-talet",
+              "name":  "Nilssom (släkt:",
+              "lifeSpan": "1700-talet",
               "marc:titleOther": ["Krylbo, Sverige)"]
             }
           }
@@ -8104,7 +8306,6 @@
         {
           "when": "$t",
           "include": "agentdata",
-          "TODO:include": "agentdataPersonFamily",
           "pendingResources": {
             "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
             "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
@@ -8119,7 +8320,6 @@
             "_:agent": {"link": "exactMatch", "resourceType": "Person"}
           },
           "include": "agentdata",
-          "TODO:include": "agentdataPersonFamily",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
@@ -8172,7 +8372,6 @@
     "500": {
       "TODO:remnants-of-inherit": "bib:100",
       "include": ["agentdata", "splicedworkentity"],
-      "TODO:include": ["agentdataPersonFamily", "splicedworkentity"],
       "TODO": "this is really a link to other auth post..",
       "NOTE": "not really though - see 100",
       "pendingResources": {
