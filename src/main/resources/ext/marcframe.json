@@ -4514,25 +4514,27 @@
     },
 
     "513": {
+      "addLink": "hasNote",
+      "resourceType": "marc:TypeOfReportAndPeriodCoveredNote",
       "aboutEntity": "?thing",
-      "$a": {
-        "addLink": "hasNote",
-        "resourceType": "marc:TypeOfReportAndPeriodCoveredNote",
-        "property": "label"
-      },
+      "$a": {"property": "label"},
       "$b": {"property": "marc:periodCovered", "TODO": "Concatenate with $b"}
     },
-    "514": {"$a": {"aboutEntity": "?thing", "property": "marc:dataQualityNote"}},
+    "514": {
+      "aboutEntity": "?thing",
+      "$a": {"property": "marc:dataQualityNote"}
+    },
     "515": {
-      "$a": {
-        "aboutEntity": "?thing",
-        "addLink": "hasNote",
-        "resourceType": "IssuanceInformationNote",
-        "property": "label"
-      }
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "IssuanceInformationNote",
+      "$a": {"property": "label"}
     },
     "516": {
-      "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "marc:TypeOfComputerFileOrDataNote", "property": "label"},
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:TypeOfComputerFileOrDataNote", 
+      "$a": {"property": "label"},
       "NOTE:i1": "ignore"
     },
     "518": {
@@ -4542,6 +4544,7 @@
       "$a": {"property": "label"},
       "$o": {"addProperty": "date"},
       "$d": {"addProperty": "comment"},
+      "TODO:d": "Change $d to date?",
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
@@ -4586,9 +4589,17 @@
       "$a": {"property": "label"},
       "TODO:b": {"link": "source", "resourceType": "Source", "property": "label", "FIXME:peningResource": "Append to intendedAudience"}
     },
-    "522": {"$a": {"aboutEntity": "?work", "addLink": "geographicCoverage", "resourceType": "GeographicCoverage", "property": "label"}},
+    "522": {
+      "aboutEntity": "?work",
+      "addLink": "geographicCoverage",
+      "resourceType": "GeographicCoverage", 
+      "$a": {"property": "label"}
+    },
     "524": {},
-    "525": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote", "TODO": "supplementaryContentNote or supplementaryContent?"}},
+    "525": {
+      "aboutEntity": "?thing",
+      "$a": {"addProperty": "supplementaryContentNote", "TODO": "supplementaryContentNote or supplementaryContent?"}
+    },
     "526": {"NOTE:record-count": 16, "ignored": true},
 
     "530": {
@@ -4779,11 +4790,20 @@
     },
     "583": {},
     "584": {"NOTE:record-count": 0, "ignored": true},
-    "585": {"$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "marc:ExhibitionsNote", "property": "label"}},
+    "585": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "marc:ExhibitionsNote",
+      "$a": {"property": "label"}
+    },
     "586": {"$a": {"aboutEntity": "?thing", "addProperty": "awardsNote"}},
     "588": {
-      "$a": {"aboutEntity": "?record", "addLink": "hasNote", "resourceType": "DescriptionSourceNote", "property": "label"},
-      "NOTE:i1": "ignore"},
+      "aboutEntity": "?record",
+      "addLink": "hasNote",
+      "resourceType": "DescriptionSourceNote",
+      "$a": {"property": "label"},
+      "NOTE:i1": "ignore"
+    },
     "590": {},
     "599": {
       "TOOO:i1": {},
@@ -6518,7 +6538,19 @@
     "016" : {},
     "020" : {},
     "022" : {},
-    "024" : {},
+    "024" : {
+      "inherit": "bib",
+      "i1": {
+        "property": "@type",
+        "tokenMap": {
+          "7": "Identifier",
+          "8": "Identifier"
+        },
+        "TODO:definedElsewhereToken": "7"
+      },
+      "i2": null
+    },
+    
     "031" : {},
     "034" : {},
     "035" : {"inherit": "bib"},
