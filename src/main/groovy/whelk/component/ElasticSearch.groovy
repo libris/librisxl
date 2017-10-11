@@ -94,10 +94,6 @@ class ElasticSearch {
         }
         finally {
             restClient?.close()
-
-            /* This is a speculative "fix" for the ElasticSearch RestClient library apparently
-            leaking file descriptors. */
-            System.gc()
         }
     }
 
