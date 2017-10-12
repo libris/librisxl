@@ -3132,10 +3132,10 @@
       "$a": {"property": "code"},
       "$b": {"property": "classificationItem", "ignored": true}
     },
-    "061": {},
+    "061": {"NOTE:record-count": 1, "ignored": true},
     "066": {},
     "070": {},
-    "071": {},
+    "071": {"NOTE:record-count": 0, "ignored": true},
 
     "072": {
       "include": ["termid"],
@@ -3218,11 +3218,11 @@
       ]
     },
 
-    "085": {},
+    "085": {"NOTE:record-count": 21, "ignored": true},
     "086": {},
     "088": {},
-    "090": {},
-    "099": {},
+    "090": {"NOTE:record-count": 67, "ignored": true},
+    "099": {"NOTE:record-count": 2, "ignored": true},
 
     "100": {
       "aboutEntity": "?work",
