@@ -2802,7 +2802,7 @@
           "1": "MatrixNumber",
           "2": "MusicPlate",
           "3": "MusicPublisherNumber",
-          "4": "VideorecordingNumber",
+          "4": "VideoRecordingNumber",
           "5": "PublisherNumber"
         }
       },
@@ -3141,10 +3141,10 @@
       "$a": {"property": "code"},
       "$b": {"property": "classificationItem", "ignored": true}
     },
-    "061": {},
+    "061": {"NOTE:record-count": 1, "ignored": true},
     "066": {},
     "070": {},
-    "071": {},
+    "071": {"NOTE:record-count": 0, "ignored": true},
 
     "072": {
       "include": ["termid"],
@@ -3227,11 +3227,11 @@
       ]
     },
 
-    "085": {},
+    "085": {"NOTE:record-count": 21, "ignored": true},
     "086": {},
     "088": {},
-    "090": {},
-    "099": {},
+    "090": {"NOTE:record-count": 67, "ignored": true},
+    "099": {"NOTE:record-count": 2, "ignored": true},
 
     "100": {
       "aboutEntity": "?work",
@@ -6728,7 +6728,19 @@
     "016" : {},
     "020" : {},
     "022" : {},
-    "024" : {},
+    "024" : {
+      "inherit": "bib",
+      "i1": {
+        "property": "@type",
+        "tokenMap": {
+          "7": "Identifier",
+          "8": "Identifier"
+        },
+        "TODO:definedElsewhereToken": "7"
+      },
+      "i2": null
+    },
+    
     "031" : {},
     "034" : {},
     "035" : {"inherit": "bib"},
