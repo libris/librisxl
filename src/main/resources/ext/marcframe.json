@@ -5667,7 +5667,6 @@
     },
     "610": {
       "aboutEntity": "?work",
-      "i1": {"marcDefault": "2"},
       "match": [
         {
           "when": "$b & i1=0 & $t",
@@ -6047,10 +6046,56 @@
       ]
     },
     "648": {
-      "include": ["subjectbase", "termbase", "uri_from_i2"],
+      "include": ["subjectbase", "termbase_with_uri_from_i2"],
       "aboutEntity": "?work",
       "addLink": "subject",
-      "resourceType": "Temporal"
+      "resourceType": "Temporal",
+      "_spec": [
+        {
+          "source": {"648": {"ind1": " ", "ind2": "7",
+            "subfields": [{"a": "1500-talet"}, {"2": "sao"}]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@id": "https://id.kb.se/term/sao/1500-talet",
+                  "@type": "Temporal",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/sao",
+                    "@type": "ConceptScheme",
+                    "code": "sao"
+                  },
+                  "prefLabel": "1500-talet"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"648": {"ind1": " ", "ind2": "7",
+            "subfields": [{"a": "Since 1500"}, {"2": "fast"}]}
+          },
+          "FIXME:id-result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@id": "http://id.worldcat.org/fast/1356013",
+                  "@type": "Temporal",
+                  "inScheme": {
+                    "@id": "http://id.kb.se/fast/",
+                    "@type": "ConceptScheme",
+                    "code": "fast"
+                  },
+                  "prefLabel": "Since 1500"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "650": {
       "include": ["subjectbase", "termbase_with_uri_from_i2"],
@@ -6223,7 +6268,7 @@
       ]
     },
     "651": {
-      "include": ["subjectbase", "termbase", "uri_from_i2"],
+      "include": ["subjectbase", "termbase_with_uri_from_i2"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Geographic",
@@ -6237,29 +6282,29 @@
             {"2": "sao"}]
           }
         },
-        "TODO:result": {"mainEntity": {
+        "result": {"mainEntity": {
           "instanceOf": {
             "@type": "Text",
             "subject": [
               {
-                "@type": "GeographicalTerm",
-                "@id": "https://id.kb.se/term/sao/Sydafrika--V%C3%A4stra%20Kapprovinsen"
-              }
-            ],
-            "prefLabel": "Sydafrika--Västra Kapprovinsen",
-            "inScheme": {
-              "@id": "https://id.kb.se/term/sao",
-              "@type": "ConceptScheme",
-              "code": "sao"
-            },
-            "termComponentList": [
-              {
-                "@type": "TopicalTerm",
-                "prefLabel": "Sydafrika"
-              },
-              {
-                "@type": "GeographicalTerm",
-                "prefLabel": "Västra Kapprovinsen"
+                "@type": "Geographic",
+                "@id": "https://id.kb.se/term/sao/Sydafrika--V%C3%A4stra%20Kapprovinsen",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/sao",
+                  "@type": "ConceptScheme",
+                  "code": "sao"
+                },
+                "prefLabel": "Sydafrika--Västra Kapprovinsen",
+                "termComponentList": [
+                  {
+                    "@type": "Topic",
+                    "prefLabel": "Sydafrika"
+                  },
+                  {
+                    "@type": "Geographic",
+                    "prefLabel": "Västra Kapprovinsen"
+                  }
+                ]
               }
             ]
           }
@@ -6273,33 +6318,33 @@
               {"v": "Early works to 1800"}]
             }
           },
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
                 {
                   "@type": "Geographic",
-                  "@id" : "http://id.loc.gov/authorities/label/Aix-en-Provence%20%28France%29"
-                }
-              ],
-              "prefLabel": "Aix-en-Provence--Social life and customs--Early works to 1800",
-              "inScheme": {
-                "@id": "http://id.loc.gov/authorities/names",
-                "@type": "ConceptScheme",
-                "code": "lcsh"
-              },
-              "termComponentList": [
-                {
-                  "@type": "TopicalTerm",
-                  "prefLabel": "Aix-en-Provence (France)"
-                },
-                {
-                  "@type": "Subdivision",
-                  "prefLabel": "Social life and customs"
-                },
-                {
-                  "@type": "GenreForm",
-                  "prefLabel": "Early work to 1800"
+                  "@id" : "http://id.loc.gov/authorities/label/Aix-en-Provence%20%28France%29--Social%20life%20and%20customs--Early%20works%20to%201800",
+                  "prefLabel": "Aix-en-Provence (France)--Social life and customs--Early works to 1800",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcsh",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  },
+                  "termComponentList": [
+                    {
+                      "@type": "Topic",
+                      "prefLabel": "Aix-en-Provence (France)"
+                    },
+                    {
+                      "@type": "Subdivision",
+                      "prefLabel": "Social life and customs"
+                    },
+                    {
+                      "@type": "GenreForm",
+                      "prefLabel": "Early works to 1800"
+                    }
+                  ]
                 }
               ]
             }
@@ -6308,13 +6353,65 @@
       ]
     },
     "653": {
-      "TOOO:i1": {},
-      "TOOO:i2": {},
-      "$a": {"aboutEntity": "?thing", "property": "keyword"}
+      "aboutEntity": "?work",
+      "addLink": "subject",
+      "resourceType": "Topic",
+      "$a": {"property": "keyword"},
+      "match": [
+        {
+          "when": "i2=0",
+          "resourceType": "Topic"
+        },
+        {
+          "when": "i2=1",
+          "resourceType": "Person"
+        },
+        {
+          "when": "i2=2",
+          "resourceType": "Organization"
+        },
+        {
+          "when": "i2=3",
+          "resourceType": "Meeting"
+        },
+        {
+          "when": "i2=4",
+          "resourceType": "Temporal"
+        },
+        {
+          "when": "i2=5",
+          "resourceType": "Place"
+        },
+        {
+          "when": "i2=6",
+          "resourceType": "GenreForm"
+        }
+      ],
+      "_spec": [
+        {
+          "source": {
+            "653": {"ind1": " ", "ind2": "4", "subfields":[
+              {"a": "Directors"}]
+            }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Temporal",
+                  "keyword": "Directors"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
 
     "654": {
       "ignored": true,
+      "NOTE:record-count": 174,
       "TODO": "facet term (i1:like 650, i2: null)"
     },
 
