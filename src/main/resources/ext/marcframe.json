@@ -746,6 +746,9 @@
 
     "contributiondata": {
       "addLink": "contribution",
+      "pendingResources": {
+        "_:agent": {"link": "agent", "resourceType": "Person"}
+      },
       "embedded": true,
       "match": [
         {
@@ -770,10 +773,6 @@
           }
         }
       ],
-      "pendingResources": {
-        "_:agent": {"link": "agent", "resourceType": "Person"}
-      },
-      "TODO:include": "agentdataNameOfPerson",
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "property": "label"},
       "TODO:eAnd4": "make a pattern for role?"
@@ -3864,11 +3863,15 @@
       "aboutEntity": "?work",
       "addLink": "contribution",
       "resourceType": "PrimaryContribution",
+      "include": ["agentdataOrganization", "titledetails1xx7xx"],
+      "pendingResources": {
+        "_:agent": {"link": "agent", "resourceType": "Organization"},
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+      },
       "match":[
         {
-          "when": "i1=0 & $b",
+          "when": "i1=2 & $b",
           "include": ["agentdataOrganizationSubUnit", "titledetails1xx7xx"],
-          "i1": {"marcDefault": "2"},
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Organization"},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
@@ -3885,7 +3888,7 @@
           }
         },
         {
-          "when": "i1=2 & $b",
+          "when": "i1=0 & $b",
           "include": ["agentdataOrganizationSubUnit", "titledetails1xx7xx"],
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Organization"},
@@ -3894,9 +3897,8 @@
           }
         },
         {
-          "when": "i1=0",
+          "when": "i1=2",
           "include": ["agentdataOrganization", "titledetails1xx7xx"],
-          "i1": {"marcDefault": "2"},
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Organization"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
@@ -3911,7 +3913,7 @@
           }
         },
         {
-          "when": "i1=2",
+          "when": "i1=0",
           "include": ["agentdataOrganization", "titledetails1xx7xx"],
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Organization"},
@@ -3919,11 +3921,6 @@
           }
         }
       ],
-      "include": ["agentdataOrganization", "titledetails1xx7xx"],
-      "pendingResources": {
-        "_:agent": {"link": "agent", "resourceType": "Organization"},
-        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-      },
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
@@ -5354,20 +5351,14 @@
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Family"}
           }
-        },
-        {
-          "when": null,
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataPerson"],
-          "addLink": "subject",
-          "resourceType": "Person",
-          "pendingResources": {
-            "_:agent": {
-              "link": "agent",
-              "resourceType": "Person"
-            }
-          }
         }
       ],
+      "pendingResources": {
+        "_:agent": {
+          "link": "agent",
+          "resourceType": "Person"
+        }
+      },
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "_spec": [
         {
@@ -6773,6 +6764,7 @@
 
     "710": {
       "aboutEntity": "?work",
+      "include": ["contributionOrganization", "agentdataOrganization", "titledetails1xx7xx"],
       "match": [
         {
           "when": "$t & i2=2 & i1=1",
@@ -6815,7 +6807,7 @@
           "include": ["relatedToOrganization", "agentdataOrganization", "titledetails1xx7xx"]
         },
         {
-          "when": "i1=0",
+          "when": "i1=2",
           "match": [
             {
               "when": "$b",
@@ -6835,7 +6827,7 @@
           "include": ["contributionJurisdiction", "agentdataOrganization", "titledetails1xx7xx"]
         },
         {
-          "when": "i1=2",
+          "when": "i1=0",
           "match": [
             {
               "when": "$b",
@@ -6853,7 +6845,6 @@
           "include": ["contributionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
         }
       ],
-      "include": ["contributionOrganization", "agentdataOrganization", "titledetails1xx7xx"],
       "TODO": [
         "change splitValueProperties to work on result, to handle match combo"
       ],
@@ -7257,6 +7248,11 @@
 
     "711": {
       "aboutEntity": "?work",
+      "include": ["agentdataMeeting", "titledetails1xx7xx"],
+      "pendingResources": {
+        "_:agent": {"link": "agent", "resourceType": "Meeting"},
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+      },
       "match": [
         {
           "when": "$t & i2=2",
@@ -7325,11 +7321,6 @@
           "$t": {"property": "title"}
         }
       ],
-      "include": ["agentdataMeeting", "titledetails1xx7xx"],
-      "pendingResources": {
-        "_:agent": {"link": "agent", "resourceType": "Meeting"},
-        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-      },
       "$i": {"addLink": "relation", "property": "label"},
       "$x": {"property": "issn"},
       "i1": {"marcDefault": "2"},
@@ -8299,7 +8290,7 @@
     "110" : {
       "match": [
         {
-          "when": "$b & $t & i1=0",
+          "when": "$b & $t & i1=2",
           "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
         },
         {
@@ -8307,11 +8298,11 @@
           "include": ["pendingContributionJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
         },
         {
-          "when": "$b & $t & i1=2",
+          "when": "$b & $t & i1=0",
           "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
         },
         {
-          "when": "$t & i1=0",
+          "when": "$t & i1=2",
           "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
         },
         {
@@ -8319,7 +8310,7 @@
           "include": ["pendingContributionJurisdiction", "agentdataOrganization", "titledetails1xx7xx"]
         },
         {
-          "when": "$t & i1=2",
+          "when": "$t & i1=0",
           "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
         },
 
@@ -8328,7 +8319,7 @@
           "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
         },
         {
-          "when": "$b & i1=0",
+          "when": "$b & i1=2",
           "include": ["agentdataOrganizationSubUnit"],
           "aboutEntity": "?thing",
           "aboutType": "Organization",
@@ -8355,7 +8346,7 @@
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
-          "when": "$b & i1=2",
+          "when": "$b & i1=0",
           "include": ["agentdataOrganizationSubUnit"],
           "aboutEntity": "?thing",
           "aboutType": "Organization",
@@ -8426,7 +8417,7 @@
           "source": {
             "110": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Europeiska unionen"},
-              {"b": " Regionkommittén"}
+              {"b": "Regionkommittén"}
             ]}},
           "result": {
             "mainEntity": {
