@@ -402,7 +402,9 @@
           "link": "agent",
           "resourceType": "Jurisdiction",
           "embedded": false
-        }
+        },
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "$t": {"property": "title"},
       "$0": {"addLink": "identifiedBy", "property": "value"}
@@ -422,7 +424,30 @@
           "link": "agent",
           "resourceType": "Organization",
           "embedded": false
-        }
+        },
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+      },
+      "$t": {"property": "title"},
+      "$0": {"addLink": "identifiedBy", "property": "value"}
+    },
+
+    "hasPartMeeting": {
+      "addLink": "hasPart",
+      "resourceType": "Work",
+      "pendingResources": {
+        "_:contribution": {
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        },
+        "_:agent": {
+          "about": "_:contribution",
+          "link": "agent",
+          "resourceType": "Meeting",
+          "embedded": false
+        },
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "$t": {"property": "title"},
       "$0": {"addLink": "identifiedBy", "property": "value"}
@@ -500,7 +525,9 @@
           "link": "agent",
           "resourceType": "Organization",
           "embedded": false
-        }
+        },
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "$t": {"about": "_:work", "property": "title"},
       "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
@@ -526,7 +553,9 @@
           "link": "agent",
           "resourceType": "Jurisdiction",
           "embedded": false
-        }
+        },
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "$t": {"about": "_:work", "property": "title"},
       "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
@@ -713,8 +742,8 @@
 
     "agentdataOrganizationSubUnit": {
       "include": "agentdataOrganizationJurisdiction",
-      "$b": {"about": "_:agent", "addProperty": "marc:subordinateUnit"},
-      "$a": {"about": "_:isPartOf", "property": "name", "required": true}
+      "$a": {"about": "_:isPartOf", "property": "name", "required": true},
+      "$b": {"about": "_:agent", "addProperty": "marc:subordinateUnit"}
     },
 
     "agentdataOrganization": {
@@ -6318,6 +6347,13 @@
               {"v": "Early works to 1800"}]
             }
           },
+          "normalized": {
+            "651": {"ind1": " ", "ind2": "0", "subfields":[
+              {"a": "Aix-en-Provence (France)"},
+              {"v": "Early works to 1800"},
+              {"x": "Social life and customs"}]
+            }
+          },
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -6864,73 +6900,59 @@
       "include": ["contributionOrganization", "agentdataOrganization", "titledetails1xx7xx"],
       "match": [
         {
+          "when": "$b & $t & i2=2 & i1=1",
+          "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+        },
+        {
           "when": "$t & i2=2 & i1=1",
-          "match": [
-            {
-              "when": "$b",
-              "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
-            }
-          ],
           "include": ["hasPartJurisdiction", "agentdataOrganization", "titledetails1xx7xx"]
         },
         {
+          "when": "$b & $t & i1=1",
+          "include": ["relatedToJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+        },
+        {
           "when": "$t & i1=1",
-          "match": [
-            {
-              "when": "$b",
-              "include": ["relatedToJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
-            }
-          ],
           "include": ["relatedToJurisdiction", "agentdataOrganization", "titledetails1xx7xx"]
         },
         {
+          "when": "$b & $t & i2=2",
+          "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+        },
+        {
           "when": "$t & i2=2",
-          "match": [
-            {
-              "when": "$b",
-              "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
-            }
-          ],
           "include": ["hasPartOrganization", "agentdataOrganization", "titledetails1xx7xx"]
         },
         {
+          "when": "$b & $t",
+          "include": ["relatedToOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+        },
+        {
           "when": "$t",
-          "match": [
-            {
-              "when": "$b",
-              "include": ["relatedToOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
-            }
-          ],
           "include": ["relatedToOrganization", "agentdataOrganization", "titledetails1xx7xx"]
         },
         {
+          "when": "$b & i1=2",
+          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+        },
+        {
           "when": "i1=2",
-          "match": [
-            {
-              "when": "$b",
-              "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
-            }
-          ],
           "include": ["contributionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
         },
         {
+          "when": "$b & i1=1",
+          "include": ["contributionJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+        },
+        {
           "when": "i1=1",
-          "match": [
-            {
-              "when": "$b",
-              "include": ["contributionJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
-            }
-          ],
           "include": ["contributionJurisdiction", "agentdataOrganization", "titledetails1xx7xx"]
         },
         {
+          "when": "$b & i1=0",
+          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+        },
+        {
           "when": "i1=0",
-          "match": [
-            {
-              "when": "$b",
-              "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
-            }
-          ],
           "include": ["contributionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
         },
         {
@@ -6979,6 +7001,40 @@
                           {"@type": "Jurisdiction", "name": "National Fire Protection Association."}
                       }
                     ]
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Sverige."},
+              {"b": "Riksdagen."},
+              {"b": "Borgarståndet."},
+              {"t": "Protokoll"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "contribution": [{
+                        "@type": "PrimaryContribution",
+                        "agent": {
+                          "@type": "Jurisdiction",
+                          "isPartOf": {
+                            "@type": "Jurisdiction",
+                            "name": "Sverige."
+                          },
+                          "marc:subordinateUnit" : ["Riksdagen.", "Borgarståndet."]
+                        }
+                      }],
+                    "title": "Protokoll"
                   }
                 }
               ]
@@ -7352,30 +7408,12 @@
       },
       "match": [
         {
-          "when": "$t & i2=2",
-          "include": ["agentdataMeeting", "titledetails1xx7xx"],
-          "addLink": "hasPart",
-          "resourceType": "Work",
-          "pendingResources": {
-            "_:contribution": {
-              "addLink": "contribution",
-              "resourceType": "PrimaryContribution",
-              "embedded": true
-            },
-            "_:agent": {
-              "about": "_:contribution",
-              "link": "agent",
-              "resourceType": "Meeting",
-              "embedded": false
-            },
-            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-          },
-          "$t": {"property": "title"},
-          "$0": {"addLink": "identifiedBy", "property": "value"}
+          "when": "$t & i1=2 & i2=2",
+          "include": ["hasPartMeeting", "agentdataMeeting", "titledetails1xx7xx"]
         },
         {
-          "when": "$t & i1=2 & i2=2",
-          "inherit-match": "$t & i2=2"
+          "when": "$t & i2=2",
+          "include": ["hasPartMeeting", "agentdataMeeting", "titledetails1xx7xx"]
         },
         {
           "when": "$t",
@@ -7392,7 +7430,6 @@
               "about": "_:work",
               "addLink": "contribution",
               "resourceType": "PrimaryContribution",
-              "TODO:resourceType": "Contribution",
               "embedded": true
             },
             "_:agent": {
