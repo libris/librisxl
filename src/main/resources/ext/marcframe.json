@@ -5354,7 +5354,9 @@
               "link": "agent",
               "resourceType": "Jurisdiction",
               "embedded": false
-            }
+            },
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "include": ["agentdataOrganization", "titledetails1xx7xx"],
           "addLink": "hasPart",
@@ -5382,7 +5384,9 @@
               "link": "agent",
               "resourceType": "Jurisdiction",
               "embedded": false
-            }
+            },
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "include": ["agentdataOrganization", "titledetails1xx7xx"],
           "addLink": "relatedTo",
@@ -5403,7 +5407,9 @@
               "link": "agent",
               "resourceType": "Organization",
               "embedded": false
-            }
+            },
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "include": ["agentdataOrganization", "titledetails1xx7xx"],
           "addLink": "hasPart",
@@ -5430,7 +5436,9 @@
               "link": "agent",
               "resourceType": "Organization",
               "embedded": false
-            }
+            },
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "include": ["agentdataOrganization", "titledetails1xx7xx"],
           "addLink": "relatedTo",
