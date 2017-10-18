@@ -68,6 +68,7 @@ class XL
 
         String resultingResourceId = null;
 
+        System.err.println("Incoming document had: " + duplicateIDs.size() + " existing duplicates.");
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
             resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId);
@@ -356,22 +357,19 @@ class XL
     private List<String> getDuplicatesOn035a(MarcRecord marcRecord)
             throws SQLException
     {
-        // Get all of marcRecord's 035a (unique id in other system) id entries in a list
-        List<String> candidate035aIDs = new ArrayList<>();
+        List<String> results = new ArrayList<>();
         for (Field field : marcRecord.getFields("035"))
         {
-            candidate035aIDs.add( DigId.grep035a( (Datafield) field ) );
-        }
+            String systemNumber = DigId.grep035a( (Datafield) field );
 
-        if (candidate035aIDs.isEmpty())
-            return new ArrayList<>();
-
-        try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnSystemNumber_ps(connection, candidate035aIDs);
-            ResultSet resultSet = statement.executeQuery())
-        {
-            return collectIDs(resultSet);
+            try(Connection connection = m_whelk.getStorage().getConnection();
+                PreparedStatement statement = getOnSystemNumber_ps(connection, systemNumber);
+                ResultSet resultSet = statement.executeQuery())
+            {
+                results.addAll( collectIDs(resultSet) );
+            }
         }
+        return results;
     }
 
     private List<String> getDuplicatesOnISBN(String isbn)
@@ -434,14 +432,14 @@ class XL
     /**
      * "System number" is our ld equivalent of marc's 035a
      */
-    private PreparedStatement getOnSystemNumber_ps(Connection connection, List<String> ids)
+    private PreparedStatement getOnSystemNumber_ps(Connection connection, String systemNumber)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE data#>'{@graph,0,systemNumber}' ??| ?";
-        PreparedStatement statement = connection.prepareStatement(query);
+        String query = "SELECT id FROM lddb WHERE data#>'{@graph,0,identifiedBy}' @> ?";
+        PreparedStatement statement =  connection.prepareStatement(query);
 
-        Array tmpArr = connection.createArrayOf("text", ids.toArray());
-        statement.setObject(1, tmpArr, Types.ARRAY);
+        statement.setObject(1, "[{\"@type\": \"SystemNumber\", \"value\": \"" + systemNumber + "\"}]", java.sql.Types.OTHER);
+
         return statement;
     }
 
