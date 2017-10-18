@@ -56,7 +56,7 @@ class XL
                          Counter importedHoldRecords,
                          Counter enrichedBibRecords,
                          Counter enrichedHoldRecords,
-                         Counter encounterdMulBibs)
+                         Counter encounteredMulBibs)
             throws Exception
     {
         String collection = "bib"; // assumption
@@ -91,7 +91,7 @@ class XL
         else
         {
             // Multiple coinciding documents.
-            encounterdMulBibs.inc();
+            encounteredMulBibs.inc();
 
             if (m_parameters.getEnrichMulDup())
             {

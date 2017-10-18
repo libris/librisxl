@@ -40,7 +40,7 @@ public class Main
             .name("batchimport_enriched_holding_records_count")
             .help("The total number of holding records enriched.")
             .register(registry);
-    private final static Counter encounterdMulBibs = Counter.build()
+    private final static Counter encounteredMulBibs = Counter.build()
             .name("batchimport_encountered_mulbibs")
             .help("The total number of incoming records with more than one duplicate already in the system.")
             .register(registry);
@@ -200,7 +200,7 @@ public class Main
                         importedHoldRecords,
                         enrichedBibRecords,
                         enrichedHoldRecords,
-                        encounterdMulBibs);
+                        encounteredMulBibs);
                 if (resultingId != null)
                     lastKnownBibDocId = resultingId;
             }
