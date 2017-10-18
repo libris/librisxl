@@ -972,6 +972,7 @@
       ]
     },
     "termbase_with_uri_from_i2_with_agent": {
+      "NOTE": "A copy of 'termbase_with_uri_from_i2', except for removed $a which instead should be mapped to agent",
       "match": [
         {
           "when": "i2=7 & $2",
