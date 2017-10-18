@@ -1,5 +1,6 @@
 package whelk.importer;
 
+import io.prometheus.client.Counter;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
@@ -49,7 +50,13 @@ class XL
      * This ID should then be passed (as 'relatedWithBibResourceId') when importing any subsequent related holdings post.
      * Returns null when supplied a hold post
      */
-    String importISO2709(MarcRecord incomingMarcRecord, String relatedWithBibResourceId)
+    String importISO2709(MarcRecord incomingMarcRecord,
+                         String relatedWithBibResourceId,
+                         Counter importedBibRecords,
+                         Counter importedHoldRecords,
+                         Counter enrichedBibRecords,
+                         Counter enrichedHoldRecords,
+                         Counter encounterdMulBibs)
             throws Exception
     {
         String collection = "bib"; // assumption
@@ -64,22 +71,26 @@ class XL
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
             resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId);
+
+            if (collection.equals("bib"))
+                importedBibRecords.inc();
+            else
+                importedHoldRecords.inc();
         }
         else if (duplicateIDs.size() == 1)
         {
-            // Coinciding with exactly one document. Merge or replace.
-
-            // The only safe way to do a REPLACE (while Voyager is still around) is to properly delete the old record
-            // and create a new one as a replacement, with a new ID. If we allowed replacing of the data in a record,
-            // we would loose our "controlNumber" reference into voyager/vcopy and create a new duplicate there with
-            // every REPLACE here. REPLACE is not currently in use for any source, do not enable this.
-
             // Enrich (or "merge")
             resultingResourceId = enrichRecord( (String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId );
+
+            if (collection.equals("bib"))
+                enrichedBibRecords.inc();
+            else
+                enrichedHoldRecords.inc();
         }
         else
         {
             // Multiple coinciding documents.
+            encounterdMulBibs.inc();
 
             if (m_parameters.getEnrichMulDup())
             {

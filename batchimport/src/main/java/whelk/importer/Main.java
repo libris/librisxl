@@ -1,5 +1,8 @@
 package whelk.importer;
 
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.Counter;
+import io.prometheus.client.exporter.PushGateway;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
@@ -16,7 +19,31 @@ import java.util.List;
 
 public class Main
 {
-    static XL s_librisXl = null;
+    private static XL s_librisXl = null;
+
+    // Metrics
+    private final static String METRICS_PUSHGATEWAY = "metrics.libris.kb.se:9091";
+    private final static CollectorRegistry registry = new CollectorRegistry();
+    private final static Counter importedBibRecords = Counter.build()
+            .name("batchimport_imported_bibliographic_records_count")
+            .help("The total number of bibliographic records imported.")
+            .register(registry);
+    private final static Counter importedHoldRecords = Counter.build()
+            .name("batchimport_imported_holding_records_count")
+            .help("The total number of holding records imported.")
+            .register(registry);
+    private final static Counter enrichedBibRecords = Counter.build()
+            .name("batchimport_enriched_bibliographic_records_count")
+            .help("The total number of bibliographic records enriched.")
+            .register(registry);
+    private final static Counter enrichedHoldRecords = Counter.build()
+            .name("batchimport_enriched_holding_records_count")
+            .help("The total number of holding records enriched.")
+            .register(registry);
+    private final static Counter encounterdMulBibs = Counter.build()
+            .name("batchimport_encountered_mulbibs")
+            .help("The total number of incoming records with more than one duplicate already in the system.")
+            .register(registry);
 
     // Abort on unhandled exceptions, including those on worker threads.
     static
@@ -66,6 +93,9 @@ public class Main
                 importFile(file.toPath(), parameters);
             }
         }
+
+        PushGateway pg = new PushGateway(METRICS_PUSHGATEWAY);
+        pg.pushAdd(registry, "batch_import");
 
         System.err.println("All done.");
     }
@@ -163,7 +193,14 @@ public class Main
             String lastKnownBibDocId = null;
             for (MarcRecord marcRecord : batch)
             {
-                String resultingId = s_librisXl.importISO2709(marcRecord, lastKnownBibDocId);
+                String resultingId = s_librisXl.importISO2709(
+                        marcRecord,
+                        lastKnownBibDocId,
+                        importedBibRecords,
+                        importedHoldRecords,
+                        enrichedBibRecords,
+                        enrichedHoldRecords,
+                        encounterdMulBibs);
                 if (resultingId != null)
                     lastKnownBibDocId = resultingId;
             }

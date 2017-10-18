@@ -25,6 +25,9 @@ dependencies {
             project(':../jmarctools') :
             'com.github.libris:jmarctools:90edfc74bcc006c2d45674cd67fbdc2db0964a97')
             */
+
+    compile 'io.prometheus:simpleclient:0.0.21'
+    compile 'io.prometheus:simpleclient_pushgateway:0.0.21'
 }
 
 mainClassName = 'whelk.importer.Main'
