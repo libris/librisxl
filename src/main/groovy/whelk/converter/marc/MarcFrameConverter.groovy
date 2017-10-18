@@ -1581,13 +1581,13 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def unhandled = new HashSet()
 
-        def localEntites = [:]
+        def localEntities = [:]
 
         [ind1: ind1, ind2: ind2].each { indKey, handler ->
             if (!handler)
                 return
             def ok = handler.convertSubValue(state, value[indKey], entity,
-                    uriTemplateParams, localEntites)
+                    uriTemplateParams, localEntities)
             if (!ok && handler.marcDefault == null) {
                 unhandled << indKey
             }
@@ -1605,7 +1605,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         ok = true // rule does not apply here
                     } else {
                         ok = subDfn.convertSubValue(state, subVal, ent,
-                                uriTemplateParams, localEntites)
+                                uriTemplateParams, localEntities)
                     }
                 }
                 if (!ok && !handled.contains(code)) {
@@ -2063,7 +2063,8 @@ class MarcSubFieldHandler extends ConversionPart {
     }
 
     boolean convertSubValue(Map state, def subVal, Map ent,
-                            Map uriTemplateParams, Map localEntites) {
+                            Map uriTemplateParams, Map localEntities,
+                            boolean precedingNewAbout = false) {
         def ok = false
         String uriTemplateKeyBase = ""
 
@@ -2083,7 +2084,7 @@ class MarcSubFieldHandler extends ConversionPart {
         }
 
         if (about) {
-            ent = fieldHandler.getLocalEntity(state, ent, about, localEntites, newAbout)
+            ent = fieldHandler.getLocalEntity(state, ent, about, localEntities, newAbout)
         }
 
         if (link) {
