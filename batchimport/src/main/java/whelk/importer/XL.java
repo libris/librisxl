@@ -48,7 +48,7 @@ class XL
     /**
      * Write a ISO2709 MarcRecord to LibrisXL. returns a resource ID if the resulting document (merged or new) was in "bib".
      * This ID should then be passed (as 'relatedWithBibResourceId') when importing any subsequent related holdings post.
-     * Returns null when supplied a hold post
+     * Returns null when supplied a hold post.
      */
     String importISO2709(MarcRecord incomingMarcRecord,
                          String relatedWithBibResourceId,
@@ -68,7 +68,8 @@ class XL
 
         String resultingResourceId = null;
 
-        System.err.println("Incoming document had: " + duplicateIDs.size() + " existing duplicates.");
+        //System.err.println("Incoming [" + collection + "] document had: " + duplicateIDs.size() + " existing duplicates:\n" + duplicateIDs);
+
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
             resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId);
@@ -107,7 +108,7 @@ class XL
                 // when there are multiple duplicates is defined as the one with the "lowest" alpha numeric id.
                 List<String> duplicateList = new ArrayList<>(duplicateIDs);
                 Collections.sort(duplicateList);
-                resultingResourceId = duplicateList.get(0);
+                resultingResourceId = m_whelk.getStorage().getThingId(duplicateList.get(0));
             }
             else
                 resultingResourceId = null;
@@ -139,7 +140,7 @@ class XL
             m_whelk.store(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
         }
         else
-            System.out.println("Would now (if --live had been specified) have written the following json-ld to whelk:"
+            System.out.println("Would now (if --live had been specified) have written the following json-ld to whelk as a new record:\n"
                     + rdfDoc.getDataAsString());
 
         if (collection.equals("bib"))
@@ -186,7 +187,7 @@ class XL
         {
             Document doc = m_whelk.getStorage().load( ourId );
             enrich( doc, rdfDoc );
-            System.out.println("Would now (if --live had been specified) have written the following (merged) json-ld to whelk:");
+            System.out.println("Would now (if --live had been specified) have written the following (merged) json-ld to whelk:\n");
             System.out.println("id:\n" + doc.getShortId());
             System.out.println("data:\n" + doc.getDataAsString());
         }
@@ -411,9 +412,10 @@ class XL
         if (df.getSubfields("b").size() < 1)
             return new ArrayList<>();
         String sigel = df.getSubfields("b").get(0).getData();
+        String library = LegacyIntegrationTools.legacySigelToUri(sigel);
 
         try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnHeldByHoldingFor_ps(connection, sigel, relatedWithBibResourceId);
+            PreparedStatement statement = getOnHeldByHoldingFor_ps(connection, library, relatedWithBibResourceId);
             ResultSet resultSet = statement.executeQuery())
         {
             return collectIDs(resultSet);
@@ -478,7 +480,14 @@ class XL
     {
         String libraryUri = LegacyIntegrationTools.legacySigelToUri(heldBy);
 
-        String query = "SELECT id FROM lddb WHERE data#>>'{@graph,1,heldBy,@id}' = ? AND data#>>'{@graph,1,itemOf,@id}' = ? AND collection = 'hold'";
+        String query =
+                "SELECT lddb.id from lddb " +
+                "INNER JOIN lddb__identifiers id1 ON lddb.data#>>'{@graph,1,itemOf,@id}' = id1.iri " +
+                "INNER JOIN lddb__identifiers id2 ON id1.id = id2.id " +
+                "WHERE " +
+                "data#>>'{@graph,1,heldBy,@id}' = ? " +
+                "AND " +
+                "id2.iri = ?";
         PreparedStatement statement = connection.prepareStatement(query);
 
         statement.setString(1, libraryUri);
