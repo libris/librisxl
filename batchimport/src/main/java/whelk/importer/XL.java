@@ -108,7 +108,10 @@ class XL
                 // when there are multiple duplicates is defined as the one with the "lowest" alpha numeric id.
                 List<String> duplicateList = new ArrayList<>(duplicateIDs);
                 Collections.sort(duplicateList);
-                resultingResourceId = m_whelk.getStorage().getThingId(duplicateList.get(0));
+                String selectedDuplicateId = duplicateList.get(0);
+                if (!selectedDuplicateId.startsWith(Document.getBASE_URI().toString()))
+                    selectedDuplicateId = Document.getBASE_URI().toString() + selectedDuplicateId;
+                resultingResourceId = m_whelk.getStorage().getThingId(selectedDuplicateId);
             }
             else
                 resultingResourceId = null;
