@@ -6183,6 +6183,41 @@
         },
         {
           "source": {
+            "650": {"ind1": "2", "ind2": " ",
+              "subfields": [{"a": "Health services for the aged", "v": "periodicals"}]}
+          },
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "marc:subjectLevel": {"@id": "marc:Secondary"},
+                  "prefLabel": "Health services for the aged"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "650": {"ind1": "0", "ind2": " ",
+              "subfields": [{"a": "Geriatrics"}]}
+          },
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "prefLabel": "Geriatrics"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
             "650": {"ind1": "2", "ind2": "4",
               "subfields": [{"a": "Something secondary"}]}
           },
@@ -6517,6 +6552,14 @@
                   "prefLabel": "True crime stories"
                 }
               ]
+            }
+          }}
+        },
+        {
+          "source": {"655": {"ind1": "7", "ind2": " ", "subfields": [{"a": "Artikeldatabaser"}, {"2": "saogf"}]}},
+          "TODO:": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text"
             }
           }}
         }
@@ -6872,6 +6915,17 @@
               ]
             }
           }}
+        },
+        {
+          "source": [
+            {"700": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Breitholtz, Lennart,"}, {"d": "1909-1998"}, {"4": "edt"}]}},
+            {"700": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Breitholtz, Lennart,"}, {"d": "1909-1998"}, {"4": "oth"}]}}
+          ],
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text"
+            }
+          }}
         }
       ]
     },
@@ -7132,6 +7186,18 @@
                   }]
                 }
               ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Statens kulturråd"},
+              {"4": "oth"}
+            ]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text"
             }
           }}
         },
