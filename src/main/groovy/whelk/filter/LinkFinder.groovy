@@ -71,9 +71,32 @@ class LinkFinder {
         }
     }
 
+    void replaceSameAsLinksWithPrimaries(Map data) {
+        // If this is a link (an object containing _only_ an id)
+        String id = data.get("@id")
+        if (id != null && data.keySet().size() == 1) {
+            String mainId = postgres.getMainId(id)
+            if (mainId != null)
+                data.put("@id", mainId)
+        }
 
+        for (Object key : data.keySet()) {
+            Object value = data.get(key)
 
+            if (value instanceof List)
+                replaceSameAsLinksWithPrimaries( (List) value)
+            if (value instanceof Map)
+                replaceSameAsLinksWithPrimaries( (Map) value)
+        }
+    }
 
-
+    void replaceSameAsLinksWithPrimaries(List data) {
+        for (Object element : data){
+            if (element instanceof List)
+                replaceSameAsLinksWithPrimaries( (List) element)
+            else if (element instanceof Map)
+                replaceSameAsLinksWithPrimaries( (Map) element)
+        }
+    }
 
 }

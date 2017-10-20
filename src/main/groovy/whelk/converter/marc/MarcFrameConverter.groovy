@@ -300,8 +300,11 @@ class MarcConversion {
         }
 
         if (flatLinkedForm) {
-            return toFlatLinkedForm(state, marcRuleSet, extraData)
+            Map result = toFlatLinkedForm(state, marcRuleSet, extraData)
+            converter.linkFinder.replaceSameAsLinksWithPrimaries(result)
+            return result
         } else {
+            converter.linkFinder.replaceSameAsLinksWithPrimaries(record)
             return record
         }
     }
