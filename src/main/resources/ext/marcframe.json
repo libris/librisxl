@@ -8937,7 +8937,13 @@
     },
     "370": {},
     "371": {},
-    "372": {},
+    "372": {
+      "addLink": "fieldOfActivity",
+      "resourceType": "FieldOfActivity",
+      "$a": {"addproperty": "label"},
+      "$2": {"property": "marc:source"},
+      "repeatable": true
+    },
     "373": {},
     "374": {
       "TODO:about": "_:agent",
