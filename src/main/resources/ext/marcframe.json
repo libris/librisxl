@@ -4749,8 +4749,7 @@
         "property": "label"
       },
       "$d": {
-        "TODO": "Add the separate lists used for cataloging, as enumerations",
-        "TODO": "Ensure this doesn't clash with 007 13:14 Sound",
+        "TODO": "Add the separate lists used for cataloging, as enumerations. Ensure this doesn't clash with 007 13:14 Sound",
         "addLink": "productionMethod",
         "resourceType": "ProductionMethod",
         "property": "label"
@@ -7993,10 +7992,13 @@
         }
       ]
     },
-    "001" : {
+    "001": {
       "aboutEntity": "?record",
       "property": "controlNumber"
     },
+
+    "003": {"ignored": true, "NOTE:local": "FÖREKOMMER EJ I LIBRIS AUKTORITETSFORMAT"},
+
     "005": {"inherit": "bib"},
 
     "008": {
@@ -9007,14 +9009,13 @@
       "addLink": "hasVersion",
       "resourceType": "Meeting"
     },
-
     "430": {
       "ignored": true,
       "TODO": "alternativeForm a Work (like a structured altLabel)"
     },
-    "447": {"ignored": true},
+    "447": {"ignored": true, "NOTE:record-count": 0},
     "448": {},
-    "450" : {
+    "450": {
       "$a": {"addProperty": "altLabel"},
       "match": [
         {
@@ -9028,13 +9029,14 @@
       ],
       "TODO": "whatIs w||e"
     },
-    "451" : {},
-    "455" : {"inherit": "450"},
-    "462" : {"ignored": true},
-    "480" : {},
-    "481" : {},
-    "482" : {"ignored": true},
-    "485" : {},
+    "451": {},
+    "455": {"inherit": "450"},
+    "462": {"ignored": true, "NOTE:record-count": 0},
+    "480": {},
+    "481": {"ignored": true, "NOTE:record-count": 1},
+    "482": {"ignored": true, "NOTE:record-count": 0},
+    "485": {},
+
     "500": {
       "TODO:remnants-of-inherit": "bib:100",
       "include": ["agentdata", "splicedworkentity"],
@@ -9556,86 +9558,115 @@
       ]
     },
 
-    "010": {"NOTE:record-count": 22, "ignored": true},
-
+    "010": {"ignored": true, "NOTE:record-count": 22, "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "014": {
       "aboutEntity": "?record",
       "TODO:i1": {},
-      "$a": {"addProperty": "librisIIINumber"}
+      "$a": {"property": "librisIIINumber"},
+      "repeatable": true
     },
-
-    "016": {"ignored": true},
-    "017": {"ignored": true},
-    "020": {},
-    "022": {},
+    "016": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "017": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "020": {"inherit": "bib"},
+    "022": {"inherit": "bib"},
     "024": {"inherit": "bib"},
-    "027": {},
-    "030": {},
-    "035": {"inherit": "bib", "$9": null},
-    "040": {"NOTE:record-count": 4, "ignored": true}, 
-    "050": {},
-    "060": {},
-    "066": {"ignored": true},
-    "072": {},
-    "080": {},
-    "082": {},
-    
-    "084": {"inherit": "bib", "aboutEntity": null, "addLink": "callno"},
+    "027": {"ignored": true, "NOTE:record-count": 0, "TODO": "inherit-bib?"},
+    "030": {"ignored": true, "NOTE:record-count": 0, "TODO": "inherit-bib?"},
+    "035": {
+      "inherit": "bib",
+      "NOTE:local": "Fältet förekommer normalt inte i beståndsposter, men kan användas för dubblettkontroll/länkning vid postexport till lokalt system.",
+      "$9": null
+    },
+    "040": {"ignored": true, "NOTE:record-count": 4, "NOTE:local": "ANVÄNDS NORMALT EJ I BESTÅNDSFORMATET"}, 
+    "050": {
+      "inherit": "bib",
+      "aboutEntity": "?item",
+      "NOTE-local": "LIBRIS-definierat beståndsfält.",
+      "addLink": "shelfMark",
+      "resourceType": "ShelfMarkLcc",
+      "$b": {"ignored": true}
+    },
+    "060": {
+      "inherit": "bib",
+      "aboutEntity": "?item",
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "addLink": "shelfMark",
+      "resourceType": "ShelfMarkNLM",
+      "$b": {"ignored": true}
+    },
+    "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS F.N. EJ"},
 
-    "337": {},
-    "338": {},
-    "347": {},
-
-    "500": {},
-
-    "506": {
-      "inherit": "bib"
+    "072": {"inherit": "bib", "aboutEntity": "?thing", "NOTE:local": "LIBRIS-definierat beståndsfält."},
+    "080": {"inherit": "bib", "aboutEntity": "?thing", "NOTE:local": "LIBRIS-definierat beståndsfält."},
+    "082": {
+      "inherit": "bib",
+      "aboutEntity": "?thing",
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "$m": null,
+      "$q": null
+    },
+    "084": {
+      "inherit": "bib",
+      "aboutEntity": "?thing",
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "addLink": "callno"
     },
 
-    "520": {},
-    "538": {},
-
+    "337": {"ignored": true, "NOTE:record-count": 0, "NOTE:": "Media only on work or instance"},
+    "338": {"ignored": true, "NOTE:record-count": 0, "NOTE:": "Carrier only on instance"},
+    "347": {"ignored": true, "NOTE:record-count": 0},
+    "500": {"inherit": "bib", "NOTE:local": "LIBRIS-definierat beståndsfält."},
+    "506": {"inherit": "bib", "aboutEntity": "?thing"},
+    "520": {"inherit": "bib", "aboutEntity": "?thing", "NOTE:local": "LIBRIS-definierat beståndsfält."},
+    "538": {"inherit": "bib", "$5": null},
     "541": {
       "TODO:linkedEntity": "?example-$i",
       "addLink": "hasItem", "embedded": true, "resourceType": "Item",
       "$a": {"addProperty": "immediateSourceOfAcquisition"},
       "repeatable": true
     },
-
     "561": {
       "TODO:linkedEntity": "?example-$i",
       "addLink": "hasItem", "embedded": true, "resourceType": "Item",
-      "$a": {"addProperty": "custodialHistory"}
+      "$a": {"property": "custodialHistory"},
+      "repeatable": true
     },
-
     "562": {
       "TODO:linkedEntity": "?example-$i",
       "inherit": "bib"
     },
-
     "563": {
       "TODO:linkedEntity": "?example-$i",
       "addLink": "hasItem", "embedded": true, "resourceType": "Item",
-      "$a": {"addProperty": "bindingInformation"}
+      "$a": {"property": "bindingInformation"},
+      "repeatable": true
     },
-
     "583": {},
 
-    "599": {"inherit": "bib", "NOTE:i1": null},
+    "599": {
+      "aboutEntity": "?record",
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "TODO:": "Should this not be internal data?",
+      "addProperty": "editorialNote",
+      "repeatable": true
+    },
 
     "600": {
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
       "TODO:aboutEntity": "?exampleOfWork (which may be the sameAs ?itemOf)",
       "TODO:remnants-of-inherit": "bib:100",
       "include": ["agentdata"],
       "pendingResources": {
         "_:agent": {"link": "subject", "resourceType": "Person"}
-      }
+      },
+      "repeatable": true
     },
     "610": {},
     "611": {},
     "630": {},
     "648": {},
     "650": {"inherit": "bib:650", "aboutEntity": null},
+    "651": {},
     "653": {},
     "655": {},
     "698": {},
@@ -9645,7 +9676,7 @@
     "752": {},
     "787": {},
 
-    "841": {"ignored": true},
+    "841": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ"},
     "842": {},
     "843": {},
     "844": {},
@@ -9749,9 +9780,9 @@
       ]
     },
 
-    "853": {"NOTE:record-count": 6, "ignored": true},
-    "854": {"NOTE:record-count": 2, "ignored": true},
-    "855": {"NOTE:record-count": 35, "ignored": true},  
+    "853": {"ignored": true, "NOTE:record-count": 6, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "854": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "855": {"ignored": true, "NOTE:record-count": 35, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
     "856": {
       "inherit": "bib"
@@ -9765,11 +9796,11 @@
       "TODO:i2": {},
       "$a": {"property": "label"},
       "$x": {"addProperty": "cataloguersNote"},
-      "$z": {"addProperty": "copyNote"}
+      "$z": {"addProperty": "copyNote"},
+      "repeatable": true
     },
-
-    "864": {"NOTE:record-count": 6, "ignored": true}, 
-    "865": {"NOTE:record-count": 8, "ignored": true}, 
+    "864": {"ignored": true, "NOTE:record-count": 6, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"}, 
+    "865": {"ignored": true, "NOTE:record-count": 8, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"}, 
 
     "866": {
       "addLink": "qualifiedBasicUnitNote",
@@ -9799,17 +9830,19 @@
       "TODO:i2": {},
       "$a": {"property": "label"},
       "$x": {"addProperty": "cataloguersNote"},
-      "$z": {"addProperty": "copyNote"}
+      "$z": {"addProperty": "copyNote"},
+      "repeatable": true
     },
+
     "876": {},
     "877": {},
     "878": {},
 
-    "880": {},
-    "883": {},
-    "884": {},
+    "880": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "LIBRIS-definierat beståndsfält."},
+    "883": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "LIBRIS-definierat beståndsfält."},
+    "884": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "LIBRIS-definierat beståndsfält."},
     "886": {},
-    "887": {},
+    "887": {"ignored": true, "NOTE:LC": "nac", "NOTE:local": "Maskinellt genererad information från LIBRIS XL till Voyager"},
 
     "948": {},
     "949": {},
