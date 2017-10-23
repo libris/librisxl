@@ -4264,10 +4264,55 @@
       "addLink": "hasTitle",
       "embedded": true,
       "resourceType": "AbbreviatedTitle",
-      "TOOO:i2": {},
+      "i2": {
+        "link": "source",
+        "resourceType": "Source",
+        "property": "label",
+        "tokenMap": {
+          " ": "issnkey",
+          "0": "marc:otherAbbreviatedTitle"
+        }
+      },
       "$a": {"property": "mainTitle"},
-      "$b": {"property": "qualifyingNote"},
-      "$2": {"property": "sourceNote"}
+      "$b": {"property": "qualifier"},
+      "$2": {"addProperty": "sourceNote"},
+      "_spec": [
+        {
+          "source": {
+            "210": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Mensuration photogrammetrie genie rural"}
+            ]}},
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "AbbreviatedTitle",
+              "mainTitle":  "Mensuration photogrammetrie genie rural",
+              "source" : {
+                "@type" : "Source",
+                "label" : "marc:otherAbbreviatedTitle"
+              }
+            }]
+          }}
+        },
+        {
+          "source": {
+            "210": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Plant prot. bull."} ,
+              {"b": "(Faridabad)"}
+            ]}},
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "AbbreviatedTitle",
+              "mainTitle":  "Plant prot. bull.",
+              "qualifier": "(Faridabad)",
+              "marc:searchElement" : false,
+              "source" : {
+                "@type" : "Source",
+                "label" : "issnkey"
+              }
+            }]
+          }}
+        }
+      ]
     },
 
     "222": {
@@ -4277,7 +4322,25 @@
       "embedded": true,
       "resourceType": "KeyTitle",
       "$a": {"property": "mainTitle"},
-      "$b": {"property": "qualifyingNote"}
+      "$b": {"property": "qualifier"},
+      "i2": {"property": "marc:titleSortKey"},
+      "_spec": [
+        {
+          "source": {
+            "222": {"ind1": " ", "ind2": "0", "subfields": [
+              {"a": "Plant prot. bull."} ,
+              {"b": "(Faridabad)"}
+            ]}},
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "KeyTitle",
+              "mainTitle": "Plant prot. bull.",
+              "qualifier": "(Faridabad)",
+              "marc:titleSortKey" : "0"
+            }]
+          }}
+        }
+      ]
     },
 
     "240": {
@@ -4325,16 +4388,102 @@
       "resourceType": "Title",
       "$c": {"property": "responsibilityStatement"},
       "$h": {"property": "marc:mediaTerm"},
-      "$y": {"link": "language", "property": "code"},
-      "TODO": "Translation of? merge into 245?"
+      "$y": {"link": "language", "resourceType": "Language", "property": "code"},
+      "i2": {"property": "marc:titleSortKey"},
+      "TODO": "Translation of? merge into 245?",
+      "_spec": [
+        {
+          "source": {
+            "242": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "New regulation on public order"} ,
+              {"b": "an addendum to the instruction of the ward chairmen."},
+              {"y": "eng"}
+            ]}},
+          "result": {"mainEntity": {
+            "marc:hasTranslatedTitle": [{
+              "@type": "Title",
+              "mainTitle": "New regulation on public order",
+              "titleRemainder": "an addendum to the instruction of the ward chairmen.",
+              "language": {"@type": "Language", "code": "eng"},
+              "marc:titleSortKey" : "0"
+            }]
+          }}
+        },
+        {
+          "source": {
+            "242": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Annals of chemistry"} ,
+              {"n": "Series C,."},
+              {"p": "Organic chemistry and biochemistry."},
+              {"y": "eng"}
+            ]}},
+          "result": {"mainEntity": {
+            "marc:hasTranslatedTitle": [{
+              "@type": "Title",
+              "mainTitle": "Annals of chemistry",
+              "hasPart" : [{
+                "@type" : "TitlePart",
+                "partName" : "Organic chemistry and biochemistry.",
+                "partNumber" : "Series C,."
+              }],
+              "language": {"@type": "Language", "code": "eng"},
+              "marc:titleSortKey" : "0"
+            }]
+          }}
+        }
+      ]
     },
 
     "243": {
-      "include": ["titledetails", "titlesearchelem"],
-      "addLink": "hasTitle",
+      "aboutEntity": "?work",
+      "include": ["titledetails1xx7xx", "titlesearchelem"],
+      "link": "hasTitle",
       "embedded": true,
       "resourceType": "CollectiveTitle",
-      "$a": {"property": "mainTitle"}
+      "$a": {"property": "mainTitle"},
+      "$d": {"property": "legalDate"},
+      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+      "i2": {"property": "marc:titleSortKey"},
+      "_spec": [
+        {
+          "source": {
+            "243": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Philosophical works"} ,
+              {"k": "Selsections"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": {
+                "@type": "CollectiveTitle",
+                "mainTitle": "Philosophical works",
+                "marc:formSubheading": ["Selsections"],
+                "marc:titleSortKey": "0"
+              }
+            }
+          }}
+        },
+        {
+          "source": {
+            "243": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Correspondence"},
+              {"l": "English"},
+              {"s": "Selections"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": {
+                "@type": "CollectiveTitle",
+                "mainTitle": "Correspondence",
+                "language": {"@type": "Language", "label": "English"},
+                "marc:titleSortKey": "0",
+                "marc:version": "Selections"
+              }
+            }
+          }}
+        }
+      ]
     },
 
     "245": {
@@ -4343,17 +4492,17 @@
       "addLink": "hasTitle",
       "embedded": true,
       "resourceType": "Title",
-      "i2": {"TODO:titleSortKey": "bf2 implements this as: ($label,@ind2+1,(string-length($label)-@ind2)-1)", "marcDefault": "0"},
       "subfieldOrder": "a b c p n ... h",
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
         "leadingPunctuation": "/", "trailingPunctuation": ".",
         "NOTE": "punctuation may include data about included parts (e.g. short stories)"
       },
-      "$f": {"aboutEntity": "?thing", "property": "temporalCoverage"},
-      "$g": {"aboutEntity": "?thing", "property": "marc:generalTemporalCoverageNote"},
+      "$f": {"aboutEntity": "?thing", "property": "marc:inclusiveDates"},
+      "$g": {"aboutEntity": "?thing", "property": "marc:bulkDates"},
       "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "surroundingChars": "[]"},
       "$s": {"property": "version"},
+      "i2": {"property": "marc:titleSortKey"},
       "_spec": [
         {
           "source": {
@@ -4362,7 +4511,8 @@
           ]}},
           "result": {"mainEntity": {
             "hasTitle": [ {"@type": "Title",
-              "mainTitle":  "Anteckningar från en ö"
+              "mainTitle":  "Anteckningar från en ö",
+              "marc:titleSortKey": "0"
             } ]
           }}
         },
@@ -4375,7 +4525,8 @@
           "result": {"mainEntity": {
             "hasTitle": [ {"@type": "Title",
               "mainTitle":  "Anteckningar från en ö",
-              "marc:searchElement": false
+              "marc:searchElement": false,
+              "marc:titleSortKey": "0"
             } ],
             "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
           }}
@@ -4411,8 +4562,8 @@
           "3": "marc:OtherTitle",
           "4": "CoverTitle",
           "5": "TitlePage",
-          "6": "HeadingTitle",
-          "7": "ColumnTitle",
+          "6": "CaptionTitle",
+          "7": "RunningTitle",
           "8": "SpineTitle"
         }
       },
@@ -7813,9 +7964,74 @@
     },
 
     "740": {
-      "inherit": "730",
+      "TODO:inherit?": "730",
       "aboutEntity": "?thing",
-      "$a": {"property": "title"}
+      "include": "titledetails1xx7xx",
+      "i1": {"property": "marc:titleSortKey"},
+      "match": [
+        {
+          "when": "i2=2",
+          "addLink": "hasPart",
+          "resourceType": "Work",
+          "$a": {"property": "title"},
+          "$d": {"property": "legalDate"},
+          "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+          "$x": {"property": "issn", "punctuationChars": ".,=;"}
+        }
+      ],
+      "pendingResources": {
+        "_:work": {"link": "entity", "resourceType": "Work", "embedded": false}
+      },
+      "addLink": "relatedTo",
+      "resourceType": "Relationship",
+      "$a": {"about": "_:work", "property": "title"},
+      "$d": {"about": "_:work","property": "legalDate"},
+      "$i": {"addLink": "relation", "property": "label"},
+      "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
+      "$x": {"about": "_:work","property": "issn", "punctuationChars": ".,=;"},
+      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "_spec": [
+        {
+          "source": {"740": {"ind1": "0", "ind2": "2", "subfields": [
+            {"a": "Economics library selections"},
+            {"n": "Series 1,"},
+            {"p": "New books in economics"}
+          ]}},
+          "normalized": {"740": {"ind1": "0", "ind2": "2", "subfields": [
+            {"a": "Economics library selections"},
+            {"n": "Series 1"},
+            {"p": "New books in economics"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasPart": [
+              {
+                "@type": "Work",
+                "title": "Economics library selections",
+                "partNumber": ["Series 1"],
+                "partName": ["New books in economics"],
+                "marc:titleSortKey" : "0"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"740": {"ind1": "3", "ind2": " ", "subfields": [
+            {"a": "En hjälpande hand"}
+          ]}},
+          "result": {"mainEntity": {
+            "relatedTo": [
+              {
+                "@type": "Relationship",
+                "entity": {
+                  "@type": "Work",
+                  "title": "En hjälpande hand"
+                },
+                "marc:titleSortKey" : "3"
+              }
+            ]
+          }}
+        }
+      ]
     },
 
     "751": {},
