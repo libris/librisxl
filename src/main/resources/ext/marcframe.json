@@ -8933,23 +8933,68 @@
       "$a": {"addProperty": "marc:typeOfCorporateBody"},
       "$c": {"addProperty": "marc:otherDesignation"},
       "$d": {"addProperty": "marc:titleOfPerson"},
-      "$2": {"property": "marc:source"}
+      "$2": {"property": "marc:source"},
+      "repeatable": true
     },
     "370": {},
     "371": {},
     "372": {
-      "addLink": "fieldOfActivity",
-      "resourceType": "FieldOfActivity",
-      "$a": {"addproperty": "label"},
+      "aboutEntity": "?thing",
+      "aboutType": "Agent",
+      "addLink": "fieldOfActivity", "resourceType": "FieldOfActivity",
+      "$a": {"addProperty": "label"},
       "$2": {"property": "marc:source"},
-      "repeatable": true
+      "repeatable": true,
+      "_spec": [
+        {
+          "source": {
+            "372": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Kriminologi"},
+              {"2": "sao"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Agent",
+              "fieldOfActivity": [
+                      {
+                        "@type": "FieldOfActivity",
+                        "label": ["Kriminologi"],
+                        "marc:source": "sao"
+                      }
+                    ]
+            }
+          }
+        }
+      ]
     },
     "373": {},
     "374": {
-      "TODO:about": "_:agent",
+      "aboutEntity": "?thing",
+      "aboutType": "Agent",
       "addLink": "hasOccupation", "resourceType": "Occupation",
-      "$a": {"property": "label"},
-      "$2": {"property": "marc:sourceOfTerm"}
+      "$a": {"addProperty": "label"},
+      "$2": {"property": "marc:sourceOfTerm"},
+      "_spec": [
+        {
+          "source": {
+            "374": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Åklagare"},
+              {"2": "sao"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Agent",
+              "hasOccupation": [
+                      {
+                        "@type": "Occupation",
+                        "label": ["Åklagare"],
+                        "marc:sourceOfTerm": "sao"
+                      }
+                    ]
+            }
+          }
+        }
+      ]
     },
     "375": {
       "TODO:about": "_:agent",
