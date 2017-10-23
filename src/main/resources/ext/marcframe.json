@@ -8120,9 +8120,9 @@
       "repeatable": false
     },
 
-    "010" : {},
-    "014" : {},
-    "016" : {},
+    "010": {"ignored": true, "NOTE:record-count": 396, "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "014": {"ignored": true, "NOTE:record-count": 1, "NOTE:LC": "nac"},
+    "016": {"ignored": true, "NOTE:record-count": 4, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "020" : {},
     "022" : {},
     "024" : {
@@ -8137,9 +8137,8 @@
       },
       "i2": null
     },
-
-    "031" : {},
-    "034" : {},
+    "031": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "034": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac - not used for titles"},
     "035" : {"inherit": "bib"},
     "040" : {
       "inherit": "bib",
@@ -8179,6 +8178,8 @@
       ]
     },
     "042": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ I AUKTORITETSFORMATET",
+      "NOTE:record-count": 34043,
       "$a": {"property": "authenticationCode"},
       "$9": {
         "addLink": "inCollection",
@@ -8193,8 +8194,7 @@
         "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "code"
       }
     },
-
-    "045": {
+    "045" : {
       "$a": {"property": "temporalCoverage", "tokenMap": "timePeriod", "TODO": "This is the EDTF value table from the LoC BF2 converter, not the readable form. Might be better as linked resources with with both labels and codes."}
     },
 
@@ -8205,19 +8205,20 @@
         "$2": {"property": "marc:sourceOfDateScheme"},
         "TODO:edtf": "?"
     },
-    "050" : {},
-    "052" : {},
-    "053" : {},
-    "055" : {},
-    "060" : {},
-    "065" : {
+    "050": {"ignored": true, "NOTE:record-count": 0},
+    "052": {"ignored": true, "NOTE:record-count": 0},
+    "053": {"ignored": true, "NOTE:record-count": 33, "NOTE:LC": "ignore - not applied to titles"},
+    "055": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "060": {"ignored": true, "NOTE:record-count": 0},
+    "065": {
       "inherit": "bib:084",
       "aboutEntity": "?thing",
       "addLink": "broadMatch"
     },
-    "070" : {},
-    "072" : {},
-    "073": {
+    "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
+    "070": {"ignored": true, "NOTE:record-count": 0},
+    "072": {"ignored": true, "NOTE:record-count": 0},
+    "073" : {
       "TODO": "ignore entirely (should be removed)",
       "ignoreOnRevertInFavourOf": "550",
       "addLink": "broader",
@@ -8226,9 +8227,10 @@
       "$z": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "code"},
       "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
     },
-    "075" : {},
-    "080" : {},
+    "075": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "080": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "082" : {
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
       "inherit": "bib",
       "aboutEntity": "?thing"
     },
@@ -8242,9 +8244,10 @@
         "Work": {"addLink": "subject"}
       }
     },
-    "086" : {},
-    "087" : {},
-    "094" : {"ignored": true, "NOTE:record-count": 4, "NOTE": "Obsolete"},
+    "086": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "087": {"ignored": true, "NOTE:record-count": 0},
+    "094": {"ignored": true, "NOTE:record-count": 4, "NOTE:local": "OBSOLET"},
+
     "100" : {
       "match": [
         {
@@ -8801,7 +8804,7 @@
       "aboutEntity": "?thing", "link": null, "resourceType": null,
       "aboutType": "Work"
     },
-    "147": {"ignored": true},
+    "147": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "148" : {
       "include": "termbase",
       "dependsOn": ["040", "042"],
@@ -8915,10 +8918,14 @@
       "aboutType": "GenreSubdivision",
       "$v": {"property": "prefLabel"}
     },
-    "260": {},
-    "336": {},
-    "348": {},
-    "360": {},
+
+    "260": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore - not used with titles"},
+
+    "336": {"ignored": true, "NOTE:record-count": 0},
+    "348": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+
+    "360": {"ignored": true, "NOTE:record-count": 1, "NOTE:LC": "ignore - not used with titles"},
+
     "368": {
       "addLink": "marc:otherAttributesOfPersonOrCorporateBody",
       "$a": {"addProperty": "marc:typeOfCorporateBody"},
@@ -8946,14 +8953,15 @@
       "TODO": "Depends on bib 100, 700 and auth 100 $q 'marc:fullerFormName'. See mads:fullNameElement ",
       "$q": {"property": "marc:fullerFormName"}
     },
-    "380": {},
-    "381": {},
-    "382": {},
-    "383": {},
-    "384": {},
-    "385": {},
-    "386": {},
-    "388": {},
+    "380": {"ignored": true, "NOTE:record-count": 2},
+    "381": {"ignored": true, "NOTE:record-count": 0},
+    "382": {"ignored": true, "NOTE:record-count": 0},
+    "383": {"ignored": true, "NOTE:record-count": 0},
+    "384": {"ignored": true, "NOTE:record-count": 0},
+    "385": {"ignored": true, "NOTE:record-count": 0},
+    "386": {"ignored": true, "NOTE:record-count": 0},
+    "388": {"ignored": true, "NOTE:record-count": 0},
+
     "400": {
       "TODO:remnants-of-inherit": "bib:100",
       "TODO": "Ensure bib 100 does not match with auth 400",
@@ -9036,12 +9044,12 @@
         "_:agent": {"link": "hasPersona", "resourceType": "Person"}
       }
     },
-    "510" : {"inherit": "bib:110", "aboutEntity": null, "addLink": "seeAlso"},
-    "511" : {"inherit": "bib:111", "aboutEntity": null, "addLink": "seeAlso"},
-    "530" : {},
-    "547" : {"ignored": true},
-    "548" : {},
-    "550" : {
+    "510": {"inherit": "bib:110", "aboutEntity": null, "addLink": "seeAlso"},
+    "511": {"inherit": "bib:111", "aboutEntity": null, "addLink": "seeAlso"},
+    "530": {},
+    "547": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
+    "548": {"ignored": true, "NOTE:record-count": 51, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
+    "550": {
       "include": ["termbase", "relation_from_w"],
       "resourceType": "Topic",
       "_spec": [
@@ -9088,42 +9096,45 @@
         }
       ]
     },
-    "551" : {
+    "551": {
       "include": ["termbase_noid", "relation_from_w"],
       "resourceType": "Geographic",
       "uriTemplate": "https://id.kb.se/place/{prefLabel}"
     },
-    "555" : {
+    "555": {
       "include": ["termbase_noid", "relation_from_w"],
       "resourceType": "GenreForm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
-    "562" : {"ignored": true},
-    "580" : {
+    "562": {"ignored": true, "NOTE:record-count": 0},
+    "580": {
       "include": ["relation_from_w"],
       "resourceType": "Subdivision",
       "$x": {"property": "prefLabel"}
     },
-    "581" : {"ignored": true},
-    "582" : {"ignored": true},
-    "585" : {},
-    "599" : {"ignored": true},
-    "640" : {"ignored": true},
-    "641" : {"ignored": true},
-    "642" : {"ignored": true},
-    "643" : {"ignored": true},
-    "644" : {"ignored": true},
-    "645" : {"ignored": true},
-    "646" : {"ignored": true},
-    "663" : {},
-    "664" : {"ignored": true},
-    "665" : {},
-    "666" : {},
-    "667" : {
+    "581": {"ignored": true, "NOTE:record-count": 0},
+    "582": {"ignored": true, "NOTE:record-count": 0},
+    "585": {},
+    "599": {"ignored": true, "NOTE:local": "MAKULERAT"},
+
+    "640": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS F.N. EJ"},
+    "641": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS F.N. EJ"},
+    "642": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
+    "643": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
+    "644": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
+    "645": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
+    "646": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
+
+    "663": {},
+    "664": {"ignored": true, "NOTE:record-count": 0},
+    "665": {},
+    "666": {},
+
+    "667": {
       "aboutEntity": "?record",
       "$a": {"addProperty": "editorialNote"}
     },
-    "670" : {
+    "670": {
       "aboutEntity": "?record",
       "addLink": "source",
       "embedded": true,
@@ -9132,22 +9143,22 @@
       "$b": {"property": "citation"},
       "$u": {"property": "uri"}
     },
-    "672" : {"ignored": true, "NOTE": "No attempt to code"},
-    "673" : {"ignored": true, "NOTE": "No attempt to code"},
-    "675" : {
+    "672": {"ignored": true, "NOTE:record-count": 1, "NOTE:LC": "nac"},
+    "673": {"ignored": true, "NOTE:record-count": 1, "NOTE:LC": "nac"},
+    "675": {
       "$a": {"property": "label"}
     },
-    "677" : {"ignored": true},
-    "678" : {
+    "677": {"ignored": true, "NOTE:record-count": 1},
+    "678": {
       "TODO:i1": {},
       "$a": {"addProperty": "note"}
     },
-    "680" : {
+    "680": {
       "$i": {"addProperty": "scopeNote"}
     },
-    "681" : {"ignored": true},
-    "682" : {"ignored": true},
-    "688" : {
+    "681": {"ignored": true, "NOTE:record-count": 0},
+    "682": {"ignored": true, "NOTE:record-count": 0},
+    "688": {
       "$a": {"addProperty": "historyNote"}
     },
 
@@ -9155,13 +9166,12 @@
       "ignored": true,
       "TODO": "exactMatch a Person (external system)"
     },
-    "710" : {},
-    "711" : {},
-    "730" : {},
-    "747" : {"ignored": true},
-    "748" : {"ignored": true},
-
-    "750" : {
+    "710": {},
+    "711": {},
+    "730": {},
+    "747": {"ignored": true, "NOTE:record-count": 0},
+    "748": {"ignored": true, "NOTE:record-count": 0},
+    "750": {
       "i1": null,
       "addLink": "closeMatch",
       "resourceType": "Topic",
@@ -9187,26 +9197,26 @@
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
     },
-    "762" : {"ignored": true},
-    "780" : {
+    "762": {"ignored": true, "NOTE:record-count": 0},
+    "780": {
       "inherit": "750",
       "$x": {"property": "prefLabel"}
     },
-    "781" : {
+    "781": {
       "inherit": "750",
       "resourceType": "GeographicSubdivision",
       "$z": {"property": "prefLabel"}
     },
-    "782" : {
+    "782": {
       "inherit": "750",
       "resourceType": "ChronologicalSubdivision",
       "$y": {"property": "prefLabel"}
     },
-    "785" : {
+    "785": {
       "inherit": "755",
       "$v": {"property": "prefLabel"}
     },
-    "788" : {"ignored": true},
+    "788": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
 
     "856": {
       "inherit": "bib",
@@ -9221,12 +9231,12 @@
         {"when": "i2=8", "addLink": "seeAlso"}
       ]
     },
-    "880": {"ignored": true, "NOTE:record-count": 15},
+    "880": {"ignored": true, "NOTE:record-count": 15, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ I AUKTORITETSFORMATET"},
     "883": {},
     "884": {},
     "885": {},
     "886": {},
-    "887": {}
+    "887": {"ignored": true, "NOTE:local": "Maskinellt genererad information från LIBRIS XL till Voyager"}
   },
 
   "hold": {
