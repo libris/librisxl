@@ -4216,13 +4216,46 @@
     "130": {
       "aboutEntity": "?work",
       "link": "expressionOf",
-      "TODO:include?": ["titledetails"],
+      "include": ["titledetails1xx7xx"],
       "resourceType": "Work",
       "TODO": "Similar to 240. Could use link:expressionOf if 130 XOR 240",
+      "TODO:translationOf": "When should we map $l to translationOf",
+      "i1": {"property": "marc:titleSortKey"},
       "$a": {"property": "uniformTitle"},
-      "$d": {"property": "date"},
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+      "$d": {"property": "legalDate"},
+      "$n": {"property": "partNumber"},
+      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "_spec": [
+        {
+          "source": {
+            "130": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
+              {"d": "(1968)."},
+              {"l": "Spanish."},
+              {"f": "1977."}
+            ]}},
+          "normalized": {
+            "130": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
+              {"d": "(1968)."},
+              {"f": "1977."},
+              {"l": "Spanish."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "expressionOf": {
+                "@type": "Work",
+                "uniformTitle":  "Treaty of the Non-proliferation of Nuclear Weapons",
+                "legalDate": "(1968).",
+                "language": {"@type": "Language", "label": "Spanish."},
+                "originDate": "1977.",
+                "marc:titleSortKey" : "0"
+              }
+            }
+          }}
+        }
+      ]
     },
 
     "210": {
@@ -4249,8 +4282,8 @@
 
     "240": {
       "aboutEntity": "?work",
-      "TODO:i2": {},
-      "include": ["titledetails", "titlesearchelem"],
+      "i2": {"property": "marc:titleSortKey"},
+      "include": ["titledetails1xx7xx", "titlesearchelem"],
       "TODO": "See also 100$t and 130.",
       "embedded": true,
       "link": "hasTitle",
@@ -4260,7 +4293,28 @@
         "aboutEntity": "?work",
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
         "uriTemplate": "http://libris.kb.se/auth/{_}"
-      }
+      },
+      "_spec": [
+        {
+          "source": {
+            "240": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Moyen âge"},
+              {"l": "Engelska."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": {
+                "@type": "Title",
+                "mainTitle":  "Moyen âge",
+                "language": {"@type": "Language", "label": "Engelska."},
+                "marc:searchElement" : false,
+                "marc:titleSortKey" : " "
+              }
+            }
+          }}
+        }
+      ]
     },
 
     "242": {
@@ -7660,19 +7714,107 @@
     "720": {},
 
     "730": {
-      "TODO": "like 700 but just a Work!",
-      "TOOO:i1": {},
-      "TODO:match": [
-        {"when": "i2=2", "addLink": "influentialPart"}
+      "aboutEntity": "?work",
+      "include": "titledetails1xx7xx",
+      "i1": {"property": "marc:titleSortKey"},
+      "match": [
+        {
+          "when": "i2=2",
+          "addLink": "hasPart",
+          "resourceType": "Work",
+          "$a": {"property": "uniformTitle"},
+          "$d": {"property": "legalDate"},
+          "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+          "$x": {"property": "issn", "punctuationChars": ".,=;"}
+        }
       ],
-      "addLink": "influentialRelation",
-      "resourceType": "Work",
-      "$a": {"property": "title"}
+      "pendingResources": {
+        "_:work": {"link": "entity", "resourceType": "Work", "embedded": false}
+      },
+      "addLink": "relatedTo",
+      "resourceType": "Relationship",
+      "$a": {"about": "_:work", "property": "uniformTitle"},
+      "$d": {"about": "_:work","property": "legalDate"},
+      "$i": {"addLink": "relation", "property": "label"},
+      "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
+      "$x": {"about": "_:work","property": "issn", "punctuationChars": ".,=;"},
+      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "_spec": [
+        {
+          "source": {"730": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Abyss (Motion picture : 1989)"},
+            {"i": "Novelization of (work)"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "uniformTitle": "Abyss (Motion picture : 1989)"
+                  },
+                  "marc:titleSortKey" : "0",
+                  "relation": [{"label": "Novelization of (work)"}]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"730": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Macaroons and biscuits."},
+            {"l": "Svenska."}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "uniformTitle": "Macaroons and biscuits."
+                  },
+                  "marc:titleSortKey" : "0",
+                  "language": {"@type": "Language", "label": "Svenska."}
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"730": {"ind1": "3", "ind2": "2", "subfields": [
+            {"i": "Container of (work): "},
+            {"a": "Gigue,"},
+            {"m": "harpsichord,"},
+            {"n": "GraunWV D:XVIII:11,"},
+            {"r": "B♭ minor"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "uniformTitle": "Gigue,",
+                  "musicMedium": ["harpsichord,"],
+                  "partNumber": ["GraunWV D:XVIII:11"],
+                  "musicKey": "B♭ minor",
+                  "relation": [{"label": "Container of (work):"}],
+                  "marc:titleSortKey" : "3"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
-
 
     "740": {
       "inherit": "730",
+      "aboutEntity": "?thing",
       "$a": {"property": "title"}
     },
 
@@ -7820,13 +7962,63 @@
     "810": {},
     "811": {},
     "830": {
-      "addLink": "isPartOf", "resourceType": "Serial",
-      "TODO:i2": {},
+      "aboutEntity": "?work",
+      "addLink": "hasSeries",
+      "resourceType": "Serial",
+      "include": "titledetails1xx7xx",
       "$a": {"property": "uniformTitle"},
-      "$d": {"addProperty": "date"},
+      "$d": {"addProperty": "legalDate"},
+      "$n": {"addProperty": "partNumber"},
       "$v": {"property": "seriesEnumeration"},
+      "$w": {"property": "marc:bibliographicRecordControlNumber"},
       "$x": {"property": "issn", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "i2": {"property": "marc:titleSortKey"},
+      "subfieldorder": "3 a d g h s m n p l r k f o v w x",
+      "_spec": [
+        {
+          "source": {"830": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Europarecht (Munich, germany)"},
+            {"p": "Beiheft"},
+            {"v": "2002/1"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasSeries": [
+                {
+                  "@type": "Serial",
+                  "uniformTitle": "Europarecht (Munich, germany)",
+                  "partName": ["Beiheft"],
+                  "seriesEnumeration": "2002/1",
+                  "marc:titleSortKey" : "0"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"830": {"ind1": " ", "ind2": "4", "subfields": [
+            {"a": "Studies on the texts of the desert of Judah,"},
+            {"v": "101"},
+            {"x": "0169-9962"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasSeries": [
+                {
+                  "@type": "Serial",
+                  "uniformTitle": "Studies on the texts of the desert of Judah,",
+                  "seriesEnumeration": "101",
+                  "issn": "0169-9962",
+                  "marc:titleSortKey" : "4"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "841": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ I DET BIBLIOGRAFISKA FORMATET"},
     "842": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ I DET BIBLIOGRAFISKA FORMATET"},
