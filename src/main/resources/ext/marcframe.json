@@ -4909,7 +4909,14 @@
     },
 
     "500": {
-      "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "Note", "property": "label"}},
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "Note",
+      "$a": {"property": "label"},
+      "TODO:$3": {"property": "marc:materialsSpecified"},
+      "TODO:$5": {"property": "marc:institutionToWhichFieldApplies"},
+      "repeatable": true
+    },
     "501": {},
     "502": {
       "aboutEntity": "?work",
@@ -4988,7 +4995,16 @@
     },
 
     "506": {
-      "$a": {"addProperty": "acquisitionTerms"}
+      "TOOO:i1": {},
+      "aboutEntity": "?thing",
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "NOTE:record-count": 92996,
+      "addLink": "usageAndAccessPolicy",
+      "embedded": true,
+      "resourceType": "UsageAndAccessPolicy",
+      "$a": {"property": "label"},
+      "$u": {"property": "uri"},
+      "$2": {"ignored": true}
     },
 
     "507": {"$a": {"aboutEntity": "?thing", "property": "scaleNote", "NOTE:b": "concatenate with a, record-count: 2"}},
