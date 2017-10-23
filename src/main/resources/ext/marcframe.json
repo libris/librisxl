@@ -3599,8 +3599,8 @@
       "resourceType": "ClassificationNlm",
       "TOOO:i1": {},
       "TOOO:i2": {},
-      "$a": {"property": "code"},
-      "$b": {"property": "classificationItem", "ignored": true}
+      "$a": {"property": "classificationPortion"},
+      "$b": {"property": "itemPortion", "ignored": true}
     },
     "061": {"NOTE:record-count": 1, "ignored": true},
     "066": {},
