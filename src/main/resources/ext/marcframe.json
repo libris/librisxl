@@ -9196,8 +9196,8 @@
       ],
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html"
     },
-    "751" : {},
-    "755" : {
+    "751": {},
+    "755": {
       "include": ["subjectbase", "termbase_noid"],
       "i1": null,
       "addLink": "closeMatch",
@@ -9423,7 +9423,8 @@
     "004": {
       "aboutType": "Item",
       "link": "itemOf", "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
-      "TODO:meta": {"property": "controlNumber"}
+      "TODO:meta": {"property": "controlNumber"},
+      "repeatable": false
     },
 
     "005": {"inherit": "bib"},
@@ -9744,6 +9745,7 @@
         "addProperty": "copyNote",
         "TODO:property": "change to comment?"
       },
+      "repeatable": true,
       "_spec": [
         {
           "source": {"852": {
@@ -9817,7 +9819,8 @@
       "TODO:i2": {},
       "$a": {"property": "label"},
       "$x": {"addProperty": "cataloguersNote"},
-      "$z": {"addProperty": "copyNote"}
+      "$z": {"addProperty": "copyNote"},
+      "repeatable": true
     },
     "867": {
       "addLink": "qualifiedSupplementaryNote",
@@ -9827,7 +9830,8 @@
       "TODO:i2": {},
       "$a": {"property": "label"},
       "$x": {"addProperty": "cataloguersNote"},
-      "$z": {"addProperty": "copyNote"}
+      "$z": {"addProperty": "copyNote"},
+      "repeatable": true
     },
     "868": {
       "addLink": "qualifiedIndexNote",
