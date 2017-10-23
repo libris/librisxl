@@ -8929,12 +8929,36 @@
     "360": {"ignored": true, "NOTE:record-count": 1, "NOTE:LC": "ignore - not used with titles"},
 
     "368": {
-      "addLink": "marc:otherAttributesOfPersonOrCorporateBody",
+      "aboutEntity": "?thing",
+      "aboutType": "Agent",
+      "addLink": "marc:hasOtherAttributesOfPersonOrCorporateBody",
+      "resourceType": "marc:OtherAttributesOfPersonOrCorporateBody",
       "$a": {"addProperty": "marc:typeOfCorporateBody"},
       "$c": {"addProperty": "marc:otherDesignation"},
       "$d": {"addProperty": "marc:titleOfPerson"},
       "$2": {"property": "marc:source"},
-      "repeatable": true
+      "repeatable": true,
+      "_spec": [
+        {
+          "source": {
+            "368": {"ind1": " ", "ind2": " ", "subfields": [
+              {"c": "Fiktiva gestalter"},
+              {"2": "sao"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Agent",
+              "marc:hasOtherAttributesOfPersonOrCorporateBody": [
+                      {
+                        "@type": "marc:OtherAttributesOfPersonOrCorporateBody",
+                        "marc:otherDesignation": ["Fiktiva gestalter"],
+                        "marc:source": "sao"
+                      }
+                    ]
+            }
+          }
+        }
+      ]
     },
     "370": {},
     "371": {},
