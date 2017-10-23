@@ -9696,11 +9696,9 @@
     "583": {},
 
     "599": {
-      "aboutEntity": "?record",
+      "ignored": true,
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
-      "TODO:": "Should this not be internal data?",
-      "addProperty": "editorialNote",
-      "repeatable": true
+      "TODO:": "Should this not be internal data? Ignore until we know further.",
     },
 
     "600": {
