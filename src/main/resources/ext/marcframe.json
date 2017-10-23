@@ -9722,9 +9722,9 @@
     "599": {
       "ignored": true,
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
-      "TODO:": "Should this not be internal data? Ignore until we know further.",
+      "TODO:": "Should this not be internal data? Ignore until we know further."
     },
-
+    
     "600": {
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
       "TODO:aboutEntity": "?exampleOfWork (which may be the sameAs ?itemOf)",
