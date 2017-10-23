@@ -3590,7 +3590,7 @@
       "$b": {"property": "itemPortion"}
     },
 
-    "051": {},
+    "051": {"ignored": true, "NOTE:record-count": 488, "NOTE:local":"ANVÄNDS NORMALT EJ", "NOTE:LC": "Item - shelfMark - ShelfMarkLcc"},
     "052": {},
     "055": {},
     "060": {
