@@ -9226,10 +9226,7 @@
       "$a": {"property": "label"}
     },
     "677": {"ignored": true, "NOTE:record-count": 1},
-    "678": {
-      "TODO:i1": {},
-      "$a": {"addProperty": "note"}
-    },
+    "678": {"inherit": "bib:545"},
     "680": {
       "$i": {"addProperty": "scopeNote"}
     },
