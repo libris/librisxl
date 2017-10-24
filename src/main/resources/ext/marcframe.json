@@ -9696,15 +9696,20 @@
     "538": {"inherit": "bib", "$5": null},
     "541": {
       "TODO:linkedEntity": "?example-$i",
+      "TODO:i1": "0 = Sekretessbelagd information. Används f.n. ej. = ca 5000 poster",
       "addLink": "hasItem", "embedded": true, "resourceType": "Item",
-      "$a": {"addProperty": "immediateSourceOfAcquisition"},
-      "repeatable": true
+      "$a": {"addProperty": "immediateAcquisition"},
+      "$b": {},
+      "$c": {},
+      "$d": {},
+      "$e": {},
+      "$f": {},
+      "$h": {}
     },
     "561": {
       "TODO:linkedEntity": "?example-$i",
       "addLink": "hasItem", "embedded": true, "resourceType": "Item",
-      "$a": {"property": "custodialHistory"},
-      "repeatable": true
+      "$a": {"property": "custodialHistory"}
     },
     "562": {
       "TODO:linkedEntity": "?example-$i",
