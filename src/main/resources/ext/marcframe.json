@@ -253,7 +253,7 @@
       "$f": {"property": "date"},
       "$g": {"property": "comment"},
       "$h": {"property": "marc:mediaTerm"},
-      "$k": {"addProperty": "qualifyingNote"},
+      "$k": {"addProperty": "qualifier"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$m": {"addProperty": "musicPerformanceMedium"},
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
@@ -4218,9 +4218,7 @@
       "link": "expressionOf",
       "include": ["titledetails1xx7xx"],
       "resourceType": "Work",
-      "TODO": "Similar to 240. Could use link:expressionOf if 130 XOR 240",
-      "TODO:translationOf": "When should we map $l to translationOf",
-      "i1": {"property": "marc:titleSortKey"},
+      "i1": {"property": "marc:nonfilingChars"},
       "$a": {"property": "uniformTitle"},
       "$d": {"property": "legalDate"},
       "$n": {"property": "partNumber"},
@@ -4250,7 +4248,7 @@
                 "legalDate": "(1968).",
                 "language": {"@type": "Language", "label": "Spanish."},
                 "originDate": "1977.",
-                "marc:titleSortKey" : "0"
+                "marc:nonfilingChars" : "0"
               }
             }
           }}
@@ -4267,20 +4265,26 @@
       "i2": {
         "link": "source",
         "resourceType": "Source",
-        "property": "label",
+        "property": "code",
         "tokenMap": {
-          " ": "issnkey",
-          "0": "marc:otherAbbreviatedTitle"
-        }
+          " ": "issnkey"
+        },
+        "definedElsewhereToken": "0"
+      },
+      "$2": {
+        "requires-i2": "0",
+        "link": "source",
+        "resourceType": "Source",
+        "property": "code"
       },
       "$a": {"property": "mainTitle"},
       "$b": {"property": "qualifier"},
-      "$2": {"addProperty": "sourceNote"},
       "_spec": [
         {
           "source": {
             "210": {"ind1": "1", "ind2": "0", "subfields": [
-              {"a": "Mensuration photogrammetrie genie rural"}
+              {"a": "Mensuration photogrammetrie genie rural"},
+              {"2": "dnlm"}
             ]}},
           "result": {"mainEntity": {
             "hasTitle": [{
@@ -4288,7 +4292,7 @@
               "mainTitle":  "Mensuration photogrammetrie genie rural",
               "source" : {
                 "@type" : "Source",
-                "label" : "marc:otherAbbreviatedTitle"
+                "code" : "dnlm"
               }
             }]
           }}
@@ -4307,7 +4311,7 @@
               "marc:searchElement" : false,
               "source" : {
                 "@type" : "Source",
-                "label" : "issnkey"
+                "code" : "issnkey"
               }
             }]
           }}
@@ -4323,7 +4327,7 @@
       "resourceType": "KeyTitle",
       "$a": {"property": "mainTitle"},
       "$b": {"property": "qualifier"},
-      "i2": {"property": "marc:titleSortKey"},
+      "i2": {"property": "marc:nonfilingChars"},
       "_spec": [
         {
           "source": {
@@ -4336,7 +4340,7 @@
               "@type": "KeyTitle",
               "mainTitle": "Plant prot. bull.",
               "qualifier": "(Faridabad)",
-              "marc:titleSortKey" : "0"
+              "marc:nonfilingChars" : "0"
             }]
           }}
         }
@@ -4345,7 +4349,7 @@
 
     "240": {
       "aboutEntity": "?work",
-      "i2": {"property": "marc:titleSortKey"},
+      "i2": {"property": "marc:nonfilingChars"},
       "include": ["titledetails1xx7xx", "titlesearchelem"],
       "TODO": "See also 100$t and 130.",
       "embedded": true,
@@ -4372,7 +4376,7 @@
                 "mainTitle":  "Moyen âge",
                 "language": {"@type": "Language", "label": "Engelska."},
                 "marc:searchElement" : false,
-                "marc:titleSortKey" : " "
+                "marc:nonfilingChars" : " "
               }
             }
           }}
@@ -4389,7 +4393,7 @@
       "$c": {"property": "responsibilityStatement"},
       "$h": {"property": "marc:mediaTerm"},
       "$y": {"link": "language", "resourceType": "Language", "property": "code"},
-      "i2": {"property": "marc:titleSortKey"},
+      "i2": {"property": "marc:nonfilingChars"},
       "TODO": "Translation of? merge into 245?",
       "_spec": [
         {
@@ -4405,7 +4409,7 @@
               "mainTitle": "New regulation on public order",
               "titleRemainder": "an addendum to the instruction of the ward chairmen.",
               "language": {"@type": "Language", "code": "eng"},
-              "marc:titleSortKey" : "0"
+              "marc:nonfilingChars" : "0"
             }]
           }}
         },
@@ -4427,7 +4431,7 @@
                 "partNumber" : "Series C,."
               }],
               "language": {"@type": "Language", "code": "eng"},
-              "marc:titleSortKey" : "0"
+              "marc:nonfilingChars" : "0"
             }]
           }}
         }
@@ -4443,7 +4447,7 @@
       "$a": {"property": "mainTitle"},
       "$d": {"property": "legalDate"},
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
-      "i2": {"property": "marc:titleSortKey"},
+      "i2": {"property": "marc:nonfilingChars"},
       "_spec": [
         {
           "source": {
@@ -4458,7 +4462,7 @@
                 "@type": "CollectiveTitle",
                 "mainTitle": "Philosophical works",
                 "marc:formSubheading": ["Selsections"],
-                "marc:titleSortKey": "0"
+                "marc:nonfilingChars": "0"
               }
             }
           }}
@@ -4477,7 +4481,7 @@
                 "@type": "CollectiveTitle",
                 "mainTitle": "Correspondence",
                 "language": {"@type": "Language", "label": "English"},
-                "marc:titleSortKey": "0",
+                "marc:nonfilingChars": "0",
                 "marc:version": "Selections"
               }
             }
@@ -4502,7 +4506,7 @@
       "$g": {"aboutEntity": "?thing", "property": "marc:bulkDates"},
       "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "surroundingChars": "[]"},
       "$s": {"property": "version"},
-      "i2": {"property": "marc:titleSortKey"},
+      "i2": {"property": "marc:nonfilingChars"},
       "_spec": [
         {
           "source": {
@@ -4512,7 +4516,7 @@
           "result": {"mainEntity": {
             "hasTitle": [ {"@type": "Title",
               "mainTitle":  "Anteckningar från en ö",
-              "marc:titleSortKey": "0"
+              "marc:nonfilingChars": "0"
             } ]
           }}
         },
@@ -4526,7 +4530,7 @@
             "hasTitle": [ {"@type": "Title",
               "mainTitle":  "Anteckningar från en ö",
               "marc:searchElement": false,
-              "marc:titleSortKey": "0"
+              "marc:nonfilingChars": "0"
             } ],
             "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
           }}
@@ -7867,7 +7871,7 @@
     "730": {
       "aboutEntity": "?work",
       "include": "titledetails1xx7xx",
-      "i1": {"property": "marc:titleSortKey"},
+      "i1": {"property": "marc:nonfilingChars"},
       "match": [
         {
           "when": "i2=2",
@@ -7906,7 +7910,7 @@
                     "@type": "Work",
                     "uniformTitle": "Abyss (Motion picture : 1989)"
                   },
-                  "marc:titleSortKey" : "0",
+                  "marc:nonfilingChars" : "0",
                   "relation": [{"label": "Novelization of (work)"}]
                 }
               ]
@@ -7928,7 +7932,7 @@
                     "@type": "Work",
                     "uniformTitle": "Macaroons and biscuits."
                   },
-                  "marc:titleSortKey" : "0",
+                  "marc:nonfilingChars" : "0",
                   "language": {"@type": "Language", "label": "Svenska."}
                 }
               ]
@@ -7943,7 +7947,8 @@
             {"n": "GraunWV D:XVIII:11,"},
             {"r": "B♭ minor"}
           ]}},
-          "result": {"mainEntity": {
+          "TODO:result": {"mainEntity": {
+            "NOTE": "Get's reverted to 700",
             "instanceOf": {
               "@type": "Text",
               "hasPart": [
@@ -7954,7 +7959,7 @@
                   "partNumber": ["GraunWV D:XVIII:11"],
                   "musicKey": "B♭ minor",
                   "relation": [{"label": "Container of (work):"}],
-                  "marc:titleSortKey" : "3"
+                  "marc:nonfilingChars" : "3"
                 }
               ]
             }
@@ -7967,7 +7972,7 @@
       "TODO:inherit?": "730",
       "aboutEntity": "?thing",
       "include": "titledetails1xx7xx",
-      "i1": {"property": "marc:titleSortKey"},
+      "i1": {"property": "marc:nonfilingChars"},
       "match": [
         {
           "when": "i2=2",
@@ -8009,7 +8014,7 @@
                 "title": "Economics library selections",
                 "partNumber": ["Series 1"],
                 "partName": ["New books in economics"],
-                "marc:titleSortKey" : "0"
+                "marc:nonfilingChars" : "0"
               }
             ]
           }}
@@ -8026,7 +8031,7 @@
                   "@type": "Work",
                   "title": "En hjälpande hand"
                 },
-                "marc:titleSortKey" : "3"
+                "marc:nonfilingChars" : "3"
               }
             ]
           }}
@@ -8052,7 +8057,7 @@
       "TOOO:i2": {},
       "$a": {"property": "controlledLabel", "TODO:targetMatch": "1xx"},
       "$b": {"property": "edition", "TODO:targetMatch": "250"},
-      "$c": {"property": "qualifyingNote"},
+      "$c": {"property": "qualifier"},
       "$d": {"property": "placePublisherAndDateOfPublication", "TODO:targetMatch": "260$c"},
       "$g": {"addProperty": "part"},
       "$h": {"property": "physicalDescription"},
@@ -8188,8 +8193,8 @@
       "$v": {"property": "seriesEnumeration"},
       "$w": {"property": "marc:bibliographicRecordControlNumber"},
       "$x": {"property": "issn", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
-      "i2": {"property": "marc:titleSortKey"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "i2": {"property": "marc:nonfilingChars"},
       "subfieldorder": "3 a d g h s m n p l r k f o v w x",
       "_spec": [
         {
@@ -8207,7 +8212,7 @@
                   "uniformTitle": "Europarecht (Munich, germany)",
                   "partName": ["Beiheft"],
                   "seriesEnumeration": "2002/1",
-                  "marc:titleSortKey" : "0"
+                  "marc:nonfilingChars" : "0"
                 }
               ]
             }
@@ -8228,7 +8233,7 @@
                   "uniformTitle": "Studies on the texts of the desert of Judah,",
                   "seriesEnumeration": "101",
                   "issn": "0169-9962",
-                  "marc:titleSortKey" : "4"
+                  "marc:nonfilingChars" : "4"
                 }
               ]
             }
