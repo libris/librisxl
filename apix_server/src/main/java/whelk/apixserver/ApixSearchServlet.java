@@ -33,7 +33,6 @@ public class ApixSearchServlet extends HttpServlet
             resultingDocuments.add(resultingDocumentsMap.get(key));
 
         Utils.send200Response(response, Xml.formatApixSearchResponse(resultingDocuments));
-        //System.out.println(searchResults);
     }
 
     private Set<String> search(HttpServletRequest request)

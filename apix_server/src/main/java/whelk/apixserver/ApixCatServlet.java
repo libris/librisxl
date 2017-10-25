@@ -41,6 +41,8 @@ public class ApixCatServlet extends HttpServlet
     final static int ERROR_DB_NOT_LIBRIS = 0xff04;
     final static int ERROR_CONVERSION_FAILED = 0xff05;
 
+    final static String APIX_SYSTEM_CODE = "APIX";
+
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
         try { doGet2(request, response); } catch (Exception e)
@@ -103,12 +105,28 @@ public class ApixCatServlet extends HttpServlet
         Utils.send200Response(response, Xml.formatApixGetRecordResponse(marcXmlString, document, collection, attachedHoldings));
     }
 
-    public void doDelete2(HttpServletRequest request, HttpServletResponse response) throws IOException
+    public void doDelete2(HttpServletRequest request, HttpServletResponse response) throws Exception
     {
+        String[] parameters = Utils.getPathSegmentParameters(request);
+        int expectedParameterCount = 3; // expect: /libris/bib/123
+        if (!Utils.validateParameters(response, parameters, expectedParameterCount))
+            return; // error response already sent
 
+        String collection = parameters[1];
+        String bibId = parameters[2];
+
+        String xlUri = Utils.mapApixIDtoXlUri(bibId, collection);
+        String xlShortId = Utils.s_whelk.getStorage().getSystemIdByIri(xlUri);
+        if (xlShortId == null)
+        {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        Utils.s_whelk.remove(xlShortId, APIX_SYSTEM_CODE, request.getRemoteUser(), collection);
     }
 
-    public void doPut2(HttpServletRequest request, HttpServletResponse response) throws IOException
+    public void doPut2(HttpServletRequest request, HttpServletResponse response) throws Exception
     {
 
     }
