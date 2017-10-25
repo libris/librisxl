@@ -3599,7 +3599,7 @@
       "resourceType": "ClassificationNlm",
       "TOOO:i1": {},
       "TOOO:i2": {},
-      "$a": {"property": "classificationPortion"},
+      "$a": {"property": "code"},
       "$b": {"property": "itemPortion", "ignored": true}
     },
     "061": {"NOTE:record-count": 1, "ignored": true},
@@ -10143,17 +10143,13 @@
       "inherit": "bib",
       "aboutEntity": "?thing",
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
-      "addLink": "shelfMark",
-      "resourceType": "ShelfMarkLcc",
-      "$b": {"ignored": true}
+      "TODO": "shelfMark for items?"
     },
     "060": {
       "inherit": "bib",
       "aboutEntity": "?thing",
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
-      "addLink": "shelfMark",
-      "resourceType": "ShelfMarkNLM",
-      "$b": {"ignored": true}
+      "TODO": "shelfMark for items?"
     },
     "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS F.N. EJ"},
 
