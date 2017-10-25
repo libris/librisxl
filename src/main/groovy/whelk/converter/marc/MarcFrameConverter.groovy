@@ -1616,9 +1616,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         if (constructProperties) {
             constructProperties.each { key, dfn ->
-                if (true) { //!key in entity) {
+                if (!(key in entity)) {
                     def parts = Util.getAllByPath(entity, (String) dfn.property)
-                    if (parts) {
+                    if (parts?.size() > 1) {
                         def constructed = parts.join((String) dfn.join)
                         entity[key] = constructed
                         uriTemplateParams[key] = constructed
