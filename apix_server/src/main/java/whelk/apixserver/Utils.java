@@ -17,7 +17,7 @@ public class Utils
     private static JsonLD2MarcXMLConverter s_toMarcConverter = new JsonLD2MarcXMLConverter();
     private static final Logger s_logger = LogManager.getLogger(Utils.class);
 
-    static String convertToMarcXml(HttpServletResponse response, Document document) throws TransformerException, IOException
+    static String convertToMarcXml(Document document) throws TransformerException, IOException
     {
         try
         {
@@ -25,8 +25,6 @@ public class Utils
         }
         catch (Exception | Error e)
         {
-            s_logger.error("Conversion to MARC failed.", e);
-            send200Response(response, Xml.formatApixErrorResponse("Conversion to MARC failed.", ApixServer.ERROR_CONVERSION_FAILED));
             return null;
         }
     }

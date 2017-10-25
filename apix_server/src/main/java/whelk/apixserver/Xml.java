@@ -16,6 +16,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.List;
 
 /**
  * The madness, just to print some xml.
@@ -59,7 +60,10 @@ public class Xml
         return docToString(xmlDoc);
     }
 
-    public static String formatApixGetRecordResponse(String marcXmlString, whelk.Document whelkDocument, String collection)
+    public static String formatApixGetRecordResponse(String marcXmlString,
+                                                     whelk.Document whelkDocument,
+                                                     String collection,
+                                                     List<whelk.Document> attachedHoldings)
             throws TransformerException, IOException, SAXException
     {
         Document xmlDoc = builder.newDocument();
@@ -90,7 +94,29 @@ public class Xml
         record.appendChild(timestamp);
         timestamp.setTextContent(whelkDocument.getModified());
 
-        // if bib - if request x-holdings : extra and holdings
+        Element extra = xmlDoc.createElement("extra");
+        record.appendChild(extra);
+
+        if (attachedHoldings != null)
+        {
+            Element holdings = xmlDoc.createElement("holdings");
+            extra.appendChild(holdings);
+
+            for (whelk.Document holdingDocument : attachedHoldings)
+            {
+                Element holding = xmlDoc.createElement("holding");
+                holdings.appendChild(holding);
+                holding.setAttribute("code", holdingDocument.getSigel());
+                holding.setAttribute("x-mfhd_id", holdingDocument.getShortId());
+
+                String holdingMarcXmlString = Utils.convertToMarcXml(holdingDocument);
+                if (holdingMarcXmlString != null)
+                {
+                    Element holdingMarcXmlRecord = builder.parse(new InputSource(new StringReader(holdingMarcXmlString))).getDocumentElement();
+                    holding.appendChild(xmlDoc.importNode(holdingMarcXmlRecord, true));
+                }
+            }
+        }
 
         return docToString(xmlDoc);
     }

@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -98,11 +99,21 @@ public class ApixServer extends HttpServlet
             return;
         }
         Document document = s_whelk.getStorage().load(xlShortId);
-        String marcXmlString = Utils.convertToMarcXml(response, document);
+        String marcXmlString = Utils.convertToMarcXml(document);
         if (marcXmlString == null)
-            return; // error response already sent
+        {
+            s_logger.error("Conversion to MARC failed for " + document.getCompleteId());
+            Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion to MARC failed.", ApixServer.ERROR_CONVERSION_FAILED));
+            return;
+        }
 
-        Utils.send200Response(response, Xml.formatApixGetRecordResponse(marcXmlString, document, collection));
+        List<Document> attachedHoldings = null;
+        if (collection.equals("bib") && request.getParameter("x-holdings") != null && request.getParameter("x-holdings").equalsIgnoreCase("true"))
+        {
+            attachedHoldings = s_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers());
+        }
+
+        Utils.send200Response(response, Xml.formatApixGetRecordResponse(marcXmlString, document, collection, attachedHoldings));
     }
 
     public void doDelete2(HttpServletRequest request, HttpServletResponse response) throws IOException
