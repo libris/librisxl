@@ -4,18 +4,31 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
+import whelk.Whelk;
+import whelk.component.PostgreSQLComponent;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
+import whelk.util.PropertyLoader;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.util.Properties;
 
 public class Utils
 {
+    static Whelk s_whelk;
     private static JsonLD2MarcXMLConverter s_toMarcConverter = new JsonLD2MarcXMLConverter();
     private static final Logger s_logger = LogManager.getLogger(Utils.class);
+
+    static
+    {
+        Properties configuration = PropertyLoader.loadProperties("secret");
+        PostgreSQLComponent postgreSqlComponent =
+                new PostgreSQLComponent(configuration.getProperty("sqlUrl"), configuration.getProperty("sqlMaintable"));
+        s_whelk = new Whelk(postgreSqlComponent);
+    }
 
     static String convertToMarcXml(Document document) throws TransformerException, IOException
     {
@@ -35,7 +48,7 @@ public class Utils
         if (apixID.matches("\\d+") && apixID.length() < 15)
         {
             String voyagerIdUri = "http://libris.kb.se/" + collection + "/" + apixID;
-            return ApixServer.s_whelk.getStorage().getRecordId(voyagerIdUri);
+            return s_whelk.getStorage().getRecordId(voyagerIdUri);
         }
         else
             return Document.getBASE_URI().toString() + apixID;
@@ -57,25 +70,25 @@ public class Utils
         if (pathSegments.length != expectedParameterCount)
         {
             send200Response(response, Xml.formatApixErrorResponse("Expected " + expectedParameterCount +
-                    " segments after /cat/ but there was " + pathSegments.length, ApixServer.ERROR_PARAM_COUNT));
+                    " segments after /cat/ but there was " + pathSegments.length, ApixCatServlet.ERROR_PARAM_COUNT));
             return false;
         }
         if ( pathSegments.length > 0 && !pathSegments[0].equals("libris") )
         {
-            send200Response(response, Xml.formatApixErrorResponse("Database path segment must be \"libris\"", ApixServer.ERROR_DB_NOT_LIBRIS));
+            send200Response(response, Xml.formatApixErrorResponse("Database path segment must be \"libris\"", ApixCatServlet.ERROR_DB_NOT_LIBRIS));
             return false;
         }
         if ( pathSegments.length > 1 &&
                 !pathSegments[1].equals("bib") && !pathSegments[1].equals("auth") && !pathSegments[1].equals("hold"))
         {
             send200Response(response,
-                    Xml.formatApixErrorResponse("Collection segment must be \"bib\", \"auth\" or \"bib\"",  ApixServer.ERROR_BAD_COLLECTION));
+                    Xml.formatApixErrorResponse("Collection segment must be \"bib\", \"auth\" or \"bib\"",  ApixCatServlet.ERROR_BAD_COLLECTION));
             return false;
         }
         if ( pathSegments.length > 3 && !pathSegments[3].equals("newhold"))
         {
             send200Response(response,
-                    Xml.formatApixErrorResponse("Unknown extra path segment: " + pathSegments[3],  ApixServer.ERROR_EXTRA_PARAM));
+                    Xml.formatApixErrorResponse("Unknown extra path segment: " + pathSegments[3],  ApixCatServlet.ERROR_EXTRA_PARAM));
             return false;
         }
         return true;

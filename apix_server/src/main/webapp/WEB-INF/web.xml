@@ -8,8 +8,14 @@
     <display-name>APIX Server</display-name>
 
     <servlet>
-        <servlet-name>ApixServerServlet</servlet-name>
-        <servlet-class>whelk.apixserver.ApixServer</servlet-class>
+        <servlet-name>ApixCatServlet</servlet-name>
+        <servlet-class>whelk.apixserver.ApixCatServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>ApixSearchServlet</servlet-name>
+        <servlet-class>whelk.apixserver.ApixSearchServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -25,9 +31,13 @@
     </servlet-mapping>
 
     <servlet-mapping>
-        <servlet-name>ApixServerServlet</servlet-name>
-        <!--<url-pattern>/</url-pattern>-->
+        <servlet-name>ApixCatServlet</servlet-name>
         <url-pattern>/apix/0.1/cat/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>ApixSearchServlet</servlet-name>
+        <url-pattern>/apix/0.1/search/*</url-pattern>
     </servlet-mapping>
 
     <welcome-file-list>

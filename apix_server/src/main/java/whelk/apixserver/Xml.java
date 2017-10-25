@@ -84,7 +84,7 @@ public class Xml
 
         Element url = xmlDoc.createElement("url");
         record.appendChild(url);
-        url.setTextContent("http://api.libris.kb.se/apix/0.1/cat/libris/" + collection + "/" + whelkDocument.getShortId());
+        url.setTextContent("https://apix.libris.kb.se/apix/0.1/cat/libris/" + collection + "/" + whelkDocument.getShortId());
 
         Element metadata = xmlDoc.createElement("metadata");
         record.appendChild(metadata);

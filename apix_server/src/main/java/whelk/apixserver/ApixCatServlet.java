@@ -3,16 +3,12 @@ package whelk.apixserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.Document;
-import whelk.Whelk;
-import whelk.component.PostgreSQLComponent;
-import whelk.util.PropertyLoader;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * A reimplementation of the APIX protocol, quirks and all.
@@ -35,24 +31,15 @@ import java.util.Properties;
  * .../apix/0.1/cat/libris/bib/123              [maps to/from]      http://libris.kb.se/bib/123
  * .../apix/0.1/cat/libris/bib/4juh23kjbsdkfbsk [maps to/from]      https://libris.kb.se/4juh23kjbsdkfbsk
  */
-public class ApixServer extends HttpServlet
+public class ApixCatServlet extends HttpServlet
 {
-    static Whelk s_whelk;
-    private static final Logger s_logger = LogManager.getLogger(ApixServer.class);
+    private static final Logger s_logger = LogManager.getLogger(ApixCatServlet.class);
 
     final static int ERROR_PARAM_COUNT = 0xff01;
     final static int ERROR_EXTRA_PARAM = 0xff02;
     final static int ERROR_BAD_COLLECTION = 0xff03;
     final static int ERROR_DB_NOT_LIBRIS = 0xff04;
     final static int ERROR_CONVERSION_FAILED = 0xff05;
-
-    public void init()
-    {
-        Properties configuration = PropertyLoader.loadProperties("secret");
-        PostgreSQLComponent postgreSqlComponent =
-                new PostgreSQLComponent(configuration.getProperty("sqlUrl"), configuration.getProperty("sqlMaintable"));
-        s_whelk = new Whelk(postgreSqlComponent);
-    }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
@@ -92,25 +79,25 @@ public class ApixServer extends HttpServlet
         String bibId = parameters[2];
 
         String xlUri = Utils.mapApixIDtoXlUri(bibId, collection);
-        String xlShortId = s_whelk.getStorage().getSystemIdByIri(xlUri);
+        String xlShortId = Utils.s_whelk.getStorage().getSystemIdByIri(xlUri);
         if (xlShortId == null)
         {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        Document document = s_whelk.getStorage().load(xlShortId);
+        Document document = Utils.s_whelk.getStorage().load(xlShortId);
         String marcXmlString = Utils.convertToMarcXml(document);
         if (marcXmlString == null)
         {
             s_logger.error("Conversion to MARC failed for " + document.getCompleteId());
-            Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion to MARC failed.", ApixServer.ERROR_CONVERSION_FAILED));
+            Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion to MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));
             return;
         }
 
         List<Document> attachedHoldings = null;
         if (collection.equals("bib") && request.getParameter("x-holdings") != null && request.getParameter("x-holdings").equalsIgnoreCase("true"))
         {
-            attachedHoldings = s_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers());
+            attachedHoldings = Utils.s_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers());
         }
 
         Utils.send200Response(response, Xml.formatApixGetRecordResponse(marcXmlString, document, collection, attachedHoldings));
