@@ -9419,8 +9419,8 @@
     "368": {
       "aboutEntity": "?thing",
       "aboutType": "Agent",
-      "addLink": "hasOtherAttributesOfAgent",
-      "resourceType": "OtherAttributesOfAgent",
+      "addLink": "marc:hasAuth368",
+      "resourceType": "marc:Auth368",
       "$a": {"addProperty": "marc:typeOfCorporateBody"},
       "$c": {"addProperty": "marc:otherDesignation"},
       "$d": {"addProperty": "marc:titleOfPerson"},
@@ -9436,9 +9436,9 @@
           "result": {
             "mainEntity": {
               "@type": "Agent",
-              "marc:hasOtherAttributesOfPersonOrCorporateBody": [
+              "marc:hasAuth368": [
                       {
-                        "@type": "marc:OtherAttributesOfPersonOrCorporateBody",
+                        "@type": "marc:Auth368",
                         "marc:otherDesignation": ["Fiktiva gestalter"],
                         "marc:source": "sao"
                       }
@@ -9448,7 +9448,19 @@
         }
       ]
     },
-    "370": {},
+    "370": {
+      "aboutEntity": "?thing",
+      "addLink": "marc:hasAuth370",
+      "resourceType": "marc:Auth370",
+      "$a": {"property": "marc:placeOfBirth"},
+      "$b": {"property": "marc:placeOfDeath"},
+      "$c": {"addProperty": "marc:associatedCountry"},
+      "$e": {"addProperty": "marc:placeOfResidenceHeadquarters"},
+      "$f": {"addProperty": "marc:otherAssociatedPlace"},
+      "$s": {"property": "marc:startPeriod"},
+      "$t": {"property": "marc:endPeriod"},
+      "$2": {"property": "marc:sourceOfTerm"}
+    },
     "371": {},
     "372": {
       "aboutEntity": "?thing",
