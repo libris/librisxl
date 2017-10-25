@@ -684,21 +684,25 @@
     },
 
     "subjectOrganization": {
+      "addLink": "subject",
+      "resourceType": "Work",
+      "embedded": false,
       "pendingResources": {
-        "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-        "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
+        "_:contribution": {"link": "contribution", "resourceType": "Contribution", "embedded": false},
         "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "embedded": false}
       },
-      "$t": {"about": "_:work", "property": "title"}
+      "$t": {"property": "title"}
     },
 
     "subjectJurisdiction": {
+      "addLink": "subject",
+      "resourceType": "Work",
+      "embedded": false,
       "pendingResources": {
-        "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-        "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
+        "_:contribution": {"link": "contribution", "resourceType": "Contribution", "embedded": false},
         "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "embedded": false}
       },
-      "$t": {"about": "_:work", "property": "title"}
+      "$t": {"property": "title"}
     },
 
     "agentdataFamily": {
@@ -835,6 +839,18 @@
       }
     },
 
+    "worksubject": {
+      "include": ["subjectbase"],
+      "addLink": "subject",
+      "resourceType": "Work",
+      "embedded": false,
+      "pendingResources": {
+        "_:contribution": {"link": "contribution", "TODO;addLink:contribution + NOTE:marc-repeatable": false, "resourceType": "Contribution", "embedded": false},
+        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
+      },
+      "$t": {"property": "title"}
+    },
+
     "subjectbase": {
       "i2": {
         "link": "inScheme",
@@ -852,7 +868,7 @@
         "resourceType": "ConceptScheme",
         "property": "code"
       },
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"}
     },
 
     "termid": {
@@ -975,20 +991,6 @@
       "NOTE": "A copy of 'termbase_with_uri_from_i2', except for removed $a which instead should be mapped to agent",
       "match": [
         {
-          "when": "i2=7 & $2",
-          "NOTE": "if possible to revert to, prefer this form over i2=0",
-          "match": [
-            {
-              "when": "$2=sao | $2=saogf | $2=gmgpc | $2=barn | $2=barngf",
-              "include": ["termbase_noid_with_agent", "termid"]
-            },
-            {
-              "when": null,
-              "include": ["termbase_noid_with_agent"]
-            }
-          ]
-        },
-        {
           "when": "i2=0",
           "include": ["termbase_noid_with_agent"],
           "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}",
@@ -1017,6 +1019,20 @@
         {
           "when": null,
           "include": ["termbase_noid_with_agent"]
+        },
+        {
+          "when": "i2=7 & $2",
+          "NOTE": "if possible to revert to, prefer this form over i2=0",
+          "match": [
+            {
+              "when": "$2=sao | $2=saogf | $2=gmgpc | $2=barn | $2=barngf",
+              "include": ["termbase_noid_with_agent", "termid"]
+            },
+            {
+              "when": null,
+              "include": ["termbase_noid_with_agent"]
+            }
+          ]
         }
       ]
     },
@@ -5608,44 +5624,37 @@
       "aboutEntity": "?work",
       "match": [
         {
-          "when": "$t & i1=0",
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataPerson", "titledetails1xx7xx"],
+          "when": "$t & i1=3",
+          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataFamily", "titledetails1xx7xx"],
+          "addLink": "subject",
+          "resourceType": "Work",
+          "embedded": false,
           "pendingResources": {
-            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
-            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
+            "_:contribution": {"link": "contribution", "resourceType": "Contribution", "embedded": false},
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Family", "embedded": false}
           },
-          "$t": {"about": "_:work", "property": "title"}
+          "$t": {"property": "title"}
+        },
+        {
+          "when": "$t & i1=0",
+          "include": ["worksubject", "termbase_with_uri_from_i2_with_agent", "agentdataPerson", "titledetails1xx7xx"]
         },
         {
           "when": "$t & i1=1",
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataNameOfPerson", "titledetails1xx7xx"],
-          "pendingResources": {
-            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
-            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
-          },
-          "$t": {"about": "_:work", "property": "title"}
-        },
-        {
-          "when": "$t & i1=3",
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataFamily", "titledetails1xx7xx"],
-          "pendingResources": {
-            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
-            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Family", "embedded": false}
-          },
-          "$t": {"about": "_:work", "property": "title"}
+          "include": ["worksubject", "termbase_with_uri_from_i2_with_agent", "agentdataNameOfPerson", "titledetails1xx7xx"]
         },
         {
           "when": "$t",
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataPerson", "titledetails1xx7xx"],
+          "include": ["worksubject", "termbase_with_uri_from_i2_with_agent", "agentdataPerson", "titledetails1xx7xx"]
+        },
+        {
+          "when": "i1=3",
+          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataFamily"],
+          "addLink": "subject",
+          "resourceType": "Family",
           "pendingResources": {
-            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
-            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
-          },
-          "$t": {"about": "_:work", "property": "title"}
+            "_:agent": {"link": "agent", "resourceType": "Family"}
+          }
         },
         {
           "when": "i1=0",
@@ -5664,15 +5673,6 @@
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Person"}
           }
-        },
-        {
-          "when": "i1=3",
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataFamily"],
-          "addLink": "subject",
-          "resourceType": "Family",
-          "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Family"}
-          }
         }
       ],
       "pendingResources": {
@@ -5681,6 +5681,7 @@
           "resourceType": "Person"
         }
       },
+      "subfieldOrder": "a b c q d j u e 4 t g m n p r s l k f o v x y z",
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "_spec": [
         {
@@ -5699,22 +5700,23 @@
                   "title": "Amores",
                   "contribution": {
                     "@type": "Contribution",
-                    "agent": {
-                      "@type": "Person",
-                      "name": "Ovid,",
-                      "lifeSpan": "43 B.C.-17 A.D. or 18 A.D."
-                  }}
+                      "agent": {
+                        "@type": "Person",
+                        "name": "Ovid,",
+                        "lifeSpan": "43 B.C.-17 A.D. or 18 A.D."
+                    }
+                  },
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcsh",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  },
+                  "language": {
+                    "@type": "Language",
+                    "label": "English."
+                  }
                 }
-              ],
-              "inScheme": {
-                "@id": "https://id.kb.se/term/lcsh",
-                "@type": "ConceptScheme",
-                "code": "lcsh"
-              },
-              "language": {
-                "@type": "Language",
-                "label": "English."
-              }
+              ]
             }
           }}
         },
@@ -5723,18 +5725,17 @@
             "600": {"ind1": "3", "ind2": "0", "subfields": [
               {"a": "Butler family."},
               {"x": "Health"}]}},
+          "FIXME": "NOT [a Family; agent [ a Family]]! Neither Person Person etc. in following specs!",
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
                 {
-                  "@id" : "http://id.loc.gov/authorities/label/Health",
                   "@type": "Family",
                   "agent": {
                     "@type": "Family",
                     "name": "Butler family."
                   },
-                  "prefLabel" : "Health",
                   "termComponentList" : [{
                     "@type" : "Subdivision",
                     "prefLabel" : "Health"
@@ -5843,7 +5844,6 @@
               {"y": "21st century."}]}},
           "result": {"mainEntity": {
             "instanceOf": {
-              "@id": "http://id.loc.gov/authorities/label/21st%20century.",
               "@type": "Text",
               "subject": [
                 {
@@ -5857,22 +5857,21 @@
                       "givenName": "Domenico"
                     }
                   },
-                  "title": "Sonatas,"
+                  "title": "Sonatas,",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcsh",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  },
+                  "partNumber": ["K. 492"],
+                  "musicMedium": ["harpsichord"],
+                  "musicKey": "D major;",
+                  "termComponentList" : [{
+                    "@type" : "Temporal",
+                    "prefLabel" : "21st century."
+                  }]
                 }
-              ],
-              "inScheme": {
-                "@id": "https://id.kb.se/term/lcsh",
-                "@type": "ConceptScheme",
-                "code": "lcsh"
-              },
-              "partNumber": ["K. 492"],
-              "musicMedium": ["harpsichord"],
-              "musicKey": "D major;",
-              "prefLabel": "21st century.",
-              "termComponentList" : [{
-                "@type" : "Temporal",
-                "prefLabel" : "21st century."
-              }]
+              ]
             }
           }}
         },
@@ -6139,7 +6138,6 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "prefLabel": "catalogs",
               "subject" : [{
                 "@type" : "Work",
                 "contribution" : {
@@ -6149,11 +6147,11 @@
                     "name" : "United States"
                   }
                 },
-                "title" : "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)"
-              }],
-              "termComponentList" : [{
-                "@type" : "GenreForm",
-                "prefLabel" : "catalogs"
+                "title" : "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)",
+                "termComponentList" : [{
+                  "@type" : "GenreForm",
+                  "prefLabel" : "catalogs"
+                }]
               }]
             }
           }}
@@ -6178,8 +6176,6 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "marc:formSubheading" : [ "Manuscript." ],
-              "partName" : [ "Pomestnyĭ prikaz" ],
               "subject": [
                 {
                   "@type": "Work",
@@ -6191,14 +6187,16 @@
                       "name" : "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."
                     }
                   },
-                  "title": "Egentitel"
+                  "title": "Egentitel",
+                  "marc:formSubheading" : [ "Manuscript." ],
+                  "partName" : [ "Pomestnyĭ prikaz" ],
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcsh",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  }
                 }
-              ],
-              "inScheme": {
-                "@id": "https://id.kb.se/term/lcsh",
-                "@type": "ConceptScheme",
-                "code": "lcsh"
-              }
+              ]
             }
           }}
         }
