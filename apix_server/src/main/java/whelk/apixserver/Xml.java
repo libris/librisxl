@@ -59,17 +59,39 @@ public class Xml
         return docToString(xmlDoc);
     }
 
-    public static String formatApixGetRecordResponse(String marcXmlString) throws TransformerException, IOException, SAXException
+    public static String formatApixGetRecordResponse(String marcXmlString, whelk.Document whelkDocument, String collection)
+            throws TransformerException, IOException, SAXException
     {
         Document xmlDoc = builder.newDocument();
 
         Element apix = xmlDoc.createElement("apix");
         Element marcRecord = builder.parse(new InputSource(new StringReader(marcXmlString))).getDocumentElement();
         xmlDoc.appendChild(apix);
-        apix.appendChild(xmlDoc.importNode(marcRecord, true));
         apix.setAttribute("version", "0.1");
         apix.setAttribute("status", "OK");
         apix.setAttribute("operation", "GETRECORD");
+
+        Element record = xmlDoc.createElement("record");
+        apix.appendChild(record);
+
+        Element identifier = xmlDoc.createElement("identifier");
+        record.appendChild(identifier);
+        identifier.setTextContent(whelkDocument.getThingIdentifiers().get(0));
+
+        Element url = xmlDoc.createElement("url");
+        record.appendChild(url);
+        url.setTextContent("http://api.libris.kb.se/apix/0.1/cat/libris/" + collection + "/" + whelkDocument.getShortId());
+
+        Element metadata = xmlDoc.createElement("metadata");
+        record.appendChild(metadata);
+        metadata.appendChild(xmlDoc.importNode(marcRecord, true));
+
+        Element timestamp = xmlDoc.createElement("timestamp");
+        record.appendChild(timestamp);
+        timestamp.setTextContent(whelkDocument.getModified());
+
+        // if bib - if request x-holdings : extra and holdings
+
         return docToString(xmlDoc);
     }
 }

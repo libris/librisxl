@@ -39,7 +39,6 @@ public class ApixServer extends HttpServlet
     static Whelk s_whelk;
     private static final Logger s_logger = LogManager.getLogger(ApixServer.class);
 
-    final static int ERROR_COULD_NOT_FIND = 0xff00;
     final static int ERROR_PARAM_COUNT = 0xff01;
     final static int ERROR_EXTRA_PARAM = 0xff02;
     final static int ERROR_BAD_COLLECTION = 0xff03;
@@ -86,7 +85,7 @@ public class ApixServer extends HttpServlet
         String[] parameters = Utils.getPathSegmentParameters(request);
         int expectedParameterCount = 3; // expect: /libris/bib/123
         if (!Utils.validateParameters(response, parameters, expectedParameterCount))
-            return;
+            return; // error response already sent
 
         String collection = parameters[1];
         String bibId = parameters[2];
@@ -95,15 +94,15 @@ public class ApixServer extends HttpServlet
         String xlShortId = s_whelk.getStorage().getSystemIdByIri(xlUri);
         if (xlShortId == null)
         {
-            Utils.send200Response(response, Xml.formatApixErrorResponse("Could not find record with requested ID.", ERROR_COULD_NOT_FIND));
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
         Document document = s_whelk.getStorage().load(xlShortId);
         String marcXmlString = Utils.convertToMarcXml(response, document);
         if (marcXmlString == null)
-            return;
+            return; // error response already sent
 
-        Utils.send200Response(response, Xml.formatApixGetRecordResponse(marcXmlString));
+        Utils.send200Response(response, Xml.formatApixGetRecordResponse(marcXmlString, document, collection));
     }
 
     public void doDelete2(HttpServletRequest request, HttpServletResponse response) throws IOException
