@@ -9419,8 +9419,8 @@
     "368": {
       "aboutEntity": "?thing",
       "aboutType": "Agent",
-      "addLink": "marc:hasOtherAttributesOfPersonOrCorporateBody",
-      "resourceType": "marc:OtherAttributesOfPersonOrCorporateBody",
+      "addLink": "hasOtherAttributesOfAgent",
+      "resourceType": "OtherAttributesOfAgent",
       "$a": {"addProperty": "marc:typeOfCorporateBody"},
       "$c": {"addProperty": "marc:otherDesignation"},
       "$d": {"addProperty": "marc:titleOfPerson"},
