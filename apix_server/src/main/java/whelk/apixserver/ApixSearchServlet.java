@@ -2,6 +2,7 @@ package whelk.apixserver;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import whelk.Document;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -24,8 +25,15 @@ public class ApixSearchServlet extends HttpServlet
 
     public void doGet2(HttpServletRequest request, HttpServletResponse response) throws Exception
     {
-        Set<String> searchResults = search(request);
-        System.out.println(searchResults);
+        Set<String> resultingIDs = search(request);
+
+        Map<String, Document> resultingDocumentsMap = Utils.s_whelk.bulkLoad(new ArrayList<>(resultingIDs));
+        List<Document> resultingDocuments = new ArrayList<>();
+        for (String key : resultingDocumentsMap.keySet())
+            resultingDocuments.add(resultingDocumentsMap.get(key));
+
+        Utils.send200Response(response, Xml.formatApixSearchResponse(resultingDocuments));
+        //System.out.println(searchResults);
     }
 
     private Set<String> search(HttpServletRequest request)
@@ -45,29 +53,20 @@ public class ApixSearchServlet extends HttpServlet
                 String normalizedValue = parameterValue.replaceAll("-", "");
                 List<String> systemIDs = Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISBN", normalizedValue.toUpperCase(), 1);
                 systemIDs.addAll( Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISBN", normalizedValue.toLowerCase(), 1) );
-                intersect(results, systemIDs);
+                results.addAll(systemIDs);
             } else if (parameterName.equalsIgnoreCase("issn"))
             {
                 String normalizedValue = parameterValue.replaceAll("-", "");
                 List<String> systemIDs = Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", normalizedValue.toUpperCase(), 1);
                 systemIDs.addAll( Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", normalizedValue.toLowerCase(), 1) );
-                intersect(results, systemIDs);
-            } else // if (...) what is the search term for 024$a = TODO, tighten this.
+                results.addAll(systemIDs);
+            } else // if (...) what is the search term for 024$a = TODO, tighten this. (urnnbn ?)
             {
                 List<String> systemIDs = Utils.s_whelk.getStorage().getSystemIDsByTypedID("Identifier", parameterValue, 1);
-                intersect(results, systemIDs);
+                results.addAll(systemIDs);
             }
         }
 
         return results;
-    }
-
-    // Multiple parameters are interpreted as implicit ANDs (all must be satisfied).
-    private void intersect(Set<String> set, List<String> list)
-    {
-        if (set.isEmpty())
-            set.addAll(list);
-        else
-            set.retainAll(list);
     }
 }

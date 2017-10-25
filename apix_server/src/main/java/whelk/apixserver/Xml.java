@@ -120,4 +120,36 @@ public class Xml
 
         return docToString(xmlDoc);
     }
+
+    public static String formatApixSearchResponse(List<whelk.Document> resultingDocuments) throws TransformerException, IOException, SAXException
+    {
+        Document xmlDoc = builder.newDocument();
+
+        Element apix = xmlDoc.createElement("apix");
+        xmlDoc.appendChild(apix);
+        apix.setAttribute("version", "0.1");
+        apix.setAttribute("status", "OK");
+        apix.setAttribute("operation", "SEARCH");
+
+        Element query = xmlDoc.createElement("query");
+        // Contents of query node intentionally omitted (for now), as it is extremely unlikely that clients actually examine this
+        apix.appendChild(query);
+
+        Element result = xmlDoc.createElement("result");
+        apix.appendChild(result);
+
+        Element records = xmlDoc.createElement("records");
+        result.appendChild(records);
+        for (whelk.Document document : resultingDocuments)
+        {
+            String marcXmlString = Utils.convertToMarcXml(document);
+            if (marcXmlString != null)
+            {
+                Element marcRecord = builder.parse(new InputSource(new StringReader(marcXmlString))).getDocumentElement();
+                records.appendChild(xmlDoc.importNode(marcRecord, true));
+            }
+        }
+
+        return docToString(xmlDoc);
+    }
 }
