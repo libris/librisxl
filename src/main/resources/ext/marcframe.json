@@ -9655,15 +9655,15 @@
     "040": {"ignored": true, "NOTE:record-count": 4, "NOTE:local": "ANVÄNDS NORMALT EJ I BESTÅNDSFORMATET"}, 
     "050": {
       "inherit": "bib",
-      "aboutEntity": "?item",
-      "NOTE-local": "LIBRIS-definierat beståndsfält.",
+      "aboutEntity": "?thing",
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
       "addLink": "shelfMark",
       "resourceType": "ShelfMarkLcc",
       "$b": {"ignored": true}
     },
     "060": {
       "inherit": "bib",
-      "aboutEntity": "?item",
+      "aboutEntity": "?thing",
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
       "addLink": "shelfMark",
       "resourceType": "ShelfMarkNLM",
