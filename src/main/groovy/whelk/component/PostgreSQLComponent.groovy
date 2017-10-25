@@ -1221,6 +1221,45 @@ class PostgreSQLComponent {
         }
     }
 
+    /**
+     * List all system IDs that match a given typed id and graph index
+     * (for example: type:ISBN, value:1234, graphIndex:1 -> ksjndfkjwbr3k)
+     */
+    public List<String> getSystemIDsByTypedID(String idType, String idValue, int graphIndex) {
+
+        // Validate input
+        if (!idType.matches("[A-Za-z]+"))
+            return []
+        if (!idValue.matches("[A-Za-z\\d]+"))
+            return []
+        // graphIndex is already a strongly typed int.
+
+        Connection connection
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            String query = "SELECT id FROM lddb WHERE data#>'{@graph," + graphIndex + ",identifiedBy}' @> ?"
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(query)
+            preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
+
+            rs = preparedStatement.executeQuery()
+            List<String> results = []
+            while (rs.next()) {
+                results.add( rs.getString(1) )
+            }
+            return results
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+            if (connection != null)
+                connection.close()
+        }
+    }
+
     String getSystemIdByThingId(String thingId) {
         Connection connection
         PreparedStatement preparedStatement
