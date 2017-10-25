@@ -253,7 +253,7 @@
       "$f": {"property": "date"},
       "$g": {"property": "comment"},
       "$h": {"property": "marc:mediaTerm"},
-      "$k": {"addProperty": "qualifyingNote"},
+      "$k": {"addProperty": "qualifier"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$m": {"addProperty": "musicPerformanceMedium"},
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
@@ -4216,13 +4216,44 @@
     "130": {
       "aboutEntity": "?work",
       "link": "expressionOf",
-      "TODO:include?": ["titledetails"],
+      "include": ["titledetails1xx7xx"],
       "resourceType": "Work",
-      "TODO": "Similar to 240. Could use link:expressionOf if 130 XOR 240",
+      "i1": {"property": "marc:nonfilingChars"},
       "$a": {"property": "uniformTitle"},
-      "$d": {"property": "date"},
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+      "$d": {"property": "legalDate"},
+      "$n": {"property": "partNumber"},
+      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "_spec": [
+        {
+          "source": {
+            "130": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
+              {"d": "(1968)."},
+              {"l": "Spanish."},
+              {"f": "1977."}
+            ]}},
+          "normalized": {
+            "130": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
+              {"d": "(1968)."},
+              {"f": "1977."},
+              {"l": "Spanish."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "expressionOf": {
+                "@type": "Work",
+                "uniformTitle":  "Treaty of the Non-proliferation of Nuclear Weapons",
+                "legalDate": "(1968).",
+                "language": {"@type": "Language", "label": "Spanish."},
+                "originDate": "1977.",
+                "marc:nonfilingChars" : "0"
+              }
+            }
+          }}
+        }
+      ]
     },
 
     "210": {
@@ -4231,10 +4262,61 @@
       "addLink": "hasTitle",
       "embedded": true,
       "resourceType": "AbbreviatedTitle",
-      "TOOO:i2": {},
+      "i2": {
+        "link": "source",
+        "resourceType": "Source",
+        "property": "code",
+        "tokenMap": {
+          " ": "issnkey"
+        },
+        "definedElsewhereToken": "0"
+      },
+      "$2": {
+        "requires-i2": "0",
+        "link": "source",
+        "resourceType": "Source",
+        "property": "code"
+      },
       "$a": {"property": "mainTitle"},
-      "$b": {"property": "qualifyingNote"},
-      "$2": {"property": "sourceNote"}
+      "$b": {"property": "qualifier"},
+      "_spec": [
+        {
+          "source": {
+            "210": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Mensuration photogrammetrie genie rural"},
+              {"2": "dnlm"}
+            ]}},
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "AbbreviatedTitle",
+              "mainTitle":  "Mensuration photogrammetrie genie rural",
+              "source" : {
+                "@type" : "Source",
+                "code" : "dnlm"
+              }
+            }]
+          }}
+        },
+        {
+          "source": {
+            "210": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Plant prot. bull."} ,
+              {"b": "(Faridabad)"}
+            ]}},
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "AbbreviatedTitle",
+              "mainTitle":  "Plant prot. bull.",
+              "qualifier": "(Faridabad)",
+              "marc:searchElement" : false,
+              "source" : {
+                "@type" : "Source",
+                "code" : "issnkey"
+              }
+            }]
+          }}
+        }
+      ]
     },
 
     "222": {
@@ -4244,13 +4326,31 @@
       "embedded": true,
       "resourceType": "KeyTitle",
       "$a": {"property": "mainTitle"},
-      "$b": {"property": "qualifyingNote"}
+      "$b": {"property": "qualifier"},
+      "i2": {"property": "marc:nonfilingChars"},
+      "_spec": [
+        {
+          "source": {
+            "222": {"ind1": " ", "ind2": "0", "subfields": [
+              {"a": "Plant prot. bull."} ,
+              {"b": "(Faridabad)"}
+            ]}},
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "KeyTitle",
+              "mainTitle": "Plant prot. bull.",
+              "qualifier": "(Faridabad)",
+              "marc:nonfilingChars" : "0"
+            }]
+          }}
+        }
+      ]
     },
 
     "240": {
       "aboutEntity": "?work",
-      "TODO:i2": {},
-      "include": ["titledetails", "titlesearchelem"],
+      "i2": {"property": "marc:nonfilingChars"},
+      "include": ["titledetails1xx7xx", "titlesearchelem"],
       "TODO": "See also 100$t and 130.",
       "embedded": true,
       "link": "hasTitle",
@@ -4260,7 +4360,28 @@
         "aboutEntity": "?work",
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
         "uriTemplate": "http://libris.kb.se/auth/{_}"
-      }
+      },
+      "_spec": [
+        {
+          "source": {
+            "240": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Moyen âge"},
+              {"l": "Engelska."}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": {
+                "@type": "Title",
+                "mainTitle":  "Moyen âge",
+                "language": {"@type": "Language", "label": "Engelska."},
+                "marc:searchElement" : false,
+                "marc:nonfilingChars" : " "
+              }
+            }
+          }}
+        }
+      ]
     },
 
     "242": {
@@ -4271,16 +4392,102 @@
       "resourceType": "Title",
       "$c": {"property": "responsibilityStatement"},
       "$h": {"property": "marc:mediaTerm"},
-      "$y": {"link": "language", "property": "code"},
-      "TODO": "Translation of? merge into 245?"
+      "$y": {"link": "language", "resourceType": "Language", "property": "code"},
+      "i2": {"property": "marc:nonfilingChars"},
+      "TODO": "Translation of? merge into 245?",
+      "_spec": [
+        {
+          "source": {
+            "242": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "New regulation on public order"} ,
+              {"b": "an addendum to the instruction of the ward chairmen."},
+              {"y": "eng"}
+            ]}},
+          "result": {"mainEntity": {
+            "marc:hasTranslatedTitle": [{
+              "@type": "Title",
+              "mainTitle": "New regulation on public order",
+              "titleRemainder": "an addendum to the instruction of the ward chairmen.",
+              "language": {"@type": "Language", "code": "eng"},
+              "marc:nonfilingChars" : "0"
+            }]
+          }}
+        },
+        {
+          "source": {
+            "242": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Annals of chemistry"} ,
+              {"n": "Series C,."},
+              {"p": "Organic chemistry and biochemistry."},
+              {"y": "eng"}
+            ]}},
+          "result": {"mainEntity": {
+            "marc:hasTranslatedTitle": [{
+              "@type": "Title",
+              "mainTitle": "Annals of chemistry",
+              "hasPart" : [{
+                "@type" : "TitlePart",
+                "partName" : "Organic chemistry and biochemistry.",
+                "partNumber" : "Series C,."
+              }],
+              "language": {"@type": "Language", "code": "eng"},
+              "marc:nonfilingChars" : "0"
+            }]
+          }}
+        }
+      ]
     },
 
     "243": {
-      "include": ["titledetails", "titlesearchelem"],
-      "addLink": "hasTitle",
+      "aboutEntity": "?work",
+      "include": ["titledetails1xx7xx", "titlesearchelem"],
+      "link": "hasTitle",
       "embedded": true,
       "resourceType": "CollectiveTitle",
-      "$a": {"property": "mainTitle"}
+      "$a": {"property": "mainTitle"},
+      "$d": {"property": "legalDate"},
+      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+      "i2": {"property": "marc:nonfilingChars"},
+      "_spec": [
+        {
+          "source": {
+            "243": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Philosophical works"} ,
+              {"k": "Selsections"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": {
+                "@type": "CollectiveTitle",
+                "mainTitle": "Philosophical works",
+                "marc:formSubheading": ["Selsections"],
+                "marc:nonfilingChars": "0"
+              }
+            }
+          }}
+        },
+        {
+          "source": {
+            "243": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Correspondence"},
+              {"l": "English"},
+              {"s": "Selections"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": {
+                "@type": "CollectiveTitle",
+                "mainTitle": "Correspondence",
+                "language": {"@type": "Language", "label": "English"},
+                "marc:nonfilingChars": "0",
+                "marc:version": "Selections"
+              }
+            }
+          }}
+        }
+      ]
     },
 
     "245": {
@@ -4289,17 +4496,17 @@
       "addLink": "hasTitle",
       "embedded": true,
       "resourceType": "Title",
-      "i2": {"TODO:titleSortKey": "bf2 implements this as: ($label,@ind2+1,(string-length($label)-@ind2)-1)", "marcDefault": "0"},
       "subfieldOrder": "a b c p n ... h",
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
         "leadingPunctuation": "/", "trailingPunctuation": ".",
         "NOTE": "punctuation may include data about included parts (e.g. short stories)"
       },
-      "$f": {"aboutEntity": "?thing", "property": "temporalCoverage"},
-      "$g": {"aboutEntity": "?thing", "property": "marc:generalTemporalCoverageNote"},
+      "$f": {"aboutEntity": "?thing", "property": "marc:inclusiveDates"},
+      "$g": {"aboutEntity": "?thing", "property": "marc:bulkDates"},
       "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "surroundingChars": "[]"},
       "$s": {"property": "version"},
+      "i2": {"property": "marc:nonfilingChars"},
       "_spec": [
         {
           "source": {
@@ -4308,7 +4515,8 @@
           ]}},
           "result": {"mainEntity": {
             "hasTitle": [ {"@type": "Title",
-              "mainTitle":  "Anteckningar från en ö"
+              "mainTitle":  "Anteckningar från en ö",
+              "marc:nonfilingChars": "0"
             } ]
           }}
         },
@@ -4321,7 +4529,8 @@
           "result": {"mainEntity": {
             "hasTitle": [ {"@type": "Title",
               "mainTitle":  "Anteckningar från en ö",
-              "marc:searchElement": false
+              "marc:searchElement": false,
+              "marc:nonfilingChars": "0"
             } ],
             "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
           }}
@@ -4351,21 +4560,60 @@
         "TODO:if _": "use $i",
         "tokenMap": {
           " ": "VariantTitle",
-          "0": "marc:TitlePart",
+          "0": "TitlePart",
           "1": "ParallelTitle",
-          "2": "marc:DistinctiveTitle",
+          "2": "DistinctiveTitle",
           "3": "marc:OtherTitle",
           "4": "CoverTitle",
           "5": "TitlePage",
-          "6": "HeadingTitle",
-          "7": "ColumnTitle",
+          "6": "CaptionTitle",
+          "7": "RunningTitle",
           "8": "SpineTitle"
         }
       },
-      "$f": {"property": "qualifyingNote"},
+      "$f": {"property": "date"},
       "$g": {"property": "comment"},
       "$h": {"property": "marc:mediaTerm", "surroundingChars": "[]"},
-      "$i": {"property": "typeNote"}
+      "$i": {"property": "typeNote"},
+      "subfieldOrder": "i ...",
+      "_spec": [
+        {
+          "source": {
+            "246": {"ind1": "1", "ind2": "6", "subfields": [
+              {"a": "Newspaper index"},
+              {"f": "January 1982-"}
+            ]}},
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "CaptionTitle",
+              "mainTitle": "Newspaper index",
+              "date": "January 1982-",
+              "marc:searchControl" : {
+                "@id" : "marc:NoteAddedEntry"
+              }
+            }]
+          }}
+        },
+        {
+          "source": {
+            "246": {"ind1": "1", "ind2": " ", "subfields": [
+              {"i": "At head of title:"},
+              {"a": "Science and public affairs"},
+              {"f": "January 1970-April 1974"}
+            ]}},
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "VariantTitle",
+              "typeNote": "At head of title:",
+              "mainTitle": "Science and public affairs",
+              "date": "January 1970-April 1974",
+              "marc:searchControl" : {
+                "@id" : "marc:NoteAddedEntry"
+              }
+            }]
+          }}
+        }
+      ]
     },
 
     "247": {
@@ -4389,7 +4637,41 @@
       "$f": {"property": "date"},
       "$g": {"property": "comment"},
       "$h": {"property": "marc:mediaTerm"},
-      "$x": {"addProperty": "issn"}
+      "$x": {"addProperty": "issn"},
+      "spec_": [
+        {
+          "source": {
+            "247": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Everywoman's magazine"},
+              {"f": "v.5, no. 6.(1963-)-v.10, no. 1 (1967)"}
+            ]}},
+          "result": {"mainEntity": {
+            "marc:previousTitle": [{
+              "@type": "TitlePart",
+              "mainTitle": "Everywoman's magazine",
+              "date": "v.5, no. 6.(1963-)-v.10, no. 1 (1967)"
+            }]
+          }}
+        },
+        {
+          "source": {
+            "247": {"ind1": "0", "ind2": "0", "subfields": [
+              {"a": "Customs and excise circular"},
+              {"n": "Part 2"},
+              {"f": "1923-1925"},
+              {"x": "0019-8536"}
+            ]}},
+          "result": {"mainEntity": {
+            "marc:previousTitle": [{
+              "@type": "TitlePart",
+              "mainTitle": "Customs and excise circular",
+              "partNumber": "Part 2",
+              "date": "1923-1925",
+              "issn": "0019-8536"
+            }]
+          }}
+        }
+      ]
     },
 
     "249": {},
@@ -7660,20 +7942,174 @@
     "720": {},
 
     "730": {
-      "TODO": "like 700 but just a Work!",
-      "TOOO:i1": {},
-      "TODO:match": [
-        {"when": "i2=2", "addLink": "influentialPart"}
+      "aboutEntity": "?work",
+      "include": "titledetails1xx7xx",
+      "i1": {"property": "marc:nonfilingChars"},
+      "match": [
+        {
+          "when": "i2=2",
+          "addLink": "hasPart",
+          "resourceType": "Work",
+          "$a": {"property": "uniformTitle"},
+          "$d": {"property": "legalDate"},
+          "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+          "$x": {"property": "issn", "punctuationChars": ".,=;"}
+        }
       ],
-      "addLink": "influentialRelation",
-      "resourceType": "Work",
-      "$a": {"property": "title"}
+      "pendingResources": {
+        "_:work": {"link": "entity", "resourceType": "Work", "embedded": false}
+      },
+      "addLink": "relatedTo",
+      "resourceType": "Relationship",
+      "$a": {"about": "_:work", "property": "uniformTitle"},
+      "$d": {"about": "_:work","property": "legalDate"},
+      "$i": {"addLink": "relation", "property": "label"},
+      "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
+      "$x": {"about": "_:work","property": "issn", "punctuationChars": ".,=;"},
+      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "_spec": [
+        {
+          "source": {"730": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Abyss (Motion picture : 1989)"},
+            {"i": "Novelization of (work)"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "uniformTitle": "Abyss (Motion picture : 1989)"
+                  },
+                  "marc:nonfilingChars" : "0",
+                  "relation": [{"label": "Novelization of (work)"}]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"730": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Macaroons and biscuits."},
+            {"l": "Svenska."}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "uniformTitle": "Macaroons and biscuits."
+                  },
+                  "marc:nonfilingChars" : "0",
+                  "language": {"@type": "Language", "label": "Svenska."}
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"730": {"ind1": "3", "ind2": "2", "subfields": [
+            {"i": "Container of (work): "},
+            {"a": "Gigue,"},
+            {"m": "harpsichord,"},
+            {"n": "GraunWV D:XVIII:11,"},
+            {"r": "B♭ minor"}
+          ]}},
+          "TODO:result": {"mainEntity": {
+            "NOTE": "Get's reverted to 700",
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "uniformTitle": "Gigue,",
+                  "musicMedium": ["harpsichord,"],
+                  "partNumber": ["GraunWV D:XVIII:11"],
+                  "musicKey": "B♭ minor",
+                  "relation": [{"label": "Container of (work):"}],
+                  "marc:nonfilingChars" : "3"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
 
-
     "740": {
-      "inherit": "730",
-      "$a": {"property": "title"}
+      "TODO:inherit?": "730",
+      "aboutEntity": "?thing",
+      "include": "titledetails1xx7xx",
+      "i1": {"property": "marc:nonfilingChars"},
+      "match": [
+        {
+          "when": "i2=2",
+          "addLink": "hasPart",
+          "resourceType": "Work",
+          "$a": {"property": "title"},
+          "$d": {"property": "legalDate"},
+          "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+          "$x": {"property": "issn", "punctuationChars": ".,=;"}
+        }
+      ],
+      "pendingResources": {
+        "_:work": {"link": "entity", "resourceType": "Work", "embedded": false}
+      },
+      "addLink": "relatedTo",
+      "resourceType": "Relationship",
+      "$a": {"about": "_:work", "property": "title"},
+      "$d": {"about": "_:work","property": "legalDate"},
+      "$i": {"addLink": "relation", "property": "label"},
+      "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
+      "$x": {"about": "_:work","property": "issn", "punctuationChars": ".,=;"},
+      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "_spec": [
+        {
+          "source": {"740": {"ind1": "0", "ind2": "2", "subfields": [
+            {"a": "Economics library selections"},
+            {"n": "Series 1,"},
+            {"p": "New books in economics"}
+          ]}},
+          "normalized": {"740": {"ind1": "0", "ind2": "2", "subfields": [
+            {"a": "Economics library selections"},
+            {"n": "Series 1"},
+            {"p": "New books in economics"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasPart": [
+              {
+                "@type": "Work",
+                "title": "Economics library selections",
+                "partNumber": ["Series 1"],
+                "partName": ["New books in economics"],
+                "marc:nonfilingChars" : "0"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"740": {"ind1": "3", "ind2": " ", "subfields": [
+            {"a": "En hjälpande hand"}
+          ]}},
+          "result": {"mainEntity": {
+            "relatedTo": [
+              {
+                "@type": "Relationship",
+                "entity": {
+                  "@type": "Work",
+                  "title": "En hjälpande hand"
+                },
+                "marc:nonfilingChars" : "3"
+              }
+            ]
+          }}
+        }
+      ]
     },
 
     "751": {},
@@ -7694,7 +8130,7 @@
       "TOOO:i2": {},
       "$a": {"property": "controlledLabel", "TODO:targetMatch": "1xx"},
       "$b": {"property": "edition", "TODO:targetMatch": "250"},
-      "$c": {"property": "qualifyingNote"},
+      "$c": {"property": "qualifier"},
       "$d": {"property": "placePublisherAndDateOfPublication", "TODO:targetMatch": "260$c"},
       "$g": {"addProperty": "part"},
       "$h": {"property": "physicalDescription"},
@@ -7820,13 +8256,63 @@
     "810": {},
     "811": {},
     "830": {
-      "addLink": "isPartOf", "resourceType": "Serial",
-      "TODO:i2": {},
+      "aboutEntity": "?work",
+      "addLink": "hasSeries",
+      "resourceType": "Serial",
+      "include": "titledetails1xx7xx",
       "$a": {"property": "uniformTitle"},
-      "$d": {"addProperty": "date"},
+      "$d": {"addProperty": "legalDate"},
+      "$n": {"addProperty": "partNumber"},
       "$v": {"property": "seriesEnumeration"},
+      "$w": {"property": "marc:bibliographicRecordControlNumber"},
       "$x": {"property": "issn", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "i2": {"property": "marc:nonfilingChars"},
+      "subfieldorder": "3 a d g h s m n p l r k f o v w x",
+      "_spec": [
+        {
+          "source": {"830": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Europarecht (Munich, germany)"},
+            {"p": "Beiheft"},
+            {"v": "2002/1"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasSeries": [
+                {
+                  "@type": "Serial",
+                  "uniformTitle": "Europarecht (Munich, germany)",
+                  "partName": ["Beiheft"],
+                  "seriesEnumeration": "2002/1",
+                  "marc:nonfilingChars" : "0"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"830": {"ind1": " ", "ind2": "4", "subfields": [
+            {"a": "Studies on the texts of the desert of Judah,"},
+            {"v": "101"},
+            {"x": "0169-9962"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasSeries": [
+                {
+                  "@type": "Serial",
+                  "uniformTitle": "Studies on the texts of the desert of Judah,",
+                  "seriesEnumeration": "101",
+                  "issn": "0169-9962",
+                  "marc:nonfilingChars" : "4"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "841": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ I DET BIBLIOGRAFISKA FORMATET"},
     "842": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ I DET BIBLIOGRAFISKA FORMATET"},
