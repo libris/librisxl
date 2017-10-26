@@ -30,6 +30,7 @@ import java.util.Properties;
 
 public class Utils
 {
+    static final String APIX_BASEURI = "https://apix.libris.kb.se/apix";
     static Whelk s_whelk;
     static JsonLd s_jsonld; // For model driven behaviour
     private static JsonLD2MarcXMLConverter s_toMarcConverter = new JsonLD2MarcXMLConverter();
@@ -168,5 +169,17 @@ public class Utils
         ServletOutputStream out = response.getOutputStream();
         out.print(message);
         out.close();
+    }
+
+    static void send201Response(HttpServletResponse response, String uri) throws IOException
+    {
+        response.setStatus(HttpServletResponse.SC_CREATED);
+        response.setHeader("Location", uri);
+    }
+
+    static void send303Response(HttpServletResponse response, String uri) throws IOException
+    {
+        response.setStatus(HttpServletResponse.SC_SEE_OTHER);
+        response.setHeader("Location", uri);
     }
 }

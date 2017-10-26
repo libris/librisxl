@@ -167,6 +167,7 @@ public class ApixCatServlet extends HttpServlet
         if (id.equalsIgnoreCase("new"))
         {
             Utils.s_whelk.store(incomingDocument, APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
+            Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
         } else // save/overwrite existing
         {
             Utils.s_whelk.storeAtomicUpdate(incomingDocument.getShortId(), false, APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false,
@@ -174,6 +175,7 @@ public class ApixCatServlet extends HttpServlet
                     {
                         doc.data = incomingDocument.data;
                     });
+            Utils.send303Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
         }
     }
 
@@ -202,7 +204,8 @@ public class ApixCatServlet extends HttpServlet
             Utils.send200Response(response, Xml.formatApixErrorResponse("Unexpected parameter: " + operator, ApixCatServlet.ERROR_EXTRA_PARAM));
             return;
         }
-        // assert operator = "newhold"
-        // New hold
+
+        Utils.s_whelk.store(incomingDocument, APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
+        Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
     }
 }
