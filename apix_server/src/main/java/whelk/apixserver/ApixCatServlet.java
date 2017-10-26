@@ -1,13 +1,18 @@
 package whelk.apixserver;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.Document;
+import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -124,10 +129,80 @@ public class ApixCatServlet extends HttpServlet
         }
 
         Utils.s_whelk.remove(xlShortId, APIX_SYSTEM_CODE, request.getRemoteUser(), collection);
+        Utils.send200Response(response, "");
     }
 
     public void doPut2(HttpServletRequest request, HttpServletResponse response) throws Exception
     {
+        String[] parameters = Utils.getPathSegmentParameters(request);
 
+        if (parameters.length == 3)
+        {
+            saveNormal(request, response);
+        } else if (parameters.length == 4)
+        {
+            saveHoldOfBib(request, response);
+        }
+    }
+
+    private void saveNormal(HttpServletRequest request, HttpServletResponse response) throws Exception
+    {
+        String[] parameters = Utils.getPathSegmentParameters(request);
+
+        int expectedParameterCount = 3; // expect: /libris/bib/{new/123}
+        if (!Utils.validateParameters(response, parameters, expectedParameterCount))
+            return; // error response already sent
+
+        String collection = parameters[1];
+        String id = parameters[2];
+
+        String content = IOUtils.toString(request.getReader());
+        Document incomingDocument = Utils.convertToRDF(content, collection, null);
+        if (incomingDocument == null)
+        {
+            Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion from MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));
+            return;
+        }
+
+        if (id.equalsIgnoreCase("new"))
+        {
+            Utils.s_whelk.store(incomingDocument, APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
+        } else // save/overwrite existing
+        {
+            Utils.s_whelk.storeAtomicUpdate(incomingDocument.getShortId(), false, APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false,
+                    (Document doc) ->
+                    {
+                        doc.data = incomingDocument.data;
+                    });
+        }
+    }
+
+    private void saveHoldOfBib (HttpServletRequest request, HttpServletResponse response) throws Exception
+    {
+        String[] parameters = Utils.getPathSegmentParameters(request);
+
+        int expectedParameterCount = 4; // expect: /libris/bib/123/newhold
+        if (!Utils.validateParameters(response, parameters, expectedParameterCount))
+            return; // error response already sent
+
+        String collection = parameters[1];
+        String bibid = parameters[2];
+        String operator = parameters[3];
+
+        String content = IOUtils.toString(request.getReader());
+        Document incomingDocument = Utils.convertToRDF(content, collection, bibid);
+        if (incomingDocument == null)
+        {
+            Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion from MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));
+            return;
+        }
+
+        if (!operator.equals("newhold"))
+        {
+            Utils.send200Response(response, Xml.formatApixErrorResponse("Unexpected parameter: " + operator, ApixCatServlet.ERROR_EXTRA_PARAM));
+            return;
+        }
+        // assert operator = "newhold"
+        // New hold
     }
 }

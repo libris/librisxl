@@ -2,24 +2,38 @@ package whelk.apixserver;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import se.kb.libris.util.marc.Controlfield;
+import se.kb.libris.util.marc.MarcFieldComparator;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import whelk.Document;
+import whelk.IdGenerator;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
+import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
+import whelk.converter.marc.MarcFrameConverter;
+import whelk.util.LegacyIntegrationTools;
 import whelk.util.PropertyLoader;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.TransformerException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 public class Utils
 {
     static Whelk s_whelk;
+    static JsonLd s_jsonld; // For model driven behaviour
     private static JsonLD2MarcXMLConverter s_toMarcConverter = new JsonLD2MarcXMLConverter();
+    private static MarcFrameConverter s_toJsonLdConverter = new MarcFrameConverter();
     private static final Logger s_logger = LogManager.getLogger(Utils.class);
 
     static
@@ -28,6 +42,10 @@ public class Utils
         PostgreSQLComponent postgreSqlComponent =
                 new PostgreSQLComponent(configuration.getProperty("sqlUrl"), configuration.getProperty("sqlMaintable"));
         s_whelk = new Whelk(postgreSqlComponent);
+        s_whelk.loadCoreData();
+        Map displayData = s_whelk.getDisplayData();
+        Map vocabData = s_whelk.getVocabData();
+        s_jsonld = new JsonLd(displayData, vocabData);
     }
 
     static String convertToMarcXml(Document document) throws TransformerException, IOException
@@ -38,6 +56,55 @@ public class Utils
         }
         catch (Exception | Error e)
         {
+            return null;
+        }
+    }
+
+    /**
+     * itemOfSystemId (a fnrgl-string) is only relevant when converting a holding record. Set to null otherwise.
+     */
+    static Document convertToRDF(String marcXmlString, String expectedCollection, String itemOfSystemId) throws IOException
+    {
+        try
+        {
+            InputStream marcXmlInputStream = new ByteArrayInputStream(marcXmlString.getBytes("UTF-8"));
+            MarcXmlRecordReader reader = new MarcXmlRecordReader(marcXmlInputStream, "/record");
+            MarcRecord marcRecord = reader.readRecord();
+
+            String generatedId = IdGenerator.generate();
+
+            // Delete any existing 001 fields (the incoming record is not allowed to decide it's own libris ID).
+            if (marcRecord.getControlfields("001").size() != 0)
+            {
+                marcRecord.getFields().remove(marcRecord.getControlfields("001").get(0));
+            }
+
+            // The conversion process needs a 001 field to work correctly.
+            if (marcRecord.getControlfields("001").size() == 0)
+                marcRecord.addField(marcRecord.createControlfield("001", generatedId));
+
+            // If this is a holding record, 004 needs to contain the correct bib id to link with
+            if (itemOfSystemId != null && expectedCollection.equals("hold"))
+            {
+                List<Controlfield> cfs = (List<Controlfield>) marcRecord.getControlfields("004");
+
+                if (cfs.isEmpty())
+                    marcRecord.addField(marcRecord.createControlfield("004", String.valueOf(itemOfSystemId)), MarcFieldComparator.strictSorted);
+                else if (!String.valueOf(itemOfSystemId).equals(cfs.get(0).getData()))
+                    return null;
+            }
+
+            Map convertedData = s_toJsonLdConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), generatedId);
+            Document document = new Document(convertedData);
+
+            String contentClassifiedAsCollection = LegacyIntegrationTools.determineLegacyCollection(document, s_jsonld);
+
+            if (contentClassifiedAsCollection.equals(expectedCollection))
+                return document;
+            return null;
+        } catch (Throwable e)
+        {
+            s_logger.error("Conversion from MARC failed.", e);
             return null;
         }
     }
@@ -97,6 +164,7 @@ public class Utils
     static void send200Response(HttpServletResponse response, String message) throws IOException
     {
         response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType("application/xml");
         ServletOutputStream out = response.getOutputStream();
         out.print(message);
         out.close();

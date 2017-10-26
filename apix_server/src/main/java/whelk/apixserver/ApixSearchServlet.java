@@ -50,19 +50,16 @@ public class ApixSearchServlet extends HttpServlet
             if (parameterName.equalsIgnoreCase("isbn"))
             {
                 String normalizedValue = parameterValue.replaceAll("-", "");
-                List<String> systemIDs = Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISBN", normalizedValue.toUpperCase(), 1);
-                systemIDs.addAll( Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISBN", normalizedValue.toLowerCase(), 1) );
-                results.addAll(systemIDs);
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISBN", normalizedValue.toUpperCase(), 1));
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISBN", normalizedValue.toLowerCase(), 1));
             } else if (parameterName.equalsIgnoreCase("issn"))
             {
                 String normalizedValue = parameterValue.replaceAll("-", "");
-                List<String> systemIDs = Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", normalizedValue.toUpperCase(), 1);
-                systemIDs.addAll( Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", normalizedValue.toLowerCase(), 1) );
-                results.addAll(systemIDs);
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", normalizedValue.toUpperCase(), 1));
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", normalizedValue.toLowerCase(), 1));
             } else // if (...) what is the search term for 024$a = TODO, tighten this. (urnnbn ?)
             {
-                List<String> systemIDs = Utils.s_whelk.getStorage().getSystemIDsByTypedID("Identifier", parameterValue, 1);
-                results.addAll(systemIDs);
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("Identifier", parameterValue, 1));
             }
         }
 
