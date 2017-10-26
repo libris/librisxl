@@ -138,14 +138,14 @@ public class ApixCatServlet extends HttpServlet
 
         if (parameters.length == 3)
         {
-            saveNormal(request, response);
+            saveOnId(request, response);
         } else if (parameters.length == 4)
         {
             saveHoldOfBib(request, response);
         }
     }
 
-    private void saveNormal(HttpServletRequest request, HttpServletResponse response) throws Exception
+    private void saveOnId(HttpServletRequest request, HttpServletResponse response) throws Exception
     {
         String[] parameters = Utils.getPathSegmentParameters(request);
 
