@@ -93,6 +93,13 @@ public class ApixCatServlet extends HttpServlet
             return;
         }
         Document document = Utils.s_whelk.getStorage().load(xlShortId);
+
+        if (document.getDeleted())
+        {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
         String marcXmlString = Utils.convertToMarcXml(document);
         if (marcXmlString == null)
         {
@@ -129,6 +136,7 @@ public class ApixCatServlet extends HttpServlet
         }
 
         Utils.s_whelk.remove(xlShortId, APIX_SYSTEM_CODE, request.getRemoteUser(), collection);
+        s_logger.info("Successful delete on: " + xlShortId);
         Utils.send200Response(response, "");
     }
 
@@ -167,14 +175,17 @@ public class ApixCatServlet extends HttpServlet
         if (id.equalsIgnoreCase("new"))
         {
             Utils.s_whelk.store(incomingDocument, APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
+            s_logger.info("Successful new on : " + incomingDocument.getShortId());
             Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
         } else // save/overwrite existing
         {
-            Utils.s_whelk.storeAtomicUpdate(incomingDocument.getShortId(), false, APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false,
+            incomingDocument.setId(id);
+            Utils.s_whelk.storeAtomicUpdate(id, false, APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false,
                     (Document doc) ->
                     {
                         doc.data = incomingDocument.data;
                     });
+            s_logger.info("Successful update on : " + incomingDocument.getShortId());
             Utils.send303Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
         }
     }
@@ -206,6 +217,7 @@ public class ApixCatServlet extends HttpServlet
         }
 
         Utils.s_whelk.store(incomingDocument, APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
+        s_logger.info("Successful new (hold on bib) on : " + incomingDocument.getShortId());
         Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
     }
 }
