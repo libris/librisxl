@@ -2451,12 +2451,20 @@
         "tokenMap": "PublicationStatusType"
       },
       "[7:11]": {
+        "TODO:addLink": "provisionActivity",
+        "TODO:resourceType": "ProvisionActivity",
+        "TODO:embedded": "true",
+        "TODO:pendingResources": {
+          "_:publication": {"addLink": "publication", "resourceType": "Publication", "embedded": true}
+        },
+        "TODO:appendToExistingEntity": "If entity provisionActivity already exists don't create new provisionActivity",
         "property": "marc:publishedYear"
       },
       "[11:15]": {
         "property": "marc:otherYear"
       },
       "[15:18]": {
+        "TODO:addLink": "provisionActivity, see [7:11]",
         "addLink": "publicationCountry",
         "uriTemplate": "https://id.kb.se/country/{_}",
         "TODO:linkedEntity": {
@@ -4758,92 +4766,399 @@
     "260": {
       "aboutEntity": "?thing",
       "ignoreOnRevertInFavourOf": "264",
+      "TODO:appendToExistingEntity": "When repeated field, exist to existing provisionActivity and don't create new provisionActivity",
       "pendingResources": {
-        "?publication": {"resourceType": "Publication", "addLink": "publication", "embedded": true},
-        "?manufacture": {"resourceType": "Manufacture", "addLink": "manufacture", "embedded": true}
+        "_:publication": {"addLink": "publication", "resourceType": "Publication", "embedded": true},
+        "_:pubPart": {"about": "_:publication", "addLink": "hasPart", "resourceType": "Publication", "subsumeSingle": true},
+        "_:manufacture": {"addLink": "manufacture", "resourceType": "Manufacture", "embedded": true}
       },
       "TODO:groupByRepetitionAndPunctuationPattern": "$3 $a $b $c $e $f $g",
       "TODO": "Need to handle when both $ef together with $ab is repeated for Serials. See ex. 8257615",
-      "TODO:i1": {"property": "marc:isLatest", "tokenMap": {"2": false, "3": true}},
+      "i1": {
+        "about": "_:publication",
+        "property": "marc:isLatest",
+        "tokenMap": {"2": null, "3": true},
+        "marcDefault": " "
+      },
       "$3": {
-        "about": "?publication",
+        "about": "_:publication",
         "link": "appliesTo",
         "resourceType": "Resource",
         "property": "label",
         "position": 0,
         "TODO": "put in first out-split entity"
       },
-      "$a": {"about": "?publication", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:"},
-      "$b": {"about": "?publication", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
-      "$c": {"about": "?publication", "property": "date", "punctuationChars": ",;"},
-      "$e": {"about": "?manufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":;", "surroundingChars" : "()"},
-      "$f": {"about": "?manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
-      "$g": {"about": "?manufacture", "property": "date", "punctuationChars": ",;"},
+      "$a": {"aboutNew": "_:pubPart", "link": "place", "resourceType": "Place", "property": "label", "leadingPunctuation": " ;", "punctuationChars": ",:;"},
+      "$b": {"aboutAltNew": "_:pubPart", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :", "punctuationChars": ",:;)"},
+      "$c": {"about": "_:publication", "property": "date", "leadingPunctuation": ",", "punctuationChars": ",;"},
+      "$e": {"aboutNew": "_:manufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:;", "surroundingChars" : "()"},
+      "$f": {"about": "_:manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :", "punctuationChars": ",:;)"},
+      "$g": {"about": "_:manufacture", "property": "date", "leadingPunctuation": ",", "punctuationChars": ",:;"},
       "_spec": [
+        {
+          "source": [
+            {"260": {"ind1": " ", "ind2": " ",
+              "subfields": [{"a": "Stockholm :"}, {"b": "Litteraturbanken,"}, {"c": "2012"}]}}
+          ],
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "1",
+              "subfields": [{"a": "Stockholm :"}, {"b": "Litteraturbanken ,"}, {"c": "2012"}]}}
+          ],
+          "result": {"mainEntity": {
+            "publication":[
+              {
+                "@type": "Publication",
+                "date": "2012",
+                "place": {"@type": "Place", "label": "Stockholm"},
+                "agent": {"@type": "Agent", "label": "Litteraturbanken"}
+              }
+            ]
+          }}
+        },
+        {
+          "source": [
+            {"260": {"subfields": [{"a": "Stockholm :"}, {"b": "Litteraturbanken,"}, {"c": "2012"}]}},
+            {"260": {"subfields": [{"a": "Stockholm :"}, {"b": "Norstedt,"}]}}
+          ],
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "1",
+              "subfields": [{"a": "Stockholm :"}, {"b": "Litteraturbanken ,"}, {"c": "2012"}]
+            }},
+            {"264": {"ind1": " ", "ind2": "1",
+              "subfields": [{"a": "Stockholm :"}, {"b": "Norstedt"} ]
+            }}
+          ],
+          "result": {"mainEntity": {
+            "publication": [
+              {
+                "@type": "Publication",
+                "date": "2012",
+                "place": {"@type": "Place", "label": "Stockholm"},
+                "agent": {"@type": "Agent", "label": "Litteraturbanken"}
+              },
+              {
+                "@type": "Publication",
+                "place": {"@type": "Place", "label": "Stockholm"},
+                "agent": {"@type": "Agent", "label": "Norstedt"}
+              }
+            ]
+          }}
+        },
+        {
+          "source": {
+            "260": {"subfields": [
+              {"a": "London ;"},
+              {"a": "New York :"}, {"b": "Routledge Falmer ;"},
+              {"a": "[London] :"}, {"b": "Open University,"},
+              {"c": "2002"}]}
+          },
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "1",
+              "subfields": [
+                {"a": "London ;"},
+                {"a": "New York :"}, {"b": "Routledge Falmer ;"},
+                {"a": "[London] :"}, {"b": "Open University ,"},
+                {"c": "2002"}
+              ]
+            }}
+          ],
+          "result": {"mainEntity": {
+            "publication": [
+              {
+                "@type": "Publication",
+                "hasPart": [
+                  {
+                    "@type": "Publication",
+                    "place": {"@type": "Place", "label":  "London"}
+                  },
+                  {
+                    "@type": "Publication",
+                    "place": {"@type": "Place", "label":  "New York"},
+                    "agent":  {"@type": "Agent", "label": "Routledge Falmer"}
+                  },
+                  {
+                    "@type": "Publication",
+                    "place": {"@type": "Place", "label":  "[London]"},
+                    "agent":  {"@type": "Agent", "label": "Open University"}
+                  }
+                ],
+                "date":  "2002"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {
+            "260": {"subfields": [
+              {"a": "London :"},
+              {"b": "Routledge Falmer :"},
+              {"b": "Open University,"},
+              {"c": "2002"}]}
+          },
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "1",
+              "subfields": [
+                {"a": "London :"},
+                {"b": "Routledge Falmer :"},
+                {"b": "Open University ,"},
+                {"c": "2002"}
+              ]
+            }}
+          ],
+          "result": {"mainEntity": {
+            "publication": [
+              {
+                "@type": "Publication",
+                "hasPart": [
+                  {
+                    "@type": "Publication",
+                    "place": {"@type": "Place", "label":  "London"},
+                    "agent":  {"@type": "Agent", "label": "Routledge Falmer"}
+                  },
+                  {
+                    "@type": "Publication",
+                    "agent":  {"@type": "Agent", "label": "Open University"}
+                  }
+                ],
+                "date":  "2002"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {
+            "260": {"subfields": [
+              {"a": "London ;"},
+              {"a": "New York :"}, {"b": "Routledge Falmer,"},
+              {"c": "2002"}]}
+          },
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "1",
+              "subfields": [
+                {"a": "London ;"},
+                {"a": "New York :"}, {"b": "Routledge Falmer ,"},
+                {"c": "2002"}
+              ]
+            }}
+          ],
+          "result": {"mainEntity": {
+            "publication": [
+              {
+                "@type": "Publication",
+                "hasPart": [
+                  {
+                    "@type": "Publication",
+                    "place": {"@type": "Place", "label":  "London"}
+                  },
+                  {
+                    "@type": "Publication",
+                    "place": {"@type": "Place", "label":  "New York"},
+                    "agent":  {"@type": "Agent", "label": "Routledge Falmer"}
+                  }
+                ],
+                "date":  "2002"
+              }
+            ]
+          }}
+        },
         {
           "source": {
             "260": {"ind1": " ", "ind2": " ", "subfields": [
-              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}, {"e": "Finland"}
+              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"},
+              {"e": "Finland"},
+              {"a": "Stockholm"}, {"b": "Wolters Kluwer"},
+              {"e": "Stockholm"}, {"f": "Fram"}
             ]}
           },
           "normalized": [
             {"264": {"ind1": " ", "ind2": "1", "subfields": [
-              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}
+              {"a": "Stockholm :"}, {"b": "Bonnier ;"},
+              {"a": "Stockholm :"}, {"b": "Wolters Kluwer ,"},
+              {"c": "1996"}
             ]}},
             {"264": {"ind1": " ", "ind2": "3", "subfields": [
               {"a": "Finland"}
+            ]}},
+            {"264": {"ind1": " ", "ind2": "3", "subfields": [
+              {"a": "Stockholm :"}, {"b": "Fram"}
             ]}}
           ],
           "result": {"mainEntity": {
             "publication": [
-              {"@type": "Publication",
-                "place": {"@type": "Place", "label":  "Stockholm"},
-                  "agent":  {"@type": "Agent", "label": "Bonnier"},
-                  "date":  "1996"}
+              {
+                "@type": "Publication",
+                "hasPart": [
+                  {
+                    "@type": "Publication",
+                    "place": {"@type": "Place", "label": "Stockholm"},
+                    "agent": {"@type": "Agent", "label": "Bonnier"}
+                  },
+                  {
+                    "@type": "Publication",
+                    "place": {"@type": "Place", "label": "Stockholm"},
+                    "agent": {"@type": "Agent", "label": "Wolters Kluwer"}
+                  }
+                ],
+                "date": "1996"
+              }
             ],
             "manufacture": [
-              {"@type": "Manufacture",
-                "place": {"@type": "Place", "label":  "Finland"}}
-            ]
-          }}
-        }, {
-          "source": {
-            "260": {"subfields": [{"a": "London ;"}, {"a": "New York :"}, {"b": "Routledge Falmer ;"}, {"a": "[London] :"}, {"b": "Open University,"}, {"c": "2002"}]}
-          },
-          "TODO:result": {"mainEntity": {
-            "publication": [
-              {"@type": "Publication",
-                "place": [{"@type": "Place", "label":  "London"},
-                        {"@type": "Place", "label":  "New York"}],
-                  "agent":  {"@type": "Agent", "label": "Routledge Falmer"}},
-              {"@type": "Publication",
-                "assumedPlace": {"@type": "Place", "label":  "London"},
-                  "agent":  {"@type": "Agent", "label": "Open University"},
-                  "date":  "2002"}
+              {
+                "@type": "Manufacture",
+                "place": {"@type": "Place", "label": "Finland"}
+              },
+              {
+                "@type": "Manufacture",
+                "place": {"@type": "Place", "label": "Stockholm"},
+                "agent": {"@type": "Agent", "label": "Fram"}
+              }
             ]
           }}
         },
         {
           "name": "Upprepade utgivarbyten för fortlöpande resurser",
-          "source": {
-            "fields": [
-              {"260": {"ind1": "_", "ind2": "_", "subfields":
-                [{"3": "Sammanfattad utgivningstid:"}, {"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-"}, {"e": "(Stockholm :"}, {"f": "Fram)"}]}},
-              {"260": {"ind1": "_", "ind2": "_", "subfields":
-                [{"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-1925"}]}},
-              {"260": {"ind1": "2", "ind2": "_", "subfields":
-                [{"a": "Lund :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1926-1927"}]}},
-              {"260": {"ind1": "2", "ind2": "_", "subfields":
-                [{"a": "Stockholm :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1928-1931"}]}},
-              {"260": {"ind1": "2", "ind2": "_", "subfields":
-                [{"a": "Stockholm :"}, {"b": "Svenska Clartéförbundet,"}, {"c": "1932-1953"}]}},
-              {"260": {"ind1": "2", "ind2": "_", "subfields":
-                [{"a": "Hägersten :"}, {"b": "Clarté,"}, {"c": "1991-1995"}]}},
-              {"260": {"ind1": "3", "ind2": "_", "subfields":
-                [{"a": "Stockholm :"}, {"b": "Clarté,"}, {"c": "1953-1991, 1995-"}]}}
-            ]
-          },
-          "TODO:result": null
+          "source": [
+            {"260": {"ind1": "_", "ind2": "_", "subfields":
+              [{"3": "Sammanfattad utgivningstid:"}, {"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-"}, {"e": "(Stockholm :"}, {"f": "Fram)"}]}},
+            {"260": {"ind1": "_", "ind2": "_", "subfields":
+              [{"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-1925"}]}},
+            {"260": {"ind1": "2", "ind2": "_", "subfields":
+              [{"a": "Lund :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1926-1927"}]}},
+            {"260": {"ind1": "2", "ind2": "_", "subfields":
+              [{"a": "Stockholm :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1928-1931"}]}},
+            {"260": {"ind1": "2", "ind2": "_", "subfields":
+              [{"a": "Stockholm :"}, {"b": "Svenska Clartéförbundet,"}, {"c": "1932-1953"}]}},
+            {"260": {"ind1": "2", "ind2": "_", "subfields":
+              [{"a": "Hägersten :"}, {"b": "Clarté,"}, {"c": "1991-1995"}]}},
+            {"260": {"ind1": "3", "ind2": "_", "subfields":
+              [{"a": "Stockholm :"}, {"b": "Clarté,"}, {"c": "1953-1991, 1995-"}]}}
+          ] ,
+          "normalized": [
+            {
+              "264": {
+                "ind1": " ", "ind2": "1",
+                "subfields": [
+                  {"a": "Lund :"}, {"b": "Svenska Clartésektionen ,"}, {"c": "1924-"}
+                ]
+              }
+            },
+            {
+              "264": {
+                "ind1": " ", "ind2": "1",
+                "subfields": [
+                  {"a": "Lund :"}, {"b": "Svenska Clartésektionen ,"}, {"c": "1924-1925"}
+                ]
+              }
+            },
+            {
+              "264": {
+                "ind1": " ", "ind2": "1",
+                "subfields": [
+                  {"a": "Lund :"}, {"b": "Svenska Clartéavdelningen ,"}, {"c": "1926-1927"}
+                ]
+              }
+            },
+            {
+              "264": {
+                "ind1": " ", "ind2": "1",
+                "subfields": [
+                  {"a": "Stockholm :"}, {"b": "Svenska Clartéavdelningen ,"}, {"c": "1928-1931"}
+                ]
+              }
+            },
+            {
+              "264": {
+                "ind1": " ", "ind2": "1",
+                "subfields": [
+                  {"a": "Stockholm :"}, {"b": "Svenska Clartéförbundet ,"}, {"c": "1932-1953"}
+                ]
+              }
+            },
+            {
+              "264": {
+                "ind1": " ", "ind2": "1",
+                "subfields": [
+                  {"a": "Hägersten :"}, {"b": "Clarté ,"}, {"c": "1991-1995"}
+                ]
+              }
+            },
+            {
+              "264": {
+                "ind1": " ", "ind2": "1",
+                "subfields": [
+                  {"a": "Stockholm :"}, {"b": "Clarté ,"}, {"c": "1953-1991, 1995-"}
+                ]
+              }
+            },
+            {
+              "264": {
+                "ind1": " ", "ind2": "3",
+                "subfields": [
+                  {"a": "Stockholm :"}, {"b": "Fram"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "appliesTo": {
+                    "@type": "Resource",
+                    "label": "Sammanfattad utgivningstid"
+                  },
+                  "date": "1924-",
+                  "place": {"@type": "Place", "label": "Lund"},
+                  "agent": {"@type": "Agent", "label": "Svenska Clartésektionen"}
+                },
+                {
+                  "@type": "Publication",
+                  "date": "1924-1925",
+                  "place": {"@type": "Place", "label": "Lund"},
+                  "agent": {"@type": "Agent", "label": "Svenska Clartésektionen"}
+                },
+                {
+                  "@type": "Publication",
+                  "date": "1926-1927",
+                  "place": {"@type": "Place", "label": "Lund"},
+                  "agent": {"@type": "Agent", "label": "Svenska Clartéavdelningen"}
+                },
+                {
+                  "@type": "Publication",
+                  "date": "1928-1931",
+                  "place": {"@type": "Place", "label": "Stockholm"},
+                  "agent": {"@type": "Agent", "label": "Svenska Clartéavdelningen"}
+                },
+                {
+                  "@type": "Publication",
+                  "date": "1932-1953",
+                  "place": {"@type": "Place", "label": "Stockholm"},
+                  "agent": {"@type": "Agent", "label": "Svenska Clartéförbundet"}
+                },
+                {
+                  "@type": "Publication",
+                  "date": "1991-1995",
+                  "place": {"@type": "Place", "label": "Hägersten"},
+                  "agent": {"@type": "Agent", "label": "Clarté"}
+                },
+                {
+                  "@type": "Publication",
+                  "marc:isLatest": true,
+                  "date": "1953-1991, 1995-",
+                  "place": {"@type": "Place", "label": "Stockholm"},
+                  "agent": {"@type": "Agent", "label": "Clarté"}
+                }
+              ],
+              "manufacture": [
+                {
+                  "@type": "Manufacture",
+                  "place": {"@type": "Place", "label": "Stockholm"},
+                  "agent": {"@type": "Agent", "label": "Fram"}
+                }
+              ]
+            }
+          }
         }
       ]
     },
@@ -4854,25 +5169,71 @@
 
     "264": {
       "TOOO:i1": {},
-      "TODO:i2": "12=4 move copyright from provisionActivity to copyrightDate Literal?",
       "match": [
-        {"when": "i2=0", "addLink": "production", "resourceType": "Production"},
-        {"when": "i2=1", "addLink": "publication", "resourceType": "Publication"},
-        {"when": "i2=2", "addLink": "distribution", "resourceType": "Distribution"},
-        {"when": "i2=3", "addLink": "manufacture", "resourceType": "Manufacture"},
-        {"when": "i2=4", "addLink": "copyright", "resourceType": "Copyright"}
+        {
+          "when": "i2=0",
+          "addLink": "production",
+          "resourceType": "Production",
+          "pendingResources": {
+            "_:part": {"addLink": "hasPart", "resourceType": "Production", "subsumeSingle": true}
+          }
+        },
+        {
+          "when": "i2=1",
+          "addLink": "publication",
+          "resourceType": "Publication",
+          "pendingResources": {
+            "_:part": {"addLink": "hasPart", "resourceType": "Publication", "subsumeSingle": true}
+          }
+        },
+        {
+          "when": "i2=2",
+          "addLink": "distribution",
+          "resourceType": "Distribution",
+          "pendingResources": {
+            "_:part": {"addLink": "hasPart", "resourceType": "Distribution", "subsumeSingle": true}
+          }
+        },
+        {
+          "when": "i2=3",
+          "addLink": "manufacture",
+          "resourceType": "Manufacture",
+          "pendingResources": {
+            "_:part": {"addLink": "hasPart", "resourceType": "Manufacture", "subsumeSingle": true}
+          }
+        },
+        {
+          "when": "i2=4",
+          "addLink": "copyright",
+          "resourceType": "Copyright",
+          "pendingResources": {
+            "_:part": {"addLink": "hasPart", "resourceType": "Copyright", "subsumeSingle": true}
+          },
+          "TODO": {
+            "TODO": "Only $c? There *might* be other facts; drop those?",
+            "addLink": null,
+            "resourceType": null,
+            "$a": null,
+            "$b": null,
+            "$c": {"property": "copyrightDate", "punctuationChars": ",;"}
+          }
+        }
       ],
       "addLink": "provisionActivity",
-      "embedded": true,
       "resourceType": "ProvisionActivity",
-      "$a": {"link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:"},
-      "$b": {"link": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",:;)"},
-      "$c": {"property": "date", "punctuationChars": ",;"},
+      "embedded": true,
+      "repeatable": true,
+      "pendingResources": {
+        "_:part": {"addLink": "hasPart", "resourceType": "ProvisionActivity", "subsumeSingle": true}
+      },
+      "$a": {"aboutNew": "_:part", "link": "place", "resourceType": "Place", "property": "label", "leadingPunctuation": " ;"},
+      "$b": {"aboutAltNew": "_:part", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :"},
+      "$c": {"property": "date", "leadingPunctuation": ","},
       "_spec": [
         {
           "source": [
             {"264": {"ind1": " ", "ind2": "1", "subfields": [
-              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"}
+              {"a": "Stockholm :"}, {"b": "Bonnier ,"}, {"c": "1996"}
             ]}},
             {"264": {"ind1": " ", "ind2": "3", "subfields": [
               {"a": "Finland"}
@@ -4880,14 +5241,65 @@
           ],
           "result": {"mainEntity": {
             "publication": [
-              {"@type": "Publication",
-                "place": {"@type": "Place", "label":  "Stockholm"},
-                  "agent":  {"@type": "Agent", "label": "Bonnier"},
-                  "date":  "1996"}
+              {
+                "@type": "Publication",
+                "place": {"@type": "Place", "label": "Stockholm"},
+                "agent": {"@type": "Agent", "label": "Bonnier"},
+                "date": "1996"
+              }
             ],
             "manufacture": [
-              {"@type": "Manufacture",
-                "place": {"@type": "Place", "label":  "Finland"}}
+              {
+                "@type": "Manufacture",
+                "place": {"@type": "Place", "label": "Finland"}
+              }
+            ]
+          }}
+        },
+        {
+          "source": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"},
+              {"a": "Stockholm"}, {"b": "Wolters Kluwer"}
+            ]}},
+            {"264": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "Hoboken, New Jersey"}, {"b": "Wiley,"}, {"c": "[2012]"}
+            ]}}
+          ],
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm :"}, {"b": "Bonnier ;"},
+              {"a": "Stockholm :"}, {"b": "Wolters Kluwer ,"},
+              {"c": "1996"}
+            ]}},
+            {"264": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "Hoboken, New Jersey :"}, {"b": "Wiley ,"}, {"c": "[2012]"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "copyright": [
+              {"@type": "Copyright",
+                "place": {"@type": "Place", "label": "Hoboken, New Jersey"},
+                "agent": {"@type": "Agent", "label": "Wiley"},
+                "date":  "[2012]"}
+            ],
+            "publication": [
+              {
+                "@type": "Publication",
+                "hasPart": [
+                  {
+                    "@type": "Publication",
+                    "place": {"@type": "Place", "label": "Stockholm"},
+                    "agent": {"@type": "Agent", "label": "Bonnier"}
+                  },
+                  {
+                    "@type": "Publication",
+                    "place": {"@type": "Place", "label": "Stockholm"},
+                    "agent": {"@type": "Agent", "label": "Wolters Kluwer"}
+                  }
+                ],
+                "date": "1996"
+              }
             ]
           }}
         }
@@ -6999,7 +7411,7 @@
               {"a": "Jansson, Tove"},
               {"t": "Anteckningar från en ö"}
             ]}},
-          "result": {"mainEntity": {
+          "FIXME:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "relatedTo": [
