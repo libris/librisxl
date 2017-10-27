@@ -37,7 +37,7 @@
 
     <servlet-mapping>
         <servlet-name>ApixSearchServlet</servlet-name>
-        <url-pattern>/apix/0.1/search/*</url-pattern>
+        <url-pattern>/apix/0.1/cat/libris/search</url-pattern>
     </servlet-mapping>
 
     <welcome-file-list>
