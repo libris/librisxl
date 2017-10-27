@@ -54,9 +54,8 @@ public class ApixSearchServlet extends HttpServlet
                 results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISBN", normalizedValue.toLowerCase(), 1));
             } else if (parameterName.equalsIgnoreCase("issn"))
             {
-                String normalizedValue = parameterValue.replaceAll("-", "");
-                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", normalizedValue.toUpperCase(), 1));
-                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", normalizedValue.toLowerCase(), 1));
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", parameterValue.toUpperCase(), 1));
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", parameterValue.toLowerCase(), 1));
             } else // if (...) what is the search term for 024$a = TODO, tighten this. (urnnbn ?)
             {
                 results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("Identifier", parameterValue, 1));
