@@ -203,7 +203,7 @@ public class ApixCatServlet extends HttpServlet
         String operator = parameters[3];
 
         String content = IOUtils.toString(request.getReader());
-        Document incomingDocument = Utils.convertToRDF(content, collection, bibid);
+        Document incomingDocument = Utils.convertToRDF(content, "hold", bibid);
         if (incomingDocument == null)
         {
             Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion from MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));

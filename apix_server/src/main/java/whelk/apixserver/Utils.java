@@ -92,7 +92,10 @@ public class Utils
                 if (cfs.isEmpty())
                     marcRecord.addField(marcRecord.createControlfield("004", String.valueOf(itemOfSystemId)), MarcFieldComparator.strictSorted);
                 else if (!String.valueOf(itemOfSystemId).equals(cfs.get(0).getData()))
+                {
+                    s_logger.error("Cannot accept incoming marc hold record. Marc field 004 did not match the bibid the holding was for.");
                     return null;
+                }
             }
 
             Map convertedData = s_toJsonLdConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), generatedId);
