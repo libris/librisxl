@@ -10,6 +10,7 @@ import whelk.Document;
 import whelk.IdGenerator;
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
@@ -42,7 +43,11 @@ public class Utils
         Properties configuration = PropertyLoader.loadProperties("secret");
         PostgreSQLComponent postgreSqlComponent =
                 new PostgreSQLComponent(configuration.getProperty("sqlUrl"), configuration.getProperty("sqlMaintable"));
-        s_whelk = new Whelk(postgreSqlComponent);
+        ElasticSearch elasticSearch = new ElasticSearch(
+                configuration.getProperty("elasticHost"),
+                configuration.getProperty("elasticCluster"),
+                configuration.getProperty("elasticIndex"));
+        s_whelk = new Whelk(postgreSqlComponent, elasticSearch);
         s_whelk.loadCoreData();
         Map displayData = s_whelk.getDisplayData();
         Map vocabData = s_whelk.getVocabData();
