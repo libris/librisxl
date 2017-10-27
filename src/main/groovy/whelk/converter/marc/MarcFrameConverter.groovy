@@ -955,6 +955,7 @@ class MarcFixedFieldHandler {
     MarcFixedFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn) {
         this.ruleSet = ruleSet
         this.tag = tag
+
         fieldDfn?.each { key, obj ->
             def m = (key =~ /^\[(\d+):(\d+)\]$/)
             if (m && obj) {
@@ -1581,18 +1582,20 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def unhandled = new HashSet()
 
-        def localEntites = [:]
+        def localEntities = [:]
 
         [ind1: ind1, ind2: ind2].each { indKey, handler ->
             if (!handler)
                 return
             def ok = handler.convertSubValue(state, value[indKey], entity,
-                    uriTemplateParams, localEntites)
+                    uriTemplateParams, localEntities)
             if (!ok && handler.marcDefault == null) {
                 unhandled << indKey
             }
         }
 
+        String precedingCode = null
+        boolean precedingNewAbout = false
         value.subfields.each { Map it ->
             it.each { code, subVal ->
                 def subDfn = (MarcSubFieldHandler) subfields[code as String]
@@ -1605,8 +1608,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         ok = true // rule does not apply here
                     } else {
                         ok = subDfn.convertSubValue(state, subVal, ent,
-                                uriTemplateParams, localEntites)
+                                uriTemplateParams, localEntities,
+                                code != precedingCode && precedingNewAbout)
                     }
+                    precedingNewAbout = subDfn.newAbout
+                    precedingCode = code
                 }
                 if (!ok && !handled.contains(code)) {
                     unhandled << code
@@ -1656,6 +1662,20 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 // ... but now we promote it to primary id if none has been given.
                 entity['@id'] = computedUri
                 /*}*/
+            }
+        }
+
+        // If subsumeSingle && only one item: merge it with parent.
+        localEntities.keySet().each {
+            def pending = (Map) pendingResources[it]
+            if (pending.subsumeSingle) {
+                def link = (String) (pending.link ?: pending.addLink)
+                def parent = (Map) (pending.about ? localEntities[pending.about] : entity)
+                def items = (List<Map>) parent[link]
+                if (items instanceof List && items.size() == 1) {
+                    parent.remove(link)
+                    parent.putAll(items[0])
+                }
             }
         }
 
@@ -1858,6 +1878,13 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
         }
+
+        pendingResources.each { key, pending ->
+            if (pending.subsumeSingle && !aboutMap[key]) {
+                aboutMap[key] = aboutMap[pending.about] ?: [entity]
+            }
+        }
+
         return new Tuple2<Boolean, Map>(shouldMap, aboutMap)
     }
 
@@ -1953,7 +1980,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     if (prevAdded && justAdded &&  subhandler.leadingPunctuation) {
                         def (prevCode, prevSub) = prevAdded
                         def prevValue = prevSub[prevCode]
-                        prevSub[prevCode] = prevValue + " " + subhandler.leadingPunctuation
+                        def nextLeading = subhandler.leadingPunctuation
+                        if (!nextLeading.startsWith(' ')) {
+                            nextLeading = ' ' + nextLeading
+                        }
+                        prevSub[prevCode] = prevValue + nextLeading
                     }
                 }
                 if (justAdded) prevAdded = justAdded
@@ -1991,6 +2022,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String link
     String about
     boolean newAbout
+    boolean altNew
     boolean repeatable
     String property
     boolean repeatProperty
@@ -2025,6 +2057,10 @@ class MarcSubFieldHandler extends ConversionPart {
         if (subDfn.aboutNew) {
             about = subDfn.aboutNew
             newAbout = true
+        } else if (subDfn.aboutAltNew) {
+            about = subDfn.aboutAltNew
+            newAbout = true
+            altNew = true
         } else {
             about = subDfn.about
         }
@@ -2063,7 +2099,8 @@ class MarcSubFieldHandler extends ConversionPart {
     }
 
     boolean convertSubValue(Map state, def subVal, Map ent,
-                            Map uriTemplateParams, Map localEntites) {
+                            Map uriTemplateParams, Map localEntities,
+                            boolean precedingNewAbout = false) {
         def ok = false
         String uriTemplateKeyBase = ""
 
@@ -2083,7 +2120,12 @@ class MarcSubFieldHandler extends ConversionPart {
         }
 
         if (about) {
-            ent = fieldHandler.getLocalEntity(state, ent, about, localEntites, newAbout)
+            // A new local entity is created if the subfield triggers a new
+            // entity ("about"), unless it's an alternative trigger and a new
+            // entity was just triggered (i.e. the preceding subfield has a
+            // different code and also triggers a new entity).
+            ent = fieldHandler.getLocalEntity(state, ent, about, localEntities,
+                    altNew && precedingNewAbout ? false : newAbout)
         }
 
         if (link) {
