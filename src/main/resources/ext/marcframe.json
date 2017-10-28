@@ -10856,14 +10856,41 @@
       "repeatable": true
     },
 
-    "876": {},
-    "877": {},
-    "878": {},
+    "876": {
+      "addLink": "marc:hasItemInformationBasicBibliographicUnit",
+      "resourceType": "marc:ItemInformationBasicBibliographicUnit",
+      "NOTE:LC": "nac",
+      "$a": {"property": "marc:internalItemNumber"},
+      "$b": {"addProperty": "marc:invalidOrCanceledInternalItemNumber"},
+      "$c": {"addProperty": "marc:cost"},
+      "$d": {"addProperty": "marc:dateAcquired"},
+      "$e": {"addProperty": "marc:sourceOfAcquisition"},
+      "$h": {"addProperty": "marc:useRestrictions"},
+      "$j": {"addProperty": "marc:itemStatus"},
+      "$l": {"addProperty": "marc:temporaryLocation"},
+      "$p": {"addProperty": "marc:pieceDesignation"},
+      "$r": {"addProperty": "marc:invalidOrCanceledPieceDesignation"},
+      "$t": {"property": "marc:copyNumber"},
+      "$x": {"addProperty": "marc:nonpublicNote", "TODO": "ignore?"},
+      "$z": {"addProperty": "marc:publicNote"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$9": {"addProperty": "organizationalUnit"}
+    },
+    "877": {
+      "inherit": "876",
+      "addLink": "marc:hasItemInformationSupplementaryMaterial",
+      "resourceType": "marc:ItemInformationSupplementaryMaterial",
+      "NOTE:LC": "nac"
+    },
+    "878": {"ignored": true, "NOTE:record-count": 9, "NOTE:LC": "nac"},
 
     "880": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "LIBRIS-definierat beståndsfält."},
     "883": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "LIBRIS-definierat beståndsfält."},
     "884": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "LIBRIS-definierat beståndsfält."},
-    "886": {},
+    "886": {
+      "inherit": "bib",
+      "NOTE:LC": "nac"
+    },
     "887": {"ignored": true, "NOTE:LC": "nac", "NOTE:local": "Maskinellt genererad information från LIBRIS XL till Voyager"},
 
     "948": {},
