@@ -5994,8 +5994,8 @@
       "$3": {"property": "marc:materialsSpecified"},
       "NOTE:i1": "ignore"
     },
-    "583": {},
-    "584": {"NOTE:record-count": 0, "ignored": true},
+    "583": {"ignored": true, "NOTE:record-count": 740, "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST"},
+    "584": {"ignored": true, "NOTE:record-count": 0},
     "585": {
       "aboutEntity": "?thing",
       "addLink": "hasNote",
@@ -10627,8 +10627,15 @@
       "$a": {"property": "bindingInformation"},
       "repeatable": true
     },
-    "583": {},
-
+    "583": {
+      "addLink": "hasNote",
+      "resourceType": "ActionNote",
+      "TODO:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 1 post",
+      "$a": {"property": "label"},
+      "$b": {"addProperty": "marc:actionIdentification"},
+      "$x": {"addProperty": "marc:nonpublicNote", "TODO": "ignore?"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+    },
     "599": {
       "ignored": true,
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
