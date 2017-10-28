@@ -3586,7 +3586,7 @@
     "046": {},
     "047": {},
     "048": {},
-    "049": {},
+    "049": {"ignored": true, "NOTE": "OCLC - Local Holdings. Field 049 is not part of the standard MARC 21 format."},
 
     "050": {
       "aboutEntity": "?work",
