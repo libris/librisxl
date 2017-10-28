@@ -10667,10 +10667,38 @@
     "787": {},
 
     "841": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ"},
-    "842": {},
-    "843": {},
-    "844": {},
-    "845": {},
+    "842": {
+      "NOTE:LC": "nac",
+      "link": "hasNote",
+      "resourceType": "marc:TextualPhysicalFormDesignator",
+      "$a": {"property": "label"},
+      "repeatable": false
+    },
+    "843": {
+      "addLink": "hasNote",
+      "resourceType": "marc:ReproductionNote",
+      "NOTE": "same marc-structure as bib:533, but that one uses provisionActivity and has Reproduction which is limited to instance",
+      "NOTE:LC": "nac",
+      "$a": {"property": "marc:typeOfReproduction"},
+      "$b": {"addProperty": "marc:placeOfReproduction"},
+      "$c": {"addProperty": "marc:agencyResponsibleForReproduction"},
+      "$d": {"property": "marc:dateOfReproduction"},
+      "$e": {"property": "marc:physicalDescriptionOfReproduction"},
+      "$3": {"property": "marc:materialsSpecified"}
+    },
+    "844": {
+      "link": "marc:hasNameOfUnit",
+      "resourceType": "marc:NameOfUnit",
+      "$a": {"property": "marc:nameOfUnit"}
+    },
+    "845": {
+      "addLink": "hasNote",
+      "resourceType": "marc:TermsGoverningUseAndReproductionNote",
+      "NOTE:LC": "nac",
+      "$a": {"property": "marc:termsGoverningUseAndReproduction"},
+      "$b": {"property": "marc:jurisdiction"},
+      "$c": {"property": "marc:authorization"}
+    },
 
     "852": {
       "aboutType": "Item",
