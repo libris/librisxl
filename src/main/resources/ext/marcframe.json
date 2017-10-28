@@ -10653,7 +10653,13 @@
     "651": {},
     "653": {},
     "655": {},
-    "698": {},
+    "698": {
+      "addLink": "marc:hasHold698",
+      "resourceType": "marc:Hold698",
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "$a": {"property": "code"},
+      "$b": {"property": "label"}
+    },
 
     "700": {},
     "710": {},
