@@ -9046,7 +9046,10 @@
       "repeatable": false
     },
 
-    "010": {"ignored": true, "NOTE:record-count": 396, "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "010": {
+      "inherit": "bib",
+      "NOTE:local": "ANVÄNDS NORMALT EJ"
+    },
     "014": {"ignored": true, "NOTE:record-count": 1, "NOTE:LC": "nac"},
     "016": {"ignored": true, "NOTE:record-count": 4, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "020" : {},
