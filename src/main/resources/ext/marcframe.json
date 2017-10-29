@@ -5520,9 +5520,39 @@
     },
     "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "344": {},
-    "345": {},
-    "346": {},
+    "344": {
+      "addLink": "soundCharacteristic",
+      "resourceType": "SoundCharacteristic",
+      "NOTE:record-count": 0,
+      "$a": {"addProperty": "marc:typeOfRecording"},
+      "$b": {"addProperty": "marc:recordingMedium"},
+      "$c": {"addProperty": "marc:playingSpeed"},
+      "$d": {"addProperty": "marc:grooveCharacteristics"},
+      "$e": {"addProperty": "marc:trackConfig"},
+      "$f": {"addProperty": "marc:tapeConfig"},
+      "$g": {"addProperty": "marc:playbackChannels"},
+      "$h": {"addProperty": "marc:playbackCharacteristic"},
+      "$2": {"property": "marc:source"},
+      "$3": {"property": "marc:materialsSpecified"}
+    },
+    "345": {
+      "addLink": "projectionCharacteristic",
+      "resourceType": "ProjectionCharacteristic",
+      "NOTE:record-count": 0,
+      "$a": {"addProperty": "marc:presentationFormat"},
+      "$b": {"addProperty": "marc:projectionSpeed"},
+      "$2": {"property": "marc:source"},
+      "$3": {"property": "marc:materialsSpecified"}
+    },
+    "346": {
+      "addLink": "videoCharacteristic",
+      "resourceType": "VideoCharacteristic",
+      "NOTE:record-count": 0,
+      "$a": {"addProperty": "marc:videoFormat"},
+      "$b": {"addProperty": "marc:broadcastStandard"},
+      "$2": {"property": "marc:source"},
+      "$3": {"property": "marc:materialsSpecified"}
+    },
     "347": {
       "aboutEntity": "?thing",
       "linkSubsequentRepeated": {
