@@ -286,7 +286,7 @@
       "match": [
         {
           "when": "$a =~ .+:\\s*$",
-          "$a": {"property": "mainTitle", "trailingPunctuation": " :"},
+          "$a": {"property": "mainTitl~e", "trailingPunctuation": " :"},
           "$b": {"property": "subtitle", "required": true, "punctuationChars": "/"}
         },
         {
@@ -820,11 +820,19 @@
     },
 
     "classification-ddc": {
-      "resourceType": "ClassificationDdc",
-      "TOOO:i1": {},
-      "uriTemplate": "http://dewey.info/class/{code}/e{+inScheme.version}/",
+      "NOTE:resourceType": "ClassificationDdc",
+      "i1": {
+        "property": "edition",
+        "tokenMap": {
+          "0": "full",
+          "1": "abridged",
+          "7": null
+        },
+        "definedElsewhereToken": "7"
+      },
       "$a": {"property": "code", "required": true},
       "$2": {
+        "requires-i1": "7",
         "link": "inScheme", "resourceType": "ConceptScheme",
         "required": true,
         "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
@@ -3656,12 +3664,87 @@
     "082": {
       "aboutEntity": "?work",
       "addLink": "classification",
+      "resourceType": "ClassificationDdc",
       "include": ["classification-ddc"],
-      "TOOO:i2": {},
+      "match": [
+        {
+          "when": "i2=0",
+          "i2": {
+            "link": "source",
+            "resourceType": "Source",
+            "uriTemplate": "http://id.loc.gov/vocabulary/organizations/dlc",
+            "property": "label",
+            "tokenMap": {
+              "0": "LC"
+            }
+          }
+        }
+      ],
+      "i2": {
+        "definedElsewhereToken": "4",
+        "marcdefault": " "
+      },
+      "$q": {"requires-i2": "4", "link": "source", "resourceType": "Source", "property": "label"},
+      "$b": {"property": "itemPortion"},
+      "$m": {"ignored": true, "NOTE:record-count": 1},
       "_spec": [
         {
-          "name": "TODO",
+          "source": {
+            "082": {"ind1": "0", "ind2": "0", "subfields": [
+              {"a": "158.1"},
+              {"2": "23"}
+            ]}},
           "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "edition": "full",
+                  "code": "158.1",
+                  "inScheme": {
+                    "@id": "http://dewey.info/scheme/edition/e23/",
+                    "@type": "ConceptScheme",
+                    "version": "23"
+                  },
+                  "source": {
+                    "@type": "Source",
+                    "@id": "http://id.loc.gov/vocabulary/organizations/dlc",
+                    "label": "LC"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "082": {"ind1": "0", "ind2": "4", "subfields": [
+              {"a": "158.1"},
+              {"2": "23/swe"},
+              {"q": "KB"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "edition": "full",
+                  "code": "158.1",
+                  "inScheme": {
+                    "@id": "http://dewey.info/scheme/edition/e23/swe/",
+                    "@type": "ConceptScheme",
+                    "version": "23",
+                    "language": "swe"
+                  },
+                  "source": {
+                    "@type": "Source",
+                    "label": "KB"
+                  }
+                }
+              ]
+            }
           }}
         }
       ]
@@ -3669,7 +3752,64 @@
     "083": {
       "aboutEntity": "?work",
       "addLink": "classification",
-      "include": ["classification-ddc"]
+      "resourceType": "AdditionalClassificationDdc",
+      "include": ["classification-ddc"],
+      "$q": {"link": "source", "resourceType": "Source", "property": "label"},
+      "_spec": [
+        {
+          "source": {
+            "083": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "158.1"},
+              {"2": "23"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "AdditionalClassificationDdc",
+                  "edition": "full",
+                  "code": "158.1",
+                  "inScheme": {
+                    "@id": "http://dewey.info/scheme/edition/e23/",
+                    "@type": "ConceptScheme",
+                    "version": "23"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "083": {"ind1": "7", "ind2": " ", "subfields": [
+              {"a": "598.0994"},
+              {"q": "KB"},
+              {"2": "23/nor"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "AdditionalClassificationDdc",
+                  "code": "598.0994",
+                  "inScheme": {
+                    "@id": "http://dewey.info/scheme/edition/e23/",
+                    "@type": "ConceptScheme",
+                    "version": "23",
+                    "language": "nor"
+                  },
+                  "source": {
+                    "@type": "Source",
+                    "label": "KB"
+                  }
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
 
     "084": {
@@ -3677,20 +3817,53 @@
       "aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "Classification",
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{code}",
-      "uriTemplateDefaults": {"inScheme.code": "kssb"},
       "$a": {"property": "code", "required": true},
+
+      "match": [
+        {
+          "when": "$2 =~ ^kssb.+$",
+          "$2": {
+            "link": "inScheme",
+            "resourceType": "ConceptScheme",
+            "property": "code",
+            "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{code}/{version}",
+            "uriTemplateDefaults": {"inScheme.code": "kssb"},
+            "splitValuePattern": "(\\d+)(?:/(5|6|7|8))?",
+            "splitValueProperties": ["code", "version"],
+            "rejoin": "/"
+          }
+        }
+      ],
       "$2": {
         "link": "inScheme",
         "resourceType": "ConceptScheme",
-        "uriTemplate": "https://id.kb.se/term/{+_}",
         "property": "code"
       },
       "$b": {"property": "classificationItem"},
+      "$q": {"property": "marc:source"},
       "_spec": [
         {
-          "name": "TODO",
+          "source": {
+            "084": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Fut.021(x)"},
+              {"2": "kssb/5"}
+            ]}},
           "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "Classification",
+                  "code": "Fut.021(x)",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/kssb/5/Fut.021%28x%29",
+                    "@type": "ConceptScheme",
+                    "code": "kssb",
+                    "version": "5"
+                  }
+                }
+              ]
+            }
           }}
         }
       ]
@@ -4366,7 +4539,9 @@
       "embedded": true,
       "link": "hasTitle",
       "resourceType": "Title",
-      "$a": {"property": "mainTitle"},
+      "$a": {"property": "uniformTitle"},
+      "$d": {"property": "legalDate"},
+      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "$0": {
         "aboutEntity": "?work",
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
@@ -4384,7 +4559,7 @@
               "@type": "Text",
               "hasTitle": {
                 "@type": "Title",
-                "mainTitle":  "Moyen âge",
+                "uniformTitle":  "Moyen âge",
                 "language": {"@type": "Language", "label": "Engelska."},
                 "marc:searchElement" : false,
                 "marc:nonfilingChars" : " "
@@ -4455,7 +4630,7 @@
       "link": "hasTitle",
       "embedded": true,
       "resourceType": "CollectiveTitle",
-      "$a": {"property": "mainTitle"},
+      "$a": {"property": "uniformTitle"},
       "$d": {"property": "legalDate"},
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "i2": {"property": "marc:nonfilingChars"},
@@ -4471,7 +4646,7 @@
               "@type": "Text",
               "hasTitle": {
                 "@type": "CollectiveTitle",
-                "mainTitle": "Philosophical works",
+                "uniformTitle": "Philosophical works",
                 "marc:formSubheading": ["Selsections"],
                 "marc:nonfilingChars": "0"
               }
@@ -4490,7 +4665,7 @@
               "@type": "Text",
               "hasTitle": {
                 "@type": "CollectiveTitle",
-                "mainTitle": "Correspondence",
+                "uniformTitle": "Correspondence",
                 "language": {"@type": "Language", "label": "English"},
                 "marc:nonfilingChars": "0",
                 "marc:version": "Selections"
@@ -10657,10 +10832,10 @@
       },
       "repeatable": true
     },
-    "610": {},
-    "611": {},
-    "630": {},
-    "648": {},
+    "610": {"inherit": "bib:610", "aboutEntity": null},
+    "611": {"inherit": "bib:611", "aboutEntity": null},
+    "630": {"inherit": "bib:630", "aboutEntity": null},
+    "648": {"inherit": "bib:648", "aboutEntity": null},
     "650": {"inherit": "bib:650", "aboutEntity": null},
     "651": {},
     "653": {},
@@ -10673,8 +10848,8 @@
       "$b": {"property": "label"}
     },
 
-    "700": {},
-    "710": {},
+    "700": {"inherit": "bib:700", "aboutEntity": null},
+    "710": {"inherit": "bib:710", "aboutEntity": null},
     "752": {},
     "787": {},
 
