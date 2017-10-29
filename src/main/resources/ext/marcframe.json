@@ -3698,7 +3698,10 @@
 
     "085": {"ignored": true, "NOTE:record-count": 21, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "086": {},
-    "088": {},
+    "088": {
+      "include": ["identifier"],
+      "resourceType": "ReportNumber"
+    },
     "090": {"ignored": true, "NOTE:record-count": 67, "NOTE:LC": "OBSOLETE, 1982", "NOTE:OCLC": "Locally Assigned LC-type Call Number. Field 090 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
     "092": {"ignored": true, "NOTE:record-count": 15, "NOTE:LC": "Not part of BF2 conversion", "NOTE:OCLC": "Locally Assigned Dewey Call Number. Field 092 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
     "096": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "Not part of BF2 conversion", "NOTE:OCLC": "Locally Assigned NLM-type Call Number. Field 096 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
