@@ -3583,7 +3583,16 @@
 
     "044": {},
     "045": {},
-    "046": {},
+    "046": {
+      "addLink": "marc:hasSpecialCodedDates",
+      "resourceType": "marc:SpecialCodedDates",
+      "$a": {"property": "marc:typeOfDateCode"},
+      "$b": {"property": "marc:date1BCDate"},
+      "$c": {"property": "marc:date1CEDate"},
+      "$e": {"property": "marc:date2CEDateFieldMustAlsoContainASubfieldC"},
+      "$m": {"property": "marc:beginningOfDateValid"},
+      "$n": {"property": "marc:endOfDateValid"}
+    },
     "047": {},
     "048": {},
     "049": {"ignored": true, "NOTE": "OCLC - Local Holdings. Field 049 is not part of the standard MARC 21 format."},
