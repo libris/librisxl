@@ -6776,6 +6776,7 @@
         }
       ]
     },
+    "647": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "648": {
       "include": ["subjectbase", "termbase_with_uri_from_i2"],
       "aboutEntity": "?work",
@@ -7292,10 +7293,16 @@
       "resourceType": "FunctionOrRole", "ignored": true
     },
 
-    "658": {},
+    "658": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
     "662": {},
-    "690": {},
+    "690": {"ignored": true, "NOTE:record-count": 21, "NOTE:OCLC": "Local Subject Added Entry--Topical Term.", "NOTE:local": "Ej i formathandboken."},
+    "691": {"ignored": true, "NOTE:record-count": 0, "NOTE:OCLC": "Local Subject Added Entry--Geographic Name", "NOTE:local": "Ej i formathandboken."},
+    "695": {"ignored": true, "NOTE:record-count": 0, "NOTE:OCLC": "Added Class Number", "NOTE:local": "Ej i formathandboken."},
+    "696": {"ignored": true, "NOTE:record-count": 0, "NOTE:OCLC": "Local Subject Added Entry--Personal Name", "NOTE:local": "Ej i formathandboken."},
+    "697": {"ignored": true, "NOTE:record-count": 5, "NOTE:OCLC": "Local Subject Added Entry--Corporate Name.", "NOTE:local": "Ej i formathandboken."},
+    "698": {"ignored": true, "NOTE:record-count": 4800, "NOTE:OCLC": "Local Subject Added Entry--Corporate Name. If the subject access point is of value to others, then use field field 653.", "NOTE:local": "Ej i formathandboken."},
+    "699": {"ignored": true, "NOTE:record-count": 1, "NOTE:OCLC": "Local Subject Added Entry--Uniform Title.", "NOTE:local": "Ej i formathandboken."},
 
     "700": {
       "aboutEntity": "?work",
