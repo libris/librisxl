@@ -5341,7 +5341,7 @@
     },
 
     "306": {},
-    "307": {"NOTE:record-count": 0, "ignored": true},
+    "307": { "ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "Används företrädesvis för elektroniska resurser."},
 
     "310": {
       "aboutEntity": "?thing",
@@ -5502,8 +5502,8 @@
         "property": "label"
       }
     },
-    "342": {"NOTE:record-count": 0, "ignored": true},
-    "343": {"NOTE:record-count": 0, "ignored": true},
+    "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "344": {},
     "345": {},
     "346": {},
@@ -5524,6 +5524,7 @@
       "TODO:$2": "Source (NR)",
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
+    "348": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "musicFormat", "NOTE": "Not in generated marcframe"},
     "351": {},
     "352": {
       "linkSubsequentRepeated": {
@@ -5555,29 +5556,30 @@
         "property": "label"
       }
     },
-    "355": {"NOTE:record-count": 0, "ignored": true},
-    "357": {},
+    "355": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "357": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "362": {
+      "TOOO:i1": {},
       "aboutEntity": "?thing",
       "$a": {"addProperty": "issueNumber"}
     },
-    "363": {},
-    "365": {},
-    "366": {},
-    "370": {"NOTE:record-count": 0, "ignored": true},
-    "377": {"NOTE:record-count": 0, "ignored": true},
-    "380": {},
-    "381": {"NOTE:record-count": 0, "ignored": true},
-    "382": {},
-    "383": {},
-    "384": {"NOTE:record-count": 0, "ignored": true},
-    "385": {},
-    "386": {},
-    "388": {"NOTE:record-count": 0, "ignored": true},
+    "363": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "365": {"ignored": true, "NOTE:record-count": 8066, "NOTE:LC": "nac", "NOTE:local": "Avsett för bokhandelns information"},
+    "366": {"ignored": true, "NOTE:record-count": 8066, "NOTE:LC": "nac", "NOTE:local": "Avsett för bokhandelns information"},
+    "370": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "377": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "380": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "genreForm", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "381": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "382": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "musicMedium", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "383": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "384": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "385": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "intendedAudience", "TODO": "For imports"},
+    "386": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "creatorCharacteristic", "TODO": "For imports"},
+    "388": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
 
-    "400": {},
-    "410": {},
-    "411": {},
+    "400": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
+    "410": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
+    "411": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
 
     "440": {
       "TODO:ignoreOnRevertInFavourOf": "490 or 773 or 830? See also mapping for 240",
