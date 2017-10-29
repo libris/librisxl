@@ -9963,7 +9963,11 @@
       "TODO:about": "_:agent",
       "$a": {"property": "gender"}
     },
-    "376": {},
+    "376": {
+      "addLink": "marc:hasAuth376",
+      "resourceType": "marc:Auth376",
+      "$a": {"addProperty": "marc:typeOfFamily"}
+    },
     "377": {},
     "378": {
       "TODO": "Depends on bib 100, 700 and auth 100 $q 'marc:fullerFormName'. See mads:fullNameElement ",
