@@ -397,9 +397,8 @@ class XL
         if (issn == null)
             return new ArrayList<>();
 
-        String numericIssn = issn.replaceAll("-", "");
         try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnISSN_ps(connection, numericIssn);
+            PreparedStatement statement = getOnISSN_ps(connection, issn);
             ResultSet resultSet = statement.executeQuery())
         {
             return collectIDs(resultSet);
@@ -457,7 +456,7 @@ class XL
 
         String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
-        
+
         statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
 
         return  statement;
@@ -466,8 +465,8 @@ class XL
     private PreparedStatement getOnISSN_ps(Connection connection, String issn)
             throws SQLException
     {
-        // required to be completely numeric (base 11, 0-9+x).
-        if (!issn.matches("[\\dxX]+"))
+        // (base 11, 0-9+x and SINGLE hyphens only).
+        if (!issn.matches("^(-[xX\\d]|[xX\\d])+$"))
             issn = "0";
 
         String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
