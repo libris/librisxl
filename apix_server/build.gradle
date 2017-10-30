@@ -40,7 +40,7 @@ dependencies {
 }
 
 task jettyRun(type: JettyRun, overwrite: true) {
-    jettyRun.contextPath = '/'
+    jettyRun.contextPath = '/apix'
     jettyRun.httpPort = 8280
 }
 
