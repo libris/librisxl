@@ -832,12 +832,12 @@
       },
       "$a": {"property": "code", "required": true},
       "$2": {
-        "requires-i1": "7",
         "link": "inScheme", "resourceType": "ConceptScheme",
         "required": true,
-        "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
+        "uriTemplate": "http://id.kb.se/edition/e{+_}/",
         "property": "version",
         "splitValuePattern": "(\\d+)(?:/(swe))?",
+        "TODO": "Only capture language 'swe'?",
         "splitValueProperties": ["version", "language"],
         "rejoin": "/"
       }
@@ -3682,7 +3682,10 @@
       ],
       "i2": {
         "definedElsewhereToken": "4",
-        "marcdefault": " "
+        "marcdefault": " ",
+        "tokenMap": {
+          " ": null
+        }
       },
       "$q": {"requires-i2": "4", "link": "source", "resourceType": "Source", "property": "label"},
       "$b": {"property": "itemPortion"},
@@ -3703,7 +3706,7 @@
                   "edition": "full",
                   "code": "158.1",
                   "inScheme": {
-                    "@id": "http://dewey.info/scheme/edition/e23/",
+                    "@id": "http://id.kb.se/edition/e23/",
                     "@type": "ConceptScheme",
                     "version": "23"
                   },
@@ -3733,7 +3736,7 @@
                   "edition": "full",
                   "code": "158.1",
                   "inScheme": {
-                    "@id": "http://dewey.info/scheme/edition/e23/swe/",
+                    "@id": "http://id.kb.se/edition/e23/swe/",
                     "@type": "ConceptScheme",
                     "version": "23",
                     "language": "swe"
@@ -3771,7 +3774,7 @@
                   "edition": "full",
                   "code": "158.1",
                   "inScheme": {
-                    "@id": "http://dewey.info/scheme/edition/e23/",
+                    "@id": "http://id.kb.se/edition/e23/",
                     "@type": "ConceptScheme",
                     "version": "23"
                   }
@@ -3787,7 +3790,8 @@
               {"q": "KB"},
               {"2": "23/nor"}
             ]}},
-          "result": {"mainEntity": {
+          "TODO:result": {"mainEntity": {
+            "FIXME": "How to do with languages other than 'swe'",
             "instanceOf": {
               "@type": "Text",
               "classification": [
@@ -3797,8 +3801,7 @@
                   "inScheme": {
                     "@id": "http://dewey.info/scheme/edition/e23/",
                     "@type": "ConceptScheme",
-                    "version": "23",
-                    "language": "nor"
+                    "version": "23"
                   },
                   "source": {
                     "@type": "Source",
@@ -3826,9 +3829,9 @@
             "link": "inScheme",
             "resourceType": "ConceptScheme",
             "property": "code",
-            "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{code}/{version}",
+            "uriTemplate": "https://id.kb.se/term/{+_}/",
             "uriTemplateDefaults": {"inScheme.code": "kssb"},
-            "splitValuePattern": "(\\d+)(?:/(5|6|7|8))?",
+            "splitValuePattern": "(\\w+)(?:/(5|6|7|8))?",
             "splitValueProperties": ["code", "version"],
             "rejoin": "/"
           }
@@ -3840,7 +3843,7 @@
         "property": "code"
       },
       "$b": {"property": "classificationItem"},
-      "$q": {"property": "marc:source"},
+      "$q": {"link": "source", "resourceType": "Source", "property": "label"},
       "_spec": [
         {
           "source": {
@@ -3856,7 +3859,7 @@
                   "@type": "Classification",
                   "code": "Fut.021(x)",
                   "inScheme": {
-                    "@id": "https://id.kb.se/term/kssb/5/Fut.021%28x%29",
+                    "@id": "https://id.kb.se/term/kssb/5/",
                     "@type": "ConceptScheme",
                     "code": "kssb",
                     "version": "5"
