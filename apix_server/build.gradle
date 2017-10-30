@@ -43,3 +43,7 @@ task jettyRun(type: JettyRun, overwrite: true) {
     jettyRun.contextPath = '/'
     jettyRun.httpPort = 8280
 }
+
+war {
+    archiveName 'apix.war'
+}

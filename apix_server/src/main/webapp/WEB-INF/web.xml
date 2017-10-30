@@ -32,12 +32,12 @@
 
     <servlet-mapping>
         <servlet-name>ApixCatServlet</servlet-name>
-        <url-pattern>/apix/0.1/cat/*</url-pattern>
+        <url-pattern>/0.1/cat/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>ApixSearchServlet</servlet-name>
-        <url-pattern>/apix/0.1/cat/libris/search</url-pattern>
+        <url-pattern>/0.1/cat/libris/search</url-pattern>
     </servlet-mapping>
 
     <welcome-file-list>
