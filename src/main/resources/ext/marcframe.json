@@ -9969,7 +9969,7 @@
             "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
             "_:contribution": {
               "about": "_:work",
-              "addLink": "contribution",
+              "link": "contribution",
               "resourceType": "PrimaryContribution",
               "embedded": true
             },
@@ -9986,7 +9986,7 @@
             "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
             "_:contribution": {
               "about": "_:work",
-              "addLink": "contribution",
+              "link": "contribution",
               "resourceType": "PrimaryContribution",
               "embedded": true
             },
@@ -10003,7 +10003,7 @@
             "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
             "_:contribution": {
               "about": "_:work",
-              "addLink": "contribution",
+              "link": "contribution",
               "resourceType": "PrimaryContribution",
               "embedded": true
             },
@@ -10020,7 +10020,7 @@
             "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
             "_:contribution": {
               "about": "_:work",
-              "addLink": "contribution",
+              "link": "contribution",
               "resourceType": "PrimaryContribution",
               "embedded": true
             },
@@ -10089,6 +10089,11 @@
               {"a": "Singh, Bhagat,"},
               {"d": "1921-"}
             ]}},
+          "normalized": {
+            "400": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Singh, Bhagat"},
+              {"d": "1921-"}
+            ]}},
           "result": {
             "mainEntity": {
               "@type": "Person",
@@ -10134,25 +10139,14 @@
         },
         {
           "source": {
-            "400": {"ind1": " ", "ind2": " ", "subfields": [
-              {"a": "Singh, Bhagat,"},
-              {"d": "1921-"}
-            ]}},
-          "result": {
-            "mainEntity": {
-              "@type": "Person",
-              "exactMatch": {
-                "@type": "Person",
-                "familyName":  "Singh", "givenName":  "Bhagat",
-                "lifeSpan": "1921-"
-              }
-            }
-          }
-        },
-        {
-          "source": {
             "400": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Singh, Bhagat,"},
+              {"d": "1921-"},
+              {"t": "Other title"}
+            ]}},
+          "normalized": {
+            "400": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Singh, Bhagat"},
               {"d": "1921-"},
               {"t": "Other title"}
             ]}},
@@ -10163,15 +10157,35 @@
                 {
                   "@type": "Work",
                   "title": "Other title",
-                  "contribution": [
-                    {
-                      "@type": "PrimaryContribution",
-                      "agent": {
-                        "@type": "Person", "familyName":  "Singh", "givenName":  "Bhagat", "lifeSpan": "1921-"}
-                    }
-                  ]
+                  "contribution": {
+                    "@type": "PrimaryContribution",
+                    "agent": {
+                      "@type": "Person", "familyName":  "Singh", "givenName":  "Bhagat", "lifeSpan": "1921-"}
+                  }
                 }
               ]
+            }
+          }
+        },
+        {
+          "source": {
+            "400": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Singh, Bhagat,"},
+              {"d": "1921-"}
+            ]}},
+          "normalized": {
+            "400": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Singh, Bhagat"},
+              {"d": "1921-"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Person",
+              "exactMatch": {
+                "@type": "Person",
+                "familyName":  "Singh", "givenName":  "Bhagat",
+                "lifeSpan": "1921-"
+              }
             }
           }
         },
@@ -10188,12 +10202,10 @@
                 {
                   "@type": "Work",
                   "title": "Other title",
-                  "contribution": [
-                    {
+                  "contribution": {
                       "@type": "PrimaryContribution",
                       "agent": {"@type": "Family", "name":  "Family X"}
                     }
-                  ]
                 }
               ]
             }
@@ -10212,12 +10224,10 @@
                 {
                   "@type": "Work",
                   "title": "Other title",
-                  "contribution": [
-                    {
-                      "@type": "PrimaryContribution",
+                  "contribution": {
+                    "@type": "PrimaryContribution",
                       "agent": {"@type": "Person", "name":  "Bhagat Singh"}
                     }
-                  ]
                 }
               ]
             }
@@ -10229,6 +10239,11 @@
               {"a": "Bhagat Singh"},
               {"t": "Other title"}
             ]}},
+          "normalized": {
+            "400": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Bhagat Singh"},
+              {"t": "Other title"}
+            ]}},
           "result": {
             "mainEntity": {
               "@type": "Work",
@@ -10236,12 +10251,10 @@
                 {
                   "@type": "Work",
                   "title": "Other title",
-                  "contribution": [
-                    {
+                  "contribution": {
                       "@type": "PrimaryContribution",
                       "agent": {"@type": "Person", "name":  "Bhagat Singh"}
                     }
-                  ]
                 }
               ]
             }
