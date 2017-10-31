@@ -9959,32 +9959,293 @@
     "400": {
       "TODO:remnants-of-inherit": "bib:100",
       "TODO": "Ensure bib 100 does not match with auth 400",
-      "pendingResources": {
-        "_:agent": {"link": "contributor", "resourceType": "Person"}
-      },
+
       "match": [
         {
-          "when": "$t",
-          "include": "agentdata",
+          "when": "$t & i1=0",
+          "include": ["agentdataPerson", "titledetails1xx7xx"],
+          "aboutType": "Work",
           "pendingResources": {
             "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
-            "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
+            "_:contribution": {
+              "about": "_:work",
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
           },
           "$t": {"about": "_:work", "property": "title"},
-          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t & i1=1",
+          "include": ["agentdataNameOfPerson", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t & i1=3",
+          "include": ["agentdataFamily", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Family", "embedded": false}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t",
+          "include": ["agentdataNameOfPerson", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "i1=0",
+          "pendingResources": {
+            "_:agent": {"link": "exactMatch", "resourceType": "Person"}
+          },
+          "include": "agentdataPerson",
+          "aboutType": "Person",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "i1=1",
+          "pendingResources": {
+            "_:agent": {"link": "exactMatch", "resourceType": "Person"}
+          },
+          "include": "agentdataNameOfPerson",
+          "aboutType": "Person",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "i1=3",
+          "pendingResources": {
+            "_:agent": {"link": "exactMatch", "resourceType": "Family"}
+          },
+          "include": "agentdataFamily",
+          "aboutType": "Family",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
           "when": null,
           "pendingResources": {
             "_:agent": {"link": "exactMatch", "resourceType": "Person"}
           },
-          "include": "agentdata",
+          "include": "agentdataNameOfPerson",
+          "aboutType": "Person",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        }
+      ],
+      "_spec": [
+        {
+          "source": {
+            "400": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Singh, Bhagat,"},
+              {"d": "1921-"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Person",
+              "exactMatch": {
+                "@type": "Person",
+                "familyName":  "Singh", "givenName":  "Bhagat",
+                "lifeSpan": "1921-"
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "400": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Bhagat Singh"},
+              {"d": "1921-"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Person",
+              "exactMatch": {
+                "@type": "Person",
+                "name":  "Bhagat Singh",
+                "lifeSpan": "1921-"
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "400": {"ind1": "3", "ind2": " ", "subfields": [
+              {"a": "Family X"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Family",
+              "exactMatch": {
+                "@type": "Family",
+                "name":  "Family X"
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "400": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Singh, Bhagat,"},
+              {"d": "1921-"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Person",
+              "exactMatch": {
+                "@type": "Person",
+                "familyName":  "Singh", "givenName":  "Bhagat",
+                "lifeSpan": "1921-"
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "400": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Singh, Bhagat,"},
+              {"d": "1921-"},
+              {"t": "Other title"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "hasVersion": [
+                {
+                  "@type": "Work",
+                  "title": "Other title",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Person", "familyName":  "Singh", "givenName":  "Bhagat", "lifeSpan": "1921-"}
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "400": {"ind1": "3", "ind2": " ", "subfields": [
+              {"a": "Family X"},
+              {"t": "Other title"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "hasVersion": [
+                {
+                  "@type": "Work",
+                  "title": "Other title",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {"@type": "Family", "name":  "Family X"}
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "400": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Bhagat Singh"},
+              {"t": "Other title"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "hasVersion": [
+                {
+                  "@type": "Work",
+                  "title": "Other title",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {"@type": "Person", "name":  "Bhagat Singh"}
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "400": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Bhagat Singh"},
+              {"t": "Other title"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "hasVersion": [
+                {
+                  "@type": "Work",
+                  "title": "Other title",
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {"@type": "Person", "name":  "Bhagat Singh"}
+                    }
+                  ]
+                }
+              ]
+            }
+          }
         }
       ]
     },
