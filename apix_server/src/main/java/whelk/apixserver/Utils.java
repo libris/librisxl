@@ -32,6 +32,7 @@ import java.util.Properties;
 public class Utils
 {
     static final String APIX_BASEURI = "https://apix.libris.kb.se/apix";
+    static final String APIX_SYSTEM_CODE = "APIX";
     static Whelk s_whelk;
     static JsonLd s_jsonld; // For model driven behaviour
     private static JsonLD2MarcXMLConverter s_toMarcConverter = new JsonLD2MarcXMLConverter();
@@ -116,6 +117,19 @@ public class Utils
             s_logger.error("Conversion from MARC failed.", e);
             return null;
         }
+    }
+
+    static Document getXlDocument(String bibId, String collection)
+    {
+        String xlUri = mapApixIDtoXlUri(bibId, collection);
+        String xlShortId = s_whelk.getStorage().getSystemIdByIri(xlUri);
+        if (xlShortId == null)
+            return null;
+        Document document = s_whelk.getStorage().load(xlShortId);
+
+        if (document.getDeleted())
+            return null;
+        return document;
     }
 
     static String mapApixIDtoXlUri(String apixID, String collection)
