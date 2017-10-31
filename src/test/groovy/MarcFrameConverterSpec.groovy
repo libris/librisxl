@@ -54,13 +54,14 @@ class MarcFrameConverterSpec extends Specification {
                     marcResults[marcType] = dfn._spec[0].result
                 }
                 if (dfn._spec instanceof List) {
-                    dfn._spec.each {
+                    dfn._spec.eachWithIndex { it, i ->
                         if (it instanceof Map && it.source && it.result) {
                             fieldSpecs << [source: it.source,
                                            normalized: it.normalized,
                                            result: it.result,
                                            addOnRevert: it.addOnRevert,
-                                           name: it.name ?: "",
+                                           name: it.name ?: "#${i}",
+                                           i: i,
                                            marcType: marcType, tag: tag,
                                            thingLink: thingLink]
                         }
@@ -111,7 +112,7 @@ class MarcFrameConverterSpec extends Specification {
         value << ["Text", ["@id": "/link"]]
     }
 
-    def "should convert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name)"() {
+    def "should convert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name) [#fieldSpec.i]"() {
         given:
         def marcType = fieldSpec.marcType
         def marc = fieldSpec.tag == '000'
@@ -146,7 +147,7 @@ class MarcFrameConverterSpec extends Specification {
     }
 
     @Requires({ env.mfspec == 'all' })
-    def "should revert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name)"() {
+    def "should revert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name) [#fieldSpec.i]"() {
         given:
         def marcType = fieldSpec.marcType
         def jsonld = deepcopy(marcResults[marcType])
