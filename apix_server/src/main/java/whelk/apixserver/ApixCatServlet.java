@@ -3,23 +3,12 @@ package whelk.apixserver;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import se.kb.libris.util.marc.*;
-import se.kb.libris.util.marc.io.MarcXmlRecordReader;
-import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Document;
-import whelk.util.LegacyIntegrationTools;
-
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.text.Format;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.ListIterator;
 
 /**
  * A reimplementation of the APIX protocol, quirks and all.
