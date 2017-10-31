@@ -1385,7 +1385,7 @@ class PostgreSQLComponent {
                 doc = assembleDocument(rs)
                 log.trace("Created document with id ${doc.getShortId()}")
             } else if (log.isTraceEnabled()) {
-                log.trace("No results returned for get($id)")
+                log.trace("No results returned for $selectstmt")
             }
         } finally {
             connection.close()
