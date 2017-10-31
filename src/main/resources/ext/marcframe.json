@@ -10838,15 +10838,150 @@
 
     "500": {
       "TODO:remnants-of-inherit": "bib:100",
-      "include": ["agentdata", "splicedworkentity"],
       "TODO": "this is really a link to other auth post..",
       "NOTE": "not really though - see 100",
-      "pendingResources": {
-        "_:agent": {"link": "hasPersona", "resourceType": "Person"}
-      }
+      "TODO:t": "hasVersion? Ensure there will be no conflict with 400 at revert",
+      "match": [
+        {
+          "when": "i1=0",
+          "pendingResources": {
+            "_:agent": {"link": "hasPersona", "resourceType": "Person"}
+          },
+          "include": "agentdataPerson",
+          "aboutType": "Person",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "i1=1",
+          "pendingResources": {
+            "_:agent": {"link": "hasPersona", "resourceType": "Person"}
+          },
+          "include": "agentdataNameOfPerson",
+          "aboutType": "Person",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "i1=3",
+          "pendingResources": {
+            "_:agent": {"link": "hasPersona", "resourceType": "Family"}
+          },
+          "include": "agentdataFamily",
+          "aboutType": "Family",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": null,
+          "pendingResources": {
+            "_:agent": {"link": "hasPersona", "resourceType": "Person"}
+          },
+          "include": "agentdataNameOfPerson",
+          "aboutType": "Person",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        }
+
+      ],
+      "_spec": [
+        {
+          "source": {
+            "500": {"ind1": "3", "ind2": " ", "subfields": [
+              {"a": "Horn Family"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Family",
+              "hasPersona": {
+                "@type": "Family",
+                "name": "Horn Family"
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "500": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Fauré, Gabriel,"},
+              {"d": "1845-1924."},
+              {"t": "Ballades,"},
+              {"m": "piano"},
+              {"n": "op. 19"}
+            ]}},
+          "TODO:result": {
+            "mainEntity": {
+            }
+          }
+        }
+      ]
     },
-    "510": {"inherit": "bib:110", "aboutEntity": null, "addLink": "seeAlso"},
-    "511": {"inherit": "bib:111", "aboutEntity": null, "addLink": "seeAlso"},
+    "510": {
+      "inherit": "bib:110",
+      "aboutEntity": null,
+      "aboutType": "Organization",
+      "addLink": "seeAlso",
+      "_spec": [
+        {
+          "source": {
+            "510": {"ind1": "2", "ind2": " ", "subfields": [
+              {"w": "b"},
+              {"a": "Oklahoma Council on Juvenile Delinquency"}
+            ]}},
+          "TODO:result": {
+            "mainEntity": {
+              "@type": "Organization",
+              "seeAlso": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Organization",
+                  "name": "Oklahoma Council on Juvenile Delinquency"
+                }
+              }]
+            }
+          }
+        }
+      ]
+    },
+    "511": {
+      "inherit": "bib:111",
+      "aboutEntity": null,
+      "aboutType": "Meeting",
+      "addLink": "seeAlso",
+      "_spec": [
+        {
+          "source": {
+            "511": {"ind1": "2", "ind2": " ", "subfields": [
+              {"w": "a"},
+              {"a": "Colloque européen de droit rural"}
+            ]}},
+          "TODO:  result": {
+            "mainEntity": {
+              "@type": "Meeting",
+              "seeAlso": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Meeting",
+                  "name": "Colloque européen de droit rural"
+                }
+              }]
+            }
+          }
+        }
+      ]
+    },
     "530": {},
     "547": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "548": {"ignored": true, "NOTE:record-count": 51, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
