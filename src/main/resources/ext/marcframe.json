@@ -10108,16 +10108,20 @@
         {
           "source": {
             "400": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Bhagat Singh"},
-              {"d": "1921-"}
+              {"a": "Alexander"},
+              {"b": "III,"},
+              {"c": "kung i Makedonien,"},
+              {"d": "356 f.Kr.-323 f.Kr"}
             ]}},
           "result": {
             "mainEntity": {
               "@type": "Person",
               "exactMatch": {
                 "@type": "Person",
-                "name":  "Bhagat Singh",
-                "lifeSpan": "1921-"
+                "name":  "Alexander",
+                "marc:numeration": "III,",
+                "marc:titleOther": ["kung i Makedonien,"],
+                "lifeSpan": "356 f.Kr.-323 f.Kr"
               }
             }
           }
@@ -10263,11 +10267,356 @@
       ]
     },
     "410": {
-      "inherit": "bib:610",
       "TODO:i2": null,
-      "aboutEntity": "?thing",
-      "addLink": "hasVersion",
-      "resourceType": "Organization"
+      "match": [
+        {
+          "when": "$b & $t & i1=2",
+          "include": ["agentdataOrganizationSubUnit", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "embedded": false},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$b & $t & i1=1",
+          "include": ["agentdataOrganizationSubUnit", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "embedded": false},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$b & $t & i1=0",
+          "inherit-match": "$b & $t & i1=2"
+        },
+        {
+          "when": "$t & i1=2",
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "embedded": false},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t & i1=1",
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "embedded": false},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t & i1=0",
+          "inherit-match": "$t & i1=2"
+        },
+        {
+          "when": "$b & i1=2",
+          "pendingResources": {
+            "_:agent": {"link": "exactMatch", "resourceType": "Organization"},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "include": "agentdataOrganizationSubUnit",
+          "aboutType": "Organization",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$b & i1=1",
+          "pendingResources": {
+            "_:agent": {"link": "exactMatch", "resourceType": "Jurisdiction"},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "include": "agentdataOrganizationSubUnit",
+          "aboutType": "Jurisdiction",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$b & i1=0",
+          "inherit-match": "$b & i1=2"
+        },
+        {
+          "when": "i1=0 | i1=2",
+          "pendingResources": {
+            "_:agent": {"link": "exactMatch", "resourceType": "Organization"}
+          },
+          "include": "agentdataOrganization",
+          "aboutType": "Organization",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "i1=1",
+          "pendingResources": {
+            "_:agent": {"link": "exactMatch", "resourceType": "Jurisdiction"}
+          },
+          "include": "agentdataOrganization",
+          "aboutType": "Jurisdiction",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t",
+          "inherit-match": "$t & i1=2"
+        },
+        {
+          "when": null,
+          "pendingResources": {
+            "_:agent": {"link": "exactMatch", "resourceType": "Organization"}
+          },
+          "include": "agentdataOrganization",
+          "aboutType": "Organization",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        }
+      ],
+      "_spec": [
+        {
+          "source": {
+            "410": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Venezuela"},
+              {"t": "Amendment of exchange agreement no. 2"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "hasVersion": [
+                {
+                  "@type": "Work",
+                  "title": "Amendment of exchange agreement no. 2",
+                  "contribution": {
+                    "@type": "PrimaryContribution",
+                    "agent": {"@type": "Jurisdiction", "name": "Venezuela"}
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "410": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Museum of Northern Arizona"},
+              {"t": "Biology research report"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "hasVersion": [
+                {
+                  "@type": "Work",
+                  "title": "Biology research report",
+                  "contribution": {
+                    "@type": "PrimaryContribution",
+                    "agent": {"@type": "Organization", "name": "Museum of Northern Arizona"}
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "410": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Museum of Northern Arizona"},
+              {"t": "Biology research report"}
+            ]}},
+          "normalized": {
+            "410": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Museum of Northern Arizona"},
+              {"t": "Biology research report"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "hasVersion": [
+                {
+                  "@type": "Work",
+                  "title": "Biology research report",
+                  "contribution": {
+                    "@type": "PrimaryContribution",
+                    "agent": {"@type": "Organization", "name": "Museum of Northern Arizona"}
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "410": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Museum of Northern Arizona"},
+              {"t": "Biology research report"}
+            ]}},
+          "normalized": {
+            "410": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Museum of Northern Arizona"},
+              {"t": "Biology research report"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "hasVersion": [
+                {
+                  "@type": "Work",
+                  "title": "Biology research report",
+                  "contribution": {
+                    "@type": "PrimaryContribution",
+                    "agent": {"@type": "Organization", "name": "Museum of Northern Arizona"}
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "410": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Museum of Northern Arizona"},
+              {"b": "Subunit part of name"},
+              {"t": "Biology research report"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "hasVersion": [
+                {
+                  "@type": "Work",
+                  "title": "Biology research report",
+                  "contribution": {
+                    "@type": "PrimaryContribution",
+                    "agent": {
+                      "@type": "Organization",
+                      "isPartOf": {
+                        "@type": "Jurisdiction",
+                        "name": "Museum of Northern Arizona"
+                      },
+                      "marc:subordinateUnit": ["Subunit part of name"]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "410": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Honduras"},
+              {"b": "Estudios Territoriales, Oficina de"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Jurisdiction",
+              "exactMatch": {
+                "@type": "Jurisdiction",
+                "marc:subordinateUnit": ["Estudios Territoriales, Oficina de"],
+                "isPartOf": {
+                  "@type": "Jurisdiction",
+                  "name": "Honduras"
+                }
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "410": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Centro de Estudios de Historia de México."},
+              {"k": "Manuscript"},
+              {"s": "Códice Condumex"}
+            ]}},
+          "TODO:result": {
+            "mainEntity": {
+              "@type": "Organization",
+              "exactMatch": {
+                "@type": "Organization",
+                "name": "Centro de Estudios de Historia de México."
+              }
+            }
+          }
+        },
+        {
+          "source": [
+            {"410": {"ind1": "2", "ind2": " ", "subfields": [{"a": "CISNU"}]}},
+            {"410": {"ind1": "2", "ind2": " ", "subfields": [{"w": "nnaa"}, {"a": "Conföderation Iranischer Studenten"}]}}
+          ],
+          "FIXME:result": {
+            "mainEntity": {
+              "@type": "Organization",
+              "exactMatch": [
+                {
+                  "@type": "Organization",
+                  "name": "CISNU"
+                },
+                {
+                  "@type": "Organization",
+                  "name": "Conföderation Iranischer Studenten"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "411": {
       "inherit": "bib:611",
