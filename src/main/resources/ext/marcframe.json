@@ -10144,15 +10144,9 @@
         {
           "source": {
             "400": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Singh, Bhagat,"},
-              {"d": "1921-"},
-              {"t": "Other title"}
-            ]}},
-          "normalized": {
-            "400": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Singh, Bhagat"},
-              {"d": "1921-"},
-              {"t": "Other title"}
+              {"a": "Defoe, Daniel"},
+              {"d": "1551?-1731"},
+              {"t": "The life and most suprizing adventures of Robinson Crusoe, of York,"}
             ]}},
           "result": {
             "mainEntity": {
@@ -10160,11 +10154,11 @@
               "hasVersion": [
                 {
                   "@type": "Work",
-                  "title": "Other title",
+                  "title": "The life and most suprizing adventures of Robinson Crusoe, of York,",
                   "contribution": {
                     "@type": "PrimaryContribution",
                     "agent": {
-                      "@type": "Person", "familyName":  "Singh", "givenName":  "Bhagat", "lifeSpan": "1921-"}
+                      "@type": "Person", "familyName": "Defoe", "givenName" : "Daniel", "lifeSpan": "1551?-1731"}
                   }
                 }
               ]
@@ -10579,23 +10573,6 @@
           }
         },
         {
-          "source": {
-            "410": {"ind1": "2", "ind2": " ", "subfields": [
-              {"a": "Centro de Estudios de Historia de México."},
-              {"k": "Manuscript"},
-              {"s": "Códice Condumex"}
-            ]}},
-          "TODO:result": {
-            "mainEntity": {
-              "@type": "Organization",
-              "exactMatch": {
-                "@type": "Organization",
-                "name": "Centro de Estudios de Historia de México."
-              }
-            }
-          }
-        },
-        {
           "source": [
             {"410": {"ind1": "2", "ind2": " ", "subfields": [{"a": "CISNU"}]}},
             {"410": {"ind1": "2", "ind2": " ", "subfields": [{"w": "nnaa"}, {"a": "Conföderation Iranischer Studenten"}]}}
@@ -10619,10 +10596,104 @@
       ]
     },
     "411": {
-      "inherit": "bib:611",
-      "aboutEntity": "?thing",
-      "addLink": "hasVersion",
-      "resourceType": "Meeting"
+      "i1": {"marcDefault": "2"},
+      "TODO:isPartOf": "marc:subordinateUnit",
+      "match": [
+        {
+          "when": "$t",
+          "include": ["agentdataMeeting", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting", "embedded": false},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": null,
+          "pendingResources": {
+            "_:agent": {"link": "exactMatch", "resourceType": "Meeting"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "include": "agentdataMeeting",
+          "aboutType": "Meeting",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        }
+      ],
+      "_spec": [
+        {
+          "source": {
+            "411": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Carlsberg Expedition to Phoenicia"},
+              {"d": "(1958-1959)."},
+              {"t": "Publications of the Carlsberg Expedition to Phoenicia"}
+            ]}},
+          "normalized": {
+            "411": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Carlsberg Expedition to Phoenicia"},
+              {"d": "(1958-1959)."},
+              {"t": "Publications of the Carlsberg Expedition to Phoenicia"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "hasVersion": [
+                {
+                  "@type": "Work",
+                  "title": "Publications of the Carlsberg Expedition to Phoenicia",
+                  "contribution": {
+                    "@type": "PrimaryContribution",
+                    "agent": {"@type": "Meeting", "name": "Carlsberg Expedition to Phoenicia", "date": ["(1958-1959)."]}
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "411": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "International Population Conference"},
+              {"d": "(1959 :"},
+              {"c": "Vienna, Austria)."},
+              {"e": "Arbeitsausschuss des Kongresses"}
+            ]}},
+          "normalized": {
+            "411": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "International Population Conference"},
+              {"d": "(1959 :"},
+              {"e": "Arbeitsausschuss des Kongresses"},
+              {"c": "Vienna, Austria)."}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Meeting",
+              "exactMatch": {
+                "@type": "Meeting",
+                "name": "International Population Conference",
+                "date": ["(1959 :"],
+                "marc:subordinateUnit": ["Arbeitsausschuss des Kongresses"],
+                "place": [{
+                  "@type": "Place",
+                  "label": "Vienna, Austria)."
+                }]
+              }
+            }
+          }
+        }
+      ]
     },
     "430": {
       "ignored": true,
