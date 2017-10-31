@@ -751,7 +751,7 @@
     "agentdataOrganizationJurisdiction": {
       "$c": {"about": "_:place", "property": "label"},
       "$d": {"about": "_:agent", "addProperty": "date"},
-      "$n": {"about": "_:agent", "addProperty": "marc:numberOfPartSectionMeeting"},
+      "$n": {"about": "_:agent", "addProperty": "partNumber"},
       "$g": {"about": "_:agent", "addProperty": "comment"},
       "$u": {"about": "_:agent", "property": "marc:affiliation"},
 
@@ -765,7 +765,7 @@
       "$d": {"about": "_:agent", "addProperty": "date"},
       "$e": {"about":"_:agent", "addProperty": "marc:subordinateUnit"},
       "$g":	{"about": "_:agent", "addProperty": "comment"},
-      "$n": {"about": "_:agent", "addProperty": "marc:numberOfPartSectionMeeting"},
+      "$n": {"about": "_:agent", "addProperty": "partNumber"},
       "$q":	{"about":"_:agent", "property": "additionalName"},
       "$u":	{"about": "_:agent", "property": "marc:affiliation"}
     },
@@ -4085,7 +4085,7 @@
                       "@type" : "Place",
                       "label": "University of California, Davis"
                     }],
-                    "marc:numberOfPartSectionMeeting": ["(2nd :"]
+                    "partNumber": ["(2nd :"]
                   },
                   "role" : [ {
                     "label" : "author"
@@ -4170,7 +4170,7 @@
                     "@type": "Meeting",
                     "date": ["1959"],
                     "name": "World Peace Conference",
-                    "marc:numberOfPartSectionMeeting": ["1st"],
+                    "partNumber": ["1st"],
                     "place" : [{
                       "@type" : "Place",
                       "label" : "Paris, France"
@@ -6604,7 +6604,7 @@
                     "@type" : "Contribution",
                     "agent" : {
                       "@type" : "Organization",
-                      "marc:numberOfPartSectionMeeting" : [ "Fond 1209" ],
+                      "partNumber" : [ "Fond 1209" ],
                       "name" : "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."
                     }
                   },
@@ -6705,7 +6705,7 @@
                       "@type": "Meeting",
                       "name": "Vatican Council",
                       "date": ["1962-1965 :"],
-                      "marc:numberOfPartSectionMeeting": ["(2nd :"],
+                      "partNumber": ["(2nd :"],
                       "place": [{
                         "@type": "Place",
                         "label": "Basilica di San Pietro in Vaticano)."
@@ -7885,7 +7885,7 @@
                     "@type": "Organization",
                     "marc:subordinateUnit" : ["Quinquennial Meeting"],
                     "date": ["1904"],
-                    "marc:numberOfPartSectionMeeting": ["(1st :"],
+                    "partNumber": ["(1st :"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "International Council of Nurses."
@@ -8280,7 +8280,7 @@
                       "@type": "Place",
                       "label": "Montréal, Québec)."
                     }],
-                    "marc:numberOfPartSectionMeeting": ["21st :"],
+                    "partNumber": ["21st :"],
                     "date": ["1976:"],
                     "marc:subordinateUnit": ["Organizing Committee." , "Arts and Culture Program." ,  "Visual Arts Section."]
                   },
@@ -8319,7 +8319,7 @@
                           "@type": "Place",
                           "label": "Basilica di San Pietro in Vaticano)."
                         }],
-                        "marc:numberOfPartSectionMeeting": ["(2nd :"],
+                        "partNumber": ["(2nd :"],
                         "date": ["1962-1965 :"]}
                     }
                   ]
@@ -9576,7 +9576,7 @@
                 "@type": "Jurisdiction",
                 "name": "Förenta staterna"
               },
-              "marc:numberOfPartSectionMeeting": ["(64: )"],
+              "partNumber": ["(64: )"],
               "date": ["1915-1916)"],
               "place": [{
                 "@type": "Place",
@@ -9959,7 +9959,7 @@
     "400": {
       "TODO:remnants-of-inherit": "bib:100",
       "TODO": "Ensure bib 100 does not match with auth 400",
-
+      "TODO:subfieldorder": "",
       "match": [
         {
           "when": "$t & i1=0",
@@ -9975,6 +9975,8 @@
             },
             "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
           },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
@@ -9992,6 +9994,8 @@
             },
             "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
           },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10009,6 +10013,8 @@
             },
             "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Family", "embedded": false}
           },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10026,6 +10032,8 @@
             },
             "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
           },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10038,7 +10046,7 @@
           "aboutType": "Person",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10051,7 +10059,7 @@
           "aboutType": "Person",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10064,7 +10072,7 @@
           "aboutType": "Family",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10077,7 +10085,7 @@
           "aboutType": "Person",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
@@ -10262,6 +10270,7 @@
     },
     "410": {
       "TODO:i2": null,
+      "TODO:subfieldorder": "",
       "match": [
         {
           "when": "$b & $t & i1=2",
@@ -10279,6 +10288,7 @@
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10298,6 +10308,7 @@
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10320,6 +10331,7 @@
             "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "embedded": false},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10338,6 +10350,7 @@
             "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "embedded": false},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10349,14 +10362,14 @@
           "when": "$b & i1=2",
           "pendingResources": {
             "_:agent": {"link": "exactMatch", "resourceType": "Organization"},
-            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "include": "agentdataOrganizationSubUnit",
           "aboutType": "Organization",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10371,7 +10384,7 @@
           "aboutType": "Jurisdiction",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10388,7 +10401,7 @@
           "aboutType": "Organization",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10401,7 +10414,7 @@
           "aboutType": "Jurisdiction",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10418,17 +10431,54 @@
           "aboutType": "Organization",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
+      "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
       "_spec": [
+        {
+          "source": {
+            "410": {"ind1": "1", "ind2": " ", "subfields": [
+              {"i": "Franska:"},
+              {"a": "Suède."},
+              {"b": "Direction nationale de la santé et des affaires sociales"}
+            ]}},
+          "normalized": {
+            "410": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Suède."},
+              {"i": "Franska:"},
+              {"b": "Direction nationale de la santé et des affaires sociales"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Jurisdiction",
+              "exactMatch": {
+                "@type": "Jurisdiction",
+                "marc:subordinateUnit": ["Direction nationale de la santé et des affaires sociales"],
+                "isPartOf": {
+                  "@type": "Jurisdiction",
+                  "name": "Suède."
+                }
+              },
+              "relation": [{
+                "@type": "Role",
+                "label": "Franska:"
+              }]
+            }
+          }
+        },
         {
           "source": {
             "410": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Venezuela"},
               {"t": "Amendment of exchange agreement no. 2"}
+            ]}},
+          "normalized": {
+            "410": {"ind1": "1", "ind2": " ", "subfields": [
+              {"t": "Amendment of exchange agreement no. 2"},
+              {"a": "Venezuela"}
             ]}},
           "result": {
             "mainEntity": {
@@ -10451,6 +10501,11 @@
             "410": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Museum of Northern Arizona"},
               {"t": "Biology research report"}
+            ]}},
+          "normalized": {
+            "410": {"ind1": "2", "ind2": " ", "subfields": [
+              {"t": "Biology research report"},
+              {"a": "Museum of Northern Arizona"}
             ]}},
           "result": {
             "mainEntity": {
@@ -10476,8 +10531,8 @@
             ]}},
           "normalized": {
             "410": {"ind1": "2", "ind2": " ", "subfields": [
-              {"a": "Museum of Northern Arizona"},
-              {"t": "Biology research report"}
+              {"t": "Biology research report"},
+              {"a": "Museum of Northern Arizona"}
             ]}},
           "result": {
             "mainEntity": {
@@ -10503,8 +10558,8 @@
             ]}},
           "normalized": {
             "410": {"ind1": "2", "ind2": " ", "subfields": [
-              {"a": "Museum of Northern Arizona"},
-              {"t": "Biology research report"}
+              {"t": "Biology research report"},
+              {"a": "Museum of Northern Arizona"}
             ]}},
           "result": {
             "mainEntity": {
@@ -10573,6 +10628,61 @@
           }
         },
         {
+          "source": {
+            "410": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Europeiska unionen."},
+              {"b": "Europaparlamentet"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Organization",
+              "exactMatch": {
+                "@type": "Organization",
+                "marc:subordinateUnit": ["Europaparlamentet"],
+                "isPartOf": {
+                  "@type": "Organization",
+                  "name": "Europeiska unionen."
+                }
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "410": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "United Nations"},
+              {"b": "General Assembly"},
+              {"b": "Special Session"},
+              {"n": "(13 : "},
+              {"d": "1986)."},
+              {"b": "Preparatory Committee of the Whole"}
+            ]}},
+          "normalized": {
+            "410": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "United Nations"},
+              {"b": "General Assembly"},
+              {"b": "Special Session"},
+              {"b": "Preparatory Committee of the Whole"},
+              {"d": "1986)."},
+              {"n": "(13 :"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Organization",
+              "exactMatch": {
+                "@type": "Organization",
+                "marc:subordinateUnit": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
+                "partNumber": ["(13 :"],
+                "date": ["1986)."],
+                "isPartOf": {
+                  "@type": "Organization",
+                  "name": "United Nations"
+                }
+              }
+            }
+          }
+        },
+        {
           "source": [
             {"410": {"ind1": "2", "ind2": " ", "subfields": [{"a": "CISNU"}]}},
             {"410": {"ind1": "2", "ind2": " ", "subfields": [{"w": "nnaa"}, {"a": "Conföderation Iranischer Studenten"}]}}
@@ -10598,6 +10708,7 @@
     "411": {
       "i1": {"marcDefault": "2"},
       "TODO:isPartOf": "marc:subordinateUnit",
+      "TODO:subfieldorder": "",
       "match": [
         {
           "when": "$t",
@@ -10614,6 +10725,7 @@
             "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting", "embedded": false},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10627,11 +10739,12 @@
           "aboutType": "Meeting",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"property": "scopeNote", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
+      "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
@@ -10642,9 +10755,9 @@
             ]}},
           "normalized": {
             "411": {"ind1": "2", "ind2": " ", "subfields": [
+              {"t": "Publications of the Carlsberg Expedition to Phoenicia"},
               {"a": "Carlsberg Expedition to Phoenicia"},
-              {"d": "(1958-1959)."},
-              {"t": "Publications of the Carlsberg Expedition to Phoenicia"}
+              {"d": "(1958-1959)."}
             ]}},
           "result": {
             "mainEntity": {
@@ -10672,10 +10785,10 @@
             ]}},
           "normalized": {
             "411": {"ind1": "2", "ind2": " ", "subfields": [
+              {"c": "Vienna, Austria)."},
               {"a": "International Population Conference"},
               {"d": "(1959 :"},
-              {"e": "Arbeitsausschuss des Kongresses"},
-              {"c": "Vienna, Austria)."}
+              {"e": "Arbeitsausschuss des Kongresses"}
             ]}},
           "result": {
             "mainEntity": {
