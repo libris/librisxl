@@ -45,8 +45,6 @@ public class ApixSearchServlet extends HttpServlet
             String parameterName = parameterNames.nextElement();
             String parameterValue = request.getParameter(parameterName);
 
-            // Supported searchable identifiers are ISBN, ISSN and "024$a"
-
             if (parameterName.equalsIgnoreCase("isbn"))
             {
                 String normalizedValue = parameterValue.replaceAll("-", "");
@@ -56,9 +54,11 @@ public class ApixSearchServlet extends HttpServlet
             {
                 results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", parameterValue.toUpperCase(), 1));
                 results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", parameterValue.toLowerCase(), 1));
-            } else // if (...) what is the search term for 024$a = TODO, tighten this. (urnnbn ?)
+            } else
             {
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("NBN", parameterValue, 1));
                 results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("Identifier", parameterValue, 1));
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("SystemNumber", parameterValue, 0));
             }
         }
 
