@@ -3027,7 +3027,7 @@
     "015": {
       "include": ["idbase"],
       "resourceType": "NBN",
-      "$a": {"addProperty": "value"},
+      "$a": {"property": "value"},
       "$z": {"addProperty": "marc:hiddenValue"},
       "$2": {
         "link": "source",
@@ -3036,7 +3036,27 @@
           "uriTemplate": "...{code}",
           "restrictedTo": "http://www.loc.gov/standards/sourcelist/national-bibliography.html"
         }
-      }
+      },
+      "_spec": [
+        {
+          "source": {"015": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "(BIBBI)0245010"},
+            {"a": "nf0909903"}
+          ]}},
+          "TODO:result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "NBN",
+                "value": "(BIBBI)0245010"
+              },
+              {
+                "@type": "NBN",
+                "value": "nf0909903"
+              }
+            ]
+          }}
+        }
+      ]
     },
 
     "016": {
@@ -7361,7 +7381,7 @@
       "$x": {"property": "issn"},
       "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
       "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "subfieldOrder": "i a b c q d j e 4 t g m n p r s l k f o",
+      "subfieldOrder": " i a b c q d j e u 4 t g m n p r s l k f o",
       "_spec": [
         {
           "source": {"700": {"ind1": "1", "ind2": " ", "subfields": [ {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}]}
@@ -9206,6 +9226,7 @@
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
+      "subfieldOrder": "a b c q d j g e 4 t n p l k f o v x y z",
       "_spec": [
         {
           "source": {
@@ -9246,12 +9267,6 @@
               {"a": "Lucifer,"},
               {"t": "Skuggpojken"},
               {"l": "Norska"}
-            ]}},
-          "normalized": {
-            "100": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Lucifer,"},
-              {"l": "Norska"},
-              {"t": "Skuggpojken"}
             ]}},
           "result": {
             "mainEntity": {
@@ -9349,12 +9364,6 @@
               {"a": "Eliot, T.S."},
               {"q": "(Thomas Stearns)"},
               {"d": "1888-1965"}
-            ]}},
-          "normalized": {
-            "100": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Eliot, T.S."},
-              {"d": "1888-1965"},
-              {"q": "(Thomas Stearns)"}
             ]}},
           "result": {
             "mainEntity": {
@@ -9515,6 +9524,7 @@
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
+      "subfieldOrder": "a b n d c g e 4 t p l k f o v x y z",
       "_spec": [
         {
           "source": {
@@ -9564,9 +9574,9 @@
             "110": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Förenta staterna"},
               {"b": "Congress"},
-              {"c": "Washington DC"},
+              {"n": "(64: )"},
               {"d": "1915-1916)"},
-              {"n": "(64: )"}
+              {"c": "Washington DC"}
             ]}},
           "result": {
             "mainEntity": {
@@ -9601,8 +9611,8 @@
               {"d": "1948 Mar.2."},
               {"d": "1951 Mar.6"},
               {"g": "Poland"},
-              {"k": "Protocols, etc"},
-              {"t": "Treaties, etc."}
+              {"t": "Treaties, etc."},
+              {"k": "Protocols, etc"}
             ]}},
           "result": {
             "mainEntity": {
@@ -9684,6 +9694,7 @@
         }
       ],
       "i1": {"marcDefault": "2"},
+      "subfieldOrder": "a q n d c g e j 4 t p l k f  v x y z",
       "_spec": [
         {
           "source": {
@@ -9959,7 +9970,8 @@
     "400": {
       "TODO:remnants-of-inherit": "bib:100",
       "TODO": "Ensure bib 100 does not match with auth 400",
-      "TODO:subfieldorder": "",
+      "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
+      "subfieldOrder": "w i a b c q d j e 4 t g m n p r s l k f o v x y z",
       "match": [
         {
           "when": "$t & i1=0",
@@ -9978,7 +9990,7 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
         },
         {
           "when": "$t & i1=1",
@@ -9997,7 +10009,7 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
         },
         {
           "when": "$t & i1=3",
@@ -10016,7 +10028,7 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
         },
         {
           "when": "$t",
@@ -10035,7 +10047,7 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
         },
         {
           "when": "i1=0",
@@ -10048,7 +10060,7 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
         },
         {
           "when": "i1=1",
@@ -10061,7 +10073,7 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
         },
         {
           "when": "i1=3",
@@ -10074,7 +10086,7 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
         },
         {
           "when": null,
@@ -10087,10 +10099,9 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
         }
       ],
-      "$w": {"property": "marc:controlSubfield"},
       "_spec": [
         {
           "source": {
@@ -10157,6 +10168,12 @@
               {"d": "1551?-1731"},
               {"t": "The life and most suprizing adventures of Robinson Crusoe, of York,"}
             ]}},
+          "normalized": {
+            "400": {"ind1": "1", "ind2": " ", "subfields": [
+              {"t": "The life and most suprizing adventures of Robinson Crusoe, of York,"},
+              {"a": "Defoe, Daniel"},
+              {"d": "1551?-1731"}
+            ]}},
           "result": {
             "mainEntity": {
               "@type": "Work",
@@ -10202,6 +10219,11 @@
               {"a": "Family X"},
               {"t": "Other title"}
             ]}},
+          "normalized": {
+            "400": {"ind1": "3", "ind2": " ", "subfields": [
+              {"t": "Other title"},
+              {"a": "Family X"}
+            ]}},
           "result": {
             "mainEntity": {
               "@type": "Work",
@@ -10223,6 +10245,11 @@
             "400": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Bhagat Singh"},
               {"t": "Other title"}
+            ]}},
+          "normalized": {
+            "400": {"ind1": "0", "ind2": " ", "subfields": [
+              {"t": "Other title"},
+              {"a": "Bhagat Singh"}
             ]}},
           "result": {
             "mainEntity": {
@@ -10248,8 +10275,8 @@
             ]}},
           "normalized": {
             "400": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Bhagat Singh"},
-              {"t": "Other title"}
+              {"t": "Other title"},
+              {"a": "Bhagat Singh"}
             ]}},
           "result": {
             "mainEntity": {
@@ -10271,7 +10298,7 @@
     },
     "410": {
       "TODO:i2": null,
-      "TODO:subfieldorder": "",
+      "subfieldOrder": "w i a b c d g  e 4 t m n p r s l k f o v x y z",
       "match": [
         {
           "when": "$b & $t & i1=2",
@@ -10291,7 +10318,7 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
         },
         {
           "when": "$b & $t & i1=1",
@@ -10311,7 +10338,7 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
         },
         {
           "when": "$b & $t & i1=0",
@@ -10334,7 +10361,7 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
         },
         {
           "when": "$t & i1=1",
@@ -10353,7 +10380,7 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
         },
         {
           "when": "$t & i1=0",
@@ -10372,7 +10399,7 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
         },
         {
           "when": "$b & i1=1",
@@ -10387,7 +10414,7 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
         },
         {
           "when": "$b & i1=0",
@@ -10404,7 +10431,7 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
         },
         {
           "when": "i1=1",
@@ -10417,7 +10444,7 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
         },
         {
           "when": "$t",
@@ -10434,23 +10461,16 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
         }
       ],
       "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
-      "$w": {"property": "marc:controlSubfield"},
       "_spec": [
         {
           "source": {
             "410": {"ind1": "1", "ind2": " ", "subfields": [
               {"i": "Franska:"},
               {"a": "Suède."},
-              {"b": "Direction nationale de la santé et des affaires sociales"}
-            ]}},
-          "normalized": {
-            "410": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Suède."},
-              {"i": "Franska:"},
               {"b": "Direction nationale de la santé et des affaires sociales"}
             ]}},
           "result": {
@@ -10710,7 +10730,7 @@
     "411": {
       "i1": {"marcDefault": "2"},
       "TODO:isPartOf": "marc:subordinateUnit",
-      "TODO:subfieldorder": "",
+      "subfieldOrder": "w i a n d c e g j 4 t n s l k f v x y z",
       "match": [
         {
           "when": "$t",
@@ -10729,7 +10749,7 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
         },
         {
           "when": null,
@@ -10743,11 +10763,10 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
         }
       ],
       "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
-      "$w": {"property": "marc:controlSubfield"},
       "_spec": [
         {
           "source": {
@@ -10861,6 +10880,7 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -10880,6 +10900,7 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -10899,6 +10920,7 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -10918,9 +10940,9 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
-
         {
           "when": "i1=0",
           "pendingResources": {
@@ -10931,6 +10953,7 @@
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -10943,6 +10966,7 @@
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -10955,6 +10979,7 @@
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -10967,10 +10992,12 @@
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
-
       ],
+      "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
+      "subfieldOrder": "w i a b c q d j e 4 t g m n p r s l k f o v x y z",
       "_spec": [
         {
           "source": {
@@ -11008,10 +11035,16 @@
         {
           "source": {
             "500": {"ind1": " ", "ind2": " ", "subfields": [
-                {"a": "Lindgren, Astrid"},
-                {"d": "1907-2002"},
-                {"t": "Lillebror och Karlsson på taket"}
-              ]}},
+              {"a": "Lindgren, Astrid"},
+              {"d": "1907-2002"},
+              {"t": "Lillebror och Karlsson på taket"}
+            ]}},
+          "normalized": {
+            "500": {"ind1": "1", "ind2": " ", "subfields": [
+              {"t": "Lillebror och Karlsson på taket"}  ,
+              {"a": "Lindgren, Astrid"},
+              {"d": "1907-2002"}
+            ]}},
           "result": {
             "mainEntity": {
               "@type": "Work",
@@ -11041,6 +11074,14 @@
               {"t": "Ballades,"},
               {"m": "piano"},
               {"n": "op. 19"}
+            ]}},
+          "normalized": {
+            "500": {"ind1": "1", "ind2": " ", "subfields": [
+              {"t": "Ballades,"},
+              {"n": "op. 19"},
+              {"a": "Fauré, Gabriel"},
+              {"d": "1845-1924."},
+              {"m": "piano"}
             ]}},
           "result": {
             "mainEntity": {
@@ -11107,6 +11148,7 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11127,6 +11169,7 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11150,6 +11193,7 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11169,6 +11213,7 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11188,6 +11233,7 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11203,6 +11249,7 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11220,6 +11267,7 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11233,6 +11281,7 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11250,12 +11299,13 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
       "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
-      "$w": {"property": "marc:controlSubfield"},
-
+      "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
+      "subfieldOrder": "w i a b c d g  e 4 t m n p r s l k f o v x y z",
       "_spec": [
         {
           "source": {
@@ -11266,10 +11316,10 @@
           "result": {
             "mainEntity": {
               "@type": "Organization",
-              "marc:controlSubfield": "b",
               "seeAlso": [{
                 "@type": "Organization",
-                "name": "Oklahoma Council on Juvenile Delinquency"
+                "name": "Oklahoma Council on Juvenile Delinquency",
+                "marc:controlSubfield": "b"
               }]
             }
           }
@@ -11295,12 +11345,18 @@
               {"a": "Maryland."},
               {"b": "Air Quality Programs"}
             ]}},
+          "normalized": {
+            "510": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Maryland."},
+              {"w": "a"},
+              {"b": "Air Quality Programs"}
+            ]}},
           "result": {
             "mainEntity": {
               "@type": "Jurisdiction",
-              "marc:controlSubfield": "a",
               "seeAlso": [{
                 "@type": "Jurisdiction",
+                "marc:controlSubfield": "a",
                 "marc:subordinateUnit": ["Air Quality Programs"],
                 "isPartOf": {
                   "@type": "Jurisdiction",
@@ -11315,7 +11371,8 @@
     "511": {
       "i1": {"marcDefault": "2"},
       "TODO:isPartOf": "marc:subordinateUnit",
-      "TODO:subfieldorder": "",
+      "subfieldOrder": "w i a n d c e g j 4 t n s l k f v x y z",
+      "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
       "match": [
         {
           "when": "$t",
@@ -11378,6 +11435,12 @@
               {"w": "a"},
               {"a": "AIC Seminar."},
               {"t": "Proceedings"}
+            ]}},
+          "normalized": {
+            "511": {"ind1": "2", "ind2": " ", "subfields": [
+              {"w": "a"},
+              {"t": "Proceedings"},
+              {"a": "AIC Seminar."}
             ]}},
           "result": {
             "mainEntity": {
