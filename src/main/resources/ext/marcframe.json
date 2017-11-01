@@ -8376,7 +8376,64 @@
       ]
     },
 
-    "720": {},
+    "720": {
+      "aboutEntity": "?work",
+      "addLink": "contribution",
+      "resourceType": "Contribution",
+      "TODO:Person": "Will probably get mixed up with 700...",
+      "match": [
+        {
+          "when": "i1=1",
+          "NOTE:agentdataNameOfPerson": "Using agentdataPerson instead because splits incorrectly on strings like 'V. D. H., pseud. för Pieter de la Court'",
+          "include": "agentdataPerson",
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Person"}
+          }
+        }
+      ],
+      "pendingResources": {
+        "_:agent": {"link": "agent", "resourceType": "Agent"}
+      },
+      "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"},
+      "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
+      "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
+      "_spec": [
+        {
+          "source": {
+            "720": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Mukhtar Bashir Mudey."},
+              {"4": "ill"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent": {"@type": "Agent", "name": "Mukhtar Bashir Mudey."},
+                  "role": [{"@type": "Role", "code": "ill"}]}
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "720": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "V. D. H., pseud. för Pieter de la Court"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent": {"@type": "Person", "name": "V. D. H., pseud. för Pieter de la Court"}}
+              ]
+            }
+          }}
+        }
+      ]
+    },
 
     "730": {
       "aboutEntity": "?work",
