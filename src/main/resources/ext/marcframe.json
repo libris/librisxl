@@ -3683,8 +3683,12 @@
       "i2": {
         "definedElsewhereToken": "4",
         "marcdefault": " ",
+        "link": "source",
+        "resourceType": "Source",
+        "property": "label",
         "tokenMap": {
-          " ": null
+          " ": null,
+          "0": "LC"
         }
       },
       "$q": {"requires-i2": "4", "link": "source", "resourceType": "Source", "property": "label"},
@@ -3757,7 +3761,11 @@
       "addLink": "classification",
       "resourceType": "AdditionalClassificationDdc",
       "include": ["classification-ddc"],
+      "$c": {"ignored": true, "NOTE:record-count": 1, "NOTE:local": "Används normalt ej"},
+      "$m": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Används normalt ej"},
       "$q": {"link": "source", "resourceType": "Source", "property": "label"},
+      "$y": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Används normalt ej"},
+      "$z": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Används normalt ej"},
       "_spec": [
         {
           "source": {
@@ -3816,7 +3824,6 @@
     },
 
     "084": {
-      "include": [],
       "aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "Classification",
@@ -3824,7 +3831,7 @@
 
       "match": [
         {
-          "when": "$2 =~ ^kssb.+$",
+          "when": "$2 =~ ^kssb/.+$",
           "$2": {
             "link": "inScheme",
             "resourceType": "ConceptScheme",
