@@ -834,7 +834,7 @@
       "$2": {
         "link": "inScheme", "resourceType": "ConceptScheme",
         "required": true,
-        "uriTemplate": "http://id.kb.se/edition/e{+_}/",
+        "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
         "property": "version",
         "splitValuePattern": "(\\d+)(?:/(swe))?",
         "TODO": "Only capture language 'swe'?",
@@ -3706,7 +3706,7 @@
                   "edition": "full",
                   "code": "158.1",
                   "inScheme": {
-                    "@id": "http://id.kb.se/edition/e23/",
+                    "@id": "http://dewey.info/scheme/edition/e23/",
                     "@type": "ConceptScheme",
                     "version": "23"
                   },
@@ -3736,7 +3736,7 @@
                   "edition": "full",
                   "code": "158.1",
                   "inScheme": {
-                    "@id": "http://id.kb.se/edition/e23/swe/",
+                    "@id": "http://dewey.info/scheme/edition/e23/swe/",
                     "@type": "ConceptScheme",
                     "version": "23",
                     "language": "swe"
@@ -3774,7 +3774,7 @@
                   "edition": "full",
                   "code": "158.1",
                   "inScheme": {
-                    "@id": "http://id.kb.se/edition/e23/",
+                    "@id": "http://dewey.info/scheme/edition/e23/",
                     "@type": "ConceptScheme",
                     "version": "23"
                   }
