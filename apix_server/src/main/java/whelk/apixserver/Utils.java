@@ -25,6 +25,7 @@ import javax.xml.transform.TransformerException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -188,7 +189,8 @@ public class Utils
     {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/xml");
-        ServletOutputStream out = response.getOutputStream();
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
         out.print(message);
         out.close();
     }
@@ -197,11 +199,13 @@ public class Utils
     {
         response.setStatus(HttpServletResponse.SC_CREATED);
         response.setHeader("Location", uri);
+        response.setCharacterEncoding("UTF-8");
     }
 
     static void send303Response(HttpServletResponse response, String uri) throws IOException
     {
         response.setStatus(HttpServletResponse.SC_SEE_OTHER);
         response.setHeader("Location", uri);
+        response.setCharacterEncoding("UTF-8");
     }
 }
