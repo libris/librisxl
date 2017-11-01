@@ -10090,6 +10090,7 @@
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
+      "$w": {"property": "marc:controlSubfield"},
       "_spec": [
         {
           "source": {
@@ -10437,6 +10438,7 @@
         }
       ],
       "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
+      "$w": {"property": "marc:controlSubfield"},
       "_spec": [
         {
           "source": {
@@ -10745,6 +10747,7 @@
         }
       ],
       "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
+      "$w": {"property": "marc:controlSubfield"},
       "_spec": [
         {
           "source": {
@@ -10840,8 +10843,84 @@
       "TODO:remnants-of-inherit": "bib:100",
       "TODO": "this is really a link to other auth post..",
       "NOTE": "not really though - see 100",
-      "TODO:t": "hasVersion? Ensure there will be no conflict with 400 at revert",
       "match": [
+        {
+          "when": "$t & i1=0",
+          "include": ["agentdataPerson", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
+          },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t & i1=1",
+          "include": ["agentdataNameOfPerson", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
+          },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t & i1=3",
+          "include": ["agentdataFamily", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Family", "embedded": false}
+          },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t",
+          "include": ["agentdataNameOfPerson", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
+          },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+
         {
           "when": "i1=0",
           "pendingResources": {
@@ -10851,8 +10930,7 @@
           "aboutType": "Person",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
-          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -10864,8 +10942,7 @@
           "aboutType": "Person",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
-          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -10877,8 +10954,7 @@
           "aboutType": "Family",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
-          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -10890,8 +10966,7 @@
           "aboutType": "Person",
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
-          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
-          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
 
@@ -10915,24 +10990,272 @@
         {
           "source": {
             "500": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Oats, Joyce Carol"},
+              {"d": "1938-"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Person",
+              "hasPersona": {
+                "@type": "Person",
+                "familyName": "Oats",
+                "givenName": "Joyce Carol",
+                "lifeSpan": "1938-"
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "500": {"ind1": " ", "ind2": " ", "subfields": [
+                {"a": "Lindgren, Astrid"},
+                {"d": "1907-2002"},
+                {"t": "Lillebror och Karlsson på taket"}
+              ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "relatedTo": [
+                {
+                  "@type": "Work",
+                  "title": "Lillebror och Karlsson på taket",
+                  "contribution": {
+                    "@type": "PrimaryContribution",
+                    "agent": {
+                      "@type": "Person",
+                      "familyName": "Lindgren",
+                      "givenName": "Astrid",
+                      "lifeSpan": "1907-2002"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "500": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Fauré, Gabriel,"},
               {"d": "1845-1924."},
               {"t": "Ballades,"},
               {"m": "piano"},
               {"n": "op. 19"}
             ]}},
-          "TODO:result": {
+          "result": {
             "mainEntity": {
+              "@type": "Work",
+              "musicMedium": ["piano"],
+              "relatedTo": [{
+                "@type": "Work",
+                "contribution": {
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Person",
+                    "familyName": "Fauré",
+                    "givenName": "Gabriel",
+                    "lifeSpan": "1845-1924."
+                  }
+                },
+                "partNumber": ["op. 19"],
+                "title": "Ballades,"
+              } ]
+            }
+          }
+        },
+        {
+          "source": [
+            {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Ekegren, Staffan,"}, {"d": "1947-"}]}},
+            {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Lundberg, Sten,"}, {"d": "1957-"}]}},
+            {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Persson, Lasse,"}, {"d": "1957-"}]}},
+            {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Thor, Clas,"}, {"d": "1951-"}]}},
+            {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Westerborn, Magnus,"}, {"d": "1953-"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Person",
+              "hasPersona": [
+                {"@type": "Person", "familyName": "Ekegren", "givenName": "Staffan", "lifeSpan": "1947-"},
+                {"@type": "Person", "familyName": "Lundberg", "givenName": "Sten", "lifeSpan": "1957-"},
+                {"@type": "Person", "familyName": "Persson", "givenName": "Lasse", "lifeSpan": "1957-"},
+                {"@type": "Person", "familyName": "Thor", "givenName": "Clas", "lifeSpan": "1951-"},
+                {"@type": "Person", "familyName": "Westerborn", "givenName": "Magnus", "lifeSpan": "1953-"}
+              ]
             }
           }
         }
       ]
     },
     "510": {
-      "inherit": "bib:110",
-      "aboutEntity": null,
-      "aboutType": "Organization",
-      "addLink": "seeAlso",
+      "NOTE": "mads relatedAuthority?",
+      "match": [
+        {
+          "when": "$b & $t & i1=2",
+          "include": ["agentdataOrganizationSubUnit", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "embedded": false},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$b & $t & i1=1",
+          "include": ["agentdataOrganizationSubUnit", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "embedded": false},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$b & $t & i1=0",
+          "inherit-match": "$b & $t & i1=2"
+        },
+        {
+          "when": "$t & i1=2",
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "embedded": false},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t & i1=1",
+          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "embedded": false},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$t": {"about": "_:work", "property": "title"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t & i1=0",
+          "inherit-match": "$t & i1=2"
+        },
+        {
+          "when": "$b & i1=2",
+          "pendingResources": {
+            "_:agent": {"addLink": "seeAlso", "resourceType": "Organization"},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "include": "agentdataOrganizationSubUnit",
+          "aboutType": "Organization",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$b & i1=1",
+          "pendingResources": {
+            "_:agent": {"addLink": "seeAlso", "resourceType": "Jurisdiction"},
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "include": "agentdataOrganizationSubUnit",
+          "aboutType": "Jurisdiction",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$b & i1=0",
+          "inherit-match": "$b & i1=2"
+        },
+        {
+          "when": "i1=0 | i1=2",
+          "pendingResources": {
+            "_:agent": {"addLink": "seeAlso", "resourceType": "Organization"}
+          },
+          "include": "agentdataOrganization",
+          "aboutType": "Organization",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "i1=1",
+          "pendingResources": {
+            "_:agent": {"addLink": "seeAlso", "resourceType": "Jurisdiction"}
+          },
+          "include": "agentdataOrganization",
+          "aboutType": "Jurisdiction",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": "$t",
+          "inherit-match": "$t & i1=2"
+        },
+        {
+          "when": null,
+          "pendingResources": {
+            "_:agent": {"addLink": "seeAlso", "resourceType": "Organization"}
+          },
+          "include": "agentdataOrganization",
+          "aboutType": "Organization",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        }
+      ],
+      "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
+      "$w": {"property": "marc:controlSubfield"},
+
       "_spec": [
         {
           "source": {
@@ -10940,14 +11263,48 @@
               {"w": "b"},
               {"a": "Oklahoma Council on Juvenile Delinquency"}
             ]}},
-          "TODO:result": {
+          "result": {
+            "mainEntity": {
+              "@type": "Organization",
+              "marc:controlSubfield": "b",
+              "seeAlso": [{
+                "@type": "Organization",
+                "name": "Oklahoma Council on Juvenile Delinquency"
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "510": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Five Pieces (reportagegrupp)"}
+            ]}},
+          "result": {
             "mainEntity": {
               "@type": "Organization",
               "seeAlso": [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Organization",
-                  "name": "Oklahoma Council on Juvenile Delinquency"
+                "@type": "Organization",
+                "name": "Five Pieces (reportagegrupp)"}]
+            }
+          }
+        },
+        {
+          "source": {
+            "510": {"ind1": "1", "ind2": " ", "subfields": [
+              {"w": "a"},
+              {"a": "Maryland."},
+              {"b": "Air Quality Programs"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Jurisdiction",
+              "marc:controlSubfield": "a",
+              "seeAlso": [{
+                "@type": "Jurisdiction",
+                "marc:subordinateUnit": ["Air Quality Programs"],
+                "isPartOf": {
+                  "@type": "Jurisdiction",
+                  "name": "Maryland."
                 }
               }]
             }
@@ -10956,10 +11313,47 @@
       ]
     },
     "511": {
-      "inherit": "bib:111",
-      "aboutEntity": null,
-      "aboutType": "Meeting",
-      "addLink": "seeAlso",
+      "i1": {"marcDefault": "2"},
+      "TODO:isPartOf": "marc:subordinateUnit",
+      "TODO:subfieldorder": "",
+      "match": [
+        {
+          "when": "$t",
+          "include": ["agentdataMeeting", "titledetails1xx7xx"],
+          "aboutType": "Work",
+          "pendingResources": {
+            "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting", "embedded": false},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "$t": {"about": "_:work", "property": "title"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+        },
+        {
+          "when": null,
+          "pendingResources": {
+            "_:agent": {"addLink": "seeAlso", "resourceType": "Meeting"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "include": "agentdataMeeting",
+          "aboutType": "Meeting",
+          "embedded": true,
+          "TODO:alternative $a": {"addProperty": "altLabel"},
+          "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
+          "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+        }
+      ],
+      "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
@@ -10967,16 +11361,61 @@
               {"w": "a"},
               {"a": "Colloque européen de droit rural"}
             ]}},
-          "TODO:  result": {
+          "result": {
             "mainEntity": {
               "@type": "Meeting",
               "seeAlso": [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Meeting",
-                  "name": "Colloque européen de droit rural"
+                "@type": "Meeting",
+                "marc:controlSubfield" : "a",
+                "name": "Colloque européen de droit rural"
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "511": {"ind1": "2", "ind2": " ", "subfields": [
+              {"w": "a"},
+              {"a": "AIC Seminar."},
+              {"t": "Proceedings"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Work",
+              "relatedTo": [{
+                "@type": "Work",
+                "title": "Proceedings",
+                "marc:controlSubfield" : "a",
+                "contribution": {
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Meeting",
+                    "name": "AIC Seminar."
+                  }
                 }
               }]
+            }
+          }
+        },
+        {
+          "source": [
+            {"511": {"ind1": "2", "ind2": " ", "subfields": [{"w": "a"}, {"a": "International Drip Irrigation Meeting"}]}},
+            {"511": {"ind1": "2", "ind2": " ", "subfields": [{"w": "b"}, {"a": "International Drip/Trickle Irrigation Congress"}]}}
+            ],
+          "result": {
+            "mainEntity": {
+              "@type": "Meeting",
+              "seeAlso": [
+                {
+                  "marc:controlSubfield": "a",
+                  "@type": "Meeting",
+                  "name": "International Drip Irrigation Meeting"
+                },
+                {
+                  "marc:controlSubfield": "b",
+                  "@type": "Meeting",
+                  "name": "International Drip/Trickle Irrigation Congress"
+                }]
             }
           }
         }
