@@ -3602,7 +3602,7 @@
     "046": {},
     "047": {},
     "048": {},
-    "049": {},
+    "049": {"ignored": true, "NOTE": "OCLC - Local Holdings. Field 049 is not part of the standard MARC 21 format."},
 
     "050": {
       "aboutEntity": "?work",
@@ -3627,9 +3627,9 @@
       "$b": {"property": "itemPortion", "ignored": true}
     },
     "061": {"NOTE:record-count": 1, "ignored": true},
-    "066": {},
+    "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
     "070": {},
-    "071": {"NOTE:record-count": 0, "ignored": true},
+    "071": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
     "072": {
       "include": ["termid"],
@@ -3712,11 +3712,14 @@
       ]
     },
 
-    "085": {"NOTE:record-count": 21, "ignored": true},
+    "085": {"ignored": true, "NOTE:record-count": 21, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "086": {},
     "088": {},
-    "090": {"NOTE:record-count": 67, "ignored": true},
-    "099": {"NOTE:record-count": 2, "ignored": true},
+    "090": {"ignored": true, "NOTE:record-count": 67, "NOTE:LC": "OBSOLETE, 1982", "NOTE:OCLC": "Locally Assigned LC-type Call Number. Field 090 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
+    "092": {"ignored": true, "NOTE:record-count": 15, "NOTE:LC": "Not part of BF2 conversion", "NOTE:OCLC": "Locally Assigned Dewey Call Number. Field 092 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
+    "096": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "Not part of BF2 conversion", "NOTE:OCLC": "Locally Assigned NLM-type Call Number. Field 096 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
+    "098": {"ignored": true, "NOTE:record-count": 5, "NOTE:LC": "Not part of BF2 conversion", "NOTE:OCLC": "Other Classification Schemes. Field 098 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
+    "099": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "Not part of BF2 conversion", "NOTE:OCLC": "Local Free-Text Call Number. Field 099 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
 
     "100": {
       "aboutEntity": "?work",
@@ -5357,7 +5360,7 @@
     },
 
     "306": {},
-    "307": {"NOTE:record-count": 0, "ignored": true},
+    "307": { "ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "Används företrädesvis för elektroniska resurser."},
 
     "310": {
       "aboutEntity": "?thing",
@@ -5518,8 +5521,8 @@
         "property": "label"
       }
     },
-    "342": {"NOTE:record-count": 0, "ignored": true},
-    "343": {"NOTE:record-count": 0, "ignored": true},
+    "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "344": {},
     "345": {},
     "346": {},
@@ -5540,6 +5543,7 @@
       "TODO:$2": "Source (NR)",
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
+    "348": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "musicFormat", "NOTE": "Not in generated marcframe"},
     "351": {},
     "352": {
       "linkSubsequentRepeated": {
@@ -5571,29 +5575,30 @@
         "property": "label"
       }
     },
-    "355": {"NOTE:record-count": 0, "ignored": true},
-    "357": {},
+    "355": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "357": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "362": {
+      "TOOO:i1": {},
       "aboutEntity": "?thing",
       "$a": {"addProperty": "issueNumber"}
     },
-    "363": {},
-    "365": {},
-    "366": {},
-    "370": {"NOTE:record-count": 0, "ignored": true},
-    "377": {"NOTE:record-count": 0, "ignored": true},
-    "380": {},
-    "381": {"NOTE:record-count": 0, "ignored": true},
-    "382": {},
-    "383": {},
-    "384": {"NOTE:record-count": 0, "ignored": true},
-    "385": {},
-    "386": {},
-    "388": {"NOTE:record-count": 0, "ignored": true},
+    "363": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "365": {"ignored": true, "NOTE:record-count": 8066, "NOTE:LC": "nac", "NOTE:local": "Avsett för bokhandelns information"},
+    "366": {"ignored": true, "NOTE:record-count": 8066, "NOTE:LC": "nac", "NOTE:local": "Avsett för bokhandelns information"},
+    "370": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "377": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "380": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "genreForm", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "381": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "382": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "musicMedium", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "383": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "384": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "385": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "intendedAudience", "TODO": "For imports"},
+    "386": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "creatorCharacteristic", "TODO": "For imports"},
+    "388": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
 
-    "400": {},
-    "410": {},
-    "411": {},
+    "400": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
+    "410": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
+    "411": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
 
     "440": {
       "TODO:ignoreOnRevertInFavourOf": "490 or 773 or 830? See also mapping for 240",
@@ -6010,8 +6015,8 @@
       "$3": {"property": "marc:materialsSpecified"},
       "NOTE:i1": "ignore"
     },
-    "583": {},
-    "584": {"NOTE:record-count": 0, "ignored": true},
+    "583": {"ignored": true, "NOTE:record-count": 740, "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST"},
+    "584": {"ignored": true, "NOTE:record-count": 0},
     "585": {
       "aboutEntity": "?thing",
       "addLink": "hasNote",
@@ -10625,8 +10630,15 @@
       "$a": {"property": "bindingInformation"},
       "repeatable": true
     },
-    "583": {},
-
+    "583": {
+      "addLink": "hasNote",
+      "resourceType": "ActionNote",
+      "TODO:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 1 post",
+      "$a": {"property": "label"},
+      "$b": {"addProperty": "marc:actionIdentification"},
+      "$x": {"addProperty": "marc:nonpublicNote", "TODO": "ignore?"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+    },
     "599": {
       "ignored": true,
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
@@ -10651,7 +10663,13 @@
     "651": {},
     "653": {},
     "655": {},
-    "698": {},
+    "698": {
+      "addLink": "marc:hasHold698",
+      "resourceType": "marc:Hold698",
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "$a": {"property": "code"},
+      "$b": {"property": "label"}
+    },
 
     "700": {},
     "710": {},
@@ -10659,10 +10677,38 @@
     "787": {},
 
     "841": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ"},
-    "842": {},
-    "843": {},
-    "844": {},
-    "845": {},
+    "842": {
+      "NOTE:LC": "nac",
+      "link": "hasNote",
+      "resourceType": "marc:TextualPhysicalFormDesignator",
+      "$a": {"property": "label"},
+      "repeatable": false
+    },
+    "843": {
+      "addLink": "hasNote",
+      "resourceType": "marc:ReproductionNote",
+      "NOTE": "same marc-structure as bib:533, but that one uses provisionActivity and has Reproduction which is limited to instance",
+      "NOTE:LC": "nac",
+      "$a": {"property": "marc:typeOfReproduction"},
+      "$b": {"addProperty": "marc:placeOfReproduction"},
+      "$c": {"addProperty": "marc:agencyResponsibleForReproduction"},
+      "$d": {"property": "marc:dateOfReproduction"},
+      "$e": {"property": "marc:physicalDescriptionOfReproduction"},
+      "$3": {"property": "marc:materialsSpecified"}
+    },
+    "844": {
+      "link": "marc:hasNameOfUnit",
+      "resourceType": "marc:NameOfUnit",
+      "$a": {"property": "marc:nameOfUnit"}
+    },
+    "845": {
+      "addLink": "hasNote",
+      "resourceType": "marc:TermsGoverningUseAndReproductionNote",
+      "NOTE:LC": "nac",
+      "$a": {"property": "marc:termsGoverningUseAndReproduction"},
+      "$b": {"property": "marc:jurisdiction"},
+      "$c": {"property": "marc:authorization"}
+    },
 
     "852": {
       "aboutType": "Item",
@@ -10820,14 +10866,41 @@
       "repeatable": true
     },
 
-    "876": {},
-    "877": {},
-    "878": {},
+    "876": {
+      "addLink": "marc:hasItemInformationBasicBibliographicUnit",
+      "resourceType": "marc:ItemInformationBasicBibliographicUnit",
+      "NOTE:LC": "nac",
+      "$a": {"property": "marc:internalItemNumber"},
+      "$b": {"addProperty": "marc:invalidOrCanceledInternalItemNumber"},
+      "$c": {"addProperty": "marc:cost"},
+      "$d": {"addProperty": "marc:dateAcquired"},
+      "$e": {"addProperty": "marc:sourceOfAcquisition"},
+      "$h": {"addProperty": "marc:useRestrictions"},
+      "$j": {"addProperty": "marc:itemStatus"},
+      "$l": {"addProperty": "marc:temporaryLocation"},
+      "$p": {"addProperty": "marc:pieceDesignation"},
+      "$r": {"addProperty": "marc:invalidOrCanceledPieceDesignation"},
+      "$t": {"property": "marc:copyNumber"},
+      "$x": {"addProperty": "marc:nonpublicNote", "TODO": "ignore?"},
+      "$z": {"addProperty": "marc:publicNote"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$9": {"addProperty": "organizationalUnit"}
+    },
+    "877": {
+      "inherit": "876",
+      "addLink": "marc:hasItemInformationSupplementaryMaterial",
+      "resourceType": "marc:ItemInformationSupplementaryMaterial",
+      "NOTE:LC": "nac"
+    },
+    "878": {"ignored": true, "NOTE:record-count": 9, "NOTE:LC": "nac"},
 
     "880": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "LIBRIS-definierat beståndsfält."},
     "883": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "LIBRIS-definierat beståndsfält."},
     "884": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "LIBRIS-definierat beståndsfält."},
-    "886": {},
+    "886": {
+      "inherit": "bib",
+      "NOTE:LC": "nac"
+    },
     "887": {"ignored": true, "NOTE:LC": "nac", "NOTE:local": "Maskinellt genererad information från LIBRIS XL till Voyager"},
 
     "948": {},
