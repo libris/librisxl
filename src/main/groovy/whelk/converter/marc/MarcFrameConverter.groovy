@@ -1453,6 +1453,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     List<List<MarcSubFieldHandler>> orderedAndGroupedSubfields
     List<MatchRule> matchRules
     Map<String, Map> pendingResources
+    String aboutAlias
     String ignoreOnRevertInFavourOf
 
     static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
@@ -1463,6 +1464,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         ind1 = fieldDfn.i1 ? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1) : null
         ind2 = fieldDfn.i2 ? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2) : null
         pendingResources = fieldDfn.pendingResources
+        aboutAlias = fieldDfn.aboutAlias
 
         dependsOn = fieldDfn.dependsOn
 
@@ -1482,8 +1484,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         matchRules = MatchRule.parseRules(this, fieldDfn) ?: Collections.emptyList()
 
+        // TODO: remove old aboutAlias mechanism (more of a hack)
         def aboutAlias = fieldDfn['about']
-
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
             if (m) {
@@ -1584,6 +1586,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def localEntities = [:]
 
+        if (aboutAlias) {
+            localEntities[aboutAlias] = entity
+        }
+
         [ind1: ind1, ind2: ind2].each { indKey, handler ->
             if (!handler)
                 return
@@ -1667,6 +1673,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         // If subsumeSingle && only one item: merge it with parent.
         localEntities.keySet().each {
+            if (it == aboutAlias) return
             def pending = (Map) pendingResources[it]
             if (pending.subsumeSingle) {
                 def link = (String) (pending.link ?: pending.addLink)
@@ -1743,7 +1750,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map getLocalEntity(Map state, Map owner, String id, Map localEntities, boolean forceNew = false) {
         def entity = (Map) localEntities[id]
         if (entity == null || forceNew) {
-            assert pendingResources, "Missing pendingResources in ${fieldId}, cannot use ${id}"
+            assert id in pendingResources, "Missing pendingResources in ${fieldId}, cannot use ${id}"
             def pending = pendingResources[id]
             entity = localEntities[id] = newEntity(state,
                     (String) pending.resourceType,
@@ -1847,6 +1854,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Tuple2<Boolean, Map<String, List>> buildAboutMap(Map entity) {
         Map<String, List> aboutMap = [:]
         boolean shouldMap = true
+
+        if (aboutAlias) {
+            aboutMap[aboutAlias] = [entity]
+        }
+
         if (!pendingResources) {
             return new Tuple2<Boolean, Map>(shouldMap, aboutMap)
         }
