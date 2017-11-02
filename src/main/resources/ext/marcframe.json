@@ -4254,6 +4254,7 @@
       "$d": {"property": "legalDate"},
       "$n": {"property": "partNumber"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
+      "subfieldOrder": "a d m n r p k l s f o",
       "_spec": [
         {
           "source": {
@@ -4267,8 +4268,8 @@
             "130": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
               {"d": "(1968)."},
-              {"f": "1977."},
-              {"l": "Spanish."}
+              {"l": "Spanish."},
+              {"f": "1977."}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -8605,7 +8606,14 @@
 
     "751": {},
     "752": {},
-    "753": {},
+    "753": {
+      "aboutEntity": "?thing",
+      "addLink": "systemRequirement",
+      "resourceType": "SystemRequirement",
+      "$a": {"property": "marc:machineModel"},
+      "$b": {"property": "marc:programmingLanguage"},
+      "$c": {"property": "marc:operatingSystem"}
+    },
     "754": {},
     "755": {},
 
