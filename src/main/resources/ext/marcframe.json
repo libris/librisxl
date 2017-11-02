@@ -8380,21 +8380,18 @@
       "aboutEntity": "?work",
       "addLink": "contribution",
       "resourceType": "Contribution",
-      "TODO:Person": "Will probably get mixed up with 700...",
+      "pendingResources": {
+        "_:agent": {"link": "agent", "resourceType": "Agent"}
+      },
       "match": [
         {
           "when": "i1=1",
-          "NOTE:agentdataNameOfPerson": "Using agentdataPerson instead because splits incorrectly on strings like 'V. D. H., pseud. för Pieter de la Court'",
-          "include": "agentdataPerson",
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Person"}
           }
         }
       ],
-      "pendingResources": {
-        "_:agent": {"link": "agent", "resourceType": "Agent"}
-      },
-      "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"},
+      "$a": {"about": "_:agent", "property": "marc:uncontrolledName", "required": true, "punctuationChars": ")"},
       "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
       "_spec": [
@@ -8410,7 +8407,7 @@
               "contribution": [
                 {
                   "@type": "Contribution",
-                  "agent": {"@type": "Agent", "name": "Mukhtar Bashir Mudey."},
+                  "agent": {"@type": "Agent", "marc:uncontrolledName": "Mukhtar Bashir Mudey."},
                   "role": [{"@type": "Role", "code": "ill"}]}
               ]
             }
@@ -8427,7 +8424,7 @@
               "contribution": [
                 {
                   "@type": "Contribution",
-                  "agent": {"@type": "Person", "name": "V. D. H., pseud. för Pieter de la Court"}}
+                  "agent": {"@type": "Person", "marc:uncontrolledName": "V. D. H., pseud. för Pieter de la Court"}}
               ]
             }
           }}
