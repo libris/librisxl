@@ -8615,11 +8615,53 @@
       ]
     },
 
-    "751": {},
-    "752": {},
+    "751": {
+      "addLink": "marc:hasAddedEntryGeographicName",
+      "resourceType": "marc:AddedEntryGeographicName",
+      "$a": {"property": "marc:geographicName"},
+      "$e": {"addProperty": "marc:relatorTerm"},
+      "$2": {"property": "marc:sourceOfHeadingOrTerm"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$4": {"addProperty": "marc:relatorCode"},
+      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+    },
+    "752": {
+      "addLink": "marc:hasAddedEntryHierarchicalPlaceName",
+      "resourceType": "marc:AddedEntryHierarchicalPlaceName",
+      "$a": {"addProperty": "marc:countryOrLargerEntity"},
+      "$b": {"property": "marc:firstOrderPoliticalJurisdiction"},
+      "$c": {"addProperty": "marc:intermediatePoliticalJurisdiction"},
+      "$d": {"property": "marc:city"},
+      "$f": {"addProperty": null},
+      "$g": {"addProperty": "marc:otherNonjurisdictionalGeographicRegionAndFeature"},
+      "$h": {"addProperty": "marc:extraterrestrialArea"},
+      "$2": {"property": "marc:sourceOfHeadingOrTerm"},
+      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+    },
     "753": {},
-    "754": {},
-    "755": {},
+    "754": {
+      "addLink": "marc:hasAddedEntryTaxonomicIdentification",
+      "resourceType": "marc:AddedEntryTaxonomicIdentification",
+      "$a": {"addProperty": "marc:taxonomicName"},
+      "$c": {"addProperty": "marc:taxonomicCategory"},
+      "$d": {"addProperty": "marc:commonOrAlternativeName"},
+      "$x": {"addProperty": "marc:nonPublicNote"},
+      "$z": {"addProperty": "marc:publicNote"},
+      "$2": {"property": "marc:sourceOfTaxonomicIdentification"},
+      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+    },
+    "755": {
+      "addLink": "marc:hasPhysicalCharacteristicsAddedEntryOBSOLETE",
+      "resourceType": "marc:PhysicalCharacteristicsAddedEntryOBSOLETE",
+      "obsolete": true,
+      "$a": {"property": "marc:accessTerm"},
+      "$v": {"property": "marc:form"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$2": {"property": "marc:sourceOfTerm"},
+      "$3": {"property": "marc:materialsSpecified"}
+    },
 
     "760": {"NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSeries", "resourceType": "Instance"},
     "762": {"NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSubseries", "resourceType": "Instance"},
