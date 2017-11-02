@@ -10845,7 +10845,7 @@
             {"410": {"ind1": "2", "ind2": " ", "subfields": [{"a": "CISNU"}]}},
             {"410": {"ind1": "2", "ind2": " ", "subfields": [{"w": "nnaa"}, {"a": "Conföderation Iranischer Studenten"}]}}
           ],
-          "FIXME:result": {
+          "FIXME:revert-result": {
             "mainEntity": {
               "@type": "Organization",
               "exactMatch": [
@@ -10855,7 +10855,8 @@
                 },
                 {
                   "@type": "Organization",
-                  "name": "Conföderation Iranischer Studenten"
+                  "name": "Conföderation Iranischer Studenten",
+                  "marc:controlSubfield": "nnaa"
                 }
               ]
             }
@@ -11294,7 +11295,7 @@
             {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Thor, Clas,"}, {"d": "1951-"}]}},
             {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Westerborn, Magnus,"}, {"d": "1953-"}]}}
           ],
-          "result": {
+          "FIXME:revert-result": {
             "mainEntity": {
               "@type": "Person",
               "hasPersona": [
@@ -11697,7 +11698,7 @@
             {"511": {"ind1": "2", "ind2": " ", "subfields": [{"w": "a"}, {"a": "International Drip Irrigation Meeting"}]}},
             {"511": {"ind1": "2", "ind2": " ", "subfields": [{"w": "b"}, {"a": "International Drip/Trickle Irrigation Congress"}]}}
             ],
-          "result": {
+          "FIXME:revert-result": {
             "mainEntity": {
               "@type": "Meeting",
               "seeAlso": [
