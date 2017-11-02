@@ -4786,8 +4786,18 @@
       "$a": {"link": "digitalCharacteristic", "resourceType": "FileType", "property": "label"}
     },
 
-    "257": {},
-    "258": {},
+    "257": {
+      "addLink": "marc:hasCountryOfProducingEntityForArchivalFilms",
+      "resourceType": "marc:CountryOfProducingEntityForArchivalFilms",
+      "$a": {"property": "marc:countryOfProducingEntity"},
+      "$2": {"property": null}
+    },
+    "258": {
+      "addLink": "marc:hasPhilatelicIssueDate",
+      "resourceType": "marc:PhilatelicIssueDate",
+      "$a": {"property": "marc:issuingJurisdiction"},
+      "$b": {"property": "marc:denomination"}
+    },
 
     "260": {
       "aboutEntity": "?thing",
