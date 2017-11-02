@@ -553,14 +553,13 @@ class MarcRuleSet {
                 def baseDfn = config['patterns'][include]
                 assert tag && baseDfn
                 if (baseDfn.include) {
-                    baseDfn = processInclude(config, baseDfn, tag)
+                    baseDfn = processInclude(config, baseDfn, "$tag+$include")
                 }
-                assert tag && !(baseDfn.keySet().intersect(fieldDfn.keySet()) - 'include')
-                merged += baseDfn
+                mergeFieldDefinitions(baseDfn, merged, "$tag+$include")
             }
         }
 
-        merged += fieldDfn
+        mergeFieldDefinitions(fieldDfn, merged, tag)
         merged.remove('include')
 
         def matchRules = merged['match']
@@ -571,6 +570,26 @@ class MarcRuleSet {
         }
 
         return merged
+    }
+
+    static void mergeFieldDefinitions(Map sourceDfn, Map targetDfn, String tag) {
+        def targetPending = targetDfn.remove('pendingResources')
+        assert tag && !(sourceDfn.keySet().intersect(targetDfn.keySet())
+                - 'include' - 'NOTE' - 'TODO')
+
+        // Treat pendingResources specially by merging them.
+        def sourcePending = sourceDfn.pendingResources
+        if (sourcePending) {
+            targetPending = targetPending ?: [:]
+            //assert tag && !(targetPending.keySet().intersect(sourcePending.keySet()))
+            targetPending.putAll(sourcePending)
+        }
+
+        targetDfn.putAll(sourceDfn)
+
+        if (targetPending) {
+            targetDfn.pendingResources = targetPending
+        }
     }
 
     boolean matchesData(Map data) {
