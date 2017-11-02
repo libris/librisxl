@@ -10087,16 +10087,31 @@
       "$a": {"property": "gender"}
     },
     "376": {
+      "aboutType": "Agent",
       "addLink": "marc:hasAuth376",
       "resourceType": "marc:Auth376",
-      "$a": {"addProperty": "marc:typeOfFamily"}
+      "$a": {"addProperty": "typeOfFamily"},
+      "$b": {"addProperty": "prominentFamilyMember"}
     },
-    "377": {},
+    "377": {
+      "aboutEntity": "?thing",
+      "aboutType": "Agent",
+      "addLink": "associatedLanguage", "resourceType": "Language",
+      "$a": {"addProperty": "label"},
+      "$2": {"property": "marc:sourceOfTerm"}
+    },
     "378": {
       "TODO": "Depends on bib 100, 700 and auth 100 $q 'marc:fullerFormName'. See mads:fullNameElement ",
       "$q": {"property": "marc:fullerFormName"}
     },
-    "380": {"ignored": true, "NOTE:record-count": 2},
+    "380": {
+      "addLink": "genreForm",
+      "resourceType": "GenreForm",
+      "TODO": "link to gf",
+      "$a": {"addProperty": "label"},
+      "$0": {},
+      "$2": {"property": "marc:sourceOfTerm"}
+    },
     "381": {"ignored": true, "NOTE:record-count": 0},
     "382": {"ignored": true, "NOTE:record-count": 0},
     "383": {"ignored": true, "NOTE:record-count": 0},
