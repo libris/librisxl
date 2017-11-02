@@ -4759,8 +4759,12 @@
       ]
     },
 
-    "254": {},
 
+    "254": {
+      "Link": "marc:hasMusicalPresentationStatement",
+      "resourceType": "marc:MusicalPresentationStatement",
+      "$a": {"property": "marc:musicalPresentationStatement"}
+    },
     "255": {
       "NOTE:domainIncludes": "Cartography",
       "aboutEntity": "?work",
