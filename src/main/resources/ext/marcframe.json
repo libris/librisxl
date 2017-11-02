@@ -8654,18 +8654,15 @@
       "TODO:aboutEntity?": "?series",
       "TODO:revert": "Get mixed up with 440",
       "include": "titledetails1xx7xx",
-      "embedded": true,
       "pendingResources": {
         "_:contribution": {
           "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
+          "resourceType": "PrimaryContribution"
         },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
-          "resourceType": "Person",
-          "embedded": false
+          "resourceType": "Person"
         }
       },
       "match": [
@@ -8677,14 +8674,12 @@
           "pendingResources": {
             "_:contribution": {
               "addLink": "contribution",
-              "resourceType": "PrimaryContribution",
-              "embedded": true
+              "resourceType": "PrimaryContribution"
             },
             "_:agent": {
               "about": "_:contribution",
               "link": "agent",
-              "resourceType": "Family",
-              "embedded": false
+              "resourceType": "Family"
             }
           }
         }
@@ -8694,9 +8689,9 @@
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
       "$x": {"property": "issn", "punctuationChars": ".,=;"},
-      "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "$e": {"addLink": "role", "property": "label"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
+      "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "_spec": [
         {
           "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
@@ -8799,7 +8794,140 @@
         }
       ]
     },
-    "810": {},
+    "810": {
+      "addLink": "hasSeries",
+      "resourceType": "Serial",
+      "TODO:aboutEntity?": "?series",
+      "TODO:revert": "Get mixed up with 440",
+      "include": ["agentdataOrganization", "titledetails1xx7xx"],
+      "embedded": true,
+      "pendingResources": {
+        "_:contribution": {
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution"
+        },
+        "_:agent": {
+          "about": "_:contribution",
+          "link": "agent",
+          "resourceType": "Organization"
+        },
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+      },
+      "match": [
+        {
+          "when": "i1=1",
+          "match": [
+            {
+              "when": "$b", "include": "agentdataOrganizationSubUnit"
+            }
+          ],
+          "include": "agentdataOrganization",
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Jurisdiction",
+              "embedded": false
+            },
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          }
+        },
+        {
+          "when": "$b",
+          "include": "agentdataOrganizationSubUnit"
+        }
+      ],
+      "$t": {"property": "title"},
+      "$w": {"addProperty": "bibliographicRecordControlNumber"},
+      "$v": {"property": "seriesEnumeration"},
+      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
+      "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "_spec": [
+        {
+          "source": {"810": {"ind1": "2", "ind2": " ", "subfields": [
+            {"a": "German Institute of Global and Area Studies <Hamburg>,"},
+            {"t": "GIGA working papers"},
+            {"v": "v 40"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Organization",
+                  "name": "German Institute of Global and Area Studies <Hamburg>,"
+                }
+              }],
+              "seriesEnumeration": "v 40",
+              "title": "GIGA working papers"
+            } ]
+          }}
+        },
+        {
+          "source": {"810": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Buenos Aires (Argentina)."},
+            {"b": "Universidad nacional."},
+            {"b": "Instituto de Literatura Española."},
+            {"t": "Bibliografías criticas ;"},
+            {"v": "1"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Jurisdiction",
+                  "marc:subordinateUnit": ["Universidad nacional.", "Instituto de Literatura Española."],
+                  "isPartOf": {
+                    "@type": "Jurisdiction",
+                    "name": "Buenos Aires (Argentina)."
+                  }
+                }
+              }],
+              "seriesEnumeration": "1",
+              "title": "Bibliografías criticas ;"
+            } ]
+          }}
+        },
+        {
+          "source": {"810": {"ind1": "2", "ind2": " ", "subfields": [
+            {"a": "Harvard University."},
+            {"b": "Bureau of Business Research."},
+            {"t": "Bulletin"},
+            {"v": "no. 20."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Organization",
+                  "marc:subordinateUnit": ["Bureau of Business Research."],
+                  "isPartOf": {
+                    "@type": "Organization",
+                    "name": "Harvard University."
+                  }
+                }
+              }],
+              "seriesEnumeration": "no. 20.",
+              "title": "Bulletin"
+            } ]
+          }}
+        }
+      ]
+    },
     "811": {},
     "830": {
       "aboutEntity": "?work",
