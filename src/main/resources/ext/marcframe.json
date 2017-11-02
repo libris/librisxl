@@ -3621,7 +3621,16 @@
       "$b": {"property": "itemPortion"}
     },
 
-    "051": {"ignored": true, "NOTE:record-count": 488, "NOTE:local":"ANVÄNDS NORMALT EJ", "NOTE:LC": "Item - shelfMark - ShelfMarkLcc"},
+    "051": {
+      "addLink": "marc:hasLibraryOfCongressCopyIssueOffprintStatement",
+      "resourceType": "marc:LibraryOfCongressCopyIssueOffprintStatement",
+      "NOTE:record-count": 488,
+      "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "TODO": "Item - shelfMark - ShelfMarkLcc?",
+      "$a": {"property": "marc:classificationNumber"},
+      "$b": {"property": "marc:itemNumber"},
+      "$c": {"property": "marc:copyInformation"}
+    },
     "052": {},
     "055": {},
     "060": {
