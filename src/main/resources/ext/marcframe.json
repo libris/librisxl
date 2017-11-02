@@ -8392,7 +8392,7 @@
           }
         }
       ],
-      "$a": {"about": "_:agent", "property": "marc:uncontrolledName", "required": true, "punctuationChars": ")"},
+      "$a": {"about": "_:agent", "property": "label", "required": true, "punctuationChars": ")"},
       "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
       "_spec": [
@@ -8408,7 +8408,7 @@
               "contribution": [
                 {
                   "@type": "Contribution",
-                  "agent": {"@type": "Agent", "marc:uncontrolledName": "Mukhtar Bashir Mudey."},
+                  "agent": {"@type": "Agent", "label": "Mukhtar Bashir Mudey."},
                   "role": [{"@type": "Role", "code": "ill"}]}
               ]
             }
@@ -8425,7 +8425,7 @@
               "contribution": [
                 {
                   "@type": "Contribution",
-                  "agent": {"@type": "Person", "marc:uncontrolledName": "V. D. H., pseud. för Pieter de la Court"}}
+                  "agent": {"@type": "Person", "label": "V. D. H., pseud. för Pieter de la Court"}}
               ]
             }
           }}
@@ -10052,7 +10052,11 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
-          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "$t & i1=1",
@@ -10071,7 +10075,11 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
-          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "$t & i1=3",
@@ -10090,7 +10098,11 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
-          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "$t",
@@ -10109,7 +10121,11 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
-          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "i1=0",
@@ -10122,7 +10138,11 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "i1=1",
@@ -10135,7 +10155,11 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "i1=3",
@@ -10148,7 +10172,11 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"}
         },
         {
           "when": null,
@@ -10161,9 +10189,16 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"}
         }
       ],
+      "$h": {"ignored": true},
+      "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"},
+      "$4": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "_spec": [
         {
           "source": {
@@ -10380,7 +10415,11 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
-          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "$b & $t & i1=1",
@@ -10400,7 +10439,11 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
-          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "$b & $t & i1=0",
@@ -10423,7 +10466,11 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
-          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "$t & i1=1",
@@ -10442,7 +10489,11 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
-          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "$t & i1=0",
@@ -10461,7 +10512,11 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "$b & i1=1",
@@ -10476,7 +10531,11 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "$b & i1=0",
@@ -10493,7 +10552,11 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "i1=1",
@@ -10506,7 +10569,11 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"}
         },
         {
           "when": "$t",
@@ -10523,10 +10590,17 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"}
         }
       ],
       "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
+      "$h": {"ignored": true},
+      "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"},
+      "$4": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "_spec": [
         {
           "source": {
@@ -10811,7 +10885,11 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
-          "$w": {"about": "_:work", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"}
         },
         {
           "when": null,
@@ -10825,10 +10903,17 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
-          "$w": {"about": "_:agent", "property": "marc:controlSubfield"}
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
+          "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"}
         }
       ],
       "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
+      "$h": {"ignored": true},
+      "$j": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"},
+      "$4": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "_spec": [
         {
           "source": {
@@ -10942,7 +11027,11 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
           "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -10962,7 +11051,11 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
           "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -10982,7 +11075,11 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
           "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11002,7 +11099,11 @@
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
           "$t": {"about": "_:work", "property": "title"},
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
           "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11015,7 +11116,11 @@
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label"},
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
           "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11028,7 +11133,11 @@
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label"},
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
           "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11041,7 +11150,11 @@
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label"},
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
           "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11054,12 +11167,19 @@
           "embedded": true,
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label"},
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
           "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
       "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
       "subfieldOrder": "w i a b c q d j e 4 t g m n p r s l k f o v x y z",
+      "$h": {"ignored": true},
+      "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"},
+      "$4": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "_spec": [
         {
           "source": {
@@ -11210,7 +11330,11 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
           "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11231,7 +11355,11 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
           "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11255,7 +11383,11 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
           "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11275,7 +11407,11 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
           "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11295,7 +11431,11 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
           "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11311,7 +11451,11 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
           "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11329,7 +11473,11 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
           "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11343,7 +11491,11 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
           "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11361,13 +11513,20 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
           "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
       "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
       "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
       "subfieldOrder": "w i a b c d g  e 4 t m n p r s l k f o v x y z",
+      "$h": {"ignored": true},
+      "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"},
+      "$4": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "_spec": [
         {
           "source": {
@@ -11453,7 +11612,11 @@
           },
           "$i": {"about": "_:work", "addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "$t": {"about": "_:work", "property": "title"},
+          "$v": {"about": "_:work", "property": "marc:formSubdivision"},
           "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:work", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11468,11 +11631,18 @@
           "TODO:alternative $a": {"addProperty": "altLabel"},
           "$i": {"addLink": "relation", "resourceType": "Role", "property": "label", "TODO": "or similar ('forskningsbiblioteksform')"},
           "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+          "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
           "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+          "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+          "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+          "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
       "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
+      "$h": {"ignored": true},
+      "$j": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"},
+      "$4": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "_spec": [
         {
           "source": {
