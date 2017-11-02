@@ -3595,7 +3595,20 @@
       "$n": {"property": "marc:endOfDateValid"}
     },
     "047": {},
-    "048": {},
+    "048": {
+      "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "addLink": "marc:hasNumberOfInstrumentsOrVoicesCode",
+      "resourceType": "marc:NumberOfInstrumentsOrVoicesCode",
+      "i2": {
+        "link": null,
+        "tokenMap": {
+          "7": "sourceSpecifiedInSubfield2"
+        }
+      },
+      "$a": {"addProperty": "marc:performerOrEnsemble"},
+      "$b": {"addProperty": "marc:soloist"},
+      "$2": {"property": "marc:sourceOfCode"}
+    },
     "049": {"ignored": true, "NOTE": "OCLC - Local Holdings. Field 049 is not part of the standard MARC 21 format."},
 
     "050": {
