@@ -17,6 +17,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 public class AuthenticationFilter implements Filter {
@@ -59,7 +61,7 @@ public class AuthenticationFilter implements Filter {
                 }
 
                 HashMap result = mapper.readValue(json, new TypeReference<Map<String, Object>>() {});
-                if (!isExpired(Long.parseLong(result.get("exp").toString()))) {
+                if (!isExpired(result.get("expires_at").toString())) {
                     request.setAttribute("user", result.get("user"));
                     chain.doFilter(request, response);
                 }else {
@@ -132,10 +134,15 @@ public class AuthenticationFilter implements Filter {
     }
     */
 
-    private boolean isExpired(long unixtime) {
-        Date now = new Date();
-        Date expires = new Date(unixtime);
-        return now.compareTo(expires) > 0;
+    private boolean isExpired(String expires_at) {
+        try {
+            Instant exp = Instant.parse(expires_at);
+            Instant now = Instant.now();
+            return now.compareTo(exp) > 0;
+        } catch(DateTimeParseException e) {
+            log.warn("Failed to parse token expiration: " + e);
+            return true;
+        }
     }
 
     /**

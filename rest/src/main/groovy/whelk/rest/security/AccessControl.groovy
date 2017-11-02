@@ -8,8 +8,8 @@ import whelk.exception.ModelValidationException
 
 @Log
 class AccessControl {
-    private static final XLREG_KEY = 'xlreg'
-    private static final KAT_KEY = 'kat'
+    private static final XLREG_KEY = 'registrant'
+    private static final KAT_KEY = 'cataloger'
 
     boolean checkDocumentToPost(Document newDoc, Map userPrivileges, JsonLd jsonld) {
         return checkDocument(newDoc, userPrivileges, jsonld)
@@ -68,8 +68,8 @@ class AccessControl {
             throw new ModelValidationException('Missing sigel in document.')
         }
 
-        userPrivileges.authorization.each { item ->
-            if (item.get("sigel") == sigel) {
+        userPrivileges.permissions.each { item ->
+            if (item.get("code") == sigel) {
                 boolean xlreg_permission = item.get(XLREG_KEY)
                 boolean kat_permission = item.get(KAT_KEY)
 
@@ -83,7 +83,7 @@ class AccessControl {
     }
 
     private boolean hasCatalogingPermission(Map userPrivileges) {
-        return userPrivileges.authorization.any { item ->
+        return userPrivileges.permissions.any { item ->
             item.get(KAT_KEY)
         }
     }
