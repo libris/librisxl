@@ -4611,7 +4611,7 @@
           "2": "DistinctiveTitle",
           "3": "marc:OtherTitle",
           "4": "CoverTitle",
-          "5": "TitlePage",
+          "5": "AddedTitlePageTitle",
           "6": "CaptionTitle",
           "7": "RunningTitle",
           "8": "SpineTitle"
