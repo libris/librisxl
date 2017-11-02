@@ -8928,7 +8928,81 @@
         }
       ]
     },
-    "811": {},
+    "811": {
+      "addLink": "hasSeries",
+      "resourceType": "Serial",
+      "TODO:aboutEntity?": "?series",
+      "TODO:revert": "Get mixed up with 440",
+      "include": ["agentdataMeeting", "titledetails1xx7xx"],
+      "i1": {"marcDefault": "2"},
+      "embedded": true,
+      "pendingResources": {
+        "_:contribution": {
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution"
+        },
+        "_:agent": {
+          "about": "_:contribution",
+          "link": "agent",
+          "resourceType": "Meeting"
+        },
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+      },
+      "$t": {"property": "title"},
+      "$w": {"addProperty": "bibliographicRecordControlNumber"},
+      "$v": {"property": "seriesEnumeration"},
+      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "_spec": [
+        {
+          "source": {"811": {"ind1": "2", "ind2": " ", "subfields": [
+            {"a": "Vatican Council"},
+            {"n": "(2nd: "},
+            {"d": "1962-1964)"},
+            {"t": "Decretum de presbyterorum ministerio et vita."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Meeting",
+                  "name": "Vatican Council",
+                  "marc:numberOfPartSectionMeeting": ["(2nd:"],
+                  "date": ["1962-1964)"]
+                }
+              }],
+              "title": "Decretum de presbyterorum ministerio et vita."
+            } ]
+          }}
+        },
+        {
+          "source": {"811": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Foo"},
+            {"t": "Bar"}
+          ]}},
+          "normalized": {"811": {"ind1": "2", "ind2": " ", "subfields": [
+            {"a": "Foo"},
+            {"t": "Bar"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Meeting",
+                  "name": "Foo"
+                }
+              }],
+              "title": "Bar"
+            } ]
+          }}
+        }
+      ]
+    },
     "830": {
       "aboutEntity": "?work",
       "addLink": "hasSeries",
