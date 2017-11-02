@@ -8652,10 +8652,9 @@
       "addLink": "hasSeries",
       "resourceType": "Serial",
       "TODO:aboutEntity?": "?series",
-      "include": "agentdata",
-      "$t": {"property": "title"},
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "TODO:revert": "Get mixed up with 440",
+      "include": "titledetails1xx7xx",
+      "embedded": true,
       "pendingResources": {
         "_:contribution": {
           "addLink": "contribution",
@@ -8669,6 +8668,35 @@
           "embedded": false
         }
       },
+      "match": [
+        {"when": "i1=0", "include": "agentdataPerson"},
+        {"when": "i1=1", "include": "agentdataNameOfPerson"},
+        {
+          "when": "i1=3",
+          "include": "agentdataFamily",
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Family",
+              "embedded": false
+            }
+          }
+        }
+      ],
+      "$t": {"property": "title"},
+      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+      "$w": {"addProperty": "bibliographicRecordControlNumber"},
+      "$v": {"property": "seriesEnumeration"},
+      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
+      "$e": {"addLink": "role", "property": "label"},
+      "$0": {"addLink": "identifiedBy", "property": "value"},
       "_spec": [
         {
           "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
@@ -8677,53 +8705,96 @@
             {"t": "Sandemo-serien ;"},
             {"v": "v 4"}
           ]}},
-          "TODO:result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasSeries": [
-                {
-                  "@type": "Serial"
-                }
-              ]
-            }
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Serial",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Person",
+                    "lifeSpan": "1924-",
+                    "familyName": "Sandemo",
+                    "givenName": "Margit"
+                  }
+                }],
+                "seriesEnumeration" : "v 4",
+                "title": "Sandemo-serien ;"
+              }
+            ]
           }}
         },
         {
-          "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
-            {"a": "  Feist, Raymond,"},
+          "source": {"800": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Raymond Feist"},
             {"t": "Demonwar saga."},
             {"l": "Svenska"},
             {"v": "v 2"}
           ]}},
-          "TODO:result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasSeries": [
-                {
-                  "@type": "Serial"
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution" : [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Person",
+                  "name": "Raymond Feist"
                 }
-              ]
-            }
+              }],
+              "language": {
+                "@type": "Language",
+                "label": "Svenska"
+              },
+              "seriesEnumeration": "v 2",
+              "title": "Demonwar saga."
+            }]
           }}
         },
         {
           "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
-            {"a": "  Sousa, John Philip,"},
+            {"a": "Sousa, John Philip,"},
             {"d": "1854-1932"},
             {"t": "Marches"},
             {"m": "band."},
             {"k": "Selections (Sousa American bicentennial collection);"} ,
             {"v": "v.1."}
           ]}},
-          "TODO:result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasSeries": [
-                {
-                  "@type": "Serial"
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Person",
+                  "familyName": "Sousa",
+                  "givenName": "John Philip",
+                  "lifeSpan": "1854-1932"
                 }
-              ]
-            }
+              }],
+              "marc:formSubheading": ["Selections (Sousa American bicentennial collection);"],
+              "musicMedium": ["band."],
+              "seriesEnumeration": "v.1.",
+              "title": "Marches"
+            } ]
+          }}
+        },
+        {
+          "source": {"800": {"ind1": "3", "ind2": " ", "subfields": [
+            {"a": "Family X"},
+            {"t": "A title"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Family",
+                  "name": "Family X"
+                }
+              }],
+              "title": "A title"
+            } ]
           }}
         }
       ]
