@@ -8668,7 +8668,65 @@
           "resourceType": "Person",
           "embedded": false
         }
-      }
+      },
+      "_spec": [
+        {
+          "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Sandemo, Margit"},
+            {"d": "1924-"},
+            {"t": "Sandemo-serien ;"},
+            {"v": "v 4"}
+          ]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasSeries": [
+                {
+                  "@type": "Serial"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "  Feist, Raymond,"},
+            {"t": "Demonwar saga."},
+            {"l": "Svenska"},
+            {"v": "v 2"}
+          ]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasSeries": [
+                {
+                  "@type": "Serial"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "  Sousa, John Philip,"},
+            {"d": "1854-1932"},
+            {"t": "Marches"},
+            {"m": "band."},
+            {"k": "Selections (Sousa American bicentennial collection);"} ,
+            {"v": "v.1."}
+          ]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasSeries": [
+                {
+                  "@type": "Serial"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "810": {},
     "811": {},
