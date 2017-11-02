@@ -10847,9 +10847,9 @@
     "630": {"inherit": "bib:630", "aboutEntity": null},
     "648": {"inherit": "bib:648", "aboutEntity": null},
     "650": {"inherit": "bib:650", "aboutEntity": null},
-    "651": {},
-    "653": {},
-    "655": {},
+    "651": {"inherit": "bib:651", "aboutEntity": null},
+    "653": {"inherit": "bib:653", "aboutEntity": null},
+    "655": {"inherit": "bib:655", "aboutEntity": null},
     "698": {
       "addLink": "marc:hasHold698",
       "resourceType": "marc:Hold698",
@@ -10861,7 +10861,7 @@
     "700": {"inherit": "bib:700", "aboutEntity": null},
     "710": {"inherit": "bib:710", "aboutEntity": null},
     "752": {},
-    "787": {},
+    "787": {"inherit": "bib:787", "aboutEntity": null},
 
     "841": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ"},
     "842": {
