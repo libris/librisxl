@@ -10876,6 +10876,7 @@
       "$2": {"property": "sourceOfClassificationOrShelfMarkScheme"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$8": {"property": "sequenceNumber"},
+      "$9": {"addProperty": "organizationalUnit"},
       "$a": {"property": "location"},
       "$b": {
         "link": "heldBy",
@@ -10887,7 +10888,7 @@
         "TODO": "move to mainEntity and auto-repeat here",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
       },
-      "$c": {"addProperty": "shelfLocation"},
+      "$c": {"addProperty": "physicalLocation"},
       "$d": {"addProperty": "formerShelfLocation"},
       "$e": {"addProperty": "address"},
       "$f": {"addProperty": "codedLocationQualifier"},
