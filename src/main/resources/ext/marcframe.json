@@ -5337,7 +5337,10 @@
 
     "261": {},
     "262": {},
-    "263": {},
+    "263": {
+      "aboutEntity": "?thing",
+      "$a": {"property": "projectedProvisionDate"}
+    },
 
     "264": {
       "TOOO:i1": {},
@@ -5713,7 +5716,16 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "348": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "musicFormat", "NOTE": "Not in generated marcframe"},
-    "351": {},
+    "351": {
+      "aboutEntity": "?work",
+      "addLink": "arrangement",
+      "resourceType": "Arrangement",
+      "$a": {"addProperty": "organization"},
+      "$b": {"addProperty": "pattern"},
+      "$c": {"property": "hierarchicalLevel"},
+      "TODO:3": "",
+      "TODO:6": ""
+    },
     "352": {
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
@@ -5800,7 +5812,13 @@
       "TODO:$5": {"property": "marc:institutionToWhichFieldApplies"},
       "repeatable": true
     },
-    "501": {},
+    "501": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "Note",
+      "$a": {"property": "marc:withNote"},
+      "TODO:$5": "?"
+    },
     "502": {
       "aboutEntity": "?work",
       "addLink": "dissertation", "resourceType": "Dissertation",
@@ -5991,7 +6009,11 @@
       "resourceType": "GeographicCoverage",
       "$a": {"property": "label"}
     },
-    "524": {},
+    "524": {
+      "aboutEntity": "?thing",
+      "$a": {"property": "preferredCitation"},
+      "TODO:$2": "?"
+    },
     "525": {
       "aboutEntity": "?thing",
       "$a": {"addProperty": "supplementaryContentNote", "TODO": "supplementaryContentNote or supplementaryContent?"}
@@ -6049,7 +6071,27 @@
       ]
     },
 
-    "534": {},
+    "534": {
+      "addLink": "hasNote",
+      "resourceType": "Note",
+      "$a": {"property": "marc:mainEntryOfOriginal"},
+      "$b": {"property": "marc:editionStatementOfOriginal"},
+      "$c": {"property": "marc:publicationDistributionEtcOfOriginal"},
+      "$e": {"property": "marc:physicalDescriptionEtcOfOriginal"},
+      "$f": {"addProperty": "marc:seriesStatementOfOriginal"},
+      "$k": {"addProperty": "marc:keyTitleOfOriginal"},
+      "$l": {"property": "marc:locationOfOriginal"},
+      "$m": {"property": "marc:materialSpecificDetails"},
+      "$n": {"addProperty": "marc:noteAboutOriginal"},
+      "$o": {"addProperty": "marc:otherResourceIdentifier"},
+      "$p": {"property": "marc:introductoryPhrase"},
+      "$t": {"property": "marc:titleStatementOfOriginal"},
+      "$x": {"addProperty": "marc:internationalStandardSerialNumber"},
+      "$z": {"addProperty": "marc:internationalStandardBookNumber"},
+      "TODO:$3": "?",
+      "TODO:$6": "?",
+      "TODO:$8": "?"
+    },
     "535": {},
     "536": {
       "aboutEntity": "?thing",
