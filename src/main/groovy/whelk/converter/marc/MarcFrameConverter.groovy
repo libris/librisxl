@@ -1630,7 +1630,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             constructProperties.each { key, dfn ->
                 if (!(key in entity)) {
                     def parts = Util.getAllByPath(entity, (String) dfn.property)
-                    if (parts?.size() > 1) {
+                    if (parts?.size() > 1 && !parts.any { it.is(null) }) {
                         def constructed = parts.join((String) dfn.join)
                         entity[key] = constructed
                         uriTemplateParams[key] = constructed
@@ -2463,7 +2463,11 @@ class Util {
             if (chain.size() > 1) {
                 collectByChain(value, chain.subList(1, chain.size()), results)
             } else {
-                results.addAll(asList(value))
+                if (value instanceof List) {
+                    results.addAll(value)
+                } else {
+                    results << value
+                }
             }
         }
     }
