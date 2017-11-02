@@ -10012,7 +10012,7 @@
     },
     "370": {
       "aboutEntity": "?thing",
-      "addLink": "marc:hasAuth370",
+      "addLink": "hasAssociatedLocale",
       "resourceType": "marc:Auth370",
       "$a": {"property": "marc:placeOfBirth"},
       "$b": {"property": "marc:placeOfDeath"},
