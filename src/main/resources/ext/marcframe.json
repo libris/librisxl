@@ -10028,9 +10028,8 @@
       "aboutEntity": "?thing",
       "aboutType": "Agent",
       "addLink": "fieldOfActivity", "resourceType": "FieldOfActivity",
-      "$a": {"addProperty": "label"},
-      "$2": {"property": "marc:source"},
-      "repeatable": true,
+      "$a": {"property": "label"},
+      "$2": {"link": "source", "property": "code"},
       "_spec": [
         {
           "source": {
@@ -10042,18 +10041,24 @@
             "mainEntity": {
               "@type": "Agent",
               "fieldOfActivity": [
-                      {
-                        "@type": "FieldOfActivity",
-                        "label": ["Kriminologi"],
-                        "marc:source": "sao"
-                      }
-                    ]
+                {
+                  "@type": "FieldOfActivity",
+                  "label": "Kriminologi",
+                  "source": {"code": "sao"}
+                }
+              ]
             }
           }
         }
       ]
     },
-    "373": {},
+    "373": {
+      "aboutEntity": "?thing",
+      "aboutType": "Agent",
+      "addLink": "hasAffiliation", "resourceType": "Affiliation",
+      "$a": {"addProperty": "label"},
+      "$2": {"property": "marc:source"}
+    },
     "374": {
       "aboutEntity": "?thing",
       "aboutType": "Agent",
