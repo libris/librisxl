@@ -3497,7 +3497,8 @@
       "$c": {"addProperty": "marc:termsOfAvailability"},
       "$f": {"addProperty": "marc:formOfIssue"},
       "$g": {"addProperty": "marc:additionalFormatCharacteristics"},
-      "$n": {"addProperty": "marc:note"}
+      "$n": {"addProperty": "marc:note"},
+      "$6": {"property": "marc:fieldref"}
     },
 
     "038": {
@@ -3866,7 +3867,8 @@
     },
     "088": {
       "include": ["identifier"],
-      "resourceType": "ReportNumber"
+      "resourceType": "ReportNumber",
+      "$6": {"property": "marc:fieldref"}
     },
     "090": {"ignored": true, "NOTE:record-count": 67, "NOTE:LC": "OBSOLETE, 1982", "NOTE:OCLC": "Locally Assigned LC-type Call Number. Field 090 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
     "092": {"ignored": true, "NOTE:record-count": 15, "NOTE:LC": "Not part of BF2 conversion", "NOTE:OCLC": "Locally Assigned Dewey Call Number. Field 092 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
