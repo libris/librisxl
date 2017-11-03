@@ -6214,7 +6214,14 @@
       "$e": {"addProperty": "inventoryLevel"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
-    "563": {},
+    "563": {
+      "addLink": "marc:hasBindingInformation",
+      "resourceType": "marc:BindingInformation",
+      "$a": {"property": "marc:bindingNote"},
+      "$u": {"addProperty": "marc:uniformResourceIdentifier"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$5": {"property": "marc:institutionToWhichFieldApplies"}
+    },
     "565": {"NOTE:record-count": 2, "ignored": true},
     "567": {"NOTE:record-count": 0, "ignored": true},
     "580": {"$a": {"aboutEntity": "?work", "addLink": "hasNote", "resourceType": "marc:LinkingEntryComplexityNote", "property": "label"}},
