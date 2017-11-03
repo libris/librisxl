@@ -3589,10 +3589,41 @@
         }
       ]
     },
-    "043": {"ignored": true},
+    "043": {
+      "TODO": "map to countrycode",
+      "link": "marc:hasGeographicAreaCode",
+      "resourceType": "marc:GeographicAreaCode",
+      "$a": {"addProperty": "marc:geographicAreaCode"},
+      "$b": {"addProperty": "marc:localGacCode"},
+      "$c": {"addProperty": "marc:isoCode"},
+      "$2": {"addProperty": "marc:sourceOfLocalCode"}
+    },
 
-    "044": {},
-    "045": {},
+    "044": {
+      "TODO": "map to countrycode",
+      "link": "marc:hasCountryOfPublishingProducingEntityCode",
+      "resourceType": "marc:CountryOfPublishingProducingEntityCode",
+      "$a": {"addProperty": "marc:marcCountryCode"},
+      "$b": {"addProperty": "marc:localSubentityCode"},
+      "$c": {"addProperty": "marc:isoCountryCode"},
+      "$2": {"addProperty": "marc:sourceOfLocalSubentityCode"}
+    },
+    "045": {
+      "TODO": "map to edtf date",
+      "link": "marc:hasTimePeriodOfContent",
+      "resourceType": "marc:TimePeriodOfContent",
+      "i1": {
+        "link": null,
+        "tokenMap": {
+          "0": "singleDateTime",
+          "1": "multipleSingleDatesTimes",
+          "2": "rangeOfDatesTimes"
+        }
+      },
+      "$a": {"addProperty": "marc:timePeriodCode"},
+      "$b": {"addProperty": "marc:formatted9999BCThroughCETimePeriod"},
+      "$c": {"addProperty": "marc:formattedPre9999BCTimePeriod"}
+    },
     "046": {
       "addLink": "marc:hasSpecialCodedDates",
       "resourceType": "marc:SpecialCodedDates",
