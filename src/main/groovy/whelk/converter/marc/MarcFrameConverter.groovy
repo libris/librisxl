@@ -1503,17 +1503,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         matchRules = MatchRule.parseRules(this, fieldDfn) ?: Collections.emptyList()
 
-        // TODO: remove old aboutAlias mechanism (more of a hack)
-        def aboutAlias = fieldDfn['about']
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
-            if (m) {
-                if (obj && obj['about'] == aboutAlias) {
-                    obj = obj.findAll { it.key != 'about' }
-                }
-                if (obj) {
-                    addSubfield(m.group(1), obj)
-                }
+            if (m && obj) {
+                addSubfield(m.group(1), obj)
             }
         }
 
