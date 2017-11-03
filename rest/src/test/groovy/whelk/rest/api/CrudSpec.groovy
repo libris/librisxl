@@ -586,12 +586,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -651,12 +651,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": false,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": true,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": true]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -704,12 +704,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -766,15 +766,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": true],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": true,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -829,12 +826,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": true],
-                                      ["sigel": "S",
-                                       "xlreg": true,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": true,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": true]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -948,12 +945,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": true,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": true]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1010,12 +1007,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": true]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1078,12 +1075,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": false,
-                                       "kat": true],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": true,
+                                     "registrant": false],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1137,12 +1134,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1168,7 +1165,7 @@ class CrudSpec extends Specification {
         assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
 
-    def "POST to / should create holding if user has kat permission for sigel"() {
+    def "POST to / should create holding if user has kat permission for code"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
@@ -1202,12 +1199,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": false,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": false],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1230,7 +1227,7 @@ class CrudSpec extends Specification {
         assert response.getStatus() == HttpServletResponse.SC_CREATED
     }
 
-    def "POST to / should return 403 Forbidden if missing kat permission for sigel"() {
+    def "POST to / should return 403 Forbidden if missing kat permission for code"() {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
@@ -1260,12 +1257,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": false,
-                                       "kat": true],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": true,
+                                     "registrant": false],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1680,12 +1677,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": false,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": false],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1753,12 +1750,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": true,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": true]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1826,12 +1823,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1899,12 +1896,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1972,12 +1969,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": true],
-                                      ["sigel": "S",
-                                       "xlreg": true,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": true,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": true]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -2043,12 +2040,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -2114,12 +2111,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -2253,12 +2250,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -2327,12 +2324,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -2401,12 +2398,12 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -2477,7 +2474,7 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "S",
+            return ["authorization": [["code": "S",
                                        "xlreg": false]]]
         }
         request.getRequestURL() >> {
@@ -2500,7 +2497,7 @@ class CrudSpec extends Specification {
         assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
 
-    def "PUT to /<id> should update holding if user has kat permission for sigel"() {
+    def "PUT to /<id> should update holding if user has kat permission for code"() {
         def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
@@ -2548,9 +2545,9 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -2569,7 +2566,7 @@ class CrudSpec extends Specification {
         assert response.getStatus() == HttpServletResponse.SC_NO_CONTENT
     }
 
-    def "PUT to /<id> should return 403 Forbidden if missing kat permission for sigel"() {
+    def "PUT to /<id> should return 403 Forbidden if missing kat permission for code"() {
         def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
@@ -2614,9 +2611,9 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -2755,12 +2752,12 @@ class CrudSpec extends Specification {
             "/1234"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": false,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": false],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         request.getMethod() >> {
             "DELETE"
@@ -2800,12 +2797,12 @@ class CrudSpec extends Specification {
             "/1234"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": false]]]
         }
         request.getMethod() >> {
             "DELETE"
@@ -2878,12 +2875,12 @@ class CrudSpec extends Specification {
             "/1234"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": true],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": true,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         request.getMethod() >> {
             "DELETE"
@@ -2925,12 +2922,12 @@ class CrudSpec extends Specification {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": true],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": true,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         storage.load(_) >> {
             new Document(data)
@@ -2972,15 +2969,12 @@ class CrudSpec extends Specification {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": true],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": true,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         storage.load(_) >> {
             new Document(data)
@@ -3022,12 +3016,12 @@ class CrudSpec extends Specification {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": true],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": true,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         storage.load(_) >> {
             new Document(data)
@@ -3071,12 +3065,12 @@ class CrudSpec extends Specification {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": true],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": true,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         storage.load(_) >> {
             return null
@@ -3121,12 +3115,12 @@ class CrudSpec extends Specification {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": true,
-                                       "kat": true],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": true,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         storage.load(_) >> {
             new Document(data)
@@ -3165,12 +3159,12 @@ class CrudSpec extends Specification {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": false,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": false],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         storage.load(_) >> {
             new Document(data)
@@ -3212,12 +3206,12 @@ class CrudSpec extends Specification {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": false,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": false],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": false]]]
         }
         storage.load(_) >> {
             new Document(data)
@@ -3234,7 +3228,7 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
 
-    def "DELETE to /<id> should delete holding if user has kat permission for sigel"() {
+    def "DELETE to /<id> should delete holding if user has kat permission for code"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def itemId = BASE_URI.resolve("/1234#it").toString()
@@ -3256,9 +3250,9 @@ class CrudSpec extends Specification {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": true]]]
+            return ["permissions": [["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
         }
         storage.load(_) >> {
             new Document(data)
@@ -3278,7 +3272,7 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NO_CONTENT
     }
 
-    def "DELETE to /<id> should return 403 Forbidden if missing kat permission for sigel"() {
+    def "DELETE to /<id> should return 403 Forbidden if missing kat permission for code"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def itemId = BASE_URI.resolve("/1234#it").toString()
@@ -3300,12 +3294,12 @@ class CrudSpec extends Specification {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["authorization": [["sigel": "Ting",
-                                       "xlreg": false,
-                                       "kat": false],
-                                      ["sigel": "S",
-                                       "xlreg": false,
-                                       "kat": false]]]
+            return ["permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": false],
+                                    ["code": "S",
+                                     "cataloger": false,
+                                     "registrant": false]]]
         }
         storage.load(_) >> {
             new Document(data)
