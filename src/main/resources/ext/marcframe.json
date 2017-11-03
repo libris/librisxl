@@ -10810,7 +10810,6 @@
       "$9": {"ignored": true}
     },
     "747": {"ignored": true, "NOTE:record-count": 0},
-    "748": {"ignored": true, "NOTE:record-count": 0},
     "748": {
       "addLink": "marc:hasEstablishedHeadingLinkingEntryChronologicalTerm",
       "resourceType": "marc:EstablishedHeadingLinkingEntryChronologicalTerm",
