@@ -11795,7 +11795,60 @@
         }
       ]
     },
-    "530": {},
+    "530": {
+      "aboutEntity": "?thing",
+      "aboutType": "Agent",
+      "link": "relatedTo",
+      "include": ["titledetails1xx7xx"],
+      "resourceType": "Work",
+      "aboutAlias": "_:work",
+      "pendingResources": {
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
+      "$a": {"about": "_:title", "property": "mainTitle"},
+      "$d": {"property": "legalDate"},
+      "$g": {"addProperty": "marc:miscellaneousInformation"},
+      "$t": {"property": "marc:titleOfAWork"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "TODO:$4": {},
+      "TODO:$5": {},
+      "$6": {"property": "marc:fieldref"},
+      "TODO:$8": {},
+      "_spec": [
+        {
+          "source": {
+            "530": {"ind1": " ", "ind2": "0", "subfields": [
+              {"w": "g"},
+              {"a": "Vedas"},
+              {"x": "Criticism, interpretation, etc."}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Agent",
+              "relatedTo": {
+                "@type": "Work",
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Vedas",
+                  "marc:nonfilingChars": "0"
+                }],
+                "marc:controlSubfield": "g",
+                "marc:generalSubdivision": ["Criticism, interpretation, etc."]
+              }
+            }
+          }
+        }
+      ]
+    },
     "547": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "548": {"ignored": true, "NOTE:record-count": 51, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "550": {
