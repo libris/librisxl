@@ -10510,7 +10510,22 @@
     "511": {"inherit": "bib:111", "aboutEntity": null, "addLink": "seeAlso"},
     "530": {},
     "547": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
-    "548": {"ignored": true, "NOTE:record-count": 51, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
+    "548": {
+      "NOTE:record-count": 51,
+      "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris.",
+      "addLink": "marc:hasSeeAlsoFromTracingChronologicalTerm",
+      "resourceType": "marc:SeeAlsoFromTracingChronologicalTerm",
+      "$a": {"property": "marc:chronologicalTerm"},
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
     "550": {
       "include": ["termbase_with_id", "relation_from_w"],
       "resourceType": "Topic",
