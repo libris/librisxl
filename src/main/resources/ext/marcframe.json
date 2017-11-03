@@ -3415,9 +3415,20 @@
 
     "036": {"NOTE:record-count": 118, "ignored": true},
 
-    "037": {},
+    "037": {
+      "addLink": "marc:hasSourceofAcquisition",
+      "resourceType": "marc:SourceofAcquisition",
+      "$a": {"property": "marc:stockNumber"},
+      "$b": {"property": "marc:sourceOfStockNumberAcquisition"},
+      "$c": {"addProperty": "marc:termsOfAvailability"},
+      "$f": {"addProperty": "marc:formOfIssue"},
+      "$g": {"addProperty": "marc:additionalFormatCharacteristics"},
+      "$n": {"addProperty": "marc:note"},
+      "$6": {"property": "marc:fieldref"}
+    },
 
     "038": {
+      "TODO:aboutEntity": "?record",
       "$a": {"link": "metadataLicensor", "resourceType": "Organization", "property": "label"}
     },
 
@@ -3507,13 +3518,84 @@
         }
       ]
     },
-    "043": {"ignored": true},
+    "043": {
+      "TODO": "map to countrycode",
+      "link": "marc:hasGeographicAreaCode",
+      "resourceType": "marc:GeographicAreaCode",
+      "$a": {"addProperty": "marc:geographicAreaCode"},
+      "$b": {"addProperty": "marc:localGacCode"},
+      "$c": {"addProperty": "marc:isoCode"},
+      "$2": {"addProperty": "marc:sourceOfLocalCode"}
+    },
 
-    "044": {},
-    "045": {},
-    "046": {},
-    "047": {},
-    "048": {},
+    "044": {
+      "TODO": "map to countrycode",
+      "link": "marc:hasCountryOfPublishingProducingEntityCode",
+      "resourceType": "marc:CountryOfPublishingProducingEntityCode",
+      "$a": {"addProperty": "marc:marcCountryCode"},
+      "$b": {"addProperty": "marc:localSubentityCode"},
+      "$c": {"addProperty": "marc:isoCountryCode"},
+      "$2": {"addProperty": "marc:sourceOfLocalSubentityCode"}
+    },
+    "045": {
+      "TODO": "map to edtf date",
+      "link": "marc:hasTimePeriodOfContent",
+      "resourceType": "marc:TimePeriodOfContent",
+      "i1": {
+        "TODO:link": null,
+        "tokenMap": {
+          "0": "singleDateTime",
+          "1": "multipleSingleDatesTimes",
+          "2": "rangeOfDatesTimes"
+        }
+      },
+      "$a": {"addProperty": "marc:timePeriodCode"},
+      "$b": {"addProperty": "marc:formatted9999BCThroughCETimePeriod"},
+      "$c": {"addProperty": "marc:formattedPre9999BCTimePeriod"}
+    },
+    "046": {
+      "addLink": "marc:hasSpecialCodedDates",
+      "resourceType": "marc:SpecialCodedDates",
+      "$a": {"property": "marc:typeOfDateCode"},
+      "$b": {"property": "marc:date1BCDate"},
+      "$c": {"property": "marc:date1CEDate"},
+      "$e": {"property": "marc:date2CEDateFieldMustAlsoContainASubfieldC"},
+      "$m": {"property": "marc:beginningOfDateValid"},
+      "$n": {"property": "marc:endOfDateValid"}
+    },
+    "047": {
+      "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "addLink": "marc:hasFormOfMusicalCompositionCode",
+      "resourceType": "marc:FormOfMusicalCompositionCode",
+      "i1": {
+        "TODO:link": null,
+        "tokenMap": {
+          "7": "Annat kodsystem specificerat i delfält $2"
+        }
+      },
+      "i2": {
+        "TODO:link": null,
+        "tokenMap": {
+          "7": "sourceSpecifiedInSubfield2"
+        }
+      },
+      "$a": {"addProperty": "marc:formOfMusicalCompositionCode"},
+      "$2": {"property": "marc:sourceOfCode"}
+    },
+    "048": {
+      "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "addLink": "marc:hasNumberOfInstrumentsOrVoicesCode",
+      "resourceType": "marc:NumberOfInstrumentsOrVoicesCode",
+      "i2": {
+        "TODO:link": null,
+        "tokenMap": {
+          "7": "sourceSpecifiedInSubfield2"
+        }
+      },
+      "$a": {"addProperty": "marc:performerOrEnsemble"},
+      "$b": {"addProperty": "marc:soloist"},
+      "$2": {"property": "marc:sourceOfCode"}
+    },
     "049": {"ignored": true, "NOTE": "OCLC - Local Holdings. Field 049 is not part of the standard MARC 21 format."},
 
     "050": {
@@ -3527,9 +3609,63 @@
       "$6": {"property": "marc:fieldref"}
     },
 
-    "051": {"ignored": true, "NOTE:record-count": 488, "NOTE:local":"ANVÄNDS NORMALT EJ", "NOTE:LC": "Item - shelfMark - ShelfMarkLcc"},
-    "052": {},
-    "055": {},
+    "051": {
+      "addLink": "marc:hasLibraryOfCongressCopyIssueOffprintStatement",
+      "resourceType": "marc:LibraryOfCongressCopyIssueOffprintStatement",
+      "NOTE:record-count": 488,
+      "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "TODO": "Item - shelfMark - ShelfMarkLcc?",
+      "$a": {"property": "marc:classificationNumber"},
+      "$b": {"property": "marc:itemNumber"},
+      "$c": {"property": "marc:copyInformation"}
+    },
+    "052": {
+      "addLink": "marc:hasGeographicClassification",
+      "resourceType": "marc:GeographicClassification",
+      "i1": {
+        "TODO:link": null,
+        "tokenMap": {
+          "": "uSDeptOfDefenseClassification",
+          "0": "US Dept of Defense-klassifikation (obsolet, använd ind 1 = 1)",
+          "1": "U.S. Dept. of Defense-klassification",
+          "7": "sourceSpecifiedInSubfield2"
+        }
+      },
+      "$a": {"property": "marc:geographicClassificationAreaCode"},
+      "$b": {"addProperty": "marc:geographicClassificationSubareaCode"},
+      "$d": {"addProperty": "marc:populatedPlaceName"},
+      "$2": {"property": "marc:codeSource"}
+    },
+    "055": {
+      "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "addLink": "marc:hasClassificationNumbersAssignedInCanada",
+      "resourceType": "marc:ClassificationNumbersAssignedInCanada",
+      "i1": {
+        "TODO:link": null,
+        "tokenMap": {
+          "0": "workHeldByLac",
+          "1": "workNotHeldByLac"
+        }
+      },
+      "i2": {
+        "TODO:link": null,
+        "tokenMap": {
+          "0": "lcBasedCallNumberAssignedByLac",
+          "1": "completeLcClassNumberAssignedByLac",
+          "2": "incompleteLcClassNumberAssignedByLac",
+          "3": "lcBasedCallNumberAssignedByTheContributingLibrary",
+          "4": "completeLcClassNumberAssignedByTheContributingLibrary",
+          "5": "incompleteLcClassNumberAssignedByTheContributingLibrary",
+          "6": "otherCallNumberAssignedByLac",
+          "7": "otherClassNumberAssignedByLac",
+          "8": "otherCallNumberAssignedByTheContributingLibrary",
+          "9": "otherClassNumberAssignedByTheContributingLibrary"
+        }
+      },
+      "$a": {"property": "marc:classificationNumber"},
+      "$b": {"property": "marc:itemNumber"},
+      "$2": {"property": "marc:sourceOfCallClassNumber"}
+    },
     "060": {
       "aboutEntity": "?work",
       "addLink": "classification",
@@ -3541,7 +3677,19 @@
     },
     "061": {"NOTE:record-count": 1, "ignored": true},
     "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
-    "070": {},
+    "070": {
+      "link": "marc:hasNationalAgriculturalLibraryCallNumber",
+      "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
+      "i1": {
+        "TODO:link": null,
+        "tokenMap": {
+          "0": "itemInNal",
+          "1": "itemNotInNal"
+        }
+      },
+      "$a": {"addProperty": "marc:classificationNumber"},
+      "$b": {"property": "marc:itemNumber"}
+    },
     "071": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
     "072": {
@@ -3555,7 +3703,12 @@
       "$2": {"link": "source", "property": "code"}
     },
 
-    "074": {},
+    "074": {
+      "addLink": "marc:hasGPOItemNumber",
+      "resourceType": "marc:GPOItemNumber",
+      "$a": {"property": "marc:gpoItemNumber"},
+      "$z": {"addProperty": "marc:canceledInvalidGpoItemNumber"}
+    },
 
     "080": {
       "aboutEntity": "?work",
@@ -3802,8 +3955,26 @@
     },
 
     "085": {"ignored": true, "NOTE:record-count": 21, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
-    "086": {},
-    "088": {},
+    "086": {
+      "TODO": "group with classification",
+      "addLink": "marc:hasGovernmentDocumentClassificationNumber",
+      "resourceType": "marc:GovernmentDocumentClassificationNumber",
+      "i1": {
+        "TODO:link": null,
+        "tokenMap": {
+          "0": "superintendentOfDocumentsClassificationSystem",
+          "1": "governmentOfCanadaPublicationsOutlineOfClassification"
+        }
+      },
+      "$a": {"property": "marc:classificationNumber"},
+      "$z": {"addProperty": "marc:canceledInvalidClassificationNumber"},
+      "$2": {"property": "marc:numberSource"}
+    },
+    "088": {
+      "include": ["identifier"],
+      "resourceType": "ReportNumber",
+      "$6": {"property": "marc:fieldref"}
+    },
     "090": {"ignored": true, "NOTE:record-count": 67, "NOTE:LC": "OBSOLETE, 1982", "NOTE:OCLC": "Locally Assigned LC-type Call Number. Field 090 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
     "092": {"ignored": true, "NOTE:record-count": 15, "NOTE:LC": "Not part of BF2 conversion", "NOTE:OCLC": "Locally Assigned Dewey Call Number. Field 092 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
     "096": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "Not part of BF2 conversion", "NOTE:OCLC": "Locally Assigned NLM-type Call Number. Field 096 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
@@ -4727,7 +4898,7 @@
           "2": "DistinctiveTitle",
           "3": "marc:OtherTitle",
           "4": "CoverTitle",
-          "5": "TitlePage",
+          "5": "AddedTitlePageTitle",
           "6": "CaptionTitle",
           "7": "RunningTitle",
           "8": "SpineTitle"
@@ -4877,8 +5048,12 @@
       ]
     },
 
-    "254": {},
 
+    "254": {
+      "Link": "marc:hasMusicalPresentationStatement",
+      "resourceType": "marc:MusicalPresentationStatement",
+      "$a": {"property": "marc:musicalPresentationStatement"}
+    },
     "255": {
       "NOTE:domainIncludes": "Cartography",
       "aboutEntity": "?work",
@@ -4900,8 +5075,19 @@
       "$a": {"link": "digitalCharacteristic", "resourceType": "FileType", "property": "label"}
     },
 
-    "257": {},
-    "258": {},
+    "257": {
+      "addLink": "marc:hasCountryOfProducingEntityForArchivalFilms",
+      "resourceType": "marc:CountryOfProducingEntityForArchivalFilms",
+      "$a": {"property": "marc:countryOfProducingEntity"},
+      "$2": {"property": null}
+    },
+    "258": {
+      "NOTE:LC": "nac",
+      "addLink": "marc:hasPhilatelicIssueDate",
+      "resourceType": "marc:PhilatelicIssueDate",
+      "$a": {"property": "marc:issuingJurisdiction"},
+      "$b": {"property": "marc:denomination"}
+    },
 
     "260": {
       "aboutEntity": "?thing",
@@ -5451,8 +5637,7 @@
       ]
     },
 
-    "265": {},
-    "270": {},
+    "270": { "ignored": true, "NOTE:LC": "ignore"},
 
     "300": {
       "aboutEntity": "?thing",
@@ -5667,9 +5852,39 @@
     },
     "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "344": {},
-    "345": {},
-    "346": {},
+    "344": {
+      "addLink": "soundCharacteristic",
+      "resourceType": "SoundCharacteristic",
+      "NOTE:record-count": 0,
+      "$a": {"addProperty": "marc:typeOfRecording"},
+      "$b": {"addProperty": "marc:recordingMedium"},
+      "$c": {"addProperty": "marc:playingSpeed"},
+      "$d": {"addProperty": "marc:grooveCharacteristics"},
+      "$e": {"addProperty": "marc:trackConfig"},
+      "$f": {"addProperty": "marc:tapeConfig"},
+      "$g": {"addProperty": "marc:playbackChannels"},
+      "$h": {"addProperty": "marc:playbackCharacteristic"},
+      "$2": {"property": "marc:source"},
+      "$3": {"property": "marc:materialsSpecified"}
+    },
+    "345": {
+      "addLink": "projectionCharacteristic",
+      "resourceType": "ProjectionCharacteristic",
+      "NOTE:record-count": 0,
+      "$a": {"addProperty": "marc:presentationFormat"},
+      "$b": {"addProperty": "marc:projectionSpeed"},
+      "$2": {"property": "marc:source"},
+      "$3": {"property": "marc:materialsSpecified"}
+    },
+    "346": {
+      "addLink": "videoCharacteristic",
+      "resourceType": "VideoCharacteristic",
+      "NOTE:record-count": 0,
+      "$a": {"addProperty": "marc:videoFormat"},
+      "$b": {"addProperty": "marc:broadcastStandard"},
+      "$2": {"property": "marc:source"},
+      "$3": {"property": "marc:materialsSpecified"}
+    },
     "347": {
       "aboutEntity": "?thing",
       "linkSubsequentRepeated": {
@@ -6158,7 +6373,28 @@
         }
       ]
     },
-    "541": {},
+    "541": {
+      "addLink": "marc:hasImmediateSourceOfAcquisitionNote",
+      "resourceType": "marc:ImmediateSourceOfAcquisitionNote",
+      "i1": {
+        "TODO:link": null,
+        "tokenMap": {
+          "0": "private",
+          "1": "notPrivate"
+        }
+      },
+      "$a": {"property": "marc:sourceOfAcquisition"},
+      "$b": {"property": "marc:address"},
+      "$c": {"property": "marc:methodOfAcquisition"},
+      "$d": {"property": "marc:dateOfAcquisition"},
+      "$e": {"property": "marc:accessionNumber"},
+      "$f": {"property": "marc:owner"},
+      "$h": {"property": "marc:purchasePrice"},
+      "$n": {"addProperty": "marc:extent"},
+      "$o": {"addProperty": "marc:typeOfUnit"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$5": {"property": "marc:institutionToWhichFieldApplies"}
+    },
     "542": {"NOTE:record-count": 0, "ignored": true},
     "544": {
       "addLink": "hasNote",
@@ -6198,7 +6434,21 @@
       "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
       "$z": {"ignored": true}
     },
-    "561": {},
+    "561": {
+      "addLink": "marc:hasOwnershipAndCustodialHistory",
+      "resourceType": "marc:OwnershipAndCustodialHistory",
+      "i1": {
+        "TODO:link": null,
+        "tokenMap": {
+          "0": "private",
+          "1": "notPrivate"
+        }
+      },
+      "$a": {"property": "marc:history"},
+      "$u": {"ignored": true},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$5": {"property": "marc:institutionToWhichFieldApplies"}
+    },
     "562": {
       "addLink": "hasItem",
       "embedded": true,
@@ -6210,7 +6460,14 @@
       "$e": {"addProperty": "inventoryLevel"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
-    "563": {},
+    "563": {
+      "addLink": "marc:hasBindingInformation",
+      "resourceType": "marc:BindingInformation",
+      "$a": {"property": "marc:bindingNote"},
+      "$u": {"addProperty": "marc:uniformResourceIdentifier"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$5": {"property": "marc:institutionToWhichFieldApplies"}
+    },
     "565": {"NOTE:record-count": 2, "ignored": true},
     "567": {"NOTE:record-count": 0, "ignored": true},
     "580": {
@@ -7024,6 +7281,7 @@
         }
       ]
     },
+    "647": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "648": {
       "include": ["subjectbase"],
       "aboutEntity": "?work",
@@ -7578,10 +7836,16 @@
       "resourceType": "FunctionOrRole", "ignored": true
     },
 
-    "658": {},
+    "658": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
     "662": {},
-    "690": {},
+    "690": {"ignored": true, "NOTE:record-count": 21, "NOTE:OCLC": "Local Subject Added Entry--Topical Term.", "NOTE:local": "Ej i formathandboken."},
+    "691": {"ignored": true, "NOTE:record-count": 0, "NOTE:OCLC": "Local Subject Added Entry--Geographic Name", "NOTE:local": "Ej i formathandboken."},
+    "695": {"ignored": true, "NOTE:record-count": 0, "NOTE:OCLC": "Added Class Number", "NOTE:local": "Ej i formathandboken."},
+    "696": {"ignored": true, "NOTE:record-count": 0, "NOTE:OCLC": "Local Subject Added Entry--Personal Name", "NOTE:local": "Ej i formathandboken."},
+    "697": {"ignored": true, "NOTE:record-count": 5, "NOTE:OCLC": "Local Subject Added Entry--Corporate Name.", "NOTE:local": "Ej i formathandboken."},
+    "698": {"ignored": true, "NOTE:record-count": 4800, "NOTE:OCLC": "Local Subject Added Entry--Corporate Name. If the subject access point is of value to others, then use field field 653.", "NOTE:local": "Ej i formathandboken."},
+    "699": {"ignored": true, "NOTE:record-count": 1, "NOTE:OCLC": "Local Subject Added Entry--Uniform Title.", "NOTE:local": "Ej i formathandboken."},
 
     "700": {
       "aboutEntity": "?work",
@@ -8925,8 +9189,29 @@
       ]
     },
 
-    "751": {},
-    "752": {},
+    "751": {
+      "addLink": "marc:hasAddedEntryGeographicName",
+      "resourceType": "marc:AddedEntryGeographicName",
+      "$a": {"property": "marc:geographicName"},
+      "$e": {"addProperty": "marc:relatorTerm"},
+      "$2": {"property": "marc:sourceOfHeadingOrTerm"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$4": {"addProperty": "marc:relatorCode"},
+      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+    },
+    "752": {
+      "addLink": "marc:hasAddedEntryHierarchicalPlaceName",
+      "resourceType": "marc:AddedEntryHierarchicalPlaceName",
+      "$a": {"addProperty": "marc:countryOrLargerEntity"},
+      "$b": {"property": "marc:firstOrderPoliticalJurisdiction"},
+      "$c": {"addProperty": "marc:intermediatePoliticalJurisdiction"},
+      "$d": {"property": "marc:city"},
+      "$f": {"addProperty": null},
+      "$g": {"addProperty": "marc:otherNonjurisdictionalGeographicRegionAndFeature"},
+      "$h": {"addProperty": "marc:extraterrestrialArea"},
+      "$2": {"property": "marc:sourceOfHeadingOrTerm"},
+      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+    },
     "753": {
       "aboutEntity": "?thing",
       "addLink": "systemRequirement",
@@ -8935,8 +9220,29 @@
       "$b": {"property": "marc:programmingLanguage"},
       "$c": {"property": "marc:operatingSystem"}
     },
-    "754": {},
-    "755": {},
+    "754": {
+      "addLink": "marc:hasAddedEntryTaxonomicIdentification",
+      "resourceType": "marc:AddedEntryTaxonomicIdentification",
+      "$a": {"addProperty": "marc:taxonomicName"},
+      "$c": {"addProperty": "marc:taxonomicCategory"},
+      "$d": {"addProperty": "marc:commonOrAlternativeName"},
+      "$x": {"addProperty": "marc:nonPublicNote"},
+      "$z": {"addProperty": "marc:publicNote"},
+      "$2": {"property": "marc:sourceOfTaxonomicIdentification"},
+      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+    },
+    "755": {
+      "addLink": "marc:hasPhysicalCharacteristicsAddedEntryOBSOLETE",
+      "resourceType": "marc:PhysicalCharacteristicsAddedEntryOBSOLETE",
+      "obsolete": true,
+      "$a": {"property": "marc:accessTerm"},
+      "$v": {"property": "marc:form"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$2": {"property": "marc:sourceOfTerm"},
+      "$3": {"property": "marc:materialsSpecified"}
+    },
 
     "760": {"NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSeries", "resourceType": "Instance"},
     "762": {"NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSubseries", "resourceType": "Instance"},
@@ -9872,11 +10178,14 @@
       "repeatable": false
     },
 
-    "010": {"ignored": true, "NOTE:record-count": 396, "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "010": {
+      "inherit": "bib",
+      "NOTE:local": "ANVÄNDS NORMALT EJ"
+    },
     "014": {"ignored": true, "NOTE:record-count": 1, "NOTE:LC": "nac"},
     "016": {"ignored": true, "NOTE:record-count": 4, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
-    "020" : {},
-    "022" : {},
+    "020" : {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS EJ"},
+    "022" : {"inherit": "bib"},
     "024" : {
       "inherit": "bib",
       "i1": {
@@ -9959,7 +10268,21 @@
     },
     "050": {"ignored": true, "NOTE:record-count": 0},
     "052": {"ignored": true, "NOTE:record-count": 0},
-    "053": {"ignored": true, "NOTE:record-count": 33, "NOTE:LC": "ignore - not applied to titles"},
+    "053": {
+      "addLink": "marc:hasLCClassificationNumber",
+      "resourceType": "marc:LCClassificationNumber",
+      "i2": {
+      "TODO:link": null,
+        "tokenMap": {
+          "0": "assignedByLc",
+          "4": "assignedByAgencyOtherThanLc"
+        }
+      },
+      "$a": {"property": "marc:classificationNumberElementSingleNumberOrBeginningNumberOfSpan"},
+      "$b": {"property": "marc:classificationNumberElementEndingNumberOfSpan"},
+      "$c": {"property": "marc:explanatoryTerm"},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
     "055": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "060": {"ignored": true, "NOTE:record-count": 0},
     "065": {
@@ -10768,18 +11091,24 @@
             "mainEntity": {
               "@type": "Agent",
               "fieldOfActivity": [
-                      {
-                        "@type": "FieldOfActivity",
-                        "label": ["Kriminologi"],
-                        "marc:source": "sao"
-                      }
-                    ]
+                {
+                  "@type": "FieldOfActivity",
+                  "label": ["Kriminologi"],
+                  "marc:source" : "sao"
+                }
+              ]
             }
           }
         }
       ]
     },
-    "373": {},
+    "373": {
+      "aboutEntity": "?thing",
+      "aboutType": "Agent",
+      "addLink": "hasAffiliation", "resourceType": "Affiliation",
+      "$a": {"addProperty": "label"},
+      "$2": {"property": "marc:source"}
+    },
     "374": {
       "aboutEntity": "?thing",
       "aboutType": "Agent",
@@ -10812,13 +11141,32 @@
       "TODO:aboutAlias": "_:agent",
       "$a": {"property": "gender"}
     },
-    "376": {},
-    "377": {},
+    "376": {
+      "aboutType": "Agent",
+      "addLink": "marc:hasAuth376",
+      "resourceType": "marc:Auth376",
+      "$a": {"addProperty": "typeOfFamily"},
+      "$b": {"addProperty": "prominentFamilyMember"}
+    },
+    "377": {
+      "aboutEntity": "?thing",
+      "aboutType": "Agent",
+      "addLink": "associatedLanguage", "resourceType": "Language",
+      "$a": {"addProperty": "label"},
+      "$2": {"property": "marc:sourceOfTerm"}
+    },
     "378": {
       "TODO": "Depends on bib 100, 700 and auth 100 $q 'marc:fullerFormName'. See mads:fullNameElement ",
       "$q": {"property": "marc:fullerFormName"}
     },
-    "380": {"ignored": true, "NOTE:record-count": 2},
+    "380": {
+      "addLink": "genreForm",
+      "resourceType": "GenreForm",
+      "TODO": "link to gf",
+      "$a": {"addProperty": "label"},
+      "$0": {},
+      "$2": {"property": "marc:sourceOfTerm"}
+    },
     "381": {"ignored": true, "NOTE:record-count": 0},
     "382": {"ignored": true, "NOTE:record-count": 0},
     "383": {"ignored": true, "NOTE:record-count": 0},
@@ -11777,7 +12125,19 @@
       "TODO": "alternativeForm a Work (like a structured altLabel)"
     },
     "447": {"ignored": true, "NOTE:record-count": 0},
-    "448": {},
+    "448": {
+      "addLink": "marc:hasSeeFromTracingChronologicalTerm",
+      "resourceType": "marc:SeeFromTracingChronologicalTerm",
+      "$a": {"property": "marc:chronologicalTerm"},
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
     "450": {
       "$a": {"addProperty": "altLabel"},
       "match": [
@@ -11792,13 +12152,48 @@
       ],
       "TODO": "whatIs w||e"
     },
-    "451": {},
+    "451": {
+      "addLink": "marc:hasSeeFromTracingGeographicName",
+      "resourceType": "marc:SeeFromTracingGeographicName",
+      "$a": {"property": "marc:geographicName"},
+      "$g": {"ignored": true},
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
     "455": {"inherit": "450"},
     "462": {"ignored": true, "NOTE:record-count": 0},
-    "480": {},
+    "480": {
+      "addLink": "marc:hasSeeFromTracingGeneralSubdivision",
+      "resourceType": "marc:SeeFromTracingGeneralSubdivision",
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
     "481": {"ignored": true, "NOTE:record-count": 1},
     "482": {"ignored": true, "NOTE:record-count": 0},
-    "485": {},
+    "485": {
+      "addLink": "marc:hasSeeFromTracingFormSubdivision",
+      "resourceType": "marc:SeeFromTracingFormSubdivision",
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
 
     "500": {
       "TODO:remnants-of-inherit": "bib:100",
@@ -12584,7 +12979,22 @@
       ]
     },
     "547": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
-    "548": {"ignored": true, "NOTE:record-count": 51, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
+    "548": {
+      "NOTE:record-count": 51,
+      "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris.",
+      "addLink": "marc:hasSeeAlsoFromTracingChronologicalTerm",
+      "resourceType": "marc:SeeAlsoFromTracingChronologicalTerm",
+      "$a": {"property": "marc:chronologicalTerm"},
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
     "550": {
       "include": ["termbase_with_id", "relation_from_w"],
       "resourceType": "Topic",
@@ -12651,7 +13061,19 @@
     },
     "581": {"ignored": true, "NOTE:record-count": 0},
     "582": {"ignored": true, "NOTE:record-count": 0},
-    "585": {},
+    "585": {
+      "addLink": "marc:hasSeeAlsoFromTracingFormSubdivision",
+      "resourceType": "marc:SeeAlsoFromTracingFormSubdivision",
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
     "599": {"ignored": true, "NOTE:local": "MAKULERAT"},
 
     "640": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS F.N. EJ"},
@@ -12662,10 +13084,20 @@
     "645": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
     "646": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
 
-    "663": {},
+    "663": {
+      "addLink": "marc:hasComplexSeeAlsoReferenceName",
+      "resourceType": "marc:ComplexSeeAlsoReferenceName",
+      "$a": {"addProperty": "marc:explanatoryText"},
+      "$b": {"addProperty": "marc:headingReferredTo"},
+      "$t": {"addProperty": "marc:titleReferredTo"}
+    },
     "664": {"ignored": true, "NOTE:record-count": 0},
-    "665": {},
-    "666": {},
+    "665": {
+      "addLink": "marc:hasHistoryReference",
+      "resourceType": "marc:HistoryReference",
+      "$a": {"addProperty": "marc:historyReference"}
+    },
+    "666": {"ignored": true},
 
     "667": {
       "aboutEntity": "?record",
@@ -12680,8 +13112,8 @@
       "$b": {"property": "citation"},
       "$u": {"property": "uri"}
     },
-    "672": {"ignored": true, "NOTE:record-count": 1, "NOTE:LC": "nac"},
-    "673": {"ignored": true, "NOTE:record-count": 1, "NOTE:LC": "nac"},
+    "672": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "673": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "675": {
       "$a": {"property": "label"}
     },
@@ -12700,11 +13132,182 @@
       "ignored": true,
       "TODO": "exactMatch a Person (external system)"
     },
-    "710": {},
-    "711": {},
-    "730": {},
+    "710": {
+      "addLink": "marc:hasEstablishedHeadingLinkingEntryCorporateName",
+      "resourceType": "marc:EstablishedHeadingLinkingEntryCorporateName",
+      "i1": {
+        "TODO:link": null,
+        "tokenMap": {
+          "0": "invertedName",
+          "1": "jurisdictionName",
+          "2": "nameInDirectOrder"
+        }
+      },
+      "i2": {
+        "TODO:link": null,
+        "tokenMap": {
+          "0": "libraryOfCongressSubjectHeadingsNameAuthorityFile",
+          "1": "lcSubjectHeadingsForChildrenSLiterature",
+          "2": "medicalSubjectHeadingsNlmNameAuthorityFile",
+          "3": "nationalAgriculturalLibrarySubjectAuthorityFile",
+          "4": "sourceNotSpecified",
+          "5": "canadianSubjectHeadingsNlcNameAuthorityFile",
+          "6": "rpertoireDeVedettesMatire",
+          "7": "sourceSpecifiedInSubfield2"
+        }
+      },
+      "$a": {"property": "marc:corporateNameOrJurisdictionNameAsEntryElement"},
+      "$b": {"addProperty": "marc:subordinateUnit"},
+      "$c": {"addProperty": "marc:locationOfMeeting"},
+      "$d": {"addProperty": "marc:dateOfMeetingOrTreatySigning"},
+      "$e": {"addProperty": "marc:relatorTerm"},
+      "$f": {"property": "marc:dateOfAWork"},
+      "$g": {"addProperty": "marc:miscellaneousInformation"},
+      "$h": {"property": "marc:medium"},
+      "$i": {"ignored": true},
+      "$k": {"addProperty": "marc:formSubheading"},
+      "$l": {"property": "marc:languageOfAWork"},
+      "$m": {"addProperty": "marc:mediumOfPerformanceForMusic"},
+      "$n": {"addProperty": "marc:numberOfPartSectionMeeting"},
+      "$o": {"property": "marc:arrangedStatementForMusic"},
+      "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
+      "$r": {"property": "marc:keyForMusic"},
+      "$s": {"property": "marc:version"},
+      "$t": {"property": "marc:titleOfAWork"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$2": {"property": "marc:sourceOfHeadingOrTerm"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
+      "$9": {"ignored": true}
+    },
+    "711": {
+      "addLink": "marc:hasEstablishedHeadingLinkingEntryMeetingName",
+      "resourceType": "marc:EstablishedHeadingLinkingEntryMeetingName",
+      "i1": {
+        "TODO:link": null,
+        "tokenMap": {
+          "0": "invertedName",
+          "1": "jurisdictionName",
+          "2": "nameInDirectOrder"
+        }
+      },
+      "i2": {
+        "TODO:link": null,
+        "tokenMap": {
+          "0": "libraryOfCongressSubjectHeadingsNameAuthorityFile",
+          "1": "lcSubjectHeadingsForChildrenSLiterature",
+          "2": "medicalSubjectHeadingsNlmNameAuthorityFile",
+          "3": "nationalAgriculturalLibrarySubjectAuthorityFile",
+          "4": "sourceNotSpecified",
+          "5": "canadianSubjectHeadingsNlcNameAuthorityFile",
+          "6": "rpertoireDeVedettesMatire",
+          "7": "sourceSpecifiedInSubfield2"
+        }
+      },
+      "$a": {"property": "marc:meetingNameOrJurisdictionNameAsEntryElement"},
+      "$c": {"addProperty": "marc:locationOfMeeting"},
+      "$d": {"property": "marc:dateOfMeeting"},
+      "$e": {"addProperty": "marc:subordinateUnit"},
+      "$f": {"property": "marc:dateOfAWork"},
+      "$g": {"addProperty": "marc:miscellaneousInformation"},
+      "$h": {"property": "marc:medium"},
+      "$i": {"ignored": true},
+      "$j": {"addProperty": "marc:relatorTerm"},
+      "$k": {"addProperty": "marc:formSubheading"},
+      "$l": {"property": "marc:languageOfAWork"},
+      "$n": {"addProperty": "marc:numberOfPartSectionMeeting"},
+      "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
+      "$q": {"property": "marc:nameOfMeetingFollowingJurisdictionNameEntryElement"},
+      "$s": {"property": "marc:version"},
+      "$t": {"property": "marc:titleOfAWork"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$2": {"property": "marc:sourceOfHeadingOrTerm"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
+      "$9": {"ignored": true}
+    },
+    "730": {
+      "addLink": "marc:hasEstablishedHeadingLinkingEntryUniformTitle",
+      "resourceType": "marc:EstablishedHeadingLinkingEntryUniformTitle",
+      "i2": {
+        "link": null,
+        "tokenMap": {
+          "0": "libraryOfCongressSubjectHeadingsNameAuthorityFile",
+          "1": "lcSubjectHeadingsForChildrenSLiterature",
+          "2": "medicalSubjectHeadingsNlmNameAuthorityFile",
+          "3": "nationalAgriculturalLibrarySubjectAuthorityFile",
+          "4": "sourceNotSpecified",
+          "5": "canadianSubjectHeadingsNlcNameAuthorityFile",
+          "6": "rpertoireDeVedettesMatire",
+          "7": "sourceSpecifiedInSubfield2"
+        }
+      },
+      "$a": {"property": "marc:uniformTitle"},
+      "$d": {"addProperty": "marc:dateOfTreatySigning"},
+      "$f": {"property": "marc:dateOfAWork"},
+      "$g": {"addProperty": "marc:miscellaneousInformation"},
+      "$h": {"property": "marc:medium"},
+      "$i": {"addProperty": null},
+      "$k": {"addProperty": "marc:formSubheading"},
+      "$l": {"property": "marc:languageOfAWork"},
+      "$m": {"addProperty": "marc:mediumOfPerformanceForMusic"},
+      "$n": {"addProperty": "marc:numberOfPartSectionOfAWork"},
+      "$o": {"property": "marc:arrangedStatementForMusic"},
+      "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
+      "$r": {"property": "marc:keyForMusic"},
+      "$s": {"property": "marc:version"},
+      "$t": {"property": "marc:titleOfAWork"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$2": {"property": "marc:sourceOfHeadingOrTerm"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
+      "$9": {"ignored": true}
+    },
     "747": {"ignored": true, "NOTE:record-count": 0},
-    "748": {"ignored": true, "NOTE:record-count": 0},
+    "748": {
+      "addLink": "marc:hasEstablishedHeadingLinkingEntryChronologicalTerm",
+      "resourceType": "marc:EstablishedHeadingLinkingEntryChronologicalTerm",
+      "TODO:i2": {
+        "link": null,
+        "tokenMap": {
+          "0": "LCSH/LC authority files",
+          "1": "LCSH for children's literature",
+          "2": "MeSH/NLM authority files",
+          "3": "NAL subject authority file",
+          "4": "System ej specificerat",
+          "5": "Canadian SH/ NLC authority file",
+          "6": "Répertoire des vedettes-matière/NLC",
+          "7": "System specificerat i $2"
+        }
+      },
+      "$a": {"property": "marc:chronologicalTerm"},
+      "$i": {"ignored": true},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$2": {"property": "marc:sourceOfHeadingOrTerm"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
+      "$9": {"ignored": true}
+    },
     "750": {
       "i1": null,
       "addLink": "closeMatch",
@@ -12722,7 +13325,16 @@
       ],
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html"
     },
-    "751": {},
+    "751": {
+      "addLink": "marc:hasAddedEntryGeographicName",
+      "resourceType": "marc:AddedEntryGeographicName",
+      "$a": {"property": "marc:geographicName"},
+      "$e": {"addProperty": "marc:relatorTerm"},
+      "$2": {"property": "marc:sourceOfHeadingOrTerm"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$4": {"addProperty": "marc:relatorCode"},
+      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+    },
     "755": {
       "include": ["subjectbase"],
       "i1": null,
@@ -13270,6 +13882,7 @@
       "$2": {"property": "sourceOfClassificationOrShelfMarkScheme"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$8": {"property": "sequenceNumber"},
+      "$9": {"addProperty": "organizationalUnit"},
       "$a": {"property": "location"},
       "$b": {
         "link": "heldBy",
@@ -13281,7 +13894,7 @@
         "TODO": "move to mainEntity and auto-repeat here",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
       },
-      "$c": {"addProperty": "shelfLocation"},
+      "$c": {"addProperty": "physicalLocation"},
       "$d": {"addProperty": "formerShelfLocation"},
       "$e": {"addProperty": "address"},
       "$f": {"addProperty": "codedLocationQualifier"},
@@ -13325,7 +13938,7 @@
               "copyNumber": "1",
               "heldBy": {"@id": "https://libris.kb.se/library/H", "@type": "Organization", "code": "H"},
               "shelfControlNumber": "65.465",
-              "shelfLocation": ["MAG"]
+              "physicalLocation": ["MAG"]
             }
           }
         },
