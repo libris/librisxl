@@ -3747,7 +3747,19 @@
     },
     "061": {"NOTE:record-count": 1, "ignored": true},
     "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
-    "070": {},
+    "070": {
+      "link": "marc:hasNationalAgriculturalLibraryCallNumber",
+      "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
+      "i1": {
+        "link": null,
+        "tokenMap": {
+          "0": "itemInNal",
+          "1": "itemNotInNal"
+        }
+      },
+      "$a": {"addProperty": "marc:classificationNumber"},
+      "$b": {"property": "marc:itemNumber"}
+    },
     "071": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
     "072": {
