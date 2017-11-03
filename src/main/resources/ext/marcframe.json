@@ -10952,7 +10952,7 @@
               "copyNumber": "1",
               "heldBy": {"@id": "https://libris.kb.se/library/H", "@type": "Organization", "code": "H"},
               "shelfControlNumber": "65.465",
-              "shelfLocation": ["MAG"]
+              "physicalLocation": ["MAG"]
             }
           }
         },
