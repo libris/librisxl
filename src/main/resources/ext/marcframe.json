@@ -5478,8 +5478,7 @@
       ]
     },
 
-    "265": {},
-    "270": {},
+    "270": { "ignored": true, "NOTE:LC": "ignore"},
 
     "300": {
       "aboutEntity": "?thing",
