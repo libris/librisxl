@@ -202,7 +202,8 @@ class Document {
             else
                 value = typedID["value"]
 
-            results.add(new Tuple(type, value, 1))
+            if (type != null && value != null)
+                results.add(new Tuple(type, value, 1))
         }
 
         return results
@@ -223,7 +224,8 @@ class Document {
             else
                 value = typedID["value"]
 
-            results.add(new Tuple(type, value, 0))
+            if (type != null && value != null)
+                results.add(new Tuple(type, value, 0))
         }
 
         return results
