@@ -10438,13 +10438,48 @@
       ],
       "TODO": "whatIs w||e"
     },
-    "451": {},
+    "451": {
+      "addLink": "marc:hasSeeFromTracingGeographicName",
+      "resourceType": "marc:SeeFromTracingGeographicName",
+      "$a": {"property": "marc:geographicName"},
+      "$g": {"ignored": true},
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
     "455": {"inherit": "450"},
     "462": {"ignored": true, "NOTE:record-count": 0},
-    "480": {},
+    "480": {
+      "addLink": "marc:hasSeeFromTracingGeneralSubdivision",
+      "resourceType": "marc:SeeFromTracingGeneralSubdivision",
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
     "481": {"ignored": true, "NOTE:record-count": 1},
     "482": {"ignored": true, "NOTE:record-count": 0},
-    "485": {},
+    "485": {
+      "addLink": "marc:hasSeeFromTracingFormSubdivision",
+      "resourceType": "marc:SeeFromTracingFormSubdivision",
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
 
     "500": {
       "TODO:remnants-of-inherit": "bib:100",
