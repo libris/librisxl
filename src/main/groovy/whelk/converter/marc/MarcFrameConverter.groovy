@@ -1683,11 +1683,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        // If subsumeSingle && only one item: merge it with parent.
+        // If absorbSingle && only one item: merge it with parent.
         localEntities.keySet().each {
             if (it == aboutAlias) return
             def pending = (Map) pendingResources[it]
-            if (pending.subsumeSingle) {
+            if (pending.absorbSingle) {
                 def link = (String) (pending.link ?: pending.addLink)
                 def parent = (Map) (pending.about ? localEntities[pending.about] : entity)
                 def items = (List<Map>) parent[link]
@@ -1905,7 +1905,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         pendingResources.each { key, pending ->
-            if (pending.subsumeSingle && !aboutMap[key]) {
+            if (pending.absorbSingle && !aboutMap[key]) {
                 def single = aboutMap[pending.about]
                 if (!single && pending.resourceType in Util.asList(entity['@type']))
                     single = [entity]

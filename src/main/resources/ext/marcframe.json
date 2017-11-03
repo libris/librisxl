@@ -825,7 +825,7 @@
     },
 
     "termbase_with_uri_from_i2": {
-      "FIXME-1": "Ensure all usages map $a to their own need (and use termComponentList with subsumeSingle:true! and required?). Also, most of these patterns can probably be combined with subjectbase, and rely on subsumeSingle.",
+      "FIXME-1": "Ensure all usages map $a to their own need (and use termComponentList with absorbSingle:true! and required?). Also, most of these patterns can probably be combined with subjectbase, and rely on absorbSingle.",
       "FIXME-2": "mostly irrelevant when using i2 rule in subjectbase!? Nah, that's to explicitly preserve the data (too)?",
       "match": [
         {
@@ -903,7 +903,7 @@
         "_:work": {
           "addLink": "termComponentList",
           "resourceType": "Work",
-          "subsumeSingle": true
+          "absorbSingle": true
         },
         "_:title": {
           "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
@@ -4679,7 +4679,7 @@
       "TODO:appendToExistingEntity": "When repeated field, exist to existing provisionActivity and don't create new provisionActivity",
       "pendingResources": {
         "_:publication": {"addLink": "publication", "resourceType": "Publication", "embedded": true},
-        "_:pubPart": {"about": "_:publication", "addLink": "hasPart", "resourceType": "Publication", "subsumeSingle": true},
+        "_:pubPart": {"about": "_:publication", "addLink": "hasPart", "resourceType": "Publication", "absorbSingle": true},
         "_:manufacture": {"addLink": "manufacture", "resourceType": "Manufacture", "embedded": true}
       },
       "TODO:groupByRepetitionAndPunctuationPattern": "$3 $a $b $c $e $f $g",
@@ -5085,7 +5085,7 @@
           "addLink": "production",
           "resourceType": "Production",
           "pendingResources": {
-            "_:part": {"addLink": "hasPart", "resourceType": "Production", "subsumeSingle": true}
+            "_:part": {"addLink": "hasPart", "resourceType": "Production", "absorbSingle": true}
           }
         },
         {
@@ -5093,7 +5093,7 @@
           "addLink": "publication",
           "resourceType": "Publication",
           "pendingResources": {
-            "_:part": {"addLink": "hasPart", "resourceType": "Publication", "subsumeSingle": true}
+            "_:part": {"addLink": "hasPart", "resourceType": "Publication", "absorbSingle": true}
           }
         },
         {
@@ -5101,7 +5101,7 @@
           "addLink": "distribution",
           "resourceType": "Distribution",
           "pendingResources": {
-            "_:part": {"addLink": "hasPart", "resourceType": "Distribution", "subsumeSingle": true}
+            "_:part": {"addLink": "hasPart", "resourceType": "Distribution", "absorbSingle": true}
           }
         },
         {
@@ -5109,7 +5109,7 @@
           "addLink": "manufacture",
           "resourceType": "Manufacture",
           "pendingResources": {
-            "_:part": {"addLink": "hasPart", "resourceType": "Manufacture", "subsumeSingle": true}
+            "_:part": {"addLink": "hasPart", "resourceType": "Manufacture", "absorbSingle": true}
           }
         },
         {
@@ -5117,7 +5117,7 @@
           "addLink": "copyright",
           "resourceType": "Copyright",
           "pendingResources": {
-            "_:part": {"addLink": "hasPart", "resourceType": "Copyright", "subsumeSingle": true}
+            "_:part": {"addLink": "hasPart", "resourceType": "Copyright", "absorbSingle": true}
           },
           "TODO": {
             "TODO": "Only $c? There *might* be other facts; drop those?",
@@ -5134,7 +5134,7 @@
       "embedded": true,
       "repeatable": true,
       "pendingResources": {
-        "_:part": {"addLink": "hasPart", "resourceType": "ProvisionActivity", "subsumeSingle": true}
+        "_:part": {"addLink": "hasPart", "resourceType": "ProvisionActivity", "absorbSingle": true}
       },
       "$a": {"aboutNew": "_:part", "link": "place", "resourceType": "Place", "property": "label", "leadingPunctuation": " ;"},
       "$b": {"aboutAltNew": "_:part", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :"},
@@ -5954,7 +5954,7 @@
             "_:work": {
               "addLink": "termComponentList",
               "resourceType": "Work",
-              "subsumeSingle": true
+              "absorbSingle": true
             },
             "_:title": {
               "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
@@ -5987,7 +5987,7 @@
             "_:agent": {
               "addLink": "termComponentList",
               "resourceType": "Family",
-              "subsumeSingle": true
+              "absorbSingle": true
             }
           }
         },
@@ -6008,7 +6008,7 @@
         "_:agent": {
           "addLink": "termComponentList",
           "resourceType": "Person",
-          "subsumeSingle": true
+          "absorbSingle": true
         }
       },
       "_spec": [
@@ -6553,7 +6553,7 @@
             "_:work": {
               "addLink": "termComponentList",
               "resourceType": "Work",
-              "subsumeSingle": true
+              "absorbSingle": true
             },
             "_:title": {
               "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
@@ -6715,7 +6715,7 @@
           "addLink": "termComponentList",
           "resourceType": "Temporal",
           "required": true,
-          "subsumeSingle": true
+          "absorbSingle": true
         }
       },
       "$a": {"about": "_:term", "property": "prefLabel"},
@@ -6775,7 +6775,7 @@
           "addLink": "termComponentList",
           "resourceType": "Topic",
           "required": true,
-          "subsumeSingle": true
+          "absorbSingle": true
         }
       },
       "$a": {"about": "_:topic", "property": "prefLabel"},
@@ -6988,7 +6988,7 @@
           "addLink": "termComponentList",
           "resourceType": "Geographic",
           "required": true,
-          "subsumeSingle": true
+          "absorbSingle": true
         }
       },
       "$a": {"about": "_:topic", "property": "prefLabel"},
@@ -7152,7 +7152,7 @@
           "addLink": "termComponentList",
           "resourceType": "GenreForm",
           "required": true,
-          "subsumeSingle": true
+          "absorbSingle": true
         }
       },
       "$a": {"about": "_:topic", "property": "prefLabel"},
@@ -9772,7 +9772,7 @@
           "addLink": "termComponentList",
           "resourceType": "Topic",
           "required": true,
-          "subsumeSingle": true
+          "absorbSingle": true
         }
       },
       "$a": {"about": "_:topic", "property": "prefLabel"},
