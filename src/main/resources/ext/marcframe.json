@@ -10856,7 +10856,16 @@
       ],
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html"
     },
-    "751": {},
+    "751": {
+      "addLink": "marc:hasAddedEntryGeographicName",
+      "resourceType": "marc:AddedEntryGeographicName",
+      "$a": {"property": "marc:geographicName"},
+      "$e": {"addProperty": "marc:relatorTerm"},
+      "$2": {"property": "marc:sourceOfHeadingOrTerm"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$4": {"addProperty": "marc:relatorCode"},
+      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+    },
     "755": {
       "include": ["subjectbase"],
       "i1": null,
