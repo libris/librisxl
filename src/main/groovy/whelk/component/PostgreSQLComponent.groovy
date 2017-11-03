@@ -11,6 +11,7 @@ import whelk.IdType
 import whelk.JsonLd
 import whelk.Location
 import whelk.exception.StorageCreateFailedException
+import whelk.filter.LinkFinder
 import whelk.util.URIWrapper
 
 import java.sql.*
@@ -78,6 +79,8 @@ class PostgreSQLComponent {
 
     String mainTableName
 
+    LinkFinder linkFinder
+
     class AcquireLockException extends RuntimeException { AcquireLockException(String s) { super(s) } }
 
     class ConflictingHoldException extends RuntimeException { ConflictingHoldException(String s) { super(s) } }
@@ -119,6 +122,9 @@ class PostgreSQLComponent {
             connectionPool.setMaxTotal(MAX_CONNECTION_COUNT)
             connectionPool.setDefaultAutoCommit(true)
         }
+
+        if (sqlUrl != null)
+            this.linkFinder = new LinkFinder(this)
 
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
@@ -263,6 +269,10 @@ class PostgreSQLComponent {
 
     boolean store(Document doc, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
+
+        if (linkFinder != null)
+            linkFinder.replaceSameAsLinksWithPrimaries(doc.data)
+
         Connection connection = getConnection()
         connection.setAutoCommit(false)
 
@@ -442,6 +452,8 @@ class PostgreSQLComponent {
 
             // Performs the callers updates on the document
             updateAgent.update(doc)
+            if (linkFinder != null)
+                linkFinder.replaceSameAsLinksWithPrimaries(doc.data)
 
             Date modTime = new Date()
             if (minorUpdate) {

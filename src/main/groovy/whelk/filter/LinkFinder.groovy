@@ -81,6 +81,12 @@ class LinkFinder {
         }
 
         for (Object key : data.keySet()) {
+
+            // sameAs objects are not links per se, and must not be replaced
+            String keyString = (String) key
+            if (keyString.equals("sameAs"))
+                return
+
             Object value = data.get(key)
 
             if (value instanceof List)
