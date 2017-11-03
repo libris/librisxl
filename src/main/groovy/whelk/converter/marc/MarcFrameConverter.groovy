@@ -1498,17 +1498,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         matchRules = MatchRule.parseRules(this, fieldDfn) ?: Collections.emptyList()
 
-        // TODO: remove old aboutAlias mechanism (more of a hack)
-        def aboutAlias = fieldDfn['about']
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
-            if (m) {
-                if (obj && obj['about'] == aboutAlias) {
-                    obj = obj.findAll { it.key != 'about' }
-                }
-                if (obj) {
-                    addSubfield(m.group(1), obj)
-                }
+            if (m && obj) {
+                addSubfield(m.group(1), obj)
             }
         }
 
@@ -1925,8 +1918,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     def revertOne(Map data, Map currentEntity, Map<String, List> aboutMap = null,
                     MatchRule usedMatchRule = null) {
 
-        def i1 = usedMatchRule?.ind1 ?: ind1 ? ind1.revert(data, currentEntity) : ' '
-        def i2 = usedMatchRule?.ind2 ?: ind2 ? ind2.revert(data, currentEntity) : ' '
+        def i1Entities = ind1?.about ? aboutMap[ind1.about] : [currentEntity]
+        def i2Entities = ind2?.about ? aboutMap[ind2.about] : [currentEntity]
+
+        def i1 = usedMatchRule?.ind1 ?: ind1 ? i1Entities.findResult { ind1.revert(data, it) } : ' '
+        def i2 = usedMatchRule?.ind2 ?: ind2 ? i2Entities.findResult { ind2.revert(data, it) } : ' '
 
         def subs = []
         def failedRequired = false
