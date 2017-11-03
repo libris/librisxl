@@ -1923,8 +1923,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     def revertOne(Map data, Map currentEntity, Map<String, List> aboutMap = null,
                     MatchRule usedMatchRule = null) {
 
-        def i1 = usedMatchRule?.ind1 ?: ind1 ? ind1.revert(data, currentEntity) : ' '
-        def i2 = usedMatchRule?.ind2 ?: ind2 ? ind2.revert(data, currentEntity) : ' '
+        def i1Entities = ind1?.about ? aboutMap[ind1.about] : [currentEntity]
+        def i2Entities = ind2?.about ? aboutMap[ind2.about] : [currentEntity]
+
+        def i1 = usedMatchRule?.ind1 ?: ind1 ? i1Entities.findResult { ind1.revert(data, it) } : ' '
+        def i2 = usedMatchRule?.ind2 ?: ind2 ? i2Entities.findResult { ind2.revert(data, it) } : ' '
 
         def subs = []
         def failedRequired = false
