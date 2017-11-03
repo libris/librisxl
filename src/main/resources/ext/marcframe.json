@@ -10353,7 +10353,19 @@
       "TODO": "alternativeForm a Work (like a structured altLabel)"
     },
     "447": {"ignored": true, "NOTE:record-count": 0},
-    "448": {},
+    "448": {
+      "addLink": "marc:hasSeeFromTracingChronologicalTerm",
+      "resourceType": "marc:SeeFromTracingChronologicalTerm",
+      "$a": {"property": "marc:chronologicalTerm"},
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
     "450": {
       "$a": {"addProperty": "altLabel"},
       "match": [
