@@ -9339,7 +9339,7 @@
     "014": {"ignored": true, "NOTE:record-count": 1, "NOTE:LC": "nac"},
     "016": {"ignored": true, "NOTE:record-count": 4, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "020" : {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS EJ"},
-    "022" : {},
+    "022" : {"inherit": "bib"},
     "024" : {
       "inherit": "bib",
       "i1": {
