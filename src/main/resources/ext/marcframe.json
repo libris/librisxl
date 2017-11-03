@@ -3634,7 +3634,25 @@
       "$m": {"property": "marc:beginningOfDateValid"},
       "$n": {"property": "marc:endOfDateValid"}
     },
-    "047": {},
+    "047": {
+      "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "addLink": "marc:hasFormOfMusicalCompositionCode",
+      "resourceType": "marc:FormOfMusicalCompositionCode",
+      "i1": {
+        "link": null,
+        "tokenMap": {
+          "7": "Annat kodsystem specificerat i delfält $2"
+        }
+      },
+      "i2": {
+        "link": null,
+        "tokenMap": {
+          "7": "sourceSpecifiedInSubfield2"
+        }
+      },
+      "$a": {"addProperty": "marc:formOfMusicalCompositionCode"},
+      "$2": {"property": "marc:sourceOfCode"}
+    },
     "048": {
       "NOTE:local":"ANVÄNDS NORMALT EJ",
       "addLink": "marc:hasNumberOfInstrumentsOrVoicesCode",
