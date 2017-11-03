@@ -67,6 +67,11 @@
         <servlet-class>whelk.rest.api.RecordRelationAPI</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
+    <servlet>
+        <servlet-name>DuplicatesAPI</servlet-name>
+        <servlet-class>whelk.rest.api.DuplicatesAPI</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
 
     <servlet>
         <servlet-name>PrometheusSimpleClientServlet</servlet-name>
@@ -112,6 +117,11 @@
     <servlet-mapping>
         <servlet-name>RefreshAPI</servlet-name>
         <url-pattern>/_refresh</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>DuplicatesAPI</servlet-name>
+        <url-pattern>/_duplicates</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
