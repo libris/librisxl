@@ -3689,8 +3689,53 @@
       "$b": {"property": "marc:itemNumber"},
       "$c": {"property": "marc:copyInformation"}
     },
-    "052": {},
-    "055": {},
+    "052": {
+      "addLink": "marc:hasGeographicClassification",
+      "resourceType": "marc:GeographicClassification",
+      "i1": {
+        "link": null,
+        "tokenMap": {
+          "": "uSDeptOfDefenseClassification",
+          "0": "US Dept of Defense-klassifikation (obsolet, använd ind 1 = 1)",
+          "1": "U.S. Dept. of Defense-klassification",
+          "7": "sourceSpecifiedInSubfield2"
+        }
+      },
+      "$a": {"property": "marc:geographicClassificationAreaCode"},
+      "$b": {"addProperty": "marc:geographicClassificationSubareaCode"},
+      "$d": {"addProperty": "marc:populatedPlaceName"},
+      "$2": {"property": "marc:codeSource"}
+    },
+    "055": {
+      "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "addLink": "marc:hasClassificationNumbersAssignedInCanada",
+      "resourceType": "marc:ClassificationNumbersAssignedInCanada",
+      "i1": {
+        "link": null,
+        "tokenMap": {
+          "0": "workHeldByLac",
+          "1": "workNotHeldByLac"
+        }
+      },
+      "i2": {
+        "link": null,
+        "tokenMap": {
+          "0": "lcBasedCallNumberAssignedByLac",
+          "1": "completeLcClassNumberAssignedByLac",
+          "2": "incompleteLcClassNumberAssignedByLac",
+          "3": "lcBasedCallNumberAssignedByTheContributingLibrary",
+          "4": "completeLcClassNumberAssignedByTheContributingLibrary",
+          "5": "incompleteLcClassNumberAssignedByTheContributingLibrary",
+          "6": "otherCallNumberAssignedByLac",
+          "7": "otherClassNumberAssignedByLac",
+          "8": "otherCallNumberAssignedByTheContributingLibrary",
+          "9": "otherClassNumberAssignedByTheContributingLibrary"
+        }
+      },
+      "$a": {"property": "marc:classificationNumber"},
+      "$b": {"property": "marc:itemNumber"},
+      "$2": {"property": "marc:sourceOfCallClassNumber"}
+    },
     "060": {
       "aboutEntity": "?work",
       "addLink": "classification",
