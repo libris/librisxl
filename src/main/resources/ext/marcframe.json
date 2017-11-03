@@ -3614,7 +3614,7 @@
       "link": "marc:hasTimePeriodOfContent",
       "resourceType": "marc:TimePeriodOfContent",
       "i1": {
-        "link": null,
+        "TODO:link": null,
         "tokenMap": {
           "0": "singleDateTime",
           "1": "multipleSingleDatesTimes",
@@ -3640,13 +3640,13 @@
       "addLink": "marc:hasFormOfMusicalCompositionCode",
       "resourceType": "marc:FormOfMusicalCompositionCode",
       "i1": {
-        "link": null,
+        "TODO:link": null,
         "tokenMap": {
           "7": "Annat kodsystem specificerat i delfält $2"
         }
       },
       "i2": {
-        "link": null,
+        "TODO:link": null,
         "tokenMap": {
           "7": "sourceSpecifiedInSubfield2"
         }
@@ -3659,7 +3659,7 @@
       "addLink": "marc:hasNumberOfInstrumentsOrVoicesCode",
       "resourceType": "marc:NumberOfInstrumentsOrVoicesCode",
       "i2": {
-        "link": null,
+        "TODO:link": null,
         "tokenMap": {
           "7": "sourceSpecifiedInSubfield2"
         }
@@ -3694,7 +3694,7 @@
       "addLink": "marc:hasGeographicClassification",
       "resourceType": "marc:GeographicClassification",
       "i1": {
-        "link": null,
+        "TODO:link": null,
         "tokenMap": {
           "": "uSDeptOfDefenseClassification",
           "0": "US Dept of Defense-klassifikation (obsolet, använd ind 1 = 1)",
@@ -3712,14 +3712,14 @@
       "addLink": "marc:hasClassificationNumbersAssignedInCanada",
       "resourceType": "marc:ClassificationNumbersAssignedInCanada",
       "i1": {
-        "link": null,
+        "TODO:link": null,
         "tokenMap": {
           "0": "workHeldByLac",
           "1": "workNotHeldByLac"
         }
       },
       "i2": {
-        "link": null,
+        "TODO:link": null,
         "tokenMap": {
           "0": "lcBasedCallNumberAssignedByLac",
           "1": "completeLcClassNumberAssignedByLac",
@@ -3752,7 +3752,7 @@
       "link": "marc:hasNationalAgriculturalLibraryCallNumber",
       "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
       "i1": {
-        "link": null,
+        "TODO:link": null,
         "tokenMap": {
           "0": "itemInNal",
           "1": "itemNotInNal"
@@ -3855,7 +3855,7 @@
       "addLink": "marc:hasGovernmentDocumentClassificationNumber",
       "resourceType": "marc:GovernmentDocumentClassificationNumber",
       "i1": {
-        "link": null,
+        "TODO:link": null,
         "tokenMap": {
           "0": "superintendentOfDocumentsClassificationSystem",
           "1": "governmentOfCanadaPublicationsOutlineOfClassification"
@@ -6213,7 +6213,7 @@
       "addLink": "marc:hasOwnershipAndCustodialHistory",
       "resourceType": "marc:OwnershipAndCustodialHistory",
       "i1": {
-        "link": null,
+        "TODO:link": null,
         "tokenMap": {
           "0": "private",
           "1": "notPrivate"
@@ -9426,7 +9426,7 @@
       "addLink": "marc:hasLCClassificationNumber",
       "resourceType": "marc:LCClassificationNumber",
       "i2": {
-      "link": null,
+      "TODO:link": null,
         "tokenMap": {
           "0": "assignedByLc",
           "4": "assignedByAgencyOtherThanLc"
