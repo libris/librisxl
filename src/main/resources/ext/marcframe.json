@@ -4929,6 +4929,7 @@
       "$2": {"property": null}
     },
     "258": {
+      "NOTE:LC": "nac",
       "addLink": "marc:hasPhilatelicIssueDate",
       "resourceType": "marc:PhilatelicIssueDate",
       "$a": {"property": "marc:issuingJurisdiction"},
