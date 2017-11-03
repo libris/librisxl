@@ -6153,7 +6153,28 @@
         }
       ]
     },
-    "541": {},
+    "541": {
+      "addLink": "marc:hasImmediateSourceOfAcquisitionNote",
+      "resourceType": "marc:ImmediateSourceOfAcquisitionNote",
+      "i1": {
+        "TODO:link": null,
+        "tokenMap": {
+          "0": "private",
+          "1": "notPrivate"
+        }
+      },
+      "$a": {"property": "marc:sourceOfAcquisition"},
+      "$b": {"property": "marc:address"},
+      "$c": {"property": "marc:methodOfAcquisition"},
+      "$d": {"property": "marc:dateOfAcquisition"},
+      "$e": {"property": "marc:accessionNumber"},
+      "$f": {"property": "marc:owner"},
+      "$h": {"property": "marc:purchasePrice"},
+      "$n": {"addProperty": "marc:extent"},
+      "$o": {"addProperty": "marc:typeOfUnit"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$5": {"property": "marc:institutionToWhichFieldApplies"}
+    },
     "542": {"NOTE:record-count": 0, "ignored": true},
     "544": {
       "addLink": "hasNote",
