@@ -5809,7 +5809,17 @@
     },
 
     "534": {},
-    "535": {},
+    "535": {
+      "addLink": "marc:hasLocationOfOriginalsDuplicatesNote",
+      "resourceType": "marc:LocationOfOriginalsDuplicatesNote",
+      "i1": {"property": "marc:holderOf"},
+      "$a": {"property": "marc:custodian"},
+      "$b": {"property": "marc:postalAddress"},
+      "$c": {"addProperty": "marc:country"},
+      "$d": {"addProperty": "marc:telecommunicationsAddress"},
+      "$g": {"property": "marc:repositoryLocationCode"},
+      "$3": {"property": "marc:materialsSpecified"}
+    },
     "536": {
       "aboutEntity": "?thing",
       "addLink": "hasNote",
@@ -5905,7 +5915,12 @@
       "$a": {"property": "label"}
     },
 
-    "550": {},
+    "550": {
+      "addLink": "marc:hasIssuingBodyNote",
+      "resourceType": "marc:IssuingBodyNote",
+      "$a": {"property": "marc:issuingBodyNote"},
+      "$6": {"property": "marc:fieldref"}
+    },
     "552": {"NOTE:record-count": 2, "ignored": true},
     "555": {
       "aboutEntity": "?thing",
