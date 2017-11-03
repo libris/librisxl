@@ -3489,7 +3489,16 @@
 
     "036": {"NOTE:record-count": 118, "ignored": true},
 
-    "037": {},
+    "037": {
+      "addLink": "marc:hasSourceofAcquisition",
+      "resourceType": "marc:SourceofAcquisition",
+      "$a": {"property": "marc:stockNumber"},
+      "$b": {"property": "marc:sourceOfStockNumberAcquisition"},
+      "$c": {"addProperty": "marc:termsOfAvailability"},
+      "$f": {"addProperty": "marc:formOfIssue"},
+      "$g": {"addProperty": "marc:additionalFormatCharacteristics"},
+      "$n": {"addProperty": "marc:note"}
+    },
 
     "038": {
       "TODO:aboutEntity": "?record",
