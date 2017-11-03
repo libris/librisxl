@@ -10592,7 +10592,19 @@
     },
     "581": {"ignored": true, "NOTE:record-count": 0},
     "582": {"ignored": true, "NOTE:record-count": 0},
-    "585": {},
+    "585": {
+      "addLink": "marc:hasSeeAlsoFromTracingFormSubdivision",
+      "resourceType": "marc:SeeAlsoFromTracingFormSubdivision",
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$4": {"ignored": true},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+    },
     "599": {"ignored": true, "NOTE:local": "MAKULERAT"},
 
     "640": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS F.N. EJ"},
