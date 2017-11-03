@@ -548,14 +548,13 @@ class MarcRuleSet {
                 def baseDfn = config['patterns'][include]
                 assert tag && baseDfn
                 if (baseDfn.include) {
-                    baseDfn = processInclude(config, baseDfn, tag)
+                    baseDfn = processInclude(config, baseDfn, "$tag+$include")
                 }
-                assert tag && !(baseDfn.keySet().intersect(fieldDfn.keySet()) - 'include')
-                merged += baseDfn
+                mergeFieldDefinitions(baseDfn, merged, "$tag+$include")
             }
         }
 
-        merged += fieldDfn
+        mergeFieldDefinitions(fieldDfn, merged, tag)
         merged.remove('include')
 
         def matchRules = merged['match']
@@ -566,6 +565,26 @@ class MarcRuleSet {
         }
 
         return merged
+    }
+
+    static void mergeFieldDefinitions(Map sourceDfn, Map targetDfn, String tag) {
+        def targetPending = targetDfn.remove('pendingResources')
+        assert tag && !(sourceDfn.keySet().intersect(targetDfn.keySet())
+                - 'include' - 'NOTE' - 'TODO')
+
+        // Treat pendingResources specially by merging them.
+        def sourcePending = sourceDfn.pendingResources
+        if (sourcePending) {
+            targetPending = targetPending ?: [:]
+            //assert tag && !(targetPending.keySet().intersect(sourcePending.keySet()))
+            targetPending.putAll(sourcePending)
+        }
+
+        targetDfn.putAll(sourceDfn)
+
+        if (targetPending) {
+            targetDfn.pendingResources = targetPending
+        }
     }
 
     boolean matchesData(Map data) {
@@ -1448,6 +1467,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     List<List<MarcSubFieldHandler>> orderedAndGroupedSubfields
     List<MatchRule> matchRules
     Map<String, Map> pendingResources
+    String aboutAlias
     String ignoreOnRevertInFavourOf
 
     static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
@@ -1458,6 +1478,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         ind1 = fieldDfn.i1 ? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1) : null
         ind2 = fieldDfn.i2 ? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2) : null
         pendingResources = fieldDfn.pendingResources
+        aboutAlias = fieldDfn.aboutAlias
 
         dependsOn = fieldDfn.dependsOn
 
@@ -1477,17 +1498,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         matchRules = MatchRule.parseRules(this, fieldDfn) ?: Collections.emptyList()
 
-        def aboutAlias = fieldDfn['about']
-
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
-            if (m) {
-                if (obj && obj['about'] == aboutAlias) {
-                    obj = obj.findAll { it.key != 'about' }
-                }
-                if (obj) {
-                    addSubfield(m.group(1), obj)
-                }
+            if (m && obj) {
+                addSubfield(m.group(1), obj)
             }
         }
 
@@ -1579,6 +1593,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def localEntities = [:]
 
+        if (aboutAlias) {
+            localEntities[aboutAlias] = entity
+        }
+
         [ind1: ind1, ind2: ind2].each { indKey, handler ->
             if (!handler)
                 return
@@ -1617,9 +1635,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         if (constructProperties) {
             constructProperties.each { key, dfn ->
-                if (true) { //!key in entity) {
+                if (!(key in entity)) {
                     def parts = Util.getAllByPath(entity, (String) dfn.property)
-                    if (parts) {
+                    if (parts?.size() > 1 && !parts.any { it.is(null) }) {
                         def constructed = parts.join((String) dfn.join)
                         entity[key] = constructed
                         uriTemplateParams[key] = constructed
@@ -1660,10 +1678,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        // If subsumeSingle && only one item: merge it with parent.
+        // If absorbSingle && only one item: merge it with parent.
         localEntities.keySet().each {
+            if (it == aboutAlias) return
             def pending = (Map) pendingResources[it]
-            if (pending.subsumeSingle) {
+            if (pending.absorbSingle) {
                 def link = (String) (pending.link ?: pending.addLink)
                 def parent = (Map) (pending.about ? localEntities[pending.about] : entity)
                 def items = (List<Map>) parent[link]
@@ -1738,7 +1757,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map getLocalEntity(Map state, Map owner, String id, Map localEntities, boolean forceNew = false) {
         def entity = (Map) localEntities[id]
         if (entity == null || forceNew) {
-            assert pendingResources, "Missing pendingResources in ${fieldId}, cannot use ${id}"
+            assert id in pendingResources, "Missing pendingResources in ${fieldId}, cannot use ${id}"
             def pending = pendingResources[id]
             entity = localEntities[id] = newEntity(state,
                     (String) pending.resourceType,
@@ -1818,12 +1837,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             useEntities.each {
-                Tuple2<Boolean, Map<String, List>> buildResult = buildAboutMap(it)
-                boolean shouldMap = buildResult.first
-                Map aboutMap = buildResult.second
-
-                if (shouldMap)
-                {
+                def (boolean requiredOk, Map aboutMap) = buildAboutMap(aboutAlias, pendingResources, it)
+                if (requiredOk) {
                     def field = revertOne(data, it, aboutMap, usedMatchRule)
                     if (field) {
                         if (useLink.subfield) {
@@ -1839,64 +1854,70 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    Tuple2<Boolean, Map<String, List>> buildAboutMap(Map entity) {
+    static Tuple2<Boolean, Map<String, List>> buildAboutMap(String aboutAlias, Map pendingResources, Map entity) {
         Map<String, List> aboutMap = [:]
-        boolean shouldMap = true
-        if (!pendingResources) {
-            return new Tuple2<Boolean, Map>(shouldMap, aboutMap)
-        }
-        pendingResources.each { key, pending ->
-            def link = pending.link ?: pending.addLink
-            def resourceType = pending.resourceType
+        boolean requiredOk = true
 
-            def parent = entity
-            if (pending.about) {
-                def pendingParent = pendingResources[pending.about]
-                if (pendingParent) {
-                    def ownerEntity = entity
-                    if (pendingParent.about) {
-                        // FIXME: recurse instead, this only goes to depth 2!
-                        def grandParent = pendingResources[pendingParent.about]
-                        ownerEntity = entity[grandParent.link ?: grandParent.addLink]
-                        if (!ownerEntity) return
+        if (aboutAlias) {
+            aboutMap[aboutAlias] = [entity]
+        }
+
+        if (pendingResources) {
+            // TODO: fatigue HACK; instead collect recursively...
+            for (int i = pendingResources.size(); i > 0; i--) {
+                pendingResources?.each { key, pending ->
+                    if (key in aboutMap) {
+                        return
                     }
-                    parent = ownerEntity[pendingParent.link ?: pendingParent.addLink]
-                }
-            }
-            def about = parent ? parent[link] : null
-            Util.asList(about).each {
-                //If @type of entity and resourceType of pendingResurce is not the same. Don't continue with revert.
-                if (it && (it['@type'] != resourceType))
-                    shouldMap = false
-                else if (it && (!resourceType || it['@type'] == resourceType)) {
-                    aboutMap.get(key, []).add(it)
+                    def resourceType = pending.resourceType
+                    def parents = pending.about == null ? [entity] :
+                        pending.about in aboutMap ? aboutMap[pending.about] : null
+                    parents?.each {
+                        def about = it[pending.link ?: pending.addLink]
+                        Util.asList(about).each {
+                            if (!it || (resourceType && !(resourceType in Util.asList(it['@type'])))) {
+                                if (pending.required) {
+                                    requiredOk = false
+                                }
+                                return
+                            }
+                            aboutMap.get(key, []).add(it)
+                        }
+                    }
                 }
             }
         }
 
         pendingResources.each { key, pending ->
-            if (pending.subsumeSingle && !aboutMap[key]) {
-                aboutMap[key] = aboutMap[pending.about] ?: [entity]
+            if (pending.absorbSingle && !aboutMap[key]) {
+                def single = aboutMap[pending.about]
+                if (!single && pending.resourceType in Util.asList(entity['@type']))
+                    single = [entity]
+                if (single)
+                    aboutMap[key] = single
+                else
+                    requiredOk = false
             }
         }
 
-        return new Tuple2<Boolean, Map>(shouldMap, aboutMap)
+        return new Tuple2<Boolean, Map>(requiredOk, aboutMap)
     }
 
     @CompileStatic(SKIP)
     def revertOne(Map data, Map currentEntity, Map<String, List> aboutMap = null,
                     MatchRule usedMatchRule = null) {
 
-        def i1 = usedMatchRule?.ind1 ?: ind1 ? ind1.revert(data, currentEntity) : ' '
-        def i2 = usedMatchRule?.ind2 ?: ind2 ? ind2.revert(data, currentEntity) : ' '
+        def i1Entities = ind1?.about ? aboutMap[ind1.about] : [currentEntity]
+        def i2Entities = ind2?.about ? aboutMap[ind2.about] : [currentEntity]
+
+        def i1 = usedMatchRule?.ind1 ?: ind1 ? i1Entities.findResult { ind1.revert(data, it) } : ' '
+        def i2 = usedMatchRule?.ind2 ?: ind2 ? i2Entities.findResult { ind2.revert(data, it) } : ' '
 
         def subs = []
         def failedRequired = false
 
         def usedEntities = new HashSet()
         def thisTag = this.tag.split(/[\[:]/)[0]
-
-        Map<String, List> remainingAboutMap = [:]
 
         def prevAdded = null
 
@@ -2446,7 +2467,11 @@ class Util {
             if (chain.size() > 1) {
                 collectByChain(value, chain.subList(1, chain.size()), results)
             } else {
-                results.addAll(asList(value))
+                if (value instanceof List) {
+                    results.addAll(value)
+                } else {
+                    results << value
+                }
             }
         }
     }
