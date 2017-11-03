@@ -8767,25 +8767,454 @@
       "addLink": "hasSeries",
       "resourceType": "Serial",
       "TODO:aboutEntity?": "?series",
-      "include": "agentdata",
-      "$t": {"property": "title"},
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "TODO:revert": "Get mixed up with 440",
+      "TODO:include": "titledetails1xx7xx",
       "pendingResources": {
         "_:contribution": {
           "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
+          "resourceType": "PrimaryContribution"
         },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Person"
+        },
+        "_:title": {
+          "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
         }
-      }
+      },
+      "match": [
+        {"when": "i1=0", "include": "agentdataPerson"},
+        {"when": "i1=1", "include": "agentdataNameOfPerson"},
+        {
+          "when": "i1=3",
+          "include": "agentdataFamily",
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution"
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Family"
+            },
+            "_:title": {
+              "addLink": "hasTitle", "resourceType": "Title",
+              "embedded": true
+            }
+          }
+        }
+      ],
+      "NOTE:titledetails1xx7xx": "Temporarily moved these locally!!",
+      "$f": {"about": "_:title", "property": "originDate"},
+      "$h": {"about": "_:title", "property": "marc:mediaTerm"},
+
+      "$m": {"addProperty": "musicMedium"},
+      "$o": {"about": "_:title", "property": "version"},
+
+      "$r": {"about": "_:title", "property": "musicKey"},
+      "$s": {"about": "_:title", "property": "marc:version"},
+
+      "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
+      "NOTE:k": "Should we map to bf2:natureOfContent instead?",
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+      "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"},
+
+      "$t": {"about": "_:title", "property": "mainTitle"},
+      "$w": {"addProperty": "bibliographicRecordControlNumber"},
+      "$v": {"property": "seriesEnumeration"},
+      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
+      "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Sandemo, Margit"},
+            {"d": "1924-"},
+            {"t": "Sandemo-serien ;"},
+            {"v": "v 4"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Serial",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Person",
+                    "lifeSpan": "1924-",
+                    "familyName": "Sandemo",
+                    "givenName": "Margit"
+                  }
+                }],
+                "seriesEnumeration" : "v 4",
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Sandemo-serien ;"
+                }]
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"800": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Raymond Feist"},
+            {"t": "Demonwar saga."},
+            {"l": "Svenska"},
+            {"v": "v 2"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution" : [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Person",
+                  "name": "Raymond Feist"
+                }
+              }],
+              "language": {
+                "@type": "Language",
+                "label": "Svenska"
+              },
+              "seriesEnumeration": "v 2",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Demonwar saga."
+              }]
+            }]
+          }}
+        },
+        {
+          "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Sousa, John Philip,"},
+            {"d": "1854-1932"},
+            {"t": "Marches"},
+            {"m": "band."},
+            {"k": "Selections (Sousa American bicentennial collection);"} ,
+            {"v": "v.1."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Person",
+                  "familyName": "Sousa",
+                  "givenName": "John Philip",
+                  "lifeSpan": "1854-1932"
+                }
+              }],
+              "musicMedium": ["band."],
+              "seriesEnumeration": "v.1.",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Marches",
+                "marc:formSubheading": ["Selections (Sousa American bicentennial collection);"]
+              } ]
+            } ]
+          }}
+        },
+        {
+          "source": {"800": {"ind1": "3", "ind2": " ", "subfields": [
+            {"a": "Family X"},
+            {"t": "A title"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Family",
+                  "name": "Family X"
+                }
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "A title"
+              }]
+            }]
+          }}
+        }
+      ]
     },
-    "810": {},
-    "811": {},
+    "810": {
+      "addLink": "hasSeries",
+      "resourceType": "Serial",
+      "TODO:aboutEntity?": "?series",
+      "TODO:revert": "Get mixed up with 440",
+      "include": ["agentdataOrganization"],
+      "TODO:include": "titledetails1xx7xx",
+      "embedded": true,
+      "pendingResources": {
+        "_:contribution": {
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution"
+        },
+        "_:agent": {
+          "about": "_:contribution",
+          "link": "agent",
+          "resourceType": "Organization"
+        },
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"},
+        "_:title": {
+          "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "match": [
+        {
+          "when": "i1=1",
+          "match": [
+            {
+              "when": "$b", "include": "agentdataOrganizationSubUnit"
+            }
+          ],
+          "include": "agentdataOrganization",
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Jurisdiction",
+              "embedded": false
+            },
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"},
+            "_:title": {
+              "addLink": "hasTitle", "resourceType": "Title",
+              "embedded": true
+            }
+          }
+        },
+        {
+          "when": "$b",
+          "include": "agentdataOrganizationSubUnit"
+        }
+      ],
+      "NOTE:titledetails1xx7xx": "Temporarily moved these locally!!",
+      "$f": {"about": "_:title", "property": "originDate"},
+      "$h": {"about": "_:title", "property": "marc:mediaTerm"},
+
+      "$m": {"addProperty": "musicMedium"},
+      "$o": {"about": "_:title", "property": "version"},
+
+      "$r": {"about": "_:title", "property": "musicKey"},
+      "$s": {"about": "_:title", "property": "marc:version"},
+
+      "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
+      "NOTE:k": "Should we map to bf2:natureOfContent instead?",
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+      "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"},
+
+      "$t": {"about": "_:title", "property": "mainTitle"},
+      "$w": {"addProperty": "bibliographicRecordControlNumber"},
+      "$v": {"property": "seriesEnumeration"},
+      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
+      "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": {"810": {"ind1": "2", "ind2": " ", "subfields": [
+            {"a": "German Institute of Global and Area Studies <Hamburg>,"},
+            {"t": "GIGA working papers"},
+            {"v": "v 40"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Organization",
+                  "name": "German Institute of Global and Area Studies <Hamburg>,"
+                }
+              }],
+              "seriesEnumeration": "v 40",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "GIGA working papers"
+              }]
+            }]
+          }}
+        },
+        {
+          "source": {"810": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Buenos Aires (Argentina)."},
+            {"b": "Universidad nacional."},
+            {"b": "Instituto de Literatura Española."},
+            {"t": "Bibliografías criticas ;"},
+            {"v": "1"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Jurisdiction",
+                  "marc:subordinateUnit": ["Universidad nacional.", "Instituto de Literatura Española."],
+                  "isPartOf": {
+                    "@type": "Jurisdiction",
+                    "name": "Buenos Aires (Argentina)."
+                  }
+                }
+              }],
+              "seriesEnumeration": "1",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Bibliografías criticas ;"
+              }]
+            }]
+          }}
+        },
+        {
+          "source": {"810": {"ind1": "2", "ind2": " ", "subfields": [
+            {"a": "Harvard University."},
+            {"b": "Bureau of Business Research."},
+            {"t": "Bulletin"},
+            {"v": "no. 20."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Organization",
+                  "marc:subordinateUnit": ["Bureau of Business Research."],
+                  "isPartOf": {
+                    "@type": "Organization",
+                    "name": "Harvard University."
+                  }
+                }
+              }],
+              "seriesEnumeration": "no. 20.",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Bulletin"
+              } ]
+            }]
+          }}
+        }
+      ]
+    },
+    "811": {
+      "addLink": "hasSeries",
+      "resourceType": "Serial",
+      "TODO:aboutEntity?": "?series",
+      "TODO:revert": "Get mixed up with 440",
+      "include": ["agentdataOrganization"],
+      "TODO:include": "titledetails1xx7xx",
+      "i1": {"marcDefault": "2"},
+      "embedded": true,
+      "pendingResources": {
+        "_:contribution": {
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution"
+        },
+        "_:agent": {
+          "about": "_:contribution",
+          "link": "agent",
+          "resourceType": "Meeting"
+        },
+        "_:title": {
+          "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        },
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+      },
+      "NOTE:titledetails1xx7xx": "Temporarily moved these locally!!",
+      "$f": {"about": "_:title", "property": "originDate"},
+      "$h": {"about": "_:title", "property": "marc:mediaTerm"},
+
+      "$m": {"addProperty": "musicMedium"},
+      "$o": {"about": "_:title", "property": "version"},
+
+      "$r": {"about": "_:title", "property": "musicKey"},
+      "$s": {"about": "_:title", "property": "marc:version"},
+
+      "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
+      "NOTE:k": "Should we map to bf2:natureOfContent instead?",
+      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+      "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"},
+
+      "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
+      "$t": {"about": "_:title", "property": "mainTitle"},
+      "$w": {"addProperty": "bibliographicRecordControlNumber"},
+      "$v": {"property": "seriesEnumeration"},
+      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": {"811": {"ind1": "2", "ind2": " ", "subfields": [
+            {"a": "Vatican Council"},
+            {"n": "(2nd: "},
+            {"d": "1962-1964)"},
+            {"t": "Decretum de presbyterorum ministerio et vita."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Meeting",
+                  "name": "Vatican Council",
+                  "date": ["1962-1964)"],
+                  "partNumber": ["(2nd:"]
+                }
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Decretum de presbyterorum ministerio et vita."
+              }]
+            }]
+          }}
+        },
+        {
+          "source": {"811": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Foo"},
+            {"t": "Bar"}
+          ]}},
+          "normalized": {"811": {"ind1": "2", "ind2": " ", "subfields": [
+            {"a": "Foo"},
+            {"t": "Bar"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Serial",
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Meeting",
+                  "name": "Foo"
+                }
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Bar"
+              }]
+            }]
+          }}
+        }
+      ]
+    },
     "830": {
       "aboutEntity": "?work",
       "addLink": "hasSeries",
