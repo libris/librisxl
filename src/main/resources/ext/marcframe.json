@@ -3070,6 +3070,7 @@
       "include": ["identifier"],
       "resourceType": "ISBN",
       "$c": {"property": "acquisitionTerms"},
+      "$6": {"property": "marc:fieldref"},
       "subfieldOrder": "a q c z",
       "_spec": [
         {
@@ -3167,6 +3168,7 @@
       "$m": {"addProperty": "marc:canceledIssnL"},
       "$2": {"TODO:link": "typeNote"},
       "$y": {"TODO": "inherit:$z + specific: marc:incorrectIssn"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -3289,6 +3291,7 @@
         "link": "agent", "resourceType": "Organization", "property": "name"
       },
       "$q": {"addProperty": "qualifier"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {"028": {"ind1": "0", "ind2": " ", "subfields": [{"a": "1"}]}},
@@ -3471,6 +3474,7 @@
       ],
       "$a": {"addLink": "identifiedBy", "resourceType": "SystemNumber", "property": "value"},
       "TODO:a": "extract value from parantheses and source as rdfs:label",
+      "$6": {"property": "marc:fieldref"},
       "$9": {"addProperty": "librisIIINumber"},
       "_spec": [
         {
@@ -3513,6 +3517,7 @@
       "$c": {"link": "marc:transcribingAgency", "resourceType": "Organization", "property": "name"},
       "$d": {"link": "descriptionModifier", "resourceType": "Organization", "property": "name"},
       "$e": {"addLink": "descriptionConventions", "NOTE:repeatable": false, "resourceType": "DescriptionConventions", "property": "code"},
+      "$6": {"property": "marc:fieldref"},
       "$9": {"property": "license"}
     },
     "041": {
@@ -3548,7 +3553,8 @@
         "about": "_:translationSource",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
-      }
+      },
+      "$6": {"property": "marc:fieldref"}
     },
     "042": {
       "aboutEntity": "?record",
@@ -3603,7 +3609,8 @@
       "TOOO:i1": {},
       "TOOO:i2": {},
       "$a": {"property": "code", "TODO:repeatable": true},
-      "$b": {"property": "itemPortion"}
+      "$b": {"property": "itemPortion"},
+      "$6": {"property": "marc:fieldref"}
     },
 
     "051": {"ignored": true, "NOTE:record-count": 488, "NOTE:local":"ANVÄNDS NORMALT EJ", "NOTE:LC": "Item - shelfMark - ShelfMarkLcc"},
@@ -3694,6 +3701,7 @@
       "$q": {"requires-i2": "4", "link": "source", "resourceType": "Source", "property": "label"},
       "$b": {"property": "itemPortion"},
       "$m": {"ignored": true, "NOTE:record-count": 1},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -3828,7 +3836,6 @@
       "addLink": "classification",
       "resourceType": "Classification",
       "$a": {"property": "code", "required": true},
-
       "match": [
         {
           "when": "$2 =~ ^kssb/.+$",
@@ -3851,6 +3858,7 @@
       },
       "$b": {"property": "classificationItem"},
       "$q": {"link": "source", "resourceType": "Source", "property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -3894,6 +3902,7 @@
       "resourceType": "PrimaryContribution",
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
       "subfieldOrder": "a b c q d j g u e 4 t n p l k f",
       "_spec": [
         {
@@ -4144,6 +4153,7 @@
       "$0": {"addLink": "identifiedBy", "property": "value"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "TODO": [
         "change splitValueProperties to work on result, to handle match combo"
       ],
@@ -4298,6 +4308,7 @@
       "$0": {"addLink": "identifiedBy", "property": "value"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$j": {"addLink": "role", "property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
       "subfieldOrder": "a q n d c g e u j 4 t p l k f",
       "TODO:$j": "",
@@ -4417,6 +4428,7 @@
       "$d": {"property": "legalDate"},
       "$n": {"property": "partNumber"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -4522,6 +4534,7 @@
       "$a": {"property": "mainTitle"},
       "$b": {"property": "qualifier"},
       "i2": {"property": "marc:nonfilingChars"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -4557,6 +4570,7 @@
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
         "uriTemplate": "http://libris.kb.se/auth/{_}"
       },
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -4702,6 +4716,7 @@
       "$g": {"aboutEntity": "?thing", "property": "marc:bulkDates"},
       "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "surroundingChars": "[]"},
       "$s": {"property": "version"},
+      "$6": {"property": "marc:fieldref"},
       "i2": {"property": "marc:nonfilingChars"},
       "_spec": [
         {
@@ -4771,6 +4786,7 @@
       "$g": {"property": "comment"},
       "$h": {"property": "marc:mediaTerm", "surroundingChars": "[]"},
       "$i": {"property": "typeNote"},
+      "$6": {"property": "marc:fieldref"},
       "subfieldOrder": "i ...",
       "_spec": [
         {
@@ -4881,6 +4897,7 @@
       "$a": {"property": "editionStatement", "punctuationChars": "/"},
       "$b": {"property": "editionStatementRemainder"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "New ed."}, {"b": "2. pr."}]}},
@@ -4966,6 +4983,7 @@
       "$e": {"aboutNew": "_:manufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:;", "surroundingChars" : "()"},
       "$f": {"about": "_:manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :", "punctuationChars": ",:;)"},
       "$g": {"about": "_:manufacture", "property": "date", "leadingPunctuation": ",", "punctuationChars": ",:;"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": [
@@ -5404,6 +5422,7 @@
       "$a": {"aboutNew": "_:part", "link": "place", "resourceType": "Place", "property": "label", "leadingPunctuation": " ;"},
       "$b": {"aboutAltNew": "_:part", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :"},
       "$c": {"property": "date", "leadingPunctuation": ","},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": [
@@ -5528,7 +5547,8 @@
       "$g": {
         "about": "_:extent",
         "property": "marc:sizeOfUnit"
-      }
+      },
+      "$6": {"property": "marc:fieldref"}
     },
 
     "306": {},
@@ -5537,6 +5557,7 @@
     "310": {
       "aboutEntity": "?thing",
       "$a": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "TODO:$b": "Compare with 321"
     },
 
@@ -5761,7 +5782,8 @@
     "362": {
       "TOOO:i1": {},
       "aboutEntity": "?thing",
-      "$a": {"addProperty": "issueNumber"}
+      "$a": {"addProperty": "issueNumber"},
+      "$6": {"property": "marc:fieldref"}
     },
     "363": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "365": {"ignored": true, "NOTE:record-count": 8066, "NOTE:LC": "nac", "NOTE:local": "Avsett för bokhandelns information"},
@@ -5793,7 +5815,8 @@
       "$p": {"addProperty": "nameOfPartOfAWork", "punctuationChars": ".,=;"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
-      "$x": {"property": "issn", "punctuationChars": ".,=;"}
+      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$6": {"property": "marc:fieldref"}
     },
     "490": {
       "inherit": "440",
@@ -5810,6 +5833,7 @@
       "$a": {"property": "label"},
       "TODO:$3": {"property": "marc:materialsSpecified"},
       "TODO:$5": {"property": "marc:institutionToWhichFieldApplies"},
+      "$6": {"property": "marc:fieldref"},
       "repeatable": true
     },
     "501": {
@@ -5827,7 +5851,8 @@
       "$b": {"property": "degree"},
       "$c": {"property": "location"},
       "$d": {"property": "date"},
-      "$g": {"property": "comment"}
+      "$g": {"property": "comment"},
+      "$6": {"property": "marc:fieldref"}
     },
     "504": {
       "$a": {
@@ -5836,7 +5861,8 @@
         "resourceType": "BibliographyNote",
         "property": "label"
       },
-      "NOTE:was": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}}
+      "NOTE:was": {"$a": {"aboutEntity": "?thing", "addProperty": "supplementaryContentNote"}},
+      "$6": {"property": "marc:fieldref"}
     },
 
     "505": {
@@ -5857,6 +5883,7 @@
       "$r": {"about": "_:tocEntry", "property": "responsibilityStatement"},
       "$g": {"about": "_:tocEntry", "property": "comment"},
       "$u": {"about": "_:tocEntry", "addProperty": "uri"},
+      "$6": {"property": "marc:fieldref"},
       "TOOO:6": {},
       "_spec": [
         {
@@ -5909,7 +5936,7 @@
     },
 
     "507": {"$a": {"aboutEntity": "?thing", "property": "scaleNote", "NOTE:b": "concatenate with a, record-count: 2"}},
-    "508": {"$a": {"aboutEntity": "?thing", "addProperty": "creditsNote"}},
+    "508": {"$a": {"aboutEntity": "?thing", "addProperty": "creditsNote"}, "$6": {"property": "marc:fieldref"}},
 
     "510": {
       "addLink": "citedBy",
@@ -5924,7 +5951,8 @@
       "match": [{"when": "i1=1", "$a": {"addProperty": "participantNote"}}],
       "$a": {
         "addProperty": "performerNote"
-      }
+      },
+      "$6": {"property": "marc:fieldref"}
     },
 
     "513": {
@@ -5942,7 +5970,8 @@
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "IssuanceInformationNote",
-      "$a": {"property": "label"}
+      "$a": {"property": "label"},
+      "$6": {"property": "marc:fieldref"}
     },
     "516": {
       "aboutEntity": "?thing",
@@ -5974,6 +6003,7 @@
       "TODO:b": "Change to summaryNote?",
       "$c": {"addLink": "source", "resourceType": "Source", "NOTE:subfield-repeatable": "false", "property": "label"},
       "$u": {"addLink": "source", "resourceType": "Source", "property": "uri"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {"520": {"ind1": " ", "ind2": " ", "subfields": [
@@ -6001,6 +6031,7 @@
       "resourceType": "IntendedAudience",
       "TOOO:i1": {},
       "$a": {"property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "TODO:b": {"link": "source", "resourceType": "Source", "property": "label", "FIXME:peningResource": "Append to intendedAudience"}
     },
     "522": {
@@ -6024,6 +6055,7 @@
       "addLink": "hasInstance",
       "TODO:a": "Change to a more appropriate name of the property",
       "$a": {"addProperty": "comment"},
+      "$6": {"property": "marc:fieldref"},
       "embedded": true
     },
 
@@ -6180,7 +6212,7 @@
       "TODO:i1": "'0': BiographicalDataNote, '1': AdministrativeHistoryNote",
       "$a": {"property": "label"}
     },
-    "546": {"aboutEntity": "?work", "$a": {"addProperty": "languageNote"}},
+    "546": {"aboutEntity": "?work", "$a": {"addProperty": "languageNote"}, "$6": {"property": "marc:fieldref"}},
     "547": {
       "aboutEntity": "?thing",
       "addLink": "hasNote",
@@ -6216,7 +6248,13 @@
     "563": {},
     "565": {"NOTE:record-count": 2, "ignored": true},
     "567": {"NOTE:record-count": 0, "ignored": true},
-    "580": {"$a": {"aboutEntity": "?work", "addLink": "hasNote", "resourceType": "marc:LinkingEntryComplexityNote", "property": "label"}},
+    "580": {
+      "aboutEntity": "?work",
+      "addLink": "hasNote",
+      "resourceType": "marc:LinkingEntryComplexityNote",
+      "$a": {"property": "label"},
+      "$6": {"property": "marc:fieldref"}
+    },
     "581": {
       "aboutEntity": "?thing",
       "addLink": "hasNote",
@@ -6234,7 +6272,11 @@
       "resourceType": "marc:ExhibitionsNote",
       "$a": {"property": "label"}
     },
-    "586": {"$a": {"aboutEntity": "?thing", "addProperty": "awardsNote"}},
+    "586": {
+      "aboutEntity": "?thing",
+      "$a": {"addProperty": "awardsNote"},
+      "$6": {"property": "marc:fieldref"}
+    },
     "588": {
       "aboutEntity": "?record",
       "addLink": "hasNote",
@@ -6326,6 +6368,7 @@
         }
       },
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -6703,6 +6746,7 @@
         }
       ],
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -6875,6 +6919,7 @@
         }
       ],
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -6962,6 +7007,7 @@
       "inherit": "130",
       "aboutEntity": "?work",
       "addLink": "subject", "resourceType": "Work",
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -7067,6 +7113,7 @@
           "2": "marc:Secondary"
         }
       },
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {"650": {"ind1": " ", "ind2": "7",
@@ -7261,6 +7308,7 @@
       "addLink": "subject",
       "resourceType": "Geographic",
       "i1": null,
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
         "source": {
@@ -7382,6 +7430,7 @@
           "resourceType": "GenreForm"
         }
       ],
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -7588,6 +7637,7 @@
       "$x": {"property": "issn"},
       "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
       "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
+      "$6": {"property": "marc:fieldref"},
       "subfieldOrder": "i a b c q d j e 4 t g m n p r s l k f o",
       "_spec": [
         {
@@ -7950,6 +8000,7 @@
       "$0": {"addLink": "identifiedBy", "property": "value"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
       "subfieldOrder": "i a b c d g u e 4 t m n p r s l k f o x",
       "FIXME:subfieldOrder": "subfieldOrder doesn't always works correctly. Termporarily added 'normalized' to make the revert spec pass.",
@@ -8448,6 +8499,7 @@
       "i1": {"marcDefault": "2"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$j": {"addLink": "role", "property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "subfieldOrder": "i a n d c e g u j 4 t n s l k f x",
       "_spec": [
@@ -8611,6 +8663,7 @@
       "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
       "$x": {"about": "_:work","property": "issn", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {"730": {"ind1": "0", "ind2": " ", "subfields": [
@@ -8712,6 +8765,7 @@
       "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
       "$x": {"about": "_:work","property": "issn", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {"740": {"ind1": "0", "ind2": "2", "subfields": [
@@ -8804,6 +8858,7 @@
       },
       "$9": {"addProperty": "partNumber"},
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
@@ -8911,6 +8966,7 @@
       "$w": {"property": "marc:bibliographicRecordControlNumber"},
       "$x": {"property": "issn", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
       "i2": {"property": "marc:nonfilingChars"},
       "subfieldorder": "3 a d g h s m n p l r k f o v w x",
       "_spec": [
@@ -8999,6 +9055,7 @@
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"property": "altLabel"},
       "$z": {"addProperty": "copyNote"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/review"}]}},
@@ -9045,7 +9102,48 @@
     "877": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ I DET BIBLIOGRAFISKA FORMATET"},
     "878": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ I DET BIBLIOGRAFISKA FORMATET"},
 
-    "880": {},
+    "880": {
+      "addLink": "marc:hasBib880",
+      "resourceType": "marc:AlternateGraphicRepresentation",
+      "i1": {"property": "marc:bib880-i1"},
+      "i2": {"property": "marc:bib880-i2"},
+      "$a": {"addProperty": "marc:bib880-a"},
+      "$b": {"addProperty": "marc:bib880-b"},
+      "$c": {"addProperty": "marc:bib880-c"},
+      "$d": {"addProperty": "marc:bib880-d"},
+      "$e": {"addProperty": "marc:bib880-e"},
+      "$f": {"addProperty": "marc:bib880-f"},
+      "$g": {"addProperty": "marc:bib880-g"},
+      "$h": {"addProperty": "marc:bib880-h"},
+      "$i": {"addProperty": "marc:bib880-i"},
+      "$j": {"addProperty": "marc:bib880-j"},
+      "$k": {"addProperty": "marc:bib880-k"},
+      "$l": {"addProperty": "marc:bib880-l"},
+      "$m": {"addProperty": "marc:bib880-m"},
+      "$n": {"addProperty": "marc:bib880-n"},
+      "$o": {"addProperty": "marc:bib880-o"},
+      "$p": {"addProperty": "marc:bib880-p"},
+      "$q": {"addProperty": "marc:bib880-q"},
+      "$r": {"addProperty": "marc:bib880-r"},
+      "$s": {"addProperty": "marc:bib880-s"},
+      "$t": {"addProperty": "marc:bib880-t"},
+      "$u": {"addProperty": "marc:bib880-u"},
+      "$v": {"addProperty": "marc:bib880-v"},
+      "$w": {"addProperty": "marc:bib880-w"},
+      "$x": {"addProperty": "marc:bib880-x"},
+      "$y": {"addProperty": "marc:bib880-y"},
+      "$z": {"addProperty": "marc:bib880-z"},
+      "$0": {"addProperty": "marc:bib880-0"},
+      "$1": {"addProperty": "marc:bib880-1"},
+      "$2": {"addProperty": "marc:bib880-2"},
+      "$3": {"addProperty": "marc:bib880-3"},
+      "$4": {"addProperty": "marc:bib880-4"},
+      "$5": {"addProperty": "marc:bib880-5"},
+      "$6": {"addProperty": "marc:fieldref"},
+      "$7": {"addProperty": "marc:bib880-7"},
+      "$8": {"addProperty": "marc:bib880-8"},
+      "$9": {"addProperty": "marc:bib880-9"}
+    },
     "882": {},
     "883": {},
     "884": {},
