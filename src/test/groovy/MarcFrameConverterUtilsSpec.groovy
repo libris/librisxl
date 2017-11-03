@@ -64,4 +64,43 @@ class MarcFrameConverterUtilsSpec extends Specification {
         MarcRuleSet.processInclude([patterns: [a: [a:1]]], [include: 'a', b:2]) == [a:1, b:2]
     }
 
+    def "should build about map"() {
+        given:
+        def pendingResources = [
+            a: [link: 'stuff1'],
+            b: [about: 'a', link: 'stuff2'],
+            c: [about: 'b', addLink: 'stuff3'],
+            d: [about: 'c', link: 'stuff4'],
+            e: [about: 'c', link: 'stuff5'],
+        ]
+        def entity = [
+            stuff1: [
+                label: 'A',
+                stuff2: [
+                    label: 'B',
+                    stuff3: [
+                        [
+                            label: 'C',
+                            stuff4: [ [label: 'D1'], [label: 'D2'] ]
+                        ],
+                        [
+                            label: 'C',
+                            stuff4: [label: 'D3'],
+                            stuff5: [label: 'E']
+                        ]
+                    ]
+                ]
+            ]
+        ]
+        when:
+        def (ok, amap) = MarcFieldHandler.buildAboutMap((String) null, pendingResources, entity)
+        then:
+        ok
+        amap.a*.label == ['A']
+        amap.b*.label == ['B']
+        amap.c*.label == ['C', 'C']
+        amap.d*.label == ['D1', 'D2', 'D3']
+        amap.e*.label == ['E']
+    }
+
 }

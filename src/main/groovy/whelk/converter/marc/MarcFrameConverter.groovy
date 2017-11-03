@@ -1842,12 +1842,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             useEntities.each {
-                Tuple2<Boolean, Map<String, List>> buildResult = buildAboutMap(it)
-                boolean shouldMap = buildResult.first
-                Map aboutMap = buildResult.second
-
-                if (shouldMap)
-                {
+                def (boolean requiredOk, Map aboutMap) = buildAboutMap(aboutAlias, pendingResources, it)
+                if (requiredOk) {
                     def field = revertOne(data, it, aboutMap, usedMatchRule)
                     if (field) {
                         if (useLink.subfield) {
@@ -1863,43 +1859,36 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    Tuple2<Boolean, Map<String, List>> buildAboutMap(Map entity) {
+    static Tuple2<Boolean, Map<String, List>> buildAboutMap(String aboutAlias, Map pendingResources, Map entity) {
         Map<String, List> aboutMap = [:]
-        boolean shouldMap = true
+        boolean requiredOk = true
 
         if (aboutAlias) {
             aboutMap[aboutAlias] = [entity]
         }
 
-        if (!pendingResources) {
-            return new Tuple2<Boolean, Map>(shouldMap, aboutMap)
-        }
-
-        pendingResources.each { key, pending ->
-            def link = pending.link ?: pending.addLink
-            def resourceType = pending.resourceType
-
-            def parent = entity
-            if (pending.about) {
-                def pendingParent = pendingResources[pending.about]
-                if (pendingParent) {
-                    def ownerEntity = entity
-                    if (pendingParent.about) {
-                        // FIXME: recurse instead, this only goes to depth 2!
-                        def grandParent = pendingResources[pendingParent.about]
-                        ownerEntity = entity[grandParent.link ?: grandParent.addLink]
-                        if (!ownerEntity) return
+        if (pendingResources) {
+            // TODO: fatigue HACK; instead collect recursively...
+            for (int i = pendingResources.size(); i > 0; i--) {
+                pendingResources?.each { key, pending ->
+                    if (key in aboutMap) {
+                        return
                     }
-                    parent = ownerEntity[pendingParent.link ?: pendingParent.addLink]
-                }
-            }
-            def about = parent ? parent[link] : null
-            Util.asList(about).each {
-                //If @type of entity and resourceType of pendingResurce is not the same. Don't continue with revert.
-                 if (pending.required && (!it || it['@type'] != resourceType))
-                    shouldMap = false
-                else if (it && (!resourceType || it['@type'] == resourceType)) {
-                    aboutMap.get(key, []).add(it)
+                    def resourceType = pending.resourceType
+                    def parents = pending.about == null ? [entity] :
+                        pending.about in aboutMap ? aboutMap[pending.about] : null
+                    parents?.each {
+                        def about = it[pending.link ?: pending.addLink]
+                        Util.asList(about).each {
+                            if (!it || (resourceType && !(resourceType in Util.asList(it['@type'])))) {
+                                if (pending.required) {
+                                    requiredOk = false
+                                }
+                                return
+                            }
+                            aboutMap.get(key, []).add(it)
+                        }
+                    }
                 }
             }
         }
@@ -1912,11 +1901,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 if (single)
                     aboutMap[key] = single
                 else
-                    shouldMap = false
+                    requiredOk = false
             }
         }
 
-        return new Tuple2<Boolean, Map>(shouldMap, aboutMap)
+        return new Tuple2<Boolean, Map>(requiredOk, aboutMap)
     }
 
     @CompileStatic(SKIP)
@@ -1934,8 +1923,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def usedEntities = new HashSet()
         def thisTag = this.tag.split(/[\[:]/)[0]
-
-        Map<String, List> remainingAboutMap = [:]
 
         def prevAdded = null
 
