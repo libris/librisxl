@@ -3773,7 +3773,12 @@
       "$2": {"link": "source", "property": "code"}
     },
 
-    "074": {},
+    "074": {
+      "addLink": "marc:hasGPOItemNumber",
+      "resourceType": "marc:GPOItemNumber",
+      "$a": {"property": "marc:gpoItemNumber"},
+      "$z": {"addProperty": "marc:canceledInvalidGpoItemNumber"}
+    },
 
     "080": {
       "aboutEntity": "?work",
