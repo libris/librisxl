@@ -205,10 +205,62 @@ class Whelk {
         }
     }
 
+    Set<String> getIdCollisions(Document document, boolean includingTypedIDs) {
+
+        Set<String> collidingSystemIDs = []
+
+        // Identifiers-table lookup on:
+        List<String> uriIDs = document.getRecordIdentifiers()
+        uriIDs.addAll( document.getThingIdentifiers() )
+        for (String uriID : uriIDs) {
+            String systemId = storage.getSystemIdByIri(uriID)
+            if (systemId != null) {
+                log.info("Determined that " + document.getShortId() + " is duplicate of " + systemId + " due to collision on URI: " + uriID)
+                collidingSystemIDs.add(systemId)
+            }
+        }
+
+        // Typed id queries on:
+        List<Tuple> typedIDs = document.getTypedRecordIdentifiers()
+        typedIDs.addAll( document.getTypedThingIdentifiers() )
+        for (Tuple typedID : typedIDs) {
+            String type = typedID[0]
+            String value = typedID[1]
+            int graphIndex = typedID[2].intValue()
+
+            // "Identifier" and "SystemNumber" are too general/meaningless to use for duplication checking.
+            if (type.equals("Identifier") || type.equals("SystemNumber"))
+                continue
+
+            List<String> collisions = storage.getSystemIDsByTypedID(type, value, graphIndex)
+            if (!collisions.isEmpty()) {
+                if (includingTypedIDs) {
+                    collidingSystemIDs.addAll( collisions )
+                } else {
+
+                    // We currently are not allowed to enforce typed identifier uniqueness. :(
+                    // We can warn at least.
+                    log.warn("While testing " + document.getShortId() + " for collisions: Ignoring typed ID collision with : "
+                            + collisions + " on " + type + "," + graphIndex + "," + value + " for political reasons.")
+                }
+            }
+        }
+
+        return collidingSystemIDs
+    }
+
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
     Document store(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
+
+        boolean detectCollisionsOnTypedIDs = false
+        Set<String> collidingIDs = getIdCollisions(document, detectCollisionsOnTypedIDs)
+        if (!collidingIDs.isEmpty()) {
+            log.info("Refused initial store of " + document.getShortId() + ". Document considered a duplicate of : " + collidingIDs)
+            throw new whelk.exception.StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
+        }
+
         if (storage.store(document, changedIn, changedBy, collection, deleted)) {
             if (elastic) {
                 elastic.index(document, collection, this)

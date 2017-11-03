@@ -41,8 +41,10 @@ class Document {
     static final List thingIdPath2 = ["@graph", 1, "@id"]
     static final List thingTypePath = ["@graph", 1, "@type"]
     static final List thingSameAsPath = ["@graph", 1, "sameAs"]
+    static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
     static final List recordIdPath = ["@graph", 0, "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
+    static final List recordTypedIDsPath = ["@graph", 0, "identifiedBy"]
     static final List failedApixExportPath = ["@graph", 0, "apixExportFailedAt"]
     static final List controlNumberPath = ["@graph", 0, "controlNumber"]
     static final List holdingForPath = ["@graph", 1, "itemOf", "@id"]
@@ -185,6 +187,47 @@ class Document {
         return null
     }
 
+    /**
+     * Gets a list of [type, value, graphIndex] typed identifiers for this thing (mainEntity)
+     */
+    List<Tuple> getTypedThingIdentifiers() {
+        List<Tuple> results = []
+        List typedIDs = get(thingTypedIDsPath)
+
+        for (Map typedID : typedIDs) {
+            String type = typedID["@type"]
+            String value = null
+            if (typedID["value"] instanceof List)
+                value = typedID["value"][0]
+            else
+                value = typedID["value"]
+
+            results.add(new Tuple(type, value, 1))
+        }
+
+        return results
+    }
+
+    /**
+     * Gets a list of [type, value, graphIndex] typed identifiers for this record
+     */
+    List<Tuple> getTypedRecordIdentifiers() {
+        List<Tuple> results = []
+        List typedIDs = get(recordTypedIDsPath)
+
+        for (Map typedID : typedIDs) {
+            String type = typedID["@type"]
+            String value = null
+            if (typedID["value"] instanceof List)
+                value = typedID["value"][0]
+            else
+                value = typedID["value"]
+
+            results.add(new Tuple(type, value, 0))
+        }
+
+        return results
+    }
 
     /**
      * By convention the first id in the returned list is the MAIN resource id.
