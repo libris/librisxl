@@ -10615,10 +10615,20 @@
     "645": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
     "646": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
 
-    "663": {},
+    "663": {
+      "addLink": "marc:hasComplexSeeAlsoReferenceName",
+      "resourceType": "marc:ComplexSeeAlsoReferenceName",
+      "$a": {"addProperty": "marc:explanatoryText"},
+      "$b": {"addProperty": "marc:headingReferredTo"},
+      "$t": {"addProperty": "marc:titleReferredTo"}
+    },
     "664": {"ignored": true, "NOTE:record-count": 0},
-    "665": {},
-    "666": {},
+    "665": {
+      "addLink": "marc:hasHistoryReference",
+      "resourceType": "marc:HistoryReference",
+      "$a": {"addProperty": "marc:historyReference"}
+    },
+    "666": {"ignored": true},
 
     "667": {
       "aboutEntity": "?record",
