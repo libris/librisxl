@@ -941,12 +941,11 @@ class Crud extends HttpServlet {
                 return doc
             }
         } catch (StorageCreateFailedException scfe) {
-            log.warn("Already have document with id ${scfe.duplicateId}")
+            log.warn("Refused document with id ${scfe.duplicateId}")
             failedRequests.labels(httpMethod, request.getRequestURI(),
                     HttpServletResponse.SC_CONFLICT.toString()).inc()
             response.sendError(HttpServletResponse.SC_CONFLICT,
-                    "Document with id \"${scfe.duplicateId}\" " +
-                            "already exists.")
+                    scfe.message)
             return null
         } catch (WhelkAddException wae) {
             log.warn("Whelk failed to store document: ${wae.message}")
