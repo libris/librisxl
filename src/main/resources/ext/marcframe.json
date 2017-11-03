@@ -3849,7 +3849,21 @@
     },
 
     "085": {"ignored": true, "NOTE:record-count": 21, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
-    "086": {},
+    "086": {
+      "TODO": "group with classification",
+      "addLink": "marc:hasGovernmentDocumentClassificationNumber",
+      "resourceType": "marc:GovernmentDocumentClassificationNumber",
+      "i1": {
+        "link": null,
+        "tokenMap": {
+          "0": "superintendentOfDocumentsClassificationSystem",
+          "1": "governmentOfCanadaPublicationsOutlineOfClassification"
+        }
+      },
+      "$a": {"property": "marc:classificationNumber"},
+      "$z": {"addProperty": "marc:canceledInvalidClassificationNumber"},
+      "$2": {"property": "marc:numberSource"}
+    },
     "088": {
       "include": ["identifier"],
       "resourceType": "ReportNumber"
