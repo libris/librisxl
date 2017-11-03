@@ -6188,7 +6188,21 @@
       "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
       "$z": {"ignored": true}
     },
-    "561": {},
+    "561": {
+      "addLink": "marc:hasOwnershipAndCustodialHistory",
+      "resourceType": "marc:OwnershipAndCustodialHistory",
+      "i1": {
+        "link": null,
+        "tokenMap": {
+          "0": "private",
+          "1": "notPrivate"
+        }
+      },
+      "$a": {"property": "marc:history"},
+      "$u": {"ignored": true},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$5": {"property": "marc:institutionToWhichFieldApplies"}
+    },
     "562": {
       "addLink": "hasItem",
       "embedded": true,
