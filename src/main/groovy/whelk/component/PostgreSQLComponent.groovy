@@ -1230,7 +1230,7 @@ class PostgreSQLComponent {
         // Validate input
         if (!idType.matches("[A-Za-z]+"))
             return []
-        if (!idValue.matches("^(-[A-Za-z\\d]|[A-Za-z\\d])+\$")) // A-Z, 0-9 and SINGLE hyphens only
+        if (!idValue.matches("^(-[A-Za-z\\d():]|[A-Za-z\\d():])+\$")) // A-Z, 0-9, (), : and SINGLE hyphens
             return []
         // graphIndex is already a strongly typed int.
 
@@ -1385,7 +1385,7 @@ class PostgreSQLComponent {
                 doc = assembleDocument(rs)
                 log.trace("Created document with id ${doc.getShortId()}")
             } else if (log.isTraceEnabled()) {
-                log.trace("No results returned for get($id)")
+                log.trace("No results returned for $selectstmt")
             }
         } finally {
             connection.close()

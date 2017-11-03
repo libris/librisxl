@@ -242,13 +242,15 @@
 
     "titlesearchelem": {
       "i1": {
+        "about": "_:title",
         "property": "marc:searchElement",
         "tokenMap": {"0": false, "2": null, "3": null, "4": null, "|": null},
         "marcDefault": "1"
       }
     },
 
-    "titledetails": {
+    "titledetailsUnused": {
+      "TODO": "unused, and slightly different from titledetails1xx7xx; why?",
       "$d": {"addProperty": "treatySigningDate"},
       "$f": {"property": "date"},
       "$g": {"property": "comment"},
@@ -263,24 +265,40 @@
       "$s": {"property": "version"}
     },
 
-    "titledetails1xx7xx": {
-      "$f": {"property": "originDate"},
-      "$h": {"property": "marc:mediaTerm"},
-      "$k": {"addProperty": "marc:formSubheading"},
+    "someworkdetails": {
+      "$f": {"about": "_:work", "property": "originDate"},
+      "$h": {"about": "_:work", "property": "marc:mediaTerm"},
+
+      "$m": {"about": "_:work", "addProperty": "musicMedium"},
+      "$o": {"about": "_:work", "property": "version"},
+
+      "$r": {"about": "_:work", "property": "musicKey"},
+      "$s": {"about": "_:work", "property": "marc:version"}
+    },
+
+    "workdetails": {
+      "include": ["someworkdetails"],
+      "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
+    },
+
+    "titledetails": {
+      "include": ["workdetails"],
+      "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
       "NOTE:k": "Should we map to bf2:natureOfContent instead?",
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$m": {"addProperty": "musicMedium"},
-      "$o": {"property": "version"},
-      "$p": {"addProperty": "partName", "punctuationChars": "/"},
-      "$r": {"property": "musicKey"},
-      "$s": {"property": "marc:version"}
+      "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"}
+    },
+
+    "titledetails1xx7xx": {
+      "include": ["titledetails"],
+      "$n": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partNumber", "punctuationChars": ","}
     },
 
     "structuredtitle": {
       "pendingResources": {
         "_:titlePart": {
           "addLink": "hasPart",
-          "resourceType": "TitlePart"
+          "resourceType": "TitlePart",
+          "embedded": true
         }
       },
       "match": [
@@ -348,224 +366,171 @@
       "$u": {"about": "_:agent", "property": "marc:affiliation"}
     },
 
-    "hasPartPerson": {
+    "hasPartData": {
       "addLink": "hasPart",
       "resourceType": "Work",
+      "aboutAlias": "_:work",
       "pendingResources": {
         "_:contribution": {
           "addLink": "contribution",
           "resourceType": "PrimaryContribution",
           "embedded": true
         },
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        },
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+      },
+      "$t": {"about": "_:title", "property": "mainTitle"},
+      "$i": {"addLink": "marc:relatedFrom", "resourceType": "Resource", "property": "label"},
+      "$0": {"addLink": "identifiedBy", "property": "value"}
+    },
+
+    "hasPartPerson": {
+      "include": ["hasPartData"],
+      "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Person",
-          "embedded": false
+          "required": true
         }
-      },
-      "$t": {"property": "title"},
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+      }
     },
 
     "hasPartFamily": {
-      "addLink": "hasPart",
-      "resourceType": "Work",
+      "include": ["hasPartData"],
       "pendingResources": {
-        "_:contribution": {
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Family",
-          "embedded": false
+          "required": true
         }
-      },
-      "$t": {"property": "title"},
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+      }
     },
 
     "hasPartJurisdiction": {
-      "addLink": "hasPart",
-      "resourceType": "Work",
+      "include": ["hasPartData"],
       "pendingResources": {
-        "_:contribution": {
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Jurisdiction",
-          "embedded": false
-        },
-        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
-        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-      },
-      "$t": {"property": "title"},
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+          "required": true
+        }
+      }
     },
 
     "hasPartOrganization": {
-      "addLink": "hasPart",
-      "resourceType": "Work",
+      "include": ["hasPartData"],
       "pendingResources": {
-        "_:contribution": {
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Organization",
-          "embedded": false
-        },
-        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
-        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-      },
-      "$t": {"property": "title"},
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+          "required": true
+        }
+      }
     },
 
     "hasPartMeeting": {
-      "addLink": "hasPart",
-      "resourceType": "Work",
+      "include": ["hasPartData"],
       "pendingResources": {
-        "_:contribution": {
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Meeting",
-          "embedded": false
+          "required": true
+        }
+      }
+    },
+
+    "relatedToData": {
+      "TODO": "compare this to hasPartData and consolidate",
+      "addLink": "relationship",
+      "resourceType": "Relationship",
+      "pendingResources": {
+        "_:work": {
+          "link": "entity",
+          "resourceType": "Work"
         },
-        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        },
+        "_:contribution": {
+          "about": "_:work",
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        }
       },
-      "$t": {"property": "title"},
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+      "$i": {"addLink": "relation", "resourceType": "Resource", "property": "label"},
+      "$t": {"about": "_:title", "property": "mainTitle"},
+      "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
     },
 
     "relatedToPerson": {
-      "addLink": "relatedTo",
-      "resourceType": "Relationship",
+      "include": ["relatedToData"],
       "pendingResources": {
-        "_:work": {
-          "link": "entity",
-          "resourceType": "Work",
-          "embedded": false
-        },
-        "_:contribution": {
-          "about": "_:work",
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Person",
-          "embedded": false
+          "required": true
         }
-      },
-      "$t": {"about": "_:work", "property": "title"},
-      "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+      }
     },
 
     "relatedToFamily": {
-      "addLink": "relatedTo",
-      "resourceType": "Relationship",
+      "include": ["relatedToData"],
       "pendingResources": {
-        "_:work": {
-          "link": "entity",
-          "resourceType": "Work",
-          "embedded": false
-        },
-        "_:contribution": {
-          "about": "_:work",
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
-          "resourceType": "Person",
-          "embedded": false
+          "resourceType": "Family",
+          "required": true
         }
-      },
-      "$t": {"about": "_:work", "property": "title"},
-      "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+      }
     },
 
     "relatedToOrganization": {
-      "addLink": "relatedTo",
-      "resourceType": "Relationship",
+      "include": ["relatedToData"],
       "pendingResources": {
-        "_:work": {
-          "link": "entity",
-          "resourceType": "Work",
-          "embedded": false
-        },
-        "_:contribution": {
-          "about": "_:work",
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Organization",
-          "embedded": false
+          "required": true
         },
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-      },
-      "$t": {"about": "_:work", "property": "title"},
-      "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+      }
     },
 
     "relatedToJurisdiction": {
-      "addLink": "relatedTo",
-      "resourceType": "Relationship",
+      "include": ["relatedToData"],
       "pendingResources": {
-        "_:work": {
-          "link": "entity",
-          "resourceType": "Work",
-          "embedded": false
-        },
-        "_:contribution": {
-          "about": "_:work",
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Jurisdiction",
-          "embedded": false
+          "required": true
         },
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-      },
-      "$t": {"about": "_:work", "property": "title"},
-      "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+      }
     },
 
     "contributionOrganization": {
       "addLink": "contribution",
       "resourceType": "Contribution",
       "pendingResources": {
-        "_:agent": {"link": "agent", "resourceType": "Organization"},
+        "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       }
@@ -575,87 +540,73 @@
       "addLink": "contribution",
       "resourceType": "Contribution",
       "pendingResources": {
-        "_:agent": {"link": "agent", "resourceType": "Jurisdiction"},
+        "_:agent": {"link": "agent", "resourceType": "Jurisdiction", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       }
     },
 
-    "contributionPerson": {
-      "include": ["agentdataPerson"],
+    "contributionData": {
       "aboutType": "Work",
-      "$t": {"property": "title"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
       "pendingResources": {
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        },
         "_:contribution": {
           "addLink": "contribution",
           "resourceType": "PrimaryContribution",
           "embedded": true
-        },
+        }
+      },
+      "$t": {"about": "_:title", "property": "mainTitle"},
+      "$0": {"addLink": "identifiedBy", "property": "value"}
+    },
+
+    "contributionPerson": {
+      "include": ["agentdataPerson", "contributionData"],
+      "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Person",
-          "embedded": false
+          "required": true
         }
       }
     },
 
     "contributionNameOfPerson": {
-      "include": ["agentdataNameOfPerson"],
-      "aboutType": "Work",
-      "$t": {"property": "title"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "include": ["agentdataNameOfPerson", "contributionData"],
       "pendingResources": {
-        "_:contribution": {
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Person",
-          "embedded": false
+          "required": true
         }
       }
     },
 
     "contributionFamily": {
-      "include": ["agentdataFamily"],
-      "aboutType": "Work",
-      "$t": {"property": "title"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "include": ["agentdataFamily", "contributionData"],
       "pendingResources": {
-        "_:contribution": {
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Family",
-          "embedded": false
+          "required": true
         }
       }
     },
 
     "pendingContributionOrganization": {
-      "aboutType": "Work",
-      "$t": {"property": "title"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "include": ["contributionData"],
       "pendingResources": {
-        "_:contribution": {
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Organization",
-          "embedded": false
+          "required": true
         },
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
@@ -663,20 +614,13 @@
     },
 
     "pendingContributionJurisdiction": {
-      "aboutType": "Work",
-      "$t": {"property": "title"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "include": ["contributionData"],
       "pendingResources": {
-        "_:contribution": {
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Jurisdiction",
-          "embedded": false
+          "required": true
         },
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
@@ -684,21 +628,17 @@
     },
 
     "subjectOrganization": {
+      "addLink": "subject",
       "pendingResources": {
-        "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-        "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
-        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "embedded": false}
-      },
-      "$t": {"about": "_:work", "property": "title"}
+        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "required": true}
+      }
     },
 
     "subjectJurisdiction": {
+      "addLink": "subject",
       "pendingResources": {
-        "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-        "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
-        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "embedded": false}
-      },
-      "$t": {"about": "_:work", "property": "title"}
+        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "required": true}
+      }
     },
 
     "agentdataFamily": {
@@ -758,22 +698,27 @@
       "TODO:role": "e och 4. Även för Family och Person"
     },
 
+    "agentlang": {
+      "TODO": "Rather odd place for a language (is it the language of the name literal?)",
+      "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label"}
+    },
+
     "agentdataMeeting": {
       "NOTE": "Used by: Bib 111, 611, 711, 811, Auth 111, 411, 511",
       "$a": {"about": "_:agent", "property": "name", "required": true},
       "$c": {"about": "_:place", "property": "label"},
       "$d": {"about": "_:agent", "addProperty": "date"},
       "$e": {"about":"_:agent", "addProperty": "marc:subordinateUnit"},
-      "$g":	{"about": "_:agent", "addProperty": "comment"},
+      "$g": {"about": "_:agent", "addProperty": "comment"},
       "$n": {"about": "_:agent", "addProperty": "marc:numberOfPartSectionMeeting"},
-      "$q":	{"about":"_:agent", "property": "additionalName"},
-      "$u":	{"about": "_:agent", "property": "marc:affiliation"}
+      "$q": {"about":"_:agent", "property": "additionalName"},
+      "$u": {"about": "_:agent", "property": "marc:affiliation"}
     },
 
     "contributiondata": {
       "addLink": "contribution",
       "pendingResources": {
-        "_:agent": {"link": "agent", "resourceType": "Person"}
+        "_:agent": {"link": "agent", "resourceType": "Person", "required": true}
       },
       "embedded": true,
       "match": [
@@ -781,42 +726,28 @@
           "when": "i1=0",
           "include": "agentdataPerson",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Person"}
+            "_:agent": {"link": "agent", "resourceType": "Person", "required": true}
           }
         },
         {
           "when": "i1=1",
           "include": "agentdataNameOfPerson",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Person"}
+            "_:agent": {"link": "agent", "resourceType": "Person", "required": true}
           }
         },
         {
           "when": "i1=3",
           "include": "agentdataFamily",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Family"}
+            "_:agent": {"link": "agent", "resourceType": "Family", "required": true}
           }
         }
       ],
+      "$a": {"required": true},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "property": "label"},
       "TODO:eAnd4": "make a pattern for role?"
-    },
-
-    "splicedworkentity": {
-      "TODO:l": "see-other-fields",
-      "match": [
-        {
-          "when": "$t",
-          "pendingResources": {
-            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-            "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
-          },
-          "$t": {"about": "_:work", "property": "title"},
-          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
-        }
-      ]
     },
 
     "classification-ddc": {
@@ -835,7 +766,117 @@
       }
     },
 
+    "termid": {
+      "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
+    },
+
+    "termcomplexsubjectHead": {
+      "$9": {
+        "addLink": "inCollection",
+        "resourceType": "TermCollection",
+        "property": "code"
+      },
+      "constructProperties": {
+        "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
+      }
+    },
+
+    "termcomplexsubjectMatch": {
+      "$v": {"addLink": "termComponentList",
+        "TODO": "use /term/saogf/{_}, but only if $2=sao",
+        "resourceType": "GenreForm",
+        "property": "prefLabel"},
+      "$x": {"addLink": "termComponentList",
+        "resourceType": "Subdivision",
+        "property": "prefLabel"},
+      "$y": {"addLink": "termComponentList",
+        "resourceType": "Temporal",
+        "property": "prefLabel"},
+      "$z": {"addLink": "termComponentList",
+        "TODO": "use /place/{_}, but only if $2=sao",
+        "resourceType": "Geographic",
+        "property": "prefLabel"}
+    },
+
+    "termbase": {
+      "include": "termcomplexsubjectHead",
+      "match": [
+        {
+          "when": "$v | $x | $y | $z",
+          "include": "termcomplexsubjectMatch",
+          "resourceType": "ComplexSubject"
+        }
+      ]
+    },
+
+    "abouttermbase": {
+      "include": "termcomplexsubjectHead",
+      "match": [
+        {
+          "when": "$v | $x | $y | $z",
+          "include": "termcomplexsubjectMatch",
+          "aboutType": "ComplexSubject"
+        }
+      ]
+    },
+
+    "termbase_with_id": {
+      "include": ["termbase", "termid"]
+    },
+
+    "termbase_with_uri_from_i2": {
+      "FIXME-1": "Ensure all usages map $a to their own need (and use termComponentList with subsumeSingle:true! and required?). Also, most of these patterns can probably be combined with subjectbase, and rely on subsumeSingle.",
+      "FIXME-2": "mostly irrelevant when using i2 rule in subjectbase!? Nah, that's to explicitly preserve the data (too)?",
+      "match": [
+        {
+          "when": "i2=0",
+          "include": ["termbase"],
+          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}",
+          "TODO": "Check if the two above are sound; better to match on uriTemplate on revert!"
+        },
+        {
+          "when": "i2=1",
+          "include": ["termbase"],
+          "uriTemplate": "http://id.loc.gov/authorities/childrensSubjects/{prefLabel}"
+        },
+        {
+          "when": "i2=2",
+          "include": ["termbase"],
+          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
+        },
+        {
+          "when": "i2=3",
+          "include": ["termbase"],
+          "TODO:uriTemplate": "https://id.nlm.nih.gov/mesh/",
+          "NOTE:uriTemplate": "beta sparql endpoint. Use this?"
+        },
+        {
+          "when": "i2=4 | i2=5 | i2=6",
+          "include": ["termbase"]
+        },
+        {
+          "when": "i2=7 & $2",
+          "NOTE": "if possible to revert to, prefer this form over i2=0? (NO, i2=7 is normally not used!)",
+          "match": [
+            {
+              "when": "$2=sao | $2=saogf | $2=gmgpc | $2=barn | $2=barngf",
+              "include": ["termbase_with_id"]
+            },
+            {
+              "when": null,
+              "include": ["termbase"]
+            }
+          ]
+        },
+        {
+          "when": null,
+          "include": ["termbase"]
+        }
+      ]
+    },
+
     "subjectbase": {
+      "include": ["termbase_with_uri_from_i2"],
       "i2": {
         "link": "inScheme",
         "resourceType": "ConceptScheme",
@@ -852,186 +893,41 @@
         "resourceType": "ConceptScheme",
         "property": "code"
       },
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"}
     },
 
-    "termid": {
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
-    },
-    "termbase_noid": {
-      "$a": {"property": "prefLabel"},
-      "$9": {
-        "addLink": "inCollection",
-        "resourceType": "TermCollection",
-        "property": "code"
+    "worksubjectData": {
+      "include": ["subjectbase"],
+      "TODO:pendingResources": "overwrites e.g. 610[i1=1 & $t] ?",
+      "pendingResources": {
+        "_:work": {
+          "addLink": "termComponentList",
+          "resourceType": "Work",
+          "subsumeSingle": true
+        },
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        },
+        "_:contribution": {
+          "about": "_:work",
+          "link": "contribution", "TODO;addLink:contribution + NOTE:marc-repeatable": false, "resourceType": "Contribution"
+        },
+        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person"}
       },
-      "constructProperties": {
-        "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
-      },
-      "match": [
-        {
-          "when": "$v | $x | $y | $z",
-          "$a": {"addLink": "termComponentList",
-                 "resourceType": "Topic",
-                 "property": "prefLabel", "required": true},
-          "$v": {"addLink": "termComponentList",
-               "TODO": "use /term/saogf/{_}, but only if $2=sao",
-                 "resourceType": "GenreForm",
-                 "property": "prefLabel"},
-          "$x": {"addLink": "termComponentList",
-                 "resourceType": "Subdivision",
-                 "property": "prefLabel"},
-          "$y": {"addLink": "termComponentList",
-                 "resourceType": "Temporal",
-                 "property": "prefLabel"},
-          "$z": {"addLink": "termComponentList",
-                 "TODO": "use /place/{_}, but only if $2=sao",
-                 "resourceType": "Geographic",
-                 "property": "prefLabel"}
-        }
-      ]
+      "$t": {
+        "about": "_:title", "property": "mainTitle"
+      }
     },
-    "termbase_noid_with_agent": {
-      "$9": {
-        "addLink": "inCollection",
-        "resourceType": "TermCollection",
-        "property": "code"
-      },
-      "constructProperties": {
-        "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
-      },
-      "match": [
-        {
-          "when": "$v | $x | $y | $z",
-          "$v": {"addLink": "termComponentList",
-            "TODO": "use /term/saogf/{_}, but only if $2=sao",
-            "resourceType": "GenreForm",
-            "property": "prefLabel"},
-          "$x": {"addLink": "termComponentList",
-            "resourceType": "Subdivision",
-            "property": "prefLabel"},
-          "$y": {"addLink": "termComponentList",
-            "resourceType": "Temporal",
-            "property": "prefLabel"},
-          "$z": {"addLink": "termComponentList",
-            "TODO": "use /place/{_}, but only if $2=sao",
-            "resourceType": "Geographic",
-            "property": "prefLabel"}
-        }
-      ]
+
+    "worksubjectSansPart": {
+      "include": ["worksubjectData", "titledetails"]
     },
-    "termbase": {
-      "include": ["termbase_noid", "termid"]
+
+    "worksubject": {
+      "include": ["worksubjectData", "titledetails1xx7xx"]
     },
-    "termbase_with_uri_from_i2": {
-      "match": [
-        {
-          "when": "i2=7 & $2",
-          "NOTE": "if possible to revert to, prefer this form over i2=0",
-          "match": [
-            {
-              "when": "$2=sao | $2=saogf | $2=gmgpc | $2=barn | $2=barngf",
-              "include": ["termbase_noid", "termid"]
-            },
-            {
-              "when": null,
-              "include": ["termbase_noid"]
-            }
-          ]
-        },
-        {
-          "when": "i2=0",
-          "include": ["termbase_noid"],
-          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}",
-          "TODO": "Check if the two above are sound; better to match on uriTemplate on revert!"
-        },
-        {
-          "when": "i2=1",
-          "include": ["termbase_noid"],
-          "uriTemplate": "http://id.loc.gov/authorities/childrensSubjects/{prefLabel}"
-        },
-        {
-          "when": "i2=2",
-          "include": ["termbase_noid"],
-          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
-        },
-        {
-          "when": "i2=3",
-          "include": ["termbase_noid"],
-          "TODO:uriTemplate": "https://id.nlm.nih.gov/mesh/",
-          "NOTE:uriTemplate": "beta sparql endpoint. Use this?"
-        },
-        {
-          "when": "i2=4 | i2=5 | i2=6",
-          "include": ["termbase_noid"]
-        },
-        {
-          "when": null,
-          "include": ["termbase_noid"]
-        }
-      ]
-    },
-    "termbase_with_uri_from_i2_with_agent": {
-      "NOTE": "A copy of 'termbase_with_uri_from_i2', except for removed $a which instead should be mapped to agent",
-      "match": [
-        {
-          "when": "i2=7 & $2",
-          "NOTE": "if possible to revert to, prefer this form over i2=0",
-          "match": [
-            {
-              "when": "$2=sao | $2=saogf | $2=gmgpc | $2=barn | $2=barngf",
-              "include": ["termbase_noid_with_agent", "termid"]
-            },
-            {
-              "when": null,
-              "include": ["termbase_noid_with_agent"]
-            }
-          ]
-        },
-        {
-          "when": "i2=0",
-          "include": ["termbase_noid_with_agent"],
-          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}",
-          "TODO": "Check if the two above are sound; better to match on uriTemplate on revert!"
-        },
-        {
-          "when": "i2=1",
-          "include": ["termbase_noid_with_agent"],
-          "uriTemplate": "http://id.loc.gov/authorities/childrensSubjects/{prefLabel}"
-        },
-        {
-          "when": "i2=2",
-          "include": ["termbase_noid_with_agent"],
-          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
-        },
-        {
-          "when": "i2=3",
-          "include": ["termbase_noid_with_agent"],
-          "TODO:uriTemplate": "https://id.nlm.nih.gov/mesh/",
-          "NOTE:uriTemplate": "beta sparql endpoint. Use this?"
-        },
-        {
-          "when": "i2=4 | i2=5 | i2=6",
-          "include": ["termbase_noid_with_agent"]
-        },
-        {
-          "when": null,
-          "include": ["termbase_noid_with_agent"]
-        }
-      ]
-    },
-    "uri_from_i2": {
-      "match": [
-        {
-          "when": "i2=7 & $2",
-          "NOTE": "if possible to revert to, prefer this form over i2=0"
-        },
-        {
-          "when": "i2=0",
-          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
-        }
-      ]
-    },
+
     "relation_from_w": {
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
     }
@@ -3880,7 +3776,6 @@
       "aboutEntity": "?work",
       "include": ["contributiondata", "titledetails1xx7xx"],
       "resourceType": "PrimaryContribution",
-      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
       "subfieldOrder": "a b c q d j g u e 4 t n p l k f",
       "_spec": [
@@ -4070,72 +3965,78 @@
       "aboutEntity": "?work",
       "addLink": "contribution",
       "resourceType": "PrimaryContribution",
-      "include": ["agentdataOrganization", "titledetails1xx7xx"],
+      "include": ["agentdataOrganization", "workdetails"],
       "pendingResources": {
-        "_:agent": {"link": "agent", "resourceType": "Organization"},
+        "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
+      "subfieldOrder": "a b n d c g u e 4 t p l k f",
+      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
+      "$e": {"addLink": "role", "property": "label"},
+
+      "TODO": "move k, n and p to other entity (title/-part)?",
+      "$k": {"addProperty": "qualifier"},
+      "$p": {"addProperty": "partName"},
+
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "TODO": [
+        "change splitValueProperties to work on result, to handle match combo"
+      ],
+
       "match":[
         {
           "when": "i1=2 & $b",
-          "include": ["agentdataOrganizationSubUnit", "titledetails1xx7xx"],
+          "include": ["agentdataOrganizationSubUnit", "workdetails"],
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Organization"},
+            "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         },
         {
           "when": "i1=1 & $b",
-          "include": ["agentdataOrganizationSubUnit", "titledetails1xx7xx"],
+          "include": ["agentdataOrganizationSubUnit", "workdetails"],
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Jurisdiction"},
+            "_:agent": {"link": "agent", "resourceType": "Jurisdiction", "required": true},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         },
         {
           "when": "i1=0 & $b",
-          "include": ["agentdataOrganizationSubUnit", "titledetails1xx7xx"],
+          "include": ["agentdataOrganizationSubUnit", "workdetails"],
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Organization"},
+            "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         },
         {
           "when": "i1=2",
-          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "include": ["agentdataOrganization", "workdetails"],
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Organization"},
+            "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         },
         {
           "when": "i1=1",
-          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "include": ["agentdataOrganization", "workdetails"],
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Jurisdiction"},
+            "_:agent": {"link": "agent", "resourceType": "Jurisdiction", "required": true},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         },
         {
           "when": "i1=0",
-          "include": ["agentdataOrganization", "titledetails1xx7xx"],
+          "include": ["agentdataOrganization", "workdetails"],
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Organization"},
+            "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         }
       ],
-      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
-      "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "$e": {"addLink": "role", "property": "label"},
-      "TODO": [
-        "change splitValueProperties to work on result, to handle match combo"
-      ],
-      "subfieldOrder": "a b n d c g u e 4 t p l k f",
       "_spec": [
         {
           "source": {
@@ -4222,8 +4123,9 @@
                       "name": "Wolters Kluwer"
                     }
                   },
-                  "marc:formSubheading": ["Grupptitel"]
-                }]
+                  "qualifier": ["Grupptitel"]
+                }
+              ]
             }
           }}
         },
@@ -4278,7 +4180,7 @@
       "addLink": "contribution",
       "resourceType": "PrimaryContribution",
       "pendingResources": {
-        "_:agent": {"link": "agent", "resourceType": "Meeting"},
+        "_:agent": {"link": "agent", "resourceType": "Meeting", "required": true},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "TODO:computeLinks": {"use": "$4", "mapping": "relatorCode"},
@@ -4400,10 +4302,16 @@
       "link": "expressionOf",
       "include": ["titledetails1xx7xx"],
       "resourceType": "Work",
-      "i1": {"property": "marc:nonfilingChars"},
-      "$a": {"property": "uniformTitle"},
+      "aboutAlias": "_:work",
+      "pendingResources": {
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "i1": {"about": "_:title", "property": "marc:nonfilingChars"},
+      "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"property": "legalDate"},
-      "$n": {"property": "partNumber"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
       "_spec": [
         {
@@ -4426,11 +4334,14 @@
               "@type": "Text",
               "expressionOf": {
                 "@type": "Work",
-                "uniformTitle":  "Treaty of the Non-proliferation of Nuclear Weapons",
-                "legalDate": "(1968).",
+                "hasTitle" : [ {
+                  "@type" : "Title",
+                  "mainTitle" : "Treaty of the Non-proliferation of Nuclear Weapons",
+                  "marc:nonfilingChars" : "0"
+                } ],
                 "language": {"@type": "Language", "label": "Spanish."},
-                "originDate": "1977.",
-                "marc:nonfilingChars" : "0"
+                "legalDate": "(1968).",
+                "originDate": "1977."
               }
             }
           }}
@@ -4442,8 +4353,9 @@
       "include": ["titlesearchelem"],
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
-      "embedded": true,
       "resourceType": "AbbreviatedTitle",
+      "aboutAlias": "_:title",
+      "embedded": true,
       "i2": {
         "link": "source",
         "resourceType": "Source",
@@ -4531,13 +4443,17 @@
 
     "240": {
       "aboutEntity": "?work",
-      "i2": {"property": "marc:nonfilingChars"},
+      "aboutAlias": "_:work",
+      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
       "include": ["titledetails1xx7xx", "titlesearchelem"],
+      "pendingResources": {
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
       "TODO": "See also 100$t and 130.",
-      "embedded": true,
-      "link": "hasTitle",
-      "resourceType": "Title",
-      "$a": {"property": "mainTitle"},
+      "$a": {"about": "_:title", "property": "mainTitle"},
       "$0": {
         "aboutEntity": "?work",
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
@@ -4553,13 +4469,13 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "hasTitle": {
+              "hasTitle": [ {
                 "@type": "Title",
-                "mainTitle":  "Moyen âge",
-                "language": {"@type": "Language", "label": "Engelska."},
+                "mainTitle": "Moyen âge",
                 "marc:searchElement" : false,
                 "marc:nonfilingChars" : " "
-              }
+              } ],
+              "language": {"@type": "Language", "label": "Engelska."}
             }
           }}
         }
@@ -4570,12 +4486,13 @@
       "include": ["structuredtitle", "titlesearchelem"],
       "aboutEntity": "?thing",
       "addLink": "marc:hasTranslatedTitle",
-      "embedded": true,
       "resourceType": "Title",
+      "aboutAlias": "_:title",
+      "embedded": true,
       "$c": {"property": "responsibilityStatement"},
       "$h": {"property": "marc:mediaTerm"},
       "$y": {"link": "language", "resourceType": "Language", "property": "code"},
-      "i2": {"property": "marc:nonfilingChars"},
+      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
       "TODO": "Translation of? merge into 245?",
       "_spec": [
         {
@@ -4622,14 +4539,19 @@
 
     "243": {
       "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "include": ["titledetails1xx7xx", "titlesearchelem"],
-      "link": "hasTitle",
-      "embedded": true,
-      "resourceType": "CollectiveTitle",
-      "$a": {"property": "mainTitle"},
+      "pendingResources": {
+        "_:title": {
+          "addLink": "hasTitle",
+          "NOTE:marc-repeatable?": false,
+          "resourceType": "CollectiveTitle",
+          "embedded": true
+        }
+      },
+      "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"property": "legalDate"},
-      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
-      "i2": {"property": "marc:nonfilingChars"},
+      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
       "_spec": [
         {
           "source": {
@@ -4640,12 +4562,12 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "hasTitle": {
+              "hasTitle": [ {
                 "@type": "CollectiveTitle",
                 "mainTitle": "Philosophical works",
                 "marc:formSubheading": ["Selsections"],
                 "marc:nonfilingChars": "0"
-              }
+              } ]
             }
           }}
         },
@@ -4659,13 +4581,13 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "hasTitle": {
+              "hasTitle": [ {
                 "@type": "CollectiveTitle",
                 "mainTitle": "Correspondence",
-                "language": {"@type": "Language", "label": "English"},
-                "marc:nonfilingChars": "0",
-                "marc:version": "Selections"
-              }
+                "marc:nonfilingChars": "0"
+              } ],
+              "language": {"@type": "Language", "label": "English"},
+              "marc:version": "Selections"
             }
           }}
         }
@@ -4676,8 +4598,9 @@
       "include": ["structuredtitle", "titlesearchelem"],
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
-      "embedded": true,
       "resourceType": "Title",
+      "embedded": true,
+      "aboutAlias": "_:title",
       "subfieldOrder": "a b c p n ... h",
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
@@ -6043,8 +5966,8 @@
         "_:event": {"addLink": "provisionActivity", "resourceType": "ProvisionActivity"}
       },
       "$a": {"property": "description", "punctuationChars": ":"},
-      "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":", "embedded": false},
-      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ",", "embedded": false},
+      "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":"},
+      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
       "$e": {"property": "physicalDescription"},
       "$f": {"addProperty": "seriesStatement"},
@@ -6282,81 +6205,160 @@
       "aboutEntity": "?work",
       "match": [
         {
-          "when": "$t & i1=0",
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataPerson", "titledetails1xx7xx"],
+          "when": "$t & i1=3",
+          "include": ["subjectbase", "agentdataFamily", "titledetails1xx7xx"],
           "pendingResources": {
-            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
-            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
+            "_:work": {
+              "addLink": "termComponentList",
+              "resourceType": "Work",
+              "subsumeSingle": true
+            },
+            "_:title": {
+              "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+              "embedded": true
+            },
+            "_:contribution": {
+              "about": "_:work",
+              "link": "contribution", "resourceType": "Contribution"
+            },
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Family"}
           },
-          "$t": {"about": "_:work", "property": "title"}
+          "$t": {"about": "_:title", "property": "mainTitle"}
+        },
+        {
+          "when": "$t & i1=0",
+          "include": ["worksubject", "agentdataPerson"]
         },
         {
           "when": "$t & i1=1",
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataNameOfPerson", "titledetails1xx7xx"],
-          "pendingResources": {
-            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
-            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
-          },
-          "$t": {"about": "_:work", "property": "title"}
-        },
-        {
-          "when": "$t & i1=3",
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataFamily", "titledetails1xx7xx"],
-          "pendingResources": {
-            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
-            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Family", "embedded": false}
-          },
-          "$t": {"about": "_:work", "property": "title"}
+          "include": ["worksubject", "agentdataNameOfPerson"]
         },
         {
           "when": "$t",
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataPerson", "titledetails1xx7xx"],
-          "pendingResources": {
-            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
-            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
-          },
-          "$t": {"about": "_:work", "property": "title"}
-        },
-        {
-          "when": "i1=0",
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataPerson"],
-          "addLink": "subject",
-          "resourceType": "Person",
-          "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Person"}
-          }
-        },
-        {
-          "when": "i1=1",
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataNameOfPerson"],
-          "addLink": "subject",
-          "resourceType": "Person",
-          "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Person"}
-          }
+          "include": ["worksubject", "agentdataPerson"]
         },
         {
           "when": "i1=3",
-          "include": ["subjectbase", "termbase_with_uri_from_i2_with_agent", "agentdataFamily"],
-          "addLink": "subject",
-          "resourceType": "Family",
+          "include": ["subjectbase", "agentdataFamily"],
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Family"}
+            "_:agent": {
+              "addLink": "termComponentList",
+              "resourceType": "Family",
+              "subsumeSingle": true
+            }
           }
-        }
-      ],
-      "pendingResources": {
-        "_:agent": {
-          "link": "agent",
+        },
+        {
+          "when": "i1=0",
+          "include": ["subjectbase", "agentdataPerson"],
+          "resourceType": "Person"
+        },
+        {
+          "when": "i1=1",
+          "include": ["subjectbase", "agentdataNameOfPerson"],
           "resourceType": "Person"
         }
+      ],
+      "subfieldOrder": "a b c q d j u e 4 t g m n p r s l k f o v x y z",
+      "addLink": "subject",
+      "pendingResources": {
+        "_:agent": {
+          "addLink": "termComponentList",
+          "resourceType": "Person",
+          "subsumeSingle": true
+        }
       },
-      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "_spec": [
+
+        {
+          "source": {"600": {"ind1": "1", "ind2": "4", "subfields": [{"a": "Lindgren, Astrid"}, {"d": "1907-2002"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Person",
+                  "familyName": "Lindgren",
+                  "givenName": "Astrid",
+                  "lifeSpan": "1907-2002"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "600": {"ind1": "0", "ind2": "0", "subfields": [
+              {"a": "Black Foot"},
+              {"c": "Chief,"},
+              {"d": "-1877"},
+              {"c": "(Spirit)"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Person",
+                  "name": "Black Foot",
+                  "marc:titleOther": ["Chief,", "(Spirit)"],
+                  "lifeSpan": "-1877",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcsh",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+
+        {
+          "source": {"600": {"ind1": "1", "ind2": "7", "subfields": [
+            {"a": "Lindgren, Astrid"},
+            {"d": "1907-2002"},
+            {"2": "kao"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Person",
+                  "familyName": "Lindgren",
+                  "givenName": "Astrid",
+                  "lifeSpan": "1907-2002",
+                  "inScheme": {
+                    "@id" : "https://id.kb.se/term/kao",
+                    "@type": "ConceptScheme",
+                    "code": "kao"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"600": {"ind1": "1", "ind2": "2", "subfields": [{"a": "Lindgren, Astrid"}, {"d": "1907-2002"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Person",
+                  "familyName": "Lindgren",
+                "givenName": "Astrid",
+                  "lifeSpan": "1907-2002",
+                  "inScheme": {
+                    "@id" : "https://id.kb.se/term/mesh",
+                    "@type": "ConceptScheme",
+                    "code": "mesh"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+
         {
           "source": {
             "600": {"ind1": "0", "ind2": "0", "subfields": [
@@ -6370,49 +6372,53 @@
               "subject": [
                 {
                   "@type": "Work",
-                  "title": "Amores",
+                  "hasTitle" : [{"@type" : "Title", "mainTitle" : "Amores"}],
                   "contribution": {
                     "@type": "Contribution",
-                    "agent": {
-                      "@type": "Person",
-                      "name": "Ovid,",
-                      "lifeSpan": "43 B.C.-17 A.D. or 18 A.D."
-                  }}
+                      "agent": {
+                        "@type": "Person",
+                        "name": "Ovid,",
+                        "lifeSpan": "43 B.C.-17 A.D. or 18 A.D."
+                    }
+                  },
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcsh",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  },
+                  "language": {
+                    "@type": "Language",
+                    "label": "English."
+                  }
                 }
-              ],
-              "inScheme": {
-                "@id": "https://id.kb.se/term/lcsh",
-                "@type": "ConceptScheme",
-                "code": "lcsh"
-              },
-              "language": {
-                "@type": "Language",
-                "label": "English."
-              }
+              ]
             }
           }}
         },
+
         {
           "source": {
             "600": {"ind1": "3", "ind2": "0", "subfields": [
               {"a": "Butler family."},
-              {"x": "Health"}]}},
+              {"x": "Health"}
+            ]}
+          },
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
                 {
-                  "@id" : "http://id.loc.gov/authorities/label/Health",
-                  "@type": "Family",
-                  "agent": {
-                    "@type": "Family",
-                    "name": "Butler family."
-                  },
-                  "prefLabel" : "Health",
-                  "termComponentList" : [{
-                    "@type" : "Subdivision",
-                    "prefLabel" : "Health"
-                  }],
+                  "@type": "ComplexSubject",
+                  "termComponentList" : [
+                    {
+                      "@type": "Family",
+                      "name": "Butler family."
+                    },
+                    {
+                      "@type" : "Subdivision",
+                      "prefLabel" : "Health"
+                    }
+                  ],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
                     "@type": "ConceptScheme",
@@ -6436,19 +6442,18 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@id": "http://id.loc.gov/authorities/label/Travel--Morocco--Marrakech",
-                  "@type": "Person",
-                  "agent": {
-                    "@type": "Person",
-                    "familyName": "Harris",
-                    "givenName": "Andy",
-                    "marc:titleOther": ["(Composer)"]
-                  },
-                  "prefLabel" : "Travel--Morocco--Marrakech",
+                  "@type": "ComplexSubject",
                   "termComponentList" : [
+                    {
+                      "@type": "Person",
+                      "familyName": "Harris",
+                      "givenName": "Andy",
+                      "marc:titleOther": ["(Composer)"]
+                    },
                     {"@type" : "Subdivision", "prefLabel" : "Travel"},
                     {"@type" : "Geographic", "prefLabel" : "Morocco"},
-                    {"@type" : "Geographic", "prefLabel" : "Marrakech"}],
+                    {"@type" : "Geographic", "prefLabel" : "Marrakech"}
+                  ],
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/lcsh",
                     "@type": "ConceptScheme",
@@ -6472,25 +6477,23 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@id" : "http://id.loc.gov/authorities/label/Criticism%20and%20interpretation--History--21st%20century.",
-                  "@type": "Person",
-                  "agent": {
-                    "@type": "Person",
-                    "familyName" : "Mangunwijaya",
-                    "givenName" : "Y. B.",
-                    "lifeSpan": "1929-1999"
-                  },
+                  "@type": "ComplexSubject",
+                  "termComponentList" : [
+                    {
+                      "@type": "Person",
+                      "familyName" : "Mangunwijaya",
+                      "givenName" : "Y. B.",
+                      "lifeSpan": "1929-1999"
+                    },
+                    {"@type" : "Subdivision", "prefLabel" : "Criticism and interpretation"},
+                    {"@type" : "Subdivision", "prefLabel" : "History"},
+                    {"@type" : "Temporal", "prefLabel" : "21st century."}
+                  ],
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/lcsh",
                     "@type": "ConceptScheme",
                     "code": "lcsh"
-                  },
-                  "prefLabel" : "Criticism and interpretation--History--21st century.",
-                  "termComponentList" : [
-                    {"@type" : "Subdivision", "prefLabel" : "Criticism and interpretation"},
-                    {"@type" : "Subdivision", "prefLabel" : "History"},
-                    {"@type" : "Temporal", "prefLabel" : "21st century."}
-                  ]
+                  }
                 }
               ]
             }
@@ -6517,133 +6520,42 @@
               {"y": "21st century."}]}},
           "result": {"mainEntity": {
             "instanceOf": {
-              "@id": "http://id.loc.gov/authorities/label/21st%20century.",
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "Work",
-                  "contribution": {
-                    "@type": "Contribution",
-                    "agent": {
-                      "@type": "Person",
-                      "lifeSpan": "1685-1757",
-                      "familyName": "Scarlatti",
-                      "givenName": "Domenico"
-                    }
-                  },
-                  "title": "Sonatas,"
-                }
-              ],
-              "inScheme": {
-                "@id": "https://id.kb.se/term/lcsh",
-                "@type": "ConceptScheme",
-                "code": "lcsh"
-              },
-              "partNumber": ["K. 492"],
-              "musicMedium": ["harpsichord"],
-              "musicKey": "D major;",
-              "prefLabel": "21st century.",
-              "termComponentList" : [{
-                "@type" : "Temporal",
-                "prefLabel" : "21st century."
-              }]
-            }
-          }}
-        },
-        {
-          "source": {
-            "600": {"ind1": "1", "ind2": "0", "subfields": [
-              {"a": "Black Foot,"},
-              {"c": "Chief,"},
-              {"d": "-1877"},
-              {"c": "(Spirit)"}]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "subject": [
-                {
-                  "@type": "Person",
-                  "agent": {
-                    "@type": "Person",
-                    "name": "Black Foot",
-                    "marc:titleOther": ["Chief,", "(Spirit)"],
-                    "lifeSpan": "-1877"
-                  },
+                  "@type": "ComplexSubject",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
                     "@type": "ConceptScheme",
                     "code": "lcsh"
-                  }
-                }
-              ]
-            }
-          }}
-        },
-        {
-          "source": {"600": {"ind1": "1", "ind2": "4", "subfields": [{"a": "Lindgren, Astrid"}, {"d": "1907-2002"}]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "subject": [
-                {
-                  "@type": "Person",
-                  "agent": {
-                    "@type": "Person",
-                    "familyName": "Lindgren",
-                    "givenName": "Astrid",
-                    "lifeSpan": "1907-2002"
-                  }
-                }
-              ]
-            }
-          }}
-        },
-        {
-          "source": {"600": {"ind1": "1", "ind2": "7", "subfields": [
-            {"a": "Lindgren, Astrid"},
-            {"d": "1907-2002"},
-            {"2": "kao"}]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "subject": [
-                {
-                  "@type": "Person",
-                  "agent": {
-                    "@type": "Person",
-                    "familyName": "Lindgren",
-                    "givenName": "Astrid",
-                    "lifeSpan": "1907-2002"
                   },
-                  "inScheme": {
-                    "@id" : "https://id.kb.se/term/kao",
-                    "@type": "ConceptScheme",
-                    "code": "kao"
-                  }
-                }
-              ]
-            }
-          }}
-        },
-        {
-          "source": {"600": {"ind1": "1", "ind2": "2", "subfields": [{"a": "Lindgren, Astrid"}, {"d": "1907-2002"}]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "subject": [
-                {
-                  "@type": "Person",
-                  "agent": {
-                    "@type": "Person",
-                    "familyName": "Lindgren",
-                    "givenName": "Astrid",
-                    "lifeSpan": "1907-2002"
-                  },
-                  "inScheme": {
-                    "@id" : "https://id.kb.se/term/mesh",
-                    "@type": "ConceptScheme",
-                    "code": "mesh"
-                  }
+                  "termComponentList" : [
+                    {
+                      "@type": "Work",
+                      "contribution": {
+                        "@type": "Contribution",
+                        "agent": {
+                          "@type": "Person",
+                          "lifeSpan": "1685-1757",
+                          "familyName": "Scarlatti",
+                          "givenName": "Domenico"
+                        }
+                      },
+                      "hasTitle": [
+                        {
+                          "@type": "Title",
+                          "mainTitle": "Sonatas,",
+                          "partNumber": ["K. 492"]
+                        }
+                      ],
+                      "musicMedium": ["harpsichord"],
+                      "musicKey": "D major;"
+                    },
+                    {
+                      "@type" : "Temporal",
+                      "prefLabel" : "21st century."
+                    }
+                  ]
                 }
               ]
             }
@@ -6656,35 +6568,35 @@
       "match": [
         {
           "when": "$b & i1=0 & $t",
-          "include": ["subjectOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"]
+          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "$b & i1=1 & $t",
-          "include": ["subjectJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"]
+          "include": ["worksubjectSansPart", "subjectJurisdiction", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "$b & i1=2 & $t",
-          "include": ["subjectOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"]
+          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "i1=0 & $t",
-          "include": ["subjectOrganization", "agentdataOrganization", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"]
+          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganization"]
         },
         {
           "when": "i1=1 & $t",
-          "include": ["subjectJurisdiction", "agentdataOrganization", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"]
+          "include": ["worksubjectSansPart", "subjectJurisdiction", "agentdataOrganization"]
         },
         {
           "when": "i1=2 & $t",
-          "include": ["subjectOrganization", "agentdataOrganization", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"]
+          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganization"]
         },
         {
           "when": "$b & $t",
-          "include": ["subjectOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"]
+          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "$b & i1=0",
-          "include": ["agentdataOrganizationSubUnit", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "include": ["agentdataOrganizationSubUnit", "subjectbase"],
           "addLink": "subject",
           "resourceType": "Organization",
           "pendingResources": {
@@ -6695,7 +6607,7 @@
         },
         {
           "when": "$b & i1=1",
-          "include": ["agentdataOrganizationSubUnit", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "include": ["agentdataOrganizationSubUnit", "subjectbase"],
           "addLink": "subject",
           "resourceType": "Jurisdiction",
           "pendingResources": {
@@ -6706,7 +6618,7 @@
         },
         {
           "when": "i1=1",
-          "include": ["agentdataOrganization", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "include": ["agentdataOrganization", "subjectbase"],
           "addLink": "subject",
           "resourceType": "Jurisdiction",
           "pendingResources": {
@@ -6716,15 +6628,15 @@
         },
         {
           "when": "$t",
-          "include": ["subjectOrganization", "agentdataOrganization", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"]
+          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganization"]
         },
         {
           "when": "$b",
-          "include": ["subjectOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"]
+          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": null,
-          "include": ["agentdataOrganization", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "include": ["agentdataOrganization", "subjectbase"],
           "addLink": "subject",
           "resourceType": "Organization",
           "pendingResources": {
@@ -6732,7 +6644,6 @@
           }
         }
       ],
-      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
@@ -6813,21 +6724,28 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "prefLabel": "catalogs",
               "subject" : [{
-                "@type" : "Work",
-                "contribution" : {
-                  "@type" : "Contribution",
-                  "agent" : {
-                    "@type" : "Jurisdiction",
-                    "name" : "United States"
+                "@type": "ComplexSubject",
+                "termComponentList" : [
+                  {
+                    "@type" : "Work",
+                    "contribution" : {
+                      "@type" : "Contribution",
+                      "agent" : {
+                        "@type" : "Jurisdiction",
+                        "name" : "United States"
+                      }
+                    },
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)"
+                    } ]
+                  },
+                  {
+                    "@type" : "GenreForm",
+                    "prefLabel" : "catalogs"
                   }
-                },
-                "title" : "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)"
-              }],
-              "termComponentList" : [{
-                "@type" : "GenreForm",
-                "prefLabel" : "catalogs"
+                ]
               }]
             }
           }}
@@ -6852,8 +6770,6 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "marc:formSubheading" : [ "Manuscript." ],
-              "partName" : [ "Pomestnyĭ prikaz" ],
               "subject": [
                 {
                   "@type": "Work",
@@ -6865,14 +6781,19 @@
                       "name" : "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."
                     }
                   },
-                  "title": "Egentitel"
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Egentitel",
+                    "marc:formSubheading" : [ "Manuscript." ],
+                    "partName" : [ "Pomestnyĭ prikaz" ]
+                  } ],
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcsh",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  }
                 }
-              ],
-              "inScheme": {
-                "@id": "https://id.kb.se/term/lcsh",
-                "@type": "ConceptScheme",
-                "code": "lcsh"
-              }
+              ]
             }
           }}
         }
@@ -6884,18 +6805,27 @@
       "match": [
         {
           "when": "$t",
-          "include": ["agentdataMeeting", "titledetails1xx7xx", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "include": ["agentdataMeeting", "subjectbase", "titledetails"],
           "pendingResources": {
-            "_:work": {"addLink": "subject", "resourceType": "Work", "embedded": false},
-            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution", "embedded": false},
-            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting", "embedded": false},
+            "_:work": {
+              "addLink": "termComponentList",
+              "resourceType": "Work",
+              "subsumeSingle": true
+            },
+            "_:title": {
+              "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+              "embedded": true
+            },
+            "_:contribution": {"about": "_:work", "link": "contribution", "resourceType": "Contribution"},
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
-          "$t": {"about": "_:work", "property": "title"}
+          "addLink": "subject",
+          "$t": {"about": "_:title", "property": "mainTitle"}
         },
         {
           "when": null,
-          "include": ["agentdataMeeting", "subjectbase", "termbase_with_uri_from_i2_with_agent"],
+          "include": ["agentdataMeeting", "subjectbase"],
           "addLink": "subject",
           "resourceType": "Meeting",
           "pendingResources": {
@@ -6904,7 +6834,6 @@
           }
         }
       ],
-      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
@@ -6961,26 +6890,29 @@
                     "agent": {
                       "@type": "Meeting",
                       "name": "Vatican Council",
+                      "marc:numberOfPartSectionMeeting" : [ "(2nd :" ],
                       "date": ["1962-1965 :"],
-                      "marc:numberOfPartSectionMeeting": ["(2nd :"],
                       "place": [{
                         "@type": "Place",
                         "label": "Basilica di San Pietro in Vaticano)."
                       }]
                     }
                   },
-                  "title": "Constitutio pastoralis de ecclesia in mundo huius temporis."
+                  "hasTitle" : [ {
+                    "@type" : "Title",
+                    "mainTitle": "Constitutio pastoralis de ecclesia in mundo huius temporis."
+                  } ],
+                  "language": {
+                    "@type": "Language",
+                    "label": "Italian"
+                  },
+                  "inScheme": {
+                    "@id" : "https://id.kb.se/term/lcsh",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  }
                 }
-              ],
-              "language": {
-                "@type": "Language",
-                "label": "Italian"
-              },
-              "inScheme": {
-                "@id" : "https://id.kb.se/term/lcsh",
-                "@type": "ConceptScheme",
-                "code": "lcsh"
-              }
+              ]
             }
           }}
         }
@@ -7015,6 +6947,7 @@
                 "@type": "ConceptScheme",
                 "code": "lcsh"
               },
+                "@type": "ComplexSubject",
               "termComponentList": [
                 {
                   "@type": "Topic",
@@ -7032,10 +6965,18 @@
     },
     "647": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "648": {
-      "include": ["subjectbase", "termbase_with_uri_from_i2"],
+      "include": ["subjectbase"],
       "aboutEntity": "?work",
       "addLink": "subject",
-      "resourceType": "Temporal",
+      "pendingResources": {
+        "_:term": {
+          "addLink": "termComponentList",
+          "resourceType": "Temporal",
+          "required": true,
+          "subsumeSingle": true
+        }
+      },
+      "$a": {"about": "_:term", "property": "prefLabel"},
       "_spec": [
         {
           "source": {"648": {"ind1": " ", "ind2": "7",
@@ -7083,11 +7024,20 @@
       ]
     },
     "650": {
-      "include": ["subjectbase", "termbase_with_uri_from_i2"],
+      "include": ["subjectbase"],
       "aboutEntity": "?work",
       "addLink": "subject",
-      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "resourceType": "Topic",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "Topic",
+          "required": true,
+          "subsumeSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel"},
+      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {
         "link": "marc:subjectLevel",
         "uriTemplate": "{+_}",
@@ -7130,7 +7080,7 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "Topic",
+                  "@type": "ComplexSubject",
                   "@id": "http://id.loc.gov/authorities/label/Information--Information%20Age",
                   "prefLabel": "Information--Information Age",
                   "termComponentList": [
@@ -7239,7 +7189,7 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "Topic",
+                  "@type": "ComplexSubject",
                   "@id": "http://id.loc.gov/authorities/label/Cardiovascular%20Physiology--Congresses.",
                   "prefLabel": "Cardiovascular Physiology--Congresses.",
                   "termComponentList": [
@@ -7287,48 +7237,57 @@
       ]
     },
     "651": {
-      "include": ["subjectbase", "termbase_with_uri_from_i2"],
+      "include": ["subjectbase"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Geographic",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "Geographic",
+          "required": true,
+          "subsumeSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel"},
       "i1": null,
       "_spec": [
         {
-        "source": {
-          "651": {"ind1": " ", "ind2": "7", "subfields":[
-            {"a": "Sydafrika"},
-            {"z": "Västra Kapprovinsen"},
-            {"2": "sao"}]
-          }
-        },
-        "result": {"mainEntity": {
-          "instanceOf": {
-            "@type": "Text",
-            "subject": [
-              {
-                "@type": "Geographic",
-                "@id": "https://id.kb.se/term/sao/Sydafrika--V%C3%A4stra%20Kapprovinsen",
-                "inScheme": {
-                  "@id": "https://id.kb.se/term/sao",
-                  "@type": "ConceptScheme",
-                  "code": "sao"
-                },
-                "prefLabel": "Sydafrika--Västra Kapprovinsen",
-                "termComponentList": [
-                  {
-                    "@type": "Topic",
-                    "prefLabel": "Sydafrika"
+          "source": {
+            "651": {"ind1": " ", "ind2": "7", "subfields":[
+              {"a": "Sydafrika"},
+              {"z": "Västra Kapprovinsen"},
+              {"2": "sao"}]
+            }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "ComplexSubject",
+                  "@id": "https://id.kb.se/term/sao/Sydafrika--V%C3%A4stra%20Kapprovinsen",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/sao",
+                    "@type": "ConceptScheme",
+                    "code": "sao"
                   },
-                  {
-                    "@type": "Geographic",
-                    "prefLabel": "Västra Kapprovinsen"
-                  }
-                ]
-              }
-            ]
-          }
-        }}
-      },
+                  "prefLabel": "Sydafrika--Västra Kapprovinsen",
+                  "termComponentList": [
+                    {
+                      "@type": "Geographic",
+                      "prefLabel": "Sydafrika"
+                    },
+                    {
+                      "@type": "Geographic",
+                      "prefLabel": "Västra Kapprovinsen"
+                    }
+                  ]
+                }
+              ]
+            }
+          }}
+        },
         {
           "source": {
             "651": {"ind1": " ", "ind2": "0", "subfields":[
@@ -7349,7 +7308,7 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "Geographic",
+                  "@type": "ComplexSubject",
                   "@id" : "http://id.loc.gov/authorities/label/Aix-en-Provence%20%28France%29--Social%20life%20and%20customs--Early%20works%20to%201800",
                   "prefLabel": "Aix-en-Provence (France)--Social life and customs--Early works to 1800",
                   "inScheme": {
@@ -7359,7 +7318,7 @@
                   },
                   "termComponentList": [
                     {
-                      "@type": "Topic",
+                      "@type": "Geographic",
                       "prefLabel": "Aix-en-Provence (France)"
                     },
                     {
@@ -7442,10 +7401,19 @@
     },
 
     "655" : {
-      "include": ["subjectbase", "termbase_with_uri_from_i2"],
+      "include": ["subjectbase"],
       "aboutEntity": "?work",
       "addLink": "genreForm",
       "resourceType": "GenreForm",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "GenreForm",
+          "required": true,
+          "subsumeSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel"},
       "_spec": [
         {
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Deckare"}, {"2": "saogf"}]}},
@@ -7620,8 +7588,6 @@
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
-      "$i": {"addLink": "relation", "property": "label"},
-      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "$x": {"property": "issn"},
       "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
       "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
@@ -7656,13 +7622,16 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relatedTo": [
+              "relationship": [
                 {
                   "@type": "Relationship",
-                  "relation": [{"label": "Parafraserar"}],
+                  "relation": [{"@type": "Resource", "label": "Parafraserar"}],
                   "entity": {
                     "@type": "Work",
-                    "title": "Anteckningar från en ö",
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "Anteckningar från en ö"
+                    } ],
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
@@ -7685,12 +7654,15 @@
           "FIXME:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relatedTo": [
+              "relationship": [
                 {
                   "@type": "Relationship",
                   "entity": {
                     "@type": "Work",
-                    "title": "Anteckningar från en ö",
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "Anteckningar från en ö"
+                    } ],
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
@@ -7715,23 +7687,26 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relatedTo": [
+              "relationship": [
                 {
                   "@type": "Relationship",
                   "entity": {
                     "@type": "Work",
-                    "title": "Progress of love.",
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "Progress of love.",
+                      "marc:formSubheading" : [ "Urval" ]
+                    } ],
+                    "language" : {
+                      "@type" : "Language",
+                      "label" : "Svenska."
+                    },
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
                         "agent": {"@type": "Person", "familyName":  "Munro", "givenName":  "Alice", "lifeSpan":  "1931-"}
                       }
                     ]
-                  },
-                  "marc:formSubheading" : [ "Urval" ],
-                  "language" : {
-                    "@type" : "Language",
-                    "label" : "Svenska."
                   }
                 }
               ]
@@ -7748,12 +7723,15 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relatedTo": [
+              "relationship": [
                 {
                   "@type": "Relationship",
                   "entity": {
                     "@type": "Work",
-                    "title": "De idolorum vanitate.",
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "De idolorum vanitate."
+                    } ],
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
@@ -7783,7 +7761,10 @@
               "hasPart": [
                 {
                   "@type": "Work",
-                  "title": "Anteckningar från en ö",
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Anteckningar från en ö"
+                  } ],
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
@@ -7831,13 +7812,16 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relatedTo": [
+              "relationship": [
                 {
                   "@type": "Relationship",
-                  "relation": [{"label": "Parafraserar"}],
+                  "relation": [{"@type": "Resource", "label": "Parafraserar"}],
                   "entity": {
                     "@type": "Work",
-                    "title": "Anteckningar från en ö",
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "Anteckningar från en ö"
+                    } ],
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
@@ -7910,79 +7894,77 @@
 
     "710": {
       "aboutEntity": "?work",
-      "include": ["contributionOrganization", "agentdataOrganization", "titledetails1xx7xx"],
       "match": [
         {
           "when": "$b & $t & i2=2 & i1=1",
-          "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+          "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetails"]
         },
         {
           "when": "$t & i2=2 & i1=1",
-          "include": ["hasPartJurisdiction", "agentdataOrganization", "titledetails1xx7xx"]
+          "include": ["hasPartJurisdiction", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$b & $t & i1=1",
-          "include": ["relatedToJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+          "include": ["relatedToJurisdiction", "agentdataOrganizationSubUnit", "titledetails"]
         },
         {
           "when": "$t & i1=1",
-          "include": ["relatedToJurisdiction", "agentdataOrganization", "titledetails1xx7xx"]
+          "include": ["relatedToJurisdiction", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$b & $t & i2=2",
-          "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+          "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetails"]
         },
         {
           "when": "$t & i2=2",
-          "include": ["hasPartOrganization", "agentdataOrganization", "titledetails1xx7xx"]
+          "include": ["hasPartOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$b & $t",
-          "include": ["relatedToOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+          "include": ["relatedToOrganization", "agentdataOrganizationSubUnit", "titledetails"]
         },
         {
           "when": "$t",
-          "include": ["relatedToOrganization", "agentdataOrganization", "titledetails1xx7xx"]
+          "include": ["relatedToOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$b & i1=2",
-          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "agentlang", "someworkdetails"]
         },
         {
           "when": "i1=2",
-          "include": ["contributionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
+          "include": ["contributionOrganization", "agentdataOrganization", "agentlang", "someworkdetails"]
         },
         {
           "when": "$b & i1=1",
-          "include": ["contributionJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+          "include": ["contributionJurisdiction", "agentdataOrganizationSubUnit", "agentlang", "someworkdetails"]
         },
         {
           "when": "i1=1",
-          "include": ["contributionJurisdiction", "agentdataOrganization", "titledetails1xx7xx"]
+          "include": ["contributionJurisdiction", "agentdataOrganization", "agentlang", "someworkdetails"]
         },
         {
           "when": "$b & i1=0",
-          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "agentlang", "someworkdetails"]
         },
         {
           "when": "i1=0",
-          "include": ["contributionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
+          "include": ["contributionOrganization", "agentdataOrganization", "agentlang", "someworkdetails"]
         },
         {
           "when": "$b",
-          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "agentlang", "someworkdetails"]
         },
         {
           "when": null,
-          "include": ["contributionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
+          "include": ["contributionOrganization", "agentdataOrganization", "agentlang", "someworkdetails"]
         }
       ],
       "TODO": [
         "change splitValueProperties to work on result, to handle match combo"
       ],
-      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
+      "TODO:changed-remove?:computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
-      "$i": {"addLink": "relation", "property": "label"},
       "$x": {"property": "issn"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
@@ -8001,12 +7983,15 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relatedTo": [
+              "relationship": [
                 {
                   "@type": "Relationship",
                   "entity": {
                     "@type": "Work",
-                    "title": "National electrical code (1993)",
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "National electrical code (1993)"
+                    } ],
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
@@ -8031,7 +8016,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relatedTo": [
+              "relationship": [
                 {
                   "@type": "Relationship",
                   "entity": {
@@ -8047,7 +8032,10 @@
                           "marc:subordinateUnit" : ["Riksdagen.", "Borgarståndet."]
                         }
                       }],
-                    "title": "Protokoll"
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "Protokoll"
+                    } ]
                   }
                 }
               ]
@@ -8068,12 +8056,15 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relatedTo": [
+              "relationship": [
                 {
                   "@type": "Relationship",
                   "entity": {
                     "@type": "Work",
-                    "title": "Handlingar 1920-1950",
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "Handlingar 1920-1950"
+                    } ],
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
@@ -8101,12 +8092,15 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relatedTo": [
+              "relationship": [
                 {
                   "@type": "Relationship",
                   "entity": {
                     "@type": "Work",
-                    "title": "National electrical code (1993)",
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "National electrical code (1993)"
+                    } ],
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
@@ -8249,21 +8243,24 @@
         },
         {
           "source": {
-            "710": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "National Fire Protection Association."},
-              {"l": "Finska"}
-            ]}},
+            "710": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Schweizerische Käseunion AG (Bern)"},
+              {"l": "ger."}
+            ]}
+          },
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "contribution": [
                 {
                   "@type": "Contribution",
-                  "agent":
-                  {"@type": "Jurisdiction", "name": "National Fire Protection Association."},
-                  "language" : {
-                    "@type" : "Language",
-                    "label" : "Finska"
+                  "agent": {
+                    "@type": "Organization",
+                    "name": "Schweizerische Käseunion AG (Bern)",
+                    "language" : {
+                      "@type" : "Language",
+                      "label" : "ger."
+                    }
                   }
                 }
               ]
@@ -8276,7 +8273,7 @@
               {"a": "Chalmers tekniska högskola."},
               {"b": "Institutionen för teknikens ekonomi och organisation."},
               {"b": "Industriell organisation och ekonomi"},
-              {"l": "Finska"}
+              {"l": "Svenska"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -8291,11 +8288,11 @@
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Chalmers tekniska högskola."
+                    },
+                    "language" : {
+                      "@type" : "Language",
+                      "label" : "Svenska"
                     }
-                  },
-                  "language" : {
-                    "@type" : "Language",
-                    "label" : "Finska"
                   }
                 }]
             }
@@ -8313,7 +8310,10 @@
               "hasPart": [
                 {
                   "@type": "Work",
-                  "title": "Lagen om vissa kommunala befogenheter",
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Lagen om vissa kommunala befogenheter"
+                  } ],
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
@@ -8339,7 +8339,10 @@
               "hasPart": [
                 {
                   "@type": "Work",
-                  "title": "Arbetsmiljölagen",
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Arbetsmiljölagen"
+                  } ],
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
@@ -8370,7 +8373,10 @@
               "hasPart": [
                 {
                   "@type": "Work",
-                  "title": "Söderbykyrka",
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Söderbykyrka"
+                  } ],
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
@@ -8426,7 +8432,6 @@
 
     "711": {
       "aboutEntity": "?work",
-      "include": ["agentdataMeeting", "titledetails1xx7xx"],
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Meeting"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
@@ -8434,53 +8439,35 @@
       "match": [
         {
           "when": "$t & i1=2 & i2=2",
-          "include": ["hasPartMeeting", "agentdataMeeting", "titledetails1xx7xx"]
+          "include": ["hasPartMeeting", "agentdataMeeting", "titledetails"]
         },
         {
           "when": "$t & i2=2",
-          "include": ["hasPartMeeting", "agentdataMeeting", "titledetails1xx7xx"]
+          "include": ["hasPartMeeting", "agentdataMeeting", "titledetails"]
         },
         {
           "when": "$t",
-          "include": ["agentdataMeeting", "titledetails1xx7xx"],
-          "addLink": "relatedTo",
-          "resourceType": "Relationship",
+          "include": ["relatedToData", "agentdataMeeting", "titledetails"],
           "pendingResources": {
-            "_:work": {
-              "link": "entity",
-              "resourceType": "Work",
-              "embedded": false
-            },
-            "_:contribution": {
-              "about": "_:work",
-              "addLink": "contribution",
-              "resourceType": "PrimaryContribution",
-              "embedded": true
-            },
             "_:agent": {
               "about": "_:contribution",
               "link": "agent",
-              "resourceType": "Meeting",
-              "embedded": false
-            },
-            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+              "resourceType": "Meeting"
+            }
           },
-          "$t": {"about": "_:work", "property": "title"},
-          "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+          "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
         },
         {
           "when": null,
-          "include": ["agentdataMeeting", "titledetails1xx7xx"],
+          "include": ["agentdataMeeting", "workdetails"],
           "addLink": "contribution",
           "resourceType": "Contribution",
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Meeting"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-          },
-          "$t": {"property": "title"}
+          }
         }
       ],
-      "$i": {"addLink": "relation", "property": "label"},
       "$x": {"property": "issn"},
       "i1": {"marcDefault": "2"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
@@ -8572,8 +8559,11 @@
               "hasPart": [
                 {
                   "@type": "Work",
-                  "relation": [{"label": "Facsimile (manifestation):"}],
-                  "title": "Constitutio pastoralis de ecclesia in mundo huius temporis.",
+                  "marc:relatedFrom": [{"@type": "Resource", "label": "Facsimile (manifestation):"}],
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Constitutio pastoralis de ecclesia in mundo huius temporis."
+                  } ],
                   "contribution": [
                     {"@type": "PrimaryContribution",
                       "agent": {
@@ -8601,12 +8591,15 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relatedTo": [
+              "relationship": [
                 {
                   "@type": "Relationship",
                   "entity": {
                     "@type": "Work",
-                    "title": "Larger catechism.",
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "Larger catechism."
+                    } ],
                     "contribution": [
                       {"@type": "PrimaryContribution",
                         "agent": {"@type": "Meeting", "name": "Westminster Assembly"}}
@@ -8625,29 +8618,33 @@
     "730": {
       "aboutEntity": "?work",
       "include": "titledetails1xx7xx",
-      "i1": {"property": "marc:nonfilingChars"},
+      "i1": {"about": "_:title", "property": "marc:nonfilingChars", "marcDefault": "0"},
       "match": [
         {
           "when": "i2=2",
           "addLink": "hasPart",
           "resourceType": "Work",
-          "$a": {"property": "uniformTitle"},
+          "aboutAlias": "_:work",
           "$d": {"property": "legalDate"},
-          "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+          "$n": {"about": "_:title", "addProperty": "partNumber", "punctuationChars": ","},
+          "$i": {"addLink": "marc:relatedFrom", "resourceType": "Resource", "property": "label"},
           "$x": {"property": "issn", "punctuationChars": ".,=;"}
         }
       ],
       "pendingResources": {
-        "_:work": {"link": "entity", "resourceType": "Work", "embedded": false}
+        "_:work": {"link": "entity", "resourceType": "Work"},
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
       },
-      "addLink": "relatedTo",
+      "addLink": "relationship",
       "resourceType": "Relationship",
-      "$a": {"about": "_:work", "property": "uniformTitle"},
+      "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"about": "_:work","property": "legalDate"},
-      "$i": {"addLink": "relation", "property": "label"},
-      "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
+      "$i": {"addLink": "relation", "resourceType": "Resource", "property": "label"},
       "$x": {"about": "_:work","property": "issn", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "_spec": [
         {
           "source": {"730": {"ind1": "0", "ind2": " ", "subfields": [
@@ -8657,15 +8654,18 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relatedTo": [
+              "relationship": [
                 {
                   "@type": "Relationship",
                   "entity": {
                     "@type": "Work",
-                    "uniformTitle": "Abyss (Motion picture : 1989)"
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "Abyss (Motion picture : 1989)",
+                      "marc:nonfilingChars" : "0"
+                    } ]
                   },
-                  "marc:nonfilingChars" : "0",
-                  "relation": [{"label": "Novelization of (work)"}]
+                  "relation": [{"@type": "Resource", "label": "Novelization of (work)"}]
                 }
               ]
             }
@@ -8679,15 +8679,18 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "relatedTo": [
+              "relationship": [
                 {
                   "@type": "Relationship",
                   "entity": {
                     "@type": "Work",
-                    "uniformTitle": "Macaroons and biscuits."
-                  },
-                  "marc:nonfilingChars" : "0",
-                  "language": {"@type": "Language", "label": "Svenska."}
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "Macaroons and biscuits.",
+                      "marc:nonfilingChars" : "0"
+                    } ],
+                    "language": {"@type": "Language", "label": "Svenska."}
+                  }
                 }
               ]
             }
@@ -8701,19 +8704,21 @@
             {"n": "GraunWV D:XVIII:11,"},
             {"r": "B♭ minor"}
           ]}},
-          "TODO:result": {"mainEntity": {
-            "NOTE": "Get's reverted to 700",
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "hasPart": [
                 {
                   "@type": "Work",
-                  "uniformTitle": "Gigue,",
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Gigue,",
+                    "partNumber": ["GraunWV D:XVIII:11"],
+                    "marc:nonfilingChars" : "3"
+                  } ],
                   "musicMedium": ["harpsichord,"],
-                  "partNumber": ["GraunWV D:XVIII:11"],
                   "musicKey": "B♭ minor",
-                  "relation": [{"label": "Container of (work):"}],
-                  "marc:nonfilingChars" : "3"
+                  "marc:relatedFrom": [{"@type": "Resource", "label": "Container of (work):"}]
                 }
               ]
             }
@@ -8726,27 +8731,30 @@
       "TODO:inherit?": "730",
       "aboutEntity": "?thing",
       "include": "titledetails1xx7xx",
-      "i1": {"property": "marc:nonfilingChars"},
+      "i1": {"about": "_:title", "property": "marc:nonfilingChars", "marcDefault": "0"},
       "match": [
         {
           "when": "i2=2",
           "addLink": "hasPart",
           "resourceType": "Work",
-          "$a": {"property": "title"},
+          "aboutAlias": "_:work",
           "$d": {"property": "legalDate"},
-          "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+          "$n": {"about": "_:title", "addProperty": "partNumber", "punctuationChars": ","},
           "$x": {"property": "issn", "punctuationChars": ".,=;"}
         }
       ],
       "pendingResources": {
-        "_:work": {"link": "entity", "resourceType": "Work", "embedded": false}
+        "_:work": {"link": "entity", "resourceType": "Work"},
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
       },
-      "addLink": "relatedTo",
+      "addLink": "relationship",
       "resourceType": "Relationship",
-      "$a": {"about": "_:work", "property": "title"},
+      "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"about": "_:work","property": "legalDate"},
-      "$i": {"addLink": "relation", "property": "label"},
-      "$n": {"about": "_:work", "addProperty": "partNumber", "punctuationChars": ","},
+      "$i": {"addLink": "relation", "resourceType": "Resource", "property": "label"},
       "$x": {"about": "_:work","property": "issn", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
       "_spec": [
@@ -8765,10 +8773,13 @@
             "hasPart": [
               {
                 "@type": "Work",
-                "title": "Economics library selections",
-                "partNumber": ["Series 1"],
-                "partName": ["New books in economics"],
-                "marc:nonfilingChars" : "0"
+                "hasTitle": [ {
+                  "@type": "Title",
+                  "mainTitle": "Economics library selections",
+                  "partName": ["New books in economics"],
+                  "partNumber": ["Series 1"],
+                  "marc:nonfilingChars" : "0"
+                } ]
               }
             ]
           }}
@@ -8778,14 +8789,17 @@
             {"a": "En hjälpande hand"}
           ]}},
           "result": {"mainEntity": {
-            "relatedTo": [
+            "relationship": [
               {
                 "@type": "Relationship",
                 "entity": {
                   "@type": "Work",
-                  "title": "En hjälpande hand"
-                },
-                "marc:nonfilingChars" : "3"
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "En hjälpande hand",
+                    "marc:nonfilingChars" : "3"
+                  } ]
+                }
               }
             ]
           }}
@@ -8971,8 +8985,7 @@
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
-          "resourceType": "Person",
-          "embedded": false
+          "resourceType": "Person"
         }
       }
     },
@@ -8982,10 +8995,16 @@
       "aboutEntity": "?work",
       "addLink": "hasSeries",
       "resourceType": "Serial",
+      "aboutAlias": "_:work",
       "include": "titledetails1xx7xx",
-      "$a": {"property": "uniformTitle"},
+      "pendingResources": {
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"addProperty": "legalDate"},
-      "$n": {"addProperty": "partNumber"},
       "$v": {"property": "seriesEnumeration"},
       "$w": {"property": "marc:bibliographicRecordControlNumber"},
       "$x": {"property": "issn", "punctuationChars": ".,=;"},
@@ -9005,8 +9024,11 @@
               "hasSeries": [
                 {
                   "@type": "Serial",
-                  "uniformTitle": "Europarecht (Munich, germany)",
-                  "partName": ["Beiheft"],
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Europarecht (Munich, germany)",
+                    "partName": ["Beiheft"]
+                  } ],
                   "seriesEnumeration": "2002/1",
                   "marc:nonfilingChars" : "0"
                 }
@@ -9026,7 +9048,10 @@
               "hasSeries": [
                 {
                   "@type": "Serial",
-                  "uniformTitle": "Studies on the texts of the desert of Judah,",
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Studies on the texts of the desert of Judah,"
+                  } ],
                   "seriesEnumeration": "101",
                   "issn": "0169-9962",
                   "marc:nonfilingChars" : "4"
@@ -9482,25 +9507,29 @@
       "match": [
         {
           "when": "$t & i1=0",
+          "aboutAlias": "_:work",
           "include": ["contributionPerson", "titledetails1xx7xx"]
         },
         {
           "when": "$t & i1=1",
+          "aboutAlias": "_:work",
           "include": ["contributionNameOfPerson", "titledetails1xx7xx"]
         },
         {
           "when": "$t & i1=3",
+          "aboutAlias": "_:work",
           "include": ["contributionFamily", "titledetails1xx7xx"]
         },
         {
           "when": "$t",
+          "aboutAlias": "_:work",
           "include": ["contributionPerson", "titledetails1xx7xx"]
         },
         {
           "when": "i1=0",
           "aboutEntity": "?thing",
           "aboutType": "Person",
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "include": "agentdataPerson",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -9508,7 +9537,7 @@
           "when": "i1=1",
           "aboutEntity": "?thing",
           "aboutType": "Person",
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "include": "agentdataNameOfPerson",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -9516,7 +9545,7 @@
           "when": "i1=3",
           "aboutEntity": "?thing",
           "aboutType": "Family",
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "include": "agentdataFamily",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -9524,7 +9553,7 @@
           "when": null,
           "aboutEntity": "?thing",
           "aboutType": "Person",
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "include": "agentdataPerson",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
@@ -9551,7 +9580,10 @@
           "result": {
             "mainEntity": {
               "@type": "Work",
-              "title": "Anteckningar från en ö",
+              "hasTitle" : [ {
+                "@type" : "Title",
+                "mainTitle": "Anteckningar från en ö"
+              } ],
               "contribution": [
                 {
                   "@type": "PrimaryContribution",
@@ -9579,7 +9611,10 @@
           "result": {
             "mainEntity": {
               "@type": "Work",
-              "title": "Skuggpojken",
+              "hasTitle" : [ {
+                "@type" : "Title",
+                "mainTitle": "Skuggpojken"
+              } ],
               "contribution": [
                 {
                   "@type": "PrimaryContribution",
@@ -9717,32 +9752,39 @@
       "match": [
         {
           "when": "$b & $t & i1=2",
-          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+          "aboutAlias": "_:work",
+          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetails"]
         },
         {
           "when": "$b & $t & i1=1",
-          "include": ["pendingContributionJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+          "aboutAlias": "_:work",
+          "include": ["pendingContributionJurisdiction", "agentdataOrganizationSubUnit", "titledetails"]
         },
         {
           "when": "$b & $t & i1=0",
-          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"]
+          "aboutAlias": "_:work",
+          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetails"]
         },
         {
           "when": "$t & i1=2",
-          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
+          "aboutAlias": "_:work",
+          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$t & i1=1",
-          "include": ["pendingContributionJurisdiction", "agentdataOrganization", "titledetails1xx7xx"]
+          "aboutAlias": "_:work",
+          "include": ["pendingContributionJurisdiction", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$t & i1=0",
-          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
+          "aboutAlias": "_:work",
+          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails"]
         },
 
         {
           "when": "$t",
-          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
+          "aboutAlias": "_:work",
+          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$b & i1=2",
@@ -9754,7 +9796,7 @@
             "_:isPartOf": {"link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
           "i1": {"marcDefault": "2"}
         },
@@ -9768,7 +9810,7 @@
             "_:isPartOf": {"link": "isPartOf", "resourceType": "Jurisdiction"},
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -9781,7 +9823,7 @@
             "_:isPartOf": {"link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -9793,7 +9835,7 @@
             "_:isPartOf": {"link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
           "i1": {"marcDefault": "2"}
@@ -9807,7 +9849,7 @@
             "_:isPartOf": {"link": "isPartOf", "resourceType": "Jurisdiction"},
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -9820,7 +9862,7 @@
             "_:isPartOf": {"link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -9833,7 +9875,7 @@
             "_:isPartOf": {"link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
@@ -9930,8 +9972,11 @@
           "result": {
             "mainEntity": {
               "@type": "Work",
-              "title": "Treaties, etc.",
-              "marc:formSubheading": ["Protocols, etc"],
+              "hasTitle": [ {
+                "@type": "Title",
+                "mainTitle": "Treaties, etc.",
+                "marc:formSubheading": ["Protocols, etc"]
+              } ],
               "contribution": [{
                 "@type": "PrimaryContribution",
                 "agent": {
@@ -9952,6 +9997,7 @@
           "when": "$t & i1=3",
           "include": ["agentdataFamily", "titledetails1xx7xx"],
           "aboutType": "Work",
+          "aboutAlias": "_:work",
           "$t": {"property": "title"},
           "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
@@ -9963,8 +10009,7 @@
             "_:agent": {
               "about": "_:contribution",
               "link": "agent",
-              "resourceType": "Family",
-              "embedded": false
+              "resourceType": "Family"
             }
           }
         },
@@ -9972,6 +10017,7 @@
           "when": "$t",
           "include": "agentdataMeeting",
           "aboutType": "Work",
+          "aboutAlias": "_:work",
           "$t": {"property": "title"},
           "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
@@ -9983,8 +10029,7 @@
             "_:agent": {
               "about": "_:contribution",
               "link": "agent",
-              "resourceType": "Meeting",
-              "embedded": false
+              "resourceType": "Meeting"
             }
           }
         },
@@ -9992,7 +10037,7 @@
           "when": "i1=3",
           "aboutEntity": "?thing",
           "aboutType": "Family",
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "include": "agentdataFamily",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
@@ -10001,7 +10046,7 @@
           "aboutEntity": "?thing",
           "aboutType": "Meeting",
           "pendingResources": {"_:agent": {"link": "agent", "resourceType": "Meeting"}},
-          "about": "_:agent",
+          "aboutAlias": "_:agent",
           "include": "agentdataMeeting",
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
@@ -10036,14 +10081,24 @@
     },
     "147": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "148" : {
-      "include": "termbase",
+      "include": "termbase_with_id",
       "dependsOn": ["040", "042"],
-      "aboutType": "Temporal"
+      "aboutType": "Temporal",
+      "$a": {"property": "prefLabel"}
     },
     "150" : {
-      "include": "termbase",
-      "aboutType": "Topic",
       "dependsOn": ["040", "042"],
+      "include": ["abouttermbase", "termid"],
+      "aboutType": "Topic",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "Topic",
+          "required": true,
+          "subsumeSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel"},
       "TODO:ignore:$0": "not-defined-for-150;or-assert-equal-to-001",
       "_spec": [
         {
@@ -10088,7 +10143,7 @@
           ],
           "result": {
             "mainEntity": {
-              "@type": "Topic",
+              "@type": "ComplexSubject",
               "@id": "https://id.kb.se/term/sao/Barn--psykologi",
               "sameAs":  [{"@id": "http://libris.kb.se/resource/auth/140482"}],
               "prefLabel": "Barn--psykologi",
@@ -10113,19 +10168,22 @@
       ]
     },
     "151" : {
-      "include": "termbase",
-      "aboutType": "Geographic"
+      "include": "termbase_with_id",
+      "aboutType": "Geographic",
+      "$a": {"property": "prefLabel"}
     },
     "155" : {
-      "include": "termbase",
+      "include": "termbase_with_id",
       "aboutType": "GenreForm",
+      "$a": {"property": "prefLabel"},
       "TODO:just-assert-inScheme=saogf?:uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "TODO:if-inScheme=barn?:uriTemplate": "https://id.kb.se/term/barngf/{prefLabel}"
     },
     "162" : {
-      "include": "termbase",
+      "include": "termbase_with_id",
       "TODO": "besättning - musik",
-      "aboutType": "MusicEnsemble"
+      "aboutType": "MusicEnsemble",
+      "$a": {"property": "prefLabel"}
     },
 
     "180" : {
@@ -10266,7 +10324,7 @@
       ]
     },
     "375": {
-      "TODO:about": "_:agent",
+      "TODO:aboutAlias": "_:agent",
       "$a": {"property": "gender"}
     },
     "376": {
@@ -10314,8 +10372,8 @@
           "when": "$t",
           "include": "agentdata",
           "pendingResources": {
-            "_:work": {"addLink": "hasVersion", "resourceType": "Work", "embedded": false},
-            "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person", "embedded": false}
+            "_:work": {"addLink": "hasVersion", "resourceType": "Work"},
+            "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person"}
           },
           "$t": {"about": "_:work", "property": "title"},
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
@@ -10390,12 +10448,28 @@
 
     "500": {
       "TODO:remnants-of-inherit": "bib:100",
-      "include": ["agentdata", "splicedworkentity"],
-      "TODO": "this is really a link to other auth post..",
       "NOTE": "not really though - see 100",
-      "pendingResources": {
-        "_:agent": {"link": "hasPersona", "resourceType": "Person"}
-      }
+      "TODO": "this is really a link to other auth post..",
+      "TODO": "change to regular 1xx/7xx patterns?",
+      "match": [
+        {
+          "when": "$t",
+          "include": ["agentdata"],
+          "pendingResources": {
+            "_:work": {"addLink": "subject", "resourceType": "Work"},
+            "_:agent": {"about": "_:work", "link": "contributor", "resourceType": "Person"}
+          },
+          "$t": {"about": "_:work", "property": "title"},
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"}
+        },
+        {
+          "when": null,
+          "include": ["agentdata"],
+          "pendingResources": {
+            "_:agent": {"link": "hasPersona", "resourceType": "Person"}
+          }
+        }
+      ]
     },
     "510": {"inherit": "bib:110", "aboutEntity": null, "addLink": "seeAlso"},
     "511": {"inherit": "bib:111", "aboutEntity": null, "addLink": "seeAlso"},
@@ -10403,8 +10477,9 @@
     "547": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "548": {"ignored": true, "NOTE:record-count": 51, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "550": {
-      "include": ["termbase", "relation_from_w"],
+      "include": ["termbase_with_id", "relation_from_w"],
       "resourceType": "Topic",
+      "$a": {"property": "prefLabel"},
       "_spec": [
         {
           "source": [
@@ -10450,12 +10525,12 @@
       ]
     },
     "551": {
-      "include": ["termbase_noid", "relation_from_w"],
+      "include": ["termbase", "relation_from_w"],
       "resourceType": "Geographic",
       "uriTemplate": "https://id.kb.se/place/{prefLabel}"
     },
     "555": {
-      "include": ["termbase_noid", "relation_from_w"],
+      "include": ["termbase", "relation_from_w"],
       "resourceType": "GenreForm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
     },
@@ -10528,19 +10603,19 @@
       "match": [
         {
           "when": "@type = Work",
-          "include": ["subjectbase", "termbase", "uri_from_i2"],
+          "include": ["subjectbase"],
           "addLink": "subject"
         },
         {
           "when": null,
-          "include": ["subjectbase", "termbase", "uri_from_i2"]
+          "include": ["subjectbase"]
         }
       ],
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html"
     },
     "751": {},
     "755": {
-      "include": ["subjectbase", "termbase_noid"],
+      "include": ["subjectbase"],
       "i1": null,
       "addLink": "closeMatch",
       "resourceType": "GenreForm",
