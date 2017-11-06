@@ -61,6 +61,13 @@ public class AuthenticationFilter implements Filter {
                 }
 
                 HashMap result = mapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+
+                Object message = result.get("message");
+                if (message != null && message.toString().equals("Bearer token is expired.")) {
+                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Access token has expired");
+                    return;
+                }
+
                 if (!isExpired(result.get("expires_at").toString())) {
                     request.setAttribute("user", result.get("user"));
                     chain.doFilter(request, response);
