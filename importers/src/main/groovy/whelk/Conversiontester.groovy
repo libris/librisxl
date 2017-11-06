@@ -88,7 +88,7 @@ class Conversiontester implements MySQLLoader.LoadHandler {
     }
 
     private synchronized logConversionFailure(String voyagerId, byte[] sourceMarc, String intermediateJson, Throwable throwable) {
-        String marcString = Iso2709Deserializer.deserialize(MySQLLoader.normalizeString(new String(sourceMarc, "UTF-8")).getBytes()).toString()
+        String marcString = Iso2709Deserializer.deserialize(new String(sourceMarc, "UTF-8").getBytes()).toString()
 
         String errorString = voyagerId + " conversion failed.\n\nOriginal MARC was:\n" +
                 marcString + "\n\nIntermediate JSON was:\n" + intermediateJson +
