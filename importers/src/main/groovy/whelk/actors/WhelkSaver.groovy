@@ -85,7 +85,7 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
                     exceptionsThrown++
                     log.info(e.message + " -> Failed to import/save the post.")
                 }
-                catch (any) {
+                catch (Throwable any) {
                     exceptionsThrown++
                     log.error "Error saving to Whelk", any
                 }
