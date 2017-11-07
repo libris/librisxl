@@ -32,6 +32,46 @@ class LegacyMarcAPI extends HttpServlet {
     private JsonLd jsonld
     private JsonLD2MarcXMLConverter toMarcXmlConverter
 
+    private static final defaultProfileString =
+            "month=*\n" +
+            "move240to244=on\n" +
+            "f003=SE-LIBR\n" +
+            "year=*\n" +
+            "holdupdate=on\n" +
+            "lcsh=off\n" +
+            "licensefilter=off\n" +
+            "composestrategy=compose\n" +
+            "holddelete=on\n" +
+            "authtype=interleaved\n" +
+            "isbnhyphenate=off\n" +
+            "name=SEK\n" +
+            "contact=support@libris.kb.se\n" +
+            "delivery_type=LIBRISFTP\n" +
+            "day_in_month=*\n" +
+            "locations=SEK FREE Nyks\n" +
+            "bibcreate=off\n" +
+            "period=1\n" +
+            "authcreate=off\n" +
+            "format=ISO2709\n" +
+            "status=on\n" +
+            "longname=LIBRIS testprofil\n" +
+            "extrafields=Mtm\\:852,856\n" +
+            "biblevel=off\n" +
+            "issnhyphenate=off\n" +
+            "issndehyphenate=off\n" +
+            "errcontact=support@libris.kb.se\n" +
+            "holdtype=interleaved\n" +
+            "holdcreate=on\n" +
+            "isbndehyphenate=on\n" +
+            "characterencoding=Latin1Strip\n" +
+            "bibupdate=off\n" +
+            "day_in_week=*\n" +
+            "efilter=off\n" +
+            "biboperators=\n" +
+            "move0359=off\n" +
+            "authupdate=off\n" +
+            "sab=off"
+
     @Override
     void init() {
         Properties configuration = PropertyLoader.loadProperties("secret")
@@ -75,10 +115,9 @@ class LegacyMarcAPI extends HttpServlet {
             }
             String profileString = whelk.storage.getProfileByLibraryUri(library)
             if (profileString == null) {
-                String message = "Could not find a profile for the supplied \"library\"-parameter."
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, message)
+                String message = "Could not find a profile for the supplied \"library\"-parameter:" + library + ", using default profile."
                 log.warn("Bad client request to LegacyMarcAPI: " + message)
-                return
+                profileString = defaultProfileString
             }
 
             File tempFile = File.createTempFile("profile", ".tmp")
