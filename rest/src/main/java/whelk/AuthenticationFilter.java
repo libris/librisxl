@@ -54,7 +54,7 @@ public class AuthenticationFilter implements Filter {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Invalid accesstoken, Token is: "+token);
                     return;
                 }
-                log.warn("Verifying token");
+                log.warn("Verifying token " + token);
                 json = verifyToken(token.replace("Bearer ", ""));
                 log.warn("Got " + json);
                 if (json == null || json.isEmpty()) {
@@ -69,6 +69,10 @@ public class AuthenticationFilter implements Filter {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Access token has expired");
                     return;
                 }
+                if (message != null && message.toString().equals("Bearer token not found.")) {
+                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Missing access token.");
+                    return;
+                }
 
                 if (!isExpired(result.get("expires_at").toString())) {
                     request.setAttribute("user", result.get("user"));
@@ -80,7 +84,7 @@ public class AuthenticationFilter implements Filter {
                 log.error("JsonParseException. Failed to parse:" + json, jpe);
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
             } catch (Exception e) {
-                log.error("Exception: + e");
+                log.error("Exception: " + e);
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
                 e.printStackTrace();
             }
