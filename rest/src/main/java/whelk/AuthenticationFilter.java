@@ -54,7 +54,9 @@ public class AuthenticationFilter implements Filter {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Invalid accesstoken, Token is: "+token);
                     return;
                 }
+                log.warn("Verifying token");
                 json = verifyToken(token.replace("Bearer ", ""));
+                log.warn("Got " + json);
                 if (json == null || json.isEmpty()) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Access token has expired");
                     return;
@@ -78,7 +80,7 @@ public class AuthenticationFilter implements Filter {
                 log.error("JsonParseException. Failed to parse:" + json, jpe);
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
             } catch (Exception e) {
-                log.error("Exception: + e")
+                log.error("Exception: + e");
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
                 e.printStackTrace();
             }
