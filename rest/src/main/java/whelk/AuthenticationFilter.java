@@ -78,6 +78,7 @@ public class AuthenticationFilter implements Filter {
                 log.error("JsonParseException. Failed to parse:" + json, jpe);
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
             } catch (Exception e) {
+                log.error("Exception: + e")
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
                 e.printStackTrace();
             }
