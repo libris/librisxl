@@ -61,6 +61,13 @@ public class AuthenticationFilter implements Filter {
                 }
 
                 HashMap result = mapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+
+                Object message = result.get("message");
+                if (message != null && message.toString().equals("Bearer token is expired.")) {
+                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Access token has expired");
+                    return;
+                }
+
                 if (!isExpired(result.get("expires_at").toString())) {
                     request.setAttribute("user", result.get("user"));
                     chain.doFilter(request, response);
@@ -138,6 +145,7 @@ public class AuthenticationFilter implements Filter {
         try {
             Instant exp = Instant.parse(expires_at);
             Instant now = Instant.now();
+            log.warn("expires_at: " + exp + ", now: " + now);
             return now.compareTo(exp) > 0;
         } catch(DateTimeParseException e) {
             log.warn("Failed to parse token expiration: " + e);
