@@ -4052,10 +4052,6 @@
             "100": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Dr. X."}
             ]}},
-          "normalized": {
-            "100": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Dr. X."}
-            ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -4113,10 +4109,6 @@
         },
         {
           "source": {
-            "100": {"ind1": "3", "ind2": " ", "subfields": [
-              {"a": "Bexelius"}
-            ]}},
-          "normalized": {
             "100": {"ind1": "3", "ind2": " ", "subfields": [
               {"a": "Bexelius"}
             ]}},
@@ -4509,15 +4501,6 @@
               {"j": "author"},
               {"4": "aut"}
             ]}},
-          "normalized": {
-            "111": {"ind1": "2", "ind2": " ", "subfields": [
-              {"a": "Conference on Occupational Health Issues Affecting Secretarial and Clerical Personnel"},
-              {"d": "1981"},
-              {"e": "2nd"},
-              {"c": "Cincinatti, Ohio"},
-              {"j": "author"},
-              {"4": "aut"}
-            ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -4564,13 +4547,6 @@
       "_spec": [
         {
           "source": {
-            "130": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
-              {"d": "(1968)."},
-              {"l": "Spanish."},
-              {"f": "1977."}
-            ]}},
-          "normalized": {
             "130": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
               {"d": "(1968)."},
@@ -6846,15 +6822,6 @@
               {"n": "K. 492, "},
               {"r": "D major;"},
               {"y": "21st century."}]}},
-          "normalized": {
-            "600": {"ind1": "1", "ind2": "0", "subfields": [
-              {"a": "Scarlatti, Domenico"},
-              {"d": "1685-1757"},
-              {"m": "harpsichord"},
-              {"n": "K. 492,"},
-              {"r": "D major;"},
-              {"t": "Sonatas,"},
-              {"y": "21st century."}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -7646,13 +7613,6 @@
               {"v": "Early works to 1800"}]
             }
           },
-          "normalized": {
-            "651": {"ind1": " ", "ind2": "0", "subfields":[
-              {"a": "Aix-en-Provence (France)"},
-              {"v": "Early works to 1800"},
-              {"x": "Social life and customs"}]
-            }
-          },
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8405,8 +8365,8 @@
             ]}},
           "normalized": {
             "710": {"ind1": "2", "ind2": " ", "subfields": [
-              {"t": "Handlingar 1920-1950"},
-              {"a": "Nationell gammaldags organisation."}
+              {"a": "Nationell gammaldags organisation."},
+              {"t": "Handlingar 1920-1950"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -8438,11 +8398,6 @@
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "National Fire Protection Association."},
               {"t": "National electrical code (1993)"}
-            ]}},
-          "normalized": {
-            "710": {"ind1": "2", "ind2": " ", "subfields": [
-              {"t": "National electrical code (1993)"},
-              {"a": "National Fire Protection Association."}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -8477,15 +8432,6 @@
               {"n": "(1st :"},
               {"d": "1904"},
               {"c": "Berlin, Germany)"},
-              {"e": "author."}
-            ]}},
-          "normalized": {
-            "710": {"ind1": "2", "ind2": " ", "subfields": [
-              {"a": "International Council of Nurses."},
-              {"c": "Berlin, Germany)"},
-              {"b": "Quinquennial Meeting"},
-              {"d": "1904"},
-              {"n": "(1st :"},
               {"e": "author."}
             ]}},
           "result": {"mainEntity": {
@@ -8862,17 +8808,6 @@
               {"e": "Organizing Committee."},
               {"e": "Arts and Culture Program."},
               {"e": "Visual Arts Section."},
-              {"j": "author."}
-            ]}},
-          "normalized": {
-            "711": {"ind1": "2", "ind2": " ", "subfields": [
-              {"a": "Olympic Games."},
-              {"d": "1976:"},
-              {"e": "Organizing Committee."},
-              {"e": "Arts and Culture Program."},
-              {"e": "Visual Arts Section."},
-              {"n": "21st :"},
-              {"c": "Montréal, Québec)."},
               {"j": "author."}
             ]}},
           "result": {"mainEntity": {
@@ -10808,14 +10743,6 @@
               {"d": "1915-1916)"},
               {"c": "Washington DC"}
             ]}},
-          "normalized": {
-            "110": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Förenta staterna"},
-              {"b": "Congress"},
-              {"n": "(64: )"},
-              {"d": "1915-1916)"},
-              {"c": "Washington DC"}
-            ]}},
           "result": {
             "mainEntity": {
               "@type": "Jurisdiction",
@@ -11561,8 +11488,8 @@
             ]}},
           "normalized": {
             "400": {"ind1": "0", "ind2": " ", "subfields": [
-              {"t": "Other title"},
-              {"a": "Bhagat Singh"}
+              {"a": "Bhagat Singh"},
+              {"t": "Other title"}
             ]}},
           "result": {
             "mainEntity": {
@@ -11812,11 +11739,6 @@
               {"a": "Venezuela"},
               {"t": "Amendment of exchange agreement no. 2"}
             ]}},
-          "normalized": {
-            "410": {"ind1": "1", "ind2": " ", "subfields": [
-              {"t": "Amendment of exchange agreement no. 2"},
-              {"a": "Venezuela"}
-            ]}},
           "result": {
             "mainEntity": {
               "@type": "Work",
@@ -11838,11 +11760,6 @@
             "410": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Museum of Northern Arizona"},
               {"t": "Biology research report"}
-            ]}},
-          "normalized": {
-            "410": {"ind1": "2", "ind2": " ", "subfields": [
-              {"t": "Biology research report"},
-              {"a": "Museum of Northern Arizona"}
             ]}},
           "result": {
             "mainEntity": {
@@ -11868,8 +11785,8 @@
             ]}},
           "normalized": {
             "410": {"ind1": "2", "ind2": " ", "subfields": [
-              {"t": "Biology research report"},
-              {"a": "Museum of Northern Arizona"}
+              {"a": "Museum of Northern Arizona"},
+              {"t": "Biology research report"}
             ]}},
           "result": {
             "mainEntity": {
@@ -11895,8 +11812,8 @@
             ]}},
           "normalized": {
             "410": {"ind1": "2", "ind2": " ", "subfields": [
-              {"t": "Biology research report"},
-              {"a": "Museum of Northern Arizona"}
+              {"a": "Museum of Northern Arizona"},
+              {"t": "Biology research report"}
             ]}},
           "result": {
             "mainEntity": {
@@ -12108,9 +12025,9 @@
             ]}},
           "normalized": {
             "411": {"ind1": "2", "ind2": " ", "subfields": [
-              {"t": "Publications of the Carlsberg Expedition to Phoenicia"},
               {"a": "Carlsberg Expedition to Phoenicia"},
-              {"d": "(1958-1959)."}
+              {"d": "(1958-1959)."},
+              {"t": "Publications of the Carlsberg Expedition to Phoenicia"}
             ]}},
           "result": {
             "mainEntity": {
@@ -12134,13 +12051,6 @@
               {"a": "International Population Conference"},
               {"d": "(1959 :"},
               {"c": "Vienna, Austria)."},
-              {"e": "Arbeitsausschuss des Kongresses"}
-            ]}},
-          "normalized": {
-            "411": {"ind1": "2", "ind2": " ", "subfields": [
-              {"c": "Vienna, Austria)."},
-              {"a": "International Population Conference"},
-              {"d": "(1959 :"},
               {"e": "Arbeitsausschuss des Kongresses"}
             ]}},
           "result": {
@@ -12440,9 +12350,9 @@
             ]}},
           "normalized": {
             "500": {"ind1": "1", "ind2": " ", "subfields": [
-              {"t": "Lillebror och Karlsson på taket"}  ,
               {"a": "Lindgren, Astrid"},
-              {"d": "1907-2002"}
+              {"d": "1907-2002"},
+              {"t": "Lillebror och Karlsson på taket"}
             ]}},
           "result": {
             "mainEntity": {
@@ -12476,14 +12386,6 @@
               {"t": "Ballades,"},
               {"m": "piano"},
               {"n": "op. 19"}
-            ]}},
-          "normalized": {
-            "500": {"ind1": "1", "ind2": " ", "subfields": [
-              {"t": "Ballades,"},
-              {"n": "op. 19"},
-              {"a": "Fauré, Gabriel"},
-              {"d": "1845-1924."},
-              {"m": "piano"}
             ]}},
           "result": {
             "mainEntity": {
@@ -12779,12 +12681,6 @@
               {"a": "Maryland."},
               {"b": "Air Quality Programs"}
             ]}},
-          "normalized": {
-            "510": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Maryland."},
-              {"w": "a"},
-              {"b": "Air Quality Programs"}
-            ]}},
           "result": {
             "mainEntity": {
               "@type": "Jurisdiction",
@@ -12884,12 +12780,6 @@
               {"w": "a"},
               {"a": "AIC Seminar."},
               {"t": "Proceedings"}
-            ]}},
-          "normalized": {
-            "511": {"ind1": "2", "ind2": " ", "subfields": [
-              {"w": "a"},
-              {"t": "Proceedings"},
-              {"a": "AIC Seminar."}
             ]}},
           "result": {
             "mainEntity": {
