@@ -68,7 +68,7 @@ public class ApiTest
         String records = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=jsonld&set=auth");
 
         Assert.assertTrue(records.contains("Johannes de Hesse"));
-        Assert.assertTrue(records.contains("Trippelkonserten"));
+        Assert.assertTrue(records.contains("Library of Congress Authorities"));
     }
 
     @Test
