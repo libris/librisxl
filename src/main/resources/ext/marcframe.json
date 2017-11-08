@@ -323,12 +323,17 @@
 
     "agentdetails": {
       "TODO": "Just drop these extremely uncommon stray workdetails (Apart from $l perhaps; but is that the language of the name literal, or 'nationality'?)",
+      "include": ["agentpartnumber"],
       "$f": {"about": "_:agent", "property": "marc:originDate"},
       "$h": {"about": "_:agent", "property": "marc:mediaTerm"},
       "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label"},
       "$o": {"about": "_:agent", "property": "version"},
       "$r": {"about": "_:agent", "property": "marc:musicKey"},
       "$s": {"about": "_:agent", "property": "version"}
+    },
+
+    "agentpartnumber": {
+      "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","}
     },
 
     "agentdata": {
@@ -851,7 +856,7 @@
     "agentdataOrganizationSubUnit": {
       "include": "agentdataOrganizationJurisdiction",
       "$a": {"about": "_:isPartOf", "property": "name", "required": true},
-      "$b": {"about": "_:agent", "addProperty": "marc:subordinateUnit"}
+      "$b": {"about": "_:agent", "addProperty": "marc:subordinateUnit", "required": true}
     },
 
     "agentdataOrganization": {
@@ -7255,7 +7260,7 @@
       "match": [
         {
           "when": "$t",
-          "include": ["agentdataMeeting", "subjectbase", "titledetails"],
+          "include": ["agentdataMeeting", "subjectbase", "titledetails", "agentpartnumber"],
           "pendingResources": {
             "_:work": {
               "addLink": "termComponentList",
@@ -7271,8 +7276,7 @@
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "addLink": "subject",
-          "$t": {"about": "_:title", "property": "mainTitle"},
-          "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","}
+          "$t": {"about": "_:title", "property": "mainTitle"}
         },
         {
           "when": null,
@@ -8348,35 +8352,35 @@
       "match": [
         {
           "when": "$b & $t & i2=2 & i1=1",
-          "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetails", "agentpartnumber"]
         },
         {
           "when": "$t & i2=2 & i1=1",
-          "include": ["hasPartJurisdiction", "agentdataOrganization", "titledetails"]
+          "include": ["hasPartJurisdiction", "agentdataOrganization", "titledetails", "agentpartnumber"]
         },
         {
           "when": "$b & $t & i1=1",
-          "include": ["relatedToJurisdiction", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["relatedToJurisdiction", "agentdataOrganizationSubUnit", "titledetails", "agentpartnumber"]
         },
         {
           "when": "$t & i1=1",
-          "include": ["relatedToJurisdiction", "agentdataOrganization", "titledetails"]
+          "include": ["relatedToJurisdiction", "agentdataOrganization", "titledetails", "agentpartnumber"]
         },
         {
           "when": "$b & $t & i2=2",
-          "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetails", "agentpartnumber"]
         },
         {
           "when": "$t & i2=2",
-          "include": ["hasPartOrganization", "agentdataOrganization", "titledetails"]
+          "include": ["hasPartOrganization", "agentdataOrganization", "titledetails", "agentpartnumber"]
         },
         {
           "when": "$b & $t",
-          "include": ["relatedToOrganization", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["relatedToOrganization", "agentdataOrganizationSubUnit", "titledetails", "agentpartnumber"]
         },
         {
           "when": "$t",
-          "include": ["relatedToOrganization", "agentdataOrganization", "titledetails"]
+          "include": ["relatedToOrganization", "agentdataOrganization", "titledetails", "agentpartnumber"]
         },
         {
           "when": "$b & i1=2",
@@ -8414,8 +8418,6 @@
       "TODO": [
         "change splitValueProperties to work on result, to handle match combo"
       ],
-
-      "$n": {"TODO:about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
 
       "TODO:changed-remove?:computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
@@ -8882,15 +8884,15 @@
       "match": [
         {
           "when": "$t & i1=2 & i2=2",
-          "include": ["hasPartMeeting", "titledetails"]
+          "include": ["hasPartMeeting", "titledetails", "agentpartnumber"]
         },
         {
           "when": "$t & i2=2",
-          "include": ["hasPartMeeting", "titledetails"]
+          "include": ["hasPartMeeting", "titledetails", "agentpartnumber"]
         },
         {
           "when": "$t",
-          "include": ["relatedToDataSansLabelledRole", "agentdataMeeting", "titledetails"],
+          "include": ["relatedToDataSansLabelledRole", "agentdataMeeting", "titledetails", "agentpartnumber"],
           "pendingResources": {
             "_:agent": {
               "about": "_:contribution",
@@ -8915,7 +8917,6 @@
       "i1": {"marcDefault": "2"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$j": {"addLink": "role", "property": "label"},
-      "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "subfieldOrder": "i a n d c e g u j 4 t n s l k f x",
@@ -11576,23 +11577,23 @@
         },
         {
           "when": "$b & i1=2",
-          "include": ["exactMatchOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["exactMatchOrganization", "agentdataOrganizationSubUnit", "agentpartnumber"]
         },
         {
           "when": "$b & i1=1",
-          "include": ["exactMatchJurisdiction", "agentdataOrganizationSubUnit"]
+          "include": ["exactMatchJurisdiction", "agentdataOrganizationSubUnit", "agentpartnumber"]
         },
         {
           "when": "$b & i1=0",
-          "include": ["exactMatchOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["exactMatchOrganization", "agentdataOrganizationSubUnit", "agentpartnumber"]
         },
         {
           "when": "i1=0 | i1=2",
-          "include": ["exactMatchOrganization", "agentdataOrganization"]
+          "include": ["exactMatchOrganization", "agentdataOrganization", "agentpartnumber"]
         },
         {
           "when": "i1=1",
-          "include": ["exactMatchJurisdiction", "agentdataOrganization"]
+          "include": ["exactMatchJurisdiction", "agentdataOrganization", "agentpartnumber"]
         },
         {
           "when": "$t",
@@ -11600,11 +11601,10 @@
         },
         {
           "when": null,
-          "include": ["exactMatchOrganization", "agentdataOrganization"]
+          "include": ["exactMatchOrganization", "agentdataOrganization", "agentpartnumber"]
         }
       ],
       "$h": {"ignored": true},
-      "$n": {"TODO:about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
