@@ -567,10 +567,13 @@ class MarcRuleSet {
         return merged
     }
 
-    static void mergeFieldDefinitions(Map sourceDfn, Map targetDfn, String tag) {
+    static void mergeFieldDefinitions(Map sourceDfn, Map targetDfn, String tag,
+            boolean preventOverwrites = true) {
         def targetPending = targetDfn.remove('pendingResources')
-        assert tag && !(sourceDfn.keySet().intersect(targetDfn.keySet())
-                - 'include' - 'NOTE' - 'TODO')
+        if (preventOverwrites) {
+            assert tag && !(sourceDfn.keySet().intersect(targetDfn.keySet())
+                    - 'include' - 'NOTE' - 'TODO')
+        }
 
         // Treat pendingResources specially by merging them.
         def sourcePending = sourceDfn.pendingResources
@@ -1514,7 +1517,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     void addSubfield(String code, Map dfn) {
-        subfields[code] = new MarcSubFieldHandler(this, code, dfn)
+        def subHandler = subfields[code] = new MarcSubFieldHandler(this, code, dfn)
+        def aboutId = subHandler.about
+        def checkAllPending = true
+        if (checkAllPending && aboutId && aboutId != aboutAlias) {
+            assert aboutId in pendingResources, "Missing pendingResources in ${fieldId}, cannot use ${aboutId} for ${subHandler.code}"
+        }
     }
 
     @CompileStatic(SKIP)
@@ -1757,7 +1765,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map getLocalEntity(Map state, Map owner, String id, Map localEntities, boolean forceNew = false) {
         def entity = (Map) localEntities[id]
         if (entity == null || forceNew) {
-            assert id in pendingResources, "Missing pendingResources in ${fieldId}, cannot use ${id}"
             def pending = pendingResources[id]
             entity = localEntities[id] = newEntity(state,
                     (String) pending.resourceType,
@@ -2323,9 +2330,13 @@ class MatchRule {
         Map<String, Map> ruleWhenMap = matchDefs.collectEntries {
             [it['when'], it]
         }
-        Map dfnCopy = fieldDfn.findAll { it.key != 'match' }
         return matchDefs?.collect {
-            new MatchRule(parent, dfnCopy + (Map) it, ruleWhenMap)
+            Map dfnCopy = fieldDfn.findAll { it.key != 'match' }
+            if (dfnCopy.pendingResources) {
+                dfnCopy.pendingResources = [:] + (Map) dfnCopy.pendingResources
+            }
+            MarcRuleSet.mergeFieldDefinitions((Map) it, dfnCopy, parent.tag, false)
+            new MatchRule(parent, dfnCopy, ruleWhenMap)
         }
     }
 
