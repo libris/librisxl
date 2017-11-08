@@ -4212,7 +4212,7 @@
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "property": "label"},
       "$k": {"addProperty": "qualifier", "NOTE": "not allowed but used in the wild"},
-      "$n": {"about": "_:agent", "addProperty": "marc:numberOfPartSectionOfAWork", "punctuationChars": ","},
+      "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
 
       "TODO": [
@@ -4394,7 +4394,7 @@
                       "@type" : "Place",
                       "label": "University of California, Davis"
                     }],
-                    "marc:numberOfPartSectionOfAWork": ["(2nd :"]
+                    "marc:partNumber": ["(2nd :"]
                   },
                   "role" : [ {
                     "label" : "author"
@@ -4424,7 +4424,7 @@
       "$0": {"addLink": "identifiedBy", "property": "value"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$j": {"addLink": "role", "property": "label"},
-      "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
+      "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
       "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
       "subfieldOrder": "a q n d c g e u j 4 t p l k f",
@@ -4481,7 +4481,7 @@
                     "@type": "Meeting",
                     "date": ["1959"],
                     "name": "World Peace Conference",
-                    "partNumber": ["1st"],
+                    "marc:partNumber": ["1st"],
                     "place" : [{
                       "@type" : "Place",
                       "label" : "Paris, France"
@@ -6869,9 +6869,6 @@
     },
     "610": {
       "aboutEntity": "?work",
-      "pendingResources": {
-        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
-      },
       "match": [
         {
           "when": "$b & i1=0 & $t",
@@ -6946,16 +6943,20 @@
         },
         {
           "when": null,
-          "include": ["agentdataOrganization", "subjectbase"],
-          "addLink": "subject",
-          "resourceType": "Organization",
-          "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Organization"}
-          },
-          "$n": {"addProperty": "marc:numberOfPartSectionOfAWork", "punctuationChars": ","}
+          "include": ["agentdataOrganization", "subjectbase"]
         }
       ],
+      "addLink": "subject",
+      "pendingResources": {
+        "_:agent": {
+          "addLink": "termComponentList",
+          "resourceType": "Organization",
+          "absorbSingle": true
+        },
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
+      },
       "$6": {"property": "marc:fieldref"},
+      "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
@@ -7089,7 +7090,7 @@
                     "@type" : "Contribution",
                     "agent" : {
                       "@type" : "Organization",
-                      "partNumber" : [ "Fond 1209" ],
+                      "marc:partNumber" : [ "Fond 1209" ],
                       "name" : "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."
                     }
                   } ],
@@ -7133,14 +7134,15 @@
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "addLink": "subject",
-          "$t": {"about": "_:title", "property": "mainTitle"}
+          "$t": {"about": "_:title", "property": "mainTitle"},
+          "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": null,
           "include": ["agentdataMeeting", "subjectbase"],
           "addLink": "subject",
           "resourceType": "Meeting",
-          "$n": {"addProperty": "marc:numberOfPartSectionOfAWork", "punctuationChars": ","},
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Meeting"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
@@ -7205,7 +7207,7 @@
                       "@type": "Meeting",
                       "name": "Vatican Council",
                       "date": ["1962-1965 :"],
-                      "partNumber": ["(2nd :"],
+                      "marc:partNumber": ["(2nd :"],
                       "place": [{
                         "@type": "Place",
                         "label": "Basilica di San Pietro in Vaticano)."
@@ -8275,6 +8277,9 @@
       "TODO": [
         "change splitValueProperties to work on result, to handle match combo"
       ],
+
+      "$n": {"TODO:about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
+
       "TODO:changed-remove?:computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
 
@@ -8444,7 +8449,7 @@
                     "@type": "Organization",
                     "marc:subordinateUnit" : ["Quinquennial Meeting"],
                     "date": ["1904"],
-                    "partNumber": ["(1st :"],
+                    "marc:partNumber": ["(1st :"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "International Council of Nurses."
@@ -8773,7 +8778,7 @@
       "i1": {"marcDefault": "2"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$j": {"addLink": "role", "property": "label"},
-      "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
+      "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "subfieldOrder": "i a n d c e g u j 4 t n s l k f x",
@@ -8823,7 +8828,7 @@
                       "@type": "Place",
                       "label": "Montréal, Québec)."
                     }],
-                    "partNumber": ["21st :"],
+                    "marc:partNumber": ["21st :"],
                     "date": ["1976:"],
                     "marc:subordinateUnit": ["Organizing Committee." , "Arts and Culture Program." ,  "Visual Arts Section."]
                   },
@@ -8865,7 +8870,7 @@
                           "@type": "Place",
                           "label": "Basilica di San Pietro in Vaticano)."
                         }],
-                        "partNumber": ["(2nd :"],
+                        "marc:partNumber": ["(2nd :"],
                         "date": ["1962-1965 :"]}
                     }
                   ]
@@ -9714,7 +9719,7 @@
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"},
 
-      "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
+      "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "$t": {"about": "_:title", "property": "mainTitle"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
@@ -9739,7 +9744,7 @@
                   "@type": "Meeting",
                   "name": "Vatican Council",
                   "date": ["1962-1964)"],
-                  "partNumber": ["(2nd:"]
+                  "marc:partNumber": ["(2nd:"]
                 }
               }],
               "hasTitle": [{
@@ -10696,7 +10701,7 @@
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
-      "$n": {"addProperty": "marc:numberOfPartSectionOfAWork", "punctuationChars": ","},
+      "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
       "subfieldOrder": "a b n d c g e 4 t p l k f o v x y z",
       "_spec": [
         {
@@ -10751,7 +10756,7 @@
                 "@type": "Jurisdiction",
                 "name": "Förenta staterna"
               },
-              "partNumber": ["(64: )"],
+              "marc:partNumber": ["(64: )"],
               "date": ["1915-1916)"],
               "place": [{
                 "@type": "Place",
@@ -10840,7 +10845,7 @@
       "pendingResources": {
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
-      "$n": {"addProperty": "marc:numberOfPartSectionOfAWork", "punctuationChars": ","},
+      "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
       "i1": {"marcDefault": "2"},
       "subfieldOrder": "a q n d c g e j 4 t p l k f  v x y z",
       "_spec": [
@@ -11706,7 +11711,7 @@
         }
       ],
       "$h": {"ignored": true},
-      "$n": {"addProperty": "marc:numberOfPartSectionOfAWork", "punctuationChars": ","},
+      "$n": {"TODO:about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
@@ -11926,7 +11931,7 @@
               "exactMatch": {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
-                "partNumber": ["(13 :"],
+                "marc:partNumber": ["(13 :"],
                 "date": ["1986)."],
                 "isPartOf": {
                   "@type": "Organization",
@@ -12014,7 +12019,7 @@
         }
       ],
       "$h": {"ignored": true},
-      "$n": {"addProperty": "marc:numberOfPartSectionOfAWork", "punctuationChars": ","},
+      "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
@@ -12639,7 +12644,7 @@
         }
       ],
       "$h": {"ignored": true},
-      "$n": {"addProperty": "marc:numberOfPartSectionOfAWork", "punctuationChars": ","},
+      "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
       "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
       "subfieldOrder": "w i a b c d g  e 4 t m n p r s l k f o v x y z",
       "_spec": [
@@ -12753,7 +12758,7 @@
         }
       ],
       "$h": {"ignored": true},
-      "$n": {"addProperty": "marc:numberOfPartSectionOfAWork", "punctuationChars": ","},
+      "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
       "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
       "subfieldOrder": "w i a n d c e g j 4 t n s l k f v x y z",
       "_spec": [
@@ -13160,7 +13165,7 @@
       "$k": {"addProperty": "marc:formSubheading"},
       "$l": {"property": "marc:languageOfAWork"},
       "$m": {"addProperty": "marc:mediumOfPerformanceForMusic"},
-      "$n": {"addProperty": "marc:numberOfPartSectionOfAWork"},
+      "$n": {"addProperty": "marc:partNumber"},
       "$o": {"property": "marc:arrangedStatementForMusic"},
       "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
       "$r": {"property": "marc:keyForMusic"},
