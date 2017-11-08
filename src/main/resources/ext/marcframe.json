@@ -250,7 +250,7 @@
     },
 
     "titledetailsUnused": {
-      "TODO": "unused, and slightly different from titledetails1xx7xx; why?",
+      "TODO": "unused, and slightly different from titledetails; why?",
       "$d": {"addProperty": "treatySigningDate"},
       "$f": {"property": "date"},
       "$g": {"property": "comment"},
@@ -277,15 +277,15 @@
       "$s": {"about": "_:work", "property": "version"}
     },
 
-    "titledetails": {
+    "titledetailsSansPartNumber": {
       "include": ["workdetails"],
       "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
       "NOTE:k": "Should we map to bf2:natureOfContent instead?",
       "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"}
     },
 
-    "titledetails1xx7xx": {
-      "include": ["titledetails"],
+    "titledetails": {
+      "include": ["titledetailsSansPartNumber"],
       "$n": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partNumber", "punctuationChars": ","}
     },
 
@@ -1099,12 +1099,12 @@
       }
     },
 
-    "worksubjectSansPart": {
-      "include": ["worksubjectData", "titledetails"]
+    "worksubjectSansPartNumber": {
+      "include": ["worksubjectData", "titledetailsSansPartNumber"]
     },
 
     "worksubject": {
-      "include": ["worksubjectData", "titledetails1xx7xx"]
+      "include": ["worksubjectData", "titledetails"]
     },
 
     "relation_from_w": {
@@ -4671,7 +4671,7 @@
     "130": {
       "aboutEntity": "?work",
       "link": "expressionOf",
-      "include": ["titledetails1xx7xx"],
+      "include": ["titledetails"],
       "resourceType": "Work",
       "aboutAlias": "_:work",
       "pendingResources": {
@@ -4812,7 +4812,7 @@
       "aboutEntity": "?work",
       "aboutAlias": "_:work",
       "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
-      "include": ["titledetails1xx7xx", "titlesearchelem"],
+      "include": ["titledetails", "titlesearchelem"],
       "pendingResources": {
         "_:title": {
           "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
@@ -4909,7 +4909,7 @@
     "243": {
       "aboutEntity": "?work",
       "aboutAlias": "_:work",
-      "include": ["titledetails1xx7xx", "titlesearchelem"],
+      "include": ["titledetails", "titlesearchelem"],
       "pendingResources": {
         "_:title": {
           "addLink": "hasTitle",
@@ -6659,7 +6659,7 @@
       "match": [
         {
           "when": "$t & i1=3",
-          "include": ["subjectbase", "agentdataFamily", "titledetails1xx7xx"],
+          "include": ["subjectbase", "agentdataFamily", "titledetails"],
           "pendingResources": {
             "_:work": {
               "addLink": "termComponentList",
@@ -7014,34 +7014,34 @@
       "match": [
         {
           "when": "$b & i1=0 & $t",
-          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "$b & i1=1 & $t",
-          "include": ["worksubjectSansPart", "subjectJurisdiction", "agentdataOrganizationSubUnit"],
+          "include": ["worksubjectSansPartNumber", "subjectJurisdiction", "agentdataOrganizationSubUnit"],
           "pendingResources": {
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"}
           }
         },
         {
           "when": "$b & i1=2 & $t",
-          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "i1=0 & $t",
-          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganization"]
+          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganization"]
         },
         {
           "when": "i1=1 & $t",
-          "include": ["worksubjectSansPart", "subjectJurisdiction", "agentdataOrganization"]
+          "include": ["worksubjectSansPartNumber", "subjectJurisdiction", "agentdataOrganization"]
         },
         {
           "when": "i1=2 & $t",
-          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganization"]
+          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganization"]
         },
         {
           "when": "$b & $t",
-          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "$b & i1=0",
@@ -7077,11 +7077,11 @@
         },
         {
           "when": "$t",
-          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganization"]
+          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganization"]
         },
         {
           "when": "$b",
-          "include": ["worksubjectSansPart", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": null,
@@ -7260,7 +7260,7 @@
       "match": [
         {
           "when": "$t",
-          "include": ["agentdataMeeting", "subjectbase", "titledetails", "agentpartnumber"],
+          "include": ["agentdataMeeting", "subjectbase", "titledetailsSansPartNumber", "agentpartnumber"],
           "pendingResources": {
             "_:work": {
               "addLink": "termComponentList",
@@ -7985,35 +7985,35 @@
       "match": [
         {
           "when": "$t & i1=0 & i2=2",
-          "include": ["hasPartPerson", "agentdataPerson", "titledetails1xx7xx"]
+          "include": ["hasPartPerson", "agentdataPerson", "titledetails"]
         },
         {
           "when": "$t & i1=1 & i2=2",
-          "include": ["hasPartPerson", "agentdataNameOfPerson", "titledetails1xx7xx"]
+          "include": ["hasPartPerson", "agentdataNameOfPerson", "titledetails"]
         },
         {
           "when": "$t & i1=3 & i2=2",
-          "include": ["hasPartFamily", "agentdataFamily", "titledetails1xx7xx"]
+          "include": ["hasPartFamily", "agentdataFamily", "titledetails"]
         },
         {
           "when": "$t & i2=2",
-          "include": ["hasPartPerson", "agentdataPerson", "titledetails1xx7xx"]
+          "include": ["hasPartPerson", "agentdataPerson", "titledetails"]
         },
         {
           "when": "$t & i1=0",
-          "include": ["relatedToPerson", "agentdataPerson", "titledetails1xx7xx"]
+          "include": ["relatedToPerson", "agentdataPerson", "titledetails"]
         },
         {
           "when": "$t & i1=1",
-          "include": ["relatedToPerson", "agentdataNameOfPerson", "titledetails1xx7xx"]
+          "include": ["relatedToPerson", "agentdataNameOfPerson", "titledetails"]
         },
         {
           "when": "$t & i1=3",
-          "include": ["relatedToFamily", "agentdataPerson", "titledetails1xx7xx"]
+          "include": ["relatedToFamily", "agentdataPerson", "titledetails"]
         },
         {
           "when": "$t",
-          "include": ["relatedToPerson", "agentdataPerson", "titledetails1xx7xx"]
+          "include": ["relatedToPerson", "agentdataPerson", "titledetails"]
         },
         {
           "when": "i1=0 & i2=2",
@@ -8352,35 +8352,35 @@
       "match": [
         {
           "when": "$b & $t & i2=2 & i1=1",
-          "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetails", "agentpartnumber"]
+          "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber", "agentpartnumber"]
         },
         {
           "when": "$t & i2=2 & i1=1",
-          "include": ["hasPartJurisdiction", "agentdataOrganization", "titledetails", "agentpartnumber"]
+          "include": ["hasPartJurisdiction", "agentdataOrganization", "titledetailsSansPartNumber", "agentpartnumber"]
         },
         {
           "when": "$b & $t & i1=1",
-          "include": ["relatedToJurisdiction", "agentdataOrganizationSubUnit", "titledetails", "agentpartnumber"]
+          "include": ["relatedToJurisdiction", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber", "agentpartnumber"]
         },
         {
           "when": "$t & i1=1",
-          "include": ["relatedToJurisdiction", "agentdataOrganization", "titledetails", "agentpartnumber"]
+          "include": ["relatedToJurisdiction", "agentdataOrganization", "titledetailsSansPartNumber", "agentpartnumber"]
         },
         {
           "when": "$b & $t & i2=2",
-          "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetails", "agentpartnumber"]
+          "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber", "agentpartnumber"]
         },
         {
           "when": "$t & i2=2",
-          "include": ["hasPartOrganization", "agentdataOrganization", "titledetails", "agentpartnumber"]
+          "include": ["hasPartOrganization", "agentdataOrganization", "titledetailsSansPartNumber", "agentpartnumber"]
         },
         {
           "when": "$b & $t",
-          "include": ["relatedToOrganization", "agentdataOrganizationSubUnit", "titledetails", "agentpartnumber"]
+          "include": ["relatedToOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber", "agentpartnumber"]
         },
         {
           "when": "$t",
-          "include": ["relatedToOrganization", "agentdataOrganization", "titledetails", "agentpartnumber"]
+          "include": ["relatedToOrganization", "agentdataOrganization", "titledetailsSansPartNumber", "agentpartnumber"]
         },
         {
           "when": "$b & i1=2",
@@ -8884,15 +8884,15 @@
       "match": [
         {
           "when": "$t & i1=2 & i2=2",
-          "include": ["hasPartMeeting", "titledetails", "agentpartnumber"]
+          "include": ["hasPartMeeting", "titledetailsSansPartNumber", "agentpartnumber"]
         },
         {
           "when": "$t & i2=2",
-          "include": ["hasPartMeeting", "titledetails", "agentpartnumber"]
+          "include": ["hasPartMeeting", "titledetailsSansPartNumber", "agentpartnumber"]
         },
         {
           "when": "$t",
-          "include": ["relatedToDataSansLabelledRole", "agentdataMeeting", "titledetails", "agentpartnumber"],
+          "include": ["relatedToDataSansLabelledRole", "agentdataMeeting", "titledetailsSansPartNumber", "agentpartnumber"],
           "pendingResources": {
             "_:agent": {
               "about": "_:contribution",
@@ -9106,7 +9106,7 @@
 
     "730": {
       "aboutEntity": "?work",
-      "include": "titledetails1xx7xx",
+      "include": "titledetails",
       "i1": {"about": "_:title", "property": "marc:nonfilingChars", "marcDefault": "0"},
       "match": [
         {
@@ -9220,7 +9220,7 @@
     "740": {
       "TODO:inherit?": "730",
       "aboutEntity": "?thing",
-      "include": "titledetails1xx7xx",
+      "include": "titledetails",
       "i1": {"about": "_:title", "property": "marc:nonfilingChars", "marcDefault": "0"},
       "match": [
         {
@@ -9472,7 +9472,7 @@
       "resourceType": "Serial",
       "TODO:aboutEntity?": "?series",
       "TODO:revert": "Get mixed up with 440",
-      "TODO:include": "titledetails1xx7xx",
+      "TODO:include": "titledetails",
       "pendingResources": {
         "_:contribution": {
           "addLink": "contribution",
@@ -9511,7 +9511,7 @@
           }
         }
       ],
-      "NOTE:titledetails1xx7xx": "Temporarily moved these locally!!",
+      "NOTE:titledetails": "Temporarily moved these locally!!",
       "$f": {"about": "_:title", "property": "originDate"},
       "$h": {"about": "_:title", "property": "marc:mediaTerm"},
 
@@ -9655,7 +9655,7 @@
       "TODO:aboutEntity?": "?series",
       "TODO:revert": "Get mixed up with 440",
       "include": ["agentdataOrganization"],
-      "TODO:include": "titledetails1xx7xx",
+      "TODO:include": "titledetails",
       "embedded": true,
       "pendingResources": {
         "_:contribution": {
@@ -9708,7 +9708,7 @@
           "include": "agentdataOrganizationSubUnit"
         }
       ],
-      "NOTE:titledetails1xx7xx": "Temporarily moved these locally!!",
+      "NOTE:titledetails": "Temporarily moved these locally!!",
       "$f": {"about": "_:title", "property": "originDate"},
       "$h": {"about": "_:title", "property": "marc:mediaTerm"},
 
@@ -9823,7 +9823,7 @@
       "TODO:aboutEntity?": "?series",
       "TODO:revert": "Get mixed up with 440",
       "include": ["agentdataOrganization"],
-      "TODO:include": "titledetails1xx7xx",
+      "TODO:include": "titledetails",
       "i1": {"marcDefault": "2"},
       "embedded": true,
       "pendingResources": {
@@ -9842,7 +9842,7 @@
         },
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
-      "NOTE:titledetails1xx7xx": "Temporarily moved these locally!!",
+      "NOTE:titledetails": "Temporarily moved these locally!!",
       "$f": {"about": "_:title", "property": "originDate"},
       "$h": {"about": "_:title", "property": "marc:mediaTerm"},
 
@@ -9925,7 +9925,7 @@
       "addLink": "hasSeries",
       "resourceType": "Serial",
       "aboutAlias": "_:work",
-      "include": "titledetails1xx7xx",
+      "include": "titledetails",
       "pendingResources": {
         "_:title": {
           "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
@@ -10478,22 +10478,22 @@
         {
           "when": "$t & i1=0",
           "aboutAlias": "_:work",
-          "include": ["contributionPerson", "titledetails1xx7xx"]
+          "include": ["contributionPerson", "titledetails"]
         },
         {
           "when": "$t & i1=1",
           "aboutAlias": "_:work",
-          "include": ["contributionNameOfPerson", "titledetails1xx7xx"]
+          "include": ["contributionNameOfPerson", "titledetails"]
         },
         {
           "when": "$t & i1=3",
           "aboutAlias": "_:work",
-          "include": ["contributionFamily", "titledetails1xx7xx"]
+          "include": ["contributionFamily", "titledetails"]
         },
         {
           "when": "$t",
           "aboutAlias": "_:work",
-          "include": ["contributionPerson", "titledetails1xx7xx"]
+          "include": ["contributionPerson", "titledetails"]
         },
         {
           "when": "i1=0",
@@ -10712,38 +10712,38 @@
         {
           "when": "$b & $t & i1=2",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber"]
         },
         {
           "when": "$b & $t & i1=1",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionJurisdiction", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["pendingContributionJurisdiction", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber"]
         },
         {
           "when": "$b & $t & i1=0",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber"]
         },
         {
           "when": "$t & i1=2",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails"]
+          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetailsSansPartNumber"]
         },
         {
           "when": "$t & i1=1",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionJurisdiction", "agentdataOrganization", "titledetails"]
+          "include": ["pendingContributionJurisdiction", "agentdataOrganization", "titledetailsSansPartNumber"]
         },
         {
           "when": "$t & i1=0",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails"]
+          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetailsSansPartNumber"]
         },
 
         {
           "when": "$t",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails"]
+          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetailsSansPartNumber"]
         },
         {
           "when": "$b & i1=2",
@@ -10948,7 +10948,7 @@
       "match": [
         {
           "when": "$t",
-          "include": ["agentdataMeeting", "titledetails1xx7xx"],
+          "include": ["agentdataMeeting", "titledetails"],
           "aboutType": "Work",
           "aboutAlias": "_:work",
           "$t": {"property": "title"},
@@ -11305,19 +11305,19 @@
       "match": [
         {
           "when": "$t & i1=0",
-          "include": ["hasContribution", "hasVersionPerson", "agentdataPerson", "titledetails1xx7xx"]
+          "include": ["hasContribution", "hasVersionPerson", "agentdataPerson", "titledetails"]
         },
         {
           "when": "$t & i1=1",
-          "include": ["hasContribution", "hasVersionPerson", "agentdataNameOfPerson", "titledetails1xx7xx"]
+          "include": ["hasContribution", "hasVersionPerson", "agentdataNameOfPerson", "titledetails"]
         },
         {
           "when": "$t & i1=3",
-          "include": ["hasContribution", "hasVersionFamily", "agentdataFamily", "titledetails1xx7xx"]
+          "include": ["hasContribution", "hasVersionFamily", "agentdataFamily", "titledetails"]
         },
         {
           "when": "$t",
-          "include": ["hasContribution", "hasVersionPerson", "agentdataNameOfPerson", "titledetails1xx7xx"]
+          "include": ["hasContribution", "hasVersionPerson", "agentdataNameOfPerson", "titledetails"]
         },
         {
           "when": "i1=0",
@@ -11550,30 +11550,30 @@
       "match": [
         {
           "when": "$b & $t & i1=2",
-          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"],
+          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganizationSubUnit", "titledetails"],
           "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
         },
         {
           "when": "$b & $t & i1=1",
-          "include": ["hasContribution", "hasVersionJurisdiction", "agentdataOrganizationSubUnit", "titledetails1xx7xx"],
+          "include": ["hasContribution", "hasVersionJurisdiction", "agentdataOrganizationSubUnit", "titledetails"],
           "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
         },
         {
           "when": "$b & $t & i1=0",
-          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganizationSubUnit", "titledetails1xx7xx"],
+          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganizationSubUnit", "titledetails"],
           "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
         },
         {
           "when": "$t & i1=2",
-          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
+          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$t & i1=1",
-          "include": ["hasContribution", "hasVersionJurisdiction", "agentdataOrganization", "titledetails1xx7xx"]
+          "include": ["hasContribution", "hasVersionJurisdiction", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$t & i1=0",
-          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
+          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$b & i1=2",
@@ -11597,7 +11597,7 @@
         },
         {
           "when": "$t",
-          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganization", "titledetails1xx7xx"]
+          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": null,
@@ -11881,7 +11881,7 @@
       "match": [
         {
           "when": "$t",
-          "include": ["hasVersionMeeting", "agentdataMeeting", "titledetails1xx7xx"],
+          "include": ["hasVersionMeeting", "agentdataMeeting", "titledetails"],
           "$j": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"},
           "$4": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"}
         },
@@ -12033,7 +12033,7 @@
       "match": [
         {
           "when": "$t & i1=0",
-          "include": ["hasContribution", "agentdataPerson", "titledetails1xx7xx"],
+          "include": ["hasContribution", "agentdataPerson", "titledetails"],
           "aboutType": "Work",
           "pendingResources": {
             "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
@@ -12054,7 +12054,7 @@
         },
         {
           "when": "$t & i1=1",
-          "include": ["hasContribution", "agentdataNameOfPerson", "titledetails1xx7xx"],
+          "include": ["hasContribution", "agentdataNameOfPerson", "titledetails"],
           "aboutType": "Work",
           "pendingResources": {
             "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
@@ -12075,7 +12075,7 @@
         },
         {
           "when": "$t & i1=3",
-          "include": ["hasContribution", "agentdataFamily", "titledetails1xx7xx"],
+          "include": ["hasContribution", "agentdataFamily", "titledetails"],
           "aboutType": "Work",
           "pendingResources": {
             "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
@@ -12096,7 +12096,7 @@
         },
         {
           "when": "$t",
-          "include": ["hasContribution", "agentdataNameOfPerson", "titledetails1xx7xx"],
+          "include": ["hasContribution", "agentdataNameOfPerson", "titledetails"],
           "aboutType": "Work",
           "pendingResources": {
             "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
@@ -12319,7 +12319,7 @@
       "match": [
         {
           "when": "$b & $t & i1=2",
-          "include": ["hasContribution", "agentdataOrganizationSubUnit", "titledetails1xx7xx"],
+          "include": ["hasContribution", "agentdataOrganizationSubUnit", "titledetails"],
           "aboutType": "Work",
           "pendingResources": {
             "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
@@ -12342,7 +12342,7 @@
         },
         {
           "when": "$b & $t & i1=1",
-          "include": ["hasContribution", "agentdataOrganizationSubUnit", "titledetails1xx7xx"],
+          "include": ["hasContribution", "agentdataOrganizationSubUnit", "titledetails"],
           "aboutType": "Work",
           "pendingResources": {
             "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
@@ -12369,7 +12369,7 @@
         },
         {
           "when": "$t & i1=2",
-          "include": ["hasContribution", "agentdataOrganization", "titledetails1xx7xx"],
+          "include": ["hasContribution", "agentdataOrganization", "titledetails"],
           "aboutType": "Work",
           "pendingResources": {
             "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
@@ -12391,7 +12391,7 @@
         },
         {
           "when": "$t & i1=1",
-          "include": ["hasContribution", "agentdataOrganization", "titledetails1xx7xx"],
+          "include": ["hasContribution", "agentdataOrganization", "titledetails"],
           "aboutType": "Work",
           "pendingResources": {
             "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
@@ -12584,7 +12584,7 @@
       "match": [
         {
           "when": "$t",
-          "include": ["agentdataMeeting", "titledetails1xx7xx"],
+          "include": ["agentdataMeeting", "titledetails"],
           "aboutType": "Work",
           "pendingResources": {
             "_:work": {"addLink": "relatedTo", "resourceType": "Work", "embedded": false},
@@ -12707,7 +12707,7 @@
       "aboutEntity": "?thing",
       "aboutType": "Agent",
       "link": "relatedTo",
-      "include": ["titledetails1xx7xx"],
+      "include": ["titledetails"],
       "resourceType": "Work",
       "aboutAlias": "_:work",
       "pendingResources": {
