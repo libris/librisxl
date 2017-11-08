@@ -386,7 +386,7 @@
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "$t": {"about": "_:title", "property": "mainTitle"},
-      "$i": {"addLink": "marc:relatedFrom", "resourceType": "Resource", "property": "label"},
+      "$i": {"addLink": "marc:relatedAs", "resourceType": "Role", "property": "label"},
       "$0": {"addLink": "identifiedBy", "property": "value"}
     },
 
@@ -589,7 +589,7 @@
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "TODO:alternative $a": {"addProperty": "altLabel"},
-      "$i": {"addLink": "marc:relatedFrom", "resourceType": "Resource", "property": "label"},
+      "$i": {"addLink": "marc:relatedAs", "resourceType": "Role", "property": "label"},
       "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
       "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
       "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
@@ -8993,7 +8993,7 @@
               "hasPart": [
                 {
                   "@type": "Work",
-                  "marc:relatedFrom": [{"@type": "Resource", "label": "Facsimile (manifestation):"}],
+                  "marc:relatedAs": [{"@type": "Role", "label": "Facsimile (manifestation):"}],
                   "hasTitle": [ {
                     "@type": "Title",
                     "mainTitle": "Constitutio pastoralis de ecclesia in mundo huius temporis."
@@ -9115,7 +9115,7 @@
           "aboutAlias": "_:work",
           "$d": {"property": "legalDate"},
           "$n": {"about": "_:title", "addProperty": "partNumber", "punctuationChars": ","},
-          "$i": {"addLink": "marc:relatedFrom", "resourceType": "Resource", "property": "label"},
+          "$i": {"addLink": "marc:relatedAs", "resourceType": "Role", "property": "label"},
           "$x": {"property": "issn", "punctuationChars": ".,=;"}
         }
       ],
@@ -9207,7 +9207,7 @@
                   } ],
                   "musicMedium": ["harpsichord,"],
                   "musicKey": "B♭ minor",
-                  "marc:relatedFrom": [{"@type": "Resource", "label": "Container of (work):"}]
+                  "marc:relatedAs": [{"@type": "Role", "label": "Container of (work):"}]
                 }
               ]
             }
@@ -11624,8 +11624,8 @@
                   "name": "Suède."
                 }
               },
-              "marc:relatedFrom": [{
-                "@type": "Resource",
+              "marc:relatedAs": [{
+                "@type": "Role",
                 "label": "Franska:"
               }]
             }
