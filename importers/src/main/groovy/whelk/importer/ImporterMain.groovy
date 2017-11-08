@@ -51,13 +51,17 @@ class ImporterMain {
     @Command(args='TO_FILE_NAME COLLECTION')
     void vcopydump(String toFileName, String collection) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, pico.getComponent(PostgreSQLComponent))
+        boolean trackedConnections = false
+        PostgreSQLComponent psql = new PostgreSQLComponent(props.getProperty("sqlUrl"), props.getProperty("sqlMaintable"), trackedConnections)
+        PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, psql)
     }
 
     @Command(args='TO_FILE_NAME COLLECTION DATA_SELECTION_TSVFILE')
     void vcopydumptestdata(String toFileName, String collection, String exampleDataFileName) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, exampleDataFileName, pico.getComponent(PostgreSQLComponent))
+        boolean trackedConnections = false
+        PostgreSQLComponent psql = new PostgreSQLComponent(props.getProperty("sqlUrl"), props.getProperty("sqlMaintable"), trackedConnections)
+        PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, exampleDataFileName, psql)
     }
 
     @Command(args='DATA_SELECTION_TSVFILE')
