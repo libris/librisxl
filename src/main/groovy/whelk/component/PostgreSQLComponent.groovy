@@ -81,6 +81,8 @@ class PostgreSQLComponent {
 
     LinkFinder linkFinder
 
+    final boolean trackConnectionFetching
+
     class AcquireLockException extends RuntimeException { AcquireLockException(String s) { super(s) } }
 
     class ConflictingHoldException extends RuntimeException { ConflictingHoldException(String s) { super(s) } }
@@ -88,7 +90,7 @@ class PostgreSQLComponent {
     // for testing
     PostgreSQLComponent() {}
 
-    PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
+    PostgreSQLComponent(String sqlUrl, String sqlMaintable, boolean trackConnectionFetching = true) {
         mainTableName = sqlMaintable
         String idTableName = mainTableName + "__identifiers"
         String versionsTableName = mainTableName + "__versions"
@@ -96,6 +98,7 @@ class PostgreSQLComponent {
         String dependenciesTableName = mainTableName + "__dependencies"
         String profilesTableName = mainTableName + "__profiles"
 
+        this.trackConnectionFetching = trackConnectionFetching
 
         connectionPool = new BasicDataSource()
 
@@ -1255,6 +1258,7 @@ class PostgreSQLComponent {
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
 
+            println(preparedStatement)
             rs = preparedStatement.executeQuery()
             List<String> results = []
             while (rs.next()) {
@@ -1660,6 +1664,11 @@ class PostgreSQLComponent {
      * if attempted (and produce error messages in your log).
      */
     Connection getConnection(){
+
+        // Dangerous mode, without tracking, for fast imports.
+        if (!trackConnectionFetching)
+            return connectionPool.getConnection()
+
         pruneConnectionAllocations()
 
         List<ConnectionAllocation> connectionsHeldByThisThread
