@@ -54,9 +54,8 @@ public class AuthenticationFilter implements Filter {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Invalid accesstoken, Token is: "+token);
                     return;
                 }
-                log.warn("Verifying token " + token);
+                log.debug("Verifying token " + token);
                 json = verifyToken(token.replace("Bearer ", ""));
-                log.warn("Got " + json);
                 if (json == null || json.isEmpty()) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Access token has expired");
                     return;
@@ -152,7 +151,7 @@ public class AuthenticationFilter implements Filter {
         try {
             Instant exp = Instant.parse(expires_at);
             Instant now = Instant.now();
-            log.warn("expires_at: " + exp + ", now: " + now);
+            log.debug("expires_at: " + exp + ", now: " + now);
             return now.compareTo(exp) > 0;
         } catch(DateTimeParseException e) {
             log.warn("Failed to parse token expiration: " + e);
