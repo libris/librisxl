@@ -10,4 +10,9 @@ public class StorageCreateFailedException extends RuntimeException {
         super("INSERT of document with id " + identifier + " failed. Document already in database.");
         duplicateId = identifier;
     }
+
+    StorageCreateFailedException(String identifier, String extraInfo) {
+        super("INSERT of document with id " + identifier + " failed. Extra info: " + extraInfo);
+        duplicateId = identifier;
+    }
 }

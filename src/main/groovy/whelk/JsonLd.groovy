@@ -1,8 +1,8 @@
 package whelk
 
 import org.codehaus.jackson.map.ObjectMapper
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.Datafield
 import whelk.converter.marc.JsonLD2MarcXMLConverter
@@ -12,6 +12,7 @@ import whelk.exception.ModelValidationException
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
 import se.kb.libris.util.marc.MarcRecord
 import whelk.util.PropertyLoader
+import whelk.util.URIWrapper
 
 public class JsonLd {
 
@@ -48,11 +49,13 @@ public class JsonLd {
     static final ObjectMapper mapper = new ObjectMapper()
     static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter()
 
-    private static Logger log = LoggerFactory.getLogger(JsonLd.class)
+    private static Logger log = LogManager.getLogger(JsonLd.class)
 
     Map displayData
     Map vocabIndex
+    Map superClassOf
     private String vocabId
+    Set forcedSetTerms
 
     /**
      * Make an instance to incapsulate model driven behaviour.
@@ -68,7 +71,11 @@ public class JsonLd {
             }
             : Collections.emptyMap()
 
+        generateSubClassesLists()
+
         expandAliasesInLensProperties()
+
+        loadForcedSetTerms()
     }
 
     private void expandAliasesInLensProperties() {
@@ -159,7 +166,7 @@ public class JsonLd {
             } else if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
                 def resolved = context[match[0][1]]
                 if (resolved) {
-                    URI base = new URI(resolved)
+                    URIWrapper base = new URIWrapper(resolved)
                     result << base.resolve(match[0][2]).toString()
                 }
             } else {
@@ -288,11 +295,11 @@ public class JsonLd {
         return result
     }
 
+    /*
     @Deprecated
     public static Map embellish(Map jsonLd, Map additionalObjects, Map displayData) {
         return new JsonLd(displayData, null).embellish(jsonLd, additionalObjects)
     }
-
 
     @Deprecated
     public static List<Map> toCards(List<Map> things, Map displayData) {
@@ -308,28 +315,43 @@ public class JsonLd {
     @Deprecated
     public static Object toChip(Object object, Map displayData) {
         return new JsonLd(displayData, null).toChip(object)
-    }
+    }*/
 
 
-    Map embellish(Map jsonLd, Map additionalObjects) {
+    Map embellish(Map jsonLd, Map additionalObjects, boolean filterOutNonChipTerms = true) {
         if (!jsonLd.get(GRAPH_KEY)) {
             return jsonLd
         }
 
         List graphItems = jsonLd.get(GRAPH_KEY)
 
-        additionalObjects.each { id, object ->
-            Map chip = toChip(object, displayData)
-            if (chip.containsKey('@graph')) {
-                if (!chip.containsKey('@id')) {
-                    chip['@id'] = id
+        if (filterOutNonChipTerms) {
+            additionalObjects.each { id, object ->
+                Map chip = toChip(object)
+                if (chip.containsKey('@graph')) {
+                    if (!chip.containsKey('@id')) {
+                        chip['@id'] = id
+                    }
+                    graphItems << chip
+                } else {
+                    graphItems << ['@graph': chip,
+                                   '@id'   : id]
                 }
-                graphItems << chip
-            } else {
-                graphItems << ['@graph': chip,
-                               '@id': id]
+            }
+        } else {
+            additionalObjects.each { id, object ->
+                if (object instanceof Map) {
+                    if (object.containsKey('@graph')) {
+                        object['@id'] = id
+                        graphItems << object
+                    } else {
+                        graphItems << ['@graph': object,
+                                       '@id'   : id]
+                    }
+                }
             }
         }
+
         jsonLd[GRAPH_KEY] = graphItems
 
         return jsonLd
@@ -580,7 +602,7 @@ public class JsonLd {
         return o
     }
 
-    static URI findRecordURI(Map jsonLd) {
+    static URIWrapper findRecordURI(Map jsonLd) {
         String foundIdentifier = findIdentifier(jsonLd)
         if (foundIdentifier) {
             return Document.BASE_URI.resolve(foundIdentifier)
@@ -742,5 +764,104 @@ public class JsonLd {
         }
 
         return true
+    }
+
+    public void getSuperClasses(String type, List<String> result) {
+        def termMap = vocabIndex[type]
+        if (termMap == null)
+            return
+
+        if (termMap["subClassOf"] != null) {
+            List superClasses = termMap["subClassOf"]
+
+            for (superClass in superClasses) {
+                if (superClass == null || superClass["@id"] == null) {
+                    continue
+                }
+                String superClassType = toTermKey( superClass["@id"] )
+                result.add(superClassType)
+                getSuperClasses(superClassType, result)
+            }
+        }
+    }
+
+    private generateSubClassesLists() {
+        superClassOf = [:]
+        for (String type : vocabIndex.keySet()) {
+            def termMap = vocabIndex[type]
+            def superClasses = termMap["subClassOf"]
+
+            // Make list if not list already.
+            if (!(superClasses instanceof List))
+                superClasses = [superClasses]
+
+            for (superClass in superClasses) {
+                if (superClass == null || superClass["@id"] == null) {
+                    continue
+                }
+
+                String superClassType = toTermKey( superClass["@id"] )
+                if (superClassOf[superClassType] == null)
+                    superClassOf[superClassType] = []
+                superClassOf[superClassType].add(type)
+            }
+        }
+    }
+
+    public void getSubClasses(String type, List<String> result) {
+        if (type == null)
+            return
+
+        def subClasses = superClassOf[type]
+        if (subClasses == null)
+            return
+
+        result.addAll(subClasses)
+
+        for (String subClass : subClasses) {
+            getSubClasses(subClass, result)
+        }
+    }
+
+    private void loadForcedSetTerms()
+            throws IOException
+    {
+        /*
+        forcedNoSetTerms are those that are used at some point with property/link (as opposed to addProperty/addLink).
+        The intersection of forcedNoSetTerms and forcedSetTerms are in conflict, dealing with these remains an issue.
+         */
+        Set forcedNoSetTerms = new HashSet<>()
+        forcedSetTerms = new HashSet<>()
+
+        InputStream marcFrameStream = getClass().getClassLoader().getResourceAsStream("ext/marcframe.json")
+
+        ObjectMapper mapper = new ObjectMapper()
+        Map marcFrame = mapper.readValue(marcFrameStream, HashMap.class)
+        parseForcedSetTerms(marcFrame, forcedNoSetTerms)
+
+        // As an interim solution conflicted terms are considered no-set-terms.
+        forcedSetTerms.removeAll(forcedNoSetTerms)
+    }
+
+    private void parseForcedSetTerms(Map marcFrame, Set forcedNoSetTerms) {
+        for (Object key : marcFrame.keySet()) {
+            Object value = marcFrame.get(key)
+            if ( (key.equals("addLink") || key.equals("addProperty")) && value instanceof String )
+                forcedSetTerms.add((String) value)
+
+            if (value instanceof Map)
+                parseForcedSetTerms( (Map) value, forcedNoSetTerms )
+            if (value instanceof List)
+                parseForcedSetTerms( (List) value, forcedNoSetTerms )
+        }
+    }
+
+    private void parseForcedSetTerms(List marcFrame, Set forcedNoSetTerms) {
+        for (Object entry : marcFrame) {
+            if (entry instanceof Map)
+                parseForcedSetTerms( (Map) entry, forcedNoSetTerms )
+            if (entry instanceof List)
+                parseForcedSetTerms( (List) entry, forcedNoSetTerms )
+        }
     }
 }

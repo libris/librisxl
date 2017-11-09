@@ -1,6 +1,6 @@
 package whelk.component
 
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import spock.lang.Specification
 import whelk.Document
@@ -33,6 +33,11 @@ class PostgreSQLComponentSpec extends Specification {
             Connection getConnection() {
                 log.info("Getting connection ...")
                 conn
+            }
+
+            @Override
+            List<String> getDependers(String id) {
+                return []
             }
         }
     }
@@ -70,6 +75,8 @@ class PostgreSQLComponentSpec extends Specification {
         given:
         2 * result.next() >> { true }
         1 * result.next() >> { false }
+        2 * result.next() >> { true }
+        1 * result.next() >> { false }
         result.getString(_) >> {
             if (it.first() == "id") {
                 return "testid"
@@ -77,7 +84,7 @@ class PostgreSQLComponentSpec extends Specification {
             if (it.first() == "data") {
                 return documentData
             }
-            if (it.first() == "identifier") {
+            if (it.first() == "iri") {
                 return identifiers
             }
         }
@@ -144,5 +151,22 @@ class PostgreSQLComponentSpec extends Specification {
 
     }
 
+    def "should calculate different checksums when a list is reordered"() {
+        when:
+        String cs1 = new Document(["@graph": [["key": "some data", "@id": "testid"], ["identifier": "testid", "collection": "test"]]]).checksum
+        String cs2 = new Document(["@graph": [["identifier": "testid", "collection": "test"], ["@id": "testid", "key": "some data"]]]).checksum
+
+        then:
+        cs1 != cs2
+    }
+
+    def "should calculate equal checksums when objects in an object change order"() {
+        when:
+        String cs1 = new Document(["@graph": [["key": "some data", "@id": "testid"], ["identifier": "testid", "collection": "test"]]]).checksum
+        String cs2 = new Document(["@graph": [["@id": "testid", "key": "some data"], ["identifier": "testid", "collection": "test"]]]).checksum
+
+        then:
+        cs1 == cs2
+    }
 
 }

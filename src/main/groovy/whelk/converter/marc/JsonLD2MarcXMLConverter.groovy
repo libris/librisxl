@@ -1,6 +1,6 @@
 package whelk.converter.marc
 
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import org.w3c.dom.DocumentFragment
 import se.kb.libris.util.marc.MarcRecord
@@ -11,6 +11,21 @@ import whelk.converter.JSONMarcConverter
 
 @Log
 class JsonLD2MarcXMLConverter implements FormatConverter {
+
+    // List of restricted chars defined at: https://www.w3.org/TR/xml11/#charsets
+    static List<String> restrictedSequences = []
+    static {
+        for (int i = 0x0; i < 0x8+1; ++i)
+            restrictedSequences.add("&#"+i+";")
+        restrictedSequences.add("&#"+0xB+";")
+        restrictedSequences.add("&#"+0xC+";")
+        for (int i = 0xE; i < 0x1F+1; ++i)
+            restrictedSequences.add("&#"+i+";")
+        for (int i = 0x7F; i < 0x84+1; ++i)
+            restrictedSequences.add("&#"+i+";")
+        for (int i = 0x86; i < 0x9F+1; ++i)
+            restrictedSequences.add("&#"+i+";")
+    }
 
     JsonLD2MarcConverter jsonldConverter = null
     final static ObjectMapper mapper = new ObjectMapper()
@@ -29,7 +44,9 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
 
         record = prepareRecord(record, id, originalDocument.getModified(), originalDocument.getChecksum())
 
-        Map xmlDocument = [(JsonLd.NON_JSON_CONTENT_KEY): whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record)]
+        String xmlString = whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record)
+        xmlString = filterRestrictedXmlEscapeSequences(xmlString)
+        Map xmlDocument = [(JsonLd.NON_JSON_CONTENT_KEY): xmlString]
 
         return xmlDocument
     }
@@ -70,5 +87,12 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
     @Override
     String getResultContentType() {
         return "application/marcxml+xml"
+    }
+
+    private static String filterRestrictedXmlEscapeSequences(String xmlString) {
+        for (String s : restrictedSequences) {
+            xmlString = xmlString.replaceAll(s, "")
+        }
+        return xmlString
     }
 }

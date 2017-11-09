@@ -57,7 +57,7 @@ class ElasticConfigGenerator {
     }
 
     /**
-     * Add a boosting offset to the given property
+     * Add a boosting offset to the given property (or its nested subproperties)
      * @param property  The entry in the templateMap (json structure) representing the base of a given property,
      *                  For example:
      *                      "familyName": {
@@ -68,7 +68,27 @@ class ElasticConfigGenerator {
     private static void boostProperty(property, propertyValues) {
         Map propertyMap = property.getValue()
         Integer boost = propertyValues[property.getKey()]
-        propertyMap["boost"] = boost
+        boolean propertyIsLeaf = true
+        for (subProperty in propertyMap) {
+            if (subProperty.getValue() instanceof Map || subProperty.getValue() instanceof List) {
+                boostSubProperty(subProperty.getValue(), boost)
+                propertyIsLeaf = false
+            }
+        }
+        if (propertyIsLeaf)
+            propertyMap["boost"] = boost
+    }
+
+    private static void boostSubProperty(property, Integer boost) {
+        boolean propertyIsLeaf = true
+        for (subProperty in property) {
+            if (subProperty.getValue() instanceof Map || subProperty.getValue() instanceof List) {
+                propertyIsLeaf = false
+                boostSubProperty(subProperty.getValue(), boost)
+            }
+        }
+        if (propertyIsLeaf)
+            property["boost"] = boost
     }
 
     /**

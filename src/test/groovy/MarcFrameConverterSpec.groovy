@@ -2,6 +2,7 @@ package whelk.converter.marc
 
 
 import spock.lang.*
+import whelk.util.URIWrapper
 
 
 @Unroll
@@ -14,7 +15,7 @@ class MarcFrameConverterSpec extends Specification {
             this.config = config
             super.conversion.doPostProcessing = false
             super.conversion.flatLinkedForm = false
-            super.conversion.baseUri = new URI("/")
+            super.conversion.baseUri = new URIWrapper("/")
         }
     }
 
@@ -53,12 +54,14 @@ class MarcFrameConverterSpec extends Specification {
                     marcResults[marcType] = dfn._spec[0].result
                 }
                 if (dfn._spec instanceof List) {
-                    dfn._spec.each {
+                    dfn._spec.eachWithIndex { it, i ->
                         if (it instanceof Map && it.source && it.result) {
                             fieldSpecs << [source: it.source,
                                            normalized: it.normalized,
                                            result: it.result,
-                                           name: it.name ?: "",
+                                           addOnRevert: it.addOnRevert,
+                                           name: it.name ?: "#${i}",
+                                           i: i,
                                            marcType: marcType, tag: tag,
                                            thingLink: thingLink]
                         }
@@ -66,16 +69,6 @@ class MarcFrameConverterSpec extends Specification {
                 }
             }
         }
-    }
-
-    def "should extract #token from #uri"() {
-        expect:
-        MarcSimpleFieldHandler.extractToken(tplt, uri) == token
-        where:
-        tplt            | uri               | token
-        "/item/{_}"     | "/item/thing"     | "thing"
-        "/item/{_}/eng" | "/item/thing/eng" | "thing"
-        "/item/{_}/swe" | "/item/thing/eng" | null
     }
 
     def "should detect marc #type type in leader value #marc.leader"() {
@@ -88,28 +81,7 @@ class MarcFrameConverterSpec extends Specification {
         [leader: "00187nx  a22000971n44500"]    | "hold"
     }
 
-    def "should parse formatted #date"() {
-        expect:
-        MarcSimpleFieldHandler.parseDate(date)
-        where:
-        date << ['2014-06-10T12:05:05.0+02:00', '2014-06-10T12:05:05.0+0200']
-    }
-
-    def "should treat arrays as sets of objects"() {
-        given:
-        def obj = [:]
-        def prop = "label"
-        when:
-        2.times {
-            BaseMarcFieldHandler.addValue(obj, prop, value, true)
-        }
-        then:
-        obj[prop] == [value]
-        where:
-        value << ["Text", ["@id": "/link"]]
-    }
-
-    def "should convert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name)"() {
+    def "should convert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name) [#fieldSpec.i]"() {
         given:
         def marcType = fieldSpec.marcType
         def marc = fieldSpec.tag == '000'
@@ -127,7 +99,11 @@ class MarcFrameConverterSpec extends Specification {
         def expected = deepcopy(marcResults[marcType])
         // test id generation separately
         expected['@id'] = result['@id']
-        expected[fieldSpec.thingLink]['@id'] = result[fieldSpec.thingLink]['@id']
+        assert expected.containsKey(fieldSpec.thingLink)
+        def resultThingId = result[fieldSpec.thingLink]['@id']
+        if (resultThingId) {
+            expected[fieldSpec.thingLink]['@id'] = resultThingId
+        }
         fieldSpec.result.each { prop, obj ->
             def value = expected[prop]
             if (value instanceof Map) value.putAll(obj)
@@ -140,20 +116,26 @@ class MarcFrameConverterSpec extends Specification {
     }
 
     @Requires({ env.mfspec == 'all' })
-    def "should revert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name)"() {
+    def "should revert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name) [#fieldSpec.i]"() {
         given:
         def marcType = fieldSpec.marcType
         def jsonld = deepcopy(marcResults[marcType])
-        fieldSpec.result.each { prop, obj ->
-            def value = jsonld[prop]
-            if (value instanceof Map) value.putAll(obj)
-            else jsonld[prop] = obj
+        [fieldSpec.result, fieldSpec.addOnRevert].each {
+            it.each { prop, obj ->
+                def value = jsonld[prop]
+                if (value instanceof Map) value.putAll(obj)
+                else jsonld[prop] = obj
+            }
         }
         expect:
         converter.conversion.getRuleSetFromJsonLd(jsonld).name == marcType
         when:
         def result = converter.conversion.revert(jsonld)
-        def expected = deepcopy(marcSkeletons[marcType])
+
+        def expected = fieldSpec.tag == '000'
+                ? [leader: fieldSpec.source.leader]
+                : deepcopy(marcSkeletons[marcType])
+
         def source = fieldSpec.normalized ?: fieldSpec.source
         if (source instanceof List) {
             expected.fields += source
@@ -237,8 +219,10 @@ class MarcFrameConverterSpec extends Specification {
         when:
         item.step.unmodify(record, thing)
         then:
-        !item.spec.back || data == (item.spec.back == true?
-                                    item.spec.source : item.spec.back)
+        if (item.spec.back) {
+            def expected = (item.spec.back == true? item.spec.source : item.spec.back)
+            assert data == expected
+        }
 
         where:
         item << postProcStepSpecs
@@ -253,7 +237,7 @@ class MarcFrameConverterSpec extends Specification {
         when:
         conv.marcRuleSets['hold'].processExtraData(entityMap, extraData)
         then:
-        thing['heldBy']['@id'] == 'http://libris.kb.se/library/S'
+        thing['heldBy']['@id'] == 'https://libris.kb.se/library/S'
         thing['holdingFor']['@id'] == 'http://libris.kb.se/resource/bib/123'
     }
 
@@ -326,33 +310,6 @@ class MarcFrameConverterSpec extends Specification {
         resultWithoutDollars != null
     }
 
-    def "should get as list"() {
-        expect:
-        Util.asList('1') == ['1']
-        Util.asList(['1']) == ['1']
-        Util.asList('') == ['']
-        Util.asList(null) == []
-    }
-
-    def "should get by path"() {
-        expect:
-        Util.getAllByPath(entity, path) == values
-        where:
-        entity                          | path              | values
-        [key: '1']                      | 'key'             | ['1']
-        [key: ['1', '2']]               | 'key'             | ['1', '2']
-        [item: [[key: '1']]]            | 'item.key'        | ['1']
-        [item: [[key: '1'],
-                [key: '2']]]            | 'item.key'        | ['1', '2']
-        [part: [[item: [[key: '1']]],
-                [item: [key: '2']]]]    | 'part.item.key'   | ['1', '2']
-    }
-
-    def "should process includes"() {
-        expect:
-        MarcRuleSet.processInclude([patterns: [a: [a:1]]], [include: 'a', b:2]) == [a:1, b:2]
-    }
-
     void assertJsonEquals(result, expected) {
         def resultJson = json(result)
         def expectedJson = json(expected)
@@ -376,11 +333,13 @@ class MarcFrameConverterSpec extends Specification {
     def sorted(obj) {
         if (obj instanceof Map) {
             TreeMap sortedmap = new TreeMap()
-            obj.each { k, v ->
-                sortedmap[k] = (v instanceof List)?
-                    v.collect { sorted(it) } : sorted(v)
+            obj.keySet().sort().each { k ->
+                def v = obj[k]
+                sortedmap[k] = sorted(v)
             }
             return sortedmap
+        } else if (obj instanceof List) {
+            return obj.collect { sorted(it) }
         }
         return obj
     }

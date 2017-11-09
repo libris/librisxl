@@ -1,7 +1,7 @@
 package whelk.converter.marc
 
 import java.util.regex.Pattern
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 
 interface MarcFramePostProcStep {
     def ID = '@id'
@@ -194,6 +194,44 @@ class MappedPropertyStep implements MarcFramePostProcStep {
      */
     void unmodify(Map record, Map thing) {
         modify(record, thing)
+    }
+
+}
+
+class VerboseRevertDataStep extends MarcFramePostProcStepBase {
+
+    String sourceProperty
+    String addLink
+    String addProperty
+
+    void modify(Map record, Map thing) {
+    }
+
+    void unmodify(Map record, Map thing) {
+        expand(thing)
+    }
+
+    void expand(Map entity) {
+        entity.each { key, value ->
+            if (value instanceof List) {
+                for (item in value) {
+                    if (item instanceof Map) {
+                        expand(item)
+                    }
+                }
+            } else if (value instanceof Map) {
+                expand(value)
+            }
+        }
+        String v = entity[sourceProperty]
+        if (v != null) {
+            Map owner = entity
+            if (addLink) {
+                owner = [:]
+                entity.get(addLink, []) << owner
+            }
+            owner[addProperty] = v
+        }
     }
 
 }

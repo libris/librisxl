@@ -237,13 +237,13 @@ class JsonLdSpec extends Specification {
 
     def  "should retrieve actual URI from @id in document"() {
         when:
-        URI uri1 = JsonLd.findRecordURI(
+        URIWrapper uri1 = JsonLd.findRecordURI(
             ["@graph": [["@id": "/qowiudhqw",
                          "name": "foo"]]])
-        URI uri2 = JsonLd.findRecordURI(
+        URIWrapper uri2 = JsonLd.findRecordURI(
             ["@graph": [["@id": "http://id.kb.se/foo/bar",
                          "name": "foo"]]])
-        URI uri3 = JsonLd.findRecordURI(["data":"foo","sameAs":"/some/other"])
+        URIWrapper uri3 = JsonLd.findRecordURI(["data":"foo","sameAs":"/some/other"])
         then:
         uri1.toString() == Document.BASE_URI.toString() + "qowiudhqw"
         uri2.toString() == "http://id.kb.se/foo/bar"

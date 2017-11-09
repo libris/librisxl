@@ -1,12 +1,12 @@
 package whelk
 
-import groovy.util.logging.Slf4j as Log
-import org.apache.lucene.analysis.util.CharArrayMap
+import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
+import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
+import whelk.util.URIWrapper
 
 import java.lang.reflect.Type
-import java.security.MessageDigest
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -22,16 +22,16 @@ class Document {
     // If we _statically_ call loadProperties("secret"), without a try/catch it means that no code with a dependency on
     // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
     // depending on whelk-core) sometimes need to do.
-    static final URI BASE_URI
+    static final URIWrapper BASE_URI
 
     static
     {
         try {
-            BASE_URI = new URI(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
+            BASE_URI = new URIWrapper(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
         }
         catch (Exception e) {
             System.err.println(e)
-            BASE_URI = new URI("https://libris.kb.se/");
+            BASE_URI = new URIWrapper("https://libris.kb.se/");
         }
     }
 
@@ -39,15 +39,20 @@ class Document {
 
     static final List thingIdPath = ["@graph", 0, "mainEntity", "@id"]
     static final List thingIdPath2 = ["@graph", 1, "@id"]
+    static final List thingTypePath = ["@graph", 1, "@type"]
     static final List thingSameAsPath = ["@graph", 1, "sameAs"]
+    static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
     static final List recordIdPath = ["@graph", 0, "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
+    static final List recordTypedIDsPath = ["@graph", 0, "identifiedBy"]
     static final List failedApixExportPath = ["@graph", 0, "apixExportFailedAt"]
     static final List controlNumberPath = ["@graph", 0, "controlNumber"]
     static final List holdingForPath = ["@graph", 1, "itemOf", "@id"]
+    static final List heldByPath = ["@graph", 1, "heldBy", "@id"]
     static final List createdPath = ["@graph", 0, "created"]
     static final List modifiedPath = ["@graph", 0, "modified"]
     static final List encLevelPath = ["@graph", 0, "marc:encLevel", "@id"]
+    static final List sigelPath = ["@graph", 1, "heldBy", "@id"]
 
     public Map data = [:]
     private boolean deleted = false
@@ -62,7 +67,7 @@ class Document {
         return new Document(clonedDate)
     }
 
-    URI getURI() {
+    URIWrapper getURI() {
         return BASE_URI.resolve(getShortId())
     }
 
@@ -89,9 +94,15 @@ class Document {
 
     String getHoldingFor() { get(holdingForPath) }
 
+    String getHeldBy() { get(heldByPath) }
+
     void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, LinkedHashMap) }
 
     String getEncodingLevel() { get(encLevelPath) }
+
+    void setThingType(thingType) { set(thingTypePath, thingType, LinkedHashMap) }
+
+    String getThingType() { get(thingTypePath) }
 
     /**
      * Will have base URI prepended if not already there
@@ -100,7 +111,7 @@ class Document {
         if (!id.startsWith(Document.BASE_URI.toString()))
             id = Document.BASE_URI.resolve(id)
 
-        addRecordIdentifier(id)
+        set(recordIdPath, id, LinkedHashMap)
     }
 
     /**
@@ -119,6 +130,19 @@ class Document {
      */
     String getCompleteId() {
         return get(recordIdPath)
+    }
+
+    /**
+     * Gets the document system ID.
+     * Usually this is equivalent to getComleteId(). But getComleteId() can sometimes return pretty-IDs
+     * (like https://id.kb.se/something) when appropriate. This function will always return the complete
+     * system internal ID (like so: [BASE_URI]/fnrglbrgl)
+     */
+    String getCompleteSystemId() {
+        String shortId = getShortId()
+        if (shortId != null)
+            return BASE_URI.toString() + shortId
+        return null
     }
 
     /**
@@ -152,32 +176,60 @@ class Document {
         return deleted
     }
 
-    boolean isHolding() {
-        List graphList = this.data.get("@graph")
-        return graphList.any { it ->
-            it.get('@type')?.equalsIgnoreCase('Item')
-        }
+    boolean isHolding(JsonLd jsonld) {
+        return ("hold" == LegacyIntegrationTools.determineLegacyCollection(this, jsonld))
     }
 
     String getSigel() {
-        if (this.isHolding()) {
-            List graphItems = this.data.get("@graph")
-
-            Map item = graphItems.find { element ->
-                element[JsonLd.TYPE_KEY] == 'Item'
-            }
-
-            if (item.heldBy?.notation) {
-                return item.heldBy.notation
-            } else {
-                return null
-            }
-        } else {
-            // TODO undefined for non-holding posts for now
-            return null
-        }
+        String uri = get(sigelPath)
+        if (uri != null)
+            return LegacyIntegrationTools.uriToLegacySigel( uri )
+        return null
     }
 
+    /**
+     * Gets a list of [type, value, graphIndex] typed identifiers for this thing (mainEntity)
+     */
+    List<Tuple> getTypedThingIdentifiers() {
+        List<Tuple> results = []
+        List typedIDs = get(thingTypedIDsPath)
+
+        for (Map typedID : typedIDs) {
+            String type = typedID["@type"]
+            String value = null
+            if (typedID["value"] instanceof List)
+                value = typedID["value"][0]
+            else
+                value = typedID["value"]
+
+            if (type != null && value != null)
+                results.add(new Tuple(type, value, 1))
+        }
+
+        return results
+    }
+
+    /**
+     * Gets a list of [type, value, graphIndex] typed identifiers for this record
+     */
+    List<Tuple> getTypedRecordIdentifiers() {
+        List<Tuple> results = []
+        List typedIDs = get(recordTypedIDsPath)
+
+        for (Map typedID : typedIDs) {
+            String type = typedID["@type"]
+            String value = null
+            if (typedID["value"] instanceof List)
+                value = typedID["value"][0]
+            else
+                value = typedID["value"]
+
+            if (type != null && value != null)
+                results.add(new Tuple(type, value, 0))
+        }
+
+        return results
+    }
 
     /**
      * By convention the first id in the returned list is the MAIN resource id.
@@ -218,7 +270,9 @@ class Document {
     List<String> getRecordIdentifiers() {
         List<String> ret = []
 
-        ret.add(get(recordIdPath)) // must be present
+        String mainId = get(recordIdPath)
+        if (mainId != null)
+        ret.add(mainId)
 
         List sameAsObjects = get(recordSameAsPath)
         for (Map object : sameAsObjects) {
@@ -251,20 +305,51 @@ class Document {
     }
 
     /**
-     * Expand the doc with the supplied extra info.
-     *
-     */
-    void embellish(Map additionalObjects, Map displayData) {
-        this.data = JsonLd.embellish(this.data, additionalObjects, displayData)
-        return
-    }
-
-    /**
      * Return a list of external references in the doc.
      *
      */
     List getExternalRefs() {
         return JsonLd.getExternalReferences(this.data)
+    }
+
+    /**
+     * Returns a String[2], first of which is the relation (itemOf, heldBy etc).
+     * The second string is the referenced URI.
+     */
+    List<String[]> getRefsWithRelation() {
+        List<String[]> references = new ArrayList<>()
+
+        addRefsWithRelation(this.data, references, null)
+
+        return references
+    }
+
+    private void addRefsWithRelation(Map node, List<String[]> references, String relation) {
+        for (Object keyObject : node.keySet()) {
+            String key = (String) keyObject
+            Object value = node.get(keyObject)
+
+            // Is node a {"@id":"[URI]"} link ?
+            if (key.equals("@id") && node.size() == 1 && value instanceof String) {
+                references.add ([relation, (String) value] as String[])
+            }
+
+            // Keep going down the tree
+            if (value instanceof Map)
+                addRefsWithRelation( (Map) value, references, key )
+            else if ( value instanceof List)
+                addRefsWithRelation( (List) value, references, key )
+        }
+    }
+
+    private void addRefsWithRelation(List node, List<String[]> references, String relation) {
+        // Keep going down the tree
+        for (Object item : node) {
+            if (item instanceof Map)
+                addRefsWithRelation( (Map) item, references, relation )
+            else if ( item instanceof List)
+                addRefsWithRelation( (List) item, references, relation )
+        }
     }
 
     /**
@@ -406,36 +491,48 @@ class Document {
     }
 
     /**
-     * This function relies on the fact that the deserialized jsonld (using Jackson ObjectMapper) consists of LinkedHashMaps
-     * (which preserve order), unlike normal HashMaps which do not, so be careful not to place HashMaps into a document
-     * structure and then try to calculate a checksum. Makes the order of the inner elements not matter for the caclulation
+     * Expand the doc with the supplied extra info.
      *
-     * This method of getting checksums is deprecated, because it is extremely expensive, and comparing full documents
-     * would actually be faster than this.
      */
-    /*
-    String getChecksum() {
-        Document clone = clone()
+    void embellish(Map additionalObjects, JsonLd jsonld, boolean filterOutNonChipTerms = true) {
+        this.data = jsonld.embellish(this.data, additionalObjects, filterOutNonChipTerms)
+    }
 
-        // timestamps not part of checksum
-        clone.set(modifiedPath, "", LinkedHashMap)
-        clone.set(createdPath, "", LinkedHashMap)
-        clone.data = clone.data["@graph"].collectEntries {
-            it ->
-                it.toSorted { a, b -> a.key <=> b.key }
+
+    /**
+     * Replaces the main ID of this document with 'newId'.
+     * Also replaces all derivatives of the old systemId, like for example oldId#it with the corresponding derivative
+     * of the new id (newId#it).
+     * Finally replaces all document-internal references to
+     */
+    void deepReplaceId(String newId) {
+        String oldId = getCompleteSystemId()
+
+        // If there is no "proper id" use whatever is at the record ID path.
+        if (oldId == null)
+            oldId = get(recordIdPath)
+
+        deepReplaceIdInternal(oldId, newId, data)
+    }
+
+    private void deepReplaceIdInternal(String oldId, String newId, node) {
+        if (node instanceof List) {
+            for (element in node)
+                deepReplaceIdInternal(oldId, newId, element)
         }
-        MessageDigest m = MessageDigest.getInstance("MD5")
-        m.reset()
-        byte[] databytes = mapper.writeValueAsBytes(clone.data)
-        m.update(databytes)
-        byte[] digest = m.digest()
-        BigInteger bigInt = new BigInteger(1, digest)
-        String hashtext = bigInt.toString(16)
-        return hashtext
-    }*/
+        if (node instanceof Map) {
+            for (String key : node.keySet()) {
+                deepReplaceIdInternal(oldId, newId, node.get(key))
+            }
+            String nodeId = node["@id"]
+            if (nodeId != null && nodeId.startsWith(oldId)) {
+                node["@id"] = newId + node["@id"].substring(oldId.length())
+            }
+        }
+    }
 
     String getChecksum() {
-        long checksum = calculateCheckSum(data, 0)
+        long checksum = calculateCheckSum(data, 1)
         return Long.toString(checksum)
     }
 
@@ -445,23 +542,23 @@ class Document {
         if (node == null)
             return term
         else if (node instanceof String)
-            return node.hashCode() + depth
+            return node.hashCode() * depth
         else if (node instanceof Boolean)
-            return node.booleanValue() ? 1 + depth : depth
+            return node.booleanValue() ? depth : term
         else if (node instanceof Integer)
-            return node.intValue() + depth
+            return node.intValue() * depth
         else if (node instanceof Map) {
             for (String key : node.keySet()) {
                 if ( !key.equals(JsonLd.MODIFIED_KEY) && !key.equals(JsonLd.CREATED_KEY)) {
-                    term += key.hashCode() + depth
+                    term += key.hashCode() * depth
                     term += calculateCheckSum(node[key], depth + 1)
                 }
             }
         }
         else { // node is a list
-            int i = 0
+            int i = 1
             for (entry in node)
-                term += calculateCheckSum(entry, depth + 1 + (i++))
+                term += calculateCheckSum(entry, depth + (i++))
         }
 
         return term

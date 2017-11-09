@@ -1,8 +1,7 @@
 package whelk.filter
 
 import groovy.transform.Synchronized
-import groovy.util.logging.Slf4j as Log
-
+import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.*
 import whelk.component.*
@@ -14,11 +13,11 @@ class JsonLdLinkExpander {
 
     Map nodesToExpand = null
     private Map cachedDocuments = [:]
-    Storage storage
+    PostgreSQLComponent storage
 
     static final ObjectMapper mapper = new ObjectMapper()
 
-    JsonLdLinkExpander(Storage s) {
+    JsonLdLinkExpander(PostgreSQLComponent s) {
         storage = s
         try {
             nodesToExpand = mapper.readValue(this.getClass().getClassLoader().getResourceAsStream("jsonLdNodesToExpand.json"), Map)

@@ -1,13 +1,14 @@
 package whelk
 
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
+import whelk.util.URIWrapper
 
 @Log
 class Location {
 
     String id
     Document document
-    URI uri
+    URIWrapper uri
 
     int responseCode = 200
 
@@ -29,10 +30,10 @@ class Location {
     }
 
     Location withURI(String location) {
-        return withURI(new URI(location))
+        return withURI(new URIWrapper(location))
     }
 
-    Location withURI(URI location) {
+    Location withURI(URIWrapper location) {
         uri = location
         return this
     }

@@ -2,9 +2,38 @@ package whelk.component
 
 import spock.lang.Specification
 
-//import whelk.ElasticSearch
 
 class ElasticSearchSpec extends Specification {
+
+    def "Should be configurable"() {
+        when:
+        def es1 = new ElasticSearch("localhost", null, "whelk_1")
+        then:
+        es1.elasticHosts.any{ it.hostName == "localhost" }
+        es1.elasticHosts.any{ it.port == 9200 }
+        es1.indexName == "whelk_1"
+        when:
+        def es2 = new ElasticSearch("otherhost:9999", null, "whelk_2")
+        then:
+        es2.elasticHosts.any{ it.hostName == "otherhost" }
+        es2.elasticHosts.any{ it.port == 9999 }
+        es2.indexName == "whelk_2"
+    }
+
+    def "Should be configurable with multiple nodes"() {
+        when:
+        def es1 = new ElasticSearch("localhost:9200,thatotherhost:9300,thatthirdhost:9400", null, "whelk_1")
+        then:
+        es1.elasticHosts.every{ ['localhost','thatotherhost','thatthirdhost'].contains(it.hostName ) }
+        es1.elasticHosts.every{ [9200,9300,9400].contains(it.port) }
+        es1.indexName == "whelk_1"
+        when:
+        def es2 = new ElasticSearch("otherhost:9999", null, "whelk_2")
+        then:
+        es2.elasticHosts.any{ it.hostName == "otherhost" }
+        es2.elasticHosts.any{ it.port == 9999 }
+        es2.indexName == "whelk_2"
+    }
 
 
     def "Should make a nested request to ElasticSearch"() {

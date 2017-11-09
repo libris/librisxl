@@ -1,7 +1,7 @@
 package whelk.filter
 
 
-import groovy.util.logging.Slf4j as Log
+import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.component.PostgreSQLComponent
@@ -18,19 +18,19 @@ class LinkFinder {
     static String ENTITY_QUERY
     static final ObjectMapper mapper = new ObjectMapper()
 
-    static Map<String, String> CACHED_LINKS = new ConcurrentHashMap<String, String>()
-
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql
-        ENTITY_QUERY = """SELECT data -> '@graph' -> 1 ->> '@id' as thingUri
+        ENTITY_QUERY = """SELECT ids2.iri AS thingUri
                         FROM lddb
+                        JOIN lddb__identifiers ids1 ON lddb.data#>>'{@graph,1,@id}' = ids1.iri
+                        JOIN lddb__identifiers ids2 ON ids1.id = ids2.id
                         WHERE data -> '@graph' @> ?
-                        AND id IN (SELECT id
+                        AND ids2.mainid=true
+                        AND lddb.id IN (SELECT id
                                      FROM lddb__identifiers
-                                     WHERE identifier IN (€));"""
+                                     WHERE iri IN (€))
+                        ORDER BY ids2.graphindex;"""
     }
-
-    int numCalls = 0
 
     List<URI> findLinks(List<Map> entities, List<String> recordIds) {
         if(recordIds.any() && entities.any()) {
@@ -48,11 +48,15 @@ class LinkFinder {
                 recordIds.each { recordId ->
                     stmt.setObject(++i, recordId)
                 }
+
                 def id
                 log.trace stmt.toString()
                 ResultSet rs = stmt.executeQuery()
                 if (rs.next()) {
-                    id = rs.getString("thingUri")
+                    id = rs.getString("thingUri") // set id to record id, as fallback
+                    if (rs.next()) {
+                        id = rs.getString("thingUri") // if there's a second row (mainEntity), use that id instead.
+                    }
                 }
 
                 return id ? Document.BASE_URI.resolve(id) : null
@@ -67,9 +71,38 @@ class LinkFinder {
         }
     }
 
+    void replaceSameAsLinksWithPrimaries(Map data) {
+        // If this is a link (an object containing _only_ an id)
+        String id = data.get("@id")
+        if (id != null && data.keySet().size() == 1) {
+            String mainId = postgres.getMainId(id)
+            if (mainId != null)
+                data.put("@id", mainId)
+        }
 
+        for (Object key : data.keySet()) {
 
+            // sameAs objects are not links per se, and must not be replaced
+            String keyString = (String) key
+            if (keyString.equals("sameAs"))
+                return
 
+            Object value = data.get(key)
 
+            if (value instanceof List)
+                replaceSameAsLinksWithPrimaries( (List) value)
+            if (value instanceof Map)
+                replaceSameAsLinksWithPrimaries( (Map) value)
+        }
+    }
+
+    void replaceSameAsLinksWithPrimaries(List data) {
+        for (Object element : data){
+            if (element instanceof List)
+                replaceSameAsLinksWithPrimaries( (List) element)
+            else if (element instanceof Map)
+                replaceSameAsLinksWithPrimaries( (Map) element)
+        }
+    }
 
 }
