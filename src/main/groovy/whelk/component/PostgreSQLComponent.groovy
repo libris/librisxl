@@ -1583,7 +1583,6 @@ class PostgreSQLComponent {
                     { Document doc ->
                         // Add a tombstone marker (without removing anything) perhaps?
                     })
-                return true
             } catch (Throwable e) {
                 log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
                 return false
