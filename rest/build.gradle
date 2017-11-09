@@ -89,7 +89,7 @@ dependencies {
     compile 'com.github.libris:isbntools:e70a5fbedb'
     compile('../../whelk-core' in project.subprojects*.name?
             project(':../../whelk-core') :
-            'com.github.libris:whelk-core:0.4.0')
+            'com.github.libris:whelk-core:develop-SNAPSHOT')
 
     // Dependencies inherited from classic libris, due to profile handling
     compile group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
