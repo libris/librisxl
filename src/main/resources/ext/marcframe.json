@@ -4569,7 +4569,7 @@
       "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
       "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
-      "subfieldOrder": "a q n d c g e u j 4 t p l k f",
+      "subfieldOrder": "a q n d g e u c j 4 t p l k f",
       "TODO:$j": "",
       "_spec": [
         {
@@ -4637,8 +4637,8 @@
           "source": {
             "111": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Conference on Occupational Health Issues Affecting Secretarial and Clerical Personnel"},
-              {"e": "2nd"},
               {"d": "1981"},
+              {"e": "2nd"},
               {"c": "Cincinatti, Ohio"},
               {"j": "author"},
               {"4": "aut"}
@@ -8430,14 +8430,13 @@
 
       "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
       "subfieldOrder": "i a b c d g u e 4 t m n p r s l k f o x",
-      "FIXME:subfieldOrder": "subfieldOrder doesn't always works correctly. Termporarily added 'normalized' to make the revert spec pass.",
       "TOOO:i2": "How to map when no $t?",
       "_spec": [
         {
           "source": {
             "710": {"ind1": "1", "ind2": " ", "subfields": [
-              {"t": "National electrical code (1993)"},
-              {"a": "National Fire Protection Association."}
+              {"a": "National Fire Protection Association."},
+              {"t": "National electrical code (1993)"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -11300,7 +11299,6 @@
       "TODO:remnants-of-inherit": "bib:100",
       "TODO": "Ensure bib 100 does not match with auth 400",
       "TODO:role": "Add e and 4 when no work",
-      "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
       "subfieldOrder": "w i a b c q d j e 4 t g m n p r s l k f o v x y z",
       "match": [
         {
@@ -11403,12 +11401,6 @@
               {"d": "1551?-1731"},
               {"t": "The life and most suprizing adventures of Robinson Crusoe, of York,"}
             ]}},
-          "normalized": {
-            "400": {"ind1": "1", "ind2": " ", "subfields": [
-              {"t": "The life and most suprizing adventures of Robinson Crusoe, of York,"},
-              {"a": "Defoe, Daniel"},
-              {"d": "1551?-1731"}
-            ]}},
           "result": {
             "mainEntity": {
               "@type": "Work",
@@ -11457,11 +11449,6 @@
               {"a": "Family X"},
               {"t": "Other title"}
             ]}},
-          "normalized": {
-            "400": {"ind1": "3", "ind2": " ", "subfields": [
-              {"t": "Other title"},
-              {"a": "Family X"}
-            ]}},
           "result": {
             "mainEntity": {
               "@type": "Work",
@@ -11486,11 +11473,6 @@
             "400": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Bhagat Singh"},
               {"t": "Other title"}
-            ]}},
-          "normalized": {
-            "400": {"ind1": "0", "ind2": " ", "subfields": [
-              {"t": "Other title"},
-              {"a": "Bhagat Singh"}
             ]}},
           "result": {
             "mainEntity": {
@@ -12184,7 +12166,6 @@
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
-      "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
       "subfieldOrder": "w i a b c q d j e 4 t g m n p r s l k f o v x y z",
       "$h": {"ignored": true},
       "_spec": [
@@ -12261,11 +12242,11 @@
         {
           "source": {
             "500": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Fauré, Gabriel,"},
+              {"a": "Fauré, Gabriel"},
               {"d": "1845-1924."},
               {"t": "Ballades,"},
-              {"m": "piano"},
-              {"n": "op. 19"}
+              {"n": "op. 19"},
+              {"m": "piano"}
             ]}},
           "result": {
             "mainEntity": {
@@ -12731,6 +12712,7 @@
       "TODO:$5": {},
       "$6": {"property": "marc:fieldref"},
       "TODO:$8": {},
+      "subfieldOrder": "w a",
       "_spec": [
         {
           "source": {
