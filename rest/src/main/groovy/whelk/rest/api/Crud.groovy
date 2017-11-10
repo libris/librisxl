@@ -98,8 +98,14 @@ class Crud extends HttpServlet {
 
         // Get a properties pico container, pre-wired with components according to components.properties
         pico = Whelk.getPreparedComponentsContainer(props)
+
         pico.addComponent(JsonLD2MarcConverter.class)
         pico.addComponent(JsonLD2MarcXMLConverter.class)
+        pico.addComponent(ISXNTool.class)
+
+        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ApixClientCamel.class)
+        //pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
+
         pico.start()
     }
 
@@ -116,9 +122,19 @@ class Crud extends HttpServlet {
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
                      String dataset) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
+        String callback = queryParameters.remove("callback")
+
         try {
             Map results = search.doSearch(queryParameters, dataset, jsonld)
-            def jsonResult = mapper.writeValueAsString(results)
+            def jsonResult
+
+            if (callback) {
+                jsonResult = callback + "(" +
+                        mapper.writeValueAsString(results) + ");"
+            } else {
+                jsonResult = mapper.writeValueAsString(results)
+            }
+
             sendResponse(response, jsonResult, "application/json")
         } catch (WhelkRuntimeException wse) {
             log.error("Attempted elastic query, but whelk has no " +
