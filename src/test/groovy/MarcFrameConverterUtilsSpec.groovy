@@ -103,4 +103,33 @@ class MarcFrameConverterUtilsSpec extends Specification {
         amap.e*.label == ['E']
     }
 
+    def "should order and group subfields"() {
+        given:
+        def field = new MarcFieldHandler(new MarcRuleSet(new MarcConversion(null, [:], [:]), 'blip'), 'xxx', [:])
+        when:
+        def subfields = MarcFieldHandler.orderAndGroupSubfields(
+                [
+                    'a': subHandler(field, 'a', 'agent'),
+                    'd': subHandler(field, 'd', 'agent'),
+                    't': subHandler(field, 't', 'title'),
+                ],
+                'a d t')
+        then:
+        subfields*.code == [['a'], ['d'], ['t']]
+        and:
+        def subfields2 = MarcFieldHandler.orderAndGroupSubfields(
+                [
+                    'a': subHandler(field, 'a', 'agent'),
+                    'p': subHandler(field, 'p', 'place'),
+                    '4': subHandler(field, '4', 'agent'),
+                ],
+                'a p 4')
+        then:
+        subfields2*.code == [['a'], ['p'], ['4']]
+    }
+
+    static subHandler(field, code, about) {
+        new MarcSubFieldHandler(field, code, [:])
+    }
+
 }
