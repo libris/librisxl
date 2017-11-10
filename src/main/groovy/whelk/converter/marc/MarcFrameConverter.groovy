@@ -1533,11 +1533,16 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 order[code] = i
             }
         }
+        if (!order['...']) {
+            order['...'] = order.size()
+        }
         Closure getOrder = {
             [order.get(it.code, order['...']), !it.code.isNumber(), it.code]
         }
         // Only the first subfield in a group is used to determine the order of the group
-        return subfields.values().groupBy { it.about ?: it.code }.entrySet().sort {
+        return subfields.values().groupBy {
+            it.about ?: it.fieldHandler.aboutAlias ?: it.code
+        }.entrySet().sort {
             getOrder(it.value[0])
         }.collect {
             it.value.sort(getOrder)
@@ -1930,7 +1935,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         orderedAndGroupedSubfields.each { subhandlers ->
 
-            def about = subhandlers[0].about
+            def about = subhandlers[0].about ?: aboutAlias
 
             def subhandlersByEntity
             if (about == null) {
