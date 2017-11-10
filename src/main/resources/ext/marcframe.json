@@ -12894,7 +12894,10 @@
     "672": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "673": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "675": {
-      "$a": {"property": "label"}
+      "aboutEntity": "?record",
+      "link": "marc:hasSourceDataNotFound",
+      "resourceType": "marc:SourceDataNotFound",
+      "$a": {"addProperty": "citationSource"}
     },
     "677": {"ignored": true, "NOTE:record-count": 1},
     "678": {"inherit": "bib:545"},
