@@ -6628,7 +6628,16 @@
       "$3": {"property": "marc:materialsSpecified"},
       "NOTE:i1": "ignore"
     },
-    "583": {"ignored": true, "NOTE:record-count": 740, "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST"},
+    "583": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
+      "addLink": "hasNote",
+      "resourceType": "ActionNote",
+      "TODO:i1": "0 = Sekretessbelagd information. filtrera bort GDPR",
+      "$a": {"property": "label"},
+      "$b": {"addProperty": "marc:actionIdentification"},
+      "$x": {"addProperty": "marc:nonpublicNote", "TODO": "ignore?"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+    },
     "584": {"ignored": true, "NOTE:record-count": 0},
     "585": {
       "aboutEntity": "?thing",
