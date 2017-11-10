@@ -146,7 +146,7 @@ class MarcFrameConverterSpec extends Specification {
             expected.fields << source
         }
         then:
-        assertJsonEquals(result, expected)
+        assertJsonEqualsOnRevert(result, expected)
         where:
         fieldSpec << fieldSpecs
     }
@@ -314,6 +314,48 @@ class MarcFrameConverterSpec extends Specification {
         def resultJson = json(result)
         def expectedJson = json(expected)
         assert resultJson == expectedJson
+    }
+
+    void assertJsonEqualsOnRevert(result, expected) {
+        def resultJson = json(result)
+        def expectedJson = json(expected)
+
+        // First check sorted subfields, then the order of codes
+        def orderChecked = false
+        if (resultJson != expectedJson) {
+
+            def normResultJson = deepcopy(result)
+            def resultSubfieldOrders = normalizeSubfieldOrder(normResultJson)
+
+            def normExpectedJson = deepcopy(expected)
+            def expectedSubfieldOrders = normalizeSubfieldOrder(normExpectedJson)
+
+            if (normResultJson == normExpectedJson) {
+                orderChecked = true
+                // should fail since norm-sorted check passed
+                assert resultSubfieldOrders == expectedSubfieldOrders
+            }
+        }
+        if (!orderChecked) {
+            assert resultJson == expectedJson
+        }
+    }
+
+    Map normalizeSubfieldOrder(Map record) {
+        Map subfieldOrder = [:]
+        if (record instanceof Map) {
+            for (field in record.fields) {
+                field.each { tag, fieldData ->
+                    if (fieldData instanceof Map) {
+                        fieldData.subfields.each {
+                            subfieldOrder.get(tag, []) << it.keySet()[0]
+                        }
+                        fieldData.subfields.sort { it.keySet()[0] }
+                    }
+                }
+            }
+        }
+        return subfieldOrder
     }
 
     private deepcopy(orig) {
