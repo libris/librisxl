@@ -15,6 +15,8 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public class Main
@@ -82,7 +84,24 @@ public class Main
             File file = new File(parameters.getPath().toString());
             if (file.isDirectory())
             {
-                for (File subFile : file.listFiles())
+
+                File[] subFiles = file.listFiles();
+                if (subFiles == null)
+                    return;
+
+                // Sort the files in the directory chronologically
+                Arrays.sort(subFiles, new Comparator<File>() {
+                    @Override
+                    public int compare(File o1, File o2) {
+                        if (o1.lastModified() < o2.lastModified())
+                            return -1;
+                        else if (o1.lastModified() > o2.lastModified())
+                            return 1;
+                        return 0;
+                    }
+                });
+
+                for (File subFile : subFiles)
                 {
                     if (!subFile.isDirectory())
                         importFile(subFile.toPath(), parameters);
