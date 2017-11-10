@@ -320,42 +320,47 @@ class MarcFrameConverterSpec extends Specification {
         def resultJson = json(result)
         def expectedJson = json(expected)
 
-        // First check sorted subfields, then the order of codes
-        def orderChecked = false
+        // If unequal, first check without indicators and subfield order,
+        // then check the extracted shape of the latter.
         if (resultJson != expectedJson) {
 
             def normResultJson = deepcopy(result)
-            def resultSubfieldOrders = normalizeSubfieldOrder(normResultJson)
+            def resultSubfieldShapes = extractSubfieldShape(normResultJson)
 
             def normExpectedJson = deepcopy(expected)
-            def expectedSubfieldOrders = normalizeSubfieldOrder(normExpectedJson)
+            def expectedSubfieldShapes = extractSubfieldShape(normExpectedJson)
 
             if (normResultJson == normExpectedJson) {
-                orderChecked = true
                 // should fail since norm-sorted check passed
-                assert resultSubfieldOrders == expectedSubfieldOrders
+                assert resultSubfieldShapes == expectedSubfieldShapes
             }
         }
-        if (!orderChecked) {
-            assert resultJson == expectedJson
-        }
+
+        assert resultJson == expectedJson
     }
 
-    Map normalizeSubfieldOrder(Map record) {
-        Map subfieldOrder = [:]
+    Map extractSubfieldShape(Map record) {
+        Map subfieldShapes = [:]
         if (record instanceof Map) {
             for (field in record.fields) {
                 field.each { tag, fieldData ->
                     if (fieldData instanceof Map) {
-                        fieldData.subfields.each {
-                            subfieldOrder.get(tag, []) << it.keySet()[0]
-                        }
+                        // store shape
+                        def fieldShape = [
+                            ind1: fieldData.ind1,
+                            ind2: fieldData.ind2,
+                            subfields: fieldData.subfields.collect { it.keySet()[0] }
+                        ]
+                        subfieldShapes.get(tag, []) << fieldShape
+                        // erase extracted shape
+                        fieldData.remove('ind1')
+                        fieldData.remove('ind2')
                         fieldData.subfields.sort { it.keySet()[0] }
                     }
                 }
             }
         }
-        return subfieldOrder
+        return subfieldShapes
     }
 
     private deepcopy(orig) {
