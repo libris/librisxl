@@ -1257,8 +1257,7 @@ class PostgreSQLComponent {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
-
-            println(preparedStatement)
+            
             rs = preparedStatement.executeQuery()
             List<String> results = []
             while (rs.next()) {
