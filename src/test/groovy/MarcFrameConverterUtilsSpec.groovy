@@ -106,30 +106,46 @@ class MarcFrameConverterUtilsSpec extends Specification {
     def "should order and group subfields"() {
         given:
         def field = new MarcFieldHandler(new MarcRuleSet(new MarcConversion(null, [:], [:]), 'blip'), 'xxx', [:])
+
         when:
         def subfields = MarcFieldHandler.orderAndGroupSubfields(
                 [
-                    'a': subHandler(field, 'a', 'agent'),
-                    'd': subHandler(field, 'd', 'agent'),
-                    't': subHandler(field, 't', 'title'),
+                    'a': subHandler(field, 'a', [about: 'agent']),
+                    'd': subHandler(field, 'd', [about: 'agent']),
+                    't': subHandler(field, 't', [about: 'title']),
                 ],
                 'a d t')
         then:
-        subfields*.code == [['a'], ['d'], ['t']]
+        subfields*.code == [['a', 'd'], ['t']]
+
         and:
         def subfields2 = MarcFieldHandler.orderAndGroupSubfields(
                 [
-                    'a': subHandler(field, 'a', 'agent'),
-                    'p': subHandler(field, 'p', 'place'),
-                    '4': subHandler(field, '4', 'agent'),
+                    'a': subHandler(field, 'a', [about: 'agent']),
+                    'p': subHandler(field, 'p', [about: 'place']),
+                    '4': subHandler(field, '4', [about: 'agent']),
                 ],
                 'a p 4')
         then:
-        subfields2*.code == [['a'], ['p'], ['4']]
+        subfields2*.code == [['a', '4'], ['p']]
+
+        and:
+        def subfields3 = MarcFieldHandler.orderAndGroupSubfields(
+                [
+                    'a': subHandler(field, 'a', [about: 'title']),
+                    'd': subHandler(field, 'd', [:]),
+                    'f': subHandler(field, 'f', [about: 'work']),
+                    'q': subHandler(field, 'q', [:]),
+                    'l': subHandler(field, 'l', [about: 'work']),
+                ],
+                'a d l f')
+        then:
+        subfields3*.code == [['a'], ['d'], ['l', 'f'], ['q']]
+
     }
 
-    static subHandler(field, code, about) {
-        new MarcSubFieldHandler(field, code, [:])
+    static subHandler(field, code, subDfn) {
+        new MarcSubFieldHandler(field, code, subDfn)
     }
 
 }
