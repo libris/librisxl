@@ -3609,7 +3609,7 @@
       "aboutEntity": "?record",
       "$a": {"link": "assigner", "resourceType": "Organization", "property": "name"},
       "$b": {
-        "addLink": "descriptionLanguage",
+        "link": "descriptionLanguage",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$c": {"link": "marc:transcribingAgency", "resourceType": "Organization", "property": "name"},
