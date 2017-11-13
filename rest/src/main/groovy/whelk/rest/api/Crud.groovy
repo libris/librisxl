@@ -218,6 +218,14 @@ class Crud extends HttpServlet {
         Document doc = docAndLocation.first
         String loc = docAndLocation.second
 
+        String ifNoneMatch = request.getHeader("If-None-Match")
+        if (ifNoneMatch != null && doc != null && ifNoneMatch == doc.getModified()) {
+            response.setHeader("ETag", doc.getModified())
+            response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
+                    "Document has not been modified.")
+            return
+        }
+
         if (!doc && !loc) {
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_NOT_FOUND.toString()).inc()
@@ -555,13 +563,6 @@ class Crud extends HttpServlet {
         }
 
         String etag = modified
-
-        String ifNoneMatch = request.getHeader("If-None-Match")
-        if (ifNoneMatch != null && ifNoneMatch == etag) {
-            response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
-                    "Document has not been modified.")
-            return 
-        }
 
         response.setHeader("ETag", etag)
 
