@@ -3270,7 +3270,7 @@
       "resourceType": "ISBN",
       "$c": {"property": "acquisitionTerms"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "subfieldOrder": "a q c z",
       "_spec": [
         {
@@ -3675,7 +3675,7 @@
       "$a": {"addLink": "identifiedBy", "resourceType": "SystemNumber", "property": "value"},
       "TODO:a": "extract value from parantheses and source as rdfs:label",
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "librisIIINumber"},
       "_spec": [
         {
@@ -4058,7 +4058,7 @@
       "$b": {"property": "itemPortion"},
       "$m": {"ignored": true, "NOTE:record-count": 1},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {
@@ -4131,7 +4131,7 @@
       "$q": {"link": "source", "resourceType": "Source", "property": "label"},
       "$y": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Används normalt ej"},
       "$z": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Används normalt ej"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {
@@ -4217,7 +4217,7 @@
       "$b": {"property": "classificationItem"},
       "$q": {"link": "source", "resourceType": "Source", "property": "label"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {
@@ -4687,7 +4687,7 @@
       "$j": {"addLink": "role", "property": "label"},
       "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
       "subfieldOrder": "a q n d g e u c j 4 t p l k f",
       "TODO:$j": "",
@@ -4859,7 +4859,7 @@
       },
       "$a": {"property": "mainTitle"},
       "$b": {"property": "qualifier"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {
@@ -5102,7 +5102,7 @@
       "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "surroundingChars": "[]"},
       "$s": {"property": "version"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "i2": {"property": "marc:nonfilingChars"},
       "_spec": [
         {
@@ -5173,7 +5173,7 @@
       "$h": {"property": "marc:mediaTerm", "surroundingChars": "[]"},
       "$i": {"property": "typeNote"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "subfieldOrder": "i ...",
       "_spec": [
         {
@@ -5285,7 +5285,7 @@
       "$b": {"property": "editionStatementRemainder"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "New ed."}, {"b": "2. pr."}]}},
@@ -5387,7 +5387,7 @@
       "$f": {"about": "_:manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :", "punctuationChars": ",:;)"},
       "$g": {"about": "_:manufacture", "property": "date", "leadingPunctuation": ",", "punctuationChars": ",:;"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": [
@@ -6269,7 +6269,7 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "TODO:$5": {"property": "marc:institutionToWhichFieldApplies"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "repeatable": true
     },
     "501": {
@@ -6879,7 +6879,7 @@
       },
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
 
         {
@@ -7255,7 +7255,7 @@
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
       },
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "_spec": [
         {
@@ -7547,7 +7547,7 @@
       "aboutEntity": "?work",
       "addLink": "subject", "resourceType": "Work",
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {
@@ -7601,7 +7601,7 @@
         }
       },
       "$a": {"about": "_:term", "property": "prefLabel"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {"648": {"ind1": " ", "ind2": "7",
@@ -7674,7 +7674,7 @@
         }
       },
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {"650": {"ind1": " ", "ind2": "7",
@@ -7879,7 +7879,7 @@
       "$a": {"about": "_:topic", "property": "prefLabel"},
       "i1": null,
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {
@@ -7995,7 +7995,7 @@
         }
       ],
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {
@@ -8038,7 +8038,7 @@
         }
       },
       "$a": {"about": "_:topic", "property": "prefLabel"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Deckare"}, {"2": "saogf"}]}},
@@ -8217,7 +8217,7 @@
       ],
       "$x": {"property": "issn"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "subfieldOrder": " i a b c q d j e u 4 t g m n p r s l k f o",
       "_spec": [
         {
@@ -8599,7 +8599,7 @@
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "property": "label"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
 
       "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
       "subfieldOrder": "i a b c d g u e 4 t m n p r s l k f o x",
@@ -9566,7 +9566,7 @@
         "addProperty": "isbn"
       },
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "partNumber"},
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "_spec": [
@@ -9707,7 +9707,7 @@
       "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "subfieldorder": "3 a d g h s m n p l r k f o v w x",
       "_spec": [
         {
@@ -13443,7 +13443,7 @@
       "TODO:linkedEntity": "?example-$i",
       "addLink": "hasItem", "embedded": true, "resourceType": "Item",
       "$a": {"property": "bindingInformation"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "repeatable": true
     },
     "583": {
@@ -13498,7 +13498,7 @@
       "link": "hasNote",
       "resourceType": "marc:TextualPhysicalFormDesignator",
       "$a": {"property": "label"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "repeatable": false
     },
     "843": {
@@ -13646,7 +13646,7 @@
       "$a": {"property": "label"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "repeatable": true
     },
     "864": {"ignored": true, "NOTE:record-count": 6, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"}, 
@@ -13662,7 +13662,7 @@
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "repeatable": true
     },
     "867": {
@@ -13706,7 +13706,7 @@
       "$x": {"addProperty": "marc:nonpublicNote", "TODO": "ignore?"},
       "$z": {"addProperty": "marc:publicNote"},
       "$3": {"property": "marc:materialsSpecified"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "organizationalUnit"}
     },
     "877": {
