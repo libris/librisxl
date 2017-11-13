@@ -10177,18 +10177,21 @@
     "855": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ I DET BIBLIOGRAFISKA FORMATET"},
 
     "856": {
-      "addLink": true,
-      "TODO": "i2 might be empty, change addLink to a default value? Will it overeagerly revert if so?",
+      "TODO:defaultLink": "electronicLocater and @type:Resource OK as default? ",
+      "addLink": "electronicLocator",
+      "resourceType": "Resource",
       "embedded": true,
-      "TODO:i1": {
-        "0": "mailto:",
-        "1": "ftp:",
-        "2": "telnet:",
-        "3": "tel:",
-        "4": "http:",
-        "7": "$2"
-      },
       "i1": {
+        "property": "marc:electronicLocatorType",
+        "tokenMap": {
+          "0": "email",
+          "1": "ftp",
+          "2": "remoteLoginTelnet",
+          "3": "dialUp",
+          "4": "http",
+          "7": null
+        },
+        "definedElsewhereToken": "7",
         "marcDefault": "4"
       },
       "match": [
@@ -10201,9 +10204,10 @@
         "if $x=digipic or $y=bild": {"addLink": "depiction"},
         "if $z=Wikipedia|IMDB": {"addLink": "isPrimaryTopicOf"}
       },
+      "$2": {"requires-i1": "7", "property": "marc:electronicLocatorType"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"},
+      "$8": {"property": "marc:groupid"},
       "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"property": "altLabel"},
@@ -10212,13 +10216,22 @@
         {
           "source": {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/review"}]}},
           "result": {"mainEntity": {
-            "isPrimaryTopicOf": [{"@type": "Document", "uri": ["http://example.org/review"]}]
+            "isPrimaryTopicOf": [{"@type": "Document", "uri": ["http://example.org/review"], "marc:electronicLocatorType": "http"}]
+          }}
+        },
+        {
+          "source": {"856": {"ind1": "7", "ind2": " ", "subfields": [
+            {"u": "http://www-spires.slac.stanford.edu/spires/find/hep?cnum=C96-05-30"},
+            {"2": "http"}
+          ]}},
+          "result": {"mainEntity": {
+            "electronicLocator": [{"@type": "Resource", "uri": ["http://www-spires.slac.stanford.edu/spires/find/hep?cnum=C96-05-30"], "marc:electronicLocatorType": "http"}]
           }}
         },
         {
           "source": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
           "result": {"mainEntity": {
-            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
+            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"], "marc:electronicLocatorType": "http"}]
           }}
         },
         {
@@ -10227,8 +10240,8 @@
             {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/page"}]}}
           ],
           "result": {"mainEntity": {
-            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}],
-            "isPrimaryTopicOf": [{"@type": "Document", "uri": ["http://example.org/page"]}]
+            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"], "marc:electronicLocatorType": "http"}],
+            "isPrimaryTopicOf": [{"@type": "Document", "uri": ["http://example.org/page"], "marc:electronicLocatorType": "http"}]
           }}
         },
         {
@@ -10238,7 +10251,10 @@
               {"u": "http://www.framtidsstudier.se/filebank/files/20051201$133251$fil$048Ti3PL2UIwRJQEBbDG.pdf"}
             ]}},
           "result": {"mainEntity": {
-            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://www.framtidsstudier.se/filebank/files/20051201$133251$fil$048Ti3PL2UIwRJQEBbDG.pdf"]}]
+            "associatedMedia": [{
+              "@type": "MediaObject",
+              "uri": ["http://www.framtidsstudier.se/filebank/files/20051201$133251$fil$048Ti3PL2UIwRJQEBbDG.pdf"],
+              "marc:electronicLocatorType": "http"}]
           }}
         }
       ]
