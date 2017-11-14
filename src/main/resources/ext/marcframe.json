@@ -3572,6 +3572,20 @@
           "resourceType": "Scale"
         }
       },
+      "match": [
+        {
+          "when": "$a=a",
+          "pendingResources": {"_:scale": {"link": "scale", "resourceType": "marc:LinearScale"}}
+        },
+        {
+          "when": "$a=b",
+          "pendingResources": {"_:scale": {"link": "scale", "resourceType": "marc:AngularScale"}}
+        },
+        {
+          "when": "$a=z",
+          "pendingResources": {"_:scale": {"link": "scale", "resourceType": "marc:OtherCartographicScale"}}
+        }
+      ],
       "i1": {"ignored": "true", "marcDefault": "1"},
       "i2": {
         "ignored": "true",
@@ -3586,9 +3600,8 @@
         "about": "_:scale",
         "property": "@type",
         "overwrite": true,
-        "FIXME": "revert will miss if resourceType is given above and doesn't match!",
+        "NOTE": "Revert requires match on resourceType too, since converter doesn't set matched subfields (only matched indicators).",
         "tokenMap": {
-          "TODO": "In revert process: Override resourceType",
           "a": "marc:LinearScale",
           "b": "marc:AngularScale",
           "z": "marc:OtherCartographicScale"
