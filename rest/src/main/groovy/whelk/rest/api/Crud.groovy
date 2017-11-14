@@ -193,13 +193,6 @@ class Crud extends HttpServlet {
             return
         }
 
-        def startTimePath = "/sys/starttime.json"
-        if (request.pathInfo == startTimePath) {
-            String responseBody = mapper.writeValueAsString( ["starttime" : ManagementFactory.getRuntimeMXBean().getStartTime()] )
-            sendGetResponse(request, response, responseBody, "1970/1/1", startTimePath, "application/json")
-            return
-        }
-
         try {
             def path = getRequestPath(request)
 
@@ -229,6 +222,7 @@ class Crud extends HttpServlet {
         String ifNoneMatch = request.getHeader("If-None-Match")
         if (ifNoneMatch != null && doc != null && ifNoneMatch == doc.getModified()) {
             response.setHeader("ETag", doc.getModified())
+            response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
             response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
                     "Document has not been modified.")
             return
@@ -573,6 +567,7 @@ class Crud extends HttpServlet {
         String etag = modified
 
         response.setHeader("ETag", etag)
+        response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
 
         if (path in contextHeaders.collect { it.value }) {
             log.debug("request is for context file. " +
