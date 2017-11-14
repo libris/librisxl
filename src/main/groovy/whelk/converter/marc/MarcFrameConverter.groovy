@@ -1992,6 +1992,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                             justAdded = [code, sub]
                         }
                     }
+                    if (subhandler.required && !justAdded) {
+                        failedRequired = true
+                    }
                 } else if (value != null) {
                     if (!usedMatchRule || usedMatchRule.matchValue(code, value)) {
                         def sub = [(code): value]
