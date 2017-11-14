@@ -11464,11 +11464,12 @@
       "$b": {"addProperty": "prominentFamilyMember"}
     },
     "377": {
+      "TODO:i2": {},
       "aboutEntity": "?thing",
       "aboutType": "Agent",
-      "addLink": "associatedLanguage", "resourceType": "Language",
-      "$a": {"addProperty": "label"},
-      "$2": {"property": "marc:sourceOfTerm"}
+      "addLink": "language", "resourceType": "Language",
+      "$a": {"uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"},
+      "$l": {"addProperty": "label"}
     },
     "378": {
       "TODO": "Depends on bib 100, 700 and auth 100 $q 'marc:fullerFormName'. See mads:fullNameElement ",
