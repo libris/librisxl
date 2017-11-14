@@ -54,9 +54,12 @@ class ElasticSearch {
                     .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
                         @Override
                         RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder requestConfigBuilder) {
-                            return requestConfigBuilder.setConnectionRequestTimeout(0)
+                            return requestConfigBuilder
+                                       .setConnectionRequestTimeout(0)
+                                       .setConnectTimeout(5000)
+                                       .setSocketTimeout(60000)
                         }
-            })
+            }).setMaxRetryTimeoutMillis(60000)
             restClient = builder.build()
         }
     }
