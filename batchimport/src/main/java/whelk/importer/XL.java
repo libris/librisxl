@@ -70,6 +70,14 @@ class XL
 
         //System.err.println("Incoming [" + collection + "] document had: " + duplicateIDs.size() + " existing duplicates:\n" + duplicateIDs);
 
+        // If an incoming holding record is marked deleted, attempt to find any duplicates for it in Libris and delete them.
+        if (collection.equals("hold") && incomingMarcRecord.getLeader(5) == 'd')
+        {
+            for (String id : duplicateIDs)
+                m_whelk.remove(id, IMPORT_SYSTEM_CODE, null, "hold");
+            return null;
+        }
+
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
             resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId);
