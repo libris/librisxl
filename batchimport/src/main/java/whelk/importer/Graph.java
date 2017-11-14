@@ -15,6 +15,7 @@ public class Graph
      */
     public enum PREDICATE_RULES
     {
+        RULE_AGGREGATE, // Allow multiple such predicates per subject.
         RULE_PREFER_ORIGINAL, // Only one such predicate per subject, prefer the original documents version to the incoming
         RULE_PREFER_INCOMING, // Only one such predicate per subject, prefer the incoming documents version to the original (= overwrite)
     };
@@ -82,16 +83,17 @@ public class Graph
                 String predicate = otherEdge[0];
                 String object = getTranslatedNodeId(otherEdge[1], bNodeMapping);
 
-                if (specialRules.get(predicate) == null) // default, AGGREGATE
-                {
-                    addTriple(new String[]{subject, predicate, object});
-                }
-                else if (specialRules.get(predicate) == PREDICATE_RULES.RULE_PREFER_ORIGINAL)
+                // == null means the deafult, if there is no special rules for *predicate
+                if (specialRules.get(predicate) == null || specialRules.get(predicate) == PREDICATE_RULES.RULE_PREFER_ORIGINAL)
                 {
                     // Add the triple only if we don't already have such a subject-predicate pair.
                     int occurrences = subjectPredicatePairOccurrences(subject, predicate);
                     if (occurrences == 0)
                         addTriple(new String[]{subject, predicate, object});
+                }
+                else if (specialRules.get(predicate) == PREDICATE_RULES.RULE_AGGREGATE)
+                {
+                    addTriple(new String[]{subject, predicate, object});
                 }
                 else if (specialRules.get(predicate) == PREDICATE_RULES.RULE_PREFER_INCOMING)
                 {
@@ -164,10 +166,13 @@ public class Graph
     {
         List<String[]> edges = m_edgesFromId.get(subject);
         int result = 0;
-        for (String[] edge : edges)
+        if (edges != null)
         {
-            if (predicate.equals(edge[0]))
-                ++result;
+            for (String[] edge : edges)
+            {
+                if (predicate.equals(edge[0]))
+                    ++result;
+            }
         }
         return result;
     }

@@ -213,6 +213,8 @@ class XL
         // This is temporary, these special rules should not be hardcoded here, but rather obtained from (presumably)
         // whelk-core's marcframe.json.
         Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+        for (String term : m_forcedSetTerms)
+            specialRules.put(term, Graph.PREDICATE_RULES.RULE_AGGREGATE);
         specialRules.put("created", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
         specialRules.put("controlNumber", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
         specialRules.put("modified", Graph.PREDICATE_RULES.RULE_PREFER_INCOMING);
