@@ -1785,7 +1785,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    def revert(Map data, Map result, MatchRule usedMatchRule = null) {
+    def revert(Map data, Map result, List<MatchRule> usedMatchRules = []) {
 
         // TODO:IMPROVE: only ignore if the one in favour succeeds.
         if (ignoreOnRevertInFavourOf) {
@@ -1797,7 +1797,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         // NOTE: Each possible match rule might produce data from *different* entities.
         // If this overproduces, it's because _revertedBy fails to prevent it.
         for (rule in matchRules) {
-            def matchres = rule.handler.revert(data, result, rule)
+            def matchres = rule.handler.revert(data, result, usedMatchRules + [rule])
             if (matchres) {
                 matchedResults += matchres
             }
@@ -1851,7 +1851,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             useEntities.each {
                 def (boolean requiredOk, Map aboutMap) = buildAboutMap(aboutAlias, pendingResources, it)
                 if (requiredOk) {
-                    def field = revertOne(data, it, aboutMap, usedMatchRule)
+                    def field = revertOne(data, it, aboutMap, usedMatchRules)
                     if (field) {
                         if (useLink.subfield) {
                             field.subfields << useLink.subfield
@@ -1886,29 +1886,28 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         pending.about in aboutMap ? aboutMap[pending.about] : null
                     parents?.each {
                         def about = it[pending.link ?: pending.addLink]
+                        if (!about && pending.absorbSingle) {
+                            if (pending.resourceType in Util.asList(it['@type'])) {
+                                about = it
+                            } else {
+                                requiredOk = false
+                            }
+                        }
+                        boolean enteredAbout = false
+                        boolean anyRequiredOk = false
                         Util.asList(about).each {
-                            if (!it || (resourceType && !(resourceType in Util.asList(it['@type'])))) {
-                                if (pending.required) {
-                                    requiredOk = false
-                                }
+                            enteredAbout = true
+                            if (!it || (pending.resourceType && !(pending.resourceType in Util.asList(it['@type'])))) {
                                 return
                             }
+                            anyRequiredOk = true
                             aboutMap.get(key, []).add(it)
+                        }
+                        if (enteredAbout && pending.required && !anyRequiredOk) {
+                            requiredOk = false
                         }
                     }
                 }
-            }
-        }
-
-        pendingResources.each { key, pending ->
-            if (pending.absorbSingle && !aboutMap[key]) {
-                def single = aboutMap[pending.about]
-                if (!single && pending.resourceType in Util.asList(entity['@type']))
-                    single = [entity]
-                if (single)
-                    aboutMap[key] = single
-                else
-                    requiredOk = false
             }
         }
 
@@ -1917,13 +1916,15 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     @CompileStatic(SKIP)
     def revertOne(Map data, Map currentEntity, Map<String, List> aboutMap = null,
-                    MatchRule usedMatchRule = null) {
+                    List<MatchRule> usedMatchRules) {
+
+        MatchRule usedMatchRule = usedMatchRules ? usedMatchRules?.last() : null
 
         def i1Entities = ind1?.about ? aboutMap[ind1.about] : [currentEntity]
         def i2Entities = ind2?.about ? aboutMap[ind2.about] : [currentEntity]
 
-        def i1 = usedMatchRule?.ind1 ?: ind1 ? i1Entities.findResult { ind1.revert(data, it) } : ' '
-        def i2 = usedMatchRule?.ind2 ?: ind2 ? i2Entities.findResult { ind2.revert(data, it) } : ' '
+        def i1 = usedMatchRules.findResult { it.ind1 } ?: ind1 ? i1Entities.findResult { ind1.revert(data, it) } : ' '
+        def i2 = usedMatchRules.findResult { it.ind2 } ?: ind2 ? i2Entities.findResult { ind2.revert(data, it) } : ' '
 
         def subs = []
         def failedRequired = false
@@ -1986,7 +1987,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
                 if (value instanceof List) {
                     value.each { v ->
-                        if (!usedMatchRule || usedMatchRule.matchValue(code, v)) {
+                        if (!usedMatchRules || usedMatchRules.every { it.matchValue(code, v) }) {
                             def sub = [(code): v]
                             subs << sub
                             justAdded = [code, sub]
@@ -1996,7 +1997,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         failedRequired = true
                     }
                 } else if (value != null) {
-                    if (!usedMatchRule || usedMatchRule.matchValue(code, value)) {
+                    if (!usedMatchRules || usedMatchRules.every { it.matchValue(code, value) }) {
                         def sub = [(code): value]
                         subs << sub
                         justAdded = [code, sub]
@@ -2025,7 +2026,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (!failedRequired && i1 != null && i2 != null && subs.size()) {
             def field = [ind1: i1, ind2: i2, subfields: subs]
 
-            if (usedMatchRule && !usedMatchRule.matches(field)) {
+            if (usedMatchRules && !usedMatchRules.every { it.matches(field) }) {
                 return null
             }
 
