@@ -724,21 +724,21 @@
     "hasRelatedToPerson": {
       "include": ["relatedToData"],
       "pendingResources": {
-        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false}
+        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false, "required": true}
       }
     },
 
     "hasRelatedToFamily": {
       "include": ["relatedToData"],
       "pendingResources": {
-        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Family", "embedded": false}
+        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Family", "embedded": false, "required": true}
       }
     },
 
     "hasRelatedToOrganization": {
       "include": ["relatedToData"],
       "pendingResources": {
-        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "embedded": false},
+        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "embedded": false, "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       }
@@ -747,7 +747,7 @@
     "hasRelatedToJurisdiction": {
       "include": ["relatedToData"],
       "pendingResources": {
-        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "embedded": false},
+        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "embedded": false, "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       }
@@ -756,7 +756,7 @@
     "hasRelatedToMeeting": {
       "include": ["relatedToData"],
       "pendingResources": {
-        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting", "embedded": false},
+        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting", "embedded": false, "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       }
@@ -765,7 +765,7 @@
     "hasPersona": {
       "include": ["agentData"],
       "pendingResources": {
-        "_:agent": {"link": "hasPersona", "resourceType": "Person"}
+        "_:agent": {"link": "hasPersona", "resourceType": "Person", "required": true}
       },
       "aboutType": "Person",
       "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
@@ -1203,7 +1203,10 @@
           "about": "_:work",
           "addLink": "contribution", "NOTE:marc-repeatable": false, "resourceType": "Contribution"
         },
-        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person"}
+        "_:agent": {
+          "about": "_:contribution", "link": "agent", "resourceType": "Person",
+          "required": true
+        }
       },
       "$t": {
         "about": "_:title", "property": "mainTitle"
@@ -6837,13 +6840,17 @@
             },
             "_:title": {
               "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
-              "embedded": true
+              "embedded": true,
+              "required": true
             },
             "_:contribution": {
               "about": "_:work",
               "addLink": "contribution", "resourceType": "Contribution"
             },
-            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Family"}
+            "_:agent": {
+              "about": "_:contribution", "link": "agent", "resourceType": "Family",
+              "required": true
+            }
           },
           "$t": {"about": "_:title", "property": "mainTitle"}
         },
@@ -6866,7 +6873,8 @@
             "_:agent": {
               "addLink": "termComponentList",
               "resourceType": "Family",
-              "absorbSingle": true
+              "absorbSingle": true,
+              "required": true
             }
           }
         },
@@ -6887,7 +6895,8 @@
         "_:agent": {
           "addLink": "termComponentList",
           "resourceType": "Person",
-          "absorbSingle": true
+          "absorbSingle": true,
+          "required": true
         }
       },
       "$n": {"addProperty": "partNumber", "punctuationChars": ","},
@@ -7057,7 +7066,7 @@
         {
           "source": {
             "600": {"ind1": "1", "ind2": "0", "subfields": [
-              {"a": "Harris, Andy "},
+              {"a": "Harris, Andy"},
               {"c": "(Composer)"},
               {"x": "Travel"},
               {"z": "Morocco"},
@@ -7190,7 +7199,7 @@
           "when": "$b & i1=1 & $t",
           "include": ["worksubjectSansPartNumber", "subjectJurisdiction", "agentdataOrganizationSubUnit"],
           "pendingResources": {
-            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"}
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction", "required": true}
           }
         },
         {
@@ -7219,7 +7228,7 @@
           "addLink": "subject",
           "resourceType": "Organization",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Organization"},
+            "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
@@ -7230,7 +7239,7 @@
           "addLink": "subject",
           "resourceType": "Jurisdiction",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Jurisdiction"},
+            "_:agent": {"link": "agent", "resourceType": "Jurisdiction", "required": true},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
@@ -7241,7 +7250,7 @@
           "addLink": "subject",
           "resourceType": "Jurisdiction",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Jurisdiction"},
+            "_:agent": {"link": "agent", "resourceType": "Jurisdiction", "required": true},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         },
@@ -11299,7 +11308,7 @@
           "absorbSingle": true
         }
       },
-      "$a": {"about": "_:topic", "property": "prefLabel"},
+      "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
       "TODO:ignore:$0": "not-defined-for-150;or-assert-equal-to-001",
       "_spec": [
         {
