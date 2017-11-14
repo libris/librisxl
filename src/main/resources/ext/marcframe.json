@@ -9546,24 +9546,54 @@
     "772": {
       "addLink": "supplementTo",
       "resourceType": "Work",
+      "TODO:?aboutEntity": "?work",
+      "aboutAlias": "_:supplementTo",
+      "pendingResources": {
+        "_:contribution": {
+          "about": "_:supplementTo",
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        },
+        "_:agent": {
+          "about": "_:contribution",
+          "addLink": "agent",
+          "resourceType": "Agent"
+        },
+        "_:title": {
+          "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "i1": {
+        "property": "marc:toDisplayNote",
+        "tokenMap": {
+          "0": true,
+          "1": false
+        },
+        "marcDefault": 0
+      },
       "TOOO:i1": {},
       "TOOO:i2": {},
-      "$a": {"property": "controlledLabel", "TODO:targetMatch": "1xx"},
-      "$b": {"property": "edition", "TODO:targetMatch": "250"},
-      "$c": {"property": "qualifier"},
-      "$d": {"property": "placePublisherAndDateOfPublication", "TODO:targetMatch": "260$c"},
+      "$a": {
+        "about": "_:agent",
+        "property": "name",
+        "TODO:targetMatch": "1xx"
+      },
+      "$b": {"property": "editionStatement", "TODO:targetMatch": "250"},
+      "$c": {"about": "_:title", "property": "qualifier"},
+      "$d": {"property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
       "$g": {"addProperty": "part"},
-      "$h": {"property": "physicalDescription"},
+      "$h": {"link": "extent", "resourceType": "Extent", "property": "label"},
+      "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
       "$i": {"addProperty": "linkNote"},
-      "$k": {"addProperty": "seriesLabel", "TODO:targetMatch": "4xx, 8xx"},
+      "$k": {"addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
       "$m": {"property": "mediaNote"},
       "$n": {"addProperty": "note"},
-      "$o": {
-        "addProperty": "identifier"
-      },
-      "$r": {"addProperty": "reportNumber", "TODO:targetMatch": "088"},
-      "$s": {"property": "uniformTitle", "TODO:targetMatch": "240"},
-      "$t": {"property": "title", "TODO:targetMatch": "222, 245"},
+      "$o": {"ignored": true, "NOTE:subfield-count": 0},
+      "$r": {"addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value", "TODO:targetMatch": "088"},
+      "$s": {"TODO:property": "mainTitle?", "about": "_:title", "property": "uniformTitle", "TODO:targetMatch": "240"},
+      "$t": {"TODO:property": "title?","about": "_:title", "property": "title", "TODO:targetMatch": "222, 245"},
       "$u": {"property": "standardTechnicalReportNumber", "TODO:targetMatch": "027"},
       "$w": {
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
@@ -9579,6 +9609,7 @@
         "addProperty": "isbn"
       },
       "$6": {"property": "marc:fieldref"},
+      "$7": {"property": "marc:controlSubfield"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "partNumber"},
       "computeLinks": {"use": "$4", "mapping": "relatorCode"},
@@ -9592,8 +9623,37 @@
             "supplementTo": [
               {
                 "@type": "Work",
-                "uniformTitle": "Main Thing",
+                "hasTitle": [{
+                  "@type": "Title",
+                  "uniformTitle": "Main Thing"
+                }],
                 "isbn": ["00-0-000000-0"]
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
+            {"7": "p1"},
+            {"a": "Beckmann, Max"},
+            {"t": "Briefec"}
+          ]}},
+          "result": {"mainEntity": {
+            "supplementTo": [
+              {
+                "@type": "Work",
+                "hasTitle": [{
+                  "@type": "Title",
+                  "title": "Briefec"
+                }],
+                "marc:controlSubfield": "p1",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": [{
+                    "@type": "Agent",
+                    "name": "Beckmann, Max"
+                  }]
+                }]
               }
             ]
           }}
