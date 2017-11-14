@@ -1419,8 +1419,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         } else {
             return (entity instanceof List ? entity : [entity]).collect {
                 def id = it instanceof Map ? it['@id'] : it
-                if (uriTemplate) {
-                    def token = extractToken(uriTemplate, id)
+                if (uriTemplate && id instanceof String) {
+                    def token = extractToken(uriTemplate, (String) id)
                     if (token) {
                         return revertObject(token)
                     }
