@@ -36,6 +36,7 @@ import javax.activation.MimetypesFileTypeMap
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import java.lang.management.ManagementFactory
 
 import static HttpTools.sendResponse
 import static whelk.rest.api.HttpTools.getMajorContentType
@@ -189,6 +190,13 @@ class Crud extends HttpServlet {
         if (request.pathInfo == forcedsetPath) {
             String responseBody = mapper.writeValueAsString(jsonld.forcedSetTerms)
             sendGetResponse(request, response, responseBody, "1970/1/1", forcedsetPath, "application/json")
+            return
+        }
+
+        def startTimePath = "/sys/starttime.json"
+        if (request.pathInfo == startTimePath) {
+            String responseBody = mapper.writeValueAsString( ["starttime" : ManagementFactory.getRuntimeMXBean().getStartTime()] )
+            sendGetResponse(request, response, responseBody, "1970/1/1", startTimePath, "application/json")
             return
         }
 
