@@ -254,9 +254,6 @@ class SearchUtils {
 
         if (stats) {
             result['stats'] = stats
-        } else {
-            log.warn("Could not build ES stats. Result was: ${esResult}")
-            log.warn("ES aggregations: ${esResult['aggregations']}")
         }
 
         return result
