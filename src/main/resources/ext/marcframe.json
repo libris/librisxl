@@ -6259,7 +6259,7 @@
       "embedded": true,
       "resourceType": "Serial",
       "TOOO:i2": {},
-      "$a": {"property": "title", "punctuationChars": ".,=;"},
+      "$a": {"property": "title", "punctuationChars": ".,=;", "required": true},
       "$0": {"addLink": "identifiedBy", "property": "value"},
       "$n": {"addProperty": "numberOfPartOfAWork"},
       "$p": {"addProperty": "nameOfPartOfAWork", "punctuationChars": ".,=;"},
@@ -7272,7 +7272,8 @@
         "_:agent": {
           "addLink": "termComponentList",
           "resourceType": "Organization",
-          "absorbSingle": true
+          "absorbSingle": true,
+          "required": true
         },
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
       },
@@ -7445,14 +7446,15 @@
             "_:work": {
               "addLink": "termComponentList",
               "resourceType": "Work",
-              "absorbSingle": true
+              "absorbSingle": true,
+              "required": true
             },
             "_:title": {
               "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
               "embedded": true
             },
             "_:contribution": {"about": "_:work", "addLink": "contribution", "resourceType": "Contribution"},
-            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting"},
+            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting", "required": true},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "addLink": "subject",
@@ -7463,9 +7465,9 @@
           "include": ["agentdataMeeting", "subjectbase"],
           "addLink": "subject",
           "resourceType": "Meeting",
+          "aboutAlias": "_:agent",
           "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Meeting"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         }
@@ -7493,15 +7495,12 @@
               "subject": [
                 {
                   "@type": "Meeting",
-                  "agent": {
-                    "@type": "Meeting",
-                    "name": "Rio+20 (Conference)",
-                    "date": ["(2012 :"],
-                    "place": [{
-                      "@type": "Place",
-                      "label": "Rio de Janeiro, Brazil)"
-                    }]
-                  },
+                  "name": "Rio+20 (Conference)",
+                  "date": ["(2012 :"],
+                  "place": [{
+                    "@type": "Place",
+                    "label": "Rio de Janeiro, Brazil)"
+                  }],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
                     "@type": "ConceptScheme",
