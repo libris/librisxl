@@ -1884,6 +1884,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     def resourceType = pending.resourceType
                     def parents = pending.about == null ? [entity] :
                         pending.about in aboutMap ? aboutMap[pending.about] : null
+
                     parents?.each {
                         def about = it[pending.link ?: pending.addLink]
                         if (!about && pending.absorbSingle) {
@@ -1893,21 +1894,19 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                                 requiredOk = false
                             }
                         }
-                        boolean enteredAbout = false
-                        boolean anyRequiredOk = false
                         Util.asList(about).each {
-                            enteredAbout = true
                             if (!it || (pending.resourceType && !(pending.resourceType in Util.asList(it['@type'])))) {
                                 return
                             }
-                            anyRequiredOk = true
                             aboutMap.get(key, []).add(it)
-                        }
-                        if (enteredAbout && pending.required && !anyRequiredOk) {
-                            requiredOk = false
                         }
                     }
                 }
+            }
+        }
+        pendingResources?.each { key, pending ->
+            if (pending.required && !(key in aboutMap)) {
+                requiredOk = false
             }
         }
 
