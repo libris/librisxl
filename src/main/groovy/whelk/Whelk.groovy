@@ -11,6 +11,8 @@ import whelk.filter.JsonLdLinkExpander
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
+import java.util.concurrent.ConcurrentHashMap
+
 /**
  * Created by markus on 15-09-03.
  */
@@ -28,8 +30,33 @@ class Whelk {
     String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
 
     private DocumentCache docCache
+    private static ConcurrentHashMap<String, Document> authCache
     private static final int CACHE_MAX_SIZE = 1000
     private static final int CACHE_LIFETIME_MILLIS = 30000
+
+    static {
+        authCache = new ConcurrentHashMap<>( )
+    }
+
+    static void putInAuthCache(Document authDocument) {
+        for (String uri : authDocument.getRecordIdentifiers()) {
+            authCache.put(uri, authDocument)
+        }
+        for (String uri : authDocument.getThingIdentifiers()) {
+            authCache.put(uri, authDocument)
+        }
+        authCache.put(authDocument.getShortId(), authDocument)
+    }
+
+    static void removeFromAuthCache(Document authDocument) {
+        for (String uri : authDocument.getRecordIdentifiers()) {
+            authCache.remove(uri)
+        }
+        for (String uri : authDocument.getThingIdentifiers()) {
+            authCache.remove(uri)
+        }
+        authCache.remove(authDocument.getShortId())
+    }
 
     public Whelk(PostgreSQLComponent pg, ElasticSearch es) {
         this.storage = pg
@@ -156,21 +183,34 @@ class Whelk {
     Map<String, Document> bulkLoad(List ids, boolean useDocumentCache = false) {
         Map result = [:]
         ids.each { id ->
-            Document doc
-            Document cached = docCache.get(id)
-            if (useDocumentCache && cached) {
-                result[id] = cached
-            } else {
-                if (id.startsWith(Document.BASE_URI.toString())) {
-                    id = Document.BASE_URI.resolve(id).getPath().substring(1)
-                    doc = storage.load(id)
-                } else {
-                    doc = storage.locate(id, true)?.document
-                }
 
-                if (doc && !doc.deleted) {
-                    result[id] = doc
-                    docCache.put(id, doc)
+            Document doc
+
+            // Check the auth cache
+            if (authCache.containsKey(id)) {
+                result[id] = authCache.get(id)
+            } else {
+
+                // Check the general purpose cache
+                Document cached = docCache.get(id)
+                if (useDocumentCache && cached) {
+                    result[id] = cached
+                } else {
+
+                    // Fetch from DB
+                    if (id.startsWith(Document.BASE_URI.toString())) {
+                        id = Document.BASE_URI.resolve(id).getPath().substring(1)
+                        doc = storage.load(id)
+                    } else {
+                        doc = storage.locate(id, true)?.document
+                    }
+
+                    if (doc && !doc.deleted) {
+                        result[id] = doc
+                        docCache.put(id, doc)
+                        if (LegacyIntegrationTools.determineLegacyCollection(doc, jsonld) == "auth")
+                            putInAuthCache(doc)
+                    }
                 }
             }
         }
@@ -269,6 +309,8 @@ class Whelk {
         }
 
         if (storage.store(document, changedIn, changedBy, collection, deleted)) {
+            if (LegacyIntegrationTools.determineLegacyCollection(document, jsonld) == "auth")
+                putInAuthCache(document)
             if (elastic) {
                 elastic.index(document, collection, this)
                 reindexDependers(document)
@@ -279,6 +321,8 @@ class Whelk {
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, PostgreSQLComponent.UpdateAgent updateAgent) {
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, collection, deleted, updateAgent)
+        if (LegacyIntegrationTools.determineLegacyCollection(updated, jsonld) == "auth")
+            putInAuthCache(updated)
         if (elastic) {
             elastic.index(updated, collection, this)
             reindexDependers(updated)
@@ -289,6 +333,11 @@ class Whelk {
     void bulkStore(final List<Document> documents, String changedIn,
                    String changedBy, String collection, boolean useDocumentCache = false) {
         if (storage.bulkStore(documents, changedIn, changedBy, collection)) {
+            for (Document doc : documents) {
+                if (LegacyIntegrationTools.determineLegacyCollection(doc, jsonld) == "auth") {
+                    putInAuthCache(doc)
+                }
+            }
             if (elastic) {
                 elastic.bulkIndex(documents, collection, this, useDocumentCache)
                 for (Document doc : documents) {
@@ -302,7 +351,10 @@ class Whelk {
 
     void remove(String id, String changedIn, String changedBy, String collection) {
         log.debug "Deleting ${id} from Whelk"
+        Document toBeRemoved = storage.load(id)
         if (storage.remove(id, changedIn, changedBy, collection)) {
+            if (LegacyIntegrationTools.determineLegacyCollection(toBeRemoved, jsonld) == "auth")
+                removeFromAuthCache(toBeRemoved)
             if (elastic) {
                 elastic.remove(id)
                 log.debug "Object ${id} was removed from Whelk"
