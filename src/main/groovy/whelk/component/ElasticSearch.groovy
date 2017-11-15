@@ -175,11 +175,15 @@ class ElasticSearch {
 
     Map query(Map jsonDsl, String collection) {
         def query = new NStringEntity(JsonOutput.toJson(jsonDsl), ContentType.APPLICATION_JSON)
+        def start = System.currentTimeMillis()
         def response = performRequest('POST',
                 getQueryUrl(collection),
                 query)
+        def duration = System.currentTimeMillis() - start
         def eString = EntityUtils.toString(response.getEntity())
         Map responseMap = mapper.readValue(eString, Map)
+
+        log.info("ES query took ${duration} (${responseMap.took} server-side)")
 
         def results = [:]
 
