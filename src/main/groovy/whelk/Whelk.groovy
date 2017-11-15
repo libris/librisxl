@@ -208,7 +208,8 @@ class Whelk {
                     if (doc && !doc.deleted) {
                         result[id] = doc
                         docCache.put(id, doc)
-                        if (LegacyIntegrationTools.determineLegacyCollection(doc, jsonld) == "auth")
+                        String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
+                        if (collection == "auth" || collection == "definitions")
                             putInAuthCache(doc)
                     }
                 }
@@ -309,7 +310,7 @@ class Whelk {
         }
 
         if (storage.store(document, changedIn, changedBy, collection, deleted)) {
-            if (LegacyIntegrationTools.determineLegacyCollection(document, jsonld) == "auth")
+            if (collection == "auth" || collection == "definitions")
                 putInAuthCache(document)
             if (elastic) {
                 elastic.index(document, collection, this)
@@ -321,7 +322,7 @@ class Whelk {
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, PostgreSQLComponent.UpdateAgent updateAgent) {
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, collection, deleted, updateAgent)
-        if (LegacyIntegrationTools.determineLegacyCollection(updated, jsonld) == "auth")
+        if (collection == "auth" || collection == "definitions")
             putInAuthCache(updated)
         if (elastic) {
             elastic.index(updated, collection, this)
@@ -334,7 +335,7 @@ class Whelk {
                    String changedBy, String collection, boolean useDocumentCache = false) {
         if (storage.bulkStore(documents, changedIn, changedBy, collection)) {
             for (Document doc : documents) {
-                if (LegacyIntegrationTools.determineLegacyCollection(doc, jsonld) == "auth") {
+                if (collection == "auth" || collection == "definitions") {
                     putInAuthCache(doc)
                 }
             }
@@ -353,7 +354,7 @@ class Whelk {
         log.debug "Deleting ${id} from Whelk"
         Document toBeRemoved = storage.load(id)
         if (storage.remove(id, changedIn, changedBy, collection)) {
-            if (LegacyIntegrationTools.determineLegacyCollection(toBeRemoved, jsonld) == "auth")
+            if (collection == "auth" || collection == "definitions")
                 removeFromAuthCache(toBeRemoved)
             if (elastic) {
                 elastic.remove(id)
