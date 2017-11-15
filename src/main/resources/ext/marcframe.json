@@ -7140,7 +7140,7 @@
               {"d": "1685-1757"},
               {"t": "Sonatas,"},
               {"m": "harpsichord"},
-              {"n": "K. 492, "},
+              {"n": "K. 492,"},
               {"r": "D major;"},
               {"y": "21st century."}]}},
           "result": {"mainEntity": {
@@ -7316,7 +7316,7 @@
             "610": {"ind1": "1", "ind2": "7", "subfields": [
               {"a": "Sverige"},
               {"b": "Riksdagen"},
-              {"d": "(1792 : "},
+              {"d": "(1792 :"},
               {"c": "Gävle)"},
               {"2": "sao"}]}
           },
@@ -7516,8 +7516,8 @@
           "source": {
             "611": {"ind1": "2", "ind2": "0", "subfields":[
               {"a": "Vatican Council"},
-              {"n": "(2nd : "},
-              {"d": "1962-1965 : "},
+              {"n": "(2nd :"},
+              {"d": "1962-1965 :"},
               {"c": "Basilica di San Pietro in Vaticano)."},
               {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
               {"l": "Italian"}]
@@ -9139,8 +9139,8 @@
           "source": {
             "711": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Olympic Games."},
-              {"n": "21st : "},
-              {"d": "1976: "},
+              {"n": "21st :"},
+              {"d": "1976:"},
               {"c": "Montréal, Québec)."},
               {"e": "Organizing Committee."},
               {"e": "Arts and Culture Program."},
@@ -9176,11 +9176,11 @@
           "source": {
             "711": {"ind1": "2", "ind2": "2", "subfields": [
               {"a": "Vatican Council"},
-              {"n": "(2nd : "},
-              {"d": "1962-1965 : "},
+              {"n": "(2nd :"},
+              {"d": "1962-1965 :"},
               {"c": "Basilica di San Pietro in Vaticano)."},
               {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
-              {"i": "Facsimile (manifestation): "}
+              {"i": "Facsimile (manifestation):"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9382,7 +9382,7 @@
         },
         {
           "source": {"730": {"ind1": "3", "ind2": "2", "subfields": [
-            {"i": "Container of (work): "},
+            {"i": "Container of (work):"},
             {"a": "Gigue,"},
             {"m": "harpsichord,"},
             {"n": "GraunWV D:XVIII:11,"},
@@ -10125,7 +10125,7 @@
         {
           "source": {"811": {"ind1": "2", "ind2": " ", "subfields": [
             {"a": "Vatican Council"},
-            {"n": "(2nd: "},
+            {"n": "(2nd:"},
             {"d": "1962-1964)"},
             {"t": "Decretum de presbyterorum ministerio et vita."}
           ]}},
@@ -10259,7 +10259,7 @@
     "855": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ I DET BIBLIOGRAFISKA FORMATET"},
 
     "856": {
-      "TODO:defaultLink": "electronicLocater and @type:Resource OK as default? ",
+      "TODO:defaultLink": "electronicLocater and @type:Resource OK as default?",
       "addLink": "electronicLocator",
       "resourceType": "Resource",
       "embedded": true,
@@ -11554,7 +11554,7 @@
       "$l": {"addProperty": "label"}
     },
     "378": {
-      "TODO": "Depends on bib 100, 700 and auth 100 $q 'marc:fullerFormName'. See mads:fullNameElement ",
+      "TODO": "Depends on bib 100, 700 and auth 100 $q 'marc:fullerFormName'. See mads:fullNameElement",
       "$q": {"property": "marc:fullerFormName"}
     },
     "380": {
@@ -12081,7 +12081,7 @@
               {"a": "United Nations"},
               {"b": "General Assembly"},
               {"b": "Special Session"},
-              {"n": "(13 : "},
+              {"n": "(13 :"},
               {"d": "1986)."},
               {"b": "Preparatory Committee of the Whole"}
             ]}},
