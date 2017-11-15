@@ -239,6 +239,9 @@ class SearchUtils {
         if (statsTree) {
             stats = buildStats(esResult['aggregations'],
                                makeFindUrl(SearchType.ELASTIC, pageParams))
+            if (!stats) {
+                log.debug("No stats found for query: ${dslQuery}, result: ${esResult}")
+            }
         }
 
         mappings.tail().each { mapping ->
