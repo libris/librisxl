@@ -9071,7 +9071,7 @@
     "711": {
       "aboutEntity": "?work",
       "pendingResources": {
-        "_:agent": {"link": "agent", "resourceType": "Meeting"},
+        "_:agent": {"link": "agent", "resourceType": "Meeting", "required": true},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "match": [
@@ -9090,7 +9090,8 @@
             "_:agent": {
               "about": "_:contribution",
               "link": "agent",
-              "resourceType": "Meeting"
+              "resourceType": "Meeting",
+              "required": true
             },
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
@@ -9101,7 +9102,7 @@
           "addLink": "contribution",
           "resourceType": "Contribution",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Meeting"},
+            "_:agent": {"link": "agent", "resourceType": "Meeting", "required": true},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         }
@@ -9246,13 +9247,13 @@
       "addLink": "contribution",
       "resourceType": "Contribution",
       "pendingResources": {
-        "_:agent": {"link": "agent", "resourceType": "Agent"}
+        "_:agent": {"link": "agent", "resourceType": "Agent", "required": true}
       },
       "match": [
         {
           "when": "i1=1",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Person"}
+            "_:agent": {"link": "agent", "resourceType": "Person", "required": true}
           }
         }
       ],
@@ -9735,7 +9736,8 @@
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
-          "resourceType": "Person"
+          "resourceType": "Person",
+          "required": true
         },
         "_:title": {
           "addLink": "hasTitle", "resourceType": "Title",
@@ -9756,7 +9758,8 @@
             "_:agent": {
               "about": "_:contribution",
               "link": "agent",
-              "resourceType": "Family"
+              "resourceType": "Family",
+              "required": true
             },
             "_:title": {
               "addLink": "hasTitle", "resourceType": "Title",
@@ -9851,7 +9854,7 @@
         },
         {
           "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
-            {"a": "Sousa, John Philip,"},
+            {"a": "Sousa, John Philip"},
             {"d": "1854-1932"},
             {"t": "Marches"},
             {"m": "band."},
@@ -9920,7 +9923,8 @@
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
-          "resourceType": "Organization"
+          "resourceType": "Organization",
+          "required": true
         },
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"},
@@ -9948,7 +9952,8 @@
               "about": "_:contribution",
               "link": "agent",
               "resourceType": "Jurisdiction",
-              "embedded": false
+              "embedded": false,
+              "required": true
             },
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"},
