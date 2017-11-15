@@ -146,7 +146,7 @@ class MarcFrameConverterSpec extends Specification {
             expected.fields << source
         }
         then:
-        assertJsonEquals(result, expected)
+        assertJsonEqualsOnRevert(result, expected)
         where:
         fieldSpec << fieldSpecs
     }
@@ -314,6 +314,53 @@ class MarcFrameConverterSpec extends Specification {
         def resultJson = json(result)
         def expectedJson = json(expected)
         assert resultJson == expectedJson
+    }
+
+    void assertJsonEqualsOnRevert(result, expected) {
+        def resultJson = json(result)
+        def expectedJson = json(expected)
+
+        // If unequal, first check without indicators and subfield order,
+        // then check the extracted shape of the latter.
+        if (resultJson != expectedJson) {
+
+            def normResultJson = deepcopy(result)
+            def resultSubfieldShapes = extractSubfieldShape(normResultJson)
+
+            def normExpectedJson = deepcopy(expected)
+            def expectedSubfieldShapes = extractSubfieldShape(normExpectedJson)
+
+            if (normResultJson == normExpectedJson) {
+                // should fail since norm-sorted check passed
+                assert resultSubfieldShapes == expectedSubfieldShapes
+            }
+        }
+
+        assert resultJson == expectedJson
+    }
+
+    Map extractSubfieldShape(Map record) {
+        Map subfieldShapes = [:]
+        if (record instanceof Map) {
+            for (field in record.fields) {
+                field.each { tag, fieldData ->
+                    if (fieldData instanceof Map) {
+                        // store shape
+                        def fieldShape = [
+                            ind1: fieldData.ind1,
+                            ind2: fieldData.ind2,
+                            subfields: fieldData.subfields.collect { it.keySet()[0] }
+                        ]
+                        subfieldShapes.get(tag, []) << fieldShape
+                        // erase extracted shape
+                        fieldData.remove('ind1')
+                        fieldData.remove('ind2')
+                        fieldData.subfields.sort { it.keySet()[0] }
+                    }
+                }
+            }
+        }
+        return subfieldShapes
     }
 
     private deepcopy(orig) {

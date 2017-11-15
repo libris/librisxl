@@ -54,9 +54,12 @@ class ElasticSearch {
                     .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
                         @Override
                         RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder requestConfigBuilder) {
-                            return requestConfigBuilder.setConnectionRequestTimeout(0)
+                            return requestConfigBuilder
+                                       .setConnectionRequestTimeout(0)
+                                       .setConnectTimeout(5000)
+                                       .setSocketTimeout(60000)
                         }
-            })
+            }).setMaxRetryTimeoutMillis(60000)
             restClient = builder.build()
         }
     }
@@ -172,11 +175,15 @@ class ElasticSearch {
 
     Map query(Map jsonDsl, String collection) {
         def query = new NStringEntity(JsonOutput.toJson(jsonDsl), ContentType.APPLICATION_JSON)
+        def start = System.currentTimeMillis()
         def response = performRequest('POST',
                 getQueryUrl(collection),
                 query)
+        def duration = System.currentTimeMillis() - start
         def eString = EntityUtils.toString(response.getEntity())
         Map responseMap = mapper.readValue(eString, Map)
+
+        log.info("ES query took ${duration} (${responseMap.took} server-side)")
 
         def results = [:]
 
