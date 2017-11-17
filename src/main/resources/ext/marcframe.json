@@ -6382,9 +6382,9 @@
       "i1": {
         "property": "marc:hasRestrictionsOnAccessNote",
         "tokenMap": {
+          " ": false,
           "0": false,
-          "1": true,
-          "2": "Uppgift saknas"
+          "1": true
         }
       },
       "$a": {"property": "label"},
@@ -6458,14 +6458,15 @@
       "i1": {
         "property": "typeNote",
         "tokenMap": {
+          " ": "summary",
           "0": "subject",
           "1": "review",
           "2": "scopeAndContent",
           "3": "abstract",
-          "4": "contentAdvice"
+          "4": "contentAdvice",
+          "8": "summary"
         }
       },
-      "NOTE:i1": "Ignore i1=8",
       "$a": {"property": "label"},
       "$b": {"property": "comment"},
       "TODO:b": "Change to summaryNote?",
@@ -6487,6 +6488,20 @@
                   {"@type": "Source", "uri": "http://example.org/thing-page"},
                   {"@type": "Source", "uri": "http://example.org/another-thing-page"}
                 ]
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"520": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Dom är tillbaka och den här gången är det full fart från början till slut."}
+          ]}},
+          "result": {"mainEntity": {
+            "summary": [
+              {
+                "@type": "Summary",
+                "label": "Dom är tillbaka och den här gången är det full fart från början till slut.",
+                "typeNote" : "summary"
               }
             ]
           }}
