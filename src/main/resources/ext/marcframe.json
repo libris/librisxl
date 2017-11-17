@@ -11539,9 +11539,9 @@
           "result": {
             "mainEntity": {
               "@type": "Agent",
-              "marc:hasAuth368": [
+              "marc:hasOtherAttributes": [
                       {
-                        "@type": "marc:Auth368",
+                        "@type": "marc:OtherAttributes",
                         "marc:otherDesignation": ["Fiktiva gestalter"],
                         "marc:source": "sao"
                       }
