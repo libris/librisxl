@@ -293,12 +293,7 @@
                                 "prefLabel": {
                                     "analyzer": "completer",
                                     "type": "text"
-                                },
-				"prefLabelByLang": {
-				    "analyzer": "completer",
-				    "type": "text"
-				}
-
+                                }
                             }
                         }
                     }
@@ -331,11 +326,6 @@
                     "boost": 10
                 },
                 "prefLabel": {
-                    "analyzer": "completer",
-                    "type": "text",
-                    "boost": 10
-                },
-		"prefLabelByLang": {
                     "analyzer": "completer",
                     "type": "text",
                     "boost": 10
