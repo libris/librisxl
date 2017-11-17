@@ -11634,12 +11634,29 @@
       "$a": {"property": "gender"}
     },
     "376": {
-      "aboutType": "Agent",
-      "addLink": "marc:hasAuth376",
-      "resourceType": "marc:Auth376",
-      "$a": {"addProperty": "typeOfFamily"},
-      "$b": {"addProperty": "prominentFamilyMember"}
-    },
+      "aboutType": "Family",
+      "$a": {"addLink": "hasTypeOfFamily", "resourceType": "TypeOfFamily", "addProperty": "label"},
+      "$b": {"addLink": "hasProminentFamilyMember", "resourceType": "Person", "addProperty": "label"},
+    "_spec": [
+      {
+        "source": {
+          "376": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Kungahus"}
+          ]}},
+        "result": {
+          "mainEntity": {
+            "@type": "Family",
+            "hasTypeOfFamily": [
+                    {
+                      "@type": "TypeOfFamily",
+                      "label": ["Kungahus"]
+                    }
+                  ]
+          }
+        }
+      }
+    ]
+  },
     "377": {
       "TODO:i2": {},
       "aboutEntity": "?thing",
