@@ -11522,8 +11522,8 @@
     "368": {
       "aboutEntity": "?thing",
       "aboutType": "Agent",
-      "addLink": "marc:hasAuth368",
-      "resourceType": "marc:Auth368",
+      "addLink": "marc:hasOtherAttributes",
+      "resourceType": "marc:OtherAttributes",
       "$a": {"addProperty": "marc:typeOfCorporateBody"},
       "$c": {"addProperty": "marc:otherDesignation"},
       "$d": {"addProperty": "marc:titleOfPerson"},
