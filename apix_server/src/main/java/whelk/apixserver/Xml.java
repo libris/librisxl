@@ -50,7 +50,7 @@ public class Xml
     public static String formatApixErrorResponse(String message, int code) throws TransformerException
     {
         Document xmlDoc = builder.newDocument();
-        Element apix = xmlDoc.createElement("apix");
+        Element apix = xmlDoc.createElementNS("http://api.libris.kb.se/apix/", "apix");
         xmlDoc.appendChild(apix);
         apix.setAttribute("version", "0.1");
         apix.setAttribute("status", "ERROR");
@@ -68,7 +68,7 @@ public class Xml
     {
         Document xmlDoc = builder.newDocument();
 
-        Element apix = xmlDoc.createElement("apix");
+        Element apix = xmlDoc.createElementNS("http://api.libris.kb.se/apix/", "apix");
         Element marcRecord = builder.parse(new InputSource(new StringReader(marcXmlString))).getDocumentElement();
         xmlDoc.appendChild(apix);
         apix.setAttribute("version", "0.1");
@@ -125,7 +125,7 @@ public class Xml
     {
         Document xmlDoc = builder.newDocument();
 
-        Element apix = xmlDoc.createElement("apix");
+        Element apix = xmlDoc.createElementNS("http://api.libris.kb.se/apix/", "apix");
         xmlDoc.appendChild(apix);
         apix.setAttribute("version", "0.1");
         apix.setAttribute("status", "OK");
