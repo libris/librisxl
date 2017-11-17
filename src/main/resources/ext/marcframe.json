@@ -9597,7 +9597,6 @@
         },
         "marcDefault": 0
       },
-      "TOOO:i1": {},
       "TOOO:i2": {},
       "$a": {
         "about": "_:agent",
@@ -9716,15 +9715,92 @@
     },
     "780": {
       "inherit": "772",
-      "TOOO:i1": {},
-      "TOOO:i2": {},
       "addLink": "precededBy",
-      "resourceType": "Work"
+      "resourceType": "Work",
+      "match": [
+        {"when": "i2=0", "addLink": "continues"},
+        {"when": "i2=1", "addLink": "continuesInPart"},
+        {"when": "i2=2", "addLink": "precededBy"},
+        {"when": "i2=3", "addLink": "precededInPartBy"},
+        {"when": "i2=4", "addLink": "mergerOf"},
+        {"when": "i2=5", "addLink": "absorbed"},
+        {"when": "i2=6", "addLink": "absorbedInPart"},
+        {"when": "i2=7", "addLink": "separatedFrom"}
+      ],
+      "i2": {"marcDefault": 0},
+      "_spec": [
+        {
+          "source": {"780": {"ind1": "0", "ind2": "0", "subfields": [
+            {"t": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"}
+          ]}},
+          "result": {"mainEntity": {
+            "continues": [
+              {
+                "@type": "Work",
+                "marc:toDisplayNote": true,
+                "hasTitle": [{
+                  "@type": "Title",
+                  "title": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
+                }]
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"780": {"ind1": " ", "ind2": " ", "subfields": [
+            {"t": "Bulletin mensuel"}
+          ]}},
+          "result": {"mainEntity": {
+            "precededBy": [
+              {
+                "@type": "Work",
+                "hasTitle": [{
+                  "@type": "Title",
+                  "title": "Bulletin mensuel"
+                }]
+              }
+            ]
+          }}
+        }
+      ]
     },
     "785": {
       "inherit": "780",
       "addLink": "succeededBy",
-      "resourceType": "Work"
+      "resourceType": "Work",
+      "match": [
+        {"when": "i2=0", "addLink": "continuedBy"},
+        {"when": "i2=1", "addLink": "continuedInPartBy"},
+        {"when": "i2=2", "addLink": "succeededBy"},
+        {"when": "i2=3", "addLink": "succeededInPartBy"},
+        {"when": "i2=4", "addLink": "absorbedBy"},
+        {"when": "i2=5", "addLink": "absorbedInPartBy"},
+        {"when": "i2=6", "addLink": "splitInto"},
+        {"when": "i2=7", "addLink": "mergedToForm"},
+        {"when": "i2=8", "addLink": "continuedBy"}
+      ],
+      "i2": {"marcDefault": 0},
+      "_spec": [
+        {
+          "source": {"785": {"ind1": "0", "ind2": "0", "subfields": [
+            {"t": "Naysprayer"},
+            {"x": "1937-6545"}
+          ]}},
+          "result": {"mainEntity": {
+            "continuedBy": [
+              {
+                "@type": "Work",
+                "hasTitle": [{
+                  "@type": "Title",
+                  "title": "Naysprayer"
+                }],
+                "issn": "1937-6545",
+                "marc:toDisplayNote": true
+              }
+            ]
+          }}
+        }
+      ]
     },
     "786": {
       "aboutEntity": "?record",
