@@ -1976,13 +1976,13 @@
           "f": "Tactile",
           "g": "ProjectedImage",
           "h": "Microform",
-          "k": "StillImage",
-          "m": "MovingImage",
-          "o": "Kit",
-          "q": "NotatedMusic",
+          "k": "StillImageInstance",
+          "m": "MovingImageInstance",
+          "o": "KitInstance",
+          "q": "NotatedMusicInstance",
           "r": "RemoteSensingImage",
           "s": "SoundRecording",
-          "t": "Text",
+          "t": "TextInstance",
           "v": "VideoRecording",
           "z": null
         }
