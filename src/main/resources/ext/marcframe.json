@@ -11564,7 +11564,9 @@
       "$t": {"property": "marc:endPeriod"},
       "$2": {"property": "marc:sourceOfTerm"}
     },
-    "371": {},
+    "371": {
+      "$a": {"aboutEntity": "?thing", "addProperty": "adress"}
+    },
     "372": {
       "aboutEntity": "?thing",
       "aboutType": "Agent",
