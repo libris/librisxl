@@ -118,11 +118,8 @@ class ElasticConfigGenerator {
                 // Has this property already been assigned a boost value, from another category?
                 // If so, use whichever is higher.
                 Integer previousBoost = propertyValues[propertyName]
-                if (previousBoost == null || previousBoost < boost) {
-                    propertyValues.put(propertyName + "ByLang", boost)
-                    propertyValues.put(propertyName, boost)
-                    boost--
-                }
+                if (previousBoost == null || previousBoost < boost)
+                    propertyValues.put(propertyName, boost--)
             }
         }
 
