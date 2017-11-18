@@ -4021,11 +4021,9 @@
     },
 
     "074": {
-      "addLink": "marc:hasGPOItemNumber",
-      "resourceType": "marc:GPOItemNumber",
-      "$a": {"property": "marc:gpoItemNumber"},
-      "$z": {"addProperty": "marc:canceledInvalidGpoItemNumber"}
-    },
+      "include": ["identifier"],
+      "resourceType": "marc:GPOItemNumber"
+      },
 
     "080": {
       "aboutEntity": "?work",
