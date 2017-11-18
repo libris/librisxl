@@ -3716,8 +3716,11 @@
       ]
     },
 
-    "036": {"NOTE:record-count": 118, "ignored": true},
-
+    "036": {
+    "include": ["identifier"],
+    "resourceType": "StudyNumber",
+    "$b": {"link": "source", "resourceType": "Source", "property": "label"}
+    },
     "037": {
       "addLink": "marc:hasSourceofAcquisition",
       "resourceType": "marc:SourceofAcquisition",
