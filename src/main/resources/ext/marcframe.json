@@ -11649,7 +11649,7 @@
     "376": {
       "aboutType": "Family",
       "$a": {"addLink": "hasTypeOfFamily", "resourceType": "TypeOfFamily", "addProperty": "label"},
-      "$b": {"addLink": "hasProminentFamilyMember", "resourceType": "Person", "addProperty": "label"},
+      "$b": {"addLink": "hasProminentFamilyMember", "resourceType": "Person", "addProperty": "prefLabel"},
     "_spec": [
       {
         "source": {
