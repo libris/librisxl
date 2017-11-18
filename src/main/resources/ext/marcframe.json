@@ -3829,6 +3829,7 @@
     },
     "043": {
       "TODO": "map to countrycode",
+      "aboutEntity": "?work",
       "link": "marc:hasGeographicAreaCode",
       "resourceType": "marc:GeographicAreaCode",
       "$a": {"addProperty": "marc:geographicAreaCode"},
@@ -3847,6 +3848,7 @@
       "$2": {"addProperty": "marc:sourceOfLocalSubentityCode"}
     },
     "045": {
+      "aboutEntity": "?work",
       "TODO": "map to edtf date",
       "link": "marc:hasTimePeriodOfContent",
       "resourceType": "marc:TimePeriodOfContent",
@@ -3874,6 +3876,7 @@
     },
     "047": {
       "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "aboutEntity": "?work",
       "addLink": "marc:hasFormOfMusicalCompositionCode",
       "resourceType": "marc:FormOfMusicalCompositionCode",
       "i1": {
@@ -3893,6 +3896,7 @@
     },
     "048": {
       "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "aboutEntity": "?work",
       "addLink": "marc:hasNumberOfInstrumentsOrVoicesCode",
       "resourceType": "marc:NumberOfInstrumentsOrVoicesCode",
       "i2": {
@@ -3930,6 +3934,7 @@
       "$c": {"property": "marc:copyInformation"}
     },
     "052": {
+      "aboutEntity": "?work",
       "addLink": "marc:hasGeographicClassification",
       "resourceType": "marc:GeographicClassification",
       "i1": {
@@ -3948,6 +3953,7 @@
     },
     "055": {
       "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "aboutEntity": "?work",
       "addLink": "marc:hasClassificationNumbersAssignedInCanada",
       "resourceType": "marc:ClassificationNumbersAssignedInCanada",
       "i1": {
@@ -3988,6 +3994,7 @@
     "061": {"NOTE:record-count": 1, "ignored": true},
     "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
     "070": {
+      "aboutEntity": "?work",
       "link": "marc:hasNationalAgriculturalLibraryCallNumber",
       "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
       "i1": {
