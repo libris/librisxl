@@ -3722,15 +3722,17 @@
     "$b": {"link": "source", "resourceType": "Source", "property": "label"}
     },
     "037": {
-      "addLink": "marc:hasSourceofAcquisition",
-      "resourceType": "marc:SourceofAcquisition",
-      "$a": {"property": "marc:stockNumber"},
+      "addLink": "acquisitionSource",
+      "resourceType": "AcquisitionSource",
+      "TODO:i1": "'2': Intervening, '3': Current/Latest",
+      "$a": {"link": "identifiedBy", "resourceType": "StockNumber", "property": "value"},
       "$b": {"property": "marc:sourceOfStockNumberAcquisition"},
-      "$c": {"addProperty": "marc:termsOfAvailability"},
+      "$c": {"addProperty": "acquisitionTerms"},
       "$f": {"addProperty": "marc:formOfIssue"},
       "$g": {"addProperty": "marc:additionalFormatCharacteristics"},
       "$n": {"addProperty": "marc:note"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "TODO": "_spec"
     },
 
     "038": {
