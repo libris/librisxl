@@ -4149,8 +4149,8 @@
     },
     "083": {
       "aboutEntity": "?work",
-      "addLink": "classification",
-      "resourceType": "AdditionalClassificationDdc",
+      "addLink": "additionalClassification",
+      "resourceType": "ClassificationDdc",
       "include": ["classification-ddc"],
       "$c": {"ignored": true, "NOTE:record-count": 1, "NOTE:local": "Används normalt ej"},
       "$m": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Används normalt ej"},
@@ -4168,9 +4168,9 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "classification": [
+              "additionalClassification": [
                 {
-                  "@type": "AdditionalClassificationDdc",
+                  "@type": "ClassificationDdc",
                   "edition": "full",
                   "code": "158.1",
                   "inScheme": {
@@ -4194,9 +4194,9 @@
             "FIXME": "How to do with languages other than 'swe'",
             "instanceOf": {
               "@type": "Text",
-              "classification": [
+              "additionalClassification": [
                 {
-                  "@type": "AdditionalClassificationDdc",
+                  "@type": "ClassificationDdc",
                   "code": "598.0994",
                   "inScheme": {
                     "@id": "http://dewey.info/scheme/edition/e23/",
