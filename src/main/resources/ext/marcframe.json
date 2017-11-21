@@ -13698,6 +13698,14 @@
       "$h": {"property": "marc:purchasePrice"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
+    "546": {
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "Note",
+      "ignoreOnRevertInFavourOf": "500",
+      "NOTE:local": "Definierat för konvertering av MO-bestånd",
+      "$a": {"property": "label"}
+    },
     "561": {
       "TODO:linkedEntity": "?example-$i",
       "TODO:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster",
