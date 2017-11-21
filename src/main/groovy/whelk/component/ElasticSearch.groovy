@@ -4,69 +4,85 @@ import groovy.json.JsonOutput
 import groovy.util.logging.Log4j2 as Log
 
 import org.apache.commons.codec.binary.Base64
-import org.apache.http.HttpHost
-import org.apache.http.client.config.RequestConfig
 import org.apache.http.entity.ContentType
-import org.apache.http.message.BasicHeader
-import org.apache.http.nio.entity.NStringEntity
-import org.apache.http.util.EntityUtils
 import org.codehaus.jackson.map.ObjectMapper
-import org.elasticsearch.client.Response
-import org.elasticsearch.client.RestClient
-import org.elasticsearch.client.RestClientBuilder
+import whelk.util.LongTermHttpConnection
 import whelk.Document
 import whelk.JsonLd
 import whelk.exception.*
 import whelk.filter.JsonLdLinkExpander
 import whelk.Whelk
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 @Log
 class ElasticSearch {
 
+    private class ConnectionPoolEntry {
+        public ConnectionPoolEntry(LongTermHttpConnection connection) {
+            this.connection = connection
+            this.inUse = new AtomicBoolean(false)
+        }
+        AtomicBoolean inUse
+        LongTermHttpConnection connection
+    }
+
     static final int DEFAULT_PAGE_SIZE = 50
-
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
+    static final int CONNECTION_POOL_SIZE = 8
 
-    RestClient restClient
+    Vector<ConnectionPoolEntry> httpConnectionPool = []
     String defaultIndex = null
-    private List<HttpHost> elasticHosts
+    private List<String> elasticHosts
     private String elasticCluster
 
     JsonLdLinkExpander expander
 
     private static final ObjectMapper mapper = new ObjectMapper()
-
+    private static final Random random = new Random()
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex,
                     JsonLdLinkExpander expander=null) {
-        this.elasticHosts = parseHosts(elasticHost)
+        this.elasticHosts = []
+        for (String host : elasticHost.split(",")) {
+            if (!host.contains(":"))
+                host += ":9200"
+            this.elasticHosts.add("http://" + host)
+        }
         this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
         this.expander = expander
-        log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes"
+        for (int i = 0; i < CONNECTION_POOL_SIZE; ++i) {
+            String host = elasticHosts[ random.nextInt() % elasticHosts.size() ]
+            httpConnectionPool.add(new ConnectionPoolEntry(new LongTermHttpConnection(host)))
+        }
+        log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes and $CONNECTION_POOL_SIZE workers."
      }
 
     String getIndexName() { defaultIndex }
 
-    private void connectRestClient() {
-        if (elasticHosts && elasticHosts.any()) {
-            def builder = RestClient.builder(*elasticHosts)
-                    .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
-                        @Override
-                        RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder requestConfigBuilder) {
-                            return requestConfigBuilder
-                                       .setConnectionRequestTimeout(0)
-                                       .setConnectTimeout(5000)
-                                       .setSocketTimeout(60000)
-                        }
-            }).setMaxRetryTimeoutMillis(60000)
-            restClient = builder.build()
-        }
-    }
+    String performRequest(String method, String path, String body, String contentType0 = null){
 
-    Response performRequest(String method, String path, NStringEntity body, String contentType0 = null){
+        // Get an available connection from the pool
+        ConnectionPoolEntry httpConnectionEntry
+        int i = 0
+        while(true) {
+            i++
+            if (i == CONNECTION_POOL_SIZE) {
+                i = 0
+                Thread.yield()
+            }
+
+            if (!httpConnectionPool[i].inUse.get()) {
+                httpConnectionEntry = httpConnectionPool[i]
+                httpConnectionEntry.inUse.set(true)
+                break
+            }
+        }
+
+        String response = null
+
         try {
-            connectRestClient()
             String contentType
             if (contentType0 == null) {
                 contentType = ContentType.APPLICATION_JSON.toString()
@@ -74,30 +90,27 @@ class ElasticSearch {
                 contentType = contentType0
             }
 
-            Response response = null
+            LongTermHttpConnection httpConnection = httpConnectionEntry.connection
             int backOffTime = 0
-            while (response == null || response.getStatusLine().statusCode == 429) {
+            while (response == null || httpConnection.getResponseCode() == 429) {
                 if (backOffTime != 0) {
                     log.info("Bulk indexing request to ElasticSearch was throttled (http 429) waiting $backOffTime seconds before retry.")
                     Thread.sleep(backOffTime * 1000)
                 }
 
-                response = restClient.performRequest(method, path,
-                        Collections.<String, String> emptyMap(),
-                        body,
-                        new BasicHeader('content-type', contentType))
+                httpConnection.sendRequest(path, method, contentType, body, null, null)
+                response = httpConnection.responseData
 
                 if (backOffTime == 0)
                     backOffTime = 1
                 else
                     backOffTime *= 2
             }
+        } finally {
+            httpConnectionEntry.inUse.set(false)
+        }
 
-            return response
-        }
-        finally {
-            restClient?.close()
-        }
+        return response
     }
 
     void bulkIndex(List<Document> docs, String collection, Whelk whelk,
@@ -111,10 +124,8 @@ class ElasticSearch {
                 "${action}\n${shapedData}\n"
             }.join('')
 
-            def body = new NStringEntity(bulkString)
-            def response = performRequest('POST', '/_bulk',body, BULK_CONTENT_TYPE)
-            def eString = EntityUtils.toString(response.getEntity())
-            Map responseMap = mapper.readValue(eString, Map)
+            String response = performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
+            Map responseMap = mapper.readValue(response, Map)
             log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
         }
     }
@@ -131,13 +142,13 @@ class ElasticSearch {
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
             Map shapedData = getShapeForIndex(doc, whelk)
-            def body = new NStringEntity(JsonOutput.toJson(shapedData), ContentType.APPLICATION_JSON)
+            //def body = new NStringEntity(JsonOutput.toJson(shapedData), ContentType.APPLICATION_JSON)
             def response = performRequest('PUT',
                     "/${indexName}/${collection}" +
                             "/${toElasticId(doc.getShortId())}?pipeline=libris",
-                    body)
-            def eString = EntityUtils.toString(response.getEntity())
-            Map responseMap = mapper.readValue(eString, Map)
+                    JsonOutput.toJson(shapedData))
+            //def eString = EntityUtils.toString(response.getEntity())
+            Map responseMap = mapper.readValue(response, Map)
             log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
         } catch (Exception e) {
             log.error("Failed to index ${doc.getShortId()} in elastic.", e)
@@ -147,12 +158,12 @@ class ElasticSearch {
     void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
-        def query = new NStringEntity(JsonOutput.toJson(dsl), ContentType.APPLICATION_JSON)
+        //def query = new NStringEntity(JsonOutput.toJson(dsl), ContentType.APPLICATION_JSON)
         def response = performRequest('POST',
                 "/${indexName}/_delete_by_query?conflicts=proceed",
-                query)
-        def eString = EntityUtils.toString(response.getEntity())
-        Map responseMap = mapper.readValue(eString, Map)
+                JsonOutput.toJson(dsl))
+        //def eString = EntityUtils.toString(response.getEntity())
+        Map responseMap = mapper.readValue(response, Map)
         log.debug("Response: ${responseMap.deleted} of ${responseMap.total} " +
                   "objects deleted")
     }
@@ -174,14 +185,12 @@ class ElasticSearch {
     }
 
     Map query(Map jsonDsl, String collection) {
-        def query = new NStringEntity(JsonOutput.toJson(jsonDsl), ContentType.APPLICATION_JSON)
         def start = System.currentTimeMillis()
         def response = performRequest('POST',
                 getQueryUrl(collection),
-                query)
+                JsonOutput.toJson(jsonDsl))
         def duration = System.currentTimeMillis() - start
-        def eString = EntityUtils.toString(response.getEntity())
-        Map responseMap = mapper.readValue(eString, Map)
+        Map responseMap = mapper.readValue(response, Map)
 
         log.info("ES query took ${duration} (${responseMap.took} server-side)")
 
@@ -301,41 +310,6 @@ class ElasticSearch {
             return Base64.encodeBase64URLSafeString(id.getBytes("UTF-8"))
         } else {
             return id // If XL-minted identifier, use the same charsequence
-        }
-    }
-
-    @Deprecated
-    String fromElasticId(String id) {
-        if (id.contains("::")) {
-            log.warn("Using old style index id's for $id")
-            def pathelements = []
-            id.split("::").each {
-                pathelements << URLEncoder.encode(it, "UTF-8")
-            }
-            return  new String("/"+pathelements.join("/"))
-        } else {
-            String decodedIdentifier = new String(Base64.decodeBase64(id), "UTF-8")
-            log.debug("Decoded id $id into $decodedIdentifier")
-            return decodedIdentifier
-        }
-    }
-
-    private int getPort(String hostString) {
-        try {
-            new Integer(hostString.split(":").last()).intValue()
-        } catch (NumberFormatException nfe) {
-            9200
-        }
-    }
-
-    private List<HttpHost> parseHosts(String elasticHosts) {
-        elasticHosts
-                .split(',')
-                .collect { String it ->
-            new HttpHost(
-                    it.split(':').first(),
-                    getPort(it),
-                    "http")
         }
     }
 }
