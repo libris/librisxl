@@ -42,7 +42,7 @@ class FileDumper implements MySQLLoader.LoadHandler {
 
     FileDumper(String exportFileName, PostgreSQLComponent postgres) {
 
-        final int THREAD_COUNT = 4 * Runtime.getRuntime().availableProcessors()
+        final int THREAD_COUNT = getThreadCount()
 
         postgreSQLComponent = postgres
         mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"))
@@ -53,6 +53,15 @@ class FileDumper implements MySQLLoader.LoadHandler {
         for (int i = 0; i < THREAD_COUNT; ++i) {
             LinkFinder lf = new LinkFinder(postgreSQLComponent)
             converterPool[i] = new MarcFrameConverter(lf)
+        }
+    }
+
+    private int getThreadCount() {
+        int procs = Runtime.getRuntime().availableProcessors()
+        if (procs > 1) {
+            return procs - 1
+        } else {
+            return procs
         }
     }
 
