@@ -3807,10 +3807,23 @@
         "resourceType": "Work",
         "embedded": true
       },
+      "TODO:i1": {
+        "link": "languageNote",
+        "resourceType": "Work",
+        "tokenMap": {
+          "0": "itemNotATranslationDoesNotIncludeATranslation",
+          "1": "itemIsOrIncludesATranslation"
+          },  
+        "marcdefault": " "
+      },
+      "TODO:i2": {},
       "TODO:pending": "Merge entities from pending in similar fields (like bib 520)?",
       "pendingResources": {
+        "_:accompaniedMaterial": {"link": "accompaniedBy", "resourceType": "Work"},
         "_:original": {"link": "originalVersion", "resourceType": "Work"},
         "_:summary": {"link": "summary", "resourceType": "Summary"},
+        "_:sungOrSpokenText": {"link": "marc:sungOrSpokenText", "resourceType": "marc:SungOrSpokenText"},
+        "_:tableOfContents": {"link": "tableOfContents", "resourceType": "TableOfContents"},
         "_:translationSource": {"link": "translationOf", "resourceType": "Work"}
       },
       "$a": {
@@ -3821,6 +3834,26 @@
       },
       "$b": {
         "about": "_:summary",
+        "addLink": "language",
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
+      },
+      "$c": {
+        "ignored": true,
+        "NOTE:LC": "Languages of separate titles (VM) [OBSOLETE, 1972]"
+      },
+      "$d": {
+        "TODO": "Revert to $a?",
+        "about": "_:sungOrSpokenText",
+        "addLink": "language",
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
+      },
+      "$f": {
+        "about": "_:tableOfContents",
+        "addLink": "language",
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
+      },
+      "$g": {
+        "about": "_:accompaniedMaterial",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
@@ -3835,7 +3868,8 @@
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"}
+      "$8": {"property": "marc:groupid"},
+      "TODO": "add _spec?"
     },
     "042": {
       "aboutEntity": "?record",
