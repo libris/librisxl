@@ -332,7 +332,9 @@ class MarcFrameConverterSpec extends Specification {
 
             if (normResultJson == normExpectedJson) {
                 // should fail since norm-sorted check passed
-                assert resultSubfieldShapes == expectedSubfieldShapes
+                def resultSubfieldShapesJson = json(resultSubfieldShapes)
+                def expectedSubfieldShapesJson = json(expectedSubfieldShapes)
+                assert resultSubfieldShapesJson == expectedSubfieldShapesJson
             }
         }
 
