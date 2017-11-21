@@ -3209,7 +3209,7 @@
       "include": ["identifier"],
       "resourceType": "LCCN",
       "$b": {"property": "marc:numcNumber"},
-      "$8": {"property": "marc:marc:groupid"}
+      "$8": {"property": "marc:groupid"}
     },
 
     "013": {"NOTE:record-count": 0, "ignored": true},
@@ -3788,7 +3788,7 @@
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"}
+      "$8": {"property": "marc:groupid"}
     },
     "042": {
       "aboutEntity": "?record",
@@ -3908,7 +3908,7 @@
       "$a": {"addProperty": "marc:performerOrEnsemble"},
       "$b": {"addProperty": "marc:soloist"},
       "$2": {"property": "marc:sourceOfCode"},
-      "$8": {"property": "marc:marc:groupid"}
+      "$8": {"property": "marc:groupid"}
     },
     "049": {"ignored": true, "NOTE": "OCLC - Local Holdings. Field 049 is not part of the standard MARC 21 format."},
 
@@ -5978,7 +5978,7 @@
         "property": "marc:sizeOfUnit"
       },
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"}
+      "$8": {"property": "marc:groupid"}
     },
 
     "306": {},
@@ -6412,7 +6412,7 @@
       "TOOO:i1": {},
       "$a": {"property": "title"},
       "$c": {"property": "pagination"},
-      "$8": {"property": "marc:marc:groupid"}
+      "$8": {"property": "marc:groupid"}
     },
 
     "511": {
@@ -6788,7 +6788,7 @@
       "$d": {"addProperty": "presentationFormat"},
       "$e": {"addProperty": "inventoryLevel"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$8": {"property": "marc:marc:groupid"}
+      "$8": {"property": "marc:groupid"}
     },
     "563": {
       "addLink": "marc:hasBindingInformation",
@@ -12985,7 +12985,7 @@
       "$b": {"property": "citation"},
       "$u": {"property": "uri"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"}
+      "$8": {"property": "marc:groupid"}
     },
     "672": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "673": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
@@ -13657,7 +13657,7 @@
       "addLink": "hasItem", "embedded": true, "resourceType": "Item",
       "$a": {"property": "custodialHistory"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$8": {"property": "marc:marc:groupid"}
+      "$8": {"property": "marc:groupid"}
     },
     "562": {
       "TODO:linkedEntity": "?example-$i",
