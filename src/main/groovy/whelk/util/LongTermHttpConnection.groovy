@@ -12,29 +12,34 @@ public class LongTermHttpConnection
     private int m_responseCode
     private String m_responseData
     private HashMap<String, String> m_responseHeaders
-    Socket m_socket
+    private Socket m_socket
+    private int m_port
+    private URL m_properUrl
+
+    public LongTermHttpConnection(String host)
+    {
+        m_properUrl = new URL(host)
+        m_port = m_properUrl.getPort()
+        if (m_port == -1)
+            m_port = m_properUrl.getDefaultPort()
+        if (m_port == -1)
+            m_port = 80
+    }
 
     /**
      * contentType, data, basicAuthName and basicAuthPass may all be passed as null where they are not relevant.
      */
-    public void sendRequest(String url, String verb, String contentType, String data,
+    public void sendRequest(String path, String verb, String contentType, String data,
                             String basicAuthName, String basicAuthPass)
             throws IOException
     {
-        URL properUrl = new URL(url)
-        int port = properUrl.getPort()
-        if (port == -1)
-            port = properUrl.getDefaultPort()
-        if (port == -1)
-            port = 80
-
         if (m_socket == null || m_socket.isClosed() || !m_socket.isConnected() || m_socket.isInputShutdown() || m_socket.isOutputShutdown())
         {
-            m_socket = createSocket(properUrl.getProtocol(), properUrl.getHost(), port)
+            m_socket = createSocket(m_properUrl.getProtocol(), m_properUrl.getHost(), m_port)
             m_socket.setKeepAlive(true)
         }
 
-        writeRequest( m_socket.getOutputStream(), properUrl.getHost(), properUrl.getPath(), verb, contentType,
+        writeRequest( m_socket.getOutputStream(), m_properUrl.getHost(), path, verb, contentType,
                 data, basicAuthName, basicAuthPass )
         readResponse( m_socket.getInputStream() )
     }

@@ -4,7 +4,6 @@ import groovy.json.JsonOutput
 import groovy.util.logging.Log4j2 as Log
 
 import org.apache.commons.codec.binary.Base64
-import org.apache.http.HttpHost
 import org.apache.http.entity.ContentType
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.LongTermHttpConnection
@@ -14,27 +13,36 @@ import whelk.exception.*
 import whelk.filter.JsonLdLinkExpander
 import whelk.Whelk
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 @Log
 class ElasticSearch {
 
+    private class ConnectionPoolEntry {
+        public ConnectionPoolEntry(LongTermHttpConnection connection) {
+            this.connection = connection
+            this.inUse = new AtomicBoolean(false)
+        }
+        AtomicBoolean inUse
+        LongTermHttpConnection connection
+    }
+
     static final int DEFAULT_PAGE_SIZE = 50
-
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
+    static final int CONNECTION_POOL_SIZE = 8
 
-    LongTermHttpConnection httpConnection
+    Vector<ConnectionPoolEntry> httpConnectionPool = []
     String defaultIndex = null
-    //private List<HttpHost> elasticHosts
     private List<String> elasticHosts
     private String elasticCluster
 
     JsonLdLinkExpander expander
 
     private static final ObjectMapper mapper = new ObjectMapper()
-
+    private static final Random random = new Random()
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex,
                     JsonLdLinkExpander expander=null) {
-        //this.elasticHosts = parseHosts(elasticHost)
         this.elasticHosts = []
         for (String host : elasticHost.split(",")) {
             if (!host.contains(":"))
@@ -44,43 +52,49 @@ class ElasticSearch {
         this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
         this.expander = expander
-        this.httpConnection = new LongTermHttpConnection()
-        log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes"
+        for (int i = 0; i < CONNECTION_POOL_SIZE; ++i) {
+            String host = elasticHosts[ random.nextInt() % elasticHosts.size() ]
+            httpConnectionPool.add(new ConnectionPoolEntry(new LongTermHttpConnection(host)))
+        }
+        log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes and $CONNECTION_POOL_SIZE workers."
      }
 
     String getIndexName() { defaultIndex }
 
-    /*private void connectRestClient() {
-        if (elasticHosts && elasticHosts.any()) {
-            def builder = RestClient.builder(*elasticHosts)
-                    .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
-                        @Override
-                        RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder requestConfigBuilder) {
-                            return requestConfigBuilder
-                                       .setConnectionRequestTimeout(0)
-                                       .setConnectTimeout(5000)
-                                       .setSocketTimeout(60000)
-                        }
-            }).setMaxRetryTimeoutMillis(60000)
-            restClient = builder.build()
-        }
-    }*/
-
     String performRequest(String method, String path, String body, String contentType0 = null){
-        String contentType
-        if (contentType0 == null) {
-            contentType = ContentType.APPLICATION_JSON.toString()
-        } else {
-            contentType = contentType0
+
+        // Get an available connection from the pool
+        ConnectionPoolEntry httpConnectionEntry
+        int i = 0
+        while(true) {
+            i++
+            if (i == CONNECTION_POOL_SIZE) {
+                i = 0
+                Thread.yield()
+            }
+
+            if (!httpConnectionPool[i].inUse.get()) {
+                httpConnectionEntry = httpConnectionPool[i]
+                httpConnectionEntry.inUse.set(true)
+                break
+            }
         }
 
         String response = null
 
-        path = elasticHosts[0] + path // TEMP! USE ALL HOSTS!
-        httpConnection.sendRequest(path, method, contentType, body, null, null)
-        response = httpConnection.responseData
+        try {
+            String contentType
+            if (contentType0 == null) {
+                contentType = ContentType.APPLICATION_JSON.toString()
+            } else {
+                contentType = contentType0
+            }
 
-        /*int backOffTime = 0
+            LongTermHttpConnection httpConnection = httpConnectionEntry.connection
+            httpConnection.sendRequest(path, method, contentType, body, null, null)
+            response = httpConnection.responseData
+
+            /*int backOffTime = 0
         while (response == null ) { // || response.getStatusLine().statusCode == 429) {
             if (backOffTime != 0) {
                 log.info("Bulk indexing request to ElasticSearch was throttled (http 429) waiting $backOffTime seconds before retry.")
@@ -96,6 +110,9 @@ class ElasticSearch {
             else
                 backOffTime *= 2
         }*/
+        } finally {
+            httpConnectionEntry.inUse.set(false)
+        }
 
         return response
     }
@@ -172,13 +189,11 @@ class ElasticSearch {
     }
 
     Map query(Map jsonDsl, String collection) {
-        //def query = new NStringEntity(JsonOutput.toJson(jsonDsl), ContentType.APPLICATION_JSON)
         def start = System.currentTimeMillis()
         def response = performRequest('POST',
                 getQueryUrl(collection),
                 JsonOutput.toJson(jsonDsl))
         def duration = System.currentTimeMillis() - start
-        //def eString = EntityUtils.toString(response.getEntity())
         Map responseMap = mapper.readValue(response, Map)
 
         log.info("ES query took ${duration} (${responseMap.took} server-side)")
