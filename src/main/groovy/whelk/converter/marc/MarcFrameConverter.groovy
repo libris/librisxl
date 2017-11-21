@@ -782,8 +782,12 @@ class ConversionPart {
             if (tokenMap instanceof String)
                 tokenMapName = tokenMap
             reverseTokenMap = [:]
-            this.tokenMap = (Map) ((tokenMap instanceof String) ?
-                    fieldHandler.tokenMaps[tokenMap] : tokenMap)
+            if (tokenMap instanceof String) {
+                assert fieldHandler.tokenMaps.containsKey(tokenMap)
+                this.tokenMap = (Map) fieldHandler.tokenMaps[tokenMap]
+            } else {
+                this.tokenMap = (Map) tokenMap
+            }
             this.tokenMap.each { k, v ->
                 if (v != null) {
                     reverseTokenMap[v] = k
