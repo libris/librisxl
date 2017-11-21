@@ -11667,6 +11667,7 @@
       "aboutType": "Agent",
       "addLink": "fieldOfActivity", "resourceType": "FieldOfActivity",
       "$a": {"addProperty": "label"},
+      "TODO": "link if $2 is sao",
       "$2": {"property": "marc:source"},
       "repeatable": true,
       "_spec": [
