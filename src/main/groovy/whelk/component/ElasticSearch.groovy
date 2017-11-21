@@ -91,25 +91,21 @@ class ElasticSearch {
             }
 
             LongTermHttpConnection httpConnection = httpConnectionEntry.connection
-            httpConnection.sendRequest(path, method, contentType, body, null, null)
-            response = httpConnection.responseData
+            int backOffTime = 0
+            while (response == null || httpConnection.getResponseCode() == 429) {
+                if (backOffTime != 0) {
+                    log.info("Bulk indexing request to ElasticSearch was throttled (http 429) waiting $backOffTime seconds before retry.")
+                    Thread.sleep(backOffTime * 1000)
+                }
 
-            /*int backOffTime = 0
-        while (response == null ) { // || response.getStatusLine().statusCode == 429) {
-            if (backOffTime != 0) {
-                log.info("Bulk indexing request to ElasticSearch was throttled (http 429) waiting $backOffTime seconds before retry.")
-                Thread.sleep(backOffTime * 1000)
+                httpConnection.sendRequest(path, method, contentType, body, null, null)
+                response = httpConnection.responseData
+
+                if (backOffTime == 0)
+                    backOffTime = 1
+                else
+                    backOffTime *= 2
             }
-
-            path = elasticHosts[0] + path // TEMP! USE ALL HOSTS!
-
-            response = httpConnection.sendRequest(path, method, contentType, body, null, null)
-
-            if (backOffTime == 0)
-                backOffTime = 1
-            else
-                backOffTime *= 2
-        }*/
         } finally {
             httpConnectionEntry.inUse.set(false)
         }
