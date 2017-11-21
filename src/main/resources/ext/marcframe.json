@@ -4149,7 +4149,7 @@
     },
     "083": {
       "aboutEntity": "?work",
-      "addLink": "additionalClassification",
+      "addLink": "additionalClassificationDdc",
       "resourceType": "ClassificationDdc",
       "include": ["classification-ddc"],
       "$c": {"ignored": true, "NOTE:record-count": 1, "NOTE:local": "Används normalt ej"},
