@@ -4168,7 +4168,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "additionalClassification": [
+              "additionalClassificationDdc": [
                 {
                   "@type": "ClassificationDdc",
                   "edition": "full",
