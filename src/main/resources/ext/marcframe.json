@@ -70,6 +70,56 @@
         "p": "marc:IncreaseInEncodingLevelFromPrepublication",
         "s": "marc:DeletedHeadingSplitIntoTwoOrMoreHeading",
         "x": "marc:DeletedHeadingReplacedByAnotherHeading"
+      },
+      "EncLevelType": {
+        "1": "marc:FullLevelMaterialNotExamined",
+        "2": "marc:LessThanFullLevelMaterialNotExamined",
+        "3": "marc:AbbreviatedLevel",
+        "4": "marc:CoreLevel",
+        "5": "marc:PartialPreliminaryLevel",
+        "7": "marc:MinimalLevel",
+        "8": "marc:PrepublicationLevel",
+        "_": "marc:FullLevel",
+        "e": "marc:SystemIdentifiedMarcErrorInABatchloadedRecordLocal",
+        "i": "marc:FullLevelInputByOclcParticipantsLocal",
+        "j": "marc:DeletedRecordLocal",
+        "k": "marc:LessThanFullLevelInputByOclcParticipantsLocal",
+        "l": "marc:FullLevelInputAddedFromABatchProcessLocal",
+        "m": "marc:LessThanFullLevelInputAddedFromABatchProcessLocal"
+      },
+      "AuthorityEncLevelType": {
+        "n": "marc:CompleteAuthorityRecord",
+        "o": "marc:IncompleteAuthorityRecord"
+      },
+      "HoldingEncLevelType": {
+        "1": "marc:HoldingsLevel1",
+        "2": "marc:HoldingsLevel2",
+        "3": "marc:HoldingsLevel3",
+        "4": "marc:HoldingsLevel4",
+        "5": "marc:HoldingsLevel4WithPieceDesignation",
+        "m": "marc:MixedLevels",
+        "z": "marc:OtherLevel"
+      },
+      "HoldingType": {
+        "v": "marc:MultipartItemHolding",
+        "x": "marc:SinglePartItemHolding",
+        "y": "marc:SerialItemHolding"
+      },
+      "PublicationStatusType": {
+        "b": "marc:NoDatesGivenBCDateInvolved",
+        "c": "marc:ContinuingResourceCurrentlyPublished",
+        "d": "marc:ContinuingResourceCeasedPublication",
+        "e": "marc:DetailedDate",
+        "i": "marc:InclusiveDatesOfCollection",
+        "k": "marc:RangeOfYearsOfBulkOfCollection",
+        "m": "marc:MultipleDates",
+        "n": "marc:DatesUnknown",
+        "p": "marc:DateOfDistributionReleaseIssueAndProductionRecordingSessionWhenDifferent",
+        "q": "marc:QuestionableDate",
+        "r": "marc:ReprintReissueDateAndOriginalDate",
+        "s": "marc:SingleKnownDateProbableDate",
+        "t": "marc:PublicationDateAndCopyrightDate",
+        "u": "marc:ContinuingResourceStatusUnknown"
       }
     },
 
@@ -135,7 +185,7 @@
   "postProcessing": [
     {
       "type": "SetUpdatedStatus",
-      "statusFlag": "marc:status",
+      "statusFlag": "recordStatus",
       "statusFlagNewValue": "marc:New",
       "statusFlagUpdatedValue": "marc:CorrectedOrRevised",
       "dateProperty": "created",
@@ -145,7 +195,7 @@
           "source": {
             "created": "2015-02-18T00:00:00Z",
             "modified": "2015-02-18T00:00:00Z",
-            "marc:status": {"@id": "marc:New"}
+            "recordStatus": "marc:New"
           },
           "result": {
             "created": "2015-02-18T00:00:00Z",
@@ -157,7 +207,7 @@
           "source": {
             "created": "2015-02-18T00:00:00Z",
             "modified": "2015-02-18T00:00:01Z",
-            "marc:status": {"@id": "marc:New"}
+            "recordStatus": "marc:New"
           },
           "result": {
             "created": "2015-02-18T00:00:00Z",
@@ -166,15 +216,15 @@
           "back": {
             "created": "2015-02-18T00:00:00Z",
             "modified": "2015-02-18T00:00:01Z",
-            "marc:status": {"@id": "marc:CorrectedOrRevised"}
+            "recordStatus": "marc:CorrectedOrRevised"
           }
         },
         {
           "source": {
-            "marc:status": null
+            "recordStatus": null
           },
           "result": {
-            "marc:status": null
+            "recordStatus": null
           },
           "back": true
         }
@@ -1272,7 +1322,7 @@
         "_spec": [
           {
             "source": {
-              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
               "marc:publishedYear": "1977"
             },
             "result": {
@@ -1281,7 +1331,7 @@
           },
           {
             "source": {
-              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
               "marc:publishedYear": "1977",
               "publication": [ {"@type": "Publication", "date": "1977"} ]
             },
@@ -1291,12 +1341,12 @@
           },
           {
             "source": {
-              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
               "marc:publishedYear": "1977",
               "publication": [ {"@type": "Publication", "date": "ca 1977"} ]
             },
             "result": {
-              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
               "marc:publishedYear": "1977",
               "publication": [
                 {
@@ -1309,7 +1359,7 @@
           {
             "source": {
               "@type": "ManuscriptText",
-              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
               "marc:publishedYear": "1977"
             },
             "result": {
@@ -1327,12 +1377,12 @@
           },
           {
             "source": {
-              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
               "marc:publishedYear": "1977",
               "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
             },
             "result": {
-              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
               "marc:publishedYear": "1977",
               "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
             }
@@ -1358,7 +1408,7 @@
         "_spec": [
           {
             "source": {
-              "marc:publicationStatus": {"@id": "marc:ContinuingResourceCurrentlyPublished"},
+              "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
               "marc:publishedYear": "1977",
               "marc:otherYear": "9999"
             },
@@ -1379,7 +1429,7 @@
         "_spec": [
           {
             "source": {
-              "marc:publicationStatus": {"@id": "marc:ContinuingResourceCeasedPublication"},
+              "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
               "marc:publishedYear": "1977",
               "marc:otherYear": "2017"
             },
@@ -1394,8 +1444,7 @@
     "000": {
       "[5:6]": {
         "aboutEntity": "?record",
-        "link": "marc:status",
-        "uriTemplate": "{_}",
+        "property": "recordStatus",
         "tokenMap": "StatusType"
       },
       "[6:7]": {
@@ -1425,8 +1474,7 @@
       },
       "[17:18]": {
         "aboutEntity": "?record",
-        "link": "marc:encLevel",
-        "uriTemplate": "{_}",
+        "property": "encodingLevel",
         "tokenMap": "EncLevelType"
       },
       "[18:19]": {
@@ -1458,7 +1506,7 @@
           "result": {
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
-            "marc:status": {"@id": "marc:CorrectedOrRevised"},
+            "recordStatus": "marc:CorrectedOrRevised",
             "descriptionConventions": [{"@id": "marc:Aacr2"}],
             "controlNumber": "0000000",
             "mainEntity": {
@@ -1478,7 +1526,7 @@
           "result": {
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
-            "marc:status": {"@id": "marc:CorrectedOrRevised"},
+            "recordStatus": "marc:CorrectedOrRevised",
             "descriptionConventions": [
               {"@id": "marc:Isbd"},
               {"@type": "DescriptionConventions", "code": "rda"}
@@ -2619,8 +2667,7 @@
         "parseDateTime": "yyMMdd", "timeZone": "CET"
       },
       "[6:7]": {
-        "link": "marc:publicationStatus",
-        "uriTemplate": "{_}",
+        "property": "marc:publicationStatus",
         "tokenMap": "PublicationStatusType"
       },
       "[7:11]": {
@@ -3168,7 +3215,7 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
-              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
               "marc:publishedYear":  "1977",
               "publicationCountry": [{"@id": "https://id.kb.se/country/sw"}],
               "instanceOf": {
@@ -3192,7 +3239,7 @@
             "marc:catalogingSource": {"@id": "marc:CooperativeCatalogingProgram"},
             "mainEntity": {
               "marc:publishedYear": "1995",
-              "marc:publicationStatus": {"@id": "marc:SingleKnownDateProbableDate"},
+              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
               "publicationCountry": [{"@id": "https://id.kb.se/country/fr"}],
               "instanceOf": {
                 "@type": "Text",
@@ -10551,9 +10598,8 @@
       "[7:8]": null,
       "[17:18]": {
         "aboutEntity": "?record",
-        "link": "marc:encLevel",
-        "tokenMap": "AuthorityEncLevelType",
-        "uriTemplate": "{_}"
+        "property": "encodingLevel",
+        "tokenMap": "AuthorityEncLevelType"
       },
       "TODO:[18:19]": "NEW: Punctuation policy",
       "_spec": [
@@ -10567,8 +10613,8 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "marc:encLevel": {"@id": "marc:CompleteAuthorityRecord"},
-            "marc:status": {"@id": "marc:CorrectedOrRevised"},
+            "encodingLevel": "marc:CompleteAuthorityRecord",
+            "recordStatus": "marc:CorrectedOrRevised",
             "mainEntity": { }
           },
           "addOnRevert": {
@@ -13366,14 +13412,12 @@
     "000": {
       "[5:6]": {
         "aboutEntity": "?record",
-        "link": "marc:status",
-        "uriTemplate": "{_}",
+        "property": "recordStatus",
         "tokenMap": "StatusType"
       },
       "[6:7]": {
         "aboutEntity": "?record",
-        "link": "marc:holdingType",
-        "uriTemplate": "{_}",
+        "property": "marc:holdingType",
         "tokenMap": "HoldingType"
       },
       "[7:8]": {
@@ -13392,8 +13436,7 @@
       },
       "[17:18]": {
         "aboutEntity": "?record",
-        "link": "marc:encLevel",
-        "uriTemplate": "{_}",
+        "property": "encodingLevel",
         "tokenMap": "HoldingEncLevelType"
       },
       "[18:19]": {
@@ -13420,9 +13463,9 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/hold/0000000",
             "controlNumber": "0000000",
-            "marc:encLevel": {"@id": "marc:HoldingsLevel1"},
-            "marc:status": {"@id": "marc:New"},
-            "marc:holdingType": {"@id": "marc:SinglePartItemHolding"},
+            "encodingLevel": "marc:HoldingsLevel1",
+            "recordStatus": "marc:New",
+            "marc:holdingType": "marc:SinglePartItemHolding",
             "mainEntity": {
               "@type": "Item",
               "@id": "http://libris.kb.se/resource/hold/0000000",
