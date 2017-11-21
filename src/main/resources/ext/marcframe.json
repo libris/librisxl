@@ -3231,6 +3231,7 @@
 
     "022": {
       "include": ["identifier"],
+      "TODO:aboutEntity": "?work",
       "resourceType": "ISSN",
       "i1": {
         "property": "marc:internationalInterest",
@@ -4905,7 +4906,7 @@
     },
 
     "222": {
-      "aboutEntity": "?thing",
+      "aboutEntity": "?work",
       "NOTE:domainIncludes": "Serial/Periodical",
       "addLink": "hasTitle",
       "embedded": true,
@@ -4922,12 +4923,15 @@
               {"b": "(Faridabad)"}
             ]}},
           "result": {"mainEntity": {
-            "hasTitle": [{
-              "@type": "KeyTitle",
-              "mainTitle": "Plant prot. bull.",
-              "qualifier": "(Faridabad)",
-              "marc:nonfilingChars" : "0"
-            }]
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [{
+                "@type": "KeyTitle",
+                "mainTitle": "Plant prot. bull.",
+                "qualifier": "(Faridabad)",
+                "marc:nonfilingChars" : "0"
+              }]
+            }
           }}
         }
       ]
@@ -6243,22 +6247,57 @@
 
     "440": {
       "TODO:ignoreOnRevertInFavourOf": "490 or 773 or 830? See also mapping for 240",
+      "ignoreOnRevertInFavourOf": "830",
+      "aboutEntity": "?work",
       "addLink": "hasSeries",
-      "embedded": true,
       "resourceType": "Serial",
-      "TOOO:i2": {},
-      "$a": {"property": "title", "punctuationChars": ".,=;", "required": true},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
-      "$n": {"addProperty": "numberOfPartOfAWork"},
-      "$p": {"addProperty": "nameOfPartOfAWork", "punctuationChars": ".,=;"},
-      "$w": {"addProperty": "bibliographicRecordControlNumber"},
+      "TODO:?aboutAlias": "_:work",
+      "aboutAlias": "_:work",
+      "include": "titledetails",
+      "pendingResources": {
+        "_:title": {
+          "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "i2": {"property": "marc:nonfilingChars"},
+      "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
+      "$d": {"addProperty": "legalDate"},
       "$v": {"property": "seriesEnumeration"},
+      "$w": {"property": "marc:bibliographicRecordControlNumber"},
       "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"}
+      "$8": {"property": "marc:groupid"},
+      "$9": {"addProperty": "marc:formOfNonfilingChars"},
+      "_spec": [
+        {
+          "source": {"440": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Kungl. Svenska vetenskapsakademiens handlingar,"},
+            {"x": "0023-5377"},
+            {"v": "N.F. 13:7"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasSeries": [
+                {
+                  "@type": "Serial",
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar"
+                  } ],
+                  "seriesEnumeration": "N.F. 13:7",
+                  "issn": "0023-5377",
+                  "marc:nonfilingChars" : " "
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "490": {
-      "inherit": "440",
       "TOOO:i1": {"when: 8xx[$t] | 830": "1", "else": "0"},
       "TODO:allowSpillOverOnRevert": "800-830",
       "i2": null,
@@ -9777,15 +9816,14 @@
       "$3": {"property": "marc:materialsSpecified"}
     },
 
-    "760": {"NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSeries", "resourceType": "Instance"},
-    "762": {"NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSubseries", "resourceType": "Instance"},
+    "760": {"aboutEntity": "?work", "NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSeries", "resourceType": "Instance"},
+    "762": {"aboutEntity": "?work","NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSubseries", "resourceType": "Instance"},
     "765": {"inherit": "772", "addLink": "translationOf"},
     "767": {"inherit": "772", "addLink": "translation"},
     "770": {"inherit": "772", "addLink": "supplement"},
     "772": {
       "addLink": "supplementTo",
       "resourceType": "Work",
-      "TODO:?aboutEntity": "?work",
       "aboutAlias": "_:supplementTo",
       "pendingResources": {
         "_:contribution": {
@@ -9932,6 +9970,7 @@
     },
     "780": {
       "inherit": "772",
+      "aboutEntity": "?work",
       "addLink": "precededBy",
       "resourceType": "Work",
       "match": [
@@ -9951,16 +9990,19 @@
             {"t": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"}
           ]}},
           "result": {"mainEntity": {
-            "continues": [
-              {
-                "@type": "Work",
-                "marc:toDisplayNote": true,
-                "hasTitle": [{
-                  "@type": "Title",
-                  "title": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
-                }]
-              }
-            ]
+            "instanceOf": {
+              "@type": "Text",
+              "continues": [
+                {
+                  "@type": "Work",
+                  "marc:toDisplayNote": true,
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "title": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
+                  }]
+                }
+              ]
+            }
           }}
         },
         {
@@ -9968,21 +10010,25 @@
             {"t": "Bulletin mensuel"}
           ]}},
           "result": {"mainEntity": {
-            "precededBy": [
-              {
-                "@type": "Work",
-                "hasTitle": [{
-                  "@type": "Title",
-                  "title": "Bulletin mensuel"
-                }]
-              }
-            ]
+            "instanceOf": {
+              "@type": "Text",
+              "precededBy": [
+                {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "title": "Bulletin mensuel"
+                  }]
+                }
+              ]
+            }
           }}
         }
       ]
     },
     "785": {
       "inherit": "780",
+      "aboutEntity": "?work",
       "addLink": "succeededBy",
       "resourceType": "Work",
       "match": [
@@ -10004,20 +10050,23 @@
             {"x": "1937-6545"}
           ]}},
           "result": {"mainEntity": {
-            "continuedBy": [
-              {
-                "@type": "Work",
-                "hasTitle": [{
-                  "@type": "Title",
-                  "title": "Naysprayer"
-                }],
-                "identifiedBy": [{
-                  "@type": "ISSN",
-                  "value": "1937-6545"
-                }],
-                "marc:toDisplayNote": true
-              }
-            ]
+            "instanceOf": {
+              "@type": "Text",
+              "continuedBy": [
+                {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "title": "Naysprayer"
+                  }],
+                  "identifiedBy": [{
+                    "@type" : "ISSN",
+                    "value" : "1937-6545"
+                  }],
+                  "marc:toDisplayNote": true
+                }
+              ]
+            }
           }}
         }
       ]
