@@ -3916,8 +3916,8 @@
       "aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "ClassificationLcc",
-      "TOOO:i1": {},
-      "TOOO:i2": {},
+      "i1": {"property": "marc:existenceInLCCollection"},
+      "i2": {"property": "marc:assignedByLC", "tokenMap": {"0": true, "4": false}},
       "$a": {"property": "code", "TODO:repeatable": true},
       "$b": {"property": "itemPortion"},
       "$6": {"property": "marc:fieldref"}
