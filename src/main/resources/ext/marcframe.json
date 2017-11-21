@@ -10793,6 +10793,10 @@
         "TODO": "parseDateTimeUsingFormatHints",
         "$f": {"property": "birthDate"},
         "$g": {"property": "deathDate"},
+        "$q": {"property": "establishDate"},
+        "$r": {"property": "terminateDate"},
+        "$s": {"property": "activityStartDate"},
+        "$t": {"property": "activityEndDate"},
         "$2": {"property": "marc:sourceOfDateScheme"},
         "TODO:edtf": "?"
     },
