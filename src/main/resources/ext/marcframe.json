@@ -3521,10 +3521,24 @@
       ]
     },
 
-    "025": {"NOTE:record-count": 1170, "ignored": true},
-
-    "026": {"NOTE:record-count": 159, "ignored": true},
-
+    "025": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "include": ["idbase"],
+      "resourceType": "LcOverseasAcq",
+      "$a": {"property": "value"}
+    },
+    "026": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "include": ["idbase"],
+      "resourceType": "Fingerprint",
+      "$a": {"property": "value"},
+      "$b": {"property": "marc:thirdAndFourthGroupsOfCharacters"},
+      "$c": {"property": "date"},
+      "$d": {"addProperty": "marc:numberOfVolumeOrPart"},
+      "$e": {"property": "marc:unparsedFingerprint"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "label"},
+      "$5": {"property": "marc:institutionToWhichFieldApplies"}
+    },
     "027": {
       "include": ["identifier"],
       "resourceType": "STRN"
@@ -6823,10 +6837,26 @@
     },
     "545": {
       "aboutEntity": "?thing",
-      "addLink": "hasNote",
-      "resourceType": "marc:BiographicalOrHistoricalData",
-      "TODO:i1": "'0': BiographicalDataNote, '1': AdministrativeHistoryNote",
-      "$a": {"property": "label"}
+      "match": [
+        {
+          "when": "i1= ",
+          "addLink": "hasBiographicalOrHistoricalData",
+          "resourceType": "BiographicalOrHistoricalData"
+        },
+        {
+          "when": "i1=0",
+          "addLink": "hasBiographicalInformation",
+          "resourceType": "BiographicalDataNote"
+        },
+        {
+          "when": "i2=1",
+          "addLink": "hasHistoricalData",
+          "resourceType": "AdministrativeHistoryNote"
+        }
+      ],
+      "$a": {"property": "label"},
+      "$b": {"property": "description"},
+      "$u": {"property": "uri"}
     },
     "546": {"aboutEntity": "?work", "$a": {"addProperty": "languageNote"}, "$6": {"property": "marc:fieldref"}},
     "547": {
@@ -10871,9 +10901,10 @@
     },
     "043" : {
       "$a": {
-        "link": "nationality",
+        "addLink": "nationality",
         "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "code"
-      }
+      },
+    "repeatable": false
     },
     "045" : {
       "$a": {"property": "temporalCoverage", "tokenMap": "timePeriod", "TODO": "This is the EDTF value table from the LoC BF2 converter, not the readable form. Might be better as linked resources with with both labels and codes."}
@@ -13093,6 +13124,9 @@
     "677": {"ignored": true, "NOTE:record-count": 1},
     "678": {"inherit": "bib:545"},
     "680": {
+      "addLink": "hasNote",
+      "resourceType": "Note",
+      "$a": {"addProperty": "marc:headingOrSubdivisionTerm"},
       "$i": {"addProperty": "scopeNote"}
     },
     "681": {"ignored": true, "NOTE:record-count": 0},
