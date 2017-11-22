@@ -39,7 +39,6 @@ class ElasticSearch {
     JsonLdLinkExpander expander
 
     private static final ObjectMapper mapper = new ObjectMapper()
-    private static final Random random = new Random()
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex,
                     JsonLdLinkExpander expander=null) {
@@ -53,7 +52,7 @@ class ElasticSearch {
         this.defaultIndex = elasticIndex
         this.expander = expander
         for (int i = 0; i < CONNECTION_POOL_SIZE; ++i) {
-            String host = elasticHosts[ random.nextInt() % elasticHosts.size() ]
+            String host = elasticHosts[ i % elasticHosts.size() ]
             httpConnectionPool.add(new ConnectionPoolEntry(new LongTermHttpConnection(host)))
         }
         log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes and $CONNECTION_POOL_SIZE workers."
