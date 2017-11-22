@@ -6246,12 +6246,9 @@
     "411": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
 
     "440": {
-      "TODO:ignoreOnRevertInFavourOf": "490 or 773 or 830? See also mapping for 240",
       "ignoreOnRevertInFavourOf": "830",
-      "aboutEntity": "?work",
       "addLink": "hasSeries",
       "resourceType": "Serial",
-      "TODO:?aboutAlias": "_:work",
       "aboutAlias": "_:work",
       "include": "titledetails",
       "pendingResources": {
@@ -6277,32 +6274,62 @@
             {"x": "0023-5377"},
             {"v": "N.F. 13:7"}
           ]}},
+          "normalized": {"830": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Kungl. Svenska vetenskapsakademiens handlingar,"},
+            {"x": "0023-5377"},
+            {"v": "N.F. 13:7"}
+          ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasSeries": [
-                {
-                  "@type": "Serial",
-                  "hasTitle": [ {
-                    "@type": "Title",
-                    "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar"
-                  } ],
-                  "seriesEnumeration": "N.F. 13:7",
-                  "issn": "0023-5377",
-                  "marc:nonfilingChars" : " "
-                }
-              ]
-            }
+            "hasSeries": [
+              {
+                "@type": "Serial",
+                "hasTitle": [ {
+                  "@type": "Title",
+                  "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar"
+                } ],
+                "seriesEnumeration": "N.F. 13:7",
+                "issn": "0023-5377",
+                "marc:nonfilingChars" : " "
+              }
+            ]
           }}
         }
       ]
     },
     "490": {
+<<<<<<< HEAD
       "TOOO:i1": {"when: 8xx[$t] | 830": "1", "else": "0"},
       "TODO:allowSpillOverOnRevert": "800-830",
+=======
+      "i1": {"property": "marc:seriesTracingPolicy"},
+>>>>>>> Update bib 490 and 440 and change bib 830 to aboutEntity to Instance
       "i2": null,
-      "TODO:ignoreOnRevertInFavourOf": "773?",
-      "$l": {"link": "callno", "resourceType": "Concept", "property": "code"}
+      "addLink": "hasSeries",
+      "resourceType": "Serial",
+      "$a": {"addProperty": "seriesStatement"},
+      "$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
+      "$v": {"property": "seriesEnumeration"},
+      "$w": {"property": "marc:bibliographicRecordControlNumber"},
+      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
+      "$9": {"addProperty": "marc:formOfNonfilingChars"},
+      "_spec": [
+        {
+          "source": {"490": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Wiley classics library"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Serial",
+                "seriesStatement": ["Wiley classics library"],
+                "marc:seriesTracingPolicy": "0"
+              }
+            ]
+          }}
+        }
+      ]
     },
 
     "500": {
@@ -10538,7 +10565,6 @@
       ]
     },
     "830": {
-      "aboutEntity": "?work",
       "addLink": "hasSeries",
       "resourceType": "Serial",
       "aboutAlias": "_:work",
@@ -10565,21 +10591,18 @@
             {"v": "2002/1"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasSeries": [
-                {
-                  "@type": "Serial",
-                  "hasTitle": [ {
-                    "@type": "Title",
-                    "mainTitle": "Europarecht (Munich, germany)",
-                    "partName": ["Beiheft"]
-                  } ],
-                  "seriesEnumeration": "2002/1",
-                  "marc:nonfilingChars" : "0"
-                }
-              ]
-            }
+            "hasSeries": [
+              {
+                "@type": "Serial",
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Europarecht (Munich, germany)",
+                  "partName": ["Beiheft"]
+                }],
+                "seriesEnumeration": "2002/1",
+                "marc:nonfilingChars" : "0"
+              }
+            ]
           }}
         },
         {
@@ -10589,6 +10612,7 @@
             {"x": "0169-9962"}
           ]}},
           "result": {"mainEntity": {
+<<<<<<< HEAD
             "instanceOf": {
               "@type": "Text",
               "hasSeries": [
@@ -10607,6 +10631,20 @@
                 }
               ]
             }
+=======
+            "hasSeries": [
+              {
+                "@type": "Serial",
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Studies on the texts of the desert of Judah,"
+                }],
+                "seriesEnumeration": "101",
+                "issn": "0169-9962",
+                "marc:nonfilingChars" : "4"
+              }
+            ]
+>>>>>>> Update bib 490 and 440 and change bib 830 to aboutEntity to Instance
           }}
         }
       ]
