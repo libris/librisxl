@@ -13383,16 +13383,16 @@
         "sourceLink": "itemOf",
         "sourceProperty": "@type",
         "targetEntity": "?record",
-        "targetProperty": "holdingType",
+        "targetProperty": "marc:holdingType",
         "valueMap": {
-          "ComponentPart": {"@id": "marc:SinglePartItemHolding"},
-          "Collection": {"@id": "marc:SinglePartItemHolding"},
-          "SubCollection": {"@id": "marc:SinglePartItemHolding"},
-          "Monograph": {"@id": "marc:SinglePartItemHolding"},
-          "SerialComponentPart": {"@id": "marc:SerialItemHolding"},
-          "Integrating": {"@id": "marc:SerialItemHolding"},
-          "Serial": {"@id": "marc:SerialItemHolding"},
-          "?": {"@id": "marc:MultipartItemHolding"},
+          "ComponentPart": "marc:SinglePartItemHolding",
+          "Collection": "marc:SinglePartItemHolding",
+          "SubCollection": "marc:SinglePartItemHolding",
+          "Monograph": "marc:SinglePartItemHolding",
+          "SerialComponentPart": "marc:SerialItemHolding",
+          "Integrating": "marc:SerialItemHolding",
+          "Serial": "marc:SerialItemHolding",
+          "?": "marc:MultipartItemHolding",
           "Periodical": null
         },
         "_spec": [
@@ -13405,7 +13405,7 @@
               }
             },
             "result": {
-              "holdingType": {"@id": "marc:SinglePartItemHolding"},
+              "marc:holdingType": "marc:SinglePartItemHolding",
               "mainEntity": {
                 "itemOf": {
                   "@type": "Monograph"
