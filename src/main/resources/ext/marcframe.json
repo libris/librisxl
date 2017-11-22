@@ -3581,10 +3581,15 @@
       "resourceType": "CODEN"
     },
 
-    "031": {"NOTE:record-count": 16, "ignored": true},
+    "031": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
 
-    "032": {"NOTE:record-count": 625, "ignored": true},
-
+    "032": {
+      "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "include": ["idbase"],
+      "resourceType": "PostalRegistration",
+      "$a": {"property": "value"},
+      "$b": {"link": "source", "resourceType": "Source", "property": "label"}
+  },
     "033": {
       "NOTE:record-count": 852,
       "TODO:revert": "To ensure 033 and 518 will not be mixed up when reverting",
