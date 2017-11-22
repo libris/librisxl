@@ -2022,7 +2022,7 @@
           "c": "Electronic",
           "d": "Globe",
           "f": "Tactile",
-          "g": "ProjectedImage",
+          "g": "ProjectedImageInstance",
           "h": "Microform",
           "k": "StillImageInstance",
           "m": "MovingImageInstance",
@@ -2163,7 +2163,7 @@
         "fixedDefault": " "
         }
       },
-      "TactileMaterial": {
+      "Tactile": {
         "[1:2]": {
           "TODO:layout": "Also more general mapping? Ensure that reconverting are able to handle this",
           "addLink": "layout",
@@ -2214,7 +2214,7 @@
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         }
       },
-      "ProjectedImage": {
+      "ProjectedImageInstance": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
@@ -2313,7 +2313,7 @@
         "fixedDefault": " "
         }
       },
-      "StillImage": {
+      "StillImageInstance": {
         "[1:2]": {
           "addLink": "genreForm",
           "uriTemplate": "{_}",
@@ -2343,7 +2343,7 @@
         "fixedDefault": " "
         }
       },
-      "MovingImage": {
+      "MovingImageInstance": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
@@ -2433,14 +2433,14 @@
           "fixedDefault": " "
         }
       },
-      "Kit": {
+      "KitInstance": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "KitMaterialType"
         }
       },
-      "NotatedMusic": {
+      "NotatedMusicInstance": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
@@ -2575,7 +2575,7 @@
         "fixedDefault": " "
         }
       },
-      "Text": {
+      "TextInstance": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
