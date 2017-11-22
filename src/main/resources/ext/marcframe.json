@@ -4096,8 +4096,8 @@
       "aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "ClassificationNlm",
-      "TOOO:i1": {},
-      "TOOO:i2": {},
+      "i1": {"property": "marc:existenceInNlmCollection"},
+      "i2": {"property": "marc:assignedByNlm", "tokenMap": {"0": true, "4": false}},
       "$a": {"property": "code"},
       "$b": {"property": "itemPortion", "ignored": true}
     },
@@ -4124,10 +4124,18 @@
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Concept",
-      "TOOO:i2": {},
+      "i2": {
+        "link": "source",
+        "resourceType": "Source",
+        "property": "code",
+        "tokenMap": {
+          "0": "NAL"
+        },
+        "definedElsewhereToken": "7"
+      },
       "$a": {"property": "label"},
       "$x": {"link": "inCollection", "property": "label"},
-      "$2": {"link": "source", "property": "code"}
+      "$2": {"requires-i2": "7", "link": "source", "resourceType": "Source", "property": "code"}
     },
 
     "074": {
