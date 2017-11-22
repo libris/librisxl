@@ -160,6 +160,9 @@ $ vim secret.properties
 
 ### Setting up Elasticsearch
 
+TODO: This is now generated! This step can probably be omitted. (See the devops
+repo or the setup-dev-whelk.sh script for details.)
+
 Create index and mappings:
 
 ```
@@ -234,9 +237,6 @@ $ java -Dxl.secret.properties=../secret.properties \
      vcopyloadexampledata ../librisxl-tools/scripts/example_records.tsv
 ```
 
-**NOTE:**
-On Windows, instead of installing modules through the `requirements.txt`-file, install the modules listed in it separately (apart from psycopg2). Download the psycopg2.whl-file that matches your OS from http://www.lfd.uci.edu/~gohlke/pythonlibs/#psycopg and pip install it.
-
 ## Maintenance
 
 ### Automated setup
@@ -261,6 +261,24 @@ E.g.:
 $ ./librisxl-tools/scripts/setup-dev-whelk.sh -n whelk_dev \
      -C postgres -D whelk -F
 ```
+
+### Development Workflow
+
+If you need to work locally (e.g. in this, the "whelk-core" or the
+"definitions" repo) and perform specific tests, you can use this workflow:
+
+```
+$ (cd ../definitions && .venv/bin/python datasets.py -l)
+$ (cd importers/ && gradle jar -DuseLocalDeps)
+$ ./librisxl-tools/scripts/setup-dev-whelk.sh -n whelk_dev
+```
+
+Important: ensure the name of the whelk (here "whelk_dev") is the same as the
+one configured in your local ./secret.properties config file.
+
+Explanation: Since we don't use -F to force rebuilding data and the importer,
+the first two commands do that. Depending on what you're doing, you can omit
+either one (or both if you're developing in this, the librisxl repo.)
 
 ### Clearing out existing definitions
 
@@ -296,3 +314,12 @@ all data again (even locally).)
 
 If the MARC conversion process has been updated and needs to be run anew, the only
 option is to reload the data from vcopy using the importers application.
+
+### Statistics
+
+Produce a stats file (here for bib) by running:
+
+```
+$ cd importers && gradle build
+$ RECTYPE=bib && time java -Dxl.secret.properties=../secret.properties -Dxl.mysql.properties=../mysql.properties -jar build/libs/vcopyImporter.jar vcopyjsondump $RECTYPE | grep '^{' | pypy ../librisxl-tools/scripts/get_marc_usage_stats.py $RECTYPE /tmp/usage-stats-$RECTYPE.json
+```
