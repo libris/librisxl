@@ -175,7 +175,7 @@ class ElasticSearch {
         List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
         Map referencedData = whelk.bulkLoad(convertedExternalLinks, useDocumentCache)
                                   .collectEntries { id, doc -> [id, doc.data] }
-        whelk.jsonld.embellish(document.data, referencedData)
+        whelk.jsonld.embellish(document.data, referencedData, false)
 
         log.debug("Framing ${document.getShortId()}")
         Map framed = JsonLd.frame(document.getCompleteId(), JsonLd.THING_KEY, document.data)
