@@ -4101,8 +4101,8 @@
       "$a": {"property": "code"},
       "$b": {"property": "itemPortion", "ignored": true}
     },
-    "061": {"NOTE:record-count": 1, "ignored": true},
-    "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
+    "061": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "066": {"ignored": true, "NOTE:record-count": 4905, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
     "070": {
       "aboutEntity": "?work",
       "link": "marc:hasNationalAgriculturalLibraryCallNumber",
