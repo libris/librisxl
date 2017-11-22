@@ -3312,8 +3312,18 @@
       }
     },
 
-    "017": {"NOTE:record-count": 2408, "ignored": true},
-    "018": {"NOTE:record-count": 0, "ignored": true},
+    "017": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "include": ["idbase"],
+      "resourceType": "CopyrightNumber",
+      "i2": {"marcDefault": " "},
+      "$a": {"property": "value"},
+      "$b": {"link": "source", "resourceType": "Source", "property": "label"},
+      "$d": {"property": "date"},
+      "$i": {"property": "note"},
+      "$z": {"addProperty": "marc:hiddenValue"}
+    },
+    "018": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
 
     "020": {
       "include": ["identifier"],
