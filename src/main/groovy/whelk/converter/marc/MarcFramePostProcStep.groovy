@@ -43,7 +43,7 @@ class FoldLinkedPropertyStep extends MarcFramePostProcStepBase {
 
     void modify(Map record, Map thing) {
         def link = getLink(thing)
-        if (thing[statusFlag]?.get(ID) != statusFlagValue)
+        if (thing[statusFlag] != statusFlagValue)
             return
         def value = thing[sourceProperty]
         if (!(value instanceof String) || !matchValuePattern.matcher(value))
@@ -74,7 +74,7 @@ class FoldLinkedPropertyStep extends MarcFramePostProcStepBase {
             def value = object[property]
             if (!(value instanceof String) || !matchValuePattern.matcher(value))
                 continue
-            thing[statusFlag] = [(ID): statusFlagValue]
+            thing[statusFlag] = statusFlagValue
             thing[sourceProperty] = value
             break
         }
@@ -92,7 +92,7 @@ class FoldJoinedPropertiesStep extends MarcFramePostProcStepBase {
     String separator
 
     void modify(Map record, Map thing) {
-        if (thing[statusFlag]?.get(ID) != statusFlagValue)
+        if (thing[statusFlag] != statusFlagValue)
             return
         def values = []
         for (prop in sourceProperties) {
@@ -142,7 +142,7 @@ class SetUpdatedStatusStep implements MarcFramePostProcStep {
         def flagObj = record[statusFlag]
         if (flagObj == null)
             return
-        def flag = flagObj[ID]
+        def flag = flagObj
         if (flag == statusFlagNewValue || flag == statusFlagUpdatedValue) {
             record.remove(statusFlag)
         }
@@ -153,7 +153,7 @@ class SetUpdatedStatusStep implements MarcFramePostProcStep {
         def updatedValue = record[updatedProperty]
         def flag = (updatedValue > dateValue)? statusFlagUpdatedValue : statusFlagNewValue
         if (!record.containsKey(statusFlag)) {
-            record[statusFlag] = [(ID): flag]
+            record[statusFlag] = flag
         }
     }
 
