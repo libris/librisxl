@@ -3255,11 +3255,11 @@
     "010": {
       "include": ["identifier"],
       "resourceType": "LCCN",
-      "$b": {"property": "marc:numcNumber"},
+      "$b": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
       "$8": {"property": "marc:groupid"}
     },
 
-    "013": {"NOTE:record-count": 0, "ignored": true},
+    "013": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
 
     "015": {
       "include": ["idbase"],
