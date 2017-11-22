@@ -7275,6 +7275,13 @@
               {"x": "Criticism and interpretation"},
               {"x": "History"},
               {"y": "21st century."}]}},
+          "normalized": {
+            "600": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Mangunwijaya, Y. B."},
+              {"d": "1929-1999"},
+              {"x": "Criticism and interpretation"},
+              {"x": "History"},
+              {"y": "21st century."}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -7306,6 +7313,15 @@
           "source": {
             "600": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Scarlatti, Domenico,"},
+              {"d": "1685-1757"},
+              {"t": "Sonatas,"},
+              {"m": "harpsichord"},
+              {"n": "K. 492,"},
+              {"r": "D major;"},
+              {"y": "21st century."}]}},
+          "normalized": {
+            "600": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Scarlatti, Domenico"},
               {"d": "1685-1757"},
               {"t": "Sonatas,"},
               {"m": "harpsichord"},
@@ -7567,7 +7583,7 @@
           "normalized": {
             "610": {"ind1": "2", "ind2": "7", "subfields":[
               {"a": "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."},
-              {"k": " Manuscript."},
+              {"k": "Manuscript."},
               {"t": "Egentitel"},
               {"n": "Fond 1209"},
               {"p": "Pomestnyĭ prikaz"}]}
@@ -9555,6 +9571,13 @@
             {"a": "Gigue,"},
             {"m": "harpsichord,"},
             {"n": "GraunWV D:XVIII:11,"},
+            {"r": "B♭ minor"}
+          ]}},
+          "normalized": {"730": {"ind1": "3", "ind2": "2", "subfields": [
+            {"i": "Container of (work):"},
+            {"a": "Gigue,"},
+            {"m": "harpsichord,"},
+            {"n": "GraunWV D:XVIII:11"},
             {"r": "B♭ minor"}
           ]}},
           "result": {"mainEntity": {
