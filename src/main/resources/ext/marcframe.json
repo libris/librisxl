@@ -6948,8 +6948,8 @@
       "$3": {"property": "marc:materialsSpecified"},
       "$5": {"property": "marc:institutionToWhichFieldApplies"}
     },
-    "565": {"NOTE:record-count": 2, "ignored": true},
-    "567": {"NOTE:record-count": 0, "ignored": true},
+    "565": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "567": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "580": {
       "aboutEntity": "?work",
       "addLink": "hasNote",
