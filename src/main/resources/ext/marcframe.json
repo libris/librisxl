@@ -6903,9 +6903,15 @@
       "$a": {"property": "label"},
       "$c": {"property": "marc:degreeOfControl", "NOTE": "concatenate with $a", "NOTE:record-count": 2}
     },
-    "556": {"NOTE:record-count": 7,
-      "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
-      "$z": {"ignored": true}
+    "556": {
+      "ignoreOnRevertInFavourOf": "500",
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "Note",
+      "i1": {"ignored": true, "NOTE:lc": "ignore"},
+      "$a": {"property": "label"},
+      "$z": {"ignored": true, "NOTE:lc": "nac"},
+      "$6": {"property": "marc:fieldref"}
     },
     "561": {
       "addLink": "marc:hasOwnershipAndCustodialHistory",
