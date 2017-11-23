@@ -144,7 +144,7 @@ public class ResponseCommon
     }
 
     public static void emitRecord(ResultSet resultSet, XMLStreamWriter writer, String requestedFormat,
-                                  boolean onlyIdentifiers, boolean embellish)
+                                  boolean onlyIdentifiers, boolean embellish, boolean withDeletedData)
             throws SQLException, XMLStreamException, IOException
     {
         boolean deleted = resultSet.getBoolean("deleted");
@@ -204,7 +204,7 @@ public class ResponseCommon
 
         writer.writeEndElement(); // header
 
-        if (!onlyIdentifiers && !deleted)
+        if (!onlyIdentifiers && (!deleted || withDeletedData))
         {
             writer.writeStartElement("metadata");
             ResponseCommon.writeConvertedDocument(writer, requestedFormat, document);

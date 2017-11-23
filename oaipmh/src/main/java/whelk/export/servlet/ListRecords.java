@@ -21,6 +21,7 @@ public class ListRecords
     private final static String SET_PARAM = "set";
     private final static String RESUMPTION_PARAM = "resumptionToken";
     private final static String FORMAT_PARAM = "metadataPrefix";
+    private final static String DELETED_DATA_PARAM = "x-withDeletedData";
 
     private static final Counter failedRequests = Counter.build()
             .name("oaipmh_failed_listrecords_requests_total").help("Total failed ListRecords requests.")
@@ -44,8 +45,11 @@ public class ListRecords
         String resumptionToken = request.getParameter(RESUMPTION_PARAM); // exclusive, not supported/used
         String metadataPrefix = request.getParameter(FORMAT_PARAM); // required
 
+        // optional and not technically legal OAI-PMH
+        boolean withDeletedData = Boolean.parseBoolean(request.getParameter(DELETED_DATA_PARAM));
+
         if (ResponseCommon.errorOnExtraParameters(request, response,
-                FROM_PARAM, UNTIL_PARAM, SET_PARAM, RESUMPTION_PARAM, FORMAT_PARAM))
+                FROM_PARAM, UNTIL_PARAM, SET_PARAM, RESUMPTION_PARAM, FORMAT_PARAM, DELETED_DATA_PARAM))
             return;
 
         // We do not use resumption tokens.
@@ -106,7 +110,7 @@ public class ListRecords
             {
                 try
                 {
-                    respond(request, response, metadataPrefix, onlyIdentifiers, includeDependencies, resultSet);
+                    respond(request, response, metadataPrefix, onlyIdentifiers, includeDependencies, withDeletedData, resultSet);
                 }
                 catch (Throwable e)
                 {
@@ -121,7 +125,8 @@ public class ListRecords
     }
 
     private static void respond(HttpServletRequest request, HttpServletResponse response,
-                                String requestedFormat, boolean onlyIdentifiers, boolean embellish, ResultSet resultSet)
+                                String requestedFormat, boolean onlyIdentifiers, boolean embellish,
+                                boolean withDeletedData, ResultSet resultSet)
             throws IOException, XMLStreamException, SQLException
     {
         // Is the resultset empty?
@@ -146,7 +151,7 @@ public class ListRecords
 
         while (resultSet.next())
         {
-            ResponseCommon.emitRecord(resultSet, writer, requestedFormat, onlyIdentifiers, embellish);
+            ResponseCommon.emitRecord(resultSet, writer, requestedFormat, onlyIdentifiers, embellish, withDeletedData);
         }
 
         writer.writeEndElement(); // ListIdentifiers/ListRecords
