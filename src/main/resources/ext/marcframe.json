@@ -3426,7 +3426,7 @@
       },
       "$l": {"property": "marc:issnL"},
       "$m": {"addProperty": "marc:canceledIssnL"},
-      "$2": {"TODO:link": "typeNote"},
+      "$2": {"property": "marc:source"},
       "$y": {"TODO": "inherit:$z + specific: marc:incorrectIssn"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
