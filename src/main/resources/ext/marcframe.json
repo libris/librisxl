@@ -5390,7 +5390,7 @@
       "$f": {"property": "date"},
       "$g": {"property": "comment"},
       "$h": {"property": "marc:mediaTerm"},
-      "$x": {"addProperty": "issn"},
+      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "spec_": [
         {
           "source": {
@@ -5420,7 +5420,7 @@
               "mainTitle": "Customs and excise circular",
               "partNumber": "Part 2",
               "date": "1923-1925",
-              "issn": "0019-8536"
+              "identifiedBy": {"@type": "Identifier", "value": "0019-8536"}
             }]
           }}
         }
@@ -8427,7 +8427,7 @@
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
-      "$x": {"property": "issn"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "subfieldOrder": " i a b c q d j e u 4 t g m n p r s l k f o",
@@ -8806,8 +8806,8 @@
       "TODO:changed-remove?:computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
 
-      "$x": {"property": "issn"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "property": "label"},
       "$6": {"property": "marc:fieldref"},
@@ -9298,7 +9298,7 @@
           }
         }
       ],
-      "$x": {"property": "issn"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "i1": {"marcDefault": "2"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$j": {"addLink": "role", "property": "label"},
@@ -9502,7 +9502,7 @@
           "$d": {"property": "legalDate"},
           "$n": {"about": "_:title", "addProperty": "partNumber", "punctuationChars": ","},
           "$i": {"addLink": "marc:relatedAs", "resourceType": "Role", "property": "label"},
-          "$x": {"property": "issn", "punctuationChars": ".,=;"}
+          "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"}
         }
       ],
       "pendingResources": {
@@ -9517,7 +9517,7 @@
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"about": "_:work","property": "legalDate"},
       "$i": {"addLink": "relation", "resourceType": "Resource", "property": "label"},
-      "$x": {"about": "_:work","property": "issn", "punctuationChars": ".,=;"},
+      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
@@ -9807,12 +9807,12 @@
       },
       "$x": {
         "TODO:targetMatch": "022",
-        "property": "issn"
+        "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"
       },
       "$y": {"property": "coden", "TODO:targetMatch": "030"},
       "$z": {
         "TODO:targetMatch": "020",
-        "addProperty": "isbn"
+        "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"
       },
       "$6": {"property": "marc:fieldref"},
       "$7": {"property": "marc:controlSubfield"},
@@ -9833,7 +9833,10 @@
                   "@type": "Title",
                   "uniformTitle": "Main Thing"
                 }],
-                "isbn": ["00-0-000000-0"]
+                "identifiedBy": [{
+                  "@type": "ISBN",
+                  "value": "00-0-000000-0"
+                }]
               }
             ]
           }}
@@ -9977,7 +9980,10 @@
                   "@type": "Title",
                   "title": "Naysprayer"
                 }],
-                "issn": "1937-6545",
+                "identifiedBy": [{
+                  "@type": "ISSN",
+                  "value": "1937-6545"
+                }],
                 "marc:toDisplayNote": true
               }
             ]
@@ -10060,7 +10066,7 @@
       "$t": {"about": "_:title", "property": "mainTitle"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
-      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
@@ -10260,7 +10266,7 @@
       "$t": {"about": "_:title", "property": "mainTitle"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
-      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
@@ -10395,7 +10401,7 @@
       "$t": {"about": "_:title", "property": "mainTitle"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
-      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
@@ -10470,7 +10476,7 @@
       "$d": {"addProperty": "legalDate"},
       "$v": {"property": "seriesEnumeration"},
       "$w": {"property": "marc:bibliographicRecordControlNumber"},
-      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "i2": {"property": "marc:nonfilingChars"},
       "subfieldorder": "3 a d g h s m n p l r k f o v w x",
@@ -10516,7 +10522,10 @@
                     "mainTitle": "Studies on the texts of the desert of Judah,"
                   } ],
                   "seriesEnumeration": "101",
-                  "issn": "0169-9962",
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0169-9962"
+                  },
                   "marc:nonfilingChars" : "4"
                 }
               ]
