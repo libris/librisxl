@@ -6297,12 +6297,9 @@
       ]
     },
     "490": {
-<<<<<<< HEAD
       "TOOO:i1": {"when: 8xx[$t] | 830": "1", "else": "0"},
       "TODO:allowSpillOverOnRevert": "800-830",
-=======
       "i1": {"property": "marc:seriesTracingPolicy"},
->>>>>>> Update bib 490 and 440 and change bib 830 to aboutEntity to Instance
       "i2": null,
       "addLink": "hasSeries",
       "resourceType": "Serial",
@@ -10108,27 +10105,31 @@
       "inherit": "772",
       "addLink": "relatedTo"
     },
-
     "800": {
       "addLink": "hasSeries",
       "resourceType": "Serial",
       "TODO:aboutEntity?": "?series",
-      "TODO:revert": "Get mixed up with 440",
-      "TODO:include": "titledetails",
+      "include": ["titledetails", "contributionRole_4_e"],
       "pendingResources": {
+        "_:work": {
+          "link": "instanceOf",
+          "resourceType": "Work"
+        },
         "_:contribution": {
+          "about": "_:work",
           "addLink": "contribution",
-          "resourceType": "PrimaryContribution"
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        },
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
         },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Person",
           "required": true
-        },
-        "_:title": {
-          "addLink": "hasTitle", "resourceType": "Title",
-          "embedded": true
         }
       },
       "match": [
@@ -10138,39 +10139,29 @@
           "when": "i1=3",
           "include": "agentdataFamily",
           "pendingResources": {
+            "_:work": {
+              "link": "instanceOf",
+              "resourceType": "Work"
+            },
             "_:contribution": {
+              "about": "_:work",
               "addLink": "contribution",
-              "resourceType": "PrimaryContribution"
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:title": {
+              "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+              "embedded": true
             },
             "_:agent": {
               "about": "_:contribution",
               "link": "agent",
               "resourceType": "Family",
               "required": true
-            },
-            "_:title": {
-              "addLink": "hasTitle", "resourceType": "Title",
-              "embedded": true
             }
           }
         }
       ],
-      "include": ["contributionRole_4_e"],
-      "NOTE:titledetails": "Temporarily moved these locally!!",
-      "$f": {"about": "_:title", "property": "originDate"},
-      "$h": {"about": "_:title", "property": "marc:mediaTerm"},
-
-      "$m": {"addProperty": "musicMedium"},
-      "$o": {"about": "_:title", "property": "version"},
-
-      "$r": {"about": "_:title", "property": "musicKey"},
-      "$s": {"about": "_:title", "property": "marc:version"},
-
-      "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
-      "NOTE:k": "Should we map to bf2:natureOfContent instead?",
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"},
-
       "$t": {"about": "_:title", "property": "mainTitle"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
@@ -10191,20 +10182,23 @@
             "hasSeries": [
               {
                 "@type": "Serial",
-                "contribution": [{
-                  "@type": "PrimaryContribution",
-                  "agent": {
-                    "@type": "Person",
-                    "lifeSpan": "1924-",
-                    "familyName": "Sandemo",
-                    "givenName": "Margit"
-                  }
-                }],
-                "seriesEnumeration" : "v 4",
-                "hasTitle": [{
-                  "@type": "Title",
-                  "mainTitle": "Sandemo-serien ;"
-                }]
+                "instanceOf": {
+                  "@type": "Work",
+                  "contribution": [{
+                    "@type": "PrimaryContribution",
+                    "agent": {
+                      "@type": "Person",
+                      "lifeSpan": "1924-",
+                      "familyName": "Sandemo",
+                      "givenName": "Margit"
+                    }
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Sandemo-serien ;"
+                  }]
+                },
+                "seriesEnumeration" : "v 4"
               }
             ]
           }}
@@ -10219,22 +10213,25 @@
           "result": {"mainEntity": {
             "hasSeries": [{
               "@type": "Serial",
-              "contribution" : [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Person",
-                  "name": "Raymond Feist"
-                }
-              }],
-              "language": {
-                "@type": "Language",
-                "label": "Svenska"
+              "instanceOf": {
+                "@type": "Work",
+                "contribution" : [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Person",
+                    "name": "Raymond Feist"
+                  }
+                }],
+                "language": {
+                  "@type": "Language",
+                  "label": "Svenska"
+                },
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Demonwar saga."
+                }]
               },
-              "seriesEnumeration": "v 2",
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "Demonwar saga."
-              }]
+              "seriesEnumeration": "v 2"
             }]
           }}
         },
@@ -10250,23 +10247,26 @@
           "result": {"mainEntity": {
             "hasSeries": [{
               "@type": "Serial",
-              "contribution": [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Person",
-                  "familyName": "Sousa",
-                  "givenName": "John Philip",
-                  "lifeSpan": "1854-1932"
-                }
-              }],
-              "musicMedium": ["band."],
-              "seriesEnumeration": "v.1.",
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "Marches",
-                "marc:formSubheading": ["Selections (Sousa American bicentennial collection);"]
-              } ]
-            } ]
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Person",
+                    "familyName": "Sousa",
+                    "givenName": "John Philip",
+                    "lifeSpan": "1854-1932"
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Marches",
+                  "marc:formSubheading": ["Selections (Sousa American bicentennial collection);"]
+                }],
+                "musicMedium": ["band."]
+              },
+              "seriesEnumeration": "v.1."
+            }]
           }}
         },
         {
@@ -10277,17 +10277,20 @@
           "result": {"mainEntity": {
             "hasSeries": [{
               "@type": "Serial",
-              "contribution": [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Family",
-                  "name": "Family X"
-                }
-              }],
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "A title"
-              }]
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Family",
+                    "name": "Family X"
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "A title"
+                }]
+              }
             }]
           }}
         }
@@ -10297,9 +10300,7 @@
       "addLink": "hasSeries",
       "resourceType": "Serial",
       "TODO:aboutEntity?": "?series",
-      "TODO:revert": "Get mixed up with 440",
-      "include": ["agentdataOrganization", "contributionRole_4_e"],
-      "TODO:include": "titledetails",
+      "include": ["titledetails", "agentdataOrganization", "contributionRole_4_e"],
       "embedded": true,
       "pendingResources": {
         "_:contribution": {
@@ -10354,21 +10355,6 @@
           "include": "agentdataOrganizationSubUnit"
         }
       ],
-      "NOTE:titledetails": "Temporarily moved these locally!!",
-      "$f": {"about": "_:title", "property": "originDate"},
-      "$h": {"about": "_:title", "property": "marc:mediaTerm"},
-
-      "$m": {"addProperty": "musicMedium"},
-      "$o": {"about": "_:title", "property": "version"},
-
-      "$r": {"about": "_:title", "property": "musicKey"},
-      "$s": {"about": "_:title", "property": "marc:version"},
-
-      "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
-      "NOTE:k": "Should we map to bf2:natureOfContent instead?",
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"},
-
       "$t": {"about": "_:title", "property": "mainTitle"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
@@ -10565,13 +10551,14 @@
       ]
     },
     "830": {
+      "NOTE": "Temporarily move conversion/revert rules of 830 before 800/810/811? Otherwise 830 always reverts to 800/810/811, since have no 'contribution'",
       "addLink": "hasSeries",
       "resourceType": "Serial",
-      "aboutAlias": "_:work",
+      "aboutAlias": "_:hasSeries",
       "include": "titledetails",
       "pendingResources": {
         "_:title": {
-          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "about": "_:hasSeries", "addLink": "hasTitle", "resourceType": "Title",
           "embedded": true
         }
       },
@@ -10612,26 +10599,6 @@
             {"x": "0169-9962"}
           ]}},
           "result": {"mainEntity": {
-<<<<<<< HEAD
-            "instanceOf": {
-              "@type": "Text",
-              "hasSeries": [
-                {
-                  "@type": "Serial",
-                  "hasTitle": [ {
-                    "@type": "Title",
-                    "mainTitle": "Studies on the texts of the desert of Judah,"
-                  } ],
-                  "seriesEnumeration": "101",
-                  "identifiedBy": {
-                    "@type": "ISSN",
-                    "value": "0169-9962"
-                  },
-                  "marc:nonfilingChars" : "4"
-                }
-              ]
-            }
-=======
             "hasSeries": [
               {
                 "@type": "Serial",
@@ -10644,7 +10611,6 @@
                 "marc:nonfilingChars" : "4"
               }
             ]
->>>>>>> Update bib 490 and 440 and change bib 830 to aboutEntity to Instance
           }}
         }
       ]
