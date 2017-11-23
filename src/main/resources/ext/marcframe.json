@@ -4096,8 +4096,8 @@
       "aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "ClassificationNlm",
-      "TOOO:i1": {},
-      "TOOO:i2": {},
+      "i1": {"property": "marc:existenceInNlmCollection"},
+      "i2": {"property": "marc:assignedByNlm", "tokenMap": {"0": true, "4": false}},
       "$a": {"property": "code"},
       "$b": {"property": "itemPortion", "ignored": true}
     },
@@ -4124,10 +4124,18 @@
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Concept",
-      "TOOO:i2": {},
+      "i2": {
+        "link": "source",
+        "resourceType": "Source",
+        "property": "code",
+        "tokenMap": {
+          "0": "NAL"
+        },
+        "definedElsewhereToken": "7"
+      },
       "$a": {"property": "label"},
       "$x": {"link": "inCollection", "property": "label"},
-      "$2": {"link": "source", "property": "code"}
+      "$2": {"requires-i2": "7", "link": "source", "resourceType": "Source", "property": "code"}
     },
 
     "074": {
@@ -4137,10 +4145,20 @@
 
     "080": {
       "aboutEntity": "?work",
-      "TOOO:i1": {},
       "addLink": "classification",
       "resourceType": "ClassificationUdc",
+      "i1": {
+        "property": "edition",
+        "tokenMap": {
+          "0": "full",
+          "1": "abridged",
+          " ": "No information provided"
+        }
+      },
       "$a": {"property": "code"},
+      "$b": {"property": "marc:itemNumber"},
+      "$x": {"addProperty": "marc:commonAuxiliarySubdivision"},
+      "$2": {"property": "marc:editionIdentifier"},
       "_spec": [
         {
           "source": {
@@ -4151,7 +4169,7 @@
               "instanceOf": {
                 "@type": "Text",
                 "classification": [
-                  {"@type": "ClassificationUdc", "code": "030"}
+                  {"@type": "ClassificationUdc", "code": "030", "edition": "No information provided"}
                 ]
               }
             }
@@ -7257,6 +7275,13 @@
               {"x": "Criticism and interpretation"},
               {"x": "History"},
               {"y": "21st century."}]}},
+          "normalized": {
+            "600": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Mangunwijaya, Y. B."},
+              {"d": "1929-1999"},
+              {"x": "Criticism and interpretation"},
+              {"x": "History"},
+              {"y": "21st century."}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -7288,6 +7313,15 @@
           "source": {
             "600": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Scarlatti, Domenico,"},
+              {"d": "1685-1757"},
+              {"t": "Sonatas,"},
+              {"m": "harpsichord"},
+              {"n": "K. 492,"},
+              {"r": "D major;"},
+              {"y": "21st century."}]}},
+          "normalized": {
+            "600": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Scarlatti, Domenico"},
               {"d": "1685-1757"},
               {"t": "Sonatas,"},
               {"m": "harpsichord"},
@@ -7549,7 +7583,7 @@
           "normalized": {
             "610": {"ind1": "2", "ind2": "7", "subfields":[
               {"a": "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."},
-              {"k": " Manuscript."},
+              {"k": "Manuscript."},
               {"t": "Egentitel"},
               {"n": "Fond 1209"},
               {"p": "Pomestnyĭ prikaz"}]}
@@ -9537,6 +9571,13 @@
             {"a": "Gigue,"},
             {"m": "harpsichord,"},
             {"n": "GraunWV D:XVIII:11,"},
+            {"r": "B♭ minor"}
+          ]}},
+          "normalized": {"730": {"ind1": "3", "ind2": "2", "subfields": [
+            {"i": "Container of (work):"},
+            {"a": "Gigue,"},
+            {"m": "harpsichord,"},
+            {"n": "GraunWV D:XVIII:11"},
             {"r": "B♭ minor"}
           ]}},
           "result": {"mainEntity": {
@@ -14001,15 +14042,23 @@
     },
 
     "863": {
-      "addLink": "qualifiedEnumerationsAndChronologyNote",
+      "addLink": "hasNote",
+      "resourceType": "marc:QualifiedEnumerationsAndChronologyNote",
       "embedded": true,
-      "resourceType": "Note",
-      "TODO:i1": {},
-      "TODO:i2": {},
-      "$a": {"property": "label"},
+      "NOTE:?resourceType": "Note",
+      "i1": {"property": "marc:holdingsLevel"},
+      "i2": {"property": "marc:formOfHoldings"},
+      "$a": {"property": "marc:firstLevelOfEnumeration"},
+      "$b": {"property": "marc:secondLevelOfEnumeration"},
+      "$c": {"property": "marc:thirdLevelOfEnumeration"},
+      "$d": {"property": "marc:fourthLevelOfEnumeration"},
+      "$e": {"property": "marc:fifthLevelOfEnumeration"},
+      "$p": {"property": "marc:pieceDesignation"},
+      "$t": {"property": "marc:copyNumber"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"},
       "$8": {"property": "marc:groupid"},
+      "$9": {"addProperty": "organizationalUnit"},
       "repeatable": true
     },
     "864": {"ignored": true, "NOTE:record-count": 6, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"}, 
