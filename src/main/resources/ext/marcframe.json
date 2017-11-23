@@ -6881,7 +6881,15 @@
       "$b": {"property": "description"},
       "$u": {"property": "uri"}
     },
-    "546": {"aboutEntity": "?work", "$a": {"addProperty": "languageNote"}, "$6": {"property": "marc:fieldref"}},
+    "546": {
+      "aboutEntity": "?work",
+      "addLink": "marc:hasLanguageNote",
+      "resourceType": "marc:LanguageNote",
+      "$a": {"property": "label"},
+      "$b": {"addProperty": "marc:informationCodeOrAlphabet"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$6": {"property": "marc:fieldref"}
+    },
     "547": {
       "aboutEntity": "?thing",
       "addLink": "hasNote",
@@ -6890,9 +6898,10 @@
     },
 
     "550": {
+      "aboutEntity": "?thing",
       "addLink": "marc:hasIssuingBodyNote",
       "resourceType": "marc:IssuingBodyNote",
-      "$a": {"property": "marc:issuingBodyNote"},
+      "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
     "552": {"NOTE:record-count": 2, "ignored": true},
