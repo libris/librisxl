@@ -6954,11 +6954,11 @@
     "581": {
       "aboutEntity": "?thing",
       "addLink": "hasNote",
-      "resourceType": "marc:PublicationsAboutDescribedMaterialsNote",
-      "$a": {"property": "marc:publicationsAboutDescribedMaterialsNote"},
-      "$z": {"property": "marc:internationalStandardBookNumber"},
-      "$3": {"property": "marc:materialsSpecified"},
-      "NOTE:i1": "ignore"
+      "resourceType": "RelatedMaterialNote",
+      "i1": {"ignored": true, "NOTE:LC": "nac"},
+      "$a": {"property": "label"},
+      "$z": {"addproperty": "isbn"},
+      "$3": {"property": "marc:materialsSpecified"}
     },
     "583": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
