@@ -1152,6 +1152,7 @@
           "NOTE": "if possible to revert to, prefer this form over i2=0? (NO, i2=7 is normally not used!)",
           "match": [
             {
+              "TODO": "i2=7 is normally not used, unless $2 is one of these. Thus, move this nest to top of list",
               "when": "$2=sao | $2=saogf | $2=gmgpc | $2=barn | $2=barngf",
               "include": ["termbase_with_id"]
             },
@@ -3721,7 +3722,7 @@
       "TODO:a": "extract value from parantheses and source as rdfs:label",
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
-      "$9": {"addProperty": "librisIIINumber"},
+      "$9": {"addProperty": "librisIIINumber", "TODO": "add spec!"},
       "_spec": [
         {
           "name": "interpret dbpedia URI as sameAs of instance",
@@ -6362,7 +6363,8 @@
     },
     "490": {
       "inherit": "440",
-      "TOOO:i1": {},
+      "TOOO:i1": {"when: 8xx[$t] | 830": "1", "else": "0"},
+      "TODO:allowSpillOverOnRevert": "800-830",
       "i2": null,
       "TODO:ignoreOnRevertInFavourOf": "773?",
       "$l": {"link": "callno", "resourceType": "Concept", "property": "code"}
