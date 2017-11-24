@@ -81,7 +81,7 @@ class LinkFinder {
             if (id.startsWith("http://libris.kb.se/resource/")) {
                 // re-calculate what the correct primary ID should be (better get this right)
                 String pathId = id.substring("http://libris.kb.se/".length())
-                data.put( "@id", Document.BASE_URI.resolve(LegacyIntegrationTools.generateId( pathId )).toString() )
+                data.put( "@id", Document.BASE_URI.resolve(LegacyIntegrationTools.generateId( pathId )).toString() + "#it" )
             } else if (id.startsWith("https://id.kb.se/")) {
                 // cache the ID
                 if (uriCache.containsKey(id)) {
