@@ -76,7 +76,7 @@ class ConverterAPISpec extends Specification {
             },
             {
               "@id": "http://127.0.0.1:5000/000000000000000#it",
-              "instanceOf": {"@type": "Work"}
+              "instanceOf": {"@type": "Text"}
             }
           ]
         }
