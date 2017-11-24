@@ -5,6 +5,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.component.PostgreSQLComponent
+import whelk.util.LegacyIntegrationTools
 
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -17,6 +18,7 @@ class LinkFinder {
 
     static String ENTITY_QUERY
     static final ObjectMapper mapper = new ObjectMapper()
+    static final ConcurrentHashMap<String, String> uriCache = new ConcurrentHashMap()
 
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql
@@ -75,11 +77,30 @@ class LinkFinder {
         // If this is a link (an object containing _only_ an id)
         String id = data.get("@id")
         if (id != null && data.keySet().size() == 1) {
-            String mainId = postgres.getMainId(id)
-            if (mainId != null)
-                data.put("@id", mainId)
+
+            if (id.startsWith("http://libris.kb.se/resource/")) {
+                // re-calculate what the correct primary ID should be (better get this right)
+                String pathId = id.substring("http://libris.kb.se/".length())
+                data.put( "@id", Document.BASE_URI.resolve(LegacyIntegrationTools.generateId( pathId )).toString() )
+            } else if (id.startsWith("https://id.kb.se/")) {
+                // cache the ID
+                if (uriCache.containsKey(id)) {
+                    data.put("@id", uriCache.get(id))
+                } else {
+                    String mainId = postgres.getMainId(id)
+                    if (mainId != null) {
+                        data.put("@id", mainId)
+                        uriCache.put(id, mainId)
+                    }
+                }
+            } else { // Fallback -> Look for a primary ID in postgres (expensive)
+                String mainId = postgres.getMainId(id)
+                if (mainId != null)
+                    data.put("@id", mainId)
+            }
         }
 
+        // Keep looking for more links
         for (Object key : data.keySet()) {
 
             // sameAs objects are not links per se, and must not be replaced
