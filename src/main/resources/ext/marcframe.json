@@ -184,53 +184,6 @@
 
   "postProcessing": [
     {
-      "type": "SetUpdatedStatus",
-      "statusFlag": "recordStatus",
-      "statusFlagNewValue": "marc:New",
-      "statusFlagUpdatedValue": "marc:CorrectedOrRevised",
-      "dateProperty": "created",
-      "updatedProperty": "modified",
-      "_spec": [
-        {
-          "source": {
-            "created": "2015-02-18T00:00:00Z",
-            "modified": "2015-02-18T00:00:00Z",
-            "recordStatus": "marc:New"
-          },
-          "result": {
-            "created": "2015-02-18T00:00:00Z",
-            "modified": "2015-02-18T00:00:00Z"
-          },
-          "back": true
-        },
-        {
-          "source": {
-            "created": "2015-02-18T00:00:00Z",
-            "modified": "2015-02-18T00:00:01Z",
-            "recordStatus": "marc:New"
-          },
-          "result": {
-            "created": "2015-02-18T00:00:00Z",
-            "modified": "2015-02-18T00:00:01Z"
-          },
-          "back": {
-            "created": "2015-02-18T00:00:00Z",
-            "modified": "2015-02-18T00:00:01Z",
-            "recordStatus": "marc:CorrectedOrRevised"
-          }
-        },
-        {
-          "source": {
-            "recordStatus": null
-          },
-          "result": {
-            "recordStatus": null
-          },
-          "back": true
-        }
-      ]
-    },
-    {
       "type": "VerboseRevertData",
       "sourceProperty": "@id",
       "addLink": "identifiedBy",
