@@ -11,8 +11,6 @@
 
   "tokenMaps": [
 
-    "marcenums.json",
-
     {
       "relatorCode": "relatorcodes.json",
       "thesaurus": {
@@ -1399,7 +1397,8 @@
       "[5:6]": {
         "aboutEntity": "?record",
         "property": "recordStatus",
-        "tokenMap": "StatusType"
+        "tokenMap": "StatusType",
+        "TODO:fallbackDefault": "c"
       },
       "[6:7]": {
         "aboutEntity": "?work",
@@ -1410,21 +1409,21 @@
         "aboutEntity": "?thing",
         "tokenMap": "BibLevelType",
         "property": "issuanceType",
-        "TODO:implied?:fixedDefault": "m"
+        "TODO:fallbackDefault": "m"
       },
       "[8:9]": {
         "aboutEntity": "?record",
         "link": "marc:typeOfControl",
-        "uriTemplate": "{_}",
-        "tokenMap": "TypeOfControlType",
+        "uriTemplate": "https://id.kb.se/marc/TypeOfControlType-{_}",
+        "matchUriToken": "^[a]$",
         "fixedDefault": " "
       },
       "[9:10]": {
         "aboutEntity": "?record",
         "link": "marc:characterCoding",
-        "uriTemplate": "{_}",
-        "fixedDefault": "a",
-        "tokenMap": "CharacterCodingType"
+        "uriTemplate": "https://id.kb.se/marc/CharacterCodingType-{_}",
+        "matchUriToken": "^[a]$",
+        "fixedDefault": "a"
       },
       "[17:18]": {
         "aboutEntity": "?record",
@@ -1436,15 +1435,15 @@
         "addLink": "descriptionConventions",
         "NOTE:repeatable": false,
         "TODO": "merge with 040.e",
-        "uriTemplate": "{_}",
-        "tokenMap": "CatFormType",
+        "uriTemplate": "https://id.kb.se/marc/CatFormType-{_}",
+        "matchUriToken": "^[aci]$",
         "fixedDefault": " "
       },
       "[19:20]": {
         "aboutEntity": "?record",
         "link": "marc:linked",
-        "uriTemplate": "{_}",
-        "tokenMap": "LinkedType",
+        "uriTemplate": "https://id.kb.se/marc/LinkedType-{_}",
+        "matchUriToken": "^[abcr]$",
         "fixedDefault": " "
       },
       "[20:24]": {
@@ -1461,7 +1460,7 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
             "recordStatus": "marc:CorrectedOrRevised",
-            "descriptionConventions": [{"@id": "marc:Aacr2"}],
+            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
             "controlNumber": "0000000",
             "mainEntity": {
               "@type": "Instance",
@@ -1482,7 +1481,7 @@
             "@id": "http://libris.kb.se/bib/0000000",
             "recordStatus": "marc:CorrectedOrRevised",
             "descriptionConventions": [
-              {"@id": "marc:Isbd"},
+              {"@id": "https://id.kb.se/marc/CatFormType-i"},
               {"@type": "DescriptionConventions", "code": "rda"}
             ],
             "controlNumber": "0000000",
@@ -1554,239 +1553,219 @@
       "Text": {
         "[1:2]": {
           "link": "illustrativeContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksIllustrationsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}",
+          "matchUriToken": "^[abcdefghijklmop]$"
         },
         "[2:3]": {
           "TODO": "Decide if it is Work or Instance?",
           "link": "illustrativeContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksIllustrationsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
         },
         "[3:4]": {
           "TODO": "Decide if it is Work or Instance?",
           "link": "illustrativeContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksIllustrationsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
         },
         "[4:5]": {
           "TODO": "Decide if it is Work or Instance?",
           "link": "illustrativeContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksIllustrationsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
         },
         "[5:6]": {
           "TODO:about": "_:aspectWork",
           "link": "intendedAudience",
-          "uriTemplate": "{_}",
-          "tokenMap": "AudienceType"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$"
         },
         "[6:7]": {
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksItemType"
+          "uriTemplate": "https://id.kb.se/marc/BooksItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$"
         },
         "[7:8]": {
+          "TODO: squash all repeated columns to one rule": "[7] [8] [9]",
           "addLink": "contentType",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksContentsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}",
+          "matchUriToken": "^[256abcdefgijklmnopqrstuvwyz]$"
         },
         "[8:9]": {
           "addLink": "contentType",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksContentsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
         },
         "[9:10]": {
           "addLink": "contentType",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksContentsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
         },
         "[10:11]": {
           "addLink": "contentType",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksContentsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
         },
         "[11:12]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "GovernmentPublicationType"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[_acfilmosu]$"
         },
         "[12:13]": {
           "addLink": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "ConferencePublicationType",
+          "uriTemplate": "https://id.kb.se/marc/ConferencePublicationType-{_}",
+          "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
         "[13:14]": {
           "addLink": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksFestschriftType",
+          "uriTemplate": "https://id.kb.se/marc/BooksFestschriftType-{_}",
+          "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
         "[14:15]": {
           "link": "marc:index",
-          "uriTemplate": "{_}",
-          "tokenMap": "IndexType",
+          "uriTemplate": "https://id.kb.se/marc/IndexType-{_}",
+          "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
         "[16:17]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksLiteraryFormType"
+          "uriTemplate": "https://id.kb.se/marc/BooksLiteraryFormType-{_}",
+          "matchUriToken": "^[01cdefhijmps]$"
         },
         "[17:18]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksBiographyType"
+          "uriTemplate": "https://id.kb.se/marc/BooksBiographyType-{_}",
+          "matchUriToken": "^[abcd]$"
         }
       },
       "Audio": {
         "[1:3]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicCompositionType"
+          "uriTemplate": "https://id.kb.se/marc/MusicCompositionType-{_}",
+          "matchUriToken": "^[abcdfghijlmnopqrstuvwyz]$"
         },
         "[3:4]": {
           "link": "musicFormat",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicFormatType"
+          "uriTemplate": "https://id.kb.se/marc/MusicFormatType-{_}",
+          "matchUriToken": "^[_abcdeghijklm]$"
         },
         "[4:5]": {
           "link": "marc:parts",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicPartsType"
+          "uriTemplate": "https://id.kb.se/marc/MusicPartsType-{_}",
+          "matchUriToken": "^[def]$"
         },
         "[5:6]": {
           "link": "intendedAudience",
-          "uriTemplate": "{_}",
-          "tokenMap": "AudienceType"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
         "[6:7]": {
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ItemType"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
         "[7:8]": {
           "TODO": "Decide if this should be Work or Instance",
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicMatterType"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}",
+          "matchUriToken": "^[_abcdefghikrs]$"
         },
         "[8:9]": {
           "TODO": "Decide if this should be Work or Instance",
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicMatterType"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
         "[9:10]": {
           "TODO": "Decide if this should be Work or Instance",
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicMatterType"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
         "[10:11]": {
           "TODO": "Decide if this should be Work or Instance",
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicMatterType"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
         "[11:12]": {
           "TODO": "Decide if this should be Work or Instance",
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicMatterType"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
         "[12:13]": {
           "TODO": "Decide if this should be Work or Instance",
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicMatterType"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
         "[13:14]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicTextType"
+          "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}",
+          "matchUriToken": "^[_abcdefghijklmoprst]$"
         },
         "[14:15]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicTextType"
+          "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}"
         },
         "[16:17]": {
           "link": "marc:transposition",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicTranspositionType"
+          "uriTemplate": "https://id.kb.se/marc/MusicTranspositionType-{_}",
+          "matchUriToken": "^[abc]$"
         }
       },
       "Cartography": {
         "[1:2]": {
           "TODO:about": "_:cartographic",
           "link": "marc:relief",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsReliefType"
+          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}",
+          "matchUriToken": "^[abcdefgijkmz]$"
         },
         "[2:3]": {
           "TODO:about": "_:cartographic",
           "link": "marc:relief",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsReliefType"
+          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
         },
         "[3:4]": {
           "TODO:about": "_:cartographic",
           "link": "marc:relief",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsReliefType"
+          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
         },
         "[4:5]": {
           "TODO:about": "_:cartographic",
           "link": "marc:relief",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsReliefType"
+          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
         },
         "[5:7]": {
           "TODO:about": "_:cartographic",
           "link": "projection",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsProjectionType",
-          "TODO:resourceType": "Projection"
+          "uriTemplate": "https://id.kb.se/marc/MapsProjectionType-{_}",
+          "matchUriToken": "^[_abcdefghijklmnoprsuz]$"
         },
         "[8:9]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/MapsMaterialType-{_}",
+          "matchUriToken": "^[_abcdefg]$"
         },
         "[11:12]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "GovernmentPublicationType"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
         },
         "[12:13]": {
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ItemType"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
         "[14:15]": {
           "link": "marc:index",
-          "uriTemplate": "{_}",
-          "tokenMap": "IndexType",
+          "uriTemplate": "https://id.kb.se/marc/IndexType-{_}",
+          "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
         "[16:17]": {
           "link": "additionalType",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsFormatType"
+          "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}",
+          "matchUriToken": "^[_ejklnopr]$"
         },
         "[17:18]": {
           "TODO:ignore": "Not used in 008",
           "link": "additionalType",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsFormatType"
+          "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}"
         },
         "[7:8]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:primeMeridian",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsPrimeMeridianType"
+          "uriTemplate": "https://id.kb.se/marc/MapsPrimeMeridianType-{_}",
+          "matchUriToken": "^[efgpwz]$"
         }
       },
       "Visual": {
@@ -1796,169 +1775,154 @@
         },
         "[5:6]": {
           "link": "intendedAudience",
-          "uriTemplate": "{_}",
-          "tokenMap": "AudienceType"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
         "[11:12]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "GovernmentPublicationType"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
         },
         "[12:13]": {
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ItemType"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
         "[16:17]": {
           "addLink": "contentType",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/VisualMaterialType-{_}",
+          "matchUriToken": "^[_abcdfgiklmnopqrstvw]$"
         },
         "[17:18]": {
           "link": "marc:technique",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualTechniqueType"
+          "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}",
+          "matchUriToken": "^[aclz]$"
         },
         "[6:7]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
+          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}",
+          "matchUriToken": "^[lmopqrsz]$"
         },
         "[7:8]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
+          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
         },
         "[8:9]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
+          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
         },
         "[9:10]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
+          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
         },
         "[10:11]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
+          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
         }
       },
       "Multimedia": {
         "[5:6]": {
           "link": "intendedAudience",
-          "uriTemplate": "{_}",
-          "tokenMap": "AudienceType"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
         "[6:7]": {
           "link": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerItemType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerItemType-{_}",
+          "matchUriToken": "^[oqs]$"
         },
         "[9:10]": {
           "addLink": "contentType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerTypeOfFileType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
+          "matchUriToken": "^[_abcdefghijm]$"
         },
         "[11:12]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "GovernmentPublicationType"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
         }
       },
       "Mixed": {
         "[6:7]": {
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ItemType"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
         "[7:8]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ItemType"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         }
       },
       "Serial": {
         "[1:2]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
           "link": "frequency",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsFrequencyType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}",
+          "matchUriToken": "^[_abcdefghijkmqstw]$"
         },
         "[2:3]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
           "link": "frequency",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsRegularityType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}",
+          "matchUriToken": "^[nrx]$"
         },
         "[3:4]": {
           "TODO:ignore": "Not used in 008. Should we remove this mapping as well?",
           "link": "marc:issn",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsISSNType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsISSNType-{_}",
+          "matchUriToken": "^[0124_f]$"
         },
         "[4:5]": {
           "addLink": "contentType",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsTypeOfSerialType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfSerialType-{_}",
+          "matchUriToken": "^[dlmnpw]$"
         },
         "[5:6]": {
           "link": "marc:originalItem",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsOriginalItemType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsOriginalItemType-{_}",
+          "matchUriToken": "^[abcdefoqs]$"
         },
         "[6:7]": {
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ItemType"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
         "[7:8]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsNatureType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsNatureType-{_}",
+          "matchUriToken": "^[6abcdefghiklmnopqrstuvwyz]$"
         },
         "[8:9]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsContentsType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}",
+          "matchUriToken": "^[56abcdefghiklmnopqrstuvwyz]$"
         },
         "[9:10]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsContentsType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}"
         },
         "[10:11]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsContentsType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}"
         },
         "[11:12]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "GovernmentPublicationType"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
         },
         "[12:13]": {
           "addLink": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "ConferencePublicationType",
+          "uriTemplate": "https://id.kb.se/marc/ConferencePublicationType-{_}",
+          "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
         "[16:17]": {
           "link": "marc:alphabet",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsAlphabetType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsAlphabetType-{_}",
+          "matchUriToken": "^[_abcdefghijkl]$"
         },
         "[17:18]": {
           "link": "marc:typeOfEntry",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsTypeOfEntryType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfEntryType-{_}",
+          "matchUriToken": "^[012]$"
         }
       },
       "repeatable": true
@@ -1993,127 +1957,125 @@
       "Map": {
         "[1:2]": {
           "addLink": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/MapMaterialType-{_}",
+          "matchUriToken": "^[_dgjkqrsy]$"
         },
         "[3:4]": {
           "TODO:aboutEntity (perhaps ideal for all colorContent (LoC does so), but more cumbersome and practically/statistically irrelevant)": "?work",
           "link": "colorContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapColorType"
+          "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}",
+          "matchUriToken": "^[_abchm]$"
         },
         "[4:5]": {
           "link": "baseMaterial",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapMediumType"
+          "uriTemplate": "https://id.kb.se/marc/MapMediumType-{_}",
+          "matchUriToken": "^[_abcdefghijlnpqrstvwy]$"
         },
         "[5:6]": {
           "link": "generation",
-          "uriTemplate": "{_}",
-          "tokenMap": "ReproductionType"
+          "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}",
+          "matchUriToken": "^[_f]$"
         },
         "[6:7]": {
           "link": "generation",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapDetailsType"
+          "uriTemplate": "https://id.kb.se/marc/MapDetailsType-{_}",
+          "matchUriToken": "^[_abcd]$",
+          "fixedDefault": "|"
         },
         "[7:8]": {
           "link": "polarity",
-          "uriTemplate": "{_}",
-          "tokenMap": "PolarityType"
+          "uriTemplate": "https://id.kb.se/marc/PolarityType-{_}",
+          "matchUriToken": "^[abm]$"
         },
         "[2:3]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:aspect",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapAspectType",
+          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
+          "matchUriToken": "^[for]$",
         "fixedDefault": " "
         }
       },
       "Electronic": {
         "[1:2]": {
           "addLink": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerMaterialType-{_}",
+          "matchUriToken": "^[_abcdefhjkmor]$"
         },
         "[3:4]": {
           "link": "colorContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerColorType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerColorType-{_}",
+          "matchUriToken": "^[_abcgm]$"
         },
         "[4:5]": {
           "link": "hasDimensions",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerDimensionsType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerDimensionsType-{_}",
+        "matchUriToken": "^[_aegijov]$"
         },
         "[5:6]": {
           "link": "soundContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerSoundType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerSoundType-{_}",
+          "matchUriToken": "^[ab]$"
         },
         "[6:9]": {
           "property": "imageBitDepth",
-          "TODO:patternMap": "ComputerImageBitDepthType"
+          "TODO:patternMap": "ComputerImageBitDepthType",
+          "fixedDefault": "   "
         },
         "[9:10]": {
           "link": "marc:fileFormats",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerFileFormatsType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerFileFormatsType-{_}",
+          "matchUriToken": "^[am]$"
         },
         "[10:11]": {
           "link": "marc:qATarget",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerQATargetType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerQATargetType-{_}",
+          "matchUriToken": "^[ap]$"
         },
         "[11:12]": {
           "link": "marc:antecedent",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerAntecedentType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerAntecedentType-{_}",
+          "matchUriToken": "^[abcdm]$"
         },
         "[12:13]": {
           "link": "marc:compression",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerCompressionType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerCompressionType-{_}",
+          "matchUriToken": "^[abdm]$"
         },
         "[13:14]": {
           "link": "marc:reformattingQuality",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerReformattingQualityType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerReformattingQualityType-{_}",
+          "matchUriToken": "^[apr]$"
         },
         "[2:3]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:fileAspect",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapAspectType",
+          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
         "fixedDefault": " "
         }
       },
       "Globe": {
         "[1:2]": {
           "addLink": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "GlobeMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/GlobeMaterialType-{_}",
+          "matchUriToken": "^[_abce]$"
         },
         "[3:4]": {
           "link": "colorContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapColorType"
+          "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}"
         },
         "[4:5]": {
           "link": "baseMaterial",
-          "uriTemplate": "{_}",
-          "tokenMap": "GlobeMediumType"
+          "uriTemplate": "https://id.kb.se/marc/GlobeMediumType-{_}",
+          "matchUriToken": "^[_abcdefgilnpvw]$"
         },
         "[5:6]": {
           "link": "generation",
-          "uriTemplate": "{_}",
-          "tokenMap": "ReproductionType"
+          "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}"
         },
         "[2:3]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:aspect",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapAspectType",
+          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
         "fixedDefault": " "
         }
       },
@@ -2121,119 +2083,101 @@
         "[1:2]": {
           "TODO:layout": "Also more general mapping? Ensure that reconverting are able to handle this",
           "addLink": "layout",
-          "uriTemplate": "{_}",
-          "tokenMap": "TacMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/TacMaterialType-{_}",
+          "matchUriToken": "^[_abcd]$"
         },
         "[3:4]": {
           "link": "layout",
-          "uriTemplate": "{_}",
-          "tokenMap": "TacBrailleWritingType"
+          "uriTemplate": "https://id.kb.se/marc/TacBrailleWritingType-{_}",
+          "matchUriToken": "^[_abcdem]$"
         },
         "[4:5]": {
           "link": "layout",
-          "uriTemplate": "{_}",
-          "tokenMap": "TacBrailleWritingType"
+          "uriTemplate": "https://id.kb.se/marc/TacBrailleWritingType-{_}"
         },
         "[5:6]": {
           "link": "layout",
-          "uriTemplate": "{_}",
-          "tokenMap": "TacContractionType"
+          "uriTemplate": "https://id.kb.se/marc/TacContractionType-{_}",
+          "matchUriToken": "^[_abm]$"
         },
         "[6:7]": {
           "link": "notation",
-          "uriTemplate": "{_}",
-          "tokenMap": "TacBrailleMusicType",
-          "TODO:resourceType": "MusicNotation",
-          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
+          "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}",
+          "matchUriToken": "^[abcdefghijklz]$"
         },
         "[7:8]": {
           "link": "notation",
-          "uriTemplate": "{_}",
-          "tokenMap": "TacBrailleMusicType",
-          "TODO:resourceType": "MusicNotation",
-          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
+          "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}"
         },
         "[8:9]": {
           "link": "notation",
-          "uriTemplate": "{_}",
-          "tokenMap": "TacBrailleMusicType",
-          "TODO:resourceType": "MusicNotation",
-          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
+          "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}"
         },
         "[9:10]": {
           "link": "notation",
-          "uriTemplate": "{_}",
-          "tokenMap": "TacSpecPhysicalCharType",
-          "TODO:resourceType": "TactileNotation",
-          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
+          "uriTemplate": "https://id.kb.se/marc/TacSpecPhysicalCharType-{_}",
+          "matchUriToken": "^[_ab]$"
         }
       },
       "ProjectedImageInstance": {
         "[1:2]": {
           "addLink": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ProjGraphMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/ProjGraphMaterialType-{_}",
+          "matchUriToken": "^[_cdfost]$"
         },
         "[3:4]": {
           "link": "colorContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "ColorType"
+          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}"
         },
         "[4:5]": {
           "link": "baseMaterial",
-          "uriTemplate": "{_}",
-          "tokenMap": "ProjGraphEmulsionType"
+          "uriTemplate": "https://id.kb.se/marc/ProjGraphEmulsionType-{_}",
+          "matchUriToken": "^[_dejkmo]$"
         },
         "[5:6]": {
           "link": "soundContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundType"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
         },
         "[6:7]": {
           "link": "soundCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "MediumType",
-          "TODO:resourceType": "RecordingMedium",
-          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
         },
         "[7:8]": {
           "link": "hasDimensions",
-          "uriTemplate": "{_}",
-          "tokenMap": "ProjGraphDimensionsType"
+          "uriTemplate": "https://id.kb.se/marc/ProjGraphDimensionsType-{_}",
+        "matchUriToken": "^[_abcefgjkstvwxy]$"
         },
         "[8:9]": {
           "link": "mount",
-          "uriTemplate": "{_}",
-          "tokenMap": "ProjGraphSupportType"
+          "uriTemplate": "https://id.kb.se/marc/ProjGraphSupportType-{_}",
+          "matchUriToken": "^[_cdehjkm]$"
         },
         "[2:3]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:projGraphAspect",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapAspectType",
+          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
         "fixedDefault": " "
         }
       },
       "Microform": {
         "[1:2]": {
           "addLink": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "MicroformMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/MicroformMaterialType-{_}",
+          "matchUriToken": "^[_abcdefghj]$"
         },
         "[3:4]": {
           "link": "polarity",
-          "uriTemplate": "{_}",
-          "tokenMap": "PolarityType"
+          "uriTemplate": "https://id.kb.se/marc/PolarityType-{_}"
         },
         "[4:5]": {
           "link": "hasDimensions",
-          "uriTemplate": "{_}",
-          "tokenMap": "MicroformDimensionsType"
+          "uriTemplate": "https://id.kb.se/marc/MicroformDimensionsType-{_}",
+        "matchUriToken": "^[_afghlmop]$"
         },
         "[5:6]": {
           "link": "reductionRatio",
-          "uriTemplate": "{_}",
-          "tokenMap": "MicroformRangeType"
+          "uriTemplate": "https://id.kb.se/marc/MicroformRangeType-{_}",
+          "matchUriToken": "^[abcdev]$"
         },
         "[6:9]": {
           "property": "reductionRatio",
@@ -2241,140 +2185,130 @@
         },
         "[9:10]": {
           "link": "colorContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MicroformColorType"
+          "uriTemplate": "https://id.kb.se/marc/MicroformColorType-{_}",
+          "matchUriToken": "^[_bcm]$"
         },
         "[10:11]": {
           "link": "emulsion",
-          "uriTemplate": "{_}",
-          "tokenMap": "MicroformEmulsionType"
+          "uriTemplate": "https://id.kb.se/marc/MicroformEmulsionType-{_}",
+          "matchUriToken": "^[_abcm]$"
         },
         "[11:12]": {
           "link": "generation",
-          "uriTemplate": "{_}",
-          "tokenMap": "MicroformGenerationType"
+          "uriTemplate": "https://id.kb.se/marc/MicroformGenerationType-{_}",
+          "matchUriToken": "^[abcm]$"
         },
         "[12:13]": {
           "link": "baseMaterial",
-          "uriTemplate": "{_}",
-          "tokenMap": "FilmBaseType"
+          "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}",
+          "matchUriToken": "^[_acdimprt]$"
         },
         "[2:3]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:aspect",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapAspectType",
+          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
         "fixedDefault": " "
         }
       },
       "StillImageInstance": {
         "[1:2]": {
           "addLink": "genreForm",
-          "uriTemplate": "{_}",
-          "TODO:tokenMap": "Rename the uri:s of NonProjMaterialType (n and v) to not only contain the code",
-          "tokenMap": "NonProjMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/NonProjMaterialType-{_}",
+          "matchUriToken": "^[_acdefghijklnopqrsv]$",
+          "TODO:tokenMap": "Rename the uri:s of NonProjMaterialType (n and v) to not only contain the code"
         },
         "[3:4]": {
           "link": "colorContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "ColorType"
+          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}"
         },
         "[4:5]": {
           "link": "baseMaterial",
-          "uriTemplate": "{_}",
-          "tokenMap": "NonProjectedType"
+          "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}",
+          "matchUriToken": "^[_abcdefghilmnopqrstvw]$"
         },
         "[5:6]": {
           "link": "mount",
-          "uriTemplate": "{_}",
-          "tokenMap": "NonProjectedType"
+          "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}"
         },
         "[2:3]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:nonProjAspect",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapAspectType",
+          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
         "fixedDefault": " "
         }
       },
       "MovingImageInstance": {
         "[1:2]": {
           "addLink": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicMaterialType-{_}",
+          "matchUriToken": "^[_cfor]$"
         },
         "[3:4]": {
           "link": "colorContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicColorType"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicColorType-{_}",
+          "matchUriToken": "^[_bchm]$"
         },
         "[4:5]": {
           "link": "projectionCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicFormatType",
-          "TODO:resourceType": "PresentationFormat"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicFormatType-{_}",
+        "matchUriToken": "^[_abcdef]$"
         },
         "[5:6]": {
           "link": "soundContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundType"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
         },
         "[6:7]": {
           "link": "soundCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "MediumType",
-          "TODO:resourceType": "RecordingMedium"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
         },
         "[7:8]": {
           "link": "hasDimensions",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicDimensionsType"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicDimensionsType-{_}",
+        "matchUriToken": "^[_abcefg]$"
         },
         "[8:9]": {
           "link": "soundCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicConfigurationOrVideoPlaybackType",
-          "TODO:resourceType": "PlaybackChannels"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}",
+          "matchUriToken": "^[_kmqs]$"
         },
         "[9:10]": {
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicElementsType"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicElementsType-{_}",
+          "matchUriToken": "^[_abcdefg]$"
         },
         "[10:11]": {
           "link": "polarity",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicPosNegType"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicPosNegType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[11:12]": {
           "link": "generation",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicGenerationType"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicGenerationType-{_}",
+          "matchUriToken": "^[_deor]$"
         },
         "[12:13]": {
           "link": "baseMaterial",
-          "uriTemplate": "{_}",
-          "tokenMap": "FilmBaseType"
+          "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}"
         },
         "[13:14]": {
           "link": "marc:motionPicCategories",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicCategoriesType"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicCategoriesType-{_}",
+        "matchUriToken": "^[_abcdefghijklmpqrstv]$"
         },
         "[14:15]": {
           "link": "marc:motionPicColorStock",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicColorStockType"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicColorStockType-{_}",
+          "matchUriToken": "^[_abcd]$"
         },
         "[15:16]": {
           "link": "marc:motionPicDeterioration",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicDeteriorationType"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicDeteriorationType-{_}",
+          "matchUriToken": "^[abcdefghklm]$"
         },
         "[16:17]": {
           "link": "marc:motionPicCompleteness",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicCompletenessType"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicCompletenessType-{_}",
+          "matchUriToken": "^[0123ci]$"
         },
         "[17:23]": {
           "property": "marc:timeOfExamination"
@@ -2382,198 +2316,175 @@
         "[2:3]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:motionPicAspect",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapAspectType",
+          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
           "fixedDefault": " "
         }
       },
       "KitInstance": {
         "[1:2]": {
           "addLink": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "KitMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}"
         }
       },
       "NotatedMusicInstance": {
         "[1:2]": {
           "addLink": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "KitMaterialType",
+          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
           "TODO:tokenMap? (empty, just as KitMaterialType)": "NotatedMusicMaterialType"
         }
       },
       "RemoteSensingImage": {
         "[1:2]": {
           "addLink": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "KitMaterialType",
+          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
           "TODO:tokenMap? (empty, just as KitMaterialType)": "RemoteSensingImageMaterialType"
         },
         "[3:4]": {
           "link": "marc:remoteSensImageAltitude",
-          "uriTemplate": "{_}",
-          "tokenMap": "RemoteSensImageAltitudeType"
+          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageAltitudeType-{_}",
+          "matchUriToken": "^[_abc]$"
         },
         "[4:5]": {
           "link": "marc:remoteSensImageAttitude",
-          "uriTemplate": "{_}",
-          "tokenMap": "RemoteSensImageAttitudeType"
+          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageAttitudeType-{_}",
+          "matchUriToken": "^[abc]$"
         },
         "[5:6]": {
           "link": "marc:remoteSensImageCloud",
-          "uriTemplate": "{_}",
-          "tokenMap": "RemoteSensImageCloudType"
+          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageCloudType-{_}",
+        "matchUriToken": "^[0123456789]$"
         },
         "[6:7]": {
           "link": "marc:remoteSensImageConstruction",
-          "uriTemplate": "{_}",
-          "tokenMap": "RemoteSensImageConstructionType"
+          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageConstructionType-{_}",
+          "matchUriToken": "^[_abcdefghi]$"
         },
         "[7:8]": {
           "link": "marc:remoteSensImageUse",
-          "uriTemplate": "{_}",
-          "tokenMap": "RemoteSensImageUseType"
+          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageUseType-{_}",
+          "matchUriToken": "^[_abcm]$"
         },
         "[8:9]": {
           "link": "marc:remoteSensImageSensor",
-          "uriTemplate": "{_}",
-          "tokenMap": "RemoteSensImageSensorType"
+          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageSensorType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[9:11]": {
           "link": "marc:remoteSensImageData",
-          "uriTemplate": "{_}",
-          "tokenMap": "RemoteSensImageDataType"
+          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageDataType-{_}",
+          "matchUriToken": "^[abcdefgjmprstuvz]$"
         }
       },
       "SoundRecording": {
         "[1:2]": {
           "addLink": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/SoundMaterialType-{_}",
+          "matchUriToken": "^[_degiqstw]$"
         },
         "[3:4]": {
           "link": "soundCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundSpeedType",
-          "TODO:resourceType": "PlayingSpeed",
-          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
+          "uriTemplate": "https://id.kb.se/marc/SoundSpeedType-{_}",
+        "matchUriToken": "^[_abcdefhiklmopr]$"
         },
         "[4:5]": {
           "link": "soundCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundPlaybackChannelType",
-          "TODO:resourceType": "PlaybackChannels",
-          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
+          "uriTemplate": "https://id.kb.se/marc/SoundPlaybackChannelType-{_}",
+          "matchUriToken": "^[_mqs]$"
         },
         "[5:6]": {
           "link": "soundCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundGrooveType",
-          "TODO:resourceType": "GrooveCharacteristic",
-          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
+          "uriTemplate": "https://id.kb.se/marc/SoundGrooveType-{_}",
+          "matchUriToken": "^[_ms]$"
         },
         "[6:7]": {
           "link": "hasDimensions",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundDimensionsType"
+          "uriTemplate": "https://id.kb.se/marc/SoundDimensionsType-{_}",
+        "matchUriToken": "^[_abcdefgjos]$"
         },
         "[7:8]": {
           "link": "hasDimensions",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundTapeWidthType"
+          "uriTemplate": "https://id.kb.se/marc/SoundTapeWidthType-{_}",
+        "matchUriToken": "^[_lmop]$"
         },
         "[8:9]": {
           "link": "soundCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundTapeConfigurationType",
-          "TODO:resourceType": "TapeConfig",
-          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
+          "uriTemplate": "https://id.kb.se/marc/SoundTapeConfigurationType-{_}",
+          "matchUriToken": "^[_abcdef]$"
         },
         "[9:10]": {
           "link": "generation",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundKindOfDiscType"
+          "uriTemplate": "https://id.kb.se/marc/SoundKindOfDiscType-{_}",
+          "matchUriToken": "^[_abdimrst]$"
         },
         "[10:11]": {
           "TODO": "Depending on value of tokenMap, map to appliedMaterial or baseMaterial?",
           "link": "marc:soundKindOfMaterial",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundKindOfMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/SoundKindOfMaterialType-{_}",
+          "matchUriToken": "^[_abcgilmprsw]$"
         },
         "[11:12]": {
           "link": "soundCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundKindOfCuttingType",
-          "TODO:resourceType": "GrooveCharacteristic",
-          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
+          "uriTemplate": "https://id.kb.se/marc/SoundKindOfCuttingType-{_}",
+          "matchUriToken": "^[hl]$"
         },
         "[12:13]": {
           "link": "soundCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundPlaybackCharacterType",
-          "TODO:resourceType": "PlaybackCharacteristic",
-          "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
+          "uriTemplate": "https://id.kb.se/marc/SoundPlaybackCharacterType-{_}",
+          "matchUriToken": "^[_abcdefgh]$"
         },
         "[13:14]": {
           "TODO": "Ensure not to clash with 340 $d",
           "TODO:aboutEntity": "Work or Instance?",
           "link": "marc:soundCapture",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundCaptureType"
+          "uriTemplate": "https://id.kb.se/marc/SoundCaptureType-{_}",
+          "matchUriToken": "^[_abde]$"
         },
         "[2:3]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:soundAspect",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapAspectType",
+          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
         "fixedDefault": " "
         }
       },
       "TextInstance": {
         "[1:2]": {
           "addLink": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "TextMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/TextMaterialType-{_}",
+          "matchUriToken": "^[_abcd]$"
         }
       },
       "VideoRecording": {
         "[1:2]": {
           "addLink": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "VideoMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/VideoMaterialType-{_}",
+          "matchUriToken": "^[_cdfr]$"
         },
         "[3:4]": {
           "link": "colorContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "VideoColorType"
+          "uriTemplate": "https://id.kb.se/marc/VideoColorType-{_}",
+          "matchUriToken": "^[_abcm]$"
         },
         "[4:5]": {
           "link": "videoCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "VideoFormatType",
-          "TODO:resourceType": "VideoFormat"
+          "uriTemplate": "https://id.kb.se/marc/VideoFormatType-{_}",
+          "matchUriToken": "^[_abcdefghijkmopqsv]$"
         },
         "[5:6]": {
           "link": "soundContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "SoundType"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
         },
         "[6:7]": {
           "link": "soundCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "MediumType",
-          "TODO:resourceType": "RecordingMedium"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
         },
         "[7:8]": {
           "link": "hasDimensions",
-          "uriTemplate": "{_}",
-          "tokenMap": "VideoDimensionsType"
+          "uriTemplate": "https://id.kb.se/marc/VideoDimensionsType-{_}",
+        "matchUriToken": "^[_amopqr]$"
         },
         "[8:9]": {
           "link": "soundCharacteristic",
-          "uriTemplate": "{_}",
-          "tokenMap": "MotionPicConfigurationOrVideoPlaybackType",
-          "TODO:resourceType": "PlaybackChannels"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}"
         }
       },
       "marc:Unspecified": {},
@@ -2585,8 +2496,8 @@
           "result": {
             "mainEntity": {
               "@type": "Map",
-              "genreForm": [{"@id": "marc:MapATwoDimensionalMap"}],
-              "baseMaterial": {"@id": "marc:Paper"}
+              "genreForm": [{"@id": "https://id.kb.se/marc/MapMaterialType-j"}],
+              "baseMaterial": {"@id": "https://id.kb.se/marc/MapMediumType-a"}
             }
           }
         },
@@ -2598,13 +2509,13 @@
           "result": {
             "mainEntity": {
               "@type": "Map",
-              "genreForm": [{"@id": "marc:MapATwoDimensionalMap"}],
-              "baseMaterial": {"@id": "marc:Paper"},
+              "genreForm": [{"@id": "https://id.kb.se/marc/MapMaterialType-j"}],
+              "baseMaterial": {"@id": "https://id.kb.se/marc/MapMediumType-a"},
               "hasPart": [
                 {
                   "@type": "Electronic",
-                  "carrierType": [{"@id": "marc:MagneticDisk"}],
-                  "marc:fileFormats": {"@id": "marc:OneFileFormat"}
+                  "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-j"}],
+                  "marc:fileFormats": {"@id": "https://id.kb.se/marc/ComputerFileFormatsType-a"}
                 }
               ]
             }
@@ -2632,10 +2543,12 @@
           "_:publication": {"addLink": "publication", "resourceType": "Publication", "embedded": true}
         },
         "TODO:appendToExistingEntity": "If entity provisionActivity already exists don't create new provisionActivity",
-        "property": "marc:publishedYear"
+        "property": "marc:publishedYear",
+        "fixedDefault": "    "
       },
       "[11:15]": {
-        "property": "marc:otherYear"
+        "property": "marc:otherYear",
+        "fixedDefault": "    "
       },
       "[15:18]": {
         "TODO:addLink": "provisionActivity, see [7:11]",
@@ -2655,6 +2568,7 @@
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}",
         "matchUriToken": "^\\w{2,3}$",
+        "fixedDefault": "   ",
         "spec": {
           "matches": ["swe", "sv"], "notMatches": ["N/A", " ", "---", "en-US", "en_us"]
         }
@@ -2662,14 +2576,15 @@
       "[38:39]": {
         "aboutEntity": "?record",
         "link": "marc:modifiedRecord",
-        "uriTemplate": "{_}",
-        "tokenMap": "ModifiedRecordType"
+        "uriTemplate": "https://id.kb.se/marc/ModifiedRecordType-{_}",
+        "matchUriToken": "^[dorsx]$"
       },
       "[39:40]": {
         "aboutEntity": "?record",
         "link": "marc:catalogingSource",
-        "uriTemplate": "{_}",
-        "tokenMap": "CatalogingSourceType"
+        "uriTemplate": "https://id.kb.se/marc/CatalogingSourceType-{_}",
+        "matchUriToken": "^[_cd]$",
+        "fixedDefault": " "
       },
 
       "recTypeBibLevelMap": {
@@ -2705,395 +2620,337 @@
           "aboutEntity": "?work",
           "TODO": "Decide if it is Work or Instance?",
           "link": "illustrativeContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksIllustrationsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
         },
         "[19:20]": {
           "aboutEntity": "?work",
           "TODO": "Decide if it is Work or Instance?",
           "link": "illustrativeContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksIllustrationsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
         },
         "[20:21]": {
           "aboutEntity": "?work",
           "TODO": "Decide if it is Work or Instance?",
           "link": "illustrativeContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksIllustrationsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
         },
         "[21:22]": {
           "aboutEntity": "?work",
           "TODO": "Decide if it is Work or Instance?",
           "link": "illustrativeContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksIllustrationsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
         },
         "[22:23]": {
           "aboutEntity": "?work",
           "link": "intendedAudience",
-          "uriTemplate": "{_}",
-          "tokenMap": "AudienceType"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
         "[23:24]": {
           "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "link": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksItemType"
+          "uriTemplate": "https://id.kb.se/marc/BooksItemType-{_}"
         },
         "[24:25]": {
           "aboutEntity": "?work",
           "addLink": "contentType",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksContentsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
         },
         "[25:26]": {
           "aboutEntity": "?work",
           "addLink": "contentType",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksContentsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
         },
         "[26:27]": {
           "aboutEntity": "?work",
           "addLink": "contentType",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksContentsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
         },
         "[27:28]": {
           "aboutEntity": "?work",
           "addLink": "contentType",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksContentsType"
+          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
         },
         "[28:29]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "GovernmentPublicationType"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
         },
         "[29:30]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "ConferencePublicationType",
+          "uriTemplate": "https://id.kb.se/marc/ConferencePublicationType-{_}",
+          "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
         "[30:31]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksFestschriftType",
+          "uriTemplate": "https://id.kb.se/marc/BooksFestschriftType-{_}",
+          "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
         "[31:32]": {
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "IndexType",
+          "uriTemplate": "https://id.kb.se/marc/IndexType-{_}",
+          "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
         "[33:34]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksLiteraryFormType"
+          "uriTemplate": "https://id.kb.se/marc/BooksLiteraryFormType-{_}",
+          "matchUriToken": "^[01cdefhijmps]$"
         },
         "[34:35]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "BooksBiographyType"
+          "uriTemplate": "https://id.kb.se/marc/BooksBiographyType-{_}",
+          "matchUriToken": "^[abcd]$"
         }
       },
       "Multimedia": {
         "[22:23]": {
           "aboutEntity": "?work",
           "link": "intendedAudience",
-          "uriTemplate": "{_}",
-          "tokenMap": "AudienceType"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
         "[23:24]": {
           "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "link": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerItemType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerItemType-{_}"
         },
         "[26:27]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerTypeOfFileType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}"
         },
         "[28:29]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "GovernmentPublicationType"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
         },
         "[18:19]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:frequencyCategory",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerFrequencyType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerFrequencyType-{_}",
+          "matchUriToken": "^[abcdefghijmqstwz]$"
         },
         "[19:20]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:regularity",
-          "uriTemplate": "{_}",
-          "tokenMap": "ComputerRegularityType"
+          "uriTemplate": "https://id.kb.se/marc/ComputerRegularityType-{_}",
+          "matchUriToken": "^[nrx]$"
         }
       },
       "Cartography": {
         "[18:19]": {
           "TODO:aboutEntity": "?cartographic",
           "addLink": "marc:relief",
-          "uriTemplate":"{_}",
-          "tokenMap": "MapsReliefType"
+          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
         },
         "[19:20]": {
           "TODO:aboutEntity": "?cartographic",
           "addLink": "marc:relief",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsReliefType"
+          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
         },
         "[20:21]": {
           "TODO:aboutEntity": "?cartographic",
           "addLink": "marc:relief",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsReliefType"
+          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
         },
         "[21:22]": {
           "TODO:aboutEntity": "?cartographic",
           "addLink": "marc:relief",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsReliefType"
+          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
         },
         "[22:24]": {
           "link": "projection",
-          "TODO:resourceType": "Projection",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsProjectionType"
+          "uriTemplate": "https://id.kb.se/marc/MapsProjectionType-{_}"
         },
         "[25:26]": {
           "TODO": "Add condition to 'link' to MapsMaterialType: (a|b|c|f|g|z) should be issuance. (d|e) should be genreForm (see also 006)",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/MapsMaterialType-{_}"
         },
         "[28:29]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "GovernmentPublicationType"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
         },
         "[29:30]": {
           "link": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ItemType"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
         "[31:32]": {
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "IndexType",
+          "uriTemplate": "https://id.kb.se/marc/IndexType-{_}",
+          "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
         "[33:34]": {
           "aboutEntity": "?work",
           "link": "additionalType",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsFormatType"
+          "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}"
         },
         "[34:35]": {
           "TODO:ignore": true,
           "aboutEntity": "?work",
           "link": "additionalType",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsFormatType"
+          "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}"
         },
         "[24:25]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:primeMeridian",
-          "uriTemplate": "{_}",
-          "tokenMap": "MapsPrimeMeridianType"
+          "uriTemplate": "https://id.kb.se/marc/MapsPrimeMeridianType-{_}"
         }
       },
       "Mixed": {
         "[23:24]": {
           "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "link": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ItemType"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         }
       },
       "Audio": {
         "[18:20]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicCompositionType"
+          "uriTemplate": "https://id.kb.se/marc/MusicCompositionType-{_}"
         },
         "[20:21]": {
           "aboutEntity": "?work",
           "link": "musicFormat",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicFormatType"
+          "uriTemplate": "https://id.kb.se/marc/MusicFormatType-{_}"
         },
         "[21:22]": {
           "aboutEntity": "?work",
           "link": "marc:parts",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicPartsType"
+          "uriTemplate": "https://id.kb.se/marc/MusicPartsType-{_}"
         },
         "[22:23]": {
           "aboutEntity": "?work",
           "link": "intendedAudience",
-          "uriTemplate": "{_}",
-          "tokenMap": "AudienceType"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
         "[23:24]": {
           "link": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ItemType"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
         "[24:25]": {
           "TODO": "Decide if this should be Work or Instance. Compare with Text",
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicMatterType"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
         "[25:26]": {
           "TODO": "Decide if this should be Work or Instance. Compare with Text",
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicMatterType"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
         "[26:27]": {
           "TODO": "Decide if this should be Work or Instance. Compare with Text",
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicMatterType"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
         "[27:28]": {
           "TODO": "Decide if this should be Work or Instance. Compare with Text",
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicMatterType"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
         "[28:29]": {
           "TODO": "Decide if this should be Work or Instance. Compare with Text",
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicMatterType"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
         "[29:30]": {
           "TODO": "Decide if this should be Work or Instance. Compare with Text",
           "link": "supplementaryContent",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicMatterType"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
         "[30:31]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicTextType"
+          "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}",
+          "fixedDefault": " "
         },
         "[31:32]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicTextType"
+          "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}"
         },
         "[33:34]": {
           "link": "marc:transposition",
-          "uriTemplate": "{_}",
-          "tokenMap": "MusicTranspositionType"
+          "uriTemplate": "https://id.kb.se/marc/MusicTranspositionType-{_}"
         }
       },
       "Serial": {
         "[18:19]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
           "link": "frequency",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsFrequencyType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}"
         },
         "[19:20]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
           "link": "frequency",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsRegularityType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}"
         },
         "[20:21]": {
           "TODO:ignore": true,
           "link": "marc:issn",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsISSNType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsISSNType-{_}"
         },
         "[21:22]": {
           "aboutEntity": "?work",
           "TODO": "Decide if it should be Work or Instance",
           "addLink": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsTypeOfSerialType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfSerialType-{_}"
         },
         "[22:23]": {
           "link": "marc:originalItem",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsOriginalItemType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsOriginalItemType-{_}"
         },
         "[23:24]": {
           "link": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ItemType"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
         "[24:25]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsNatureType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsNatureType-{_}"
         },
         "[25:26]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsContentsType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}"
         },
         "[26:27]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsContentsType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}"
         },
         "[27:28]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsContentsType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}"
         },
         "[28:29]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "GovernmentPublicationType",
-          "TODO": "If we remove tokenMap, we need @id linking to type+code (or embed those), and resourceType here to ensure proper match on revert (or else rely on parsing the @id value)",
-          "TODO:uriTemplate": "marc:GovernmentPublicationType-{_}",
-          "TODO:resourceType": "marc:GovernmentPublicationType",
-          "TODO:property": "code"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
         },
         "[29:30]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "ConferencePublicationType",
+          "uriTemplate": "https://id.kb.se/marc/ConferencePublicationType-{_}",
+          "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
         "[33:34]": {
           "link": "marc:alphabet",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsAlphabetType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsAlphabetType-{_}"
         },
         "[34:35]": {
           "link": "marc:typeOfEntry",
-          "uriTemplate": "{_}",
-          "tokenMap": "SerialsTypeOfEntryType"
+          "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfEntryType-{_}"
         }
       },
       "Visual": {
@@ -3104,60 +2961,50 @@
         "[22:23]": {
           "aboutEntity": "?work",
           "link": "intendedAudience",
-          "uriTemplate": "{_}",
-          "tokenMap": "AudienceType"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
         "[28:29]": {
           "aboutEntity": "?work",
           "link": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "GovernmentPublicationType"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
         },
         "[29:30]": {
           "link": "carrierType",
-          "uriTemplate": "{_}",
-          "tokenMap": "ItemType"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
         "[33:34]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMaterialType"
+          "uriTemplate": "https://id.kb.se/marc/VisualMaterialType-{_}"
         },
         "[34:35]": {
           "link": "marc:technique",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualTechniqueType"
+          "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}"
         },
         "[23:24]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
+          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
         },
         "[24:25]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
+          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
         },
         "[25:26]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
+          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
         },
         "[26:27]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
+          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
         },
         "[27:28]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
-          "uriTemplate": "{_}",
-          "tokenMap": "VisualMatterType"
+          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
         }
       },
       "repeatable": false,
@@ -3175,8 +3022,8 @@
               "instanceOf": {
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],
-                "genreForm": [{"@id": "marc:NotFictionNotFurtherSpecified"},
-                              {"@id": "marc:Autobiography"}
+                "genreForm": [{"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
+                              {"@id": "https://id.kb.se/marc/BooksBiographyType-a"}
                 ]
               }
             }
@@ -3190,14 +3037,14 @@
           ],
           "result": {
             "created": "2016-04-20T00:00:00.0+02:00",
-            "marc:catalogingSource": {"@id": "marc:CooperativeCatalogingProgram"},
+            "marc:catalogingSource": {"@id": "https://id.kb.se/marc/CatalogingSourceType-c"},
             "mainEntity": {
               "marc:publishedYear": "1995",
               "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
               "publicationCountry": [{"@id": "https://id.kb.se/country/fr"}],
               "instanceOf": {
                 "@type": "Text",
-                "genreForm": {"@id": "marc:NotFictionNotFurtherSpecified"},
+                "genreForm": {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
                 "language": [{"@id": "https://id.kb.se/language/freeng", "code": "freeng"}]
               }
             }
@@ -10781,50 +10628,50 @@
       "[6:7]": {
         "aboutEntity": "?record",
         "link": "marc:subdivision",
-        "uriTemplate": "{_}",
-        "tokenMap": "SubdivisionType"
+        "uriTemplate": "https://id.kb.se/marc/SubdivisionType-{_}",
+        "matchUriToken": "^[di]$"
       },
       "[7:8]": {
         "aboutEntity": "?record",
         "link": "marc:romanization",
-        "uriTemplate": "{_}",
-        "tokenMap": "RomanizationType"
+        "uriTemplate": "https://id.kb.se/marc/RomanizationType-{_}",
+        "matchUriToken": "^[abcdefg]$"
       },
       "[8:9]": {
         "aboutEntity": "?record",
         "link": "marc:languageOfCatalog",
-        "uriTemplate": "{_}",
-        "tokenMap": "LanguageOfCatalogType"
+        "uriTemplate": "https://id.kb.se/marc/LanguageOfCatalogType-{_}",
+        "matchUriToken": "^[bef]$"
       },
       "[9:10]": {
         "aboutEntity": "?record",
         "link": "marc:kindOfRecord",
-        "uriTemplate": "{_}",
-        "tokenMap": "KindOfRecordType"
+        "uriTemplate": "https://id.kb.se/marc/KindOfRecordType-{_}",
+        "matchUriToken": "^[abcdefg]$"
       },
       "[10:11]": {
         "aboutEntity": "?record",
         "link": "descriptionConventions",
-        "uriTemplate": "{_}",
-        "tokenMap": "CatalogingRulesType"
+        "uriTemplate": "https://id.kb.se/marc/CatalogingRulesType-{_}",
+        "matchUriToken": "^[_abcd]$"
       },
       "[11:12]": {
         "aboutEntity": "?record",
         "link": "marc:subjectHeading",
-        "uriTemplate": "{_}",
-        "tokenMap": "SubjectHeadingType"
+        "uriTemplate": "https://id.kb.se/marc/SubjectHeadingType-{_}",
+        "matchUriToken": "^[_abcdkrsv]$"
       },
       "[12:13]": {
         "aboutEntity": "?record",
         "link": "marc:typeOfSeries",
-        "uriTemplate": "{_}",
-        "tokenMap": "TypeOfSeriesType"
+        "uriTemplate": "https://id.kb.se/marc/TypeOfSeriesType-{_}",
+        "matchUriToken": "^[_abc]$"
       },
       "[13:14]": {
         "aboutEntity": "?record",
         "link": "marc:numberedSeries",
-        "uriTemplate": "{_}",
-        "tokenMap": "NumberedSeriesType"
+        "uriTemplate": "https://id.kb.se/marc/NumberedSeriesType-{_}",
+        "matchUriToken": "^[abc]$"
       },
       "[16:17]": {
         "aboutEntity": "?record",
@@ -10834,50 +10681,48 @@
       "[17:18]": {
         "aboutEntity": "?record",
         "link": "marc:subjectSubdivision",
-        "uriTemplate": "{_}",
-        "tokenMap": "SubjectSubdivisionType"
+        "uriTemplate": "https://id.kb.se/marc/SubjectSubdivisionType-{_}",
+        "matchUriToken": "^[abcde]$"
       },
       "[28:29]": {
         "aboutEntity": "?record",
         "link": "marc:govtAgency",
-        "uriTemplate": "{_}",
-        "tokenMap": "GovtAgencyType"
+        "uriTemplate": "https://id.kb.se/marc/GovtAgencyType-{_}",
+        "matchUriToken": "^[acfilmosuz]$"
       },
       "[29:30]": {
         "aboutEntity": "?record",
         "link": "marc:reference",
-        "uriTemplate": "{_}",
-        "tokenMap": "ReferenceType"
+        "uriTemplate": "https://id.kb.se/marc/ReferenceType-{_}",
+        "matchUriToken": "^[ab]$"
       },
       "[31:32]": {
         "aboutEntity": "?record",
         "link": "marc:recordUpdate",
-        "uriTemplate": "{_}",
-        "tokenMap": "RecordUpdateType"
+        "uriTemplate": "https://id.kb.se/marc/RecordUpdateType-{_}",
+        "matchUriToken": "^[ab]$"
       },
       "[32:33]": {
         "aboutEntity": "?record",
         "link": "marc:personalName",
-        "uriTemplate": "{_}",
-        "tokenMap": "PersonalNameType"
+        "uriTemplate": "https://id.kb.se/marc/PersonalNameType-{_}",
+        "matchUriToken": "^[ab]$"
       },
       "[33:34]": {
         "aboutEntity": "?record",
         "link": "marc:level",
-        "uriTemplate": "{_}",
-        "tokenMap": "LevelType"
+        "uriTemplate": "https://id.kb.se/marc/LevelType-{_}",
+        "matchUriToken": "^[abcd]$"
       },
       "[38:39]": {
         "aboutEntity": "?record",
         "link": "marc:modifiedRecord",
-        "uriTemplate": "{_}",
-        "tokenMap": "ModifiedRecordType"
+        "uriTemplate": "https://id.kb.se/marc/ModifiedRecordType-{_}"
       },
       "[39:40]": {
         "aboutEntity": "?record",
         "link": "marc:catalogingSource",
-        "uriTemplate": "{_}",
-        "tokenMap": "CatalogingSourceType"
+        "uriTemplate": "https://id.kb.se/marc/CatalogingSourceType-{_}"
       },
       "[14:15]": {
         "aboutEntity": "?record",
@@ -13569,15 +13414,15 @@
         "NOTE": "Undefined in MARC21/Voyager",
         "aboutEntity": "?record",
         "link": "marc:statistics",
-        "uriTemplate": "{_}",
-        "tokenMap": "StatisticsType"
+        "uriTemplate": "https://id.kb.se/marc/StatisticsType-{_}",
+        "matchUriToken": "^[_or]$",
+        "fixedDefault": " "
       },
       "[9:10]": {
         "aboutEntity": "?record",
         "link": "marc:characterCoding",
-        "uriTemplate": "{_}",
-        "fixedDefault": "a",
-        "tokenMap": "CharacterCodingType"
+        "uriTemplate": "https://id.kb.se/marc/CharacterCodingType-{_}",
+        "fixedDefault": "a"
       },
       "[17:18]": {
         "aboutEntity": "?record",
@@ -13647,13 +13492,13 @@
       },
       "[6:7]": {
         "link": "marc:acquisitionStatus",
-        "uriTemplate": "{_}",
-        "tokenMap": "AcquisitionStatusType"
+        "uriTemplate": "https://id.kb.se/marc/AcquisitionStatusType-{_}",
+        "matchUriToken": "^[12345acdnp]$"
       },
       "[7:8]": {
         "link": "marc:acquisitionMethod",
-        "uriTemplate": "{_}",
-        "tokenMap": "AcquisitionMethodType"
+        "uriTemplate": "https://id.kb.se/marc/AcquisitionMethodType-{_}",
+        "matchUriToken": "^[cdefglmnpz]$"
       },
       "[8:12]": {
         "property": "marc:expectedAcquisitionEndDate",
@@ -13663,28 +13508,28 @@
       },
       "[12:13]": {
         "link": "marc:retentionPolicy",
-        "uriTemplate": "{_}",
-        "tokenMap": "RetentionPolicyType"
+        "uriTemplate": "https://id.kb.se/marc/RetentionPolicyType-{_}",
+        "matchUriToken": "^[12345678]$"
       },
       "[13:14]": {
         "link": "marc:specificRetentionPolicy",
-        "uriTemplate": "{_}",
-        "tokenMap": "SpecificRetentionPolicyType",
+        "uriTemplate": "https://id.kb.se/marc/SpecificRetentionPolicyType-{_}",
+        "matchUriToken": "^[lp]$",
         "fixedDefault": " "
       },
       "[14:15]": {
-        "property": "marc:retentionPolicyNumberOfUnits"
+        "property": "marc:retentionPolicyNumberOfUnits",
+        "fixedDefault": " "
       },
       "[15:16]": {
         "link": "marc:retentionPolicyUnitType",
-        "uriTemplate": "{_}",
-        "tokenMap": "RetentionPolicyUnitType",
+        "uriTemplate": "https://id.kb.se/marc/RetentionPolicyUnitType-{_}",
+        "matchUriToken": "^[eimswy]$",
         "fixedDefault": " "
       },
       "[16:17]": {
         "link": "marc:completeness",
-        "uriTemplate": "{_}",
-        "tokenMap": "CompletenessType"
+        "uriTemplate": "https://id.kb.se/marc/CompletenessType-{_}"
       },
       "[17:20]": {
         "property": "inventoryLevel",
@@ -13693,13 +13538,13 @@
       },
       "[20:21]": {
         "link": "marc:lendingPolicy",
-        "uriTemplate": "{_}",
-        "tokenMap": "LendingPolicyType"
+        "uriTemplate": "https://id.kb.se/marc/LendingPolicyType-{_}",
+        "matchUriToken": "^[abcl]$"
       },
       "[21:22]": {
         "link": "marc:reproductionPolicy",
-        "uriTemplate": "{_}",
-        "tokenMap": "ReproductionPolicyType"
+        "uriTemplate": "https://id.kb.se/marc/ReproductionPolicyType-{_}",
+        "matchUriToken": "^[ab]$"
       },
       "[22:25]": {
         "addLink": "language",
@@ -13709,8 +13554,8 @@
       },
       "[25:26]": {
         "link": "marc:copyReport",
-        "uriTemplate": "{_}",
-        "tokenMap": "CopyReportType"
+        "uriTemplate": "https://id.kb.se/marc/CopyReportType-{_}",
+        "matchUriToken": "^[01]$"
       },
       "[26:32]": {
         "aboutEntity": "?record",
@@ -13758,7 +13603,7 @@
             }
           }
         },
-        {
+      {
           "name": "non-zero-padded inventoryLevel and odd dates",
           "source": {"008": "121102||0   |||||1  b ||| 0     "},
           "normalized": {"008": "121102||    |   |001b|und|000000"},
@@ -13766,7 +13611,7 @@
             "created": "2012-11-02T00:00:00.0+01:00",
             "mainEntity": {
               "inventoryLevel": 1,
-              "marc:lendingPolicy": {"@id": "marc:WillNotLend"}
+              "marc:lendingPolicy": {"@id": "https://id.kb.se/marc/LendingPolicyType-b"}
             }
           }
         }

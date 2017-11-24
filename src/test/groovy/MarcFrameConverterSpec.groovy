@@ -169,17 +169,19 @@ class MarcFrameConverterSpec extends Specification {
         when:
         def frame = converter.runConvert(marc)
         then:
+        // NOTE: unhandled fixed field columns now stored as code strings
+        frame['marc:modifiedRecord']['code'] == 'E'
         frame._marcUncompleted == [
-            ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
+            //["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
             ["100": ["ind1": "0", "subfields": [["a": "somebody"], ["?": "?"]]], "_unhandled": ["?"]],
             ["100": ["ind2": "0", "subfields": [["a": "somebody"]]], "_unhandled": ["a"]],
             ["024": ["ind1": "9", "subfields": [["a": "123"]]], "_unhandled": ["ind1"]],
             ["999": "N/A"]
         ]
         frame._marcBroken == [["100": "..."]]
-        frame._marcFailedFixedFields == [
-            "008": ["38": "E", "39": "E", "29": "E", "30": "E", "31": "E", "34": "E"]
-        ]
+        //frame._marcFailedFixedFields == [
+        //    "008": ["38": "E", "39": "E", "29": "E", "30": "E", "31": "E", "34": "E"]
+        //]
     }
 
     def "should copy over unhandled marc fields"() {
@@ -203,6 +205,33 @@ class MarcFrameConverterSpec extends Specification {
             ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
             ["100": ["ind1": "0", "subfields": [["?": "?"]]]]
         ]
+    }
+
+    def "should accept sameAs-token-URIs on revert"() {
+        given:
+        def jsonld = [
+            controlNumber: "0000000",
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "mainEntity": [
+                "@type": "Instance",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "marc:publishedYear":  "1977",
+                "publicationCountry": [["@id": "https://id.kb.se/country/sw"]],
+                "issuanceType": "Monograph",
+                "instanceOf": [
+                    "@type": "Text",
+                    "language": [["@id": "https://id.kb.se/language/swe"]],
+                    "genreForm": [
+                        ["sameAs": [["@id": "https://id.kb.se/marc/BooksLiteraryFormType-1"]]],
+                        ["sameAs": [["@id": "https://id.kb.se/marc/BooksBiographyType-d"]]]
+                    ]
+                ]
+            ]
+        ]
+        when:
+        def result = converter.conversion.revert(jsonld)
+        then:
+        result.fields[1]["008"] == "900101s1977    sw |||||||||||000 1dswe| "
     }
 
     def "should handle postprocessing"() {
