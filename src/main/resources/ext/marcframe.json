@@ -6942,9 +6942,11 @@
     },
     "584": {"ignored": true, "NOTE:record-count": 0},
     "585": {
+      "NOTE:local": "För anmärkning till utställningskataloger används fält 500.",
+      "ignoreOnRevertInFavourOf": "500",
       "aboutEntity": "?thing",
       "addLink": "hasNote",
-      "resourceType": "marc:ExhibitionsNote",
+      "resourceType": "Note",
       "$a": {"property": "label"}
     },
     "586": {
