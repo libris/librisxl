@@ -458,6 +458,9 @@ class PostgreSQLComponent {
             if (linkFinder != null)
                 linkFinder.replaceSameAsLinksWithPrimaries(doc.data)
 
+            // Make the document aware of it's deleted-status, or lack thereof
+            doc.setDeleted(deleted)
+
             Date modTime = new Date()
             if (minorUpdate) {
                 modTime = new Date(resultSet.getTimestamp("modified").getTime())

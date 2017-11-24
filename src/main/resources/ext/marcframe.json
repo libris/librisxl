@@ -184,53 +184,6 @@
 
   "postProcessing": [
     {
-      "type": "SetUpdatedStatus",
-      "statusFlag": "recordStatus",
-      "statusFlagNewValue": "marc:New",
-      "statusFlagUpdatedValue": "marc:CorrectedOrRevised",
-      "dateProperty": "created",
-      "updatedProperty": "modified",
-      "_spec": [
-        {
-          "source": {
-            "created": "2015-02-18T00:00:00Z",
-            "modified": "2015-02-18T00:00:00Z",
-            "recordStatus": "marc:New"
-          },
-          "result": {
-            "created": "2015-02-18T00:00:00Z",
-            "modified": "2015-02-18T00:00:00Z"
-          },
-          "back": true
-        },
-        {
-          "source": {
-            "created": "2015-02-18T00:00:00Z",
-            "modified": "2015-02-18T00:00:01Z",
-            "recordStatus": "marc:New"
-          },
-          "result": {
-            "created": "2015-02-18T00:00:00Z",
-            "modified": "2015-02-18T00:00:01Z"
-          },
-          "back": {
-            "created": "2015-02-18T00:00:00Z",
-            "modified": "2015-02-18T00:00:01Z",
-            "recordStatus": "marc:CorrectedOrRevised"
-          }
-        },
-        {
-          "source": {
-            "recordStatus": null
-          },
-          "result": {
-            "recordStatus": null
-          },
-          "back": true
-        }
-      ]
-    },
-    {
       "type": "VerboseRevertData",
       "sourceProperty": "@id",
       "addLink": "identifiedBy",
@@ -1199,6 +1152,7 @@
           "NOTE": "if possible to revert to, prefer this form over i2=0? (NO, i2=7 is normally not used!)",
           "match": [
             {
+              "TODO": "i2=7 is normally not used, unless $2 is one of these. Thus, move this nest to top of list",
               "when": "$2=sao | $2=saogf | $2=gmgpc | $2=barn | $2=barngf",
               "include": ["termbase_with_id"]
             },
@@ -3768,7 +3722,7 @@
       "TODO:a": "extract value from parantheses and source as rdfs:label",
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
-      "$9": {"addProperty": "librisIIINumber"},
+      "$9": {"addProperty": "librisIIINumber", "TODO": "add spec!"},
       "_spec": [
         {
           "name": "interpret dbpedia URI as sameAs of instance",
@@ -6409,7 +6363,8 @@
     },
     "490": {
       "inherit": "440",
-      "TOOO:i1": {},
+      "TOOO:i1": {"when: 8xx[$t] | 830": "1", "else": "0"},
+      "TODO:allowSpillOverOnRevert": "800-830",
       "i2": null,
       "TODO:ignoreOnRevertInFavourOf": "773?",
       "$l": {"link": "callno", "resourceType": "Concept", "property": "code"}
@@ -10696,8 +10651,47 @@
     "885": {},
 
     "886": {
-      "TODO:i1": {},
-      "TODO:addLink": "quotedMARC", "datatype": "XMLLiteral", "$_": {}
+      "addLink": "marc:hasForeignMARCInformationField",
+      "resourceType": "marc:ForeignMARCInformationField",
+      "i1": {"property": "marc:foreignMarcSubfield-i1"},
+      "TODO:addLink": "quotedMARC", "datatype": "XMLLiteral", "$_": {},
+      "$a": {"addProperty": "marc:foreignMarcSubfield-a"},
+      "$b": {"addProperty": "marc:foreignMarcSubfield-b"},
+      "$c": {"addProperty": "marc:foreignMarcSubfield-c"},
+      "$d": {"addProperty": "marc:foreignMarcSubfield-d"},
+      "$e": {"addProperty": "marc:foreignMarcSubfield-e"},
+      "$f": {"addProperty": "marc:foreignMarcSubfield-f"},
+      "$g": {"addProperty": "marc:foreignMarcSubfield-g"},
+      "$h": {"addProperty": "marc:foreignMarcSubfield-h"},
+      "$i": {"addProperty": "marc:foreignMarcSubfield-i"},
+      "$j": {"addProperty": "marc:foreignMarcSubfield-j"},
+      "$k": {"addProperty": "marc:foreignMarcSubfield-k"},
+      "$l": {"addProperty": "marc:foreignMarcSubfield-l"},
+      "$m": {"addProperty": "marc:foreignMarcSubfield-m"},
+      "$n": {"addProperty": "marc:foreignMarcSubfield-n"},
+      "$o": {"addProperty": "marc:foreignMarcSubfield-o"},
+      "$p": {"addProperty": "marc:foreignMarcSubfield-p"},
+      "$q": {"addProperty": "marc:foreignMarcSubfield-q"},
+      "$r": {"addProperty": "marc:foreignMarcSubfield-r"},
+      "$s": {"addProperty": "marc:foreignMarcSubfield-s"},
+      "$t": {"addProperty": "marc:foreignMarcSubfield-t"},
+      "$u": {"addProperty": "marc:foreignMarcSubfield-u"},
+      "$v": {"addProperty": "marc:foreignMarcSubfield-v"},
+      "$w": {"addProperty": "marc:foreignMarcSubfield-w"},
+      "$x": {"addProperty": "marc:foreignMarcSubfield-x"},
+      "$y": {"addProperty": "marc:foreignMarcSubfield-y"},
+      "$z": {"addProperty": "marc:foreignMarcSubfield-z"},
+      "$0": {"addProperty": "marc:foreignMarcSubfield-0"},
+      "$1": {"addProperty": "marc:foreignMarcSubfield-1"},
+      "$2": {"addProperty": "marc:foreignMarcSubfield-2"},
+      "$3": {"addProperty": "marc:foreignMarcSubfield-3"},
+      "$4": {"addProperty": "marc:foreignMarcSubfield-4"},
+      "$5": {"addProperty": "marc:foreignMarcSubfield-5"},
+      "$6": {"addProperty": "marc:foreignMarcSubfield-6"},
+      "$7": {"addProperty": "marc:foreignMarcSubfield-7"},
+      "$8": {"addProperty": "marc:foreignMarcSubfield-8"},
+      "$9": {"addProperty": "marc:foreignMarcSubfield-9"},
+      "repeatable": true
     },
     "887": {
       "TODO:addLink": "quotedRaw", "$_": {}

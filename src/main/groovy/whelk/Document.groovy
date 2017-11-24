@@ -51,12 +51,11 @@ class Document {
     static final List heldByPath = ["@graph", 1, "heldBy", "@id"]
     static final List createdPath = ["@graph", 0, "created"]
     static final List modifiedPath = ["@graph", 0, "modified"]
-    static final List encLevelPath = ["@graph", 0, "marc:encLevel", "@id"]
+    static final List encLevelPath = ["@graph", 0, "encodingLevel"]
+    static final List deletedPath = ["@graph", 0, "recordStatus"]
     static final List sigelPath = ["@graph", 1, "heldBy", "@id"]
 
     public Map data = [:]
-    private boolean deleted = false
-
 
     Document(Map data) {
         this.data = data
@@ -169,11 +168,17 @@ class Document {
     String getModified() { get(modifiedPath) }
 
     void setDeleted(boolean newValue) {
-        deleted = newValue
+        if (newValue)
+            set(deletedPath, "marc:Deleted", HashMap)
+        else
+            removeLeafObject(deletedPath, HashMap)
     }
 
     boolean getDeleted() {
-        return deleted
+        String deletedString = get(deletedPath)
+        if (deletedString == null || !deletedString.equals("marc:Deleted"))
+            return false
+        return true
     }
 
     boolean isHolding(JsonLd jsonld) {
