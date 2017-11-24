@@ -13893,8 +13893,8 @@
     "653": {"inherit": "bib:653", "aboutEntity": null},
     "655": {"inherit": "bib:655", "aboutEntity": null},
     "698": {
-      "addLink": "marc:hasHold698",
-      "resourceType": "marc:Hold698",
+      "addLink": "marc:hasLocalSubjectAndHeading",
+      "resourceType": "marc:LocalSubjectAndHeading",
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
       "$a": {"property": "code"},
       "$b": {"property": "label"}
