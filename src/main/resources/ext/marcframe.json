@@ -6959,7 +6959,7 @@
       "$a": {"property": "label"},
       "NOTE:i1": "ignore"
     },
-    "590": {},
+    "590": {"ignored": true, "NOTE:OCLC": "Use for notes pertaining only to the copy of the item located in your institution. Field 590 is not part of the standard MARC21 format." },
     "599": {
       "TOOO:i1": {},
       "$a": {"aboutEntity": "?record", "addProperty": "technicalNote"}
