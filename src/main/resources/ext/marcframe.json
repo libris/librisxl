@@ -2022,7 +2022,7 @@
           "c": "Electronic",
           "d": "Globe",
           "f": "Tactile",
-          "g": "ProjectedImage",
+          "g": "ProjectedImageInstance",
           "h": "Microform",
           "k": "StillImageInstance",
           "m": "MovingImageInstance",
@@ -2163,7 +2163,7 @@
         "fixedDefault": " "
         }
       },
-      "TactileMaterial": {
+      "Tactile": {
         "[1:2]": {
           "TODO:layout": "Also more general mapping? Ensure that reconverting are able to handle this",
           "addLink": "layout",
@@ -2214,7 +2214,7 @@
           "TODO:tokenMap": "If we remove tokenMap, we need the URI, and preferably match type to ensure valid values"
         }
       },
-      "ProjectedImage": {
+      "ProjectedImageInstance": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
@@ -2313,7 +2313,7 @@
         "fixedDefault": " "
         }
       },
-      "StillImage": {
+      "StillImageInstance": {
         "[1:2]": {
           "addLink": "genreForm",
           "uriTemplate": "{_}",
@@ -2343,7 +2343,7 @@
         "fixedDefault": " "
         }
       },
-      "MovingImage": {
+      "MovingImageInstance": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
@@ -2433,14 +2433,14 @@
           "fixedDefault": " "
         }
       },
-      "Kit": {
+      "KitInstance": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
           "tokenMap": "KitMaterialType"
         }
       },
-      "NotatedMusic": {
+      "NotatedMusicInstance": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
@@ -2575,7 +2575,7 @@
         "fixedDefault": " "
         }
       },
-      "Text": {
+      "TextInstance": {
         "[1:2]": {
           "addLink": "carrierType",
           "uriTemplate": "{_}",
@@ -3255,11 +3255,11 @@
     "010": {
       "include": ["identifier"],
       "resourceType": "LCCN",
-      "$b": {"property": "marc:numcNumber"},
+      "$b": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
       "$8": {"property": "marc:groupid"}
     },
 
-    "013": {"NOTE:record-count": 0, "ignored": true},
+    "013": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
 
     "015": {
       "include": ["idbase"],
@@ -3312,8 +3312,18 @@
       }
     },
 
-    "017": {"NOTE:record-count": 2408, "ignored": true},
-    "018": {"NOTE:record-count": 0, "ignored": true},
+    "017": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "include": ["idbase"],
+      "resourceType": "CopyrightNumber",
+      "i2": {"marcDefault": " "},
+      "$a": {"property": "value"},
+      "$b": {"link": "source", "resourceType": "Source", "property": "label"},
+      "$d": {"property": "date"},
+      "$i": {"property": "note"},
+      "$z": {"addProperty": "marc:hiddenValue"}
+    },
+    "018": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
 
     "020": {
       "include": ["identifier"],
@@ -3416,7 +3426,7 @@
       },
       "$l": {"property": "marc:issnL"},
       "$m": {"addProperty": "marc:canceledIssnL"},
-      "$2": {"TODO:link": "typeNote"},
+      "$2": {"property": "marc:source"},
       "$y": {"TODO": "inherit:$z + specific: marc:incorrectIssn"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
@@ -3511,10 +3521,24 @@
       ]
     },
 
-    "025": {"NOTE:record-count": 1170, "ignored": true},
-
-    "026": {"NOTE:record-count": 159, "ignored": true},
-
+    "025": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "include": ["idbase"],
+      "resourceType": "LcOverseasAcq",
+      "$a": {"property": "value"}
+    },
+    "026": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "include": ["idbase"],
+      "resourceType": "Fingerprint",
+      "$a": {"property": "value"},
+      "$b": {"property": "marc:thirdAndFourthGroupsOfCharacters"},
+      "$c": {"property": "date"},
+      "$d": {"addProperty": "marc:numberOfVolumeOrPart"},
+      "$e": {"property": "marc:unparsedFingerprint"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "label"},
+      "$5": {"property": "marc:institutionToWhichFieldApplies"}
+    },
     "027": {
       "include": ["identifier"],
       "resourceType": "STRN"
@@ -3557,10 +3581,15 @@
       "resourceType": "CODEN"
     },
 
-    "031": {"NOTE:record-count": 16, "ignored": true},
+    "031": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
 
-    "032": {"NOTE:record-count": 625, "ignored": true},
-
+    "032": {
+      "NOTE:local":"ANVÄNDS NORMALT EJ",
+      "include": ["idbase"],
+      "resourceType": "PostalRegistration",
+      "$a": {"property": "value"},
+      "$b": {"link": "source", "resourceType": "Source", "property": "label"}
+  },
     "033": {
       "NOTE:record-count": 852,
       "TODO:revert": "To ensure 033 and 518 will not be mixed up when reverting",
@@ -3909,7 +3938,7 @@
       ]
     },
     "043": {
-      "TODO": "map to countrycode",
+      "NOTE:local": "ANVÄNDS NORMALT EJ - Används normalt inte i Bibliografiska formatet, men ska ligga kvar oförändrat i importerade poster.",
       "aboutEntity": "?work",
       "link": "marc:hasGeographicAreaCode",
       "resourceType": "marc:GeographicAreaCode",
@@ -4067,13 +4096,13 @@
       "aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "ClassificationNlm",
-      "TOOO:i1": {},
-      "TOOO:i2": {},
+      "i1": {"property": "marc:existenceInNlmCollection"},
+      "i2": {"property": "marc:assignedByNlm", "tokenMap": {"0": true, "4": false}},
       "$a": {"property": "code"},
       "$b": {"property": "itemPortion", "ignored": true}
     },
-    "061": {"NOTE:record-count": 1, "ignored": true},
-    "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
+    "061": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "066": {"ignored": true, "NOTE:record-count": 4905, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
     "070": {
       "aboutEntity": "?work",
       "link": "marc:hasNationalAgriculturalLibraryCallNumber",
@@ -4095,10 +4124,18 @@
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Concept",
-      "TOOO:i2": {},
+      "i2": {
+        "link": "source",
+        "resourceType": "Source",
+        "property": "code",
+        "tokenMap": {
+          "0": "NAL"
+        },
+        "definedElsewhereToken": "7"
+      },
       "$a": {"property": "label"},
       "$x": {"link": "inCollection", "property": "label"},
-      "$2": {"link": "source", "property": "code"}
+      "$2": {"requires-i2": "7", "link": "source", "resourceType": "Source", "property": "code"}
     },
 
     "074": {
@@ -4108,10 +4145,20 @@
 
     "080": {
       "aboutEntity": "?work",
-      "TOOO:i1": {},
       "addLink": "classification",
       "resourceType": "ClassificationUdc",
+      "i1": {
+        "property": "edition",
+        "tokenMap": {
+          "0": "full",
+          "1": "abridged",
+          " ": "No information provided"
+        }
+      },
       "$a": {"property": "code"},
+      "$b": {"property": "marc:itemNumber"},
+      "$x": {"addProperty": "marc:commonAuxiliarySubdivision"},
+      "$2": {"property": "marc:editionIdentifier"},
       "_spec": [
         {
           "source": {
@@ -4122,7 +4169,7 @@
               "instanceOf": {
                 "@type": "Text",
                 "classification": [
-                  {"@type": "ClassificationUdc", "code": "030"}
+                  {"@type": "ClassificationUdc", "code": "030", "edition": "No information provided"}
                 ]
               }
             }
@@ -5343,7 +5390,7 @@
       "$f": {"property": "date"},
       "$g": {"property": "comment"},
       "$h": {"property": "marc:mediaTerm"},
-      "$x": {"addProperty": "issn"},
+      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "spec_": [
         {
           "source": {
@@ -5373,7 +5420,7 @@
               "mainTitle": "Customs and excise circular",
               "partNumber": "Part 2",
               "date": "1923-1925",
-              "issn": "0019-8536"
+              "identifiedBy": {"@type": "Identifier", "value": "0019-8536"}
             }]
           }}
         }
@@ -6813,10 +6860,26 @@
     },
     "545": {
       "aboutEntity": "?thing",
-      "addLink": "hasNote",
-      "resourceType": "marc:BiographicalOrHistoricalData",
-      "TODO:i1": "'0': BiographicalDataNote, '1': AdministrativeHistoryNote",
-      "$a": {"property": "label"}
+      "match": [
+        {
+          "when": "i1= ",
+          "addLink": "hasBiographicalOrHistoricalData",
+          "resourceType": "BiographicalOrHistoricalData"
+        },
+        {
+          "when": "i1=0",
+          "addLink": "hasBiographicalInformation",
+          "resourceType": "BiographicalDataNote"
+        },
+        {
+          "when": "i2=1",
+          "addLink": "hasHistoricalData",
+          "resourceType": "AdministrativeHistoryNote"
+        }
+      ],
+      "$a": {"property": "label"},
+      "$b": {"property": "description"},
+      "$u": {"property": "uri"}
     },
     "546": {"aboutEntity": "?work", "$a": {"addProperty": "languageNote"}, "$6": {"property": "marc:fieldref"}},
     "547": {
@@ -6840,9 +6903,15 @@
       "$a": {"property": "label"},
       "$c": {"property": "marc:degreeOfControl", "NOTE": "concatenate with $a", "NOTE:record-count": 2}
     },
-    "556": {"NOTE:record-count": 7,
-      "$a": {"aboutEntity": "?thing", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
-      "$z": {"ignored": true}
+    "556": {
+      "ignoreOnRevertInFavourOf": "500",
+      "aboutEntity": "?thing",
+      "addLink": "hasNote",
+      "resourceType": "Note",
+      "i1": {"ignored": true, "NOTE:lc": "ignore"},
+      "$a": {"property": "label"},
+      "$z": {"ignored": true, "NOTE:lc": "nac"},
+      "$6": {"property": "marc:fieldref"}
     },
     "561": {
       "addLink": "marc:hasOwnershipAndCustodialHistory",
@@ -6879,8 +6948,8 @@
       "$3": {"property": "marc:materialsSpecified"},
       "$5": {"property": "marc:institutionToWhichFieldApplies"}
     },
-    "565": {"NOTE:record-count": 2, "ignored": true},
-    "567": {"NOTE:record-count": 0, "ignored": true},
+    "565": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "567": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "580": {
       "aboutEntity": "?work",
       "addLink": "hasNote",
@@ -6891,11 +6960,11 @@
     "581": {
       "aboutEntity": "?thing",
       "addLink": "hasNote",
-      "resourceType": "marc:PublicationsAboutDescribedMaterialsNote",
-      "$a": {"property": "marc:publicationsAboutDescribedMaterialsNote"},
-      "$z": {"property": "marc:internationalStandardBookNumber"},
-      "$3": {"property": "marc:materialsSpecified"},
-      "NOTE:i1": "ignore"
+      "resourceType": "RelatedMaterialNote",
+      "i1": {"ignored": true, "NOTE:LC": "nac"},
+      "$a": {"property": "label"},
+      "$z": {"addproperty": "isbn"},
+      "$3": {"property": "marc:materialsSpecified"}
     },
     "583": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
@@ -7212,6 +7281,13 @@
               {"x": "Criticism and interpretation"},
               {"x": "History"},
               {"y": "21st century."}]}},
+          "normalized": {
+            "600": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Mangunwijaya, Y. B."},
+              {"d": "1929-1999"},
+              {"x": "Criticism and interpretation"},
+              {"x": "History"},
+              {"y": "21st century."}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -7243,6 +7319,15 @@
           "source": {
             "600": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Scarlatti, Domenico,"},
+              {"d": "1685-1757"},
+              {"t": "Sonatas,"},
+              {"m": "harpsichord"},
+              {"n": "K. 492,"},
+              {"r": "D major;"},
+              {"y": "21st century."}]}},
+          "normalized": {
+            "600": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Scarlatti, Domenico"},
               {"d": "1685-1757"},
               {"t": "Sonatas,"},
               {"m": "harpsichord"},
@@ -7504,7 +7589,7 @@
           "normalized": {
             "610": {"ind1": "2", "ind2": "7", "subfields":[
               {"a": "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."},
-              {"k": " Manuscript."},
+              {"k": "Manuscript."},
               {"t": "Egentitel"},
               {"n": "Fond 1209"},
               {"p": "Pomestnyĭ prikaz"}]}
@@ -8342,7 +8427,7 @@
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
-      "$x": {"property": "issn"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "subfieldOrder": " i a b c q d j e u 4 t g m n p r s l k f o",
@@ -8721,8 +8806,8 @@
       "TODO:changed-remove?:computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
 
-      "$x": {"property": "issn"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "property": "label"},
       "$6": {"property": "marc:fieldref"},
@@ -9213,7 +9298,7 @@
           }
         }
       ],
-      "$x": {"property": "issn"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "i1": {"marcDefault": "2"},
       "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$j": {"addLink": "role", "property": "label"},
@@ -9417,7 +9502,7 @@
           "$d": {"property": "legalDate"},
           "$n": {"about": "_:title", "addProperty": "partNumber", "punctuationChars": ","},
           "$i": {"addLink": "marc:relatedAs", "resourceType": "Role", "property": "label"},
-          "$x": {"property": "issn", "punctuationChars": ".,=;"}
+          "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"}
         }
       ],
       "pendingResources": {
@@ -9432,7 +9517,7 @@
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"about": "_:work","property": "legalDate"},
       "$i": {"addLink": "relation", "resourceType": "Resource", "property": "label"},
-      "$x": {"about": "_:work","property": "issn", "punctuationChars": ".,=;"},
+      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
@@ -9492,6 +9577,13 @@
             {"a": "Gigue,"},
             {"m": "harpsichord,"},
             {"n": "GraunWV D:XVIII:11,"},
+            {"r": "B♭ minor"}
+          ]}},
+          "normalized": {"730": {"ind1": "3", "ind2": "2", "subfields": [
+            {"i": "Container of (work):"},
+            {"a": "Gigue,"},
+            {"m": "harpsichord,"},
+            {"n": "GraunWV D:XVIII:11"},
             {"r": "B♭ minor"}
           ]}},
           "result": {"mainEntity": {
@@ -9715,12 +9807,12 @@
       },
       "$x": {
         "TODO:targetMatch": "022",
-        "property": "issn"
+        "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"
       },
       "$y": {"property": "coden", "TODO:targetMatch": "030"},
       "$z": {
         "TODO:targetMatch": "020",
-        "addProperty": "isbn"
+        "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"
       },
       "$6": {"property": "marc:fieldref"},
       "$7": {"property": "marc:controlSubfield"},
@@ -9741,7 +9833,10 @@
                   "@type": "Title",
                   "uniformTitle": "Main Thing"
                 }],
-                "isbn": ["00-0-000000-0"]
+                "identifiedBy": [{
+                  "@type": "ISBN",
+                  "value": "00-0-000000-0"
+                }]
               }
             ]
           }}
@@ -9885,7 +9980,10 @@
                   "@type": "Title",
                   "title": "Naysprayer"
                 }],
-                "issn": "1937-6545",
+                "identifiedBy": [{
+                  "@type": "ISSN",
+                  "value": "1937-6545"
+                }],
                 "marc:toDisplayNote": true
               }
             ]
@@ -9968,7 +10066,7 @@
       "$t": {"about": "_:title", "property": "mainTitle"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
-      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
@@ -10168,7 +10266,7 @@
       "$t": {"about": "_:title", "property": "mainTitle"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
-      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
@@ -10303,7 +10401,7 @@
       "$t": {"about": "_:title", "property": "mainTitle"},
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
-      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
@@ -10378,7 +10476,7 @@
       "$d": {"addProperty": "legalDate"},
       "$v": {"property": "seriesEnumeration"},
       "$w": {"property": "marc:bibliographicRecordControlNumber"},
-      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "i2": {"property": "marc:nonfilingChars"},
       "subfieldorder": "3 a d g h s m n p l r k f o v w x",
@@ -10424,7 +10522,10 @@
                     "mainTitle": "Studies on the texts of the desert of Judah,"
                   } ],
                   "seriesEnumeration": "101",
-                  "issn": "0169-9962",
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0169-9962"
+                  },
                   "marc:nonfilingChars" : "4"
                 }
               ]
@@ -10861,9 +10962,10 @@
     },
     "043" : {
       "$a": {
-        "link": "nationality",
+        "addLink": "nationality",
         "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "code"
-      }
+      },
+    "repeatable": false
     },
     "045" : {
       "$a": {"property": "temporalCoverage", "tokenMap": "timePeriod", "TODO": "This is the EDTF value table from the LoC BF2 converter, not the readable form. Might be better as linked resources with with both labels and codes."}
@@ -13083,6 +13185,9 @@
     "677": {"ignored": true, "NOTE:record-count": 1},
     "678": {"inherit": "bib:545"},
     "680": {
+      "addLink": "hasNote",
+      "resourceType": "Note",
+      "$a": {"addProperty": "marc:headingOrSubdivisionTerm"},
       "$i": {"addProperty": "scopeNote"}
     },
     "681": {"ignored": true, "NOTE:record-count": 0},
@@ -13383,16 +13488,16 @@
         "sourceLink": "itemOf",
         "sourceProperty": "@type",
         "targetEntity": "?record",
-        "targetProperty": "holdingType",
+        "targetProperty": "marc:holdingType",
         "valueMap": {
-          "ComponentPart": {"@id": "marc:SinglePartItemHolding"},
-          "Collection": {"@id": "marc:SinglePartItemHolding"},
-          "SubCollection": {"@id": "marc:SinglePartItemHolding"},
-          "Monograph": {"@id": "marc:SinglePartItemHolding"},
-          "SerialComponentPart": {"@id": "marc:SerialItemHolding"},
-          "Integrating": {"@id": "marc:SerialItemHolding"},
-          "Serial": {"@id": "marc:SerialItemHolding"},
-          "?": {"@id": "marc:MultipartItemHolding"},
+          "ComponentPart": "marc:SinglePartItemHolding",
+          "Collection": "marc:SinglePartItemHolding",
+          "SubCollection": "marc:SinglePartItemHolding",
+          "Monograph": "marc:SinglePartItemHolding",
+          "SerialComponentPart": "marc:SerialItemHolding",
+          "Integrating": "marc:SerialItemHolding",
+          "Serial": "marc:SerialItemHolding",
+          "?": "marc:MultipartItemHolding",
           "Periodical": null
         },
         "_spec": [
@@ -13405,7 +13510,7 @@
               }
             },
             "result": {
-              "holdingType": {"@id": "marc:SinglePartItemHolding"},
+              "marc:holdingType": "marc:SinglePartItemHolding",
               "mainEntity": {
                 "itemOf": {
                   "@type": "Monograph"
@@ -13952,15 +14057,23 @@
     },
 
     "863": {
-      "addLink": "qualifiedEnumerationsAndChronologyNote",
+      "addLink": "hasNote",
+      "resourceType": "marc:QualifiedEnumerationsAndChronologyNote",
       "embedded": true,
-      "resourceType": "Note",
-      "TODO:i1": {},
-      "TODO:i2": {},
-      "$a": {"property": "label"},
+      "NOTE:?resourceType": "Note",
+      "i1": {"property": "marc:holdingsLevel"},
+      "i2": {"property": "marc:formOfHoldings"},
+      "$a": {"property": "marc:firstLevelOfEnumeration"},
+      "$b": {"property": "marc:secondLevelOfEnumeration"},
+      "$c": {"property": "marc:thirdLevelOfEnumeration"},
+      "$d": {"property": "marc:fourthLevelOfEnumeration"},
+      "$e": {"property": "marc:fifthLevelOfEnumeration"},
+      "$p": {"property": "marc:pieceDesignation"},
+      "$t": {"property": "marc:copyNumber"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"},
       "$8": {"property": "marc:groupid"},
+      "$9": {"addProperty": "organizationalUnit"},
       "repeatable": true
     },
     "864": {"ignored": true, "NOTE:record-count": 6, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"}, 
