@@ -477,8 +477,7 @@ class Crud extends HttpServlet {
                                                     String version = null) {
         Tuple2<Document, String> result = new Tuple2(null, null)
 
-        // Document doc = whelk.storage.load(id, version)
-        Document doc = whelk.storage.load(id)
+        Document doc = whelk.storage.load(id, version)
         if (doc) {
             return new Tuple2(doc, null)
         }
@@ -487,15 +486,13 @@ class Crud extends HttpServlet {
         // identifiers table instead
         switch (whelk.storage.getIdType(id)) {
             case IdType.RecordMainId:
-                // doc = whelk.storage.loadDocumentByMainId(id, version)
-                doc = whelk.storage.loadDocumentByMainId(id)
+                doc = whelk.storage.loadDocumentByMainId(id, version)
                 if (doc) {
                     result = new Tuple2(doc, null)
                 }
                 break
             case IdType.ThingMainId:
-                // doc = whelk.storage.loadDocumentByMainId(id, version)
-                doc = whelk.storage.loadDocumentByMainId(id)
+                doc = whelk.storage.loadDocumentByMainId(id, version)
                 if (doc) {
                     String contentLocation = whelk.storage.getRecordId(id)
                     result = new Tuple2(doc, contentLocation)
@@ -923,7 +920,7 @@ class Crud extends HttpServlet {
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
-                    doc = whelk.store(doc, "xl", null, collection, false)
+                    doc = whelk.createDocument(doc, "xl", null, collection, false)
                 }
 
                 log.debug("Saving document (${doc.getShortId()})")

@@ -163,7 +163,7 @@ public class ApixCatServlet extends HttpServlet
 
         if (id.equalsIgnoreCase("new"))
         {
-            Utils.s_whelk.store(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
+            Utils.s_whelk.createDocument(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
             s_logger.info("Successful new on : " + incomingDocument.getShortId());
             Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
         } else // save/overwrite existing
@@ -205,7 +205,7 @@ public class ApixCatServlet extends HttpServlet
             return;
         }
 
-        Utils.s_whelk.store(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
+        Utils.s_whelk.createDocument(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
         s_logger.info("Successful new (hold on bib) on : " + incomingDocument.getShortId());
         Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
     }
