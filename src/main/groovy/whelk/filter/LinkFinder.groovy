@@ -79,9 +79,25 @@ class LinkFinder {
         if (id != null && data.keySet().size() == 1) {
 
             if (id.startsWith("http://libris.kb.se/resource/")) {
+
                 // re-calculate what the correct primary ID should be (better get this right)
-                String pathId = id.substring("http://libris.kb.se/".length())
-                data.put( "@id", Document.BASE_URI.resolve(LegacyIntegrationTools.generateId( pathId )).toString() + "#it" )
+                String pathId = id.substring("http://libris.kb.se/resource".length())
+                String numericId = pathId.split("/")[2]
+                boolean isNumericId = true
+                for (char c : numericId.toCharArray()) {
+                    if (!Character.isDigit(c))
+                        isNumericId = false
+                }
+                if (isNumericId) {
+                    data.put("@id", Document.BASE_URI.resolve(LegacyIntegrationTools.generateId(pathId)).toString() + "#it")
+                } else {
+                    // The ID is something of the form http://libris.kb.se/resource/cwpqbclp4x4n61k
+                    String primaryId = Document.BASE_URI.resolve(numericId).toString()
+                    if (!primaryId.endsWith("#it"))
+                        primaryId += "#it"
+                    data.put("@id", primaryId)
+                }
+
             } else if (id.startsWith("https://id.kb.se/")) {
                 // cache the ID
                 if (uriCache.containsKey(id)) {

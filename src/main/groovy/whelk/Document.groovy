@@ -52,7 +52,7 @@ class Document {
     static final List createdPath = ["@graph", 0, "created"]
     static final List modifiedPath = ["@graph", 0, "modified"]
     static final List encLevelPath = ["@graph", 0, "encodingLevel"]
-    static final List deletedPath = ["@graph", 0, "recordStatus"]
+    static final List statusPath = ["@graph", 0, "recordStatus"]
     static final List sigelPath = ["@graph", 1, "heldBy", "@id"]
 
     public Map data = [:]
@@ -169,13 +169,13 @@ class Document {
 
     void setDeleted(boolean newValue) {
         if (newValue)
-            set(deletedPath, "marc:Deleted", HashMap)
+            set(statusPath, "marc:Deleted", HashMap)
         else
-            removeLeafObject(deletedPath, HashMap)
+            removeLeafObject(statusPath, HashMap)
     }
 
     boolean getDeleted() {
-        String deletedString = get(deletedPath)
+        String deletedString = get(statusPath)
         if (deletedString == null || !deletedString.equals("marc:Deleted"))
             return false
         return true
