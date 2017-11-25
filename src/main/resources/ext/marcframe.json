@@ -1120,10 +1120,24 @@
       "FIXME-2": "mostly irrelevant when using i2 rule in subjectbase!? Nah, that's to explicitly preserve the data (too)?",
       "match": [
         {
+          "NOTE": "Only prefer this form over i2=0 if $2 is special (i2=7 is normally not used)",
+          "when": "$2=sao | $2=saogf | $2=gmgpc | $2=barn | $2=barngf",
+          "match": [
+            {
+              "when": "i2=7 & $2",
+              "include": ["termbase_with_id"]
+            },
+            {
+              "when": null,
+              "include": ["termbase"]
+            }
+          ]
+        },
+        {
           "when": "i2=0",
           "include": ["termbase"],
           "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}",
-          "TODO": "Check if the two above are sound; better to match on uriTemplate on revert!"
+          "FIXME": "Match on uriTemplate on revert!"
         },
         {
           "when": "i2=1",
@@ -1138,27 +1152,16 @@
         {
           "when": "i2=3",
           "include": ["termbase"],
-          "TODO:uriTemplate": "https://id.nlm.nih.gov/mesh/",
+          "uriTemplate": "https://id.nlm.nih.gov/mesh/{code}",
           "NOTE:uriTemplate": "beta sparql endpoint. Use this?"
         },
         {
-          "when": "i2=4 | i2=5 | i2=6",
+          "when": "i2=4",
           "include": ["termbase"]
         },
         {
-          "when": "i2=7 & $2",
-          "NOTE": "if possible to revert to, prefer this form over i2=0? (NO, i2=7 is normally not used!)",
-          "match": [
-            {
-              "TODO": "i2=7 is normally not used, unless $2 is one of these. Thus, move this nest to top of list",
-              "when": "$2=sao | $2=saogf | $2=gmgpc | $2=barn | $2=barngf",
-              "include": ["termbase_with_id"]
-            },
-            {
-              "when": null,
-              "include": ["termbase"]
-            }
-          ]
+          "when": "i2=5 | i2=6",
+          "include": ["termbase"]
         },
         {
           "when": null,
