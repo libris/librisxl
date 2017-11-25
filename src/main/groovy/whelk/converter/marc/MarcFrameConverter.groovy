@@ -1055,9 +1055,9 @@ class MarcFixedFieldHandler {
             if (matchAsDefault) {
                 this.matchAsDefault = Pattern.compile((String) matchAsDefault)
             }
-            if (!fixedDefault && tokenMap &&
-                    !tokenMap.containsKey(FIXED_FAUX_NONE) &&
-                    !tokenMap.containsKey(FIXED_NONE)) {
+            if (!fixedDefault && (!tokenMap ||
+                    (!tokenMap.containsKey(FIXED_FAUX_NONE) &&
+                    !tokenMap.containsKey(FIXED_NONE)))) {
                 this.fixedDefault = FIXED_UNDEF
             }
         }
@@ -1261,6 +1261,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XX")
 
     static final String URI_SLOT = '{_}'
+    static final String COLUMN_STRING_PROPERTY = 'code'
 
     String property
     String uriTemplate
@@ -1380,7 +1381,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             if (!matchUriToken || matchUriToken.matcher(strValue).matches()) {
                 ent['@id'] = uriTemplate.replace(URI_SLOT, strValue.trim())
             } else {
-                ent['@value'] = value
+                ent[COLUMN_STRING_PROPERTY] = value
             }
             //} else if (linkedHandler) {
             //    linkedHandler.convert(state, value,["?thing": ent])
@@ -1421,15 +1422,33 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             return revertObject(v)
         } else {
             return (entity instanceof List ? entity : [entity]).collect {
-                def id = it instanceof Map ? it['@id'] : it
-                if (uriTemplate && id instanceof String) {
-                    def token = extractToken(uriTemplate, (String) id)
+                if (uriTemplate) {
+                    def token = findTokenFromId(it)
                     if (token) {
                         return revertObject(token)
+                    }
+                    if (it instanceof Map) {
+                        for (same in Util.asList(it['sameAs'])) {
+                            token = findTokenFromId(same)
+                            if (token) {
+                                return revertObject(token)
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+
+    String findTokenFromId(node) {
+        def id = node instanceof Map ? node['@id'] : node
+        if (id instanceof String) {
+            String token = extractToken(uriTemplate, (String) id)
+            if (token != null && (!matchUriToken || matchUriToken.matcher(token).matches())) {
+                return token
+            }
+        }
+        return null
     }
 
     static ZonedDateTime parseDate(String s) {
