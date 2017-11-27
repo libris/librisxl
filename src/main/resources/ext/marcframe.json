@@ -9478,9 +9478,7 @@
           "addLink": "hasPart",
           "resourceType": "Work",
           "aboutAlias": "_:work",
-          "$d": {"property": "legalDate"},
-          "$n": {"about": "_:title", "addProperty": "partNumber", "punctuationChars": ","},
-          "$x": {"property": "issn", "punctuationChars": ".,=;"}
+          "$n": {"about": "_:title", "addProperty": "partNumber", "punctuationChars": ","}
         }
       ],
       "pendingResources": {
@@ -9493,10 +9491,6 @@
       "addLink": "relationship",
       "resourceType": "Relationship",
       "$a": {"about": "_:title", "property": "mainTitle"},
-      "$d": {"about": "_:work","property": "legalDate"},
-      "$i": {"addLink": "relation", "resourceType": "Resource", "property": "label"},
-      "$x": {"about": "_:work","property": "issn", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
@@ -11761,8 +11755,8 @@
       "$l": {"addProperty": "label"}
     },
     "378": {
-      "TODO": "Depends on bib 100, 700 and auth 100 $q 'marc:fullerFormName'. See mads:fullNameElement",
-      "$q": {"property": "marc:fullerFormName"}
+      "TODO": "Depends on bib 100, 700 and auth 100 $q 'marc:fullerFormName'. See mads:fullNameElement ",
+      "$q": {"addProperty": "marc:fullerFormName"}
     },
     "380": {
       "addLink": "genreForm",
@@ -13686,14 +13680,12 @@
     "050": {
       "inherit": "bib",
       "aboutEntity": "?thing",
-      "NOTE:local": "LIBRIS-definierat beståndsfält.",
-      "TODO": "shelfMark for items?"
+      "NOTE:local": "LIBRIS-definierat beståndsfält."
     },
     "060": {
       "inherit": "bib",
       "aboutEntity": "?thing",
-      "NOTE:local": "LIBRIS-definierat beståndsfält.",
-      "TODO": "shelfMark for items?"
+      "NOTE:local": "LIBRIS-definierat beståndsfält."
     },
     "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS F.N. EJ"},
 
@@ -13709,8 +13701,7 @@
     "084": {
       "inherit": "bib",
       "aboutEntity": "?thing",
-      "NOTE:local": "LIBRIS-definierat beståndsfält.",
-      "addLink": "callno"
+      "NOTE:local": "LIBRIS-definierat beståndsfält."
     },
 
     "337": {"ignored": true, "NOTE:record-count": 0, "NOTE:": "Media only on work or instance"},
@@ -13772,18 +13763,15 @@
     "599": {
       "ignored": true,
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
-      "TODO:": "Should this not be internal data? Ignore until we know further."
+      "TODO:": "Should this not be internal data? Ignore until we know further.",
+      "aboutEntity": "?record",
+      "$a": {"addProperty": "cataloguersNote"}
     },
     
     "600": {
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
-      "TODO:aboutEntity": "?exampleOfWork (which may be the sameAs ?itemOf)",
-      "TODO:remnants-of-inherit": "bib:100",
-      "include": ["agentdataObsolete"],
-      "pendingResources": {
-        "_:agent": {"link": "subject", "resourceType": "Person"}
-      },
-      "repeatable": true
+      "inherit": "bib:600",
+      "aboutEntity": null
     },
     "610": {"inherit": "bib:610", "aboutEntity": null},
     "611": {"inherit": "bib:611", "aboutEntity": null},
@@ -13849,14 +13837,12 @@
         "embedded": true,
         "resourceType": "Item"
       },
-      "TODO:i1": {},
-      "FIXME:i2": {
-        "property": "shelfOrder"
-      },
-      "$2": {"property": "sourceOfClassificationOrShelfMarkScheme"},
+      "i1": {"property": "marc:shelvingScheme", "marcDefault": " "},
+      "i2": {"property": "marc:shelvingOrder", "marcDefault": " "},
+      "$2": {"property": "marc:sourceOfClassificationOrShelfMarkScheme"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "sequenceNumber"},
+      "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "organizationalUnit"},
       "$a": {"property": "location"},
       "$b": {
@@ -13875,7 +13861,9 @@
       "$f": {"addProperty": "codedLocationQualifier"},
       "$g": {"addProperty": "nonCodedLocationQualifier"},
       "$h": {
-        "property": "shelfMark",
+        "link": "shelfMark",
+        "resourceType": "ShelfMark",
+        "property": "label",
         "NOTE": "libris deviates from standard classificationPart (libris use it for all kinds of shelfControlNumber?)"
       },
       "$i": {
@@ -13913,7 +13901,9 @@
               "copyNumber": "1",
               "heldBy": {"@id": "https://libris.kb.se/library/H", "@type": "Organization", "code": "H"},
               "shelfControlNumber": "65.465",
-              "physicalLocation": ["MAG"]
+              "physicalLocation": ["MAG"],
+              "marc:shelvingOrder": " ",
+              "marc:shelvingScheme": " "
             }
           }
         },
@@ -13929,12 +13919,17 @@
                 {
                   "@type": "Item",
                   "copyNumber": "1",
-                  "heldBy": {"@id": "https://libris.kb.se/library/X", "@type": "Organization", "code": "X"}
+                  "heldBy": {
+                    "@id": "https://libris.kb.se/library/X", "@type": "Organization", "code": "X"},
+                  "marc:shelvingOrder": " ",
+                  "marc:shelvingScheme": " "
                 },
                 {
                   "@type": "Item",
                   "copyNumber": "2",
-                  "heldBy": {"@id": "https://libris.kb.se/library/Y", "@type": "Organization", "code": "Y"}
+                  "heldBy": {"@id": "https://libris.kb.se/library/Y", "@type": "Organization", "code": "Y"},
+                  "marc:shelvingOrder": " ",
+                  "marc:shelvingScheme": " "
                 }
               ]
             }
@@ -14143,5 +14138,4 @@
       "$z": {"addProperty": "marc:hasHold951-z"}
     }
   }
-
 }
