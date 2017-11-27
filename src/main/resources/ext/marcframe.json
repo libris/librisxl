@@ -6798,13 +6798,13 @@
       "addLink": "marc:hasLanguageNote",
       "resourceType": "marc:LanguageNote",
       "$a": {"property": "label"},
-      "$b": {"addProperty": "marc:informationCodeOrAlphabet"},
-      "$3": {"property": "marc:materialsSpecified"},
+      "$b": {"addLink": "hasNotation", "resourceType": "Notation", "property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
     "547": {
       "aboutEntity": "?thing",
-      "addLink": "hasNote",
+      "addLink": "marc:hasFormerTitleComplexityNote",
       "resourceType": "marc:FormerTitleComplexityNote",
       "$a": {"property": "label"}
     },
