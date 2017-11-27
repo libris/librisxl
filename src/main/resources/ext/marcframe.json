@@ -6460,12 +6460,14 @@
       "aboutEntity": "?work",
       "addLink": "capture",
       "resourceType": "Capture",
+      "TODO": "LC: Concatenate $adop, separate with space, keep order in field",
       "$a": {"property": "label"},
-      "$o": {"addProperty": "date"},
-      "$d": {"addProperty": "comment"},
-      "TODO:d": "Change $d to date?",
+      "$o": {"addProperty": "note"},
+      "$d": {"addProperty": "date"},
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$2": {"ignored": true, "NOTE:LC": "nac"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"property": "marc:fieldref"}
     },
 
     "520": {
