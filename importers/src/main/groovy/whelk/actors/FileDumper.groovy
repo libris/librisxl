@@ -88,7 +88,8 @@ class FileDumper implements MySQLLoader.LoadHandler {
                     List<String[]> externalDependencies = postgreSQLComponent.calculateDependenciesSystemIDs(recordMap.document)
                     recordMap["dependencies"] = externalDependencies
                     recordMap.document.setModified(new Date())
-                    converterPool[threadIndex].linkFinder.replaceSameAsLinksWithPrimaries(recordMap.document.data)
+                    boolean cacheAuthForever = true
+                    converterPool[threadIndex].linkFinder.replaceSameAsLinksWithPrimaries(recordMap.document.data, cacheAuthForever)
                     if (externalDependencies.size() > 0) {
                         List<String> dependencyIDsIncludingThis = []
                         for (String[] reference : externalDependencies) {
