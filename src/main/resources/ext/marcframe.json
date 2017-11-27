@@ -6249,10 +6249,10 @@
     },
     "501": {
       "aboutEntity": "?thing",
-      "addLink": "hasNote",
-      "resourceType": "Note",
-      "$a": {"property": "marc:withNote"},
-      "TODO:$5": "?"
+      "addLink": "marc:hasWithNote",
+      "resourceType": "marc:WithNote",
+      "$a": {"property": "label"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"}
     },
     "502": {
       "aboutEntity": "?work",
