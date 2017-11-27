@@ -6471,7 +6471,7 @@
       "addLink": "summary",
       "resourceType": "Summary",
       "i1": {
-        "marcDefault": "8",
+        "marcDefault": " ",
         "NOTE:LC": "nac",
         "property": "typeNote",
         "tokenMap": {
