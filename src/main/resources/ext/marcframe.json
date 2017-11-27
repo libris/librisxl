@@ -6470,6 +6470,8 @@
       "addLink": "summary",
       "resourceType": "Summary",
       "i1": {
+        "marcDefault": "8",
+        "NOTE:LC": "nac",
         "property": "typeNote",
         "tokenMap": {
           " ": "summary",
@@ -6482,10 +6484,9 @@
         }
       },
       "$a": {"property": "label"},
-      "$b": {"property": "comment"},
-      "TODO:b": "Change to summaryNote?",
-      "$c": {"addLink": "source", "resourceType": "Source", "NOTE:subfield-repeatable": "false", "property": "label"},
-      "$u": {"addLink": "source", "resourceType": "Source", "property": "uri"},
+      "$b": {"property": "marc:expansionOfSummaryNote"},
+      "$c": {"property": "marc:assigningSource"},
+      "$u": {"addLink": "source", "resourceType": "Source","property": "uri"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "_spec": [
