@@ -6226,10 +6226,26 @@
       "resourceType": "Note",
       "$a": {"property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "TODO:$5": {"property": "marc:institutionToWhichFieldApplies"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
-      "repeatable": true
+      "repeatable": true,
+      "TODO:_spec": "Add repeated, more complex testcase",
+      "_spec": [
+        {
+          "source": {"500": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Skolkartor"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasNote": [
+              {
+                "@type": "Note",
+                "label": "Skolkartor"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "501": {
       "aboutEntity": "?thing",
