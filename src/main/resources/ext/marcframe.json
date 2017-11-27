@@ -6819,7 +6819,7 @@
     "552": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "nac"},
     "555": {
       "aboutEntity": "?thing",
-      "addLink": "hasNote",
+      "addLink": "marc:hasCumulativeIndexFindingAidsNote",
       "resourceType": "marc:CumulativeIndexFindingAidsNote",
       "$a": {"property": "label"},
       "$c": {"property": "marc:degreeOfControl", "NOTE": "concatenate with $a", "NOTE:record-count": 2}
@@ -6835,21 +6835,22 @@
       "$6": {"property": "marc:fieldref"}
     },
     "561": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
+      "aboutEntity": "?thing",
+      "TODO": "LC item",
       "addLink": "marc:hasOwnershipAndCustodialHistory",
       "resourceType": "marc:OwnershipAndCustodialHistory",
       "i1": {
-        "TODO:link": null,
-        "tokenMap": {
-          "0": "private",
-          "1": "notPrivate"
-        }
+        "ignored": true,
+        "marcDefault": " "
       },
-      "$a": {"property": "marc:history"},
+      "$a": {"property": "label"},
       "$u": {"ignored": true},
-      "$3": {"property": "marc:materialsSpecified"},
-      "$5": {"property": "marc:institutionToWhichFieldApplies"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"}
     },
     "562": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
       "addLink": "hasItem",
       "embedded": true,
       "resourceType": "Item",
@@ -6862,18 +6863,22 @@
       "$8": {"property": "marc:groupid"}
     },
     "563": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
+      "aboutEntity": "?thing",
+      "TODO": "LC item",
       "addLink": "marc:hasBindingInformation",
       "resourceType": "marc:BindingInformation",
-      "$a": {"property": "marc:bindingNote"},
-      "$u": {"addProperty": "marc:uniformResourceIdentifier"},
-      "$3": {"property": "marc:materialsSpecified"},
-      "$5": {"property": "marc:institutionToWhichFieldApplies"}
+      "$a": {"property": "label"},
+      "$u": {"addProperty": "uri"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label", "NOTE:LC": "nac"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
+      "$6": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"}
     },
     "565": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "567": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "580": {
       "aboutEntity": "?work",
-      "addLink": "hasNote",
+      "addLink": "marc:hasLinkingEntryComplexityNote",
       "resourceType": "marc:LinkingEntryComplexityNote",
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
@@ -6885,7 +6890,7 @@
       "i1": {"ignored": true, "NOTE:LC": "nac"},
       "$a": {"property": "label"},
       "$z": {"addproperty": "isbn"},
-      "$3": {"property": "marc:materialsSpecified"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "583": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
@@ -6907,8 +6912,11 @@
       "$a": {"property": "label"}
     },
     "586": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
       "aboutEntity": "?thing",
-      "$a": {"addProperty": "awardsNote"},
+      "i1": {"ignored": true},
+      "$a": {"property": "awardsNote"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
     "588": {
