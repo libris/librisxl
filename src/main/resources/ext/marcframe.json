@@ -6751,17 +6751,17 @@
           "1": "notPrivate"
         }
       },
-      "$a": {"property": "marc:sourceOfAcquisition"},
-      "$b": {"property": "marc:address"},
+      "$a": {"property": "label"},
+      "$b": {"ignored": true, "NOTE:LC": "nac"},
       "$c": {"property": "marc:methodOfAcquisition"},
-      "$d": {"property": "marc:dateOfAcquisition"},
+      "$d": {"property": "date"},
       "$e": {"property": "marc:accessionNumber"},
       "$f": {"property": "marc:owner"},
       "$h": {"property": "marc:purchasePrice"},
       "$n": {"addProperty": "marc:extent"},
-      "$o": {"addProperty": "marc:typeOfUnit"},
-      "$3": {"property": "marc:materialsSpecified"},
-      "$5": {"property": "marc:institutionToWhichFieldApplies"}
+      "$o": {"addProperty": "unit"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"}
     },
     "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "544": {
