@@ -6314,10 +6314,10 @@
                 "@type": "Instance",
                 "instanceOf": {
                   "@type": "Work",
-                  "hasTitle": [ {
+                  "hasTitle": [{
                     "@type": "Title",
                     "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar"
-                  } ],
+                  }],
                   "identifiedBy": {
                     "@type": "ISSN",
                     "value": "0023-5377"
@@ -6325,6 +6325,115 @@
                 },
                 "seriesEnumeration": "N.F. 13:7",
                 "marc:nonfilingChars" : " "
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"440": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Corpus christianorum."},
+            {"p": "Series Latina,"},
+            {"x": "0589-798X ;"},
+            {"v": "156 B"},
+            {"9": "156"},
+            {"9": "B"}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Corpus christianorum"},
+            {"p": "Series Latina,"},
+            {"x": "0589-798X"},
+            {"v": "156 B"},
+            {"9": "156"},
+            {"9": "B"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Corpus christianorum",
+                    "partName": ["Series Latina,"]
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0589-798X"
+                  }
+                },
+                "seriesEnumeration": "156 B",
+                "marc:nonfilingChars" : " ",
+                "marc:formOfNonfilingChars" : [ "156", "B" ]
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"440": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Lunds universitets årsskrift."},
+            {"p": "Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"},
+            {"x": "0368-8151 ;"},
+            {"v": "9:15"},
+            {"9": "9"},
+            {"9": "15"}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Lunds universitets årsskrift"},
+            {"p": "Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"},
+            {"x": "0368-8151"},
+            {"v": "9:15"},
+            {"9": "9"},
+            {"9": "15"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Lunds universitets årsskrift",
+                    "partName": ["Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"]
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0368-8151"
+                  }
+                },
+                "seriesEnumeration": "9:15",
+                "marc:nonfilingChars" : " ",
+                "marc:formOfNonfilingChars" : [ "9", "15" ]
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"440": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Sveriges officiella statistik,"},
+            {"x": "99-0111480-2"}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Sveriges officiella statistik"},
+            {"x": "99-0111480-2"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Sveriges officiella statistik"
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "99-0111480-2"
+                  }
+                },
+                "marc:nonfilingChars" : "0"
               }
             ]
           }}
@@ -10543,6 +10652,9 @@
       "$w": {"property": "marc:bibliographicRecordControlNumber"},
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
+      "$8": {"property": "marc:groupid"},
+      "$9": {"addProperty": "marc:formOfNonfilingChars"},
       "i2": {"property": "marc:nonfilingChars"},
       "subfieldorder": "3 a d g h s m n p l r k f o v w x",
       "_spec": [
