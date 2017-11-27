@@ -73,47 +73,13 @@ class LinkFinder {
         }
     }
 
-    void replaceSameAsLinksWithPrimaries(Map data) {
+    void replaceSameAsLinksWithPrimaries(Map data, boolean cacheAuthForever = false) {
         // If this is a link (an object containing _only_ an id)
         String id = data.get("@id")
         if (id != null && data.keySet().size() == 1) {
-
-            if (id.startsWith("http://libris.kb.se/resource/")) {
-
-                // re-calculate what the correct primary ID should be (better get this right)
-                String pathId = id.substring("http://libris.kb.se/resource".length())
-                String numericId = pathId.split("/")[2]
-                boolean isNumericId = true
-                for (char c : numericId.toCharArray()) {
-                    if (!Character.isDigit(c))
-                        isNumericId = false
-                }
-                if (isNumericId) {
-                    data.put("@id", Document.BASE_URI.resolve(LegacyIntegrationTools.generateId(pathId)).toString() + "#it")
-                } else {
-                    // The ID is something of the form http://libris.kb.se/resource/cwpqbclp4x4n61k
-                    String primaryId = Document.BASE_URI.resolve(numericId).toString()
-                    if (!primaryId.endsWith("#it"))
-                        primaryId += "#it"
-                    data.put("@id", primaryId)
-                }
-
-            } else if (id.startsWith("https://id.kb.se/")) {
-                // cache the ID
-                if (uriCache.containsKey(id)) {
-                    data.put("@id", uriCache.get(id))
-                } else {
-                    String mainId = postgres.getMainId(id)
-                    if (mainId != null) {
-                        data.put("@id", mainId)
-                        uriCache.put(id, mainId)
-                    }
-                }
-            } else { // Fallback -> Look for a primary ID in postgres (expensive)
-                String mainId = postgres.getMainId(id)
-                if (mainId != null)
-                    data.put("@id", mainId)
-            }
+            String primaryId = lookupPrimaryId(id, cacheAuthForever)
+            if (primaryId != null)
+                data.put("@id", primaryId)
         }
 
         // Keep looking for more links
@@ -142,4 +108,48 @@ class LinkFinder {
         }
     }
 
+    private String lookupPrimaryId(String id, boolean cacheAuthForever) {
+
+        if (!cacheAuthForever) {
+            String mainId = postgres.getMainId(id)
+                return mainId
+        }
+
+        if (id.startsWith("http://libris.kb.se/resource/")) {
+            // re-calculate what the correct primary ID should be (better get this right)
+            String pathId = id.substring("http://libris.kb.se/resource".length())
+            String numericId = pathId.split("/")[2]
+            boolean isNumericId = true
+            for (char c : numericId.toCharArray()) {
+                if (!Character.isDigit(c))
+                    isNumericId = false
+            }
+            if (isNumericId) {
+                return Document.BASE_URI.resolve(LegacyIntegrationTools.generateId(pathId)).toString() + "#it"
+            } else {
+                // The ID is something of the form http://libris.kb.se/resource/cwpqbclp4x4n61k
+                String primaryId = Document.BASE_URI.resolve(numericId).toString()
+                if (!primaryId.endsWith("#it"))
+                    primaryId += "#it"
+                return primaryId
+            }
+
+        } else if (id.startsWith("https://id.kb.se/")) {
+            // cache the ID
+            if (uriCache.containsKey(id)) {
+                return uriCache.get(id)
+            } else {
+                String mainId = postgres.getMainId(id)
+                if (mainId != null) {
+                    uriCache.put(id, mainId)
+                    return mainId
+                }
+            }
+        } else { // Fallback -> Look for a primary ID in postgres (expensive)
+            String mainId = postgres.getMainId(id)
+                return mainId
+        }
+
+        return null
+    }
 }
