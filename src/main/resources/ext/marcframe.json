@@ -6404,7 +6404,16 @@
     "510": {
       "addLink": "citedBy",
       "resourceType": "Instance",
-      "TOOO:i1": {},
+      "TOOO:i1": {
+        "link": null,
+        "tokenMap": {
+          "0": "coverageUnknown",
+          "1": "coverageComplete",
+          "2": "coverageIsSelective",
+          "3": "locationInSourceNotGiven",
+          "4": "locationInSourceGiven"
+        }
+      },
       "$a": {"property": "title"},
       "$c": {"property": "pagination"},
       "$8": {"property": "marc:groupid"}
