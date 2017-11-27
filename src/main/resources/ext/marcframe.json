@@ -6680,12 +6680,11 @@
       "aboutEntity": "?thing",
       "addLink": "systemRequirement",
       "resourceType": "SystemRequirement",
-      "$a": {
-        "property": "marc:systemDetailsNote"
-      },
+      "$a": {"property": "marc:systemDetailsNote"},
       "$u": {"addProperty": "uri"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "TODO:$5": "Institution to which field applies (NR)"
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
+      "$6": {"property": "marc:fieldref"}
     },
     "540": {
       "aboutEntity": "?thing", "addLink": "usageAndAccessPolicy", "resourceType": "UsePolicy", "repeatable": false,
