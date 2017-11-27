@@ -6444,14 +6444,14 @@
     },
     "515": {
       "aboutEntity": "?thing",
-      "addLink": "hasNote",
-      "resourceType": "IssuanceInformationNote",
+      "addLink": "marc:hasNumberingPeculiaritiesNote",
+      "resourceType": "marc:NumberingPeculiaritiesNote",
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
     "516": {
       "aboutEntity": "?thing",
-      "addLink": "hasNote",
+      "addLink": "marc:hasTypeOfComputerFileOrDataNote",
       "resourceType": "marc:TypeOfComputerFileOrDataNote",
       "$a": {"property": "label"},
       "NOTE:i1": "ignore"
