@@ -59,6 +59,7 @@ class Document {
 
     Document(Map data) {
         this.data = data
+        updateRecordStatus()
     }
 
     Document clone() {
@@ -153,6 +154,7 @@ class Document {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(created.toInstant(), ZoneId.systemDefault())
         String formatedCreated = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
         set(createdPath, formatedCreated, HashMap)
+        updateRecordStatus()
     }
 
     String getCreated() {
@@ -163,6 +165,7 @@ class Document {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(modified.toInstant(), ZoneId.systemDefault())
         String formatedModified = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
         set(modifiedPath, formatedModified, HashMap)
+        updateRecordStatus()
     }
 
     String getModified() { get(modifiedPath) }
@@ -170,8 +173,10 @@ class Document {
     void setDeleted(boolean newValue) {
         if (newValue)
             set(statusPath, "marc:Deleted", HashMap)
-        else
-            removeLeafObject(statusPath, HashMap)
+        else {
+            set(statusPath, "marc:New", HashMap)
+            updateRecordStatus()
+        }
     }
 
     boolean getDeleted() {
@@ -179,6 +184,16 @@ class Document {
         if (deletedString == null || !deletedString.equals("marc:Deleted"))
             return false
         return true
+    }
+
+    private void updateRecordStatus() {
+        String currentStatus = get(statusPath)
+        if (currentStatus != null && currentStatus.equals("marc:New")) {
+            String modified = getModified()
+            String created = getCreated()
+            if (modified != null && created != null && !modified.equals(created))
+                set(statusPath, "marc:CorrectedOrRevised", HashMap)
+        }
     }
 
     boolean isHolding(JsonLd jsonld) {
