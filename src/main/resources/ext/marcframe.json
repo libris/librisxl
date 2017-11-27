@@ -6531,30 +6531,54 @@
 
     "521": {
       "aboutEntity": "?work",
-      "addLink": "intendedAudience",
       "embedded": true,
+      "addLink": "intendedAudience",
       "resourceType": "IntendedAudience",
-      "TOOO:i1": {},
+      "i1": {
+        "marcDefault": " ",
+        "property": "typeNote",
+        "tokenMap": {
+          " ": null,
+          "0": "readingGradeLevel",
+          "1": "interestAgeLevel",
+          "2": "interestGradeLevel",
+          "3": "specialAudienceCharacteristics",
+          "4": "motivationInterestLevel",
+          "8": "noDisplayConstantGenerated"
+        }
+      },
       "$a": {"property": "label"},
-      "$6": {"property": "marc:fieldref"},
-      "TODO:b": {"link": "source", "resourceType": "Source", "property": "label", "FIXME:peningResource": "Append to intendedAudience"}
+      "$b": {"link": "source", "resourceType": "Source","property": "label"},
+      "$6": {"property": "marc:fieldref"}
     },
     "522": {
       "aboutEntity": "?work",
       "addLink": "geographicCoverage",
       "resourceType": "GeographicCoverage",
+      "i1": {
+        "ignored": true,
+        "NOTE:LC": "nac"
+      },
       "$a": {"property": "label"}
     },
     "524": {
       "aboutEntity": "?thing",
+      "i1": {
+        "ignored": true,
+        "NOTE:LC": "nac"
+      },
       "$a": {"property": "preferredCitation"},
-      "TODO:$2": "?"
+      "$2": {"ignored": true, "NOTE:LC": "nac"},
+      "$3": {"ignored": true, "NOTE:LC": "nac"},
+      "$6": {"ignored": true, "NOTE:LC": "nac"}
     },
     "525": {
       "aboutEntity": "?thing",
-      "$a": {"addProperty": "supplementaryContentNote", "TODO": "supplementaryContentNote or supplementaryContent?"}
+      "link": "marc:hasSupplementNote",
+      "resourceType": "marc:SupplementNote",
+      "$a": {"property": "label"}
     },
-    "526": {"NOTE:record-count": 16, "ignored": true},
+    "526": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ", "NOTE:LC": "nac"},
 
     "530": {
       "addLink": "hasInstance",
