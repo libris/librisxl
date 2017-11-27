@@ -6687,14 +6687,18 @@
       "$6": {"property": "marc:fieldref"}
     },
     "540": {
-      "aboutEntity": "?thing", "addLink": "usageAndAccessPolicy", "resourceType": "UsePolicy", "repeatable": false,
-      "NOTE": "Formathandboken: 'Används normalt ej i bibliografiska poster'",
+      "aboutEntity": "?thing",
+      "addLink": "usageAndAccessPolicy",
+      "resourceType": "UsePolicy",
+      "repeatable": false,
+      "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
       "pendingResources": {
         "_:source": {"link": "source", "resourceType": "Source"}
       },
       "$a": {"property": "label"},
+      "$b": {"ignored": true, "NOTE:LC": "nac"},
       "$c": {"about": "_:source", "property": "label"},
-      "$u": {"property": "marc:uniformResourceIdentifier", "TODO": "Map to uri instead?"},
+      "$u": {"property": "uri"},
       "_spec": [
         {
           "source": {
@@ -6736,6 +6740,8 @@
       ]
     },
     "541": {
+      "aboutEntity": "?thing",
+      "TODO": "LC converts to Item enitity, implications?",
       "addLink": "marc:hasImmediateSourceOfAcquisitionNote",
       "resourceType": "marc:ImmediateSourceOfAcquisitionNote",
       "i1": {
@@ -6757,9 +6763,10 @@
       "$3": {"property": "marc:materialsSpecified"},
       "$5": {"property": "marc:institutionToWhichFieldApplies"}
     },
-    "542": {"NOTE:record-count": 0, "ignored": true},
+    "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "544": {
-      "addLink": "hasNote",
+      "aboutEntity": "?thing",
+      "addLink": "marc:hasLocationOfOtherArchivalMaterialsNote",
       "resourceType": "marc:LocationOfOtherArchivalMaterialsNote",
       "$a": {"addProperty": "label"}
     },
