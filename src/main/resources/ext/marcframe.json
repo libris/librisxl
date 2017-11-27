@@ -6274,12 +6274,15 @@
     "440": {
       "ignoreOnRevertInFavourOf": "830",
       "addLink": "hasSeries",
-      "resourceType": "Serial",
-      "aboutAlias": "_:work",
+      "resourceType": "Instance",
       "include": "titledetails",
       "pendingResources": {
+        "_:work": {
+          "link": "instanceOf",
+          "resourceType": "Work"
+        },
         "_:title": {
-          "addLink": "hasTitle", "resourceType": "Title",
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
           "embedded": true
         }
       },
@@ -6288,7 +6291,7 @@
       "$d": {"addProperty": "legalDate"},
       "$v": {"property": "seriesEnumeration"},
       "$w": {"property": "marc:bibliographicRecordControlNumber"},
-      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -6308,13 +6311,19 @@
           "result": {"mainEntity": {
             "hasSeries": [
               {
-                "@type": "Serial",
-                "hasTitle": [ {
-                  "@type": "Title",
-                  "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar"
-                } ],
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar"
+                  } ],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0023-5377"
+                  }
+                },
                 "seriesEnumeration": "N.F. 13:7",
-                "issn": "0023-5377",
                 "marc:nonfilingChars" : " "
               }
             ]
