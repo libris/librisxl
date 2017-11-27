@@ -18,38 +18,57 @@ class ElasticReindexer {
     final static boolean useDocumentCache = true
     long startTime
 
+    // Abort on unhandled exceptions, including those on worker threads.
+    static
+    {
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()
+        {
+            @Override
+            public void uncaughtException(Thread thread, Throwable throwable)
+            {
+                System.err.println("PANIC ABORT, unhandled exception:\n" + throwable.toString())
+                throwable.printStackTrace()
+                System.exit(-1)
+            }
+        })
+    }
+
     ElasticReindexer(Whelk w) {
         this.whelk = w
         this.whelk.loadCoreData()
     }
 
     synchronized void reindex(String suppliedCollection) {
-        int counter = 0
-        startTime = System.currentTimeMillis()
-        List<String> collections = suppliedCollection ? [suppliedCollection] : whelk.storage.loadCollections()
-        ThreadPool threadPool = new ThreadPool( Runtime.getRuntime().availableProcessors() * 4 )
-        collections.each { collection ->
-            List<Document> documents = []
-            for (document in whelk.storage.loadAll(collection)) {
-                documents.add(document)
-                double docsPerSec = ((double)counter) / ((double)((System.currentTimeMillis() - startTime) / 1000))
-                counter++
-                if (counter % BATCH_SIZE == 0) {
-                    println("Indexing $docsPerSec documents per second (running average since process start).")
-                    threadPool.executeOnThread(new Batch(documents, collection), new BatchHandler())
-                    documents = []
+        try {
+            int counter = 0
+            startTime = System.currentTimeMillis()
+            List<String> collections = suppliedCollection ? [suppliedCollection] : whelk.storage.loadCollections()
+            ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors() * 4)
+            collections.each { collection ->
+                List<Document> documents = []
+                for (document in whelk.storage.loadAll(collection)) {
+                    documents.add(document)
+                    double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
+                    counter++
+                    if (counter % BATCH_SIZE == 0) {
+                        println("Indexing $docsPerSec documents per second (running average since process start).")
+                        threadPool.executeOnThread(new Batch(documents, collection), new BatchHandler())
+                        documents = []
+                    }
                 }
+                if (documents.size() > 0) {
+                    whelk.elastic.bulkIndex(documents, collection, whelk, useDocumentCache)
+                }
+                log.info("Cache size: ${whelk.cacheSize()}, " +
+                        "cache hits: ${whelk.cacheHits()}, " +
+                        "stale cache reads: ${whelk.cacheStaleCount()} " +
+                        "(after ${collection})")
             }
-            if (documents.size() > 0) {
-                whelk.elastic.bulkIndex(documents, collection, whelk, useDocumentCache)
-            }
-            log.info("Cache size: ${whelk.cacheSize()}, " +
-                     "cache hits: ${whelk.cacheHits()}, " +
-                     "stale cache reads: ${whelk.cacheStaleCount()} " +
-                     "(after ${collection})")
+            threadPool.joinAll()
+            println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
+        } catch (Throwable e) {
+            println("Reindex failed with:\n" + e.toString() + "\ncallstack:\n" + e.printStackTrace())
         }
-        threadPool.joinAll()
-        println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
     }
 
     private class Batch {
