@@ -6294,13 +6294,12 @@
     },
     "504": {
       "aboutEntity": "?thing",
-      "addLink": "hasNote",
-      "resourceType": "BibliographyNote",
+      "addLink": "marc:hasBibliographyEtcNote",
+      "resourceType": "marc:BibliographyEtcNote",
       "$a": {"property": "label"},
-      "$b": {"property": "marc:numberOfReferences"},
+      "$b": {"property": "count"},
       "$6": {"property": "marc:fieldref"}
     },
-
     "505": {
       "TOOO:i1": {},
       "TOOO:i2": {},
