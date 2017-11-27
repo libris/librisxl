@@ -6424,7 +6424,7 @@
       "addLink": "marc:hasParticipantOrPerformerNote",
       "resourceType": "marc:ParticipantOrPerformerNote",
       "i1": {
-        "marcDefault": "0",
+        "marcDefault": "0"
       },
       "$a": {"addProperty": "label"},
       "$6": {"property": "marc:fieldref"}
