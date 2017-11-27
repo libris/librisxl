@@ -6421,15 +6421,17 @@
 
     "511": {
       "aboutEntity": "?work",
-      "match": [{"when": "i1=1", "$a": {"addProperty": "participantNote"}}],
-      "$a": {
-        "addProperty": "performerNote"
+      "addLink": "marc:hasParticipantOrPerformerNote",
+      "resourceType": "marc:ParticipantOrPerformerNote",
+      "i1": {
+        "marcDefault": "0",
       },
+      "$a": {"addProperty": "label"},
       "$6": {"property": "marc:fieldref"}
     },
 
     "513": {
-      "addLink": "hasNote",
+      "addLink": "marc:hasTypeOfReportAndPeriodCoveredNote",
       "resourceType": "marc:TypeOfReportAndPeriodCoveredNote",
       "aboutEntity": "?thing",
       "$a": {"property": "label"},
