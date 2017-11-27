@@ -6436,6 +6436,7 @@
       "$b": {"property": "marc:periodCovered", "TODO": "Concatenate with $b"}
     },
     "514": {
+      "NOTE:LC": "nac",
       "aboutEntity": "?thing",
       "$a": {"property": "marc:dataQualityNote"}
     },
