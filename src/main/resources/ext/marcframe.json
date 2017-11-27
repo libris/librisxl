@@ -6816,7 +6816,7 @@
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
-    "552": {"NOTE:record-count": 2, "ignored": true},
+    "552": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "nac"},
     "555": {
       "aboutEntity": "?thing",
       "addLink": "hasNote",
