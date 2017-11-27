@@ -6226,38 +6226,80 @@
       "resourceType": "Note",
       "$a": {"property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "TODO:$5": {"property": "marc:institutionToWhichFieldApplies"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
-      "repeatable": true
+      "repeatable": true,
+      "TODO:_spec": "Add repeated, more complex testcase",
+      "_spec": [
+        {
+          "source": {"500": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Skolkartor"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasNote": [
+              {
+                "@type": "Note",
+                "label": "Skolkartor"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "501": {
       "aboutEntity": "?thing",
-      "addLink": "hasNote",
-      "resourceType": "Note",
-      "$a": {"property": "marc:withNote"},
-      "TODO:$5": "?"
+      "addLink": "marc:hasWithNote",
+      "resourceType": "marc:WithNote",
+      "$a": {"property": "label"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"}
     },
     "502": {
       "aboutEntity": "?work",
       "addLink": "dissertation", "resourceType": "Dissertation",
       "embedded": true,
-      "$a": {"property": "note"},
+      "$a": {"property": "label"},
       "$b": {"property": "degree"},
-      "$c": {"property": "location"},
+      "$c": {"link": "grantingInstitution", "resourceType": "Agent", "property": "label"},
       "$d": {"property": "date"},
-      "$g": {"property": "comment"},
-      "$6": {"property": "marc:fieldref"}
+      "$g": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$o": {"addLink": "identifiedBy", "resourceType": "DissertationIdentifier", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": {"502": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Diss."},
+            {"c": "Universitetet i Tromsø,"},
+            {"d": "2011"}
+          ]}},
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "dissertation": [{
+                    "@type": "Dissertation",
+                    "date": "2011",
+                    "grantingInstitution": {
+                      "@type": "Agent",
+                      "label": "Universitetet i Tromsø,"
+                    },
+                    "label": "Diss."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
     "504": {
       "aboutEntity": "?thing",
-      "addLink": "hasNote",
-      "resourceType": "BibliographyNote",
+      "addLink": "marc:hasBibliographyEtcNote",
+      "resourceType": "marc:BibliographyEtcNote",
       "$a": {"property": "label"},
-      "$b": {"property": "marc:numberOfReferences"},
+      "$b": {"property": "count"},
       "$6": {"property": "marc:fieldref"}
     },
-
     "505": {
       "TOOO:i1": {},
       "TOOO:i2": {},
