@@ -6258,12 +6258,39 @@
       "aboutEntity": "?work",
       "addLink": "dissertation", "resourceType": "Dissertation",
       "embedded": true,
-      "$a": {"property": "note"},
+      "$a": {"property": "label"},
       "$b": {"property": "degree"},
-      "$c": {"property": "location"},
+      "$c": {"link": "grantingInstitution", "resourceType": "Agent", "property": "label"},
       "$d": {"property": "date"},
-      "$g": {"property": "comment"},
-      "$6": {"property": "marc:fieldref"}
+      "$g": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$o": {"addLink": "identifiedBy", "resourceType": "DissertationIdentifier", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": {"502": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Diss."},
+            {"c": "Universitetet i Tromsø,"},
+            {"d": "2011"}
+          ]}},
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "dissertation": [{
+                    "@type": "Dissertation",
+                    "date": "2011",
+                    "grantingInstitution": {
+                      "@type": "Agent",
+                      "label": "Universitetet i Tromsø,"
+                    },
+                    "label": "Diss."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
     "504": {
       "aboutEntity": "?thing",
