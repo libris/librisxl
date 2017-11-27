@@ -6,6 +6,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.codec.binary.Base64
 import org.apache.http.entity.ContentType
 import org.codehaus.jackson.map.ObjectMapper
+import whelk.util.LegacyIntegrationTools
 import whelk.util.LongTermHttpConnection
 import whelk.Document
 import whelk.JsonLd
@@ -118,7 +119,7 @@ class ElasticSearch {
         if (docs) {
             String bulkString = docs.collect{ doc ->
                 String shapedData = JsonOutput.toJson(
-                    getShapeForIndex(doc, whelk, useDocumentCache))
+                    getShapeForIndex(doc, whelk, collection, useDocumentCache))
                 String action = createActionRow(doc,collection)
                 "${action}\n${shapedData}\n"
             }.join('')
@@ -140,7 +141,7 @@ class ElasticSearch {
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
-            Map shapedData = getShapeForIndex(doc, whelk)
+            Map shapedData = getShapeForIndex(doc, whelk, collection)
             //def body = new NStringEntity(JsonOutput.toJson(shapedData), ContentType.APPLICATION_JSON)
             def response = performRequest('PUT',
                     "/${indexName}/${collection}" +
@@ -167,14 +168,16 @@ class ElasticSearch {
                   "objects deleted")
     }
 
-    Map getShapeForIndex(Document document, Whelk whelk,
+    Map getShapeForIndex(Document document, Whelk whelk, String collection,
                          boolean useDocumentCache = false) {
 
-        List externalRefs = document.getExternalRefs()
-        List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
-        Map referencedData = whelk.bulkLoad(convertedExternalLinks, useDocumentCache)
-                                  .collectEntries { id, doc -> [id, doc.data] }
-        whelk.jsonld.embellish(document.data, referencedData, false)
+        if (!collection.equals("hold")) {
+            List externalRefs = document.getExternalRefs()
+            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
+            Map referencedData = whelk.bulkLoad(convertedExternalLinks, useDocumentCache)
+                    .collectEntries { id, doc -> [id, doc.data] }
+            whelk.jsonld.embellish(document.data, referencedData, false)
+        }
 
         log.debug("Framing ${document.getShortId()}")
         Map framed = JsonLd.frame(document.getCompleteId(), JsonLd.THING_KEY, document.data)
