@@ -253,17 +253,29 @@ class PostgreSQLComponent {
     }
 
     public List<String> loadCollections() {
-        Connection connection = getConnection()
-        PreparedStatement collectionStatement = connection.prepareStatement(LOAD_COLLECTIONS)
-        ResultSet collectionResults = collectionStatement.executeQuery()
-        List<String> collections = []
-        while (collectionResults.next()) {
-            String c = collectionResults.getString("collection")
-            if (c) {
-                collections.add(c)
+        Connection connection
+        PreparedStatement collectionStatement
+        ResultSet collectionResults
+        try {
+            connection = getConnection()
+            collectionStatement = connection.prepareStatement(LOAD_COLLECTIONS)
+            collectionResults = collectionStatement.executeQuery()
+            List<String> collections = []
+            while (collectionResults.next()) {
+                String c = collectionResults.getString("collection")
+                if (c) {
+                    collections.add(c)
+                }
             }
+            return collections
+        } finally {
+            if (collectionResults != null)
+                collectionResults.close()
+            if (collectionStatement != null)
+                collectionStatement.close()
+            if (connection != null)
+                connection.close()
         }
-        return collections
     }
 
     boolean store(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
