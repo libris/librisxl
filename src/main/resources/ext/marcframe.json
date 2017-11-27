@@ -10565,7 +10565,8 @@
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
-          "resourceType": "Meeting"
+          "resourceType": "Meeting",
+          "required": true
         },
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
