@@ -6388,9 +6388,19 @@
       "$6": {"property": "marc:fieldref"}
     },
 
-    "507": {"$a": {"aboutEntity": "?thing", "property": "scaleNote", "NOTE:b": "concatenate with a, record-count: 2"}},
-    "508": {"$a": {"aboutEntity": "?thing", "addProperty": "creditsNote"}, "$6": {"property": "marc:fieldref"}},
+    "507": {
+      "$a": {"aboutEntity": "?thing", "property": "scale"},
+      "NOTE:$b": "concatenate with a, record-count: 0",
+      "$6": {"ignored": true, "NOTE:local": "scale property sits directly on thing, record-count: 0"}
+    },
 
+    "508": {
+      "aboutEntity": "?work", 
+      "addLink": "marc:hasCreationProductionCreditsNote",
+      "resourceType": "marc:CreationProductionCreditsNote",
+      "$a": {"addProperty": "label"},
+      "$6": {"property": "marc:fieldref"}
+    },
     "510": {
       "addLink": "citedBy",
       "resourceType": "Instance",
