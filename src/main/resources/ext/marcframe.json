@@ -3231,7 +3231,8 @@
       "$l": {"property": "marc:issnL"},
       "$m": {"addProperty": "marc:canceledIssnL"},
       "$2": {"property": "marc:source"},
-      "$y": {"TODO": "inherit:$z + specific: marc:incorrectIssn"},
+      "$y": {"addProperty": "marc:incorrectIssn"},
+      "TODO:$y?": {"TODO": "inherit:$z + specific: marc:incorrectIssn"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
@@ -13864,7 +13865,7 @@
 
     "700": {"inherit": "bib:700", "aboutEntity": null},
     "710": {"inherit": "bib:710", "aboutEntity": null},
-    "752": {},
+    "752": {"inherit": "bib:752", "aboutEntity": null},
     "787": {"inherit": "bib:787", "aboutEntity": null},
 
     "841": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ"},
