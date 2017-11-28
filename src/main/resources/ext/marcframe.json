@@ -3279,7 +3279,7 @@
           "3": "EAN",
           "4": "SICI",
           "7": "Identifier",
-          "8": "Identifier"
+          "8": "marc:OtherIdentifier"
         },
         "TODO:definedElsewhereToken": "7"
       },
@@ -3648,7 +3648,7 @@
           "0": "itemNotATranslationDoesNotIncludeATranslation",
           "1": "itemIsOrIncludesATranslation"
           },  
-        "marcdefault": " "
+        "marcDefault": " "
       },
       "TODO:i2": {},
       "TODO:pending": "Merge entities from pending in similar fields (like bib 520)?",
