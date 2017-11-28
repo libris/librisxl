@@ -42,35 +42,6 @@ class PostgreSQLComponentSpec extends Specification {
         }
     }
 
-    def "should save document to database"() {
-        given:
-        result.next() >> { true }
-        result.getTimestamp(_) >> {
-            return new Timestamp(new Date().getTime())
-        }
-        result.getString("id") >> { return "hej" }
-        stmt.executeUpdate() >> { 1 }
-
-        Document doc = null
-        when:
-        doc = new Document(["@graph": DocumentSpec.examples.first().data])
-        then:
-        doc.checksum != null
-        doc.id == "http://example.org/record"
-        //doc.collection == "test" //no collection property anymore
-        doc.created == null
-        doc.modified == null
-        and:
-        storage.store(doc, true, null, null, "", false)
-        then:
-        doc.created != null
-        doc.modified != null
-        // r.collection == "test" //no collection property anymore
-        doc.id == "http://example.org/record"
-        doc.checksum != null
-    }
-
-
     def "should load document from database"() {
         given:
         2 * result.next() >> { true }
