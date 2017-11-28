@@ -492,18 +492,27 @@ class XL
     {
         String libraryUri = LegacyIntegrationTools.legacySigelToUri(heldBy);
 
-        String query =
+        // Here be dragons. The allways-works query is this:
+        /*String query =
                 "SELECT lddb.id from lddb " +
                 "INNER JOIN lddb__identifiers id1 ON lddb.data#>>'{@graph,1,itemOf,@id}' = id1.iri " +
                 "INNER JOIN lddb__identifiers id2 ON id1.id = id2.id " +
                 "WHERE " +
                 "data#>>'{@graph,1,heldBy,@id}' = ? " +
                 "AND " +
-                "id2.iri = ?";
+                "id2.iri = ?";*/
+
+        // This query REQUIRES that links be on the primary ID only. This works beacuse of link-finding step2, but if
+        // that should ever change this query would break.
+
+        String query = "SELECT id from lddb WHERE data#>>'{@graph,1,heldBy,@id}' = ? AND data#>>'{@graph,1,itemOf,@id}' = ?";
+
         PreparedStatement statement = connection.prepareStatement(query);
 
         statement.setString(1, libraryUri);
         statement.setString(2, holdingForId);
+
+        System.out.println("slow? :\n" + statement);
 
         return statement;
     }
