@@ -148,7 +148,7 @@ class XL
 
         if (!m_parameters.getReadOnly())
         {
-            m_whelk.store(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
+            m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
         }
         else
             System.out.println("Would now (if --live had been specified) have written the following json-ld to whelk as a new record:\n"

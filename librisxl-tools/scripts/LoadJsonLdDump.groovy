@@ -15,6 +15,6 @@ new File(sourceDump).eachLine('UTF-8') {
     def data = mapper.readValue(it, Map)
     def id = data.descriptions.entry['@id']
     def doc = new Document(id, data, [dataset: 'auth'])
-    storage.store(doc)
+    storage.createDocument(doc)
     println "Stored #${i++} as ${id}"
 }
