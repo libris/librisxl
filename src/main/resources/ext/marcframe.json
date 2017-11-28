@@ -1046,14 +1046,8 @@
       },
       "$a": {"property": "code", "required": true},
       "$2": {
-        "link": "inScheme", "resourceType": "ConceptScheme",
-        "required": true,
-        "uriTemplate": "http://dewey.info/scheme/edition/e{+_}/",
-        "property": "version",
-        "splitValuePattern": "(\\d+)(?:/(swe))?",
-        "TODO": "Only capture language 'swe'?",
-        "splitValueProperties": ["version", "language"],
-        "rejoin": "/"
+        "requires-i1": "7",
+        "property": "edition"
       }
     },
 
@@ -3989,38 +3983,53 @@
       "include": ["classification-ddc"],
       "match": [
         {
-          "when": "i2=0",
-          "i2": {
+          "when": "i2=4 & $q",
+          "$q": {
+            "requires-i2": "4",
             "link": "source",
             "resourceType": "Source",
-            "uriTemplate": "http://id.loc.gov/vocabulary/organizations/dlc",
-            "property": "label",
-            "tokenMap": {
-              "0": "LC"
-            }
+            "property": "label"
           }
         }
       ],
       "i2": {
-        "definedElsewhereToken": "4",
-        "marcdefault": " ",
         "link": "source",
         "resourceType": "Source",
-        "property": "label",
+        "uriTemplate": "http://id.loc.gov/vocabulary/organizations/{_}",
+        "definedElsewhereToken": "4",
+        "marcDefault": " ",
+        "property": "code",
         "tokenMap": {
-          " ": null,
-          "0": "LC"
+          "0": "dlc"
         }
       },
-      "$q": {"requires-i2": "4", "link": "source", "resourceType": "Source", "property": "label"},
       "$b": {"property": "itemPortion"},
       "$m": {"ignored": true, "NOTE:record-count": 1},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
+      "subfieldOrder": "a b 2 q ...",
       "_spec": [
         {
           "source": {
-            "082": {"ind1": "0", "ind2": "0", "subfields": [
+            "082": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "158.1"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "code": "158.1",
+                  "edition": "full"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "082": {"ind1": "7", "ind2": "0", "subfields": [
               {"a": "158.1"},
               {"2": "23"}
             ]}},
@@ -4030,17 +4039,12 @@
               "classification": [
                 {
                   "@type": "ClassificationDdc",
-                  "edition": "full",
                   "code": "158.1",
-                  "inScheme": {
-                    "@id": "http://dewey.info/scheme/edition/e23/",
-                    "@type": "ConceptScheme",
-                    "version": "23"
-                  },
+                  "edition": "23",
                   "source": {
                     "@type": "Source",
                     "@id": "http://id.loc.gov/vocabulary/organizations/dlc",
-                    "label": "LC"
+                    "code": "dlc"
                   }
                 }
               ]
@@ -4049,7 +4053,7 @@
         },
         {
           "source": {
-            "082": {"ind1": "0", "ind2": "4", "subfields": [
+            "082": {"ind1": "7", "ind2": "4", "subfields": [
               {"a": "158.1"},
               {"2": "23/swe"},
               {"q": "KB"}
@@ -4060,14 +4064,31 @@
               "classification": [
                 {
                   "@type": "ClassificationDdc",
+                  "code": "158.1",
+                  "edition": "23/swe",
+                  "source": {
+                    "@type": "Source",
+                    "label": "KB"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "082": {"ind1": "0", "ind2": "4", "subfields": [
+              {"a": "158.1"},
+              {"q": "KB"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
                   "edition": "full",
                   "code": "158.1",
-                  "inScheme": {
-                    "@id": "http://dewey.info/scheme/edition/e23/swe/",
-                    "@type": "ConceptScheme",
-                    "version": "23",
-                    "language": "swe"
-                  },
                   "source": {
                     "@type": "Source",
                     "label": "KB"
@@ -4094,8 +4115,7 @@
         {
           "source": {
             "083": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "158.1"},
-              {"2": "23"}
+              {"a": "158.1"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -4104,12 +4124,7 @@
                 {
                   "@type": "ClassificationDdc",
                   "edition": "full",
-                  "code": "158.1",
-                  "inScheme": {
-                    "@id": "http://dewey.info/scheme/edition/e23/",
-                    "@type": "ConceptScheme",
-                    "version": "23"
-                  }
+                  "code": "158.1"
                 }
               ]
             }
@@ -4130,11 +4145,7 @@
                 {
                   "@type": "ClassificationDdc",
                   "code": "598.0994",
-                  "inScheme": {
-                    "@id": "http://dewey.info/scheme/edition/e23/",
-                    "@type": "ConceptScheme",
-                    "version": "23"
-                  },
+                  "edition": "23/nor",
                   "source": {
                     "@type": "Source",
                     "label": "KB"
@@ -4172,6 +4183,7 @@
         "resourceType": "ConceptScheme",
         "property": "code"
       },
+      "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/classification.html",
       "$b": {"property": "classificationItem"},
       "$q": {"link": "source", "resourceType": "Source", "property": "label"},
       "$6": {"property": "marc:fieldref"},
