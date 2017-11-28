@@ -15,6 +15,9 @@ import whelk.filter.LinkFinder
 import whelk.util.URIWrapper
 
 import java.sql.*
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -138,7 +141,7 @@ class PostgreSQLComponent {
         DELETE_DEPENDENCIES = "DELETE FROM $dependenciesTableName WHERE id = ?"
         INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, relation, dependsOnId) VALUES (?,?,?)"
 
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, modified, deleted) SELECT ?,?,?,?,?,?,?,? " +
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? " +
                 "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
                 "ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"
 
@@ -149,10 +152,9 @@ class PostgreSQLComponent {
                                           "WHERE id = (SELECT id FROM $idTableName " +
                                                       "WHERE iri = ? AND mainid = 't') " +
                                           "AND checksum = ?"
-        // FIXME fix created read (join with lddb?)
-        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,deleted,data->>'created' AS created,modified " +
+        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,deleted,created,modified " +
                 "FROM $versionsTableName WHERE id = ? ORDER BY modified"
-        GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = "SELECT id,data,deleted,data->>'created' AS created,modified " +
+        GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = "SELECT id,data,deleted,created,modified " +
                                                "FROM $versionsTableName " +
                                                "WHERE id = (SELECT id FROM $idTableName " +
                                                            "WHERE iri = ? AND mainid = 't') " +
@@ -278,11 +280,7 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean store(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
-        store(doc, false, changedIn, changedBy, collection, deleted)
-    }
-
-    boolean store(Document doc, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
         if (linkFinder != null)
@@ -316,7 +314,7 @@ class PostgreSQLComponent {
                 }
                 lock = acquireRowLock(holdingForSystemId)
 
-                Document linkedBib = load(holdingForSystemId)
+                Document linkedBib = load(holdingForSystemId, connection)
                 List<Document> otherHoldings = getAttachedHoldings(linkedBib.getThingIdentifiers())
                 for (Document otherHolding in otherHoldings) {
                     if ( otherHolding.getHeldBy() == doc.getHeldBy())
@@ -327,12 +325,13 @@ class PostgreSQLComponent {
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
 
-            if (minorUpdate) {
-                now = status(doc.getURI(), connection)['modified']
-            }
             insert = rigInsertStatement(insert, doc, changedIn, changedBy, collection, deleted)
             insert.executeUpdate()
-            saveVersion(doc, connection, now, changedIn, changedBy, collection, deleted)
+            connection.commit()
+            Document savedDoc = load(doc.getShortId(), connection)
+            Date createdAt = parseDate(savedDoc.getCreated())
+            Date modifiedAt = parseDate(savedDoc.getModified())
+            saveVersion(doc, connection, createdAt, modifiedAt, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
             for (String dependerId : getDependers(doc.getShortId())) {
                 updateMinMaxDepModified(dependerId, connection)
@@ -473,6 +472,7 @@ class PostgreSQLComponent {
             // Make the document aware of it's deleted-status, or lack thereof
             doc.setDeleted(deleted)
 
+            Date createdTime = new Date(resultSet.getTimestamp("created").getTime())
             Date modTime = new Date()
             if (minorUpdate) {
                 modTime = new Date(resultSet.getTimestamp("modified").getTime())
@@ -482,7 +482,7 @@ class PostgreSQLComponent {
             updateStatement.execute()
 
             // The versions and identifiers tables are NOT under lock. Synchronization is only maintained on the main table.
-            saveVersion(doc, connection, modTime, changedIn, changedBy, collection, deleted)
+            saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
             for (String dependerId : getDependers(doc.getShortId())) {
                 updateMinMaxDepModified(dependerId, connection)
@@ -698,12 +698,16 @@ class PostgreSQLComponent {
         update.setObject(8, doc.getShortId(), java.sql.Types.OTHER)
     }
 
-    boolean saveVersion(Document doc, Connection connection, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean saveVersion(Document doc, Connection connection, Date createdTime,
+                        Date modTime, String changedIn, String changedBy,
+                        String collection, boolean deleted) {
         if (versioning) {
             PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
                 log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum()}. Modified: $modTime")
-                insvers = rigVersionStatement(insvers, doc, modTime, changedIn, changedBy, collection, deleted)
+                insvers = rigVersionStatement(insvers, doc, createdTime,
+                                              modTime, changedIn, changedBy,
+                                              collection, deleted)
                 int updated = insvers.executeUpdate()
                 log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
                 return (updated > 0)
@@ -716,17 +720,22 @@ class PostgreSQLComponent {
         }
     }
 
-    private PreparedStatement rigVersionStatement(PreparedStatement insvers, Document doc, Date modTime, String changedIn, String changedBy, String collection, deleted) {
+    private PreparedStatement rigVersionStatement(PreparedStatement insvers,
+                                                  Document doc, Date createdTime,
+                                                  Date modTime, String changedIn,
+                                                  String changedBy, String collection,
+                                                  boolean deleted) {
         insvers.setString(1, doc.getShortId())
         insvers.setObject(2, doc.dataAsString, Types.OTHER)
         insvers.setString(3, collection)
         insvers.setString(4, changedIn)
         insvers.setString(5, changedBy)
         insvers.setString(6, doc.getChecksum())
-        insvers.setTimestamp(7, new Timestamp(modTime.getTime()))
-        insvers.setBoolean(8, deleted)
-        insvers.setString(9, doc.getShortId())
-        insvers.setString(10, doc.getChecksum())
+        insvers.setTimestamp(7, new Timestamp(createdTime.getTime()))
+        insvers.setTimestamp(8, new Timestamp(modTime.getTime()))
+        insvers.setBoolean(9, deleted)
+        insvers.setString(10, doc.getShortId())
+        insvers.setString(11, doc.getChecksum())
         return insvers
     }
 
@@ -744,7 +753,7 @@ class PostgreSQLComponent {
             docs.each { doc ->
                 Date now = new Date()
                 if (versioning) {
-                    ver_batch = rigVersionStatement(ver_batch, doc, now, changedIn, changedBy, collection, false)
+                    ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
                     ver_batch.addBatch()
                 }
                 batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
@@ -1111,22 +1120,25 @@ class PostgreSQLComponent {
         }
     }
 
-    Document load(String id) {
-        return load(id, null)
+    Document load(String id, Connection conn = null) {
+        return load(id, null, conn)
     }
 
-    Document load(String id, String version) {
+    Document load(String id, String version, Connection conn = null) {
         Document doc = null
         if (version && version.isInteger()) {
             int v = version.toInteger()
-            def docList = loadAllVersions(id)
+            def docList = loadAllVersions(id, conn)
             if (v < docList.size()) {
                 doc = docList[v]
+            } else {
+                // looks like version might be a checksum, try loading
+                doc = loadFromSql(GET_DOCUMENT_VERSION, [1: id, 2: version], conn)
             }
         } else if (version) {
-            doc = loadFromSql(GET_DOCUMENT_VERSION, [1: id, 2: version])
+            doc = loadFromSql(GET_DOCUMENT_VERSION, [1: id, 2: version], conn)
         } else {
-            doc = loadFromSql(GET_DOCUMENT, [1: id])
+            doc = loadFromSql(GET_DOCUMENT, [1: id], conn)
         }
         return doc
     }
@@ -1389,11 +1401,15 @@ class PostgreSQLComponent {
         return []
     }
 
-    private Document loadFromSql(String sql, Map<Integer, Object> parameters) {
+    private Document loadFromSql(String sql, Map<Integer, Object> parameters, Connection connection = null) {
         Document doc = null
+        boolean shouldCloseConn = false
         log.debug("loadFromSql $parameters ($sql)")
-        Connection connection = getConnection()
-        log.debug("Got connection.")
+        if (!connection) {
+            connection = getConnection()
+            shouldCloseConn = true
+            log.debug("Got connection.")
+        }
         PreparedStatement selectstmt
         ResultSet rs
         try {
@@ -1418,7 +1434,9 @@ class PostgreSQLComponent {
                 log.trace("No results returned for $selectstmt")
             }
         } finally {
-            connection.close()
+            if (shouldCloseConn) {
+                connection.close()
+            }
         }
 
         return doc
@@ -1431,8 +1449,8 @@ class PostgreSQLComponent {
         return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1: [["sameAs": ["@id": identifier]]]])
     }
 
-    List<Document> loadAllVersions(String identifier) {
-        return doLoadAllVersions(identifier, GET_ALL_DOCUMENT_VERSIONS)
+    List<Document> loadAllVersions(String identifier, Connection conn = null) {
+        return doLoadAllVersions(identifier, GET_ALL_DOCUMENT_VERSIONS, conn)
     }
 
     List<Document> loadAllVersionsByMainId(String identifier) {
@@ -1440,8 +1458,12 @@ class PostgreSQLComponent {
                                  GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID)
     }
 
-    private List<Document> doLoadAllVersions(String identifier, String sql) {
-        Connection connection = getConnection()
+    private List<Document> doLoadAllVersions(String identifier, String sql, Connection connection = null) {
+        boolean shouldCloseConn = false
+        if (!connection) {
+            connection = getConnection()
+            shouldCloseConn = true
+        }
         PreparedStatement selectstmt
         ResultSet rs
         List<Document> docList = []
@@ -1456,8 +1478,10 @@ class PostgreSQLComponent {
                 docList << doc
             }
         } finally {
-            connection.close()
-            log.debug("[loadAllVersions] Closed connection.")
+            if (shouldCloseConn) {
+                connection.close()
+                log.debug("[loadAllVersions] Closed connection.")
+            }
         }
         return docList
     }
@@ -1990,5 +2014,15 @@ class PostgreSQLComponent {
       find.setObject(2, mapper.writeValueAsString(secondCondition),
                      java.sql.Types.OTHER)
       return find
+    }
+
+    private String formatDate(Date date) {
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault())
+        return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
+    }
+
+    private Date parseDate(String date) {
+        ZonedDateTime zdt = ZonedDateTime.parse(date, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+        return Date.from(zdt.toInstant())
     }
 }

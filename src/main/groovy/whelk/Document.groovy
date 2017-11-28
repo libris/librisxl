@@ -56,6 +56,7 @@ class Document {
     static final List sigelPath = ["@graph", 1, "heldBy", "@id"]
 
     public Map data = [:]
+    public int version = 0
 
     Document(Map data) {
         this.data = data
