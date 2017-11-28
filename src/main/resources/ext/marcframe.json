@@ -3925,13 +3925,12 @@
     "071": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
     "072": {
-      "include": ["termid"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Concept",
       "i2": {
-        "link": "source",
-        "resourceType": "Source",
+        "link": "inScheme",
+        "resourceType": "ConceptScheme",
         "property": "code",
         "tokenMap": {
           "0": "NAL"
@@ -3940,7 +3939,7 @@
       },
       "$a": {"property": "label"},
       "$x": {"link": "inCollection", "property": "label"},
-      "$2": {"requires-i2": "7", "link": "source", "resourceType": "Source", "property": "code"}
+      "$2": {"requires-i2": "7", "link": "inScheme", "resourceType": "ConceptScheme", "property": "code"}
     },
 
     "074": {
