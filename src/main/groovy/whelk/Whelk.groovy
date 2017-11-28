@@ -300,7 +300,7 @@ class Whelk {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    Document store(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
+    Document createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
 
         boolean detectCollisionsOnTypedIDs = false
         List<Tuple2<String, String>> collidingIDs = getIdCollisions(document, detectCollisionsOnTypedIDs)
@@ -309,7 +309,7 @@ class Whelk {
             throw new whelk.exception.StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
         }
 
-        if (storage.store(document, changedIn, changedBy, collection, deleted)) {
+        if (storage.createDocument(document, changedIn, changedBy, collection, deleted)) {
             if (collection == "auth" || collection == "definitions")
                 putInAuthCache(document)
             if (elastic) {
