@@ -512,8 +512,6 @@ class XL
         statement.setString(1, libraryUri);
         statement.setString(2, holdingForId);
 
-        System.out.println("slow? :\n" + statement);
-
         return statement;
     }
 
