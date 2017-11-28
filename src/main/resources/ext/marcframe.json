@@ -13354,7 +13354,38 @@
           "include": ["subjectbase"]
         }
       ],
-      "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html"
+      "$a": {"property": "prefLabel"},
+      "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html",
+      "_spec": [
+        {
+          "source": {
+            "750": {
+              "ind1": " ", "ind2": "0",
+              "subfields": [{"a": "Archaeology"}, {"0": "(DLC)sh 85006507"}]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "@type": "Concept",
+              "closeMatch": [
+                {
+                  "@id": "http://id.loc.gov/authorities/label/Archaeology",
+                  "@type": "Topic",
+                  "prefLabel": "Archaeology",
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "@id": "https://id.kb.se/term/lcsh",
+                    "code": "lcsh"
+                  },
+                  "identifiedBy": [
+                    {"@type": "Identifier", "value": "(DLC)sh 85006507"}
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "751": {
       "addLink": "marc:hasAddedEntryGeographicName",
@@ -13372,6 +13403,7 @@
       "addLink": "closeMatch",
       "resourceType": "GenreForm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
+      "$a": {"property": "prefLabel"},
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
     },
     "762": {"ignored": true, "NOTE:record-count": 0},
