@@ -3,6 +3,7 @@ package whelk.importer;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.Templates;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -14,7 +15,7 @@ class Parameters
     private Path path;
     private INPUT_FORMAT format;
     private boolean readOnly = true;
-    private List<Transformer> transformers = new ArrayList<>();
+    private List<Templates> templates = new ArrayList<>();
     private List<DUPLICATION_TYPE> dupTypes = new ArrayList<>();
     private String inputEncoding = "UTF-8";
     private boolean parallel = false;
@@ -23,7 +24,7 @@ class Parameters
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
     boolean getReadOnly() { return readOnly; }
-    List<Transformer> getTransformers() { return transformers; }
+    List<Templates> getTemplates() { return templates; }
     List<DUPLICATION_TYPE> getDuplicationTypes() { return dupTypes; }
     String getInputEncoding() { return inputEncoding; }
     boolean getRunParallel() { return parallel; }
@@ -160,8 +161,7 @@ class Parameters
                 break;
 
             case "--transformer":
-                transformers.add( TransformerFactory.newInstance().newTransformer(
-                        new StreamSource(new File(value))) );
+                templates.add( TransformerFactory.newInstance().newTemplates( new StreamSource(new File(value))) );
                 break;
 
             case "--inEncoding": // Only relevant for non-xml formats. XML files are expected to declare encoding in their header.

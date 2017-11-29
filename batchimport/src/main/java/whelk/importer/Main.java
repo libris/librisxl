@@ -12,16 +12,21 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.Templates;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Collections;
+import java.util.Iterator;
 
 public class Main
 {
     private static XL s_librisXl = null;
+
+    private static List tempfiles = Collections.synchronizedList(new ArrayList<File>());
 
     // Metrics
     private final static String METRICS_PUSHGATEWAY = "metrics.libris.kb.se:9091";
@@ -143,9 +148,12 @@ public class Main
         // of marcxml records that the jmarctools.MarcXmlRecordReader can read. The order of the records
         // is also expected to be; one bib record followed by any related holding records, after which
         // comes the next bib record and so on.
-        List<Transformer> transformers = parameters.getTransformers();
-        for (Transformer transformer : transformers)
-            inputStream = transform(transformer, inputStream);
+
+        for (Templates template : parameters.getTemplates())
+        {
+	    inputStream = transform(template.newTransformer(), inputStream);
+            //inputStream = transform(transformer, inputStream);
+        }
 
         int threadCount = 1;
         if (parameters.getRunParallel())
@@ -202,7 +210,24 @@ public class Main
             if (reader != null)
                 reader.close();
             threadPool.joinAll();
+
         }
+
+	inputStream.close();
+	removeTemporaryFiles();
+    }
+
+    private static void removeTemporaryFiles()
+    {
+	synchronized(tempfiles) {
+		Iterator<File> i = tempfiles.iterator();
+		while (i.hasNext()) {
+    			File f = i.next();
+    			f.delete();
+    			i.remove();
+		}
+	}
+
     }
 
     private static void importBatch(List<MarcRecord> batch)
@@ -233,7 +258,7 @@ public class Main
             throws IOException
     {
         File tempFile = File.createTempFile("xlimport", ".tmp");
-        tempFile.deleteOnExit();
+	tempfiles.add(tempFile);
         return tempFile;
     }
 
