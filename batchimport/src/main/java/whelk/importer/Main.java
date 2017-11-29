@@ -149,15 +149,11 @@ public class Main
         // is also expected to be; one bib record followed by any related holding records, after which
         // comes the next bib record and so on.
 
-        //List<Transformers> transformers = parameters.getTransformers();
-        //for (Transformer transformer : transformers)
         for (Templates template : parameters.getTemplates())
         {
 	    inputStream = transform(template.newTransformer(), inputStream);
             //inputStream = transform(transformer, inputStream);
         }
-
-	//inputStream = transform(parameters.getTemplate().newTransformer(), inputStream);
 
         int threadCount = 1;
         if (parameters.getRunParallel())
