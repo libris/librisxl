@@ -33,15 +33,31 @@ public class LongTermHttpConnection
                             String basicAuthName, String basicAuthPass)
             throws IOException
     {
-        if (m_socket == null || m_socket.isClosed() || !m_socket.isConnected() || m_socket.isInputShutdown() || m_socket.isOutputShutdown())
+        int attempts = 0
+        while (true)
         {
-            m_socket = createSocket(m_properUrl.getProtocol(), m_properUrl.getHost(), m_port)
-            m_socket.setKeepAlive(true)
-        }
+            try
+            {
+                if (m_socket == null || m_socket.isClosed() || !m_socket.isConnected() || m_socket.isInputShutdown() || m_socket.isOutputShutdown()) {
+                    m_socket = createSocket(m_properUrl.getProtocol(), m_properUrl.getHost(), m_port)
+                    m_socket.setKeepAlive(true)
+                }
 
-        writeRequest( m_socket.getOutputStream(), m_properUrl.getHost(), path, verb, contentType,
-                data, basicAuthName, basicAuthPass )
-        readResponse( m_socket.getInputStream() )
+                writeRequest(m_socket.getOutputStream(), m_properUrl.getHost(), path, verb, contentType,
+                        data, basicAuthName, basicAuthPass)
+                readResponse(m_socket.getInputStream())
+                break // We're done, no need for retries
+            } catch (SocketException se)
+            {
+                if (attempts > 2)
+                    throw se
+
+                // Close socket and retry with a new connection
+                try { m_socket.close() } catch (Throwable e) { /* ignore */ }
+                m_socket = null
+            }
+            ++attempts
+        }
     }
 
     public void close() throws IOException
