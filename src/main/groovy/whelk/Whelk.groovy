@@ -219,11 +219,19 @@ class Whelk {
     }
 
     public void reindexDependers(Document document) {
-        List<String> dependingIDs = storage.getDependers(document.getShortId())
+        List<Tuple2<String, String>> dependers = storage.getDependers(document.getShortId())
+
+        // Filter out "itemOf"-links. In other words, do not bother reindexing hold posts (they're not embellished in elastic)
+        List<String> idsToReindex = []
+        for (Tuple2<String, String> depender : dependers) {
+            if (!depender.get(1).equals("itemOf")) {
+                idsToReindex.add( (String) depender.get(0))
+            }
+        }
 
         // If the number of dependers isn't too large. Update them synchronously
-        if (dependingIDs.size() < 20) {
-            Map dependingDocuments = bulkLoad(dependingIDs)
+        if (dependers.size() < 20) {
+            Map dependingDocuments = bulkLoad(idsToReindex)
             for (String id : dependingDocuments.keySet()) {
                 Document dependingDoc = dependingDocuments.get(id)
                 String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
@@ -234,7 +242,7 @@ class Whelk {
             Whelk _this = this
             new Thread(new Runnable() {
                 void run() {
-                    for (String id : dependingIDs) {
+                    for (String id : idsToReindex) {
                         Document dependingDoc = storage.load(id)
                         String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
                         if (dependingDocCollection != null)
