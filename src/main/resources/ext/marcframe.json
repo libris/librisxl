@@ -9644,7 +9644,7 @@
       "$b": {"property": "marc:firstOrderPoliticalJurisdiction"},
       "$c": {"addProperty": "marc:intermediatePoliticalJurisdiction"},
       "$d": {"property": "marc:city"},
-      "$f": {"addProperty": null},
+      "$f": {"addProperty": "marc:citySubsection", "TODO:ignored": "true?"},
       "$g": {"addProperty": "marc:otherNonjurisdictionalGeographicRegionAndFeature"},
       "$h": {"addProperty": "marc:extraterrestrialArea"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
@@ -10514,10 +10514,13 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
+      "$a": {"addProperty": "marc:hostName"},
+      "$f": {"addProperty": "marc:electronicName"},
       "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
-      "$y": {"property": "altLabel"},
-      "$z": {"addProperty": "copyNote"},
+      "$y": {"addLink": "hasNote", "resourceType": "Note", "property": "marc:linkText"},
+      "$z": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "TODO": "subfieldOrder",
       "_spec": [
         {
           "source": {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/review"}]}},
@@ -13777,7 +13780,7 @@
     "010": {"ignored": true, "NOTE:record-count": 22, "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "014": {
       "aboutEntity": "?record",
-      "TODO:i1": {},
+      "i1": {"property": "marc:typeOfLinkageNumber"},
       "$a": {"property": "librisIIINumber"},
       "repeatable": true
     },
@@ -13790,6 +13793,7 @@
     "030": {"ignored": true, "NOTE:record-count": 0, "TODO": "inherit-bib?"},
     "035": {
       "inherit": "bib",
+      "aboutEntity": null,
       "NOTE:local": "Fältet förekommer normalt inte i beståndsposter, men kan användas för dubblettkontroll/länkning vid postexport till lokalt system.",
       "$9": null
     },
@@ -14095,6 +14099,7 @@
       "$a": {"property": "label"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {"addProperty": "copyNote"},
+      "$2": {"property": "marc:sourceOfNotation"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "organizationalUnit"},
