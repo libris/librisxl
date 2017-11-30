@@ -505,7 +505,7 @@ class XL
         // This query REQUIRES that links be on the primary ID only. This works beacuse of link-finding step2, but if
         // that should ever change this query would break.
 
-        String query = "SELECT id from lddb WHERE data#>>'{@graph,1,heldBy,@id}' = ? AND data#>>'{@graph,1,itemOf,@id}' = ?";
+        String query = "SELECT id from lddb WHERE data#>>'{@graph,1,heldBy,@id}' = ? AND data#>>'{@graph,1,itemOf,@id}' = ? AND deleted = false";
 
         PreparedStatement statement = connection.prepareStatement(query);
 
