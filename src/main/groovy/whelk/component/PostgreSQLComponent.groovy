@@ -314,12 +314,8 @@ class PostgreSQLComponent {
                 }
                 lock = acquireRowLock(holdingForSystemId)
 
-                Document linkedBib = load(holdingForSystemId, connection)
-                List<Document> otherHoldings = getAttachedHoldings(linkedBib.getThingIdentifiers())
-                for (Document otherHolding in otherHoldings) {
-                    if ( otherHolding.getHeldBy() == doc.getHeldBy())
-                        throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $holdingForSystemId")
-                }
+                if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
+                    throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $holdingFor")
             }
 
             Date now = new Date()
@@ -1194,6 +1190,27 @@ class PostgreSQLComponent {
                 preparedStatement.close()
             if (connection != null)
                 connection.close()
+        }
+    }
+
+    String getHoldingForBibAndSigel(String bibThingUri, String libraryUri, Connection connection) {
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            String sql = "SELECT id FROM $mainTableName WHERE data#>>'{@graph, 1, itemOf, @id}' = ? AND data#>>'{@graph, 1, heldBy, @id}' = ? AND deleted = false"
+            preparedStatement = connection.prepareStatement(sql)
+            preparedStatement.setString(1, bibThingUri)
+            preparedStatement.setString(2, libraryUri)
+            rs = preparedStatement.executeQuery()
+            if (rs.next())
+                return rs.getString(1)
+            return null
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
         }
     }
 
