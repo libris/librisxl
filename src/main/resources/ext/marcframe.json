@@ -10891,7 +10891,6 @@
     "040" : {
       "inherit": "bib",
       "TODO": "if no $f, drop entire record (or mark as obsolete)",
-      "$a": {"link": "assigner", "resourceType": "Organization", "property": "name"},
       "$f": {
         "IMPROVE:about": "$thing if Concept else $record",
         "aboutEntity": "?thing",
