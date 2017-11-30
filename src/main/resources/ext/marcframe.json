@@ -3648,8 +3648,10 @@
       "TODO:pending": "Merge entities from pending in similar fields (like bib 520)?",
       "pendingResources": {
         "_:accompaniedMaterial": {"link": "accompaniedBy", "resourceType": "Work"},
+        "_:libretto": {"link": "marc:libretto", "resourceType": "marc:Libretto"},
         "_:original": {"link": "originalVersion", "resourceType": "Work"},
         "_:summary": {"link": "summary", "resourceType": "Summary"},
+        "_:subtitlesOrCaptions": {"link": "marc:subtitlesOrCaptions", "resourceType": "marc:SubtitlesOrCaptions"},
         "_:sungOrSpokenText": {"link": "marc:sungOrSpokenText", "resourceType": "marc:SungOrSpokenText"},
         "_:tableOfContents": {"link": "tableOfContents", "resourceType": "TableOfContents"},
         "_:translationSource": {"link": "translationOf", "resourceType": "Work"}
@@ -3675,6 +3677,11 @@
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
+      "$e": {
+        "about": "_:libretto",
+        "addLink": "language",
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
+      },
       "$f": {
         "about": "_:tableOfContents",
         "addLink": "language",
@@ -3687,6 +3694,11 @@
       },
       "$h": {
         "about": "_:original",
+        "addLink": "language",
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
+      },
+      "$j": {
+        "about": "_:subtitlesOrCaptions",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
