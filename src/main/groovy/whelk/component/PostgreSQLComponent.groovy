@@ -190,8 +190,8 @@ class PostgreSQLComponent {
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
                 "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
-        GET_DEPENDERS = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ?"
-        GET_DEPENDENCIES = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ?"
+        GET_DEPENDERS = "SELECT id, relation FROM $dependenciesTableName WHERE dependsOnId = ?"
+        GET_DEPENDENCIES = "SELECT dependsOnId, relation FROM $dependenciesTableName WHERE id = ?"
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
         GET_MINMAX_MODIFIED = "SELECT MIN(modified), MAX(modified) from $mainTableName WHERE id IN (?)"
@@ -314,12 +314,8 @@ class PostgreSQLComponent {
                 }
                 lock = acquireRowLock(holdingForSystemId)
 
-                Document linkedBib = load(holdingForSystemId, connection)
-                List<Document> otherHoldings = getAttachedHoldings(linkedBib.getThingIdentifiers())
-                for (Document otherHolding in otherHoldings) {
-                    if ( otherHolding.getHeldBy() == doc.getHeldBy())
-                        throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $holdingForSystemId")
-                }
+                if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
+                    throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $holdingFor")
             }
 
             Date now = new Date()
@@ -333,9 +329,10 @@ class PostgreSQLComponent {
             Date modifiedAt = parseDate(savedDoc.getModified())
             saveVersion(doc, connection, createdAt, modifiedAt, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
-            for (String dependerId : getDependers(doc.getShortId())) {
-                updateMinMaxDepModified(dependerId, connection)
+            for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
+                updateMinMaxDepModified(depender.get(0), connection)
             }
+
             connection.commit()
             def status = status(doc.getURI(), connection)
             if (status.exists) {
@@ -484,8 +481,8 @@ class PostgreSQLComponent {
             // The versions and identifiers tables are NOT under lock. Synchronization is only maintained on the main table.
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
-            for (String dependerId : getDependers(doc.getShortId())) {
-                updateMinMaxDepModified(dependerId, connection)
+            for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
+                updateMinMaxDepModified(depender.get(0), connection)
             }
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
@@ -759,8 +756,8 @@ class PostgreSQLComponent {
                 batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
-                for (String dependerId : getDependers(doc.getShortId())) {
-                    updateMinMaxDepModified(dependerId, connection)
+                for (String depender : getDependers(doc.getShortId())) {
+                    updateMinMaxDepModified(depender.get(0), connection)
                 }
             }
             batch.executeBatch()
@@ -1196,15 +1193,36 @@ class PostgreSQLComponent {
         }
     }
 
-    List<String> getDependencies(String id) {
+    String getHoldingForBibAndSigel(String bibThingUri, String libraryUri, Connection connection) {
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            String sql = "SELECT id FROM $mainTableName WHERE data#>>'{@graph, 1, itemOf, @id}' = ? AND data#>>'{@graph, 1, heldBy, @id}' = ? AND deleted = false"
+            preparedStatement = connection.prepareStatement(sql)
+            preparedStatement.setString(1, bibThingUri)
+            preparedStatement.setString(2, libraryUri)
+            rs = preparedStatement.executeQuery()
+            if (rs.next())
+                return rs.getString(1)
+            return null
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+        }
+    }
+
+    List<Tuple2<String, String>> getDependencies(String id) {
         return getDependencyData(id, GET_DEPENDENCIES)
     }
 
-    List<String> getDependers(String id) {
+    List<Tuple2<String, String>> getDependers(String id) {
         return getDependencyData(id, GET_DEPENDERS)
     }
 
-    private List<String> getDependencyData(String id, String query) {
+    private List<Tuple2<String, String>> getDependencyData(String id, String query) {
         Connection connection
         PreparedStatement preparedStatement
         ResultSet rs
@@ -1213,11 +1231,11 @@ class PostgreSQLComponent {
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
             rs = preparedStatement.executeQuery()
-            List<String> dependecies = []
+            List<Tuple2<String, String>> dependencies = []
             while (rs.next()) {
-                dependecies.add( rs.getString(1) )
+                dependencies.add( new Tuple2<String, String>(rs.getString(1), rs.getString(2)) )
             }
-            return dependecies
+            return dependencies
         }
         finally {
             if (rs != null)
