@@ -6796,26 +6796,38 @@
     },
     "545": {
       "aboutEntity": "?thing",
+      "addLink": "hasBiographicalOrHistoricalData",
+      "resourceType": "BiographicalOrHistoricalData",
       "match": [
-        {
-          "when": "i1= ",
-          "addLink": "hasBiographicalOrHistoricalData",
-          "resourceType": "BiographicalOrHistoricalData"
-        },
         {
           "when": "i1=0",
           "addLink": "hasBiographicalInformation",
           "resourceType": "BiographicalDataNote"
         },
         {
-          "when": "i2=1",
+          "when": "i1=1",
           "addLink": "hasHistoricalData",
           "resourceType": "AdministrativeHistoryNote"
         }
       ],
       "$a": {"property": "label"},
       "$b": {"property": "description"},
-      "$u": {"property": "uri"}
+      "$u": {"property": "uri"},
+      "_spec": [
+        {
+          "source": {"545": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Författare och bibliotekarie"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasBiographicalInformation": [
+              {
+                "@type": "BiographicalDataNote",
+                "label": "Författare och bibliotekarie"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "546": {
       "aboutEntity": "?work",
