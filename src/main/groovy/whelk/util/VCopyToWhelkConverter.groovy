@@ -33,7 +33,7 @@ public class VCopyToWhelkConverter {
             updated = resultSet.getTimestamp('update_date')
             this.collection = collection
             bib_id = collection == 'bib' ? resultSet.getInt('bib_id') : 0
-            auth_id = collection == 'auth' ? resultSet.getInt('auth_id') : 0
+            auth_id = collection == 'auth' || collection == 'bib' ? resultSet.getInt('auth_id') : 0
             mfhd_id = collection == 'hold' ? resultSet.getInt('mfhd_id') : 0
             authdata = collection == 'bib' ? resultSet.getBytes('auth_data') : null
             sigel = collection == "hold" ? resultSet.getString("shortname") : null
