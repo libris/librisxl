@@ -13918,7 +13918,6 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "599": {
-      "ignored": true,
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
       "TODO:": "Should this not be internal data? Ignore until we know further.",
       "aboutEntity": "?record",
