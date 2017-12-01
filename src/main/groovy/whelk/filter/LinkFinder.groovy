@@ -73,7 +73,31 @@ class LinkFinder {
         }
     }
 
-    void replaceSameAsLinksWithPrimaries(Map data, boolean cacheAuthForever = false) {
+    void normalizeIdentifiers(Document document, boolean cacheAuthForever = false) {
+
+        // Normalize ISBN and ISSN identifiers. No hyphens and upper case.
+        List typedIDs = document.get(Document.thingTypedIDsPath)
+        for (Object entry: typedIDs) {
+            if (entry instanceof Map) {
+                Map map = (Map) entry
+                String type = map.get("@type")
+                if ( type != null && type.equals("ISBN")) {
+                    String value = map.get("value")
+                    if (value != null)
+                        map.put("value", value.replaceAll("-", "").toUpperCase())
+                }
+                if ( type != null && type.equals("ISSN") ) {
+                    String value = map.get("value")
+                    if (value != null)
+                        map.put("value", value.toUpperCase())
+                }
+            }
+        }
+
+        replaceSameAsLinksWithPrimaries(document.data, cacheAuthForever)
+    }
+
+    private void replaceSameAsLinksWithPrimaries(Map data, boolean cacheAuthForever = false) {
         // If this is a link (an object containing _only_ an id)
         String id = data.get("@id")
         if (id != null && data.keySet().size() == 1) {
@@ -99,7 +123,7 @@ class LinkFinder {
         }
     }
 
-    void replaceSameAsLinksWithPrimaries(List data) {
+    private void replaceSameAsLinksWithPrimaries(List data) {
         for (Object element : data){
             if (element instanceof List)
                 replaceSameAsLinksWithPrimaries( (List) element)

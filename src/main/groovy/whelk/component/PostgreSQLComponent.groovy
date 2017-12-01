@@ -284,7 +284,7 @@ class PostgreSQLComponent {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
         if (linkFinder != null)
-            linkFinder.replaceSameAsLinksWithPrimaries(doc.data)
+            linkFinder.normalizeIdentifiers(doc)
 
         Connection connection = getConnection()
         connection.setAutoCommit(false)
@@ -464,7 +464,7 @@ class PostgreSQLComponent {
             // Performs the callers updates on the document
             updateAgent.update(doc)
             if (linkFinder != null)
-                linkFinder.replaceSameAsLinksWithPrimaries(doc.data)
+                linkFinder.normalizeIdentifiers(doc)
 
             // Make the document aware of it's deleted-status, or lack thereof
             doc.setDeleted(deleted)
@@ -748,6 +748,8 @@ class PostgreSQLComponent {
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             docs.each { doc ->
+                if (linkFinder != null)
+                    linkFinder.normalizeIdentifiers(doc)
                 Date now = new Date()
                 if (versioning) {
                     ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
