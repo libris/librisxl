@@ -117,7 +117,7 @@ task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
 task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
     description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.converter.marc.MarcFrameConverter'
+    main = 'whelk.converter.marc.MarcFrameCli'
     args(System.getProperty('args', "").split() as String[])
 }
 
