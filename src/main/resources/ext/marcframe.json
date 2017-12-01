@@ -13878,11 +13878,24 @@
     },
     "561": {
       "TODO:linkedEntity": "?example-$i",
-      "TODO:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster",
+      "NOTE:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster. Remove i1 when revert",
+      "i1": {"ignored": true,"marcDefault": " "},
       "addLink": "hasItem", "embedded": true, "resourceType": "Item",
       "$a": {"property": "custodialHistory"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$8": {"property": "marc:groupid"}
+      "$8": {"property": "marc:groupid"},
+      "_spec": [
+        {
+          "source": {"561": {"ind1": "0", "ind2": " ","subfields": [{"a": "xxx"}]}},
+          "normalized": {"561": {"ind1": " ", "ind2": " ","subfields": [{"a": "xxx"}]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "hasItem": [{"@type": "Item", "custodialHistory": "xxx"}]
+            }
+          }
+        }
+      ]
     },
     "562": {
       "TODO:linkedEntity": "?example-$i",
@@ -13962,7 +13975,7 @@
     "844": {
       "link": "marc:hasNameOfUnit",
       "resourceType": "marc:NameOfUnit",
-      "$a": {"property": "marc:nameOfUnit"}
+      "$a": {"property": "label"}
     },
     "845": {
       "addLink": "hasNote",
