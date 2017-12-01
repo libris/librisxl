@@ -1,5 +1,8 @@
 package whelk.converter.marc
 
+import whelk.component.PostgreSQLComponent
+import whelk.filter.LinkFinder
+
 
 List fpaths
 def cmd = "convert"
@@ -13,6 +16,15 @@ if (args.length > 1) {
 
 def converter = new MarcFrameConverter()
 
+def addLinkFinder(converter) {
+    if (converter.linkFinder)
+        return
+    def whelkname = "whelk_dev"
+    def pgsql = whelkname ?  new PostgreSQLComponent("jdbc:postgresql:$whelkname", "lddb"): null
+    def linkFinder = pgsql ? new LinkFinder(pgsql) : null
+    converter.linkFinder = linkFinder
+}
+
 for (fpath in fpaths) {
     def source = converter.mapper.readValue(new File(fpath), Map)
     def result = null
@@ -20,6 +32,10 @@ for (fpath in fpaths) {
         result = converter.runRevert(source)
     } else {
         def extraData = null
+        if (source.oaipmhSetSpecs) {
+            addLinkFinder(converter)
+            extraData= [oaipmhSetSpecs: source.remove('oaipmhSetSpecs')]
+        }
         result = converter.runConvert(source, fpath, extraData)
     }
     if (fpaths.size() > 1)
