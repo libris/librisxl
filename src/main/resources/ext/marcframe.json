@@ -3648,8 +3648,10 @@
       "TODO:pending": "Merge entities from pending in similar fields (like bib 520)?",
       "pendingResources": {
         "_:accompaniedMaterial": {"link": "accompaniedBy", "resourceType": "Work"},
+        "_:libretto": {"link": "marc:libretto", "resourceType": "marc:Libretto"},
         "_:original": {"link": "originalVersion", "resourceType": "Work"},
         "_:summary": {"link": "summary", "resourceType": "Summary"},
+        "_:subtitlesOrCaptions": {"link": "marc:subtitlesOrCaptions", "resourceType": "marc:SubtitlesOrCaptions"},
         "_:sungOrSpokenText": {"link": "marc:sungOrSpokenText", "resourceType": "marc:SungOrSpokenText"},
         "_:tableOfContents": {"link": "tableOfContents", "resourceType": "TableOfContents"},
         "_:translationSource": {"link": "translationOf", "resourceType": "Work"}
@@ -3675,6 +3677,11 @@
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
+      "$e": {
+        "about": "_:libretto",
+        "addLink": "language",
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
+      },
       "$f": {
         "about": "_:tableOfContents",
         "addLink": "language",
@@ -3687,6 +3694,11 @@
       },
       "$h": {
         "about": "_:original",
+        "addLink": "language",
+        "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
+      },
+      "$j": {
+        "about": "_:subtitlesOrCaptions",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
@@ -6784,26 +6796,38 @@
     },
     "545": {
       "aboutEntity": "?thing",
+      "addLink": "hasBiographicalOrHistoricalData",
+      "resourceType": "BiographicalOrHistoricalData",
       "match": [
-        {
-          "when": "i1= ",
-          "addLink": "hasBiographicalOrHistoricalData",
-          "resourceType": "BiographicalOrHistoricalData"
-        },
         {
           "when": "i1=0",
           "addLink": "hasBiographicalInformation",
           "resourceType": "BiographicalDataNote"
         },
         {
-          "when": "i2=1",
+          "when": "i1=1",
           "addLink": "hasHistoricalData",
           "resourceType": "AdministrativeHistoryNote"
         }
       ],
       "$a": {"property": "label"},
       "$b": {"property": "description"},
-      "$u": {"property": "uri"}
+      "$u": {"property": "uri"},
+      "_spec": [
+        {
+          "source": {"545": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Författare och bibliotekarie"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasBiographicalInformation": [
+              {
+                "@type": "BiographicalDataNote",
+                "label": "Författare och bibliotekarie"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "546": {
       "aboutEntity": "?work",
@@ -10891,7 +10915,6 @@
     "040" : {
       "inherit": "bib",
       "TODO": "if no $f, drop entire record (or mark as obsolete)",
-      "$a": {"link": "assigner", "resourceType": "Organization", "property": "name"},
       "$f": {
         "IMPROVE:about": "$thing if Concept else $record",
         "aboutEntity": "?thing",
@@ -13855,11 +13878,24 @@
     },
     "561": {
       "TODO:linkedEntity": "?example-$i",
-      "TODO:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster",
+      "NOTE:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster. Remove i1 when revert",
+      "i1": {"ignored": true,"marcDefault": " "},
       "addLink": "hasItem", "embedded": true, "resourceType": "Item",
       "$a": {"property": "custodialHistory"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$8": {"property": "marc:groupid"}
+      "$8": {"property": "marc:groupid"},
+      "_spec": [
+        {
+          "source": {"561": {"ind1": "0", "ind2": " ","subfields": [{"a": "xxx"}]}},
+          "normalized": {"561": {"ind1": " ", "ind2": " ","subfields": [{"a": "xxx"}]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "hasItem": [{"@type": "Item", "custodialHistory": "xxx"}]
+            }
+          }
+        }
+      ]
     },
     "562": {
       "TODO:linkedEntity": "?example-$i",
@@ -13939,7 +13975,7 @@
     "844": {
       "link": "marc:hasNameOfUnit",
       "resourceType": "marc:NameOfUnit",
-      "$a": {"property": "marc:nameOfUnit"}
+      "$a": {"property": "label"}
     },
     "845": {
       "addLink": "hasNote",
@@ -14197,6 +14233,32 @@
       "$x": {"addProperty": "marc:hasHold948-x"},
       "$y": {"addProperty": "marc:hasHold948-y"},
       "$z": {"addProperty": "marc:hasHold948-z"},
+      "$A": {"addProperty": "marc:hasHold948-a"},
+      "$B": {"addProperty": "marc:hasHold948-b"},
+      "$C": {"addProperty": "marc:hasHold948-c"},
+      "$D": {"addProperty": "marc:hasHold948-d"},
+      "$E": {"addProperty": "marc:hasHold948-e"},
+      "$F": {"addProperty": "marc:hasHold948-f"},
+      "$G": {"addProperty": "marc:hasHold948-g"},
+      "$H": {"addProperty": "marc:hasHold948-h"},
+      "$I": {"addProperty": "marc:hasHold948-i"},
+      "$J": {"addProperty": "marc:hasHold948-j"},
+      "$K": {"addProperty": "marc:hasHold948-k"},
+      "$L": {"addProperty": "marc:hasHold948-l"},
+      "$M": {"addProperty": "marc:hasHold948-m"},
+      "$N": {"addProperty": "marc:hasHold948-n"},
+      "$O": {"addProperty": "marc:hasHold948-o"},
+      "$P": {"addProperty": "marc:hasHold948-p"},
+      "$Q": {"addProperty": "marc:hasHold948-q"},
+      "$R": {"addProperty": "marc:hasHold948-r"},
+      "$S": {"addProperty": "marc:hasHold948-s"},
+      "$T": {"addProperty": "marc:hasHold948-t"},
+      "$U": {"addProperty": "marc:hasHold948-u"},
+      "$V": {"addProperty": "marc:hasHold948-v"},
+      "$W": {"addProperty": "marc:hasHold948-w"},
+      "$X": {"addProperty": "marc:hasHold948-x"},
+      "$Y": {"addProperty": "marc:hasHold948-y"},
+      "$Z": {"addProperty": "marc:hasHold948-z"},
       "$0": {"addProperty": "marc:hasHold948-0"},
       "$1": {"addProperty": "marc:hasHold948-1"},
       "$2": {"addProperty": "marc:hasHold948-2"},
@@ -14240,6 +14302,32 @@
       "$x": {"addProperty": "marc:hasHold949-x"},
       "$y": {"addProperty": "marc:hasHold949-y"},
       "$z": {"addProperty": "marc:hasHold949-z"},
+      "$A": {"addProperty": "marc:hasHold949-a"},
+      "$B": {"addProperty": "marc:hasHold949-b"},
+      "$C": {"addProperty": "marc:hasHold949-c"},
+      "$D": {"addProperty": "marc:hasHold949-d"},
+      "$E": {"addProperty": "marc:hasHold949-e"},
+      "$F": {"addProperty": "marc:hasHold949-f"},
+      "$G": {"addProperty": "marc:hasHold949-g"},
+      "$H": {"addProperty": "marc:hasHold949-h"},
+      "$I": {"addProperty": "marc:hasHold949-i"},
+      "$J": {"addProperty": "marc:hasHold949-j"},
+      "$K": {"addProperty": "marc:hasHold949-k"},
+      "$L": {"addProperty": "marc:hasHold949-l"},
+      "$M": {"addProperty": "marc:hasHold949-m"},
+      "$N": {"addProperty": "marc:hasHold949-n"},
+      "$O": {"addProperty": "marc:hasHold949-o"},
+      "$P": {"addProperty": "marc:hasHold949-p"},
+      "$Q": {"addProperty": "marc:hasHold949-q"},
+      "$R": {"addProperty": "marc:hasHold949-r"},
+      "$S": {"addProperty": "marc:hasHold949-s"},
+      "$T": {"addProperty": "marc:hasHold949-t"},
+      "$U": {"addProperty": "marc:hasHold949-u"},
+      "$V": {"addProperty": "marc:hasHold949-v"},
+      "$W": {"addProperty": "marc:hasHold949-w"},
+      "$X": {"addProperty": "marc:hasHold949-x"},
+      "$Y": {"addProperty": "marc:hasHold949-y"},
+      "$Z": {"addProperty": "marc:hasHold949-z"},
       "$0": {"addProperty": "marc:hasHold949-0"},
       "$1": {"addProperty": "marc:hasHold949-1"},
       "$2": {"addProperty": "marc:hasHold949-2"},
