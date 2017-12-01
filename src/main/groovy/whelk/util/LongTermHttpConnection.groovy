@@ -9,7 +9,7 @@ import javax.net.ssl.SSLSocketFactory
  */
 public class LongTermHttpConnection
 {
-    private final long TIMEOUT_MS = 15000
+    private final int TIMEOUT_MS = 15000
     private int m_responseCode
     private String m_responseData
     private HashMap<String, String> m_responseHeaders
@@ -42,6 +42,7 @@ public class LongTermHttpConnection
                 if (m_socket == null || m_socket.isClosed() || !m_socket.isConnected() || m_socket.isInputShutdown() || m_socket.isOutputShutdown()) {
                     m_socket = createSocket(m_properUrl.getProtocol(), m_properUrl.getHost(), m_port)
                     m_socket.setKeepAlive(true)
+                    m_socket.setSoTimeout(TIMEOUT_MS)
                 }
 
                 writeRequest(m_socket.getOutputStream(), m_properUrl.getHost(), path, verb, contentType,
@@ -92,7 +93,9 @@ public class LongTermHttpConnection
             return ssf.createSocket(host, port)
         }
         else
+        {
             return new Socket(host, port)
+        }
     }
 
     private void writeRequest(OutputStream outputStream, String host, String path, String verb, String contentType,
@@ -142,22 +145,12 @@ public class LongTermHttpConnection
         int bytesRead = 0
         int totalBytesRead = 0
         int contentLength = Integer.MAX_VALUE
-        long lastDataAt = System.currentTimeMillis()
         while (bytesRead != -1 && totalBytesRead < contentLength)
         {
-            if (inputStream.available() <= 0)
-            {
-                if (System.currentTimeMillis() > lastDataAt + TIMEOUT_MS)
-                    throw new SocketException("No response from server in " + TIMEOUT_MS + " ms.")
-                bytesRead = 0
-                continue
-            }
-
             bytesRead = inputStream.read(buf)
             if (bytesRead == -1)
                 continue
 
-            lastDataAt = System.currentTimeMillis()
             completeResponse.write(buf, 0, bytesRead)
             totalBytesRead += bytesRead
 
