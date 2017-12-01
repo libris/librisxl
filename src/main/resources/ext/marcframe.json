@@ -6796,13 +6796,13 @@
     },
     "545": {
       "aboutEntity": "?thing",
-      "addLink": "hasBiographicalOrHistoricalData",
-      "resourceType": "BiographicalOrHistoricalData",
+      "addLink": "marc:hasBiographicalOrHistoricalData",
+      "resourceType": "marc:BiographicalOrHistoricalData",
       "match": [
         {
           "when": "i1=0",
           "addLink": "hasBiographicalInformation",
-          "resourceType": "BiographicalDataNote"
+          "resourceType": "BiographicalNote"
         },
         {
           "when": "i1=1",
