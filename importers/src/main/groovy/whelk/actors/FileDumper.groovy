@@ -89,7 +89,7 @@ class FileDumper implements MySQLLoader.LoadHandler {
                     recordMap["dependencies"] = externalDependencies
                     recordMap.document.setModified(new Date())
                     boolean cacheAuthForever = true
-                    converterPool[threadIndex].linkFinder.replaceSameAsLinksWithPrimaries(recordMap.document.data, cacheAuthForever)
+                    converterPool[threadIndex].linkFinder.normalizeIdentifiers(recordMap.document, cacheAuthForever)
                     if (externalDependencies.size() > 0) {
                         List<String> dependencyIDsIncludingThis = []
                         for (String[] reference : externalDependencies) {
