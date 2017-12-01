@@ -38,10 +38,8 @@ class Parameters
 
     enum DUPLICATION_TYPE
     {
-        DUPTYPE_ISBNA,
-        DUPTYPE_ISBNZ,
-        DUPTYPE_ISSNA,
-        DUPTYPE_ISSNZ,
+        DUPTYPE_ISBN,
+        DUPTYPE_ISSN,
         DUPTYPE_035A,
         DUPTYPE_LIBRISID
     }
@@ -115,10 +113,8 @@ class Parameters
         System.err.println("              record, that record will be enriched with any additional information in the");
         System.err.println("              incoming record.");
         System.err.println("              Duplication types:");
-        System.err.println("                ISBNA     ISBN number, obtained from MARC subfield $a of the incoming record");
-        System.err.println("                ISBNZ     ISBN number, obtained from MARC subfield $z of the incoming record");
-        System.err.println("                ISSNA     ISSN number, obtained from MARC subfield $a of the incoming record");
-        System.err.println("                ISSNZ     ISSN number, obtained from MARC subfield $z of the incoming record");
+        System.err.println("                ISBN      ISBN number");
+        System.err.println("                ISSN      ISSN number");
         System.err.println("                035A      ID in other system, obtained from MARC 035 $a of the incoming record");
         System.err.println("                LIBRIS-ID ID in Libris.");
         System.err.println("");
@@ -183,14 +179,10 @@ class Parameters
     {
         switch (typeString)
         {
-            case "ISBNA":
-                return DUPLICATION_TYPE.DUPTYPE_ISBNA;
-            case "ISBNZ":
-                return DUPLICATION_TYPE.DUPTYPE_ISBNZ;
-            case "ISSNA":
-                return DUPLICATION_TYPE.DUPTYPE_ISSNA;
-            case "ISSNZ":
-                return DUPLICATION_TYPE.DUPTYPE_ISSNZ;
+            case "ISBN":
+                return DUPLICATION_TYPE.DUPTYPE_ISBN;
+            case "ISSN":
+                return DUPLICATION_TYPE.DUPTYPE_ISSN;
             case "035A":
                 return DUPLICATION_TYPE.DUPTYPE_035A;
             case "LIBRIS-ID":

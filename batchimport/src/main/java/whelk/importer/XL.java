@@ -282,48 +282,26 @@ class XL
         {
             switch (dupType)
             {
-                case DUPTYPE_ISBNA: // International Standard Book Number (only from subfield A)
+                case DUPTYPE_ISBN:
                     for (Field field : marcRecord.getFields("020"))
                     {
                         String isbn = DigId.grepIsbna( (Datafield) field );
+                        String isbnz = DigId.grepIsbnz( (Datafield) field );
+                        if (isbn == null && isbnz != null)
+                            isbn = isbnz;
                         if (isbn != null)
-                        {
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toLowerCase() ));
                             duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toUpperCase() ));
-                        }
                     }
                     break;
-                case DUPTYPE_ISBNZ: // International Standard Book Number (only from subfield Z)
-                    for (Field field : marcRecord.getFields("020"))
-                    {
-                        String isbn = DigId.grepIsbnz( (Datafield) field );
-                        if (isbn != null)
-                        {
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toLowerCase() ));
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toUpperCase() ));
-                        }
-                    }
-                    break;
-                case DUPTYPE_ISSNA: // International Standard Serial Number (only from marc 022_A)
+                case DUPTYPE_ISSN:
                     for (Field field : marcRecord.getFields("022"))
                     {
                         String issn = DigId.grepIssn( (Datafield) field, 'a' );
+                        String issnz = DigId.grepIssn( (Datafield) field, 'z' );
+                        if (issn == null && issnz != null)
+                            issn = issnz;
                         if (issn != null)
-                        {
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toLowerCase() ));
                             duplicateIDs.addAll(getDuplicatesOnISSN( issn.toUpperCase() ));
-                        }
-                    }
-                    break;
-                case DUPTYPE_ISSNZ: // International Standard Serial Number (only from marc 022_Z)
-                    for (Field field : marcRecord.getFields("022"))
-                    {
-                        String issn = DigId.grepIssn( (Datafield) field, 'z' );
-                        if (issn != null)
-                        {
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toLowerCase() ));
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toUpperCase() ));
-                        }
                     }
                     break;
                 case DUPTYPE_035A:
