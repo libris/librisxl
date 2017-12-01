@@ -118,7 +118,7 @@ class FieldHandlerViewCategory {
     }
 
     static void printVocab(MarcSubFieldHandler self) {
-        def domainType = self.about && self.fieldHandler.pendingResources ?
+        def domainType = self.fieldHandler.pendingResources?.get(self.about) ?
             self.fieldHandler.pendingResources[self.about].resourceType
             : self.fieldHandler.link ? self.fieldHandler.resourceType
             : self.fieldHandler.domainType
