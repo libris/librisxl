@@ -9,6 +9,7 @@ import javax.net.ssl.SSLSocketFactory
  */
 public class LongTermHttpConnection
 {
+    private final long TIMEOUT_MS = 15000
     private int m_responseCode
     private String m_responseData
     private HashMap<String, String> m_responseHeaders
@@ -47,10 +48,12 @@ public class LongTermHttpConnection
                         data, basicAuthName, basicAuthPass)
                 readResponse(m_socket.getInputStream())
                 break // We're done, no need for retries
-            } catch (SocketException se)
+            } catch (SocketException | IOException se)
             {
                 if (attempts > 2)
+                {
                     throw se
+                }
 
                 // Close socket and retry with a new connection
                 try { m_socket.close() } catch (Throwable e) { /* ignore */ }
@@ -139,9 +142,22 @@ public class LongTermHttpConnection
         int bytesRead = 0
         int totalBytesRead = 0
         int contentLength = Integer.MAX_VALUE
+        long lastDataAt = System.currentTimeMillis()
         while (bytesRead != -1 && totalBytesRead < contentLength)
         {
+            if (inputStream.available() <= 0)
+            {
+                if (System.currentTimeMillis() > lastDataAt + TIMEOUT_MS)
+                    throw new SocketException("No response from server in " + TIMEOUT_MS + " ms.")
+                bytesRead = 0
+                continue
+            }
+
             bytesRead = inputStream.read(buf)
+            if (bytesRead == -1)
+                continue
+
+            lastDataAt = System.currentTimeMillis()
             completeResponse.write(buf, 0, bytesRead)
             totalBytesRead += bytesRead
 
