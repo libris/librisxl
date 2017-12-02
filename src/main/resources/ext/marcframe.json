@@ -3565,9 +3565,10 @@
       ],
       "$a": {"addLink": "identifiedBy", "resourceType": "SystemNumber", "property": "value"},
       "TODO:a": "extract value from parantheses and source as rdfs:label",
+      "$z": {"addProperty": "marc:canceledInvalidControlNumber"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
-      "$9": {"addProperty": "librisIIINumber", "TODO": "add spec!"},
+      "$8": {"addProperty": "marc:groupid"},
+      "$9": {"property": "librisIIINumber"},
       "_spec": [
         {
           "name": "interpret dbpedia URI as sameAs of instance",
@@ -3586,6 +3587,15 @@
             "mainEntity": {
               "sameAs":  [{"@id": "http://dbpedia.org/resource/August_Strindberg"}]
             }
+          }
+        },
+        {
+          "name": "librisIIINumber",
+          "source": [
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [{"9": "123"}]}}
+          ],
+          "result": {
+            "librisIIINumber": "123"
           }
         }
       ]
