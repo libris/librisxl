@@ -6513,13 +6513,12 @@
         "NOTE:LC": "nac",
         "property": "typeNote",
         "tokenMap": {
-          " ": "summary",
           "0": "subject",
           "1": "review",
           "2": "scopeAndContent",
           "3": "abstract",
           "4": "contentAdvice",
-          "8": "summary"
+          "8": "noDisplayConstantGenerated"
         }
       },
       "$a": {"property": "label"},
@@ -6554,8 +6553,7 @@
             "summary": [
               {
                 "@type": "Summary",
-                "label": "Dom är tillbaka och den här gången är det full fart från början till slut.",
-                "typeNote" : "summary"
+                "label": "Dom är tillbaka och den här gången är det full fart från början till slut."
               }
             ]
           }}
