@@ -9660,6 +9660,7 @@
     },
 
     "751": {
+      "NOTE:LC": "nac",
       "addLink": "marc:hasAddedEntryGeographicName",
       "resourceType": "marc:AddedEntryGeographicName",
       "$a": {"property": "marc:geographicName"},
@@ -9670,6 +9671,7 @@
       "$0": {"addProperty": "marc:authorityRecordControlNumber"}
     },
     "752": {
+      "TODO": "map to madsrdf terms?",
       "addLink": "marc:hasAddedEntryHierarchicalPlaceName",
       "resourceType": "marc:AddedEntryHierarchicalPlaceName",
       "$a": {"addProperty": "marc:countryOrLargerEntity"},
@@ -9713,6 +9715,7 @@
       ]
     },
     "754": {
+      "NOTE:LC": "nac",
       "addLink": "marc:hasAddedEntryTaxonomicIdentification",
       "resourceType": "marc:AddedEntryTaxonomicIdentification",
       "$a": {"addProperty": "marc:taxonomicName"},
