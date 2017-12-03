@@ -9684,11 +9684,33 @@
     },
     "753": {
       "aboutEntity": "?thing",
-      "addLink": "systemRequirement",
-      "resourceType": "SystemRequirement",
-      "$a": {"property": "marc:machineModel"},
-      "$b": {"property": "marc:programmingLanguage"},
-      "$c": {"property": "marc:operatingSystem"}
+      "$a": {"addLink": "systemRequirement", "resourceType": "MachineModel", "property": "label"},
+      "$b": {"addLink": "systemRequirement", "resourceType": "ProgrammingLanguage", "property": "label"},
+      "$c": {"addLink": "systemRequirement", "resourceType": "OperatingSystem", "property": "label"},
+      "_spec": [
+        {
+          "source": {
+            "753": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "PC"},
+              {"c": "Windows 95"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Instance",
+              "systemRequirement": [
+                {
+                  "@type": "MachineModel",
+                  "label": "PC"
+                },
+                {
+                  "@type": "OperatingSystem",
+                  "label": "Windows 95"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "754": {
       "addLink": "marc:hasAddedEntryTaxonomicIdentification",
