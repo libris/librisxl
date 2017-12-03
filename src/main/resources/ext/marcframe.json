@@ -3723,15 +3723,14 @@
     },
     "042": {
       "aboutEntity": "?record",
-      "link": "descriptionAuthentication",
-      "resourceType": "DescriptionAuthentication",
+      "TODO": "addLink isPartOfBibliography?",
       "pendingResources": {
         "_:bibliography": {
           "addLink": "bibliography",
           "resourceType": "Library"
         }
       },
-      "$a": {"addProperty": "code"},
+      "$a": {"link": "descriptionAuthentication", "resourceType": "DescriptionAuthentication", "addProperty": "code"},
       "$9": {
         "about": "_:bibliography",
         "uriTemplate": "https://libris.kb.se/library/{_}",
@@ -3743,12 +3742,9 @@
             "042": {"ind1": " ", "ind2": " ", "subfields": [{"9": "NB"}]}
           },
           "result": {
-            "descriptionAuthentication": {
-              "@type": "DescriptionAuthentication",
               "bibliography": [
                 {"@type": "Library", "sigel": "NB"}
-              ]
-            },
+              ],
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text"
