@@ -6969,8 +6969,36 @@
     },
     "590": {"ignored": true, "NOTE:OCLC": "Use for notes pertaining only to the copy of the item located in your institution. Field 590 is not part of the standard MARC21 format." },
     "599": {
-      "TOOO:i1": {},
-      "$a": {"aboutEntity": "?record", "addProperty": "technicalNote"}
+      "aboutEntity": "?record",
+      "addLink": "technicalNote",
+      "resourceType": "TechnicalNote",
+      "i1": {"marcDefault": " "},
+      "$a": {"property": "label"},
+      "_spec": [
+        {
+          "source": [
+            {"599": {"ind1": " ", "ind2": " ", "subfields": [{"a": "EBZ"}]}},
+            {"599": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Maskinellt genererad post."}]}}
+          ],
+          "result": {
+              "technicalNote": [
+                {
+                "@type": "TechnicalNote",
+                "label": "EBZ"
+              },
+              {
+              "@type": "TechnicalNote",
+              "label": "Maskinellt genererad post."
+            }
+            ],
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        }
+      ]
     },
 
     "600": {
