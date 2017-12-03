@@ -12661,7 +12661,7 @@
         {
           "when": "i1=3",
           "pendingResources": {
-            "_:agent": {"link": "hasPersona", "resourceType": "Family"}
+            "_:agent": {"link": "seeAlso", "resourceType": "Family"}
           },
           "include": ["agentData", "agentdataFamily"],
           "aboutType": "Family"
@@ -12682,7 +12682,7 @@
           "result": {
             "mainEntity": {
               "@type": "Family",
-              "hasPersona": {
+              "seeAlso": {
                 "@type": "Family",
                 "name": "Horn Family"
               }
