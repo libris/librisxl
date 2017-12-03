@@ -3776,11 +3776,12 @@
     },
     "045": {
       "aboutEntity": "?work",
-      "TODO": "map to edtf date",
+      "NOTE": "see also auth045 TimePeriodOfHeading",
+      "TODO": "bf2 temporalCoverage, This is the EDTF value table from the LoC BF2 converter, not the readable form. Might be better as linked resources with both labels and codes.",
       "link": "marc:hasTimePeriodOfContent",
       "resourceType": "marc:TimePeriodOfContent",
       "i1": {
-        "TODO:link": null,
+        "property": "marc:typeOfTimePeriod",
         "tokenMap": {
           "0": "singleDateTime",
           "1": "multipleSingleDatesTimes",
@@ -10997,7 +10998,8 @@
     "repeatable": false
     },
     "045" : {
-      "$a": {"property": "temporalCoverage", "tokenMap": "timePeriod", "TODO": "This is the EDTF value table from the LoC BF2 converter, not the readable form. Might be better as linked resources with with both labels and codes."}
+      "inherit": "bib",
+      "aboutEntity": "?thing"
     },
 
     "046" : {
