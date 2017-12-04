@@ -145,7 +145,8 @@ public class LongTermHttpConnection
         int bytesRead = 0
         int totalBytesRead = 0
         int contentLength = Integer.MAX_VALUE
-        while (bytesRead != -1 && totalBytesRead < contentLength)
+        int headerLength = Integer.MAX_VALUE
+        while ( bytesRead != -1 && totalBytesRead < ((long)headerLength + (long)contentLength) )
         {
             bytesRead = inputStream.read(buf)
             if (bytesRead == -1)
@@ -156,7 +157,7 @@ public class LongTermHttpConnection
 
             //System.out.print( new String(buf, "UTF-8") ) // print all raw http to terminal
 
-            if (contentLength == Integer.MAX_VALUE) // If we haven't parsed a content-length yet
+            if (headerLength == Integer.MAX_VALUE) // If we haven't parsed all headers yet
             {
                 String responseText = completeResponse.toString("UTF-8").toLowerCase()
                 int contentLengthHeaderBeginsAt
@@ -170,12 +171,17 @@ public class LongTermHttpConnection
                     }
                 }
 
-                // If we've read all the headers, and there was no content-length, then there can be no body. Consider the response fully received.
-                if (responseText.contains("\r\n\r\n") && contentLength == Integer.MAX_VALUE)
+                // Scan for end of headers
+                if (responseText.contains("\r\n\r\n"))
                 {
-                    //System.out.println("Response considered complete, because headers are done and no content-length :\n" + responseText)
-                    processCompleteResponse(responseText)
-                    return
+                    headerLength = responseText.indexOf("\r\n\r\n") + 4
+
+                    // If we've read all the headers, and there was no content-length, then there can be no body. Consider the response fully received.
+                    if (contentLength == Integer.MAX_VALUE)
+                    {
+                        processCompleteResponse(responseText)
+                        return
+                    }
                 }
             }
         }
