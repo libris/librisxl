@@ -12,7 +12,6 @@
   "tokenMaps": [
 
     {
-      "relatorCode": "relatorcodes.json",
       "thesaurus": {
         "0": "lcsh",
         "1": "lcsh/csh",
@@ -392,7 +391,7 @@
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "$t": {"about": "_:title", "property": "mainTitle"},
-      "$i": {"addLink": "marc:relatedAs", "resourceType": "Role", "property": "label"},
+      "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
       "$0": {"addLink": "identifiedBy", "property": "value"}
     },
 
@@ -405,7 +404,7 @@
 
     "hasPartData": {
       "include": ["hasPartDataSansLabelledRole"],
-      "$e": {"about": "_:contribution", "addLink": "role", "property": "label"}
+      "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"}
     },
 
     "hasPartPerson": {
@@ -596,7 +595,7 @@
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "TODO:alternative $a": {"addProperty": "altLabel"},
-      "$i": {"addLink": "marc:relatedAs", "resourceType": "Role", "property": "label"},
+      "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
       "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
       "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
       "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
@@ -605,7 +604,22 @@
       "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"}
     },
 
+    "contributionRole_4": {
+      "$4": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "https://id.kb.se/relator/{_}", "matchUriToken": "^[\\w+]$"}
+    },
+
+    "contributionRole_4_e": {
+      "include": ["contributionRole_4"],
+      "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"}
+    },
+
+    "contributionRole_4_j": {
+      "include": ["contributionRole_4"],
+      "$j": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"}
+    },
+
     "hasContribution": {
+      "include": ["contributionRole_4_e"],
       "pendingResources": {
         "_:contribution": {
           "about": "_:work",
@@ -613,12 +627,11 @@
           "resourceType": "PrimaryContribution",
           "embedded": true
         }
-      },
-      "$e": {"about": "_:contribution", "addLink": "role", "property": "label"},
-      "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"}
+      }
     },
 
     "relationshipDataSansLabelledRole": {
+      "include": ["contributionRole_4"],
       "TODO": "compare this to hasPartData and consolidate",
       "addLink": "relationship",
       "resourceType": "Relationship",
@@ -638,15 +651,14 @@
           "embedded": true
         }
       },
-      "$i": {"addLink": "relation", "resourceType": "Resource", "property": "label"},
+      "$i": {"addLink": "relation", "resourceType": "Relation", "property": "label"},
       "$t": {"about": "_:title", "property": "mainTitle"},
-      "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
       "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
     },
 
     "relationshipData": {
       "include": ["relationshipDataSansLabelledRole"],
-      "$e": {"about": "_:contribution", "addLink": "role", "property": "label"}
+      "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"}
     },
 
     "hasRelationshipPerson": {
@@ -712,7 +724,7 @@
           "embedded": true
         }
       },
-      "$i": {"addLink": "marc:relatedAs", "resourceType": "Role", "property": "label"},
+      "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
       "$t": {"about": "_:title", "property": "mainTitle"},
       "$v": {"about": "_:work", "property": "marc:formSubdivision"},
       "$w": {"about": "_:work", "property": "marc:controlSubfield"},
@@ -814,6 +826,7 @@
     "contributionOrganization": {
       "addLink": "contribution",
       "resourceType": "Contribution",
+      "aboutAlias": "_:contribution",
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
@@ -824,6 +837,7 @@
     "contributionJurisdiction": {
       "addLink": "contribution",
       "resourceType": "Contribution",
+      "aboutAlias": "_:contribution",
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Jurisdiction", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
@@ -985,7 +999,7 @@
       "$g": {"about": "_:agent", "addProperty": "comment"},
       "$u": {"about": "_:agent", "property": "marc:affiliation"},
 
-      "TODO:role": "e och 4. Även för Family och Person"
+      "TODO::include": "contributionRole_4_e? e and 4. Also for Family och Person. Uses require aboutAlias: _:contribution"
     },
 
     "agentdataMeeting": {
@@ -1000,6 +1014,7 @@
     },
 
     "contributiondata": {
+      "include": ["contributionRole_4_e"],
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Person", "required": true}
       },
@@ -1027,10 +1042,7 @@
           }
         }
       ],
-      "$a": {"required": true},
-      "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "$e": {"addLink": "role", "property": "label"},
-      "TODO:eAnd4": "make a pattern for role?"
+      "$a": {"required": true}
     },
 
     "classification-ddc": {
@@ -4268,6 +4280,7 @@
       "aboutEntity": "?work",
       "addLink": "contribution",
       "resourceType": "PrimaryContribution",
+      "aboutAlias": "_:contribution",
       "include": ["contributiondata"],
       "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
       "$6": {"property": "marc:fieldref"},
@@ -4350,9 +4363,11 @@
                     "lifeSpan": "1204-1263"
                   },
                   "role" : [ {
+                    "@type": "Role",
                     "label" : "author."
                   }, {
-                    "code" : "aut"
+                    "@type": "Role",
+                    "@id" : "https://id.kb.se/relator/aut", "code" : "aut"
                   } ]
                 }
               ]
@@ -4451,7 +4466,8 @@
       "aboutEntity": "?work",
       "addLink": "contribution",
       "resourceType": "PrimaryContribution",
-      "include": ["agentdataOrganization"],
+      "aboutAlias": "_:contribution",
+      "include": ["agentdataOrganization", "contributionRole_4_e"],
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
@@ -4459,10 +4475,7 @@
 
       "subfieldOrder": "a b n d c g u e 4 k", "NOTE:notInLibris": "t p l k f",
 
-      "TODO:changed-remove?:computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
-      "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "$e": {"addLink": "role", "property": "label"},
       "$k": {"addProperty": "qualifier", "NOTE": "not allowed but used in the wild"},
       "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
@@ -4649,9 +4662,11 @@
                     "marc:partNumber": ["(2nd :"]
                   },
                   "role" : [ {
-                    "label" : "author"
-                  },
+                      "@type": "Role",
+                      "label" : "author"
+                    },
                     {
+                      "@type": "Role",
                       "label" : "issuing body."
                     }]
                 }]
@@ -4664,18 +4679,16 @@
 
     "111": {
       "aboutEntity": "?work",
-      "include": "agentdataMeeting",
       "addLink": "contribution",
       "resourceType": "PrimaryContribution",
+      "aboutAlias": "_:contribution",
+      "include": ["agentdataMeeting", "contributionRole_4_j"],
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Meeting", "required": true},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
-      "TODO:computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
-      "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "$j": {"addLink": "role", "property": "label"},
       "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -4770,8 +4783,8 @@
                       "label" : "Cincinatti, Ohio"
                     }]},
                   "role": [
-                    {"label": "author"},
-                    {"code": "aut"}]
+                    {"@type": "Role", "label": "author"},
+                    {"@type": "Role", "@id" : "https://id.kb.se/relator/aut", "code": "aut"}]
                 }]
             }
           }}
@@ -6242,7 +6255,7 @@
       "$v": {"property": "seriesEnumeration"},
       "$x": {"property": "issn", "punctuationChars": ".,=;"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:marc:groupid"}
+      "$8": {"property": "marc:groupid"}
     },
     "490": {
       "inherit": "440",
@@ -7876,7 +7889,6 @@
         }
       },
       "$a": {"about": "_:topic", "property": "prefLabel"},
-      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {
         "link": "marc:subjectLevel",
         "uriTemplate": "{+_}",
@@ -8466,7 +8478,7 @@
               "relationship": [
                 {
                   "@type": "Relationship",
-                  "relation": [{"@type": "Resource", "label": "Parafraserar"}],
+                  "relation": [{"@type": "Relation", "label": "Parafraserar"}],
                   "entity": {
                     "@type": "Work",
                     "hasTitle": [ {
@@ -8476,7 +8488,7 @@
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
-                        "role": [{"label": "Skapad av"}],
+                        "role": [{"@type": "Role", "label": "Skapad av"}],
                         "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
                       }
                     ]
@@ -8656,7 +8668,7 @@
               "relationship": [
                 {
                   "@type": "Relationship",
-                  "relation": [{"@type": "Resource", "label": "Parafraserar"}],
+                  "relation": [{"@type": "Relation", "label": "Parafraserar"}],
                   "entity": {
                     "@type": "Work",
                     "hasTitle": [ {
@@ -8738,11 +8750,11 @@
       "match": [
         {
           "when": "$b & $t & i2=2 & i1=1",
-          "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber", "agentpartnumber"]
+          "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4"]
         },
         {
           "when": "$t & i2=2 & i1=1",
-          "include": ["hasPartJurisdiction", "agentdataOrganization", "titledetailsSansPartNumber", "agentpartnumber"]
+          "include": ["hasPartJurisdiction", "agentdataOrganization", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4"]
         },
         {
           "when": "$b & $t & i1=1",
@@ -8754,11 +8766,11 @@
         },
         {
           "when": "$b & $t & i2=2",
-          "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber", "agentpartnumber"]
+          "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4"]
         },
         {
           "when": "$t & i2=2",
-          "include": ["hasPartOrganization", "agentdataOrganization", "titledetailsSansPartNumber", "agentpartnumber"]
+          "include": ["hasPartOrganization", "agentdataOrganization", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4"]
         },
         {
           "when": "$b & $t",
@@ -8770,48 +8782,45 @@
         },
         {
           "when": "$b & i1=2",
-          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "agentdetails"]
+          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "agentdetails", "contributionRole_4_e"]
         },
         {
           "when": "i1=2",
-          "include": ["contributionOrganization", "agentdataOrganization", "agentdetails"]
+          "include": ["contributionOrganization", "agentdataOrganization", "agentdetails", "contributionRole_4_e"]
         },
         {
           "when": "$b & i1=1",
-          "include": ["contributionJurisdiction", "agentdataOrganizationSubUnit", "agentdetails"]
+          "include": ["contributionJurisdiction", "agentdataOrganizationSubUnit", "agentdetails", "contributionRole_4_e"]
         },
         {
           "when": "i1=1",
-          "include": ["contributionJurisdiction", "agentdataOrganization", "agentdetails"]
+          "include": ["contributionJurisdiction", "agentdataOrganization", "agentdetails", "contributionRole_4_e"]
         },
         {
           "when": "$b & i1=0",
-          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "agentdetails"]
+          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "agentdetails", "contributionRole_4_e"]
         },
         {
           "when": "i1=0",
-          "include": ["contributionOrganization", "agentdataOrganization", "agentdetails"]
+          "include": ["contributionOrganization", "agentdataOrganization", "agentdetails", "contributionRole_4_e"]
         },
         {
           "when": "$b",
-          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "agentdetails"]
+          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "agentdetails", "contributionRole_4_e"]
         },
         {
           "when": null,
-          "include": ["contributionOrganization", "agentdataOrganization", "agentdetails"]
+          "include": ["contributionOrganization", "agentdataOrganization", "agentdetails", "contributionRole_4_e"]
         }
       ],
       "TODO": [
         "change splitValueProperties to work on result, to handle match combo"
       ],
 
-      "TODO:changed-remove?:computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "i1": {"marcDefault": "2"},
 
       "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
-      "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "$e": {"addLink": "role", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
 
@@ -8985,6 +8994,7 @@
                     }]
                   },
                   "role": [{
+                    "@type": "Role",
                     "label": "author."
                   }]
                 }
@@ -9270,11 +9280,11 @@
       "match": [
         {
           "when": "$t & i1=2 & i2=2",
-          "include": ["hasPartMeeting", "titledetailsSansPartNumber", "agentpartnumber"]
+          "include": ["hasPartMeeting", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4_j"]
         },
         {
           "when": "$t & i2=2",
-          "include": ["hasPartMeeting", "titledetailsSansPartNumber", "agentpartnumber"]
+          "include": ["hasPartMeeting", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4_j"]
         },
         {
           "when": "$t",
@@ -9287,13 +9297,15 @@
               "required": true
             },
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-          }
+          },
+          "$j": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"}
         },
         {
           "when": null,
-          "include": ["agentdataMeeting", "agentdetails"],
+          "include": ["agentdataMeeting", "agentdetails", "contributionRole_4_j"],
           "addLink": "contribution",
           "resourceType": "Contribution",
+          "aboutAlias": "_:contribution",
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Meeting", "required": true},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
@@ -9302,10 +9314,7 @@
       ],
       "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "i1": {"marcDefault": "2"},
-      "$4": {"addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "$j": {"addLink": "role", "property": "label"},
       "$6": {"property": "marc:fieldref"},
-      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "subfieldOrder": "i a n d c e g u j 4 t n s l k f x",
       "_spec": [
         {
@@ -9358,6 +9367,7 @@
                     "marc:subordinateUnit": ["Organizing Committee." , "Arts and Culture Program." ,  "Visual Arts Section."]
                   },
                   "role": [{
+                    "@type": "Role",
                     "label": "author."
                   }]
                 }]
@@ -9381,7 +9391,7 @@
               "hasPart": [
                 {
                   "@type": "Work",
-                  "marc:relatedAs": [{"@type": "Role", "label": "Facsimile (manifestation):"}],
+                  "marc:relatedAs": [{"@type": "Relation", "label": "Facsimile (manifestation):"}],
                   "hasTitle": [ {
                     "@type": "Title",
                     "mainTitle": "Constitutio pastoralis de ecclesia in mundo huius temporis."
@@ -9439,6 +9449,8 @@
       "aboutEntity": "?work",
       "addLink": "contribution",
       "resourceType": "Contribution",
+      "include": ["contributionRole_4_e"],
+      "aboutAlias": "_:contribution",
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Agent", "required": true}
       },
@@ -9451,8 +9463,6 @@
         }
       ],
       "$a": {"about": "_:agent", "property": "label", "required": true, "punctuationChars": ")"},
-      "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
       "_spec": [
         {
           "source": {
@@ -9467,7 +9477,7 @@
                 {
                   "@type": "Contribution",
                   "agent": {"@type": "Agent", "label": "Mukhtar Bashir Mudey."},
-                  "role": [{"@type": "Role", "code": "ill"}]}
+                  "role": [{"@type": "Role", "@id" : "https://id.kb.se/relator/ill", "code": "ill"}]}
               ]
             }
           }}
@@ -9503,7 +9513,7 @@
           "aboutAlias": "_:work",
           "$d": {"property": "legalDate"},
           "$n": {"about": "_:title", "addProperty": "partNumber", "punctuationChars": ","},
-          "$i": {"addLink": "marc:relatedAs", "resourceType": "Role", "property": "label"},
+          "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
           "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"}
         }
       ],
@@ -9518,7 +9528,7 @@
       "resourceType": "Relationship",
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"about": "_:work","property": "legalDate"},
-      "$i": {"addLink": "relation", "resourceType": "Resource", "property": "label"},
+      "$i": {"addLink": "relation", "resourceType": "Relation", "property": "label"},
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
@@ -9542,7 +9552,7 @@
                       "marc:nonfilingChars" : "0"
                     } ]
                   },
-                  "relation": [{"@type": "Resource", "label": "Novelization of (work)"}]
+                  "relation": [{"@type": "Relation", "label": "Novelization of (work)"}]
                 }
               ]
             }
@@ -9602,7 +9612,7 @@
                   } ],
                   "musicMedium": ["harpsichord,"],
                   "musicKey": "B♭ minor",
-                  "marc:relatedAs": [{"@type": "Role", "label": "Container of (work):"}]
+                  "marc:relatedAs": [{"@type": "Relation", "label": "Container of (work):"}]
                 }
               ]
             }
@@ -9840,7 +9850,6 @@
       "$7": {"property": "marc:controlSubfield"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "partNumber"},
-      "computeLinks": {"use": "$4", "mapping": "relatorCode"},
       "_spec": [
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
@@ -10070,6 +10079,7 @@
           }
         }
       ],
+      "include": ["contributionRole_4_e"],
       "NOTE:titledetails": "Temporarily moved these locally!!",
       "$f": {"about": "_:title", "property": "originDate"},
       "$h": {"about": "_:title", "property": "marc:mediaTerm"},
@@ -10089,8 +10099,6 @@
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
       "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -10214,7 +10222,7 @@
       "resourceType": "Serial",
       "TODO:aboutEntity?": "?series",
       "TODO:revert": "Get mixed up with 440",
-      "include": ["agentdataOrganization"],
+      "include": ["agentdataOrganization", "contributionRole_4_e"],
       "TODO:include": "titledetails",
       "embedded": true,
       "pendingResources": {
@@ -10289,8 +10297,6 @@
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
       "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
-      "$e": {"addLink": "role", "resourceType": "Role", "property": "label"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
@@ -10384,7 +10390,7 @@
       "resourceType": "Serial",
       "TODO:aboutEntity?": "?series",
       "TODO:revert": "Get mixed up with 440",
-      "include": ["agentdataOrganization"],
+      "include": ["agentdataOrganization", "contributionRole_4"],
       "TODO:include": "titledetails",
       "i1": {"marcDefault": "2"},
       "embedded": true,
@@ -10424,7 +10430,7 @@
       "$w": {"addProperty": "bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
       "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$4": {"addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"},
+      "TODO:$j": "used in practise?",
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
@@ -12260,7 +12266,7 @@
                 }
               },
               "marc:relatedAs": [{
-                "@type": "Role",
+                "@type": "Relation",
                 "label": "Franska:"
               }]
             }
@@ -12516,9 +12522,7 @@
       "match": [
         {
           "when": "$t",
-          "include": ["hasVersionMeeting", "agentdataMeeting", "titledetails"],
-          "$j": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"},
-          "$4": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"}
+          "include": ["hasVersionMeeting", "agentdataMeeting", "titledetails", "contributionRole_4_j"]
         },
         {
           "when": null,
@@ -12955,7 +12959,7 @@
       "match": [
         {
           "when": "$t",
-          "include": ["hasRelatedToMeeting", "agentdataMeeting", "titledetails"],
+          "include": ["hasRelatedToMeeting", "agentdataMeeting", "titledetails", "contributionRole_4"],
           "pendingResources": {
             "_:contribution": {
               "about": "_:work",
@@ -12964,8 +12968,7 @@
               "embedded": true
             }
           },
-          "$j": {"about": "_:contribution", "addLink": "role", "property": "label"},
-          "$4": {"about": "_:contribution", "addLink": "role", "property": "code", "uriTemplate": "{code}", "TODO:mapping": "relatorCode"}
+          "$j": {"about": "_:contribution", "addLink": "role", "property": "label"}
         },
         {
           "when": null,
