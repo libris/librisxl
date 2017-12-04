@@ -156,7 +156,7 @@ public class LongTermHttpConnection
 
             //System.out.print( new String(buf, "UTF-8") ) // print all raw http to terminal
 
-            if (contentLength == Integer.MAX_VALUE) // If we haven't parsed the content-length yet
+            if (contentLength == Integer.MAX_VALUE) // If we haven't parsed a content-length yet
             {
                 String responseText = completeResponse.toString("UTF-8").toLowerCase()
                 int contentLengthHeaderBeginsAt
@@ -169,11 +169,24 @@ public class LongTermHttpConnection
                         contentLength = Integer.parseInt(contentLengthString.trim())
                     }
                 }
+
+                // If we've read all the headers, and there was no content-length, then there can be no body. Consider the response fully received.
+                if (responseText.contains("\r\n\r\n") && contentLength == Integer.MAX_VALUE)
+                {
+                    //System.out.println("Response considered complete, because headers are done and no content-length :\n" + responseText)
+                    processCompleteResponse(responseText)
+                    return
+                }
             }
         }
 
         // Response completely retrieved.
         String responseText = completeResponse.toString("UTF-8")
+        processCompleteResponse(responseText)
+    }
+
+    private void processCompleteResponse(String responseText)
+    {
         int introEnd = responseText.indexOf("\r\n")
         if (introEnd == -1)
             throw new IOException("Malformed HTTP response, no intro line ending: " + responseText)
