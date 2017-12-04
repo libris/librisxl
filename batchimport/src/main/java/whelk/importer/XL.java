@@ -288,7 +288,6 @@ class XL
                         String isbn = DigId.grepIsbna( (Datafield) field );
                         if (isbn != null)
                         {
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toLowerCase() ));
                             duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toUpperCase() ));
                         }
                     }
@@ -299,7 +298,6 @@ class XL
                         String isbn = DigId.grepIsbnz( (Datafield) field );
                         if (isbn != null)
                         {
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toLowerCase() ));
                             duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toUpperCase() ));
                         }
                     }
@@ -310,7 +308,6 @@ class XL
                         String issn = DigId.grepIssn( (Datafield) field, 'a' );
                         if (issn != null)
                         {
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toLowerCase() ));
                             duplicateIDs.addAll(getDuplicatesOnISSN( issn.toUpperCase() ));
                         }
                     }
@@ -321,7 +318,6 @@ class XL
                         String issn = DigId.grepIssn( (Datafield) field, 'z' );
                         if (issn != null)
                         {
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toLowerCase() ));
                             duplicateIDs.addAll(getDuplicatesOnISSN( issn.toUpperCase() ));
                         }
                     }
