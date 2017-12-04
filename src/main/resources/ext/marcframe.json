@@ -9708,9 +9708,7 @@
       "$g": {"addProperty": "marc:otherNonjurisdictionalGeographicRegionAndFeature"},
       "$h": {"addProperty": "marc:extraterrestrialArea"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
-      "$0": {"addProperty": "marc:authorityRecordControlNumber"},
-      "TODO:$4": "Change to: {'addLink': 'role', 'resourceType': 'Role', 'property': 'code', 'uriTemplate': '{code}', 'TODO:mapping': 'relatorCode'}??",
-      "$4": {"addProperty": "marc:relatorCode"}
+      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
     },
     "753": {
       "aboutEntity": "?thing",
@@ -11880,12 +11878,12 @@
             "mainEntity": {
               "@type": "Agent",
               "hasOccupation": [
-                      {
-                        "@type": "Occupation",
-                        "label": ["Åklagare"],
-                        "marc:sourceOfTerm": "sao"
-                      }
-                    ]
+                {
+                  "@type": "Occupation",
+                  "label": ["Åklagare"],
+                  "marc:sourceOfTerm": "sao"
+                }
+              ]
             }
           }
         }
@@ -14012,7 +14010,11 @@
 
     "700": {"inherit": "bib:700", "aboutEntity": null},
     "710": {"inherit": "bib:710", "aboutEntity": null},
-    "752": {"inherit": "bib:752", "aboutEntity": null},
+    "752": {
+      "inherit": "bib:752",
+      "aboutEntity": null,
+      "$4": {"addProperty": "marc:relatorCode"}
+    },
     "787": {"inherit": "bib:787", "aboutEntity": null},
 
     "841": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ"},
@@ -14189,7 +14191,7 @@
     "865": {"ignored": true, "NOTE:record-count": 8, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"}, 
 
     "866": {
-      "addLink": "qualifiedBasicUnitNote",
+      "addLink": "marc:qualifiedBasicUnitNote",
       "embedded": true,
       "resourceType": "Note",
       "i1": {"property": "marc:holdingsLevel"},
@@ -14204,7 +14206,7 @@
       "repeatable": true
     },
     "867": {
-      "addLink": "qualifiedSupplementaryNote",
+      "addLink": "marc:qualifiedSupplementaryNote",
       "embedded": true,
       "resourceType": "Note",
       "i1": {"property": "marc:holdingsLevel"},
@@ -14215,7 +14217,7 @@
       "repeatable": true
     },
     "868": {
-      "addLink": "qualifiedIndexNote",
+      "addLink": "marc:qualifiedIndexNote",
       "embedded": true,
       "resourceType": "Note",
       "i1": {"property": "marc:holdingsLevel"},
