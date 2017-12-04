@@ -22,6 +22,7 @@ import java.util.*;
 
 class XL
 {
+    private static final String PRELIMINARY_STATUS = "marc:PartialPreliminaryLevel";
     private Whelk m_whelk;
     private Parameters m_parameters;
     private Properties m_properties;
@@ -148,6 +149,7 @@ class XL
 
         if (!m_parameters.getReadOnly())
         {
+            rdfDoc.setRecordStatus(PRELIMINARY_STATUS);
             m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
         }
         else
@@ -176,7 +178,7 @@ class XL
                             if (collection.equals("bib"))
                             {
                                 String encodingLevel = doc.getEncodingLevel();
-                                if (encodingLevel == null || !encodingLevel.equals("marc:PartialPreliminaryLevel"))
+                                if (encodingLevel == null || !encodingLevel.equals(PRELIMINARY_STATUS))
                                     throw new TooHighEncodingLevelException();
                             }
 
