@@ -10011,9 +10011,9 @@
       ]
     },
     "786": {
-      "aboutEntity": "?record",
+      "aboutEntity": "?work",
       "inherit": "772",
-      "addLink": "source",
+      "addLink": "dataSource",
       "resourceType": "Dataset"
     },
     "787": {
