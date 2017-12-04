@@ -6286,16 +6286,15 @@
           "embedded": true
         }
       },
-      "i2": {"property": "marc:nonfilingChars"},
+      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
-      "$d": {"addProperty": "legalDate"},
       "$v": {"property": "seriesEnumeration"},
       "$w": {"property": "marc:bibliographicRecordControlNumber"},
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
-      "$9": {"addProperty": "marc:formOfNonfilingChars"},
+      "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "_spec": [
         {
           "source": {"440": {"ind1": "0", "ind2": " ", "subfields": [
@@ -6316,15 +6315,15 @@
                   "@type": "Work",
                   "hasTitle": [{
                     "@type": "Title",
-                    "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar"
+                    "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar",
+                    "marc:nonfilingChars" : " "
                   }],
                   "identifiedBy": {
                     "@type": "ISSN",
                     "value": "0023-5377"
                   }
                 },
-                "seriesEnumeration": "N.F. 13:7",
-                "marc:nonfilingChars" : " "
+                "seriesEnumeration": "N.F. 13:7"
               }
             ]
           }}
@@ -6355,7 +6354,8 @@
                   "hasTitle": [{
                     "@type": "Title",
                     "mainTitle": "Corpus christianorum",
-                    "partName": ["Series Latina,"]
+                    "partName": ["Series Latina,"],
+                    "marc:nonfilingChars" : " "
                   }],
                   "identifiedBy": {
                     "@type": "ISSN",
@@ -6363,8 +6363,7 @@
                   }
                 },
                 "seriesEnumeration": "156 B",
-                "marc:nonfilingChars" : " ",
-                "marc:formOfNonfilingChars" : [ "156", "B" ]
+                "marc:filingOfSeriesenumeration" : [ "156", "B" ]
               }
             ]
           }}
@@ -6395,7 +6394,8 @@
                   "hasTitle": [{
                     "@type": "Title",
                     "mainTitle": "Lunds universitets årsskrift",
-                    "partName": ["Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"]
+                    "partName": ["Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"],
+                    "marc:nonfilingChars" : " "
                   }],
                   "identifiedBy": {
                     "@type": "ISSN",
@@ -6403,8 +6403,7 @@
                   }
                 },
                 "seriesEnumeration": "9:15",
-                "marc:nonfilingChars" : " ",
-                "marc:formOfNonfilingChars" : [ "9", "15" ]
+                "marc:filingOfSeriesenumeration" : [ "9", "15" ]
               }
             ]
           }}
@@ -6426,14 +6425,81 @@
                   "@type": "Work",
                   "hasTitle": [{
                     "@type": "Title",
-                    "mainTitle": "Sveriges officiella statistik"
+                    "mainTitle": "Sveriges officiella statistik",
+                    "marc:nonfilingChars" : "0"
                   }],
                   "identifiedBy": {
                     "@type": "ISSN",
                     "value": "99-0111480-2"
                   }
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"440": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Stockholms stads statistik."},
+            {"p": "3, Hälso- och sjukvård,"},
+            {"x": "99-2058355-3 ;"},
+            {"v": "2"}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Stockholms stads statistik"},
+            {"p": "3, Hälso- och sjukvård,"},
+            {"x": "99-2058355-3"},
+            {"v": "2"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Stockholms stads statistik",
+                    "partName" : ["3, Hälso- och sjukvård,"],
+                    "marc:nonfilingChars" : "0"
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "99-2058355-3"
+                  }
                 },
-                "marc:nonfilingChars" : "0"
+                "seriesEnumeration": "2"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"440": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Kungl. Skogs- och Lantbruksakademiens tidskrift ,"},
+            {"x": "0023-5350 ;"},
+            {"v": "nr 7 (2005) årg. 144"}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Kungl. Skogs- och Lantbruksakademiens tidskrift"},
+            {"x": "0023-5350"},
+            {"v": "nr 7 (2005) årg. 144"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Kungl. Skogs- och Lantbruksakademiens tidskrift",
+                    "marc:nonfilingChars" : "0"
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0023-5350"
+                  }
+                },
+                "seriesEnumeration": "nr 7 (2005) årg. 144"
               }
             ]
           }}
@@ -10551,6 +10617,38 @@
               "seriesEnumeration": "no. 20."
             }]
           }}
+        },
+        {
+          "source": {"810": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Stadtbibliothek."},
+            {"c": "Königsberg"},
+            {"t": "Mitteilungen aus der Stadtbibliothek Königsberg"},
+            {"v": "4/5."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Organization",
+                    "name": "Stadtbibliothek.",
+                    "place": [{
+                      "@type": "Place",
+                      "label": "Königsberg"
+                    }]
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Mitteilungen aus der Stadtbibliothek Königsberg"
+                }]
+              },
+              "seriesEnumeration": "4/5."
+            }]
+          }}
         }
       ]
     },
@@ -10647,7 +10745,8 @@
           "embedded": true
         }
       },
-      "$a": {"about": "_:title", "property": "mainTitle"},
+      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
+      "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$d": {"addProperty": "legalDate"},
       "$v": {"property": "seriesEnumeration"},
       "$w": {"property": "marc:bibliographicRecordControlNumber"},
@@ -10655,8 +10754,7 @@
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
-      "$9": {"addProperty": "marc:formOfNonfilingChars"},
-      "i2": {"property": "marc:nonfilingChars"},
+      "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "subfieldorder": "3 a d g h s m n p l r k f o v w x",
       "_spec": [
         {
@@ -10674,11 +10772,42 @@
                   "hasTitle": [{
                     "@type": "Title",
                     "mainTitle": "Europarecht (Munich, germany)",
-                    "partName": ["Beiheft"]
+                    "partName": ["Beiheft"],
+                    "marc:nonfilingChars": "0"
                   }]
                 },
-                "seriesEnumeration": "2002/1",
-                "marc:nonfilingChars" : "0"
+                "seriesEnumeration": "2002/1"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"830": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Archiv für Papyrusforschung und verwandte Gebiete."},
+            {"p": "Ergänzungsband."},
+            {"p": "Kleine Reihe ;"},
+            {"v": "5."}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Archiv für Papyrusforschung und verwandte Gebiete"},
+            {"p": "Ergänzungsband."},
+            {"p": "Kleine Reihe ;"},
+            {"v": "5."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Archiv für Papyrusforschung und verwandte Gebiete",
+                    "partName": ["Ergänzungsband.", "Kleine Reihe ;"],
+                    "marc:nonfilingChars": "0"
+                  }]
+                },
+                "seriesEnumeration": "5."
               }
             ]
           }}
@@ -10686,6 +10815,11 @@
         {
           "source": {"830": {"ind1": " ", "ind2": "4", "subfields": [
             {"a": "Studies on the texts of the desert of Judah,"},
+            {"v": "101"},
+            {"x": "0169-9962"}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": "4", "subfields": [
+            {"a": "Studies on the texts of the desert of Judah"},
             {"v": "101"},
             {"x": "0169-9962"}
           ]}},
@@ -10697,15 +10831,50 @@
                   "@type": "Work",
                   "hasTitle": [{
                     "@type": "Title",
-                    "mainTitle": "Studies on the texts of the desert of Judah,"
+                    "mainTitle": "Studies on the texts of the desert of Judah",
+                    "marc:nonfilingChars": "4"
                   }],
                   "identifiedBy": {
                     "@type": "ISSN",
                     "value": "0169-9962"
                   }
                 },
-                "seriesEnumeration": "101",
-                "marc:nonfilingChars" : "4"
+                "seriesEnumeration": "101"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"830": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Migrationsstudier."},
+            {"n": "B"},
+            {"x": "0358-0083 ;"},
+            {"v": "5."}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Migrationsstudier"},
+            {"n": "B"},
+            {"x": "0358-0083"},
+            {"v": "5."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Migrationsstudier",
+                    "partNumber": ["B"],
+                    "marc:nonfilingChars": " "
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0358-0083"
+                  }
+                },
+                "seriesEnumeration": "5."
               }
             ]
           }}
