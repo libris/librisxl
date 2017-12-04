@@ -105,6 +105,10 @@ class Document {
 
     String getThingType() { get(thingTypePath) }
 
+    String getRecordStatus() { return get(statusPath) }
+
+    void setRecordStatus(status) { set(statusPath, status, HashMap) }
+
     /**
      * Will have base URI prepended if not already there
      */
