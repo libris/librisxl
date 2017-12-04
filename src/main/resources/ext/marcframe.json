@@ -3066,6 +3066,7 @@
       "$z": {"addProperty": "marc:hiddenValue"},
       "$2": {
         "link": "source",
+        "resourceType": "Source",
         "property": "code",
         "TODO": {
           "uriTemplate": "...{code}",
@@ -3104,6 +3105,7 @@
       "i2": {"marcDefault": " "},
       "$2": {
         "link": "source",
+        "resourceType": "Source",
         "property": "code",
         "requires-i1": "7",
         "TODO": "see 015 $2"
