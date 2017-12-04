@@ -9692,6 +9692,7 @@
       "$e": {"addProperty": "marc:relatorTerm"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
       "$3": {"property": "marc:materialsSpecified"},
+      "TODO:$4": "Change to: {'addLink': 'role', 'resourceType': 'Role', 'property': 'code', 'uriTemplate': '{code}', 'TODO:mapping': 'relatorCode'}??",
       "$4": {"addProperty": "marc:relatorCode"},
       "$0": {"addProperty": "marc:authorityRecordControlNumber"}
     },
@@ -9707,7 +9708,9 @@
       "$g": {"addProperty": "marc:otherNonjurisdictionalGeographicRegionAndFeature"},
       "$h": {"addProperty": "marc:extraterrestrialArea"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
-      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+      "$0": {"addProperty": "marc:authorityRecordControlNumber"},
+      "TODO:$4": "Change to: {'addLink': 'role', 'resourceType': 'Role', 'property': 'code', 'uriTemplate': '{code}', 'TODO:mapping': 'relatorCode'}??",
+      "$4": {"addProperty": "marc:relatorCode"}
     },
     "753": {
       "aboutEntity": "?thing",
@@ -13980,7 +13983,10 @@
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
       "TODO:": "Should this not be internal data? Ignore until we know further.",
       "aboutEntity": "?record",
-      "$a": {"addProperty": "cataloguersNote"}
+      "$a": {"addProperty": "cataloguersNote"},
+      "_spec": [
+        {"source": {"599": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Notes"}]}},
+          "result": {"cataloguersNote": ["Notes"], "mainEntity": {"@type": "Item"}}}]
     },
     
     "600": {
@@ -14076,9 +14082,7 @@
       "$f": {"addProperty": "codedLocationQualifier"},
       "$g": {"addProperty": "nonCodedLocationQualifier"},
       "$h": {
-        "link": "shelfMark",
-        "resourceType": "ShelfMark",
-        "property": "label",
+        "property": "shelfMark",
         "NOTE": "libris deviates from standard classificationPart (libris use it for all kinds of shelfControlNumber?)"
       },
       "$i": {
@@ -14239,6 +14243,7 @@
       "$t": {"property": "marc:copyNumber"},
       "$x": {"addProperty": "marc:nonpublicNote", "TODO": "ignore?"},
       "$z": {"addProperty": "marc:publicNote"},
+      "TODO:$3ChangeTo?": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$3": {"property": "marc:materialsSpecified"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "organizationalUnit"}
