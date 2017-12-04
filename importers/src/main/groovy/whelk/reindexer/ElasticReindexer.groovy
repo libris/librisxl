@@ -51,7 +51,7 @@ class ElasticReindexer {
                     double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
                     counter++
                     if (counter % BATCH_SIZE == 0) {
-                        println("Indexing $docsPerSec documents per second (running average since process start).")
+                        println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
                         threadPool.executeOnThread(new Batch(documents, collection), new BatchHandler())
                         documents = []
                     }
