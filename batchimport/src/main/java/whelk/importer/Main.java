@@ -26,6 +26,8 @@ public class Main
 {
     private static XL s_librisXl = null;
 
+    private static boolean verbose = false;
+
     private static List tempfiles = Collections.synchronizedList(new ArrayList<File>());
 
     // Metrics
@@ -60,7 +62,7 @@ public class Main
             @Override
             public void uncaughtException(Thread thread, Throwable throwable)
             {
-                System.err.println("PANIC ABORT, unhandled exception:\n");
+                System.err.println("fatal: PANIC ABORT, unhandled exception:\n");
                 throwable.printStackTrace();
                 System.exit(-1);
             }
@@ -78,7 +80,9 @@ public class Main
         }
 
         // Normal importing operations
-		Parameters parameters = new Parameters(args);
+	Parameters parameters = new Parameters(args);
+	verbose = parameters.getVerbose();
+
         s_librisXl = new XL(parameters);
 
         if (parameters.getPath() == null)
@@ -121,7 +125,10 @@ public class Main
         PushGateway pg = new PushGateway(METRICS_PUSHGATEWAY);
         pg.pushAdd(registry, "batch_import");
 
-        System.err.println("All done.");
+	if ( verbose )
+        {
+            System.err.println("info: All done.");
+	}
     }
 
     /**
@@ -130,7 +137,7 @@ public class Main
     private static void importFile(Path path, Parameters parameters)
             throws Exception
     {
-        System.err.println("Importing file: " + path.toString());
+        System.err.println("info: Importing file: " + path.toString());
         try (ExclusiveFile file = new ExclusiveFile(path);
              InputStream fileInStream = file.getInputStream())
         {
@@ -198,7 +205,7 @@ public class Main
                     if (secondDiff > 0)
                     {
                         long recordsPerSec = recordsBatched / secondDiff;
-                        System.err.println("Currently importing " + recordsPerSec + " records / sec. Active threads: " + threadPool.getActiveThreadCount());
+                        System.err.println("info: Currently importing " + recordsPerSec + " records / sec. Active threads: " + threadPool.getActiveThreadCount());
                     }
                 }
             }
@@ -237,6 +244,21 @@ public class Main
             String lastKnownBibDocId = null;
             for (MarcRecord marcRecord : batch)
             {
+		if ( verbose ) {
+			String ids[][] = DigId.digIds(marcRecord);
+			if ( ids != null ) {
+				for (String r[] : ids ) {
+					if ( r != null ) {
+						for (String c : r) {
+							if ( c != null ) {
+								System.out.printf("%s ", c);
+							}
+						}
+					}
+				}
+			}
+			System.out.println();
+		}
                 String resultingId = s_librisXl.importISO2709(
                         marcRecord,
                         lastKnownBibDocId,

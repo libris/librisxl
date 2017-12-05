@@ -27,6 +27,7 @@ class XL
     private Parameters m_parameters;
     private Properties m_properties;
     private MarcFrameConverter m_marcFrameConverter;
+    private static boolean verbose = false;
 
     // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
     // has only a single member.
@@ -37,6 +38,7 @@ class XL
     XL(Parameters parameters) throws IOException
     {
         m_parameters = parameters;
+        verbose = m_parameters.getVerbose();
         m_properties = PropertyLoader.loadProperties("secret");
         PostgreSQLComponent storage = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
         ElasticSearch elastic = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
@@ -153,8 +155,13 @@ class XL
             m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
         }
         else
-            System.out.println("Would now (if --live had been specified) have written the following json-ld to whelk as a new record:\n"
-                    + rdfDoc.getDataAsString());
+        {
+            if ( verbose )
+            {
+                System.out.println("info: Would now (if --live had been specified) have written the following json-ld to whelk as a new record:\n"
+                + rdfDoc.getDataAsString());
+            }
+        }
 
         if (collection.equals("bib"))
             return rdfDoc.getThingIdentifiers().get(0);
@@ -193,16 +200,22 @@ class XL
             }
             catch (TooHighEncodingLevelException e)
             {
-                System.out.println("Not enriching id: " + ourId + ", because it no longer has encoding level marc:PartialPreliminaryLevel");
+                if ( verbose )
+                {
+                    System.out.println("info: Not enriching id: " + ourId + ", because it no longer has encoding level marc:PartialPreliminaryLevel");
+                }
             }
         }
         else
         {
             Document doc = m_whelk.getStorage().load( ourId );
             enrich( doc, rdfDoc );
-            System.out.println("Would now (if --live had been specified) have written the following (merged) json-ld to whelk:\n");
-            System.out.println("id:\n" + doc.getShortId());
-            System.out.println("data:\n" + doc.getDataAsString());
+            if ( verbose )
+            {
+                System.out.println("info: Would now (if --live had been specified) have written the following (merged) json-ld to whelk:\n");
+                System.out.println("id:\n" + doc.getShortId());
+                System.out.println("data:\n" + doc.getDataAsString());
+            }
         }
 
         if (collection.equals("bib"))
