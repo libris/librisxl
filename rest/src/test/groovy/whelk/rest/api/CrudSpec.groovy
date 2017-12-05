@@ -644,6 +644,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "POST"
         }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -696,6 +699,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -758,6 +764,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -847,6 +856,9 @@ class CrudSpec extends Specification {
         }
         storage.createDocument(_, _) >> {
             return null
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -1032,6 +1044,9 @@ class CrudSpec extends Specification {
         accessControl.checkDocumentToPost(_, _) >> {
             throw new ModelValidationException("Could not validate model.")
         }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -1067,6 +1082,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -1191,6 +1209,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -2243,6 +2264,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "PUT"
         }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -2341,6 +2365,9 @@ class CrudSpec extends Specification {
         }
         storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -2537,6 +2564,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "PUT"
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -2891,6 +2921,9 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
             return true
         }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -2937,6 +2970,9 @@ class CrudSpec extends Specification {
         }
         storage.getDependers(_) >> {
             []
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -2985,6 +3021,9 @@ class CrudSpec extends Specification {
         storage.getDependers(_) >> {
             []
         }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -3031,6 +3070,9 @@ class CrudSpec extends Specification {
         }
         storage.getDependers(_) >> {
             []
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -3172,6 +3214,9 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
             return true
         }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
         }
@@ -3262,6 +3307,9 @@ class CrudSpec extends Specification {
         }
         storage.getDependers(_) >> {
             []
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
