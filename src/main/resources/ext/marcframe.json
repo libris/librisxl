@@ -10050,8 +10050,8 @@
       "$3": {"property": "marc:materialsSpecified"}
     },
 
-    "760": {"aboutEntity": "?work", "NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSeries", "resourceType": "Instance"},
-    "762": {"aboutEntity": "?work","NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSubseries", "resourceType": "Instance"},
+    "760": {"aboutEntity": "?work", "NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSeries"},
+    "762": {"aboutEntity": "?work","NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSubseries"},
     "765": {"inherit": "772", "addLink": "translationOf"},
     "767": {"inherit": "772", "addLink": "translation"},
     "770": {"inherit": "772", "addLink": "supplement"},
