@@ -1,5 +1,8 @@
 package whelk.component
 
+import groovy.transform.Canonical
+import groovy.transform.CompileStatic
+import static groovy.transform.TypeCheckingMode.SKIP
 import groovy.util.logging.Log4j2 as Log
 import groovy.json.StringEscapeUtils
 import org.apache.commons.dbcp2.BasicDataSource
@@ -23,6 +26,7 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 @Log
+@CompileStatic
 class PostgreSQLComponent {
 
     /**
@@ -35,7 +39,7 @@ class PostgreSQLComponent {
     private BasicDataSource connectionPool
     static String driverClass = "org.postgresql.Driver"
 
-    public final static mapper = new ObjectMapper()
+    public final static ObjectMapper mapper = new ObjectMapper()
 
     boolean versioning = true
 
@@ -330,14 +334,14 @@ class PostgreSQLComponent {
             saveVersion(doc, connection, createdAt, modifiedAt, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
             for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
-                updateMinMaxDepModified(depender.get(0), connection)
+                updateMinMaxDepModified((String) depender.get(0), connection)
             }
 
             connection.commit()
             def status = status(doc.getURI(), connection)
             if (status.exists) {
-                doc.setCreated(status['created'])
-                doc.setModified(status['modified'])
+                doc.setCreated((Date) status['created'])
+                doc.setModified((Date) status['modified'])
             }
 
 
@@ -371,6 +375,7 @@ class PostgreSQLComponent {
         return false
     }
 
+    @Canonical
     private class RowLock {
         Connection connection
         PreparedStatement statement
@@ -395,7 +400,7 @@ class PostgreSQLComponent {
             throw new AcquireLockException("There is no document with the id $id (So no lock could be acquired)")
 
         log.debug("Row lock aquired for $id")
-        return new RowLock(connection: connection, statement: lockStatement, resultSet: resultSet)
+        return new RowLock(connection, lockStatement, resultSet)
     }
 
     void releaseRowLock(RowLock rowlock) {
@@ -482,7 +487,7 @@ class PostgreSQLComponent {
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
             for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
-                updateMinMaxDepModified(depender.get(0), connection)
+                updateMinMaxDepModified((String) depender.get(0), connection)
             }
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
@@ -490,7 +495,7 @@ class PostgreSQLComponent {
             log.error("SQL failed: ${psqle.message}")
             connection.rollback()
             if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
-                throw new StorageCreateFailedException()
+                throw new StorageCreateFailedException(id)
             } else {
                 throw psqle
             }
@@ -758,8 +763,8 @@ class PostgreSQLComponent {
                 batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
-                for (String depender : getDependers(doc.getShortId())) {
-                    updateMinMaxDepModified(depender.get(0), connection)
+                for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
+                    updateMinMaxDepModified((String) depender.get(0), connection)
                 }
             }
             batch.executeBatch()
@@ -769,8 +774,9 @@ class PostgreSQLComponent {
             return true
         } catch (Exception e) {
             log.error("Failed to save batch: ${e.message}. Rolling back..", e)
-            if (e instanceof SQLException && e.nextException) {
-                log.error("Note: next exception was: ${e.nextException.message}.", e.nextException)
+            if (e instanceof SQLException) {
+                Exception nextException = ((SQLException) e).nextException
+                log.error("Note: next exception was: ${nextException.message}.", nextException)
             }
             connection.rollback()
         } finally {
@@ -780,7 +786,7 @@ class PostgreSQLComponent {
         return false
     }
 
-    Map<String, Object> query(Map queryParameters, String collection, StorageType storageType) {
+    Map<String, Object> query(Map<String, List<String>> queryParameters, String collection, StorageType storageType) {
         log.debug("Performing query with type $storageType : $queryParameters")
         long startTime = System.currentTimeMillis()
         Connection connection = getConnection()
@@ -792,7 +798,9 @@ class PostgreSQLComponent {
         queryParameters.remove("_orderBy") // Not supported
         queryParameters.remove("_select") // Not supported
 
-        def (whereClause, values) = buildQueryString(queryParameters, collection, storageType)
+        def queryTuple = buildQueryString(queryParameters, collection, storageType)
+        String whereClause = queryTuple.first
+        List values = queryTuple.second
 
         int limit = pageSize as int
         int offset = (Integer.parseInt(page) - 1) * limit
@@ -839,7 +847,7 @@ class PostgreSQLComponent {
         }
     }
 
-    def buildQueryString(Map queryParameters, String collection, StorageType storageType) {
+    Tuple2<String, List> buildQueryString(Map queryParameters, String collection, StorageType storageType) {
         boolean firstKey = true
         List values = []
 
@@ -858,20 +866,20 @@ class PostgreSQLComponent {
             String key = entry.key
             boolean firstValue = true
             whereClause.append("(")
-            for (value in entry.value) {
+            for (String value : entry.value) {
                 if (!firstValue) {
                     whereClause.append(" OR ")
                 }
-                def (sqlKey, sqlValue) = translateToSql(key, value, storageType)
-                whereClause.append(sqlKey)
-                values.add(sqlValue)
+                def sqlKeyValue = translateToSql(key, value, storageType)
+                whereClause.append(sqlKeyValue.first)
+                values.add(sqlKeyValue.second)
                 firstValue = false
             }
             whereClause.append(")")
             firstKey = false
         }
         whereClause.append(")")
-        return [whereClause.toString(), values]
+        return new Tuple2<>(whereClause.toString(), values)
     }
 
     protected String translateSort(String keys, StorageType storageType) {
@@ -906,7 +914,7 @@ class PostgreSQLComponent {
     }
 
     // TODO: Adapt to real flat JSON
-    protected translateToSql(String key, String value, StorageType storageType) {
+    protected Tuple2<String, String> translateToSql(String key, String value, StorageType storageType) {
         def keyElements = key.split("\\.")
         StringBuilder jsonbPath = new StringBuilder(SQL_PREFIXES.get(storageType, ""))
         if (storageType == StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS) {
@@ -941,11 +949,12 @@ class PostgreSQLComponent {
 
         jsonbPath.append(" @> ?")
 
-        return [jsonbPath.toString(), value]
+        return new Tuple2<>(jsonbPath.toString(), value)
     }
 
     // TODO: Update to real locate
     @Deprecated
+    @CompileStatic(SKIP)
     Location locate(String identifier, boolean loadDoc) {
         log.debug("Locating $identifier")
         if (identifier) {
@@ -973,7 +982,7 @@ class PostgreSQLComponent {
             def docStatus = status(uri)
             if (docStatus.exists && !docStatus.deleted) {
                 if (loadDoc) {
-                    return new Location(load(docStatus.id)).withResponseCode(301)
+                    return new Location(load((String) docStatus.id)).withResponseCode(301)
                 } else {
                     return new Location().withId(docStatus.id).withURI(docStatus.uri).withResponseCode(301)
                 }
@@ -1142,7 +1151,7 @@ class PostgreSQLComponent {
         return doc
     }
 
-    String[] getMinMaxModified(List<String> ids) {
+    Tuple2<String, String> getMinMaxModified(List<String> ids) {
         Connection connection
         PreparedStatement preparedStatement
         ResultSet rs
@@ -1157,10 +1166,10 @@ class PostgreSQLComponent {
             if (rs.next()) {
                 String min = rs.getString(1)
                 String max = rs.getString(2)
-                return [min, max]
+                return new Tuple2(min, max)
             }
             else
-                return  [null, null]
+                return new Tuple2(null, null)
         }
         finally {
             if (rs != null)
@@ -1421,7 +1430,7 @@ class PostgreSQLComponent {
         return []
     }
 
-    private Document loadFromSql(String sql, Map<Integer, Object> parameters, Connection connection = null) {
+    private Document loadFromSql(String sql, Map parameters, Connection connection = null) {
         Document doc = null
         boolean shouldCloseConn = false
         log.debug("loadFromSql $parameters ($sql)")
@@ -1437,10 +1446,10 @@ class PostgreSQLComponent {
             log.trace("Prepared statement")
             for (items in parameters) {
                 if (items.value instanceof String) {
-                    selectstmt.setString(items.key, items.value)
+                    selectstmt.setString((Integer) items.key, (String) items.value)
                 }
                 if (items.value instanceof Map || items.value instanceof List) {
-                    selectstmt.setObject(items.key, mapper.writeValueAsString(items.value), java.sql.Types.OTHER)
+                    selectstmt.setObject((Integer) items.key, mapper.writeValueAsString(items.value), java.sql.Types.OTHER)
                 }
             }
             log.trace("Executing query")
@@ -1566,6 +1575,7 @@ class PostgreSQLComponent {
         return identifiers
     }
 
+    @CompileStatic(SKIP)
     private Iterable<Document> loadAllDocuments(String collection, boolean withLinks, Date since = null, Date until = null) {
         log.debug("Load all called with collection: $collection")
         return new Iterable<Document>() {
