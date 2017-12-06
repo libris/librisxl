@@ -14251,10 +14251,9 @@
       "$t": {"property": "marc:copyNumber"},
       "$x": {"addProperty": "marc:nonpublicNote", "TODO": "ignore?"},
       "$z": {"addProperty": "marc:publicNote"},
-      "TODO:$3ChangeTo?": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$3": {"property": "marc:materialsSpecified"},
       "$8": {"property": "marc:groupid"},
-      "$9": {"addProperty": "organizationalUnit"}
+      "$9": {"addProperty": "marc:organizationalUnit"}
     },
     "877": {
       "inherit": "876",
