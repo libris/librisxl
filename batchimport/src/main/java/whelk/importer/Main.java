@@ -232,10 +232,10 @@ public class Main
 
     private static void importBatch(List<MarcRecord> batch)
     {
-        try
+        String lastKnownBibDocId = null;
+        for (MarcRecord marcRecord : batch)
         {
-            String lastKnownBibDocId = null;
-            for (MarcRecord marcRecord : batch)
+            try
             {
                 String resultingId = s_librisXl.importISO2709(
                         marcRecord,
@@ -247,10 +247,11 @@ public class Main
                         encounteredMulBibs);
                 if (resultingId != null)
                     lastKnownBibDocId = resultingId;
+            } catch (Exception e)
+            {
+                System.err.println("Failed to convert or write the following MARC post:\n" + marcRecord.toString());
+                throw new RuntimeException(e);
             }
-        } catch (Exception e)
-        {
-            throw new RuntimeException(e);
         }
     }
 
