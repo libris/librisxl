@@ -1823,6 +1823,13 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             useLinks << [link: linkRepeated.link, resourceType: linkRepeated.resourceType]
         }
 
+        String uriTemplateBase = uriTemplate
+        if (uriTemplate) {
+            int braceIdx = uriTemplate.indexOf('{')
+            if (braceIdx > -1) {
+                uriTemplateBase = uriTemplate.substring(0, braceIdx)
+            }
+        }
         for (useLink in useLinks) {
             def useEntities = [entity]
             if (useLink.link) {
@@ -1831,6 +1838,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     useEntities = useEntities.findAll {
                         if (!it) return false
                         assert it instanceof Map, "Error reverting ${fieldId} - expected object, got: ${it}"
+                        if (uriTemplateBase) {
+                            if (!it['@id'] || !it['@id'].startsWith(uriTemplateBase)) {
+                                return false
+                            }
+                        }
                         def type = it['@type']
                         return (type instanceof List) ?
                                 useLink.resourceType in type : type == useLink.resourceType
@@ -2016,6 +2028,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             def field = [ind1: i1, ind2: i2, subfields: subs]
 
             if (usedMatchRules && !usedMatchRules.every { it.matches(field) }) {
+                //return [_notMatching: this.tag]
                 return null
             }
 
