@@ -6303,7 +6303,7 @@
             {"v": "N.F. 13:7"}
           ]}},
           "normalized": {"830": {"ind1": "0", "ind2": " ", "subfields": [
-            {"a": "Kungl. Svenska vetenskapsakademiens handlingar,"},
+            {"a": "Kungl. Svenska vetenskapsakademiens handlingar"},
             {"x": "0023-5377"},
             {"v": "N.F. 13:7"}
           ]}},
@@ -7619,7 +7619,7 @@
               {"d": "1685-1757"},
               {"t": "Sonatas,"},
               {"m": "harpsichord"},
-              {"n": "K. 492,"},
+              {"n": "K. 492"},
               {"r": "D major;"},
               {"y": "21st century."}]}},
           "result": {"mainEntity": {
@@ -10525,6 +10525,7 @@
           "include": "agentdataOrganizationSubUnit"
         }
       ],
+      "i1": {"marcDefault": "2"},
       "_spec": [
         {
           "source": {"810": {"ind1": "2", "ind2": " ", "subfields": [
@@ -10620,6 +10621,12 @@
         },
         {
           "source": {"810": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Stadtbibliothek."},
+            {"c": "Königsberg"},
+            {"t": "Mitteilungen aus der Stadtbibliothek Königsberg"},
+            {"v": "4/5."}
+          ]}},
+          "normalized": {"810": {"ind1": "2", "ind2": " ", "subfields": [
             {"a": "Stadtbibliothek."},
             {"c": "Königsberg"},
             {"t": "Mitteilungen aus der Stadtbibliothek Königsberg"},
@@ -10733,7 +10740,6 @@
       "NOTE": "Temporarily move conversion/revert rules of 830 before 800/810/811? Otherwise 830 always reverts to 800/810/811, since have no 'contribution'",
       "addLink": "hasSeries",
       "resourceType": "Instance",
-      "aboutAlias": "_:hasSeries",
       "include": "titledetails",
       "pendingResources": {
         "_:work": {
@@ -10741,7 +10747,7 @@
           "resourceType": "Work"
         },
         "_:title": {
-          "about": "_:hasSeries", "addLink": "hasTitle", "resourceType": "Title",
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
           "embedded": true
         }
       },
