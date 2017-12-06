@@ -11378,19 +11378,12 @@
     "050": {"ignored": true, "NOTE:record-count": 0},
     "052": {"ignored": true, "NOTE:record-count": 0},
     "053": {
-      "addLink": "marc:hasLCClassificationNumber",
-      "resourceType": "marc:LCClassificationNumber",
-      "i2": {
-      "TODO:link": null,
-        "tokenMap": {
-          "0": "assignedByLc",
-          "4": "assignedByAgencyOtherThanLc"
-        }
-      },
-      "$a": {"property": "marc:classificationNumberElementSingleNumberOrBeginningNumberOfSpan"},
-      "$b": {"property": "marc:classificationNumberElementEndingNumberOfSpan"},
-      "$c": {"property": "marc:explanatoryTerm"},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+      "aboutEntity": "?thing",
+      "addLink": "classification",
+      "resourceType": "ClassificationLcc",
+      "$a": {"property": "classificationPortion"},
+      "$b": {"property": "spanEnd"},
+      "$c": {"property": "marc:explanatoryTerm"}
     },
     "055": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "060": {"ignored": true, "NOTE:record-count": 0},
