@@ -1148,22 +1148,27 @@
     },
 
     "termbase_with_uri_from_i2": {
-      "FIXME-1": "Ensure all usages map $a to their own need (and use termComponentList with absorbSingle:true! and required?). Also, most of these patterns can probably be combined with subjectbase, and rely on absorbSingle.",
-      "FIXME-2": "mostly irrelevant when using i2 rule in subjectbase!? Nah, that's to explicitly preserve the data (too)?",
+      "IMPORTANT": "Ensure all usages map $a to their own need (and use termComponentList with absorbSingle and required). Must be combined with i2 and $2 in subjectbase, to preserve the data (for revert to match here).",
       "match": [
         {
-          "NOTE": "Only prefer this form over i2=0 if $2 is special (i2=7 is normally not used)",
-          "when": "$2=sao | $2=saogf | $2=gmgpc | $2=barn | $2=barngf",
-          "match": [
-            {
-              "when": "i2=7 & $2",
-              "include": ["termbase_with_id"]
-            },
-            {
-              "when": null,
-              "include": ["termbase"]
-            }
-          ]
+          "when": "i2=7 & $2=sao",
+          "include": ["termbase_with_id"]
+        },
+        {
+          "when": "i2=7 & $2=saogf",
+          "include": ["termbase_with_id"]
+        },
+        {
+          "when": "i2=7 & $2=gmgpc",
+          "include": ["termbase_with_id"]
+        },
+        {
+          "when": "i2=7 & $2=barn",
+          "include": ["termbase_with_id"]
+        },
+        {
+          "when": "i2=7 & $2=barngf",
+          "include": ["termbase_with_id"]
         },
         {
           "when": "i2=0",
@@ -1184,16 +1189,25 @@
         {
           "when": "i2=3",
           "include": ["termbase"],
-          "uriTemplate": "https://id.nlm.nih.gov/mesh/{code}",
+          "uriTemplate": "https://id.nlm.nih.gov/mesh/{prefLabel}",
           "NOTE:uriTemplate": "beta sparql endpoint. Use this?"
         },
         {
-          "when": "i2=4",
-          "include": ["termbase"]
+          "when": "i2=5",
+          "include": ["termbase"],
+          "uriTemplate": "https://id.kb.se/term/csh/{prefLabel}",
+          "TODO": "remove uriTemplate and add a fixed (linked) i2 mapping?"
         },
         {
-          "when": "i2=5 | i2=6",
-          "include": ["termbase"]
+          "when": "i2=6",
+          "include": ["termbase"],
+          "uriTemplate": "https://id.kb.se/term/rvm/{prefLabel}",
+          "TODO": "remove uriTemplate and add a fixed (linked) i2 mapping?"
+        },
+        {
+          "when": "i2=4",
+          "include": ["termbase"],
+          "$2": null
         },
         {
           "when": null,
@@ -1207,7 +1221,7 @@
       "i2": {
         "link": "inScheme",
         "resourceType": "ConceptScheme",
-        "uriTemplate": "https://id.kb.se/term/{+_}",
+        "uriTemplate": "https://id.kb.se/term/{_}",
         "property": "code",
         "tokenMap": "thesaurus",
         "marcDefault": "4",
@@ -1216,7 +1230,7 @@
       "$2": {
         "requires-i2": "7",
         "link": "inScheme",
-        "uriTemplate": "https://id.kb.se/term/{+_}",
+        "uriTemplate": "https://id.kb.se/term/{_}",
         "resourceType": "ConceptScheme",
         "property": "code"
       },
