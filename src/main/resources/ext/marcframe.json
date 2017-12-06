@@ -1171,6 +1171,10 @@
           "include": ["termbase_with_id"]
         },
         {
+          "when": "i2=7 & $2=kao",
+          "include": ["termbase"]
+        },
+        {
           "when": "i2=0",
           "include": ["termbase"],
           "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}",
@@ -1182,36 +1186,15 @@
           "uriTemplate": "http://id.loc.gov/authorities/childrensSubjects/{prefLabel}"
         },
         {
-          "when": "i2=2",
-          "include": ["termbase"],
-          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
-        },
-        {
-          "when": "i2=3",
-          "include": ["termbase"],
-          "uriTemplate": "https://id.nlm.nih.gov/mesh/{prefLabel}",
-          "NOTE:uriTemplate": "beta sparql endpoint. Use this?"
-        },
-        {
-          "when": "i2=5",
-          "include": ["termbase"],
-          "uriTemplate": "https://id.kb.se/term/csh/{prefLabel}",
-          "TODO": "remove uriTemplate and add a fixed (linked) i2 mapping?"
-        },
-        {
-          "when": "i2=6",
-          "include": ["termbase"],
-          "uriTemplate": "https://id.kb.se/term/rvm/{prefLabel}",
-          "TODO": "remove uriTemplate and add a fixed (linked) i2 mapping?"
-        },
-        {
-          "when": "i2=4",
-          "include": ["termbase"],
-          "$2": null
-        },
-        {
           "when": null,
           "include": ["termbase"]
+        },
+
+        {
+          "TODO:when": "i2=2",
+          "include": ["termbase"],
+          "uriTemplate": "https://id.nlm.nih.gov/mesh/{prefLabel}",
+          "NOTE": "beta sparql endpoint. Do not use yet (labels don't match)..."
         }
       ]
     },
@@ -8331,7 +8314,6 @@
               "subject": [
                 {
                   "@type": "ComplexSubject",
-                  "@id": "http://id.loc.gov/authorities/label/Cardiovascular%20Physiology--Congresses.",
                   "prefLabel": "Cardiovascular Physiology--Congresses.",
                   "termComponentList": [
                     {
@@ -8370,6 +8352,50 @@
                     "code": "agrovoc"
                   },
                   "prefLabel": "rye"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "650": {"ind1": " ", "ind2": "5",
+              "subfields": [{"a": "CSH-term"}]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "@id": "https://id.kb.se/term/csh",
+                    "code": "csh"
+                  },
+                  "prefLabel": "CSH-term"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "650": {"ind1": " ", "ind2": "6",
+              "subfields": [{"a": "RVM-term"}]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "@id": "https://id.kb.se/term/rvm",
+                    "code": "rvm"
+                  },
+                  "prefLabel": "RVM-term"
                 }
               ]
             }
