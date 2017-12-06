@@ -11382,6 +11382,7 @@
       "aboutEntity": "?thing",
       "addLink": "classification",
       "resourceType": "ClassificationLcc",
+      "i2": {"property": "marc:assignedByLC", "tokenMap": {"0": true, "4": false}},
       "$a": {"property": "classificationPortion"},
       "$b": {"property": "spanEnd"},
       "$c": {"property": "marc:explanatoryTerm"}
