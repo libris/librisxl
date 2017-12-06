@@ -135,6 +135,8 @@ public class OaiPmh extends HttpServlet
         ongoingRequests.labels(verb).inc();
         Summary.Timer requestTimer = requestsLatency.labels(verb).startTimer();
 
+        res.setCharacterEncoding("utf-8");
+
         try
         {
             switch (verb) {
