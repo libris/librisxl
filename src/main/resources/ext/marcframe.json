@@ -6722,12 +6722,12 @@
     },
     "538": {
       "aboutEntity": "?thing",
-      "addLink": "systemRequirement",
-      "resourceType": "SystemRequirement",
+      "addLink": "marc:hasSystemDetailsNote",
+      "resourceType": "marc:SystemDetailsNote",
       "$a": {"property": "marc:systemDetailsNote"},
-      "$u": {"addProperty": "uri"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
+      "$u": {"addProperty": "marc:uniformResourceIdentifier"},
+      "$3": {"property": "marc:materialsSpecified"},
+      "$5": {"addProperty": "marc:institutionToWhichFieldApplies", "NOTE:local": "Används ej"},
       "$6": {"property": "marc:fieldref"}
     },
     "540": {
