@@ -12163,7 +12163,7 @@
       "addLink": "fieldOfActivity", "resourceType": "FieldOfActivity",
       "$a": {"addProperty": "label"},
       "TODO": "link if $2 is sao",
-      "$2": {"property": "marc:source"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
       "repeatable": true,
       "_spec": [
         {
@@ -12179,7 +12179,10 @@
                 {
                   "@type": "FieldOfActivity",
                   "label": ["Kriminologi"],
-                  "marc:source" : "sao"
+                  "source": {
+                    "@type": "Source",
+                    "code": "sao"
+                    }
                 }
               ]
             }
@@ -12192,14 +12195,14 @@
       "aboutType": "Agent",
       "addLink": "hasAffiliation", "resourceType": "Affiliation",
       "$a": {"addProperty": "label"},
-      "$2": {"property": "marc:source"}
+      "$2": {"link": "source", "resourceType": "Source", "property": "code"}
     },
     "374": {
       "aboutEntity": "?thing",
       "aboutType": "Agent",
       "addLink": "hasOccupation", "resourceType": "Occupation",
       "$a": {"addProperty": "label"},
-      "$2": {"property": "marc:sourceOfTerm"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
       "_spec": [
         {
           "source": {
@@ -12214,7 +12217,10 @@
                 {
                   "@type": "Occupation",
                   "label": ["Åklagare"],
-                  "marc:sourceOfTerm": "sao"
+                  "source": {
+                    "@type": "Source",
+                    "code": "sao"
+                    }
                 }
               ]
             }
