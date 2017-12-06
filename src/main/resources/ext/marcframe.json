@@ -362,7 +362,7 @@
       ],
       "$a": {"required": true},
       "$b": {"about": "_:agent", "property": "marc:numeration"},
-      "$c": {"about": "_:agent", "addProperty": "marc:titleOther"},
+      "$c": {"about": "_:agent", "addProperty": "marc:titlesAndOtherWordsAssociatedWithAName"},
       "$d": {
         "about": "_:agent",
         "property": "lifeSpan",
@@ -966,7 +966,7 @@
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "$b": {"about": "_:agent", "property": "marc:numeration"},
-      "$c": {"about": "_:agent", "addProperty": "marc:titleOther"},
+      "$c": {"about": "_:agent", "addProperty": "marc:titlesAndOtherWordsAssociatedWithAName"},
       "$d": {
         "about": "_:agent",
         "property": "lifeSpan",
@@ -4386,7 +4386,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {"@type": "Person",
                     "marc:numeration": "IV Haakonsson,",
-                    "marc:titleOther":  ["King of Norway,"],
+                    "marc:titlesAndOtherWordsAssociatedWithAName":  ["King of Norway,"],
                     "name":  "Haakon",
                     "lifeSpan": "1204-1263"
                   },
@@ -4438,7 +4438,7 @@
                     "familyName":  "Andersson",
                     "givenName":  "Lars",
                     "lifeSpan":  "1961-",
-                    "marc:titleOther": ["arkeolog"]}
+                    "marc:titlesAndOtherWordsAssociatedWithAName": ["arkeolog"]}
                 }
               ]
             }
@@ -4460,7 +4460,7 @@
                   "agent": {"@type": "Person",
                     "name":  "Andersson",
                     "lifeSpan":  "1961-",
-                    "marc:titleOther": ["arkeolog"]}
+                    "marc:titlesAndOtherWordsAssociatedWithAName": ["arkeolog"]}
                 }
               ]
             }
@@ -7398,7 +7398,7 @@
                 {
                   "@type": "Person",
                   "name": "Black Foot",
-                  "marc:titleOther": ["Chief,", "(Spirit)"],
+                  "marc:titlesAndOtherWordsAssociatedWithAName": ["Chief,", "(Spirit)"],
                   "lifeSpan": "-1877",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
@@ -7546,7 +7546,7 @@
                       "@type": "Person",
                       "familyName": "Harris",
                       "givenName": "Andy",
-                      "marc:titleOther": ["(Composer)"]
+                      "marc:titlesAndOtherWordsAssociatedWithAName": ["(Composer)"]
                     },
                     {"@type" : "Subdivision", "prefLabel" : "Travel"},
                     {"@type" : "Geographic", "prefLabel" : "Morocco"},
@@ -11592,7 +11592,7 @@
               "@type": "Person",
               "name":  "Gustav",
               "marc:numeration": "I,",
-              "marc:titleOther": ["kung av Sverige"],
+              "marc:titlesAndOtherWordsAssociatedWithAName": ["kung av Sverige"],
               "lifeSpan": "1496-1560"
             }
           }
@@ -11616,7 +11616,7 @@
             "mainEntity": {
               "@type": "Person",
               "name":  "Diana",
-              "marc:titleOther": ["prinsessa av Wales,", "(ande)"],
+              "marc:titlesAndOtherWordsAssociatedWithAName": ["prinsessa av Wales,", "(ande)"],
               "lifeSpan": "1961-1997"
             }
           }
@@ -11656,7 +11656,7 @@
               "@type": "Family",
               "name":  "Nilssom (släkt:",
               "lifeSpan": "1700-talet",
-              "marc:titleOther": ["Krylbo, Sverige)"]
+              "marc:titlesAndOtherWordsAssociatedWithAName": ["Krylbo, Sverige)"]
             }
           }
         }
@@ -12358,7 +12358,7 @@
                 "@type": "Person",
                 "name":  "Alexander",
                 "marc:numeration": "III,",
-                "marc:titleOther": ["kung i Makedonien,"],
+                "marc:titlesAndOtherWordsAssociatedWithAName": ["kung i Makedonien,"],
                 "lifeSpan": "356 f.Kr.-323 f.Kr"
               }
             }
