@@ -1063,6 +1063,32 @@
       }
     },
 
+    "hasSeriesInstance": {
+      "pendingResources": {
+        "_:work": {
+          "link": "instanceOf",
+          "resourceType": "Work"
+        },
+        "_:contribution": {
+          "about": "_:work",
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        },
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "$t": {"about": "_:title", "property": "mainTitle"},
+      "$w": {"property": "marc:bibliographicRecordControlNumber"},
+      "$v": {"property": "seriesEnumeration"},
+      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
+      "$8": {"property": "marc:groupid"}
+    },
+
     "termid": {
       "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
     },
@@ -3231,6 +3257,7 @@
 
     "022": {
       "include": ["identifier"],
+      "TODO:aboutEntity": "?work",
       "resourceType": "ISSN",
       "i1": {
         "property": "marc:internationalInterest",
@@ -4905,7 +4932,7 @@
     },
 
     "222": {
-      "aboutEntity": "?thing",
+      "aboutEntity": "?work",
       "NOTE:domainIncludes": "Serial/Periodical",
       "addLink": "hasTitle",
       "embedded": true,
@@ -4922,12 +4949,15 @@
               {"b": "(Faridabad)"}
             ]}},
           "result": {"mainEntity": {
-            "hasTitle": [{
-              "@type": "KeyTitle",
-              "mainTitle": "Plant prot. bull.",
-              "qualifier": "(Faridabad)",
-              "marc:nonfilingChars" : "0"
-            }]
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [{
+                "@type": "KeyTitle",
+                "mainTitle": "Plant prot. bull.",
+                "qualifier": "(Faridabad)",
+                "marc:nonfilingChars" : "0"
+              }]
+            }
           }}
         }
       ]
@@ -6242,28 +6272,271 @@
     "411": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
 
     "440": {
-      "TODO:ignoreOnRevertInFavourOf": "490 or 773 or 830? See also mapping for 240",
+      "ignoreOnRevertInFavourOf": "830",
       "addLink": "hasSeries",
-      "embedded": true,
-      "resourceType": "Serial",
-      "TOOO:i2": {},
-      "$a": {"property": "title", "punctuationChars": ".,=;", "required": true},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
-      "$n": {"addProperty": "numberOfPartOfAWork"},
-      "$p": {"addProperty": "nameOfPartOfAWork", "punctuationChars": ".,=;"},
-      "$w": {"addProperty": "bibliographicRecordControlNumber"},
+      "resourceType": "Instance",
+      "include": "titledetails",
+      "pendingResources": {
+        "_:work": {
+          "link": "instanceOf",
+          "resourceType": "Work"
+        },
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
+      "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$v": {"property": "seriesEnumeration"},
-      "$x": {"property": "issn", "punctuationChars": ".,=;"},
+      "$w": {"property": "marc:bibliographicRecordControlNumber"},
+      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"}
+      "$8": {"property": "marc:groupid"},
+      "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
+      "_spec": [
+        {
+          "source": {"440": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Kungl. Svenska vetenskapsakademiens handlingar,"},
+            {"x": "0023-5377"},
+            {"v": "N.F. 13:7"}
+          ]}},
+          "normalized": {"830": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Kungl. Svenska vetenskapsakademiens handlingar"},
+            {"x": "0023-5377"},
+            {"v": "N.F. 13:7"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar",
+                    "marc:nonfilingChars" : " "
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0023-5377"
+                  }
+                },
+                "seriesEnumeration": "N.F. 13:7"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"440": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Corpus christianorum."},
+            {"p": "Series Latina,"},
+            {"x": "0589-798X ;"},
+            {"v": "156 B"},
+            {"9": "156"},
+            {"9": "B"}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Corpus christianorum"},
+            {"p": "Series Latina,"},
+            {"x": "0589-798X"},
+            {"v": "156 B"},
+            {"9": "156"},
+            {"9": "B"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Corpus christianorum",
+                    "partName": ["Series Latina,"],
+                    "marc:nonfilingChars" : " "
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0589-798X"
+                  }
+                },
+                "seriesEnumeration": "156 B",
+                "marc:filingOfSeriesenumeration" : [ "156", "B" ]
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"440": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Lunds universitets årsskrift."},
+            {"p": "Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"},
+            {"x": "0368-8151 ;"},
+            {"v": "9:15"},
+            {"9": "9"},
+            {"9": "15"}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Lunds universitets årsskrift"},
+            {"p": "Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"},
+            {"x": "0368-8151"},
+            {"v": "9:15"},
+            {"9": "9"},
+            {"9": "15"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Lunds universitets årsskrift",
+                    "partName": ["Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"],
+                    "marc:nonfilingChars" : " "
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0368-8151"
+                  }
+                },
+                "seriesEnumeration": "9:15",
+                "marc:filingOfSeriesenumeration" : [ "9", "15" ]
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"440": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Sveriges officiella statistik,"},
+            {"x": "99-0111480-2"}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Sveriges officiella statistik"},
+            {"x": "99-0111480-2"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Sveriges officiella statistik",
+                    "marc:nonfilingChars" : "0"
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "99-0111480-2"
+                  }
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"440": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Stockholms stads statistik."},
+            {"p": "3, Hälso- och sjukvård,"},
+            {"x": "99-2058355-3 ;"},
+            {"v": "2"}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Stockholms stads statistik"},
+            {"p": "3, Hälso- och sjukvård,"},
+            {"x": "99-2058355-3"},
+            {"v": "2"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Stockholms stads statistik",
+                    "partName" : ["3, Hälso- och sjukvård,"],
+                    "marc:nonfilingChars" : "0"
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "99-2058355-3"
+                  }
+                },
+                "seriesEnumeration": "2"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"440": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Kungl. Skogs- och Lantbruksakademiens tidskrift ,"},
+            {"x": "0023-5350 ;"},
+            {"v": "nr 7 (2005) årg. 144"}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Kungl. Skogs- och Lantbruksakademiens tidskrift"},
+            {"x": "0023-5350"},
+            {"v": "nr 7 (2005) årg. 144"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Kungl. Skogs- och Lantbruksakademiens tidskrift",
+                    "marc:nonfilingChars" : "0"
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0023-5350"
+                  }
+                },
+                "seriesEnumeration": "nr 7 (2005) årg. 144"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "490": {
-      "inherit": "440",
       "TOOO:i1": {"when: 8xx[$t] | 830": "1", "else": "0"},
       "TODO:allowSpillOverOnRevert": "800-830",
+      "i1": {"property": "marc:seriesTracingPolicy"},
       "i2": null,
-      "TODO:ignoreOnRevertInFavourOf": "773?",
-      "$l": {"link": "callno", "resourceType": "Concept", "property": "code"}
+      "addLink": "hasSeries",
+      "resourceType": "Serial",
+      "$a": {"addProperty": "seriesStatement"},
+      "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
+      "$v": {"property": "seriesEnumeration"},
+      "$w": {"property": "marc:bibliographicRecordControlNumber"},
+      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "qvalue"},
+      "$6": {"property": "marc:fieldref"},
+      "$9": {"addProperty": "marc:formOfNonfilingChars"},
+      "_spec": [
+        {
+          "source": {"490": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Wiley classics library"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Serial",
+                "seriesStatement": ["Wiley classics library"],
+                "marc:seriesTracingPolicy": "0"
+              }
+            ]
+          }}
+        }
+      ]
     },
 
     "500": {
@@ -7346,7 +7619,7 @@
               {"d": "1685-1757"},
               {"t": "Sonatas,"},
               {"m": "harpsichord"},
-              {"n": "K. 492,"},
+              {"n": "K. 492"},
               {"r": "D major;"},
               {"y": "21st century."}]}},
           "result": {"mainEntity": {
@@ -9777,15 +10050,14 @@
       "$3": {"property": "marc:materialsSpecified"}
     },
 
-    "760": {"NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSeries", "resourceType": "Instance"},
-    "762": {"NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSubseries", "resourceType": "Instance"},
+    "760": {"aboutEntity": "?work", "NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSeries"},
+    "762": {"aboutEntity": "?work","NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSubseries"},
     "765": {"inherit": "772", "addLink": "translationOf"},
     "767": {"inherit": "772", "addLink": "translation"},
     "770": {"inherit": "772", "addLink": "supplement"},
     "772": {
       "addLink": "supplementTo",
       "resourceType": "Work",
-      "TODO:?aboutEntity": "?work",
       "aboutAlias": "_:supplementTo",
       "pendingResources": {
         "_:contribution": {
@@ -9856,6 +10128,10 @@
             {"s": "Main Thing"},
             {"z": "00-0-000000-0"}
           ]}},
+          "normalized": {"772": {"ind1": "0", "ind2": " ", "subfields": [
+            {"s": "Main Thing"},
+            {"z": "00-0-000000-0"}
+          ]}},
           "result": {"mainEntity": {
             "supplementTo": [
               {
@@ -9874,6 +10150,11 @@
         },
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
+            {"7": "p1"},
+            {"a": "Beckmann, Max"},
+            {"t": "Briefec"}
+          ]}},
+          "normalized": {"772": {"ind1": "0", "ind2": " ", "subfields": [
             {"7": "p1"},
             {"a": "Beckmann, Max"},
             {"t": "Briefec"}
@@ -9932,6 +10213,7 @@
     },
     "780": {
       "inherit": "772",
+      "aboutEntity": "?work",
       "addLink": "precededBy",
       "resourceType": "Work",
       "match": [
@@ -9951,38 +10233,48 @@
             {"t": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"}
           ]}},
           "result": {"mainEntity": {
-            "continues": [
-              {
-                "@type": "Work",
-                "marc:toDisplayNote": true,
-                "hasTitle": [{
-                  "@type": "Title",
-                  "title": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
-                }]
-              }
-            ]
+            "instanceOf": {
+              "@type": "Text",
+              "continues": [
+                {
+                  "@type": "Work",
+                  "marc:toDisplayNote": true,
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "title": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
+                  }]
+                }
+              ]
+            }
           }}
         },
         {
           "source": {"780": {"ind1": " ", "ind2": " ", "subfields": [
             {"t": "Bulletin mensuel"}
           ]}},
+          "normalized": {"780": {"ind1": " ", "ind2": "0", "subfields": [
+            {"t": "Bulletin mensuel"}
+          ]}},
           "result": {"mainEntity": {
-            "precededBy": [
-              {
-                "@type": "Work",
-                "hasTitle": [{
-                  "@type": "Title",
-                  "title": "Bulletin mensuel"
-                }]
-              }
-            ]
+            "instanceOf": {
+              "@type": "Text",
+              "precededBy": [
+                {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "title": "Bulletin mensuel"
+                  }]
+                }
+              ]
+            }
           }}
         }
       ]
     },
     "785": {
       "inherit": "780",
+      "aboutEntity": "?work",
       "addLink": "succeededBy",
       "resourceType": "Work",
       "match": [
@@ -10004,20 +10296,23 @@
             {"x": "1937-6545"}
           ]}},
           "result": {"mainEntity": {
-            "continuedBy": [
-              {
-                "@type": "Work",
-                "hasTitle": [{
-                  "@type": "Title",
-                  "title": "Naysprayer"
-                }],
-                "identifiedBy": [{
-                  "@type": "ISSN",
-                  "value": "1937-6545"
-                }],
-                "marc:toDisplayNote": true
-              }
-            ]
+            "instanceOf": {
+              "@type": "Text",
+              "continuedBy": [
+                {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "title": "Naysprayer"
+                  }],
+                  "identifiedBy": [{
+                    "@type" : "ISSN",
+                    "value" : "1937-6545"
+                  }],
+                  "marc:toDisplayNote": true
+                }
+              ]
+            }
           }}
         }
       ]
@@ -10032,27 +10327,17 @@
       "inherit": "772",
       "addLink": "relatedTo"
     },
-
     "800": {
       "addLink": "hasSeries",
-      "resourceType": "Serial",
+      "resourceType": "Instance",
       "TODO:aboutEntity?": "?series",
-      "TODO:revert": "Get mixed up with 440",
-      "TODO:include": "titledetails",
+      "include": ["hasSeriesInstance", "titledetails", "contributionRole_4_e"],
       "pendingResources": {
-        "_:contribution": {
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution"
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
           "resourceType": "Person",
           "required": true
-        },
-        "_:title": {
-          "addLink": "hasTitle", "resourceType": "Title",
-          "embedded": true
         }
       },
       "match": [
@@ -10062,46 +10347,15 @@
           "when": "i1=3",
           "include": "agentdataFamily",
           "pendingResources": {
-            "_:contribution": {
-              "addLink": "contribution",
-              "resourceType": "PrimaryContribution"
-            },
             "_:agent": {
               "about": "_:contribution",
               "link": "agent",
               "resourceType": "Family",
               "required": true
-            },
-            "_:title": {
-              "addLink": "hasTitle", "resourceType": "Title",
-              "embedded": true
             }
           }
         }
       ],
-      "include": ["contributionRole_4_e"],
-      "NOTE:titledetails": "Temporarily moved these locally!!",
-      "$f": {"about": "_:title", "property": "originDate"},
-      "$h": {"about": "_:title", "property": "marc:mediaTerm"},
-
-      "$m": {"addProperty": "musicMedium"},
-      "$o": {"about": "_:title", "property": "version"},
-
-      "$r": {"about": "_:title", "property": "musicKey"},
-      "$s": {"about": "_:title", "property": "marc:version"},
-
-      "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
-      "NOTE:k": "Should we map to bf2:natureOfContent instead?",
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"},
-
-      "$t": {"about": "_:title", "property": "mainTitle"},
-      "$w": {"addProperty": "bibliographicRecordControlNumber"},
-      "$v": {"property": "seriesEnumeration"},
-      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
       "subfieldorder": "3 a d g h s m n p l r k f o v w x",
       "_spec": [
         {
@@ -10114,21 +10368,24 @@
           "result": {"mainEntity": {
             "hasSeries": [
               {
-                "@type": "Serial",
-                "contribution": [{
-                  "@type": "PrimaryContribution",
-                  "agent": {
-                    "@type": "Person",
-                    "lifeSpan": "1924-",
-                    "familyName": "Sandemo",
-                    "givenName": "Margit"
-                  }
-                }],
-                "seriesEnumeration" : "v 4",
-                "hasTitle": [{
-                  "@type": "Title",
-                  "mainTitle": "Sandemo-serien ;"
-                }]
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "contribution": [{
+                    "@type": "PrimaryContribution",
+                    "agent": {
+                      "@type": "Person",
+                      "lifeSpan": "1924-",
+                      "familyName": "Sandemo",
+                      "givenName": "Margit"
+                    }
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Sandemo-serien ;"
+                  }]
+                },
+                "seriesEnumeration" : "v 4"
               }
             ]
           }}
@@ -10142,23 +10399,26 @@
           ]}},
           "result": {"mainEntity": {
             "hasSeries": [{
-              "@type": "Serial",
-              "contribution" : [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Person",
-                  "name": "Raymond Feist"
-                }
-              }],
-              "language": {
-                "@type": "Language",
-                "label": "Svenska"
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution" : [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Person",
+                    "name": "Raymond Feist"
+                  }
+                }],
+                "language": {
+                  "@type": "Language",
+                  "label": "Svenska"
+                },
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Demonwar saga."
+                }]
               },
-              "seriesEnumeration": "v 2",
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "Demonwar saga."
-              }]
+              "seriesEnumeration": "v 2"
             }]
           }}
         },
@@ -10173,24 +10433,27 @@
           ]}},
           "result": {"mainEntity": {
             "hasSeries": [{
-              "@type": "Serial",
-              "contribution": [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Person",
-                  "familyName": "Sousa",
-                  "givenName": "John Philip",
-                  "lifeSpan": "1854-1932"
-                }
-              }],
-              "musicMedium": ["band."],
-              "seriesEnumeration": "v.1.",
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "Marches",
-                "marc:formSubheading": ["Selections (Sousa American bicentennial collection);"]
-              } ]
-            } ]
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Person",
+                    "familyName": "Sousa",
+                    "givenName": "John Philip",
+                    "lifeSpan": "1854-1932"
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Marches",
+                  "marc:formSubheading": ["Selections (Sousa American bicentennial collection);"]
+                }],
+                "musicMedium": ["band."]
+              },
+              "seriesEnumeration": "v.1."
+            }]
           }}
         },
         {
@@ -10200,18 +10463,21 @@
           ]}},
           "result": {"mainEntity": {
             "hasSeries": [{
-              "@type": "Serial",
-              "contribution": [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Family",
-                  "name": "Family X"
-                }
-              }],
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "A title"
-              }]
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Family",
+                    "name": "Family X"
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "A title"
+                }]
+              }
             }]
           }}
         }
@@ -10219,17 +10485,11 @@
     },
     "810": {
       "addLink": "hasSeries",
-      "resourceType": "Serial",
+      "resourceType": "Instance",
       "TODO:aboutEntity?": "?series",
-      "TODO:revert": "Get mixed up with 440",
-      "include": ["agentdataOrganization", "contributionRole_4_e"],
-      "TODO:include": "titledetails",
+      "include": ["hasSeriesInstance", "agentdataOrganization", "titledetails", "contributionRole_4_e"],
       "embedded": true,
       "pendingResources": {
-        "_:contribution": {
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution"
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
@@ -10237,11 +10497,7 @@
           "required": true
         },
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
-        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"},
-        "_:title": {
-          "addLink": "hasTitle", "resourceType": "Title",
-          "embedded": true
-        }
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "match": [
         {
@@ -10253,11 +10509,6 @@
           ],
           "include": "agentdataOrganization",
           "pendingResources": {
-            "_:contribution": {
-              "addLink": "contribution",
-              "resourceType": "PrimaryContribution",
-              "embedded": true
-            },
             "_:agent": {
               "about": "_:contribution",
               "link": "agent",
@@ -10266,11 +10517,7 @@
               "required": true
             },
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
-            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"},
-            "_:title": {
-              "addLink": "hasTitle", "resourceType": "Title",
-              "embedded": true
-            }
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         },
         {
@@ -10278,27 +10525,7 @@
           "include": "agentdataOrganizationSubUnit"
         }
       ],
-      "NOTE:titledetails": "Temporarily moved these locally!!",
-      "$f": {"about": "_:title", "property": "originDate"},
-      "$h": {"about": "_:title", "property": "marc:mediaTerm"},
-
-      "$m": {"addProperty": "musicMedium"},
-      "$o": {"about": "_:title", "property": "version"},
-
-      "$r": {"about": "_:title", "property": "musicKey"},
-      "$s": {"about": "_:title", "property": "marc:version"},
-
-      "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
-      "NOTE:k": "Should we map to bf2:natureOfContent instead?",
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"},
-
-      "$t": {"about": "_:title", "property": "mainTitle"},
-      "$w": {"addProperty": "bibliographicRecordControlNumber"},
-      "$v": {"property": "seriesEnumeration"},
-      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
-      "$6": {"property": "marc:fieldref"},
+      "i1": {"marcDefault": "2"},
       "_spec": [
         {
           "source": {"810": {"ind1": "2", "ind2": " ", "subfields": [
@@ -10308,19 +10535,22 @@
           ]}},
           "result": {"mainEntity": {
             "hasSeries": [{
-              "@type": "Serial",
-              "contribution": [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Organization",
-                  "name": "German Institute of Global and Area Studies <Hamburg>,"
-                }
-              }],
-              "seriesEnumeration": "v 40",
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "GIGA working papers"
-              }]
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution" : [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Organization",
+                    "name": "German Institute of Global and Area Studies <Hamburg>,"
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "GIGA working papers"
+                }]
+              },
+              "seriesEnumeration": "v 40"
             }]
           }}
         },
@@ -10334,23 +10564,26 @@
           ]}},
           "result": {"mainEntity": {
             "hasSeries": [{
-              "@type": "Serial",
-              "contribution": [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Jurisdiction",
-                  "marc:subordinateUnit": ["Universidad nacional.", "Instituto de Literatura Española."],
-                  "isPartOf": {
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
                     "@type": "Jurisdiction",
-                    "name": "Buenos Aires (Argentina)."
+                    "marc:subordinateUnit": ["Universidad nacional.", "Instituto de Literatura Española."],
+                    "isPartOf": {
+                      "@type": "Jurisdiction",
+                      "name": "Buenos Aires (Argentina)."
+                    }
                   }
-                }
-              }],
-              "seriesEnumeration": "1",
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "Bibliografías criticas ;"
-              }]
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Bibliografías criticas ;"
+                }]
+              },
+              "seriesEnumeration": "1"
             }]
           }}
         },
@@ -10363,23 +10596,64 @@
           ]}},
           "result": {"mainEntity": {
             "hasSeries": [{
-              "@type": "Serial",
-              "contribution": [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Organization",
-                  "marc:subordinateUnit": ["Bureau of Business Research."],
-                  "isPartOf": {
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
                     "@type": "Organization",
-                    "name": "Harvard University."
+                    "marc:subordinateUnit": ["Bureau of Business Research."],
+                    "isPartOf": {
+                      "@type": "Organization",
+                      "name": "Harvard University."
+                    }
                   }
-                }
-              }],
-              "seriesEnumeration": "no. 20.",
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "Bulletin"
-              } ]
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Bulletin"
+                }]
+              },
+              "seriesEnumeration": "no. 20."
+            }]
+          }}
+        },
+        {
+          "source": {"810": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Stadtbibliothek."},
+            {"c": "Königsberg"},
+            {"t": "Mitteilungen aus der Stadtbibliothek Königsberg"},
+            {"v": "4/5."}
+          ]}},
+          "normalized": {"810": {"ind1": "2", "ind2": " ", "subfields": [
+            {"a": "Stadtbibliothek."},
+            {"c": "Königsberg"},
+            {"t": "Mitteilungen aus der Stadtbibliothek Königsberg"},
+            {"v": "4/5."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [{
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Organization",
+                    "name": "Stadtbibliothek.",
+                    "place": [{
+                      "@type": "Place",
+                      "label": "Königsberg"
+                    }]
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Mitteilungen aus der Stadtbibliothek Königsberg"
+                }]
+              },
+              "seriesEnumeration": "4/5."
             }]
           }}
         }
@@ -10387,52 +10661,20 @@
     },
     "811": {
       "addLink": "hasSeries",
-      "resourceType": "Serial",
+      "resourceType": "Instance",
       "TODO:aboutEntity?": "?series",
-      "TODO:revert": "Get mixed up with 440",
-      "include": ["agentdataOrganization", "contributionRole_4"],
-      "TODO:include": "titledetails",
+      "include": ["hasSeriesInstance", "agentdataOrganization", "titledetails", "contributionRole_4"],
       "i1": {"marcDefault": "2"},
       "embedded": true,
       "pendingResources": {
-        "_:contribution": {
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution"
-        },
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
-          "resourceType": "Meeting"
-        },
-        "_:title": {
-          "addLink": "hasTitle", "resourceType": "Title",
-          "embedded": true
+          "resourceType": "Meeting",
+          "required": true
         },
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
-      "NOTE:titledetails": "Temporarily moved these locally!!",
-      "$f": {"about": "_:title", "property": "originDate"},
-      "$h": {"about": "_:title", "property": "marc:mediaTerm"},
-
-      "$m": {"addProperty": "musicMedium"},
-      "$o": {"about": "_:title", "property": "version"},
-
-      "$r": {"about": "_:title", "property": "musicKey"},
-      "$s": {"about": "_:title", "property": "marc:version"},
-
-      "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
-      "NOTE:k": "Should we map to bf2:natureOfContent instead?",
-      "$l": {"link": "language", "resourceType": "Language", "property": "label"},
-      "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"},
-
-      "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
-      "$t": {"about": "_:title", "property": "mainTitle"},
-      "$w": {"addProperty": "bibliographicRecordControlNumber"},
-      "$v": {"property": "seriesEnumeration"},
-      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "TODO:$j": "used in practise?",
-      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
-      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {"811": {"ind1": "2", "ind2": " ", "subfields": [
@@ -10443,20 +10685,23 @@
           ]}},
           "result": {"mainEntity": {
             "hasSeries": [{
-              "@type": "Serial",
-              "contribution": [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Meeting",
-                  "name": "Vatican Council",
-                  "date": ["1962-1964)"],
-                  "marc:partNumber": ["(2nd:"]
+              "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "contribution": [{
+                    "@type": "PrimaryContribution",
+                    "agent": {
+                      "@type": "Meeting",
+                      "name": "Vatican Council",
+                      "date": ["1962-1964)"]
+                    }
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Decretum de presbyterorum ministerio et vita.",
+                    "partNumber": [ "(2nd:" ]
+                  }]
                 }
-              }],
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "Decretum de presbyterorum ministerio et vita."
-              }]
             }]
           }}
         },
@@ -10471,42 +10716,51 @@
           ]}},
           "result": {"mainEntity": {
             "hasSeries": [{
-              "@type": "Serial",
-              "contribution": [{
-                "@type": "PrimaryContribution",
-                "agent": {
-                  "@type": "Meeting",
-                  "name": "Foo"
-                }
-              }],
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "Bar"
-              }]
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Meeting",
+                    "name": "Foo"
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Bar"
+                }]
+              }
             }]
           }}
         }
       ]
     },
     "830": {
-      "aboutEntity": "?work",
+      "NOTE": "Temporarily move conversion/revert rules of 830 before 800/810/811? Otherwise 830 always reverts to 800/810/811, since have no 'contribution'",
       "addLink": "hasSeries",
-      "resourceType": "Serial",
-      "aboutAlias": "_:work",
+      "resourceType": "Instance",
       "include": "titledetails",
       "pendingResources": {
+        "_:work": {
+          "link": "instanceOf",
+          "resourceType": "Work"
+        },
         "_:title": {
           "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
           "embedded": true
         }
       },
-      "$a": {"about": "_:title", "property": "mainTitle"},
+      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
+      "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$d": {"addProperty": "legalDate"},
       "$v": {"property": "seriesEnumeration"},
       "$w": {"property": "marc:bibliographicRecordControlNumber"},
-      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
+      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
-      "i2": {"property": "marc:nonfilingChars"},
+      "$6": {"property": "marc:fieldref"},
+      "$8": {"property": "marc:groupid"},
+      "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "subfieldorder": "3 a d g h s m n p l r k f o v w x",
       "_spec": [
         {
@@ -10516,21 +10770,52 @@
             {"v": "2002/1"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasSeries": [
-                {
-                  "@type": "Serial",
-                  "hasTitle": [ {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
                     "@type": "Title",
                     "mainTitle": "Europarecht (Munich, germany)",
-                    "partName": ["Beiheft"]
-                  } ],
-                  "seriesEnumeration": "2002/1",
-                  "marc:nonfilingChars" : "0"
-                }
-              ]
-            }
+                    "partName": ["Beiheft"],
+                    "marc:nonfilingChars": "0"
+                  }]
+                },
+                "seriesEnumeration": "2002/1"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"830": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Archiv für Papyrusforschung und verwandte Gebiete."},
+            {"p": "Ergänzungsband."},
+            {"p": "Kleine Reihe ;"},
+            {"v": "5."}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
+            {"a": "Archiv für Papyrusforschung und verwandte Gebiete"},
+            {"p": "Ergänzungsband."},
+            {"p": "Kleine Reihe ;"},
+            {"v": "5."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Archiv für Papyrusforschung und verwandte Gebiete",
+                    "partName": ["Ergänzungsband.", "Kleine Reihe ;"],
+                    "marc:nonfilingChars": "0"
+                  }]
+                },
+                "seriesEnumeration": "5."
+              }
+            ]
           }}
         },
         {
@@ -10539,25 +10824,65 @@
             {"v": "101"},
             {"x": "0169-9962"}
           ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": "4", "subfields": [
+            {"a": "Studies on the texts of the desert of Judah"},
+            {"v": "101"},
+            {"x": "0169-9962"}
+          ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasSeries": [
-                {
-                  "@type": "Serial",
-                  "hasTitle": [ {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
                     "@type": "Title",
-                    "mainTitle": "Studies on the texts of the desert of Judah,"
-                  } ],
-                  "seriesEnumeration": "101",
+                    "mainTitle": "Studies on the texts of the desert of Judah",
+                    "marc:nonfilingChars": "4"
+                  }],
                   "identifiedBy": {
                     "@type": "ISSN",
                     "value": "0169-9962"
-                  },
-                  "marc:nonfilingChars" : "4"
-                }
-              ]
-            }
+                  }
+                },
+                "seriesEnumeration": "101"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {"830": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Migrationsstudier."},
+            {"n": "B"},
+            {"x": "0358-0083 ;"},
+            {"v": "5."}
+          ]}},
+          "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Migrationsstudier"},
+            {"n": "B"},
+            {"x": "0358-0083"},
+            {"v": "5."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasSeries": [
+              {
+                "@type": "Instance",
+                "instanceOf": {
+                  "@type": "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Migrationsstudier",
+                    "partNumber": ["B"],
+                    "marc:nonfilingChars": " "
+                  }],
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0358-0083"
+                  }
+                },
+                "seriesEnumeration": "5."
+              }
+            ]
           }}
         }
       ]
