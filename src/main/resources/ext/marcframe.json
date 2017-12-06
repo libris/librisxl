@@ -3137,10 +3137,11 @@
       "aboutEntity": "?record",
       "addLink": "identifiedBy",
       "embedded": true,
-      "resourceType": "Identifier",
+      "resourceType": "Local",
+      "TODO": "No handle of empty i1",
+      "i1": {"marcDefault": "7"},
       "$a": {"addProperty": "value"},
       "$z": {"addProperty": "marc:hiddenValue"},
-      "i2": {"marcDefault": " "},
       "$2": {
         "link": "source",
         "resourceType": "Source",
