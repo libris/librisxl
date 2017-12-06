@@ -13923,8 +13923,8 @@
     "541": {
       "TODO:linkedEntity": "?example-$i",
       "TODO:i1": "0 = Sekretessbelagd information. Används f.n. ej. = ca 5000 poster",
-      "addLink": "hasItem", "embedded": true, "resourceType": "Item",
-      "$a": {"addProperty": "immediateAcquisition"},
+      "addLink": "immediateAcquisition", "resourceType": "ImmediateAcquisition",
+      "$a": {"addProperty": "marc:sourceOfAcquisition"},
       "$b": {"property": "marc:address"},
       "$c": {"property": "marc:methodOfAcquisition"},
       "$d": {"property": "marc:dateOfAcquisition"},
@@ -13945,7 +13945,6 @@
       "TODO:linkedEntity": "?example-$i",
       "NOTE:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster. Remove i1 when revert",
       "i1": {"ignored": true,"marcDefault": " "},
-      "addLink": "hasItem", "embedded": true, "resourceType": "Item",
       "$a": {"property": "custodialHistory"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$8": {"property": "marc:groupid"},
@@ -13956,7 +13955,7 @@
           "result": {
             "mainEntity": {
               "@type": "Item",
-              "hasItem": [{"@type": "Item", "custodialHistory": "xxx"}]
+              "custodialHistory": "xxx"
             }
           }
         }
@@ -13964,12 +13963,14 @@
     },
     "562": {
       "TODO:linkedEntity": "?example-$i",
-      "inherit": "bib"
+      "inherit": "bib",
+      "addLink": "hasNote",
+      "resourceType": "marc:ItemInformationNote"
     },
     "563": {
       "TODO:linkedEntity": "?example-$i",
-      "addLink": "hasItem", "embedded": true, "resourceType": "Item",
-      "$a": {"property": "bindingInformation"},
+      "addLink": "hasNote", "embedded": true, "resourceType": "marc:BindingInformationNote",
+      "$a": {"property": "label"},
       "$8": {"property": "marc:groupid"},
       "repeatable": true
     },
