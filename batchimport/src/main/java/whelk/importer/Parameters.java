@@ -20,6 +20,7 @@ class Parameters
     private String inputEncoding = "UTF-8";
     private boolean parallel = false;
     private boolean enrichMulDup = false;
+    private boolean verbose = false;
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
@@ -29,6 +30,7 @@ class Parameters
     String getInputEncoding() { return inputEncoding; }
     boolean getRunParallel() { return parallel; }
     boolean getEnrichMulDup() { return enrichMulDup; }
+    boolean getVerbose() { return verbose; }
 
     enum INPUT_FORMAT
     {
@@ -135,6 +137,7 @@ class Parameters
         System.err.println("              document, the incoming document is normally ignored/skipped. If this flag is");
         System.err.println("              set however, all found duplicates will be enriched with the information from");
         System.err.println("              the incoming record.");
+        System.err.println("--verbose     Verbose logging.");
     }
 
     private void interpretBinaryParameter(String parameter, String value)
@@ -211,6 +214,9 @@ class Parameters
                 break;
             case "--enrichMulDup":
                 enrichMulDup = true;
+                break;
+            case "--verbose":
+		verbose = true;	
                 break;
             default:
                 throw new IllegalArgumentException(parameter);
