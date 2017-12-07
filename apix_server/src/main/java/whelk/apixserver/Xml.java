@@ -4,6 +4,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import whelk.util.LegacyIntegrationTools;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -121,7 +122,7 @@ public class Xml
         return docToString(xmlDoc);
     }
 
-    public static String formatApixSearchResponse(List<whelk.Document> resultingDocuments) throws TransformerException, IOException, SAXException
+    public static String formatApixSearchResponse(List<whelk.Document> resultingDocuments, boolean includeHold) throws TransformerException, IOException, SAXException
     {
         Document xmlDoc = builder.newDocument();
 
@@ -142,12 +143,44 @@ public class Xml
         result.appendChild(records);
         for (whelk.Document document : resultingDocuments)
         {
+            Element record = xmlDoc.createElement("record");
+            records.appendChild(record);
+
+            Element metadata = xmlDoc.createElement("metadata");
+            record.appendChild(metadata);
+
             String marcXmlString = Utils.convertToMarcXml(document);
             if (marcXmlString != null)
             {
                 Element marcRecord = builder.parse(new InputSource(new StringReader(marcXmlString))).getDocumentElement();
-                records.appendChild(xmlDoc.importNode(marcRecord, true));
+                metadata.appendChild(xmlDoc.importNode(marcRecord, true));
             }
+
+            if (LegacyIntegrationTools.determineLegacyCollection(document, Utils.s_jsonld).equals("bib") && includeHold)
+            {
+                Element extra = xmlDoc.createElement("extra");
+                record.appendChild(extra);
+
+                Element holdings = xmlDoc.createElement("holdings");
+                extra.appendChild(holdings);
+
+                List<whelk.Document> attachedHoldings = Utils.s_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers());
+                for (whelk.Document holdingDocument : attachedHoldings)
+                {
+                    Element holding = xmlDoc.createElement("holding");
+                    holdings.appendChild(holding);
+                    holding.setAttribute("code", holdingDocument.getSigel());
+                    holding.setAttribute("x-mfhd_id", holdingDocument.getShortId());
+
+                    String holdingMarcXmlString = Utils.convertToMarcXml(holdingDocument);
+                    if (holdingMarcXmlString != null)
+                    {
+                        Element holdingMarcXmlRecord = builder.parse(new InputSource(new StringReader(holdingMarcXmlString))).getDocumentElement();
+                        holding.appendChild(xmlDoc.importNode(holdingMarcXmlRecord, true));
+                    }
+                }
+            }
+
         }
 
         return docToString(xmlDoc);

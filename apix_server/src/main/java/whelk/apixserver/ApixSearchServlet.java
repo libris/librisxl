@@ -32,7 +32,11 @@ public class ApixSearchServlet extends HttpServlet
         for (String key : resultingDocumentsMap.keySet())
             resultingDocuments.add(resultingDocumentsMap.get(key));
 
-        Utils.send200Response(response, Xml.formatApixSearchResponse(resultingDocuments));
+        boolean includeHold = false;
+        if (request.getParameter("x-holdings") != null && request.getParameter("x-holdings").equalsIgnoreCase("true"))
+            includeHold = true;
+
+        Utils.send200Response(response, Xml.formatApixSearchResponse(resultingDocuments, includeHold));
     }
 
     private Set<String> search(HttpServletRequest request)
