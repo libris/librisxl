@@ -11394,11 +11394,33 @@
       }
     },
     "043" : {
-      "$a": {
-        "addLink": "nationality",
-        "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "code"
-      },
-    "repeatable": false
+      "aboutEntity": "?thing",
+      "aboutType": "Agent",
+      "$a": {"addLink": "nationality", "resourceType": "Nationality", "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "code"},
+      "NOTE:repeatable": false,
+      "_spec": [
+        {
+          "source": [
+            {"043": {"ind1": " ", "ind2": " ", "subfields": [{"a": "e-sw---v"}]}},
+            {"043": {"ind1": " ", "ind2": " ", "subfields": [{"a": "e-xr---"}]}}
+          ],
+          "result": {"mainEntity": {
+            "@type": "Agent",
+            "nationality": [
+              {
+                "@id" : "https://id.kb.se/nationality/e-sw---v",
+                "@type": "Nationality",
+                "code": "e-sw---v"
+              },
+              {
+                "@id" : "https://id.kb.se/nationality/e-xr---",
+                "@type": "Nationality",
+                "code": "e-xr---"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "045" : {
       "inherit": "bib",
@@ -13633,9 +13655,9 @@
     },
     "670": {
       "aboutEntity": "?record",
-      "addLink": "source",
+      "addLink": "sourceConsulted",
       "embedded": true,
-      "resourceType": "Instance",
+      "resourceType": "SourceData",
       "$a": {"property": "label"},
       "$b": {"property": "citation"},
       "$u": {"property": "uri"},
@@ -13646,7 +13668,7 @@
     "673": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "675": {
       "aboutEntity": "?record",
-      "link": "marc:hasSourceDataNotFound",
+      "link": "sourceConsulted",
       "resourceType": "marc:SourceDataNotFound",
       "$a": {"addProperty": "citationSource"}
     },
