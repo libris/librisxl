@@ -1896,11 +1896,15 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                                 requiredOk = false
                             }
                         }
-                        Util.asList(about).each {
-                            if (!it || (pending.resourceType && !(pending.resourceType in Util.asList(it['@type'])))) {
+                        Util.asList(about).eachWithIndex { item, pos ->
+                            if (!item || (pending.resourceType && !(pending.resourceType in Util.asList(item['@type'])))) {
+                                return
+                            } else if (pos == 0 && pending.itemPos == 'rest') {
+                                return
+                            } else if (pos > 0 && pending.itemPos == 'first') {
                                 return
                             }
-                            aboutMap.get(key, []).add(it)
+                            aboutMap.get(key, []).add(item)
                         }
                     }
                 }
