@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The madness, just to print some xml.
@@ -122,7 +123,9 @@ public class Xml
         return docToString(xmlDoc);
     }
 
-    public static String formatApixSearchResponse(List<whelk.Document> resultingDocuments, boolean includeHold) throws TransformerException, IOException, SAXException
+    public static String formatApixSearchResponse(List<whelk.Document> resultingDocuments,
+                                                  boolean includeHold, Map<String, String[]> parameterMap)
+            throws TransformerException, IOException, SAXException
     {
         Document xmlDoc = builder.newDocument();
 
@@ -133,8 +136,16 @@ public class Xml
         apix.setAttribute("operation", "SEARCH");
 
         Element query = xmlDoc.createElement("query");
-        // Contents of query node intentionally omitted (for now), as it is extremely unlikely that clients actually examine this
         apix.appendChild(query);
+        for (Object key : parameterMap.keySet())
+        {
+            String parameterName = (String) key;
+            String[] values = parameterMap.get(key);
+
+            Element parameter = xmlDoc.createElement(parameterName);
+            parameter.setTextContent(values[0]);
+            query.appendChild(parameter);
+        }
 
         Element result = xmlDoc.createElement("result");
         apix.appendChild(result);

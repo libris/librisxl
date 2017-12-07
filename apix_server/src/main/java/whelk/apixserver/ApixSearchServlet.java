@@ -36,7 +36,7 @@ public class ApixSearchServlet extends HttpServlet
         if (request.getParameter("x-holdings") != null && request.getParameter("x-holdings").equalsIgnoreCase("true"))
             includeHold = true;
 
-        Utils.send200Response(response, Xml.formatApixSearchResponse(resultingDocuments, includeHold));
+        Utils.send200Response(response, Xml.formatApixSearchResponse(resultingDocuments, includeHold, request.getParameterMap()));
     }
 
     private Set<String> search(HttpServletRequest request)
