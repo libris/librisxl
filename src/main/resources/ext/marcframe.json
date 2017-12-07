@@ -11419,28 +11419,17 @@
     },
     "043" : {
       "aboutEntity": "?thing",
-      "aboutType": "Agent",
-      "$a": {"addLink": "nationality", "resourceType": "Nationality", "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$", "property": "code"},
-      "NOTE:repeatable": false,
+      "$a": {"addLink": "nationality", "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$"},
+      "repeatable": false,
       "_spec": [
         {
-          "source": [
-            {"043": {"ind1": " ", "ind2": " ", "subfields": [{"a": "e-sw---v"}]}},
-            {"043": {"ind1": " ", "ind2": " ", "subfields": [{"a": "e-xr---"}]}}
-          ],
+          "source":
+            {"043": {"ind1": " ", "ind2": " ", "subfields": [{"a": "e-sw---v"}, {"a": "e-xr---"}]}},
           "result": {"mainEntity": {
-            "@type": "Agent",
+            "@type": "Concept",
             "nationality": [
-              {
-                "@id" : "https://id.kb.se/nationality/e-sw---v",
-                "@type": "Nationality",
-                "code": "e-sw---v"
-              },
-              {
-                "@id" : "https://id.kb.se/nationality/e-xr---",
-                "@type": "Nationality",
-                "code": "e-xr---"
-              }
+              {"@id" : "https://id.kb.se/nationality/e-sw---v"},
+              {"@id" : "https://id.kb.se/nationality/e-xr---"}
             ]
           }}
         }
