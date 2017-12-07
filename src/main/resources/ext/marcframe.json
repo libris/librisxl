@@ -1108,16 +1108,20 @@
       "$v": {"addLink": "termComponentList",
         "TODO": "use /term/saogf/{_}, but only if $2=sao",
         "resourceType": "GenreForm",
+        "itemPos": "rest",
         "property": "prefLabel"},
       "$x": {"addLink": "termComponentList",
         "resourceType": "Subdivision",
+        "itemPos": "rest",
         "property": "prefLabel"},
       "$y": {"addLink": "termComponentList",
         "resourceType": "Temporal",
+        "itemPos": "rest",
         "property": "prefLabel"},
       "$z": {"addLink": "termComponentList",
         "TODO": "use /place/{_}, but only if $2=sao",
         "resourceType": "Geographic",
+        "itemPos": "rest",
         "property": "prefLabel"}
     },
 
@@ -1251,6 +1255,7 @@
         "_:work": {
           "addLink": "termComponentList",
           "resourceType": "Work",
+          "itemPos": "first",
           "absorbSingle": true
         },
         "_:title": {
@@ -7321,6 +7326,7 @@
             "_:work": {
               "addLink": "termComponentList",
               "resourceType": "Work",
+              "itemPos": "first",
               "absorbSingle": true
             },
             "_:title": {
@@ -7358,6 +7364,7 @@
             "_:agent": {
               "addLink": "termComponentList",
               "resourceType": "Family",
+              "itemPos": "first",
               "absorbSingle": true,
               "required": true
             }
@@ -7380,6 +7387,7 @@
         "_:agent": {
           "addLink": "termComponentList",
           "resourceType": "Person",
+          "itemPos": "first",
           "absorbSingle": true,
           "required": true
         }
@@ -7773,6 +7781,7 @@
         "_:agent": {
           "addLink": "termComponentList",
           "resourceType": "Organization",
+          "itemPos": "first",
           "absorbSingle": true,
           "required": true
         },
@@ -7947,6 +7956,7 @@
             "_:work": {
               "addLink": "termComponentList",
               "resourceType": "Work",
+              "itemPos": "first",
               "absorbSingle": true,
               "required": true
             },
@@ -8119,6 +8129,7 @@
           "addLink": "termComponentList",
           "resourceType": "Temporal",
           "required": true,
+          "itemPos": "first",
           "absorbSingle": true
         }
       },
@@ -8180,6 +8191,7 @@
           "addLink": "termComponentList",
           "resourceType": "Topic",
           "required": true,
+          "itemPos": "first",
           "absorbSingle": true
         }
       },
@@ -8437,6 +8449,7 @@
           "addLink": "termComponentList",
           "resourceType": "Geographic",
           "required": true,
+          "itemPos": "first",
           "absorbSingle": true
         }
       },
@@ -8598,6 +8611,7 @@
           "addLink": "termComponentList",
           "resourceType": "GenreForm",
           "required": true,
+          "itemPos": "first",
           "absorbSingle": true
         }
       },
@@ -12107,6 +12121,7 @@
           "addLink": "termComponentList",
           "resourceType": "Topic",
           "required": true,
+          "itemPos": "first",
           "absorbSingle": true
         }
       },
