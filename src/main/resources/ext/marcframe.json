@@ -11490,8 +11490,8 @@
     },
     "083" : {
       "aboutEntity": "?thing",
-      "link": "closeMatch",
-      "aboutAlias": "_:closeMatch",
+      "addLink": "closeMatch",
+      "resourceType": "ClassificationDdc",
       "TODO:match": [
         {
           "when": "@type = Agent",
@@ -11502,19 +11502,12 @@
           "aboutType": "Concept"
         }
       ],
-      "pendingResources":{
-          "_:classification": {
-            "about": "_:closeMatch",
-            "addLink": "classification",
-            "resourceType": "ClassificationDdc"
-          }
-      },
       "i1": {"marcDefault": "0"},
       "i2": {"marcDefault": "4"},
-      "$a": {"about": "_:classification", "property": "code", "required": true},
-      "$c": {"about": "_:classification", "property": "marc:explanatoryTerm"},
-      "$z": {"about": "_:classification", "property": "marc:tableIdentificationTableNumber"},
-      "$2": {"about": "_:classification", "property": "edition"},
+      "$a": {"property": "code", "required": true},
+      "$c": {"property": "marc:explanatoryTerm"},
+      "$z": {"property": "marc:tableIdentificationTableNumber"},
+      "$2": {"property": "edition"},
       "TODO:match @type = ?": {
         "Concept": {"addLink": "closeMatch"},
         "Place": {"addLink": "closeMatch"},
@@ -11532,15 +11525,13 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "closeMatch": {
-                "classification": [{
-                  "@type": "ClassificationDdc",
-                  "code":  "085",
-                  "marc:explanatoryTerm":  "BroadMatch",
-                  "marc:tableIdentificationTableNumber":  "1",
-                  "edition":  "23/swe"
-                }]
-              }
+              "closeMatch": [{
+                "@type": "ClassificationDdc",
+                "code":  "085",
+                "marc:explanatoryTerm":  "BroadMatch",
+                "marc:tableIdentificationTableNumber":  "1",
+                "edition":  "23/swe"
+              }]
             }
           }
         }
