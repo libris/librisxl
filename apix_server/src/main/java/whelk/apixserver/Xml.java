@@ -149,6 +149,15 @@ public class Xml
             Element metadata = xmlDoc.createElement("metadata");
             record.appendChild(metadata);
 
+            Element identifier = xmlDoc.createElement("identifier");
+            record.appendChild(identifier);
+            identifier.setTextContent(document.getThingIdentifiers().get(0));
+
+            String collection = LegacyIntegrationTools.determineLegacyCollection(document, Utils.s_jsonld);
+            Element url = xmlDoc.createElement("url");
+            record.appendChild(url);
+            url.setTextContent(Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + document.getShortId());
+
             String marcXmlString = Utils.convertToMarcXml(document);
             if (marcXmlString != null)
             {
@@ -156,7 +165,7 @@ public class Xml
                 metadata.appendChild(xmlDoc.importNode(marcRecord, true));
             }
 
-            if (LegacyIntegrationTools.determineLegacyCollection(document, Utils.s_jsonld).equals("bib") && includeHold)
+            if (collection.equals("bib") && includeHold)
             {
                 Element extra = xmlDoc.createElement("extra");
                 record.appendChild(extra);
