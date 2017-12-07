@@ -1122,22 +1122,20 @@
     },
 
     "termbase": {
-      "include": "termcomplexsubjectHead",
+      "include": ["termcomplexsubjectHead", "termcomplexsubjectMatch"],
       "match": [
         {
           "when": "$v | $x | $y | $z",
-          "include": "termcomplexsubjectMatch",
           "resourceType": "ComplexSubject"
         }
       ]
     },
 
     "abouttermbase": {
-      "include": "termcomplexsubjectHead",
+      "include": ["termcomplexsubjectHead", "termcomplexsubjectMatch"],
       "match": [
         {
           "when": "$v | $x | $y | $z",
-          "include": "termcomplexsubjectMatch",
           "aboutType": "ComplexSubject"
         }
       ]
