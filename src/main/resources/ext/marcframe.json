@@ -7213,7 +7213,7 @@
     "581": {
       "aboutEntity": "?thing",
       "addLink": "hasNote",
-      "resourceType": "RelatedMaterialNote",
+      "resourceType": "marc:PublicationsAboutDescribedMaterialsNote",
       "i1": {"ignored": true, "NOTE:LC": "nac"},
       "$a": {"property": "label"},
       "$z": {"addproperty": "isbn"},
@@ -7222,7 +7222,7 @@
     "583": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
       "addLink": "hasNote",
-      "resourceType": "ActionNote",
+      "resourceType": "marc:ActionNote",
       "TODO:i1": "0 = Sekretessbelagd information. filtrera bort GDPR",
       "$a": {"property": "label"},
       "$b": {"addProperty": "marc:actionIdentification"},
@@ -7249,7 +7249,7 @@
     "588": {
       "aboutEntity": "?record",
       "addLink": "hasNote",
-      "resourceType": "DescriptionSourceNote",
+      "resourceType": "marc:SourceOfDescriptionNote",
       "$a": {"property": "label"},
       "NOTE:i1": "ignore"
     },
@@ -14342,7 +14342,7 @@
     },
     "583": {
       "addLink": "hasNote",
-      "resourceType": "ActionNote",
+      "resourceType": "marc:ActionNote",
       "TODO:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 1 post",
       "$a": {"property": "label"},
       "$b": {"addProperty": "marc:actionIdentification"},
