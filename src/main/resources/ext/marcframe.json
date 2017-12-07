@@ -1183,6 +1183,32 @@
           "include": ["termbase"],
           "uriTemplate": "http://id.loc.gov/authorities/childrensSubjects/{prefLabel}"
         },
+
+        {
+          "when": null,
+          "include": ["termbase"],
+          "TODO": "The uses of i2 below would be preferable before this, but the $2 are redunant (and don't work properly anyway). But matching just i2 actually sets its value..."
+        },
+        {
+          "when": "i2=2 & $2=mesh",
+          "include": ["termbase"]
+        },
+        {
+          "when": "i2=3 & $2=nal",
+          "include": ["termbase"]
+        },
+        {
+          "when": "i2=5 & $2=csh",
+          "include": ["termbase"]
+        },
+        {
+          "when": "i2=6 & $2=rvm",
+          "include": ["termbase"]
+        },
+        {
+          "when": "i2=7 & $2 =~ .+",
+          "include": ["termbase"]
+        },
         {
           "when": null,
           "include": ["termbase"]
