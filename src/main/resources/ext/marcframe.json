@@ -3704,7 +3704,25 @@
       "$d": {"link": "descriptionUpgrader", "resourceType": "Organization", "property": "name"},
       "$e": {"addLink": "descriptionConventions", "NOTE:repeatable": false, "resourceType": "DescriptionConventions", "property": "code"},
       "$6": {"property": "marc:fieldref"},
-      "$9": {"property": "license"}
+      "$9": {"property": "license"},
+      "_spec": [
+        {
+          "name": "ensure multiple fields matching a top entity convert and revert OK",
+          "source": [
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [{"9": "9927672551"}]}},
+            {"040": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Js"}]}}
+          ],
+          "result": {
+            "librisIIINumber": "9927672551",
+            "descriptionCreator": {"@type": "Organization", "name": "Js"},
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        }
+      ]
     },
     "041": {
       "aboutEntity": "?work",

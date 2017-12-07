@@ -1793,9 +1793,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
 
-        def entity = getEntity(data)
+        final Map topEntity = getEntity(data)
 
-        def types = entity['@type']
+        def types = topEntity['@type']
         if (types instanceof String) {
             types = [types]
         }
@@ -1807,7 +1807,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def useLinks = []
         if (computeLinks && computeLinks.mapping instanceof Map) {
             computeLinks.mapping.each { code, compLink ->
-                if (compLink in entity) {
+                if (compLink in topEntity) {
                     if (code == '*') {
                         useLinks << [link: compLink, subfield: null]
                     } else {
@@ -1831,9 +1831,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
         }
         for (useLink in useLinks) {
-            def useEntities = [entity]
+            def useEntities = [topEntity]
             if (useLink.link) {
-                useEntities = Util.asList(entity[useLink.link])
+                useEntities = Util.asList(topEntity[useLink.link])
                 if (useLink.resourceType) {
                     useEntities = useEntities.findAll {
                         if (!it) return false
@@ -1853,7 +1853,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             useEntities.each {
                 def (boolean requiredOk, Map aboutMap) = buildAboutMap(aboutAlias, pendingResources, it)
                 if (requiredOk) {
-                    def field = revertOne(data, it, aboutMap, usedMatchRules)
+                    def field = revertOne(data, topEntity, it, aboutMap, usedMatchRules)
                     if (field) {
                         if (useLink.subfield) {
                             field.subfields << useLink.subfield
@@ -1920,7 +1920,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    def revertOne(Map data, Map currentEntity, Map<String, List> aboutMap = null,
+    def revertOne(Map data, Map topEntity, Map currentEntity, Map<String, List> aboutMap = null,
                     List<MatchRule> usedMatchRules) {
 
         MatchRule usedMatchRule = usedMatchRules ? usedMatchRules?.last() : null
@@ -1979,11 +1979,14 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     return
                 }
 
-                // FIXME: selectedEntity != topEntity (otherwise a top property might block all other top properties?)
-                if (/*selectedEntity != currentEntity && */selectedEntity._revertedBy/* == thisTag*/) {
+                // TODO: This check is rather crude for determining if an
+                // entity has already been reverted. There *might* be several
+                // fields contributing to a nested entity...
+                if ((selectedEntity != topEntity && selectedEntity._revertedBy) ||
+                    selectedEntity._revertedBy == thisTag) {
                     failedRequired = true
                     return
-                    //subs << ['DEBUG:wouldHaveBlockedOn': this.tag]
+                    //subs << ['DEBUG:blockedSinceRevertedBy': selectedEntity._revertedBy]
                 }
 
                 def value = subhandler.revert(data, selectedEntity)
