@@ -10349,7 +10349,7 @@
           "source": {"780": {"ind1": " ", "ind2": " ", "subfields": [
             {"t": "Bulletin mensuel"}
           ]}},
-          "normalized": {"780": {"ind1": " ", "ind2": "0", "subfields": [
+          "normalized": {"780": {"ind1": "0", "ind2": "2", "subfields": [
             {"t": "Bulletin mensuel"}
           ]}},
           "result": {"mainEntity": {
