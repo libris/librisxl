@@ -462,7 +462,7 @@ class MarcRuleSet {
                 handler = new TokenSwitchFieldHandler(this, tag, dfn)
             } else if (dfn.recTypeBibLevelMap) {
                 handler = new TokenSwitchFieldHandler(this, tag, dfn, 'recTypeBibLevelMap')
-            } else if (dfn.find { it.key[0] == '[' }) {
+            } else if (dfn.find(MarcFixedFieldHandler.&isColKey)) {
                 handler = new MarcFixedFieldHandler(this, tag, dfn)
             } else if ('match' in dfn || dfn.find { it.key[0] == '$' }) {
                 handler = new MarcFieldHandler(this, tag, dfn)
@@ -943,21 +943,34 @@ class MarcFixedFieldHandler {
     MarcFixedFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn) {
         this.ruleSet = ruleSet
         this.tag = tag
-
         fieldDfn?.each { key, obj ->
-            def m = (key =~ /^\[(\d+):(\d+)\]$/)
-            if (m && obj) {
-                int start = m.group(1).toInteger()
-                int end = m.group(2).toInteger()
-                columns << new Column(ruleSet, obj, start, end,
+            if (!isColKey(key) || !obj)
+                return
+            def colNums = parseColumnNumbers(key)
+            colNums.eachWithIndex { Tuple2<Integer, Integer> colNum, int i ->
+                columns << new Column(ruleSet, obj, colNum.first, colNum.second,
+                        obj['itemPos'] ?: colNums.size() > 1 ? i : null,
                         obj['fixedDefault'],
                         obj['matchAsDefault'])
-                if (end > fieldSize) {
-                    fieldSize = end
+
+                if (colNum.second > fieldSize) {
+                    fieldSize = colNum.second
                 }
             }
         }
         columns.sort { it.start }
+    }
+
+    static boolean isColKey(key) { ((String) key)?.startsWith('[') }
+
+    static List<Tuple2<Integer, Integer>> parseColumnNumbers(key) {
+        List colNums = []
+        (key =~ /\[(\d+)(?::(\d+))?\]\s*/).each { List<String> m ->
+            Integer start = m[1].toInteger()
+            Integer end = m[2]?.toInteger() ?: start + 1
+            colNums << new Tuple2<>(start, end)
+        }
+        return colNums
     }
 
     ConvertResult convert(Map state, value) {
@@ -986,12 +999,7 @@ class MarcFixedFieldHandler {
         def actualValue = false
         for (col in columns) {
             assert value.size() > col.start // columns must fit within value
-            def obj = col.revert(data)
-            // TODO: ambiguity trouble if this is a List!
-            if (obj instanceof List) {
-                obj = obj.find { it && col.width >= it.size() }
-            }
-            obj = (String) obj
+            String obj = (String) col.revert(data)
             if (obj && col.width >= obj.size()) {
                 def end = col.start + obj.size() - 1
                 value[col.start..end] = obj
@@ -1007,15 +1015,17 @@ class MarcFixedFieldHandler {
 
         int start
         int end
+        Integer itemPos
         String fixedDefault
         Pattern matchAsDefault
 
         Column(ruleSet, fieldDfn, int start, int end,
-               fixedDefault, matchAsDefault = null) {
+               itemPos, fixedDefault, matchAsDefault = null) {
             super(ruleSet, null, fieldDfn)
             assert start > -1 && end >= start
             this.start = start
             this.end = end
+            this.itemPos = (Integer) itemPos
             this.fixedDefault = fixedDefault
             if (fixedDefault) {
                 assert this.fixedDefault.size() == this.width
@@ -1059,10 +1069,20 @@ class MarcFixedFieldHandler {
             return super.convert(state, token)
         }
 
+        @CompileStatic(SKIP)
         def revert(Map data) {
             def v = super.revert(data, null)
             if ((v == null || v.every { it == null }) && fixedDefault)
                 return fixedDefault
+
+            if (v instanceof List) {
+                v = v.findAll { it && width >= it.size() }
+                if (itemPos != null) {
+                    return itemPos < v.size() ? v[itemPos] : fixedDefault
+                } else {
+                    return v[0]
+                }
+            }
             return v
         }
 

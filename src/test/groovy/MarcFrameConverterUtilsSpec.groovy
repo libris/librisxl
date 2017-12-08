@@ -144,6 +144,17 @@ class MarcFrameConverterUtilsSpec extends Specification {
 
     }
 
+    def "should parse col-numbers from col-key"() {
+         expect:
+         MarcFixedFieldHandler.parseColumnNumbers(key) == colNums
+         where:
+         key        | colNums
+         '[0:1]'    | [[0, 1]]
+         '[0:2]'    | [[0, 2]]
+         '[0]'      | [[0, 1]]
+         '[0] [1] [2:4]'  | [[0, 1], [1, 2], [2,4]]
+    }
+
     static subHandler(field, code, subDfn) {
         new MarcSubFieldHandler(field, code, subDfn)
     }

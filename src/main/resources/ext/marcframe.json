@@ -1612,25 +1612,10 @@
       },
       "tokenTypeMap": "[0:1]",
       "Text": {
-        "[1:2]": {
+        "[1] [2] [3] [4]": {
           "link": "illustrativeContent",
           "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}",
           "matchUriToken": "^[abcdefghijklmop]$"
-        },
-        "[2:3]": {
-          "TODO": "Decide if it is Work or Instance?",
-          "link": "illustrativeContent",
-          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
-        },
-        "[3:4]": {
-          "TODO": "Decide if it is Work or Instance?",
-          "link": "illustrativeContent",
-          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
-        },
-        "[4:5]": {
-          "TODO": "Decide if it is Work or Instance?",
-          "link": "illustrativeContent",
-          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
         },
         "[5:6]": {
           "TODO:about": "_:aspectWork",
@@ -1643,23 +1628,10 @@
           "uriTemplate": "https://id.kb.se/marc/BooksItemType-{_}",
           "matchUriToken": "^[abcdfoqrs]$"
         },
-        "[7:8]": {
-          "TODO: squash all repeated columns to one rule": "[7] [8] [9]",
+        "[7] [8] [9] [10]": {
           "addLink": "contentType",
           "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}",
           "matchUriToken": "^[256abcdefgijklmnopqrstuvwyz]$"
-        },
-        "[8:9]": {
-          "addLink": "contentType",
-          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
-        },
-        "[9:10]": {
-          "addLink": "contentType",
-          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
-        },
-        "[10:11]": {
-          "addLink": "contentType",
-          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
         },
         "[11:12]": {
           "link": "genreForm",
@@ -1719,45 +1691,16 @@
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
-        "[7:8]": {
+        "[7] [8] [9] [10] [11] [12]": {
           "TODO": "Decide if this should be Work or Instance",
           "link": "supplementaryContent",
           "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}",
           "matchUriToken": "^[_abcdefghikrs]$"
         },
-        "[8:9]": {
-          "TODO": "Decide if this should be Work or Instance",
-          "link": "supplementaryContent",
-          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
-        },
-        "[9:10]": {
-          "TODO": "Decide if this should be Work or Instance",
-          "link": "supplementaryContent",
-          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
-        },
-        "[10:11]": {
-          "TODO": "Decide if this should be Work or Instance",
-          "link": "supplementaryContent",
-          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
-        },
-        "[11:12]": {
-          "TODO": "Decide if this should be Work or Instance",
-          "link": "supplementaryContent",
-          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
-        },
-        "[12:13]": {
-          "TODO": "Decide if this should be Work or Instance",
-          "link": "supplementaryContent",
-          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
-        },
-        "[13:14]": {
+        "[13] [14]": {
           "link": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}",
           "matchUriToken": "^[_abcdefghijklmoprst]$"
-        },
-        "[14:15]": {
-          "link": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}"
         },
         "[16:17]": {
           "link": "marc:transposition",
@@ -1766,26 +1709,11 @@
         }
       },
       "Cartography": {
-        "[1:2]": {
+        "[1] [2] [3] [4]": {
           "TODO:about": "_:cartographic",
           "link": "marc:relief",
           "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}",
           "matchUriToken": "^[abcdefgijkmz]$"
-        },
-        "[2:3]": {
-          "TODO:about": "_:cartographic",
-          "link": "marc:relief",
-          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
-        },
-        "[3:4]": {
-          "TODO:about": "_:cartographic",
-          "link": "marc:relief",
-          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
-        },
-        "[4:5]": {
-          "TODO:about": "_:cartographic",
-          "link": "marc:relief",
-          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
         },
         "[5:7]": {
           "TODO:about": "_:cartographic",
@@ -1812,15 +1740,11 @@
           "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
-        "[16:17]": {
+        "[16] [17]": {
+          "TODO:ignore pos 17": "Not used in 008",
           "link": "additionalType",
           "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}",
           "matchUriToken": "^[_ejklnopr]$"
-        },
-        "[17:18]": {
-          "TODO:ignore": "Not used in 008",
-          "link": "additionalType",
-          "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}"
         },
         "[7:8]": {
           "NOTE": "Undefined in MARC21/Voyager",
@@ -1856,31 +1780,11 @@
           "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}",
           "matchUriToken": "^[aclz]$"
         },
-        "[6:7]": {
+        "[6] [7] [8] [9] [10]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}",
           "matchUriToken": "^[lmopqrsz]$"
-        },
-        "[7:8]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:matter",
-          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
-        },
-        "[8:9]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:matter",
-          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
-        },
-        "[9:10]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:matter",
-          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
-        },
-        "[10:11]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:matter",
-          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
         }
       },
       "Multimedia": {
@@ -1904,12 +1808,8 @@
         }
       },
       "Mixed": {
-        "[6:7]": {
-          "link": "marc:additionalCarrierType",
-          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
-        },
-        "[7:8]": {
-          "NOTE": "Undefined in MARC21/Voyager",
+        "[6] [7]": {
+          "NOTE": "Pos 7 Undefined in MARC21/Voyager",
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         }
@@ -1952,18 +1852,10 @@
           "uriTemplate": "https://id.kb.se/marc/SerialsNatureType-{_}",
           "matchUriToken": "^[6abcdefghiklmnopqrstuvwyz]$"
         },
-        "[8:9]": {
+        "[8] [9] [10]": {
           "link": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}",
           "matchUriToken": "^[56abcdefghiklmnopqrstuvwyz]$"
-        },
-        "[9:10]": {
-          "link": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}"
-        },
-        "[10:11]": {
-          "link": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}"
         },
         "[11:12]": {
           "link": "genreForm",
@@ -2147,32 +2039,20 @@
           "uriTemplate": "https://id.kb.se/marc/TacMaterialType-{_}",
           "matchUriToken": "^[_abcd]$"
         },
-        "[3:4]": {
+        "[3] [4]": {
           "link": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleWritingType-{_}",
           "matchUriToken": "^[_abcdem]$"
-        },
-        "[4:5]": {
-          "link": "layout",
-          "uriTemplate": "https://id.kb.se/marc/TacBrailleWritingType-{_}"
         },
         "[5:6]": {
           "link": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacContractionType-{_}",
           "matchUriToken": "^[_abm]$"
         },
-        "[6:7]": {
+        "[6] [7] [8[": {
           "link": "notation",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}",
           "matchUriToken": "^[abcdefghijklz]$"
-        },
-        "[7:8]": {
-          "link": "notation",
-          "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}"
-        },
-        "[8:9]": {
-          "link": "notation",
-          "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}"
         },
         "[9:10]": {
           "link": "notation",
@@ -2677,29 +2557,12 @@
       },
 
       "Text": {
-        "[18:19]": {
+        "[18] [19] [20] [21]": {
           "aboutEntity": "?work",
           "TODO": "Decide if it is Work or Instance?",
           "link": "illustrativeContent",
-          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
-        },
-        "[19:20]": {
-          "aboutEntity": "?work",
-          "TODO": "Decide if it is Work or Instance?",
-          "link": "illustrativeContent",
-          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
-        },
-        "[20:21]": {
-          "aboutEntity": "?work",
-          "TODO": "Decide if it is Work or Instance?",
-          "link": "illustrativeContent",
-          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
-        },
-        "[21:22]": {
-          "aboutEntity": "?work",
-          "TODO": "Decide if it is Work or Instance?",
-          "link": "illustrativeContent",
-          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}",
+          "matchUriToken": "^[abcdefghijklmop]$"
         },
         "[22:23]": {
           "aboutEntity": "?work",
@@ -2711,22 +2574,7 @@
           "link": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/BooksItemType-{_}"
         },
-        "[24:25]": {
-          "aboutEntity": "?work",
-          "addLink": "contentType",
-          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
-        },
-        "[25:26]": {
-          "aboutEntity": "?work",
-          "addLink": "contentType",
-          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
-        },
-        "[26:27]": {
-          "aboutEntity": "?work",
-          "addLink": "contentType",
-          "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
-        },
-        "[27:28]": {
+        "[24] [25] [26] [27]": {
           "aboutEntity": "?work",
           "addLink": "contentType",
           "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
@@ -2804,22 +2652,7 @@
         }
       },
       "Cartography": {
-        "[18:19]": {
-          "TODO:aboutEntity": "?cartographic",
-          "addLink": "marc:relief",
-          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
-        },
-        "[19:20]": {
-          "TODO:aboutEntity": "?cartographic",
-          "addLink": "marc:relief",
-          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
-        },
-        "[20:21]": {
-          "TODO:aboutEntity": "?cartographic",
-          "addLink": "marc:relief",
-          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
-        },
-        "[21:22]": {
+        "[18] [19] [20] [21]": {
           "TODO:aboutEntity": "?cartographic",
           "addLink": "marc:relief",
           "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
@@ -2848,13 +2681,7 @@
           "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
-        "[33:34]": {
-          "aboutEntity": "?work",
-          "link": "additionalType",
-          "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}"
-        },
-        "[34:35]": {
-          "TODO:ignore": true,
+        "[33] [34]": {
           "aboutEntity": "?work",
           "link": "additionalType",
           "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}"
@@ -2888,7 +2715,7 @@
           "link": "marc:parts",
           "uriTemplate": "https://id.kb.se/marc/MusicPartsType-{_}"
         },
-        "[22:23]": {
+        "[22]": {
           "aboutEntity": "?work",
           "link": "intendedAudience",
           "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
@@ -2897,46 +2724,18 @@
           "link": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
-        "[24:25]": {
+        "[24] [25] [26] [27] [28] [29]": {
           "TODO": "Decide if this should be Work or Instance. Compare with Text",
           "link": "supplementaryContent",
+          "itemPos": 0,
           "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
-        "[25:26]": {
-          "TODO": "Decide if this should be Work or Instance. Compare with Text",
-          "link": "supplementaryContent",
-          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
-        },
-        "[26:27]": {
-          "TODO": "Decide if this should be Work or Instance. Compare with Text",
-          "link": "supplementaryContent",
-          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
-        },
-        "[27:28]": {
-          "TODO": "Decide if this should be Work or Instance. Compare with Text",
-          "link": "supplementaryContent",
-          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
-        },
-        "[28:29]": {
-          "TODO": "Decide if this should be Work or Instance. Compare with Text",
-          "link": "supplementaryContent",
-          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
-        },
-        "[29:30]": {
-          "TODO": "Decide if this should be Work or Instance. Compare with Text",
-          "link": "supplementaryContent",
-          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
-        },
-        "[30:31]": {
+        "[30] [31]": {
           "aboutEntity": "?work",
           "link": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}",
+          "matchUriToken": "^[_abcdefghijklmoprst]$",
           "fixedDefault": " "
-        },
-        "[31:32]": {
-          "aboutEntity": "?work",
-          "link": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}"
         },
         "[33:34]": {
           "link": "marc:transposition",
@@ -2978,17 +2777,7 @@
           "link": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsNatureType-{_}"
         },
-        "[25:26]": {
-          "aboutEntity": "?work",
-          "link": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}"
-        },
-        "[26:27]": {
-          "aboutEntity": "?work",
-          "link": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}"
-        },
-        "[27:28]": {
+        "[25] [26] [27]": {
           "aboutEntity": "?work",
           "link": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}"
@@ -3042,27 +2831,7 @@
           "link": "marc:technique",
           "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}"
         },
-        "[23:24]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:matter",
-          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
-        },
-        "[24:25]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:matter",
-          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
-        },
-        "[25:26]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:matter",
-          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
-        },
-        "[26:27]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:matter",
-          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
-        },
-        "[27:28]": {
+        "[23] [24] [25] [26] [27]": {
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
@@ -3107,6 +2876,43 @@
                 "@type": "Text",
                 "genreForm": {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
                 "language": [{"@id": "https://id.kb.se/language/freeng", "code": "freeng"}]
+              }
+            }
+          }
+        },
+        {
+          "name": "handle consecutive columns",
+          "source": [
+            {"008": "900101s1977    sw abcd||e||||000 0aswe| "},
+            {"336": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "just challenging column itemPos"}
+            ]}}
+          ],
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "mainEntity": {
+              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+              "marc:publishedYear":  "1977",
+              "publicationCountry": [{"@id": "https://id.kb.se/country/sw"}],
+              "instanceOf": {
+                "@type": "Text",
+                "language": [{"@id": "https://id.kb.se/language/swe"}],
+                "contentType": [
+                  {"@id": "https://id.kb.se/marc/BooksContentsType-e"},
+                  {
+                    "@type": "ContentType",
+                    "label": "just challenging column itemPos"
+                  }
+                ],
+                "genreForm": [{"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
+                              {"@id": "https://id.kb.se/marc/BooksBiographyType-a"}
+                ],
+                "illustrativeContent": [
+                  {"@id": "https://id.kb.se/marc/BooksIllustrationsType-a"},
+                  {"@id": "https://id.kb.se/marc/BooksIllustrationsType-b"},
+                  {"@id": "https://id.kb.se/marc/BooksIllustrationsType-c"},
+                  {"@id": "https://id.kb.se/marc/BooksIllustrationsType-d"}
+                ]
               }
             }
           }
