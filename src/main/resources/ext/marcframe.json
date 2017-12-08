@@ -6061,7 +6061,7 @@
         "TODO:implement:mergeWithExistingLinkedAtPosition": true
       },
       "pendingResources": {
-        "_:contentType": {"addLink": "contentType", "resourceType": "Class"}
+        "_:contentType": {"addLink": "contentType", "resourceType": "ContentType"}
       },
       "$a": {"about": "_:contentType", "property": "label"},
       "$b": {"about": "_:contentType", "property": "code"},
