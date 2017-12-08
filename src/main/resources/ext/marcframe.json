@@ -274,7 +274,7 @@
       "$o": {"about": "_:work", "property": "version"},
 
       "$r": {"about": "_:work", "property": "musicKey"},
-      "$s": {"about": "_:work", "property": "version"}
+      "$s": {"about": "_:work", "property": "marc:version"}
     },
 
     "titledetailsSansPartNumber": {
@@ -5156,7 +5156,7 @@
                 "marc:nonfilingChars": "0"
               } ],
               "language": {"@type": "Language", "label": "English"},
-              "version": "Selections"
+              "marc:version": "Selections"
             }
           }}
         }
