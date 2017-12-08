@@ -373,7 +373,7 @@
         "punctuationChars": ","
       },
       "$j": {"about": "_:agent", "property": "marc:attributionQualifier"},
-      "$q": {"about": "_:agent", "property": "marc:fullerFormName"},
+      "$q": {"about": "_:agent", "property": "fullerFormOfName"},
       "$u": {"about": "_:agent", "property": "marc:affiliation"}
     },
 
@@ -975,7 +975,7 @@
       },
       "$g": {"about": "_:agent", "addProperty": "comment"},
       "$j": {"about": "_:agent", "property": "marc:attributionQualifier"},
-      "$q": {"about": "_:agent", "property": "marc:fullerFormName"},
+      "$q": {"about": "_:agent", "property": "fullerFormOfName"},
       "$u": {"about": "_:agent", "property": "marc:affiliation"}
     },
 
@@ -11779,7 +11779,7 @@
               "@type": "Person",
               "familyName":  "Eliot",
               "givenName": "T.S.",
-              "marc:fullerFormName": "(Thomas Stearns)",
+              "fullerFormOfName": "(Thomas Stearns)",
               "lifeSpan": "1888-1965"
             }
           }
@@ -12407,8 +12407,10 @@
       "$l": {"addProperty": "label"}
     },
     "378": {
-      "TODO": "Depends on bib 100, 700 and auth 100 $q 'marc:fullerFormName'. See mads:fullNameElement ",
-      "$q": {"addProperty": "marc:fullerFormName"}
+      "link": "marc:hasAuth378",
+      "resourceType": "marc:Auth378",
+      "NOTE:local": "Uppgiften avser personnamn i auktoritetspostens fält 100.",
+      "$q": {"property": "marc:fullerFormOfPersonalName"}
     },
     "380": {
       "addLink": "genreForm",
