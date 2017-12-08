@@ -13708,8 +13708,8 @@
       "addLink": "sourceConsulted",
       "embedded": true,
       "resourceType": "SourceData",
-      "$a": {"property": "label"},
-      "$b": {"property": "citation"},
+      "$a": {"property": "citationSource"},
+      "$b": {"property": "citationNote"},
       "$u": {"property": "uri"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"}
@@ -13718,9 +13718,7 @@
     "673": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "675": {
       "aboutEntity": "?record",
-      "link": "sourceConsulted",
-      "resourceType": "marc:SourceDataNotFound",
-      "$a": {"addProperty": "citationSource"}
+      "$a": {"link": "sourceConsulted", "resourceType": "SourceDataNotFound", "addProperty": "citationSource"}
     },
     "677": {"ignored": true, "NOTE:record-count": 1},
     "678": {"inherit": "bib:545"},
