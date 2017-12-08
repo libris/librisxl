@@ -6665,8 +6665,8 @@
       "$6": {"property": "marc:fieldref"}
     },
     "505": {
-      "TOOO:i1": {},
-      "TOOO:i2": {},
+      "i1": {"marcDefault": "8", "NOTE:LC": "nac"},
+      "i2": {"marcDefault": "", "NOTE:LC": "ignore"},
       "aboutEntity": "?thing",
       "addLink": "tableOfContents",
       "resourceType": "TableOfContents",
