@@ -2727,7 +2727,6 @@
         "[24] [25] [26] [27] [28] [29]": {
           "TODO": "Decide if this should be Work or Instance. Compare with Text",
           "link": "supplementaryContent",
-          "itemPos": 0,
           "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
         },
         "[30] [31]": {
