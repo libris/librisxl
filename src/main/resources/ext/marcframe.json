@@ -11534,6 +11534,10 @@
           "aboutType": "Concept"
         }
       ],
+      "TODO:computeLinks": {
+        "use": "$c",
+        "mapping": {"BroadMatch": "broadMatch", "NarrowMatch": "narrowMatch", "*": "closeMatch"}
+      },
       "i1": {"marcDefault": "0"},
       "i2": {"marcDefault": "4"},
       "$a": {"property": "code", "required": true},
