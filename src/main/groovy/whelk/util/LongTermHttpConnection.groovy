@@ -9,7 +9,7 @@ import javax.net.ssl.SSLSocketFactory
  */
 public class LongTermHttpConnection
 {
-    private final int TIMEOUT_MS = 15000
+    private final int TIMEOUT_MS = 120000
     private int m_responseCode
     private String m_responseData
     private HashMap<String, String> m_responseHeaders
@@ -51,7 +51,7 @@ public class LongTermHttpConnection
                 break // We're done, no need for retries
             } catch (SocketException | IOException se)
             {
-                if (attempts > 2)
+                if (attempts > 5)
                 {
                     throw se
                 }
