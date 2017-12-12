@@ -369,6 +369,8 @@ public class JsonldSerializer
         for (int correctIndex = 0; correctIndex < staticNodeIDs.length; ++correctIndex)
         {
             String soughtID = staticNodeIDs[correctIndex];
+            if (soughtID == null)
+                continue; // For example, there may be no #work in a document
 
             for (int i = 0; i < graphList.size(); ++i)
             {
