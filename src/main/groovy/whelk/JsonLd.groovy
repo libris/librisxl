@@ -30,6 +30,7 @@ public class JsonLd {
     //static final String VALUE_KEY = "@set"
     static final String REVERSE_KEY = "@reverse"
     static final String THING_KEY = "mainEntity"
+    static final String WORK_KEY = "instanceOf"
     static final String RECORD_KEY = "meta"
     static final String CREATED_KEY = "created"
     static final String MODIFIED_KEY = "modified"
