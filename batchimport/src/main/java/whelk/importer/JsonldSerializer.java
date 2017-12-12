@@ -277,38 +277,9 @@ public class JsonldSerializer
     {
         List graphList = (List) map.get("@graph");
 
-        // find the resource (thing) node id. And the list indices for the main node and the thing node
-        String thingId = null;
-        int mainNodeIndex = -1;
-        int thingNodeIndex = -1;
-        for (int i = 0; i < graphList.size(); ++i)
-        {
-            Map objectMap = (Map) graphList.get(i);
-            if (objectMap.containsKey("@id") &&  objectMap.get("@id").equals(Document.getBASE_URI()+mainId))
-            {
-                mainNodeIndex = i;
-                Map thingReference = (Map) objectMap.get(JsonLd.getABOUT_KEY());
-                thingId = (String) thingReference.get("@id");
-            }
-        }
+        String[] staticNodeIDs = getStaticallyPositionedNodeIDs(graphList, mainId); // normally: [fnrl, fnrl#it, fnrl#work]
 
-        for (int i = 0; i < graphList.size(); ++i)
-        {
-            Map objectMap = (Map) graphList.get(i);
-            if (objectMap.containsKey("@id") &&  objectMap.get("@id").equals(thingId))
-                thingNodeIndex = i;
-        }
-
-        // Make sure the main node is at index 0 in the graph list and the thing node at index 1
-        if (mainNodeIndex == 1 && thingNodeIndex == 0)
-            Collections.swap(graphList, 0, 1);
-        else if (mainNodeIndex != -1 && thingNodeIndex != -1)
-        {
-            if (mainNodeIndex != 0)
-                Collections.swap(graphList, 0, mainNodeIndex);
-            if (thingNodeIndex != 1)
-                Collections.swap(graphList, 1, thingNodeIndex);
-        }
+        enforceStaticNodePositioning(staticNodeIDs, graphList);
 
         // Embed and delete root objects where possible
         Iterator it = graphList.iterator();
@@ -319,7 +290,7 @@ public class JsonldSerializer
             {
                 String objectId = (String) objectMap.get("@id");
 
-                if ( objectId.equals(mainId) || objectId.equals(thingId) )
+                if (Arrays.asList(staticNodeIDs).contains(objectId))
                     continue;
 
                 List references = new ArrayList<>();
@@ -350,6 +321,69 @@ public class JsonldSerializer
         JsonLd.getReferencedBNodes(map, referencedBNodes);
 
         JsonLd.cleanUnreferencedBNodeIDs(map, referencedBNodes);
+    }
+
+    /**
+     * Return a string[3] with the IDs of the nodes that need to be in fixed positions.
+     * Normally this will be (in order)
+     * https://libris.kb.se/3j4n5kj34n5k4n
+     * https://libris.kb.se/3j4n5kj34n5k4n#it
+     * https://libris.kb.se/3j4n5kj34n5k4n#work
+     */
+    private static String[] getStaticallyPositionedNodeIDs(List graphList, String mainId)
+    {
+        String[] result = new String[3];
+        result[0] = Document.getBASE_URI()+mainId;
+
+        // find the resource (thing) node id.
+        for (int i = 0; i < graphList.size(); ++i)
+        {
+            Map objectMap = (Map) graphList.get(i);
+            if (objectMap.containsKey("@id") && objectMap.get("@id").equals(result[0]))
+            {
+                Map thingReference = (Map) objectMap.get(JsonLd.getABOUT_KEY());
+                result[1] = (String) thingReference.get("@id");
+            }
+        }
+
+        // find the work node id.
+        for (int i = 0; i < graphList.size(); ++i)
+        {
+            Map objectMap = (Map) graphList.get(i);
+            if (objectMap.containsKey("@id") && objectMap.get("@id").equals(result[1]))
+            {
+                Map workReference = (Map) objectMap.get(JsonLd.getWORK_KEY());
+                result[2] = (String) workReference.get("@id");
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Move object in the provided flat graphList around so that the static nodes are in the correct places
+     * (fnrgl first, #it second, #work third etc).
+     */
+    private static void enforceStaticNodePositioning(String[] staticNodeIDs, List graphList)
+    {
+        for (int correctIndex = 0; correctIndex < staticNodeIDs.length; ++correctIndex)
+        {
+            String soughtID = staticNodeIDs[correctIndex];
+
+            for (int i = 0; i < graphList.size(); ++i)
+            {
+                Map objectMap = (Map) graphList.get(i);
+                if (!objectMap.containsKey("@id"))
+                    continue;
+                String actualNodeID = (String) objectMap.get("@id");
+
+                if (actualNodeID.equals(soughtID))
+                {
+                    if (i != correctIndex)
+                        Collections.swap(graphList, i, correctIndex);
+                }
+            }
+        }
     }
 
     private static void gatherReferences(Map map, String id, List references)
