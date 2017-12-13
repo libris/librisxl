@@ -6640,7 +6640,7 @@
     },
 
     "520": {
-      "aboutEntity": "?thing",
+      "aboutEntity": "?work",
       "addLink": "summary",
       "resourceType": "Summary",
       "i1": {
@@ -6668,16 +6668,19 @@
             {"u": "http://example.org/thing-page"}, {"u": "http://example.org/another-thing-page"}
           ]}},
           "result": {"mainEntity": {
-            "summary": [
-              {
-                "@type": "Summary",
-                "typeNote" : "scopeAndContent",
-                "source": [
-                  {"@type": "Source", "uri": "http://example.org/thing-page"},
-                  {"@type": "Source", "uri": "http://example.org/another-thing-page"}
-                ]
-              }
-            ]
+            "instanceOf": {
+              "@type": "Text",
+              "summary": [
+                {
+                  "@type": "Summary",
+                  "typeNote" : "scopeAndContent",
+                  "source": [
+                    {"@type": "Source", "uri": "http://example.org/thing-page"},
+                    {"@type": "Source", "uri": "http://example.org/another-thing-page"}
+                  ]
+                }
+              ]
+            }
           }}
         },
         {
@@ -6685,12 +6688,15 @@
             {"a": "Dom är tillbaka och den här gången är det full fart från början till slut."}
           ]}},
           "result": {"mainEntity": {
-            "summary": [
-              {
-                "@type": "Summary",
-                "label": "Dom är tillbaka och den här gången är det full fart från början till slut."
-              }
-            ]
+            "instanceOf": {
+              "@type": "Text",
+              "summary": [
+                {
+                  "@type": "Summary",
+                  "label": "Dom är tillbaka och den här gången är det full fart från början till slut."
+                }
+              ]
+            }
           }}
         }
       ]
