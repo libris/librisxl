@@ -353,7 +353,8 @@ public class JsonldSerializer
             if (objectMap.containsKey("@id") && objectMap.get("@id").equals(result[1]))
             {
                 Map workReference = (Map) objectMap.get(JsonLd.getWORK_KEY());
-                result[2] = (String) workReference.get("@id");
+                if (workReference != null)
+                    result[2] = (String) workReference.get("@id");
             }
         }
 
