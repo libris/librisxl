@@ -63,7 +63,6 @@ class ElasticReindexer {
                         "cache hits: ${whelk.cacheHits()}, " +
                         "stale cache reads: ${whelk.cacheStaleCount()} " +
                         "(after ${collection})")
-                System.gc()
             }
             threadPool.joinAll()
             println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
