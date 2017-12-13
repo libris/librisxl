@@ -16,6 +16,7 @@ public class LongTermHttpConnection
     private Socket m_socket
     private int m_port
     private URL m_properUrl
+    byte[] m_buf = new byte[1024*8]
 
     public LongTermHttpConnection(String host)
     {
@@ -84,6 +85,13 @@ public class LongTermHttpConnection
         return Collections.unmodifiableMap(m_responseHeaders)
     }
 
+    public void clearBuffers()
+    {
+        m_responseCode = 0
+        m_responseData = null
+        m_responseHeaders = null
+    }
+
     private Socket createSocket(String protocol, String host, int port)
             throws IOException
     {
@@ -140,7 +148,6 @@ public class LongTermHttpConnection
             throws IOException
     {
         ByteArrayOutputStream completeResponse = new ByteArrayOutputStream()
-        byte[] buf = new byte[1024*8]
 
         int bytesRead = 0
         int totalBytesRead = 0
@@ -148,14 +155,14 @@ public class LongTermHttpConnection
         int headerLength = Integer.MAX_VALUE
         while ( bytesRead != -1 && totalBytesRead < ((long)headerLength + (long)contentLength) )
         {
-            bytesRead = inputStream.read(buf)
+            bytesRead = inputStream.read(m_buf)
             if (bytesRead == -1)
                 continue
 
-            completeResponse.write(buf, 0, bytesRead)
+            completeResponse.write(m_buf, 0, bytesRead)
             totalBytesRead += bytesRead
 
-            //System.out.print( new String(buf, "UTF-8") ) // print all raw http to terminal
+            //System.out.print( new String(m_buf, "UTF-8") ) // print all raw http to terminal
 
             if (headerLength == Integer.MAX_VALUE) // If we haven't parsed all headers yet
             {

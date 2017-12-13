@@ -30,7 +30,7 @@ class ElasticSearch {
 
     static final int DEFAULT_PAGE_SIZE = 50
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
-    static final int CONNECTION_POOL_SIZE = 8
+    static final int CONNECTION_POOL_SIZE = 9
 
     Vector<ConnectionPoolEntry> httpConnectionPool = []
     String defaultIndex = null
@@ -100,6 +100,7 @@ class ElasticSearch {
 
                 httpConnection.sendRequest(path, method, contentType, body, null, null)
                 response = httpConnection.responseData
+                httpConnection.clearBuffers()
 
                 if (backOffTime == 0)
                     backOffTime = 1
