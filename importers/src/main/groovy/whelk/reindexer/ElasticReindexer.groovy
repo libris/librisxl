@@ -15,7 +15,8 @@ class ElasticReindexer {
     static final int BATCH_SIZE = 3000
     Whelk whelk
 
-    final static boolean useDocumentCache = true
+    final static boolean useDocumentCache = false
+
     long startTime
 
     // Abort on unhandled exceptions, including those on worker threads.
