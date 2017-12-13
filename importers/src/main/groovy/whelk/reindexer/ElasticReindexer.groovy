@@ -15,8 +15,6 @@ class ElasticReindexer {
     static final int BATCH_SIZE = 3000
     Whelk whelk
 
-    final static boolean useDocumentCache = false
-
     long startTime
 
     // Abort on unhandled exceptions, including those on worker threads.
@@ -58,12 +56,8 @@ class ElasticReindexer {
                     }
                 }
                 if (documents.size() > 0) {
-                    whelk.elastic.bulkIndex(documents, collection, whelk, useDocumentCache)
+                    whelk.elastic.bulkIndex(documents, collection, whelk)
                 }
-                log.info("Cache size: ${whelk.cacheSize()}, " +
-                        "cache hits: ${whelk.cacheHits()}, " +
-                        "stale cache reads: ${whelk.cacheStaleCount()} " +
-                        "(after ${collection})")
             }
             threadPool.joinAll()
             println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
@@ -84,7 +78,7 @@ class ElasticReindexer {
     private class BatchHandler implements ThreadPool.Worker<Batch> {
         void doWork(Batch batch, int threadIndex) {
             long indexTime = System.currentTimeMillis()
-            whelk.elastic.bulkIndex(batch.documents, batch.collection, whelk, useDocumentCache)
+            whelk.elastic.bulkIndex(batch.documents, batch.collection, whelk)
         }
     }
 }
