@@ -207,7 +207,8 @@ class Whelk {
 
                     if (doc && !doc.deleted) {
                         result[id] = doc
-                        docCache.put(id, doc)
+                        if (useDocumentCache)
+                            docCache.put(id, doc)
                         String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
                         if (collection == "auth" || collection == "definitions"
                                 || collection == null) // TODO: Remove ASAP when mainEntity,@type mappings correctly map to collection again.
