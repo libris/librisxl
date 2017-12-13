@@ -29,13 +29,12 @@ class Whelk {
     String vocabDisplayUri = "https://id.kb.se/vocab/display" // TODO: encapsulate and configure (LXL-260)
     String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
 
-    private DocumentCache docCache
-    private static ConcurrentHashMap<String, Document> authCache
+    private static Map<String, Document> authCache
     private static final int CACHE_MAX_SIZE = 1000
-    private static final int CACHE_LIFETIME_MILLIS = 30000
 
     static {
-        authCache = new ConcurrentHashMap<>( )
+        authCache = Collections.synchronizedMap(
+                new LRUMap<String, Document>(CACHE_MAX_SIZE))
     }
 
     static void putInAuthCache(Document authDocument) {
@@ -61,96 +60,15 @@ class Whelk {
     public Whelk(PostgreSQLComponent pg, ElasticSearch es) {
         this.storage = pg
         this.elastic = es
-        this.docCache = new DocumentCache()
         log.info("Whelk started with storage $storage and index $elastic")
     }
 
     public Whelk(PostgreSQLComponent pg) {
         this.storage = pg
-        this.docCache = new DocumentCache()
         log.info("Whelk started with storage $storage")
     }
 
     public Whelk() {
-        this.docCache = new DocumentCache()
-    }
-
-    private class DocumentCache {
-        private Map cache
-        private int staleCount
-        private int cacheHits
-
-        private class Entry {
-            Document doc
-            long lastAccessed
-
-            Entry(Document doc) {
-                this.doc = doc
-                this.lastAccessed = System.currentTimeMillis()
-            }
-        }
-
-        DocumentCache() {
-            this.cache = Collections.synchronizedMap(
-                new LRUMap<String, Entry>(CACHE_MAX_SIZE))
-            this.staleCount = 0
-            this.cacheHits = 0
-        }
-
-        Document get(String key) {
-            synchronized(cache) {
-                Entry entry = cache[key]
-                if (entry) {
-                    cacheHits += 1
-                    if(isStale(entry)) {
-                        cache.remove(key)
-                        staleCount += 1
-                        return null
-                    } else {
-                        return entry.doc
-                    }
-                } else {
-                    return null
-                }
-            }
-        }
-
-        void put(String key, Document doc) {
-            synchronized(cache) {
-                cache[key] = new Entry(doc)
-            }
-        }
-
-        int getSize() {
-            synchronized(cache) {
-                return cache.size()
-            }
-        }
-
-        int getStaleCount() {
-            return staleCount
-        }
-
-        int getCacheHits() {
-            return cacheHits
-        }
-
-        private boolean isStale(Entry entry) {
-            return (entry.lastAccessed + CACHE_LIFETIME_MILLIS) <
-                   System.currentTimeMillis()
-        }
-    }
-
-    int cacheSize() {
-        return docCache.getSize()
-    }
-
-    int cacheStaleCount() {
-        return docCache.getStaleCount()
-    }
-
-    int cacheHits() {
-        return docCache.getCacheHits()
     }
 
     public static DefaultPicoContainer getPreparedComponentsContainer(Properties properties) {
@@ -180,7 +98,10 @@ class Whelk {
         this.vocabData = this.storage.locate(vocabUri, true).document.data
     }
 
-    Map<String, Document> bulkLoad(List ids, boolean useDocumentCache = false) {
+    //private long hits = 0
+    //private long misses = 0
+
+    Map<String, Document> bulkLoad(List ids) {
         Map result = [:]
         ids.each { id ->
 
@@ -188,32 +109,29 @@ class Whelk {
 
             // Check the auth cache
             if (authCache.containsKey(id)) {
+                /*if (hits++ % 100 == 0)
+                    println("Fetching with cache: $id, Sofar hits: $hits , misses: $misses")*/
                 result[id] = authCache.get(id)
             } else {
 
-                // Check the general purpose cache
-                Document cached = docCache.get(id)
-                if (useDocumentCache && cached) {
-                    result[id] = cached
+                // Fetch from DB
+                if (id.startsWith(Document.BASE_URI.toString())) {
+                    id = Document.BASE_URI.resolve(id).getPath().substring(1)
+                    doc = storage.load(id)
                 } else {
+                    doc = storage.locate(id, true)?.document
+                }
 
-                    // Fetch from DB
-                    if (id.startsWith(Document.BASE_URI.toString())) {
-                        id = Document.BASE_URI.resolve(id).getPath().substring(1)
-                        doc = storage.load(id)
-                    } else {
-                        doc = storage.locate(id, true)?.document
-                    }
+                if (doc && !doc.deleted) {
 
-                    if (doc && !doc.deleted) {
-                        result[id] = doc
-                        if (useDocumentCache)
-                            docCache.put(id, doc)
-                        String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
-                        if (collection == "auth" || collection == "definitions"
-                                || collection == null) // TODO: Remove ASAP when mainEntity,@type mappings correctly map to collection again.
-                            putInAuthCache(doc)
-                    }
+                    /*if (misses++ % 100 == 0)
+                        println("Fetching without cache: $id (${doc.getCompleteId()}), Sofar hits: $hits , misses: $misses")*/
+
+                    result[id] = doc
+                    String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
+                    if (collection == "auth" || collection == "definitions"
+                            || collection == null) // TODO: Remove ASAP when mainEntity,@type mappings correctly map to collection again.
+                        putInAuthCache(doc)
                 }
             }
         }

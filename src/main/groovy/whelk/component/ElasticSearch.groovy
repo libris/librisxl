@@ -114,13 +114,12 @@ class ElasticSearch {
         return response
     }
 
-    void bulkIndex(List<Document> docs, String collection, Whelk whelk,
-	               boolean useDocumentCache = false) {
+    void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
         assert collection
         if (docs) {
             String bulkString = docs.collect{ doc ->
                 String shapedData = JsonOutput.toJson(
-                    getShapeForIndex(doc, whelk, collection, useDocumentCache))
+                    getShapeForIndex(doc, whelk, collection))
                 String action = createActionRow(doc,collection)
                 "${action}\n${shapedData}\n"
             }.join('')
@@ -169,13 +168,12 @@ class ElasticSearch {
                   "objects deleted")
     }
 
-    Map getShapeForIndex(Document document, Whelk whelk, String collection,
-                         boolean useDocumentCache = false) {
+    Map getShapeForIndex(Document document, Whelk whelk, String collection) {
 
         if (!collection.equals("hold")) {
             List externalRefs = document.getExternalRefs()
             List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
-            Map referencedData = whelk.bulkLoad(convertedExternalLinks, useDocumentCache)
+            Map referencedData = whelk.bulkLoad(convertedExternalLinks)
                     .collectEntries { id, doc -> [id, doc.data] }
             whelk.jsonld.embellish(document.data, referencedData, false)
         }
