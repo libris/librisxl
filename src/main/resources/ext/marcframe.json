@@ -12174,10 +12174,7 @@
         }
       ]
     },
-    "375": {
-      "TODO:aboutAlias": "_:agent",
-      "$a": {"property": "gender"}
-    },
+    "375": {"ignored": true, "NOTE:local": "gender: Struket av MSS 2017-12-12 efter diskussion om persondata i biblioteksregister."},
     "376": {
       "aboutType": "Family",
       "$a": {"addLink": "hasTypeOfFamily", "resourceType": "TypeOfFamily", "addProperty": "label"},
