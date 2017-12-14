@@ -16,7 +16,7 @@ public class LongTermHttpConnection
     private Socket m_socket
     private int m_port
     private URL m_properUrl
-    byte[] m_buf = new byte[1024*8]
+    private final byte[] m_buf = new byte[1024*8]
 
     public LongTermHttpConnection(String host)
     {
@@ -52,7 +52,7 @@ public class LongTermHttpConnection
                 break // We're done, no need for retries
             } catch (SocketException | IOException se)
             {
-                if (attempts > 5)
+                if (attempts > 2)
                 {
                     throw se
                 }
@@ -60,6 +60,7 @@ public class LongTermHttpConnection
                 // Close socket and retry with a new connection
                 try { m_socket.close() } catch (Throwable e) { /* ignore */ }
                 m_socket = null
+                m_responseData = null
             }
             ++attempts
         }
