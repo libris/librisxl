@@ -473,7 +473,6 @@
       "include": ["hasWork"],
       "addLink": "hasVersion",
       "resourceType": "Work",
-      "aboutType": "Work",
       "aboutAlias": "_:work",
       "pendingResources": {
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
@@ -549,43 +548,38 @@
 
     "exactMatchPerson": {
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Person"}
+        "_:agent": {"link": "exactMatch", "resourceType": "Person", "required": true}
       },
-      "include": ["agentData"],
-      "aboutType": "Person"
+      "include": ["agentData"]
     },
 
     "exactMatchFamily": {
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Family"}
+        "_:agent": {"link": "exactMatch", "resourceType": "Family", "required": true}
       },
-      "include": ["agentData"],
-      "aboutType": "Family"
+      "include": ["agentData"]
     },
 
     "exactMatchOrganization": {
       "include": ["agentData"],
-      "aboutType": "Organization",
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Organization"},
+        "_:agent": {"link": "exactMatch", "resourceType": "Organization", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
       }
     },
 
     "exactMatchJurisdiction": {
       "include": ["agentData"],
-      "aboutType": "Jurisdiction",
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Jurisdiction"},
+        "_:agent": {"link": "exactMatch", "resourceType": "Jurisdiction", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"}
       }
     },
 
     "exactMatchMeeting": {
       "include": ["agentData"],
-      "aboutType": "Meeting",
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Meeting"},
+        "_:agent": {"link": "exactMatch", "resourceType": "Meeting", "required": true},
         "TODO:_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"}
       }
     },
@@ -716,7 +710,6 @@
     "relatedToData": {
       "addLink": "relatedTo",
       "resourceType": "Work",
-      "aboutType": "Work",
       "aboutAlias": "_:work",
       "pendingResources": {
         "_:title": {
@@ -780,7 +773,6 @@
       "pendingResources": {
         "_:agent": {"link": "hasPersona", "resourceType": "Person", "required": true}
       },
-      "aboutType": "Person",
       "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
     },
 
@@ -788,7 +780,6 @@
       "include": "agentData",
       "addLink": "seeAlso",
       "resourceType": "Organization",
-      "aboutType": "Organization",
       "aboutAlias": "_:agent",
       "pendingResources": {
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
@@ -801,7 +792,6 @@
       "include": "agentData",
       "addLink": "seeAlso",
       "resourceType": "Jurisdiction",
-      "aboutType": "Jurisdiction",
       "aboutAlias": "_:agent",
       "pendingResources": {
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
@@ -814,7 +804,6 @@
       "include": "agentData",
       "addLink": "seeAlso",
       "resourceType": "Meeting",
-      "aboutType": "Meeting",
       "aboutAlias": "_:agent",
       "pendingResources": {
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"},
@@ -10004,15 +9993,15 @@
       "$g": {"addProperty": "part"},
       "$h": {"link": "extent", "resourceType": "Extent", "property": "label"},
       "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
-      "$i": {"addProperty": "linkNote"},
+      "$i": {"addProperty": "marc:displayText"},
       "$k": {"addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
-      "$m": {"property": "mediaNote"},
-      "$n": {"addProperty": "note"},
+      "$m": {"property": "marc:materialSpecificDetails"},
+      "$n": {"addProperty": "marc:note"},
       "$o": {"ignored": true, "NOTE:subfield-count": 0},
       "$r": {"addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value", "TODO:targetMatch": "088"},
-      "$s": {"TODO:property": "mainTitle?", "about": "_:title", "property": "uniformTitle", "TODO:targetMatch": "240"},
-      "$t": {"TODO:property": "title?","about": "_:title", "property": "title", "TODO:targetMatch": "222, 245"},
-      "$u": {"property": "standardTechnicalReportNumber", "TODO:targetMatch": "027"},
+      "$s": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "240"},
+      "$t": {"about": "_:title", "property": "title", "TODO:targetMatch": "222, 245"},
+      "$u": {"addLink": "identifiedBy", "resourceType": "STRN", "property": "value", "TODO:targetMatch": "027"},
       "$w": {
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
         "uriTemplate": "http://libris.kb.se/bib/{_}"
@@ -10021,7 +10010,7 @@
         "TODO:targetMatch": "022",
         "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"
       },
-      "$y": {"property": "coden", "TODO:targetMatch": "030"},
+      "$y": {"addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
       "$z": {
         "TODO:targetMatch": "020",
         "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"
@@ -10046,7 +10035,7 @@
                 "@type": "Work",
                 "hasTitle": [{
                   "@type": "Title",
-                  "uniformTitle": "Main Thing"
+                  "mainTitle": "Main Thing"
                 }],
                 "identifiedBy": [{
                   "@type": "ISBN",
@@ -12298,7 +12287,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Person",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Person",
                 "familyName":  "Singh", "givenName":  "Bhagat",
@@ -12317,7 +12306,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Person",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Person",
                 "name":  "Alexander",
@@ -12335,7 +12324,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Family",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Family",
                 "name":  "Family X"
@@ -12352,7 +12341,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12383,7 +12372,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Person",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Person",
                 "familyName":  "Singh", "givenName":  "Bhagat",
@@ -12400,7 +12389,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12425,7 +12414,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12455,7 +12444,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12546,7 +12535,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Jurisdiction",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Jurisdiction",
                 "marc:subordinateUnit": ["Direction nationale de la santé et des affaires sociales"],
@@ -12570,7 +12559,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12595,7 +12584,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12625,7 +12614,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12655,7 +12644,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12681,7 +12670,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12713,7 +12702,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Jurisdiction",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Jurisdiction",
                 "marc:subordinateUnit": ["Estudios Territoriales, Oficina de"],
@@ -12733,7 +12722,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Organization",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["Europaparlamentet"],
@@ -12766,7 +12755,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Organization",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
@@ -12787,7 +12776,7 @@
           ],
           "FIXME:revert-result": {
             "mainEntity": {
-              "@type": "Organization",
+              "@type": "Concept",
               "exactMatch": [
                 {
                   "@type": "Organization",
@@ -12837,7 +12826,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12864,7 +12853,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Meeting",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Meeting",
                 "name": "International Population Conference",
@@ -12988,10 +12977,9 @@
         {
           "when": "i1=3",
           "pendingResources": {
-            "_:agent": {"link": "seeAlso", "resourceType": "Family"}
+            "_:agent": {"link": "seeAlso", "resourceType": "Family", "required": true}
           },
-          "include": ["agentData", "agentdataFamily"],
-          "aboutType": "Family"
+          "include": ["agentData", "agentdataFamily"]
         },
         {
           "when": null,
@@ -13008,7 +12996,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Family",
+              "@type": "Concept",
               "seeAlso": {
                 "@type": "Family",
                 "name": "Horn Family"
@@ -13024,7 +13012,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Person",
+              "@type": "Concept",
               "hasPersona": {
                 "@type": "Person",
                 "familyName": "Oats",
@@ -13049,7 +13037,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "relatedTo": [
                 {
                   "@type": "Work",
@@ -13082,7 +13070,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "relatedTo": [{
                 "@type": "Work",
                 "contribution": [ {
@@ -13196,7 +13184,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Organization",
+              "@type": "Concept",
               "seeAlso": [{
                 "@type": "Organization",
                 "name": "Oklahoma Council on Juvenile Delinquency",
@@ -13212,7 +13200,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Organization",
+              "@type": "Concept",
               "seeAlso": [{
                 "@type": "Organization",
                 "name": "Five Pieces (reportagegrupp)"}]
@@ -13228,7 +13216,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Jurisdiction",
+              "@type": "Concept",
               "seeAlso": [{
                 "@type": "Jurisdiction",
                 "marc:controlSubfield": "a",
@@ -13277,7 +13265,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Meeting",
+              "@type": "Concept",
               "seeAlso": [{
                 "@type": "Meeting",
                 "marc:controlSubfield" : "a",
@@ -13295,7 +13283,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "relatedTo": [{
                 "@type": "Work",
                 "hasTitle": [{
@@ -13340,7 +13328,6 @@
     },
     "530": {
       "aboutEntity": "?thing",
-      "aboutType": "Agent",
       "link": "relatedTo",
       "include": ["titledetails"],
       "resourceType": "Work",
@@ -13377,7 +13364,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Agent",
+              "@type": "Concept",
               "relatedTo": {
                 "@type": "Work",
                 "hasTitle": [{
