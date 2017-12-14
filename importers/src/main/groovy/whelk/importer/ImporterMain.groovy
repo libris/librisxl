@@ -4,6 +4,7 @@ import whelk.Conversiontester
 import whelk.ElasticConfigGenerator
 import whelk.actors.FileDumper
 import whelk.actors.StatsMaker
+import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 
 import java.lang.annotation.*
@@ -146,7 +147,14 @@ class ImporterMain {
 
     @Command(args='[COLLECTION]')
     void reindex(String collection=null) {
-        def reindex = pico.getComponent(ElasticReindexer)
+        PostgreSQLComponent postgreSqlComponent =
+                new PostgreSQLComponent(props.getProperty("sqlUrl"), props.getProperty("sqlMaintable"), false)
+        ElasticSearch elasticSearch = new ElasticSearch(
+                props.getProperty("elasticHost"),
+                props.getProperty("elasticCluster"),
+                props.getProperty("elasticIndex"))
+        Whelk whelk = new Whelk(postgreSqlComponent, elasticSearch)
+        def reindex = new ElasticReindexer(whelk)
         reindex.reindex(collection)
     }
 
