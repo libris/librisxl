@@ -2565,7 +2565,7 @@
         },
         "[24] [25] [26] [27]": {
           "aboutEntity": "?work",
-          "addLink": "contentType",
+          "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
         },
         "[28:29]": {
