@@ -13328,7 +13328,6 @@
     },
     "530": {
       "aboutEntity": "?thing",
-      "aboutType": "Agent",
       "link": "relatedTo",
       "include": ["titledetails"],
       "resourceType": "Work",
@@ -13365,7 +13364,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Agent",
+              "@type": "Concept",
               "relatedTo": {
                 "@type": "Work",
                 "hasTitle": [{
