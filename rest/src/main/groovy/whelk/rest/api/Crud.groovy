@@ -49,6 +49,7 @@ class Crud extends HttpServlet {
 
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
     final static String DOCBASE_URI = "http://libris.kb.se/" // TODO: encapsulate and configure (LXL-260)
+    final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
 
     static final Counter requests = Counter.build()
         .name("api_requests_total").help("Total requests to API.")
@@ -901,10 +902,14 @@ class Crud extends HttpServlet {
                           boolean isUpdate, String httpMethod) {
         try {
             if (doc) {
+                String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
 
                 if (isUpdate) {
-                    whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", null, collection, false, {
+                    whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", activeSigel, collection, false, {
                         Document _doc ->
+                            log.warn("If-Match: ${request.getHeader('If-Match')}")
+                            log.warn("Modified: ${_doc.modified}")
+
                             if (_doc.modified as String != request.getHeader("If-Match")) {
                                 log.debug("PUT performed on stale document.")
 
@@ -920,7 +925,7 @@ class Crud extends HttpServlet {
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
-                    doc = whelk.createDocument(doc, "xl", null, collection, false)
+                    doc = whelk.createDocument(doc, "xl", activeSigel, collection, false)
                 }
 
                 log.debug("Saving document (${doc.getShortId()})")
@@ -1122,7 +1127,8 @@ class Crud extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "This record may not be deleted, because it is referenced by other records.")
             } else {
                 log.debug("Removing resource at ${doc.getShortId()}")
-                whelk.remove(doc.getShortId(), "xl", null, LegacyIntegrationTools.determineLegacyCollection(doc, jsonld))
+                String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
+                whelk.remove(doc.getShortId(), "xl", activeSigel, LegacyIntegrationTools.determineLegacyCollection(doc, jsonld))
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
         } catch (ModelValidationException mve) {

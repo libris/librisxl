@@ -24,6 +24,7 @@ import java.util.*;
 public class AuthenticationFilter implements Filter {
 
     private static final ObjectMapper mapper = new ObjectMapper();
+    private static final String XL_ACTIVE_SIGEL_HEADER = "XL-Active-Sigel";
     private List<String> supportedMethods;
     private boolean mockAuthMode = false;
     private String url = null;
@@ -74,7 +75,12 @@ public class AuthenticationFilter implements Filter {
                 }
 
                 if (!isExpired(result.get("expires_at").toString())) {
-                    request.setAttribute("user", result.get("user"));
+                    HashMap user = (HashMap) result.get("user");
+                    String activeSigel = httpRequest.getHeader(XL_ACTIVE_SIGEL_HEADER);
+                    if (activeSigel != null) {
+                        user.put("active_sigel", activeSigel);
+                    }
+                    request.setAttribute("user", user);
                     chain.doFilter(request, response);
                 }else {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED);
