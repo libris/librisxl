@@ -780,7 +780,6 @@
       "include": "agentData",
       "addLink": "seeAlso",
       "resourceType": "Organization",
-      "aboutType": "Organization",
       "aboutAlias": "_:agent",
       "pendingResources": {
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
@@ -793,7 +792,6 @@
       "include": "agentData",
       "addLink": "seeAlso",
       "resourceType": "Jurisdiction",
-      "aboutType": "Jurisdiction",
       "aboutAlias": "_:agent",
       "pendingResources": {
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
@@ -806,7 +804,6 @@
       "include": "agentData",
       "addLink": "seeAlso",
       "resourceType": "Meeting",
-      "aboutType": "Meeting",
       "aboutAlias": "_:agent",
       "pendingResources": {
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"},
@@ -12980,10 +12977,9 @@
         {
           "when": "i1=3",
           "pendingResources": {
-            "_:agent": {"link": "seeAlso", "resourceType": "Family"}
+            "_:agent": {"link": "seeAlso", "resourceType": "Family", "required": true}
           },
-          "include": ["agentData", "agentdataFamily"],
-          "aboutType": "Family"
+          "include": ["agentData", "agentdataFamily"]
         },
         {
           "when": null,
@@ -13000,7 +12996,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Family",
+              "@type": "Concept",
               "seeAlso": {
                 "@type": "Family",
                 "name": "Horn Family"
@@ -13188,7 +13184,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Organization",
+              "@type": "Concept",
               "seeAlso": [{
                 "@type": "Organization",
                 "name": "Oklahoma Council on Juvenile Delinquency",
@@ -13204,7 +13200,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Organization",
+              "@type": "Concept",
               "seeAlso": [{
                 "@type": "Organization",
                 "name": "Five Pieces (reportagegrupp)"}]
@@ -13220,7 +13216,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Jurisdiction",
+              "@type": "Concept",
               "seeAlso": [{
                 "@type": "Jurisdiction",
                 "marc:controlSubfield": "a",
@@ -13269,7 +13265,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Meeting",
+              "@type": "Concept",
               "seeAlso": [{
                 "@type": "Meeting",
                 "marc:controlSubfield" : "a",
