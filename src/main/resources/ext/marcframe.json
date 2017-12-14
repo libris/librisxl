@@ -10003,15 +10003,15 @@
       "$g": {"addProperty": "part"},
       "$h": {"link": "extent", "resourceType": "Extent", "property": "label"},
       "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
-      "$i": {"addProperty": "linkNote"},
+      "$i": {"addProperty": "marc:displayText"},
       "$k": {"addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
-      "$m": {"property": "mediaNote"},
-      "$n": {"addProperty": "note"},
+      "$m": {"property": "marc:materialSpecificDetails"},
+      "$n": {"addProperty": "marc:note"},
       "$o": {"ignored": true, "NOTE:subfield-count": 0},
       "$r": {"addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value", "TODO:targetMatch": "088"},
-      "$s": {"TODO:property": "mainTitle?", "about": "_:title", "property": "uniformTitle", "TODO:targetMatch": "240"},
-      "$t": {"TODO:property": "title?","about": "_:title", "property": "title", "TODO:targetMatch": "222, 245"},
-      "$u": {"property": "standardTechnicalReportNumber", "TODO:targetMatch": "027"},
+      "$s": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "240"},
+      "$t": {"about": "_:title", "property": "title", "TODO:targetMatch": "222, 245"},
+      "$u": {"addLink": "identifiedBy", "resourceType": "STRN", "property": "value", "TODO:targetMatch": "027"},
       "$w": {
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
         "uriTemplate": "http://libris.kb.se/bib/{_}"
@@ -10020,7 +10020,7 @@
         "TODO:targetMatch": "022",
         "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"
       },
-      "$y": {"property": "coden", "TODO:targetMatch": "030"},
+      "$y": {"addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
       "$z": {
         "TODO:targetMatch": "020",
         "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"
@@ -10045,7 +10045,7 @@
                 "@type": "Work",
                 "hasTitle": [{
                   "@type": "Title",
-                  "uniformTitle": "Main Thing"
+                  "mainTitle": "Main Thing"
                 }],
                 "identifiedBy": [{
                   "@type": "ISBN",
