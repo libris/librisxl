@@ -499,11 +499,7 @@ class PostgreSQLComponent {
             } else {
                 throw psqle
             }
-        } catch (whelk.importer.XL.TooHighEncodingLevelException e) {
-            connection.rollback()
-            throw e
         } catch (Exception e) {
-            log.error(e.getClass().getCanonicalName()) //KP
             log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
             throw e
