@@ -548,43 +548,38 @@
 
     "exactMatchPerson": {
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Person"}
+        "_:agent": {"link": "exactMatch", "resourceType": "Person", "required": true}
       },
-      "include": ["agentData"],
-      "aboutType": "Person"
+      "include": ["agentData"]
     },
 
     "exactMatchFamily": {
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Family"}
+        "_:agent": {"link": "exactMatch", "resourceType": "Family", "required": true}
       },
-      "include": ["agentData"],
-      "aboutType": "Family"
+      "include": ["agentData"]
     },
 
     "exactMatchOrganization": {
       "include": ["agentData"],
-      "aboutType": "Organization",
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Organization"},
+        "_:agent": {"link": "exactMatch", "resourceType": "Organization", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
       }
     },
 
     "exactMatchJurisdiction": {
       "include": ["agentData"],
-      "aboutType": "Jurisdiction",
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Jurisdiction"},
+        "_:agent": {"link": "exactMatch", "resourceType": "Jurisdiction", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"}
       }
     },
 
     "exactMatchMeeting": {
       "include": ["agentData"],
-      "aboutType": "Meeting",
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Meeting"},
+        "_:agent": {"link": "exactMatch", "resourceType": "Meeting", "required": true},
         "TODO:_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"}
       }
     },
@@ -12297,7 +12292,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Person",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Person",
                 "familyName":  "Singh", "givenName":  "Bhagat",
@@ -12316,7 +12311,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Person",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Person",
                 "name":  "Alexander",
@@ -12334,7 +12329,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Family",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Family",
                 "name":  "Family X"
@@ -12382,7 +12377,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Person",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Person",
                 "familyName":  "Singh", "givenName":  "Bhagat",
@@ -12545,7 +12540,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Jurisdiction",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Jurisdiction",
                 "marc:subordinateUnit": ["Direction nationale de la santé et des affaires sociales"],
@@ -12712,7 +12707,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Jurisdiction",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Jurisdiction",
                 "marc:subordinateUnit": ["Estudios Territoriales, Oficina de"],
@@ -12732,7 +12727,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Organization",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["Europaparlamentet"],
@@ -12765,7 +12760,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Organization",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
@@ -12786,7 +12781,7 @@
           ],
           "FIXME:revert-result": {
             "mainEntity": {
-              "@type": "Organization",
+              "@type": "Concept",
               "exactMatch": [
                 {
                   "@type": "Organization",
@@ -12863,7 +12858,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Meeting",
+              "@type": "Concept",
               "exactMatch": {
                 "@type": "Meeting",
                 "name": "International Population Conference",
