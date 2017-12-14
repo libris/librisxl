@@ -710,7 +710,6 @@
     "relatedToData": {
       "addLink": "relatedTo",
       "resourceType": "Work",
-      "aboutType": "Work",
       "aboutAlias": "_:work",
       "pendingResources": {
         "_:title": {
@@ -13043,7 +13042,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "relatedTo": [
                 {
                   "@type": "Work",
@@ -13076,7 +13075,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "relatedTo": [{
                 "@type": "Work",
                 "contribution": [ {
@@ -13289,7 +13288,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "relatedTo": [{
                 "@type": "Work",
                 "hasTitle": [{
