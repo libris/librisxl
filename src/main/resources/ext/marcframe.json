@@ -473,7 +473,6 @@
       "include": ["hasWork"],
       "addLink": "hasVersion",
       "resourceType": "Work",
-      "aboutType": "Work",
       "aboutAlias": "_:work",
       "pendingResources": {
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
@@ -12352,7 +12351,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12400,7 +12399,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12425,7 +12424,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12455,7 +12454,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12570,7 +12569,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12595,7 +12594,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12625,7 +12624,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12655,7 +12654,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12681,7 +12680,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
@@ -12837,7 +12836,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Work",
+              "@type": "Concept",
               "hasVersion": [
                 {
                   "@type": "Work",
