@@ -773,7 +773,6 @@
       "pendingResources": {
         "_:agent": {"link": "hasPersona", "resourceType": "Person", "required": true}
       },
-      "aboutType": "Person",
       "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
     },
 
@@ -13017,7 +13016,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Person",
+              "@type": "Concept",
               "hasPersona": {
                 "@type": "Person",
                 "familyName": "Oats",
