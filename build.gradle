@@ -54,7 +54,6 @@ repositories {
 
 dependencies {
     def groovyVersion=GroovySystem.getVersion()
-    compile 'org.elasticsearch.client:rest:5.4.1'
 
     // KB tools
     compile 'com.github.libris:jmarctools:bb97de39cb41e7455ecb29af0ed5f27f2e9cc797'
