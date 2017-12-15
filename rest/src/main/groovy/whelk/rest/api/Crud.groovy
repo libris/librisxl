@@ -49,6 +49,8 @@ class Crud extends HttpServlet {
 
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
     final static String DOCBASE_URI = "http://libris.kb.se/" // TODO: encapsulate and configure (LXL-260)
+    final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
+    final static String EPOCH_START = '1970/1/1'
 
     static final Counter requests = Counter.build()
         .name("api_requests_total").help("Total requests to API.")
@@ -182,14 +184,14 @@ class Crud extends HttpServlet {
         def marcframePath = "/sys/marcframe.json"
         if (request.pathInfo == marcframePath) {
             def responseBody = getClass().classLoader.getResourceAsStream("ext/marcframe.json").getText("utf-8")
-            sendGetResponse(request, response, responseBody, "1970/1/1", marcframePath, "application/json")
+            sendGetResponse(request, response, responseBody, EPOCH_START, marcframePath, "application/json")
             return
         }
 
         def forcedsetPath = "/sys/forcedsetterms.json"
         if (request.pathInfo == forcedsetPath) {
             String responseBody = mapper.writeValueAsString(jsonld.forcedSetTerms)
-            sendGetResponse(request, response, responseBody, "1970/1/1", forcedsetPath, "application/json")
+            sendGetResponse(request, response, responseBody, EPOCH_START, forcedsetPath, "application/json")
             return
         }
 
@@ -563,8 +565,12 @@ class Crud extends HttpServlet {
 
         String etag = modified
 
-        response.setHeader("ETag", etag)
-        response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
+        if (etag == EPOCH_START) {
+            // For some resources, we want to set the etag to when the system was started
+            response.setHeader("ETag", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
+        } else {
+            response.setHeader("ETag", etag)
+        }
 
         if (path in contextHeaders.collect { it.value }) {
             log.debug("request is for context file. " +
@@ -901,10 +907,14 @@ class Crud extends HttpServlet {
                           boolean isUpdate, String httpMethod) {
         try {
             if (doc) {
+                String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
 
                 if (isUpdate) {
-                    whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", null, collection, false, {
+                    whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", activeSigel, collection, false, {
                         Document _doc ->
+                            log.warn("If-Match: ${request.getHeader('If-Match')}")
+                            log.warn("Modified: ${_doc.modified}")
+
                             if (_doc.modified as String != request.getHeader("If-Match")) {
                                 log.debug("PUT performed on stale document.")
 
@@ -920,7 +930,7 @@ class Crud extends HttpServlet {
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
-                    doc = whelk.createDocument(doc, "xl", null, collection, false)
+                    doc = whelk.createDocument(doc, "xl", activeSigel, collection, false)
                 }
 
                 log.debug("Saving document (${doc.getShortId()})")
@@ -1122,7 +1132,8 @@ class Crud extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "This record may not be deleted, because it is referenced by other records.")
             } else {
                 log.debug("Removing resource at ${doc.getShortId()}")
-                whelk.remove(doc.getShortId(), "xl", null, LegacyIntegrationTools.determineLegacyCollection(doc, jsonld))
+                String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
+                whelk.remove(doc.getShortId(), "xl", activeSigel, LegacyIntegrationTools.determineLegacyCollection(doc, jsonld))
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
         } catch (ModelValidationException mve) {
