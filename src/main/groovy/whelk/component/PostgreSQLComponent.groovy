@@ -20,6 +20,7 @@ import whelk.IdType
 import whelk.JsonLd
 import whelk.Location
 import whelk.exception.StorageCreateFailedException
+import whelk.exception.TooHighEncodingLevelException
 import whelk.filter.LinkFinder
 import whelk.util.URIWrapper
 
@@ -505,6 +506,9 @@ class PostgreSQLComponent {
             } else {
                 throw psqle
             }
+        } catch (TooHighEncodingLevelException e) {
+            connection.rollback() // KP Not needed?
+            throw e
         } catch (Exception e) {
             log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
