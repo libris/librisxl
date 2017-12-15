@@ -36,6 +36,8 @@ class PostgreSQLComponent {
         public void update(Document doc)
     }
 
+    private class TooHighEncodingLevelException extends RuntimeException {} //KP
+
     private BasicDataSource connectionPool
     static String driverClass = "org.postgresql.Driver"
 
@@ -499,6 +501,9 @@ class PostgreSQLComponent {
             } else {
                 throw psqle
             }
+        } catch (TooHighEncodingLevelException e) {
+            connection.rollback() // KP Not needed
+            throw e
         } catch (Exception e) {
             log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
