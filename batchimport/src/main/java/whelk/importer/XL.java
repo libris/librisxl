@@ -12,6 +12,7 @@ import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
+import whelk.exception.TooHighEncodingLevelException;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.PropertyLoader;
 
@@ -537,5 +538,5 @@ class XL
         return ids;
     }
 
-    private class TooHighEncodingLevelException extends RuntimeException {}
+    //private class TooHighEncodingLevelException extends RuntimeException {}
 }
