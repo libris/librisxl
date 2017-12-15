@@ -1837,12 +1837,6 @@ class PostgreSQLComponent {
      */
     private class ConnectionMethodInterceptor implements InvocationHandler {
         private final Object wrappedInstance
-
-        // The fact that the invoke method is now synchronized should effectively turn all
-        // Connection methods thread safe even without using the additional boolean
-        // to check isClosed(). But the boolean is used as well in case I've misunderstood
-        // how the JVM handles methods and reflection (or in case it changes in the future).
-        // "Hängslen och livrem".
         private AtomicBoolean wrappedConnectionIsClosed = new AtomicBoolean(false)
 
         public ConnectionMethodInterceptor(Object wrappedInstance) {
@@ -1850,7 +1844,7 @@ class PostgreSQLComponent {
         }
 
         @Override
-        public synchronized Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
             if (method.getName().equals("close")) {
                 Object result = method.invoke(wrappedInstance, args)
