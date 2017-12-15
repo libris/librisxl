@@ -15,6 +15,7 @@ import whelk.converter.marc.MarcFrameConverter;
 import whelk.exception.TooHighEncodingLevelException;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.PropertyLoader;
+import whelk.triples.*;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

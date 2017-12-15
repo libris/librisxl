@@ -5,6 +5,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
+import whelk.triples.*;
 
 public class CliEnrich
 {

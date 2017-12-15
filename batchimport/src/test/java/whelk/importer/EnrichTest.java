@@ -6,6 +6,7 @@ import org.junit.*;
 
 import java.io.IOException;
 import java.util.*;
+import whelk.triples.*;
 
 @SuppressWarnings("unchecked")
 public class EnrichTest
