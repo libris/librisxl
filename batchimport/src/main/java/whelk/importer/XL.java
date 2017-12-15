@@ -246,7 +246,8 @@ class XL
         originalGraph.enrichWith(withGraph, specialRules);
 
         Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), m_forcedSetTerms);
-        JsonldSerializer.normalize(enrichedData, mutableDocument.getShortId());
+        boolean deleteUnreferencedData = true;
+        JsonldSerializer.normalize(enrichedData, mutableDocument.getShortId(), deleteUnreferencedData);
         mutableDocument.data = enrichedData;
     }
 

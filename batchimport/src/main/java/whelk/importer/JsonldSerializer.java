@@ -273,7 +273,7 @@ public class JsonldSerializer
     /**
      * Assumes the provided jsonld to be flat.
      */
-    public static void normalize(Map map, String mainId)
+    public static void normalize(Map map, String mainId, boolean deleteUnreferencedData)
     {
         List graphList = (List) map.get("@graph");
 
@@ -310,7 +310,8 @@ public class JsonldSerializer
                     // If an object is not the root object (record-object) and there are _no_ references to it
                     // (it's been orphaned in the graph) it is semantically meaningless. Clean it up.
                     // This can happen if the special rules are used (PREFER_* in particular)
-                    it.remove();
+                    if (deleteUnreferencedData)
+                        it.remove();
                 }
             }
         }

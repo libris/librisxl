@@ -185,20 +185,13 @@ public class Graph
         int currentHighestBNodeID = 0;
         for (String subject : m_edgesFromId.keySet())
         {
-            List<String[]> edges = m_edgesFromId.get(subject);
-            for (String[] edge: edges)
+            try
             {
-                String predicate = edge[0];
-                String object = edge[1];
-
-                try
-                {
-                    int bnodeNumber = Integer.parseInt(subject.substring( JsonldSerializer.BLANKNODE_PREFIX.length() ));
-                    if (bnodeNumber >= currentHighestBNodeID)
-                        currentHighestBNodeID = bnodeNumber;
-                }
-                catch (Exception e) { /* ignore */ }
+                int bnodeNumber = Integer.parseInt(subject.substring( JsonldSerializer.BLANKNODE_PREFIX.length() ));
+                if (bnodeNumber >= currentHighestBNodeID)
+                    currentHighestBNodeID = bnodeNumber;
             }
+            catch (Exception e) { /* ignore */ }
         }
         return  currentHighestBNodeID;
     }

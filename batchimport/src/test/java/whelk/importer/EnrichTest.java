@@ -33,7 +33,8 @@ public class EnrichTest
         originalGraph.enrichWith(otherGraph, specialRules);
 
         Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), new HashSet<>());
-        JsonldSerializer.normalize(enrichedData, MAIN_ID);
+        boolean deleteUnreferencedData = false;
+        JsonldSerializer.normalize(enrichedData, MAIN_ID, deleteUnreferencedData);
 
         if ( ! rdfEquals( enrichedData, expectedResultData ) )
         {
