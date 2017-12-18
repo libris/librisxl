@@ -135,7 +135,7 @@ class PostgreSQLComponent {
             connectionPool.setDriverClassName(driverClass)
             connectionPool.setUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
             // Remove the password part from the url or it won't be able to connect
-            connectionPool.setInitialSize(10)
+            connectionPool.setInitialSize(1)
             connectionPool.setMaxTotal(MAX_CONNECTION_COUNT)
             connectionPool.setDefaultAutoCommit(true)
         }

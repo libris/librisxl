@@ -17,6 +17,7 @@ public class LongTermHttpConnection
     private int m_port
     private URL m_properUrl
     private final byte[] m_buf = new byte[1024*8]
+    private ByteArrayOutputStream m_completeResponse
 
     public LongTermHttpConnection(String host)
     {
@@ -54,6 +55,7 @@ public class LongTermHttpConnection
             {
                 if (attempts > 2)
                 {
+                    println("Failed to receive response, contents of response buffer so far:\n" + m_completeResponse.toString("UTF-8").toLowerCase() + "[ENDOFBUFFER]")
                     throw se
                 }
 
@@ -91,6 +93,7 @@ public class LongTermHttpConnection
         m_responseCode = 0
         m_responseData = null
         m_responseHeaders = null
+        m_completeResponse = null
     }
 
     private Socket createSocket(String protocol, String host, int port)
@@ -148,7 +151,7 @@ public class LongTermHttpConnection
     private void readResponse(InputStream inputStream)
             throws IOException
     {
-        ByteArrayOutputStream completeResponse = new ByteArrayOutputStream()
+        m_completeResponse = new ByteArrayOutputStream()
 
         int bytesRead = 0
         int totalBytesRead = 0
@@ -160,14 +163,14 @@ public class LongTermHttpConnection
             if (bytesRead == -1)
                 continue
 
-            completeResponse.write(m_buf, 0, bytesRead)
+            m_completeResponse.write(m_buf, 0, bytesRead)
             totalBytesRead += bytesRead
 
             //System.out.print( new String(m_buf, "UTF-8") ) // print all raw http to terminal
 
             if (headerLength == Integer.MAX_VALUE) // If we haven't parsed all headers yet
             {
-                String responseText = completeResponse.toString("UTF-8").toLowerCase()
+                String responseText = m_completeResponse.toString("UTF-8").toLowerCase()
                 int contentLengthHeaderBeginsAt
                 if ( (contentLengthHeaderBeginsAt = responseText.indexOf("content-length:")) != -1)
                 {
@@ -195,7 +198,7 @@ public class LongTermHttpConnection
         }
 
         // Response completely retrieved.
-        String responseText = completeResponse.toString("UTF-8")
+        String responseText = m_completeResponse.toString("UTF-8")
         processCompleteResponse(responseText)
     }
 
