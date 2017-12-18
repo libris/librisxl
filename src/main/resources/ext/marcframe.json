@@ -6087,7 +6087,7 @@
     "355": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "357": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "362": {
-      "TOOO:i1": {},
+      "i1": {"marcDefault": "0"},
       "aboutEntity": "?thing",
       "$a": {"addProperty": "issueNumber"},
       "$6": {"property": "marc:fieldref"}
