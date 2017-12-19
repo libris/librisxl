@@ -1036,6 +1036,22 @@
 
     "classification-ddc": {
       "NOTE:resourceType": "ClassificationDdc",
+      "match": [
+        {
+          "when": "i1=0 & $2 =~ ^full$",
+          "$2": {"property": "edition"}
+        },
+        {
+          "when": "i1=1 & $2 =~ ^abridged$",
+          "$2": {"property": "edition"}
+        },
+        {
+          "NOTE": "Given a $2, ignore i1 on convert and set i1=7 on revert",
+          "when": "$2",
+          "i1": {"marcDefault": "7"},
+          "$2": {"property": "edition"}
+        }
+      ],
       "i1": {
         "property": "edition",
         "tokenMap": {
@@ -3879,9 +3895,9 @@
       "aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "ClassificationDdc",
-      "include": ["classification-ddc"],
       "match": [
         {
+          "include": ["classification-ddc"],
           "when": "i2=4 & $q",
           "$q": {
             "requires-i2": "4",
@@ -3889,6 +3905,10 @@
             "resourceType": "Source",
             "property": "label"
           }
+        },
+        {
+          "when": null,
+          "include": ["classification-ddc"]
         }
       ],
       "i2": {
@@ -3997,6 +4017,79 @@
             }
           }}
         }
+      ],
+      "_spec": [
+        {
+          "source": {
+            "082": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "344.485074"}
+            ]}},
+          "normalized": {
+            "082": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "344.485074"},
+              {"2": "abridged"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "edition": "abridged",
+                  "code": "344.485074"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "082": {"ind1": "7", "ind2": " ", "subfields": [
+              {"a": "344.485074"},
+              {"2": "abridged"}
+            ]}},
+          "normalized": {
+            "082": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "344.485074"},
+              {"2": "abridged"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "edition": "abridged",
+                  "code": "344.485074"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "082": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "344.485074"},
+              {"2": "23/swe"}
+            ]}},
+          "normalized": {
+            "082": {"ind1": "7", "ind2": " ", "subfields": [
+              {"a": "344.485074"},
+              {"2": "23/swe"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "edition": "23/swe",
+                  "code": "344.485074"
+                }
+              ]
+            }
+          }}
+        }
       ]
     },
     "083": {
@@ -4015,6 +4108,11 @@
           "source": {
             "083": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "158.1"}
+            ]}},
+          "normalized": {
+            "083": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "158.1"},
+              {"2": "full"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
