@@ -112,7 +112,6 @@ dependencies {
     // Integration
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile 'com.vividsolutions:jts:1.13'
-    compile 'org.picocontainer:picocontainer:2.15'
     /* Not needed?
     compile 'com.thoughtworks.paranamer:paranamer:2.7'
     compile 'asm:asm:3.3.1'
