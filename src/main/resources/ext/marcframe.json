@@ -5030,7 +5030,7 @@
         "TODO:if _": "use $i",
         "tokenMap": {
           " ": "VariantTitle",
-          "0": "TitlePart",
+          "0": "TitlePortion",
           "1": "ParallelTitle",
           "2": "DistinctiveTitle",
           "3": "marc:OtherTitle",
