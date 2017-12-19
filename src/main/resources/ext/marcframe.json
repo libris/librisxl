@@ -1116,7 +1116,7 @@
         "itemPos": "rest",
         "property": "prefLabel"},
       "$x": {"addLink": "termComponentList",
-        "resourceType": "Subdivision",
+        "resourceType": "TopicSubdivision",
         "itemPos": "rest",
         "property": "prefLabel"},
       "$y": {"addLink": "termComponentList",
@@ -7461,7 +7461,7 @@
                       "name": "Butler family."
                     },
                     {
-                      "@type" : "Subdivision",
+                      "@type" : "TopicSubdivision",
                       "prefLabel" : "Health"
                     }
                   ],
@@ -7496,7 +7496,7 @@
                       "givenName": "Andy",
                       "marc:titlesAndOtherWordsAssociatedWithAName": ["(Composer)"]
                     },
-                    {"@type" : "Subdivision", "prefLabel" : "Travel"},
+                    {"@type" : "TopicSubdivision", "prefLabel" : "Travel"},
                     {"@type" : "Geographic", "prefLabel" : "Morocco"},
                     {"@type" : "Geographic", "prefLabel" : "Marrakech"}
                   ],
@@ -7538,8 +7538,8 @@
                       "givenName" : "Y. B.",
                       "lifeSpan": "1929-1999"
                     },
-                    {"@type" : "Subdivision", "prefLabel" : "Criticism and interpretation"},
-                    {"@type" : "Subdivision", "prefLabel" : "History"},
+                    {"@type" : "TopicSubdivision", "prefLabel" : "Criticism and interpretation"},
+                    {"@type" : "TopicSubdivision", "prefLabel" : "History"},
                     {"@type" : "Temporal", "prefLabel" : "21st century."}
                   ],
                   "inScheme": {
@@ -7728,7 +7728,7 @@
                     "name" : "Kungl. biblioteket"},
                   "termComponentList": [
                     {"@type": "Organization", "name": "Kungl. biblioteket"},
-                    {"@type": "Subdivision", "prefLabel": "samlingar"}
+                    {"@type": "TopicSubdivision", "prefLabel": "samlingar"}
                   ],
                   "prefLabel" : "samlingar",
                   "inScheme": {
@@ -8440,7 +8440,7 @@
                       "prefLabel": "Aix-en-Provence (France)"
                     },
                     {
-                      "@type": "Subdivision",
+                      "@type": "TopicSubdivision",
                       "prefLabel": "Social life and customs"
                     },
                     {
@@ -12099,7 +12099,7 @@
                   "prefLabel": "Barn"
                 },
                 {
-                  "@type": "Subdivision",
+                  "@type": "TopicSubdivision",
                   "prefLabel": "psykologi"
                 }
               ]
@@ -12129,7 +12129,7 @@
 
     "180" : {
       "include": "termid",
-      "aboutType": "Subdivision",
+      "aboutType": "TopicSubdivision",
       "$x": {"property": "prefLabel"}
     },
     "181" : {
@@ -13555,7 +13555,7 @@
     "562": {"ignored": true, "NOTE:record-count": 0},
     "580": {
       "include": ["relation_from_w"],
-      "resourceType": "Subdivision",
+      "resourceType": "TopicSubdivision",
       "$x": {"property": "prefLabel"}
     },
     "581": {"ignored": true, "NOTE:record-count": 0},
