@@ -5041,7 +5041,7 @@
           "8": "SpineTitle"
         }
       },
-      "$f": {"property": "date"},
+      "$f": {"property": "coverage"},
       "$g": {"property": "comment"},
       "$h": {"property": "marc:mediaTerm", "surroundingChars": "[]"},
       "$i": {"property": "typeNote"},
