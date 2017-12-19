@@ -83,7 +83,6 @@ dependencies {
     compile 'org.apache.commons:commons-dbcp2:2.0.1'
     // Integration
     compile 'mysql:mysql-connector-java:5.1.33'
-    compile 'org.picocontainer:picocontainer:2.15'
     compile 'org.codehaus.gpars:gpars:1.2.1'
 
     // metrics
