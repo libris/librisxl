@@ -2,6 +2,12 @@ package whelk.component
 
 import groovy.transform.Canonical
 import groovy.transform.CompileStatic
+
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
+import java.util.concurrent.atomic.AtomicBoolean
+
 import static groovy.transform.TypeCheckingMode.SKIP
 import groovy.util.logging.Log4j2 as Log
 import groovy.json.StringEscapeUtils
@@ -14,6 +20,7 @@ import whelk.IdType
 import whelk.JsonLd
 import whelk.Location
 import whelk.exception.StorageCreateFailedException
+import whelk.exception.TooHighEncodingLevelException
 import whelk.filter.LinkFinder
 import whelk.util.URIWrapper
 
@@ -128,7 +135,7 @@ class PostgreSQLComponent {
             connectionPool.setDriverClassName(driverClass)
             connectionPool.setUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
             // Remove the password part from the url or it won't be able to connect
-            connectionPool.setInitialSize(10)
+            connectionPool.setInitialSize(1)
             connectionPool.setMaxTotal(MAX_CONNECTION_COUNT)
             connectionPool.setDefaultAutoCommit(true)
         }
@@ -499,6 +506,9 @@ class PostgreSQLComponent {
             } else {
                 throw psqle
             }
+        } catch (TooHighEncodingLevelException e) {
+            connection.rollback() // KP Not needed?
+            throw e
         } catch (Exception e) {
             log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
@@ -1313,7 +1323,7 @@ class PostgreSQLComponent {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
-            
+
             rs = preparedStatement.executeQuery()
             List<String> results = []
             while (rs.next()) {
@@ -1778,6 +1788,10 @@ class PostgreSQLComponent {
     private Connection __getConnectionInternal(List<ConnectionAllocation> connectionsHeldByThisThread) {
         // Allocate and track the requested connection
         Connection connection = connectionPool.getConnection()
+
+        Class[] interfaces = (Class[]) [Connection].toArray()
+        connection = (Connection) Proxy.newProxyInstance(connection.getClass().getClassLoader(), interfaces, new ConnectionMethodInterceptor(connection) )
+
         ConnectionAllocation allocation =
                 new ConnectionAllocation(
                         connection,
@@ -1813,6 +1827,34 @@ class PostgreSQLComponent {
             if (!thread.isAlive()) {
                 threadIterator.remove()
             }
+        }
+    }
+
+    /**
+     * This looks scary, and it SHOULD! The purpose of this hack is to make the connection.isClosed()
+     * method usable from another thread than the one using the connection without compromising
+     * thread safety.
+     */
+    private class ConnectionMethodInterceptor implements InvocationHandler {
+        private final Object wrappedInstance
+        private AtomicBoolean wrappedConnectionIsClosed = new AtomicBoolean(false)
+
+        public ConnectionMethodInterceptor(Object wrappedInstance) {
+            this.wrappedInstance = wrappedInstance
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+            if (method.getName().equals("close")) {
+                Object result = method.invoke(wrappedInstance, args)
+                wrappedConnectionIsClosed.set(true)
+                return result
+            } else if (method.getName().equals("isClosed")) {
+                return wrappedConnectionIsClosed.get()
+            }
+
+            return method.invoke(wrappedInstance, args)
         }
     }
 

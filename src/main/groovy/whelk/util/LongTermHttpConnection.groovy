@@ -9,14 +9,15 @@ import javax.net.ssl.SSLSocketFactory
  */
 public class LongTermHttpConnection
 {
-    private final int TIMEOUT_MS = 120000
+    private final int TIMEOUT_MS = 240000
     private int m_responseCode
     private String m_responseData
     private HashMap<String, String> m_responseHeaders
     private Socket m_socket
     private int m_port
     private URL m_properUrl
-    byte[] m_buf = new byte[1024*8]
+    private final byte[] m_buf = new byte[1024*8]
+    private ByteArrayOutputStream m_completeResponse
 
     public LongTermHttpConnection(String host)
     {
@@ -52,14 +53,16 @@ public class LongTermHttpConnection
                 break // We're done, no need for retries
             } catch (SocketException | IOException se)
             {
-                if (attempts > 5)
+                if (attempts > 3)
                 {
+                    println("Failed to receive response, contents of response buffer so far:\n" + m_completeResponse.toString("UTF-8").toLowerCase() + "[ENDOFBUFFER]")
                     throw se
                 }
 
                 // Close socket and retry with a new connection
                 try { m_socket.close() } catch (Throwable e) { /* ignore */ }
                 m_socket = null
+                m_responseData = null
             }
             ++attempts
         }
@@ -90,6 +93,7 @@ public class LongTermHttpConnection
         m_responseCode = 0
         m_responseData = null
         m_responseHeaders = null
+        m_completeResponse = null
     }
 
     private Socket createSocket(String protocol, String host, int port)
@@ -147,7 +151,7 @@ public class LongTermHttpConnection
     private void readResponse(InputStream inputStream)
             throws IOException
     {
-        ByteArrayOutputStream completeResponse = new ByteArrayOutputStream()
+        m_completeResponse = new ByteArrayOutputStream()
 
         int bytesRead = 0
         int totalBytesRead = 0
@@ -159,14 +163,14 @@ public class LongTermHttpConnection
             if (bytesRead == -1)
                 continue
 
-            completeResponse.write(m_buf, 0, bytesRead)
+            m_completeResponse.write(m_buf, 0, bytesRead)
             totalBytesRead += bytesRead
 
             //System.out.print( new String(m_buf, "UTF-8") ) // print all raw http to terminal
 
             if (headerLength == Integer.MAX_VALUE) // If we haven't parsed all headers yet
             {
-                String responseText = completeResponse.toString("UTF-8").toLowerCase()
+                String responseText = m_completeResponse.toString("UTF-8").toLowerCase()
                 int contentLengthHeaderBeginsAt
                 if ( (contentLengthHeaderBeginsAt = responseText.indexOf("content-length:")) != -1)
                 {
@@ -194,7 +198,7 @@ public class LongTermHttpConnection
         }
 
         // Response completely retrieved.
-        String responseText = completeResponse.toString("UTF-8")
+        String responseText = m_completeResponse.toString("UTF-8")
         processCompleteResponse(responseText)
     }
 

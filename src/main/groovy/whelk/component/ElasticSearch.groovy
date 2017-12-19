@@ -73,10 +73,12 @@ class ElasticSearch {
                 Thread.yield()
             }
 
-            if (!httpConnectionPool[i].inUse.get()) {
-                httpConnectionEntry = httpConnectionPool[i]
-                httpConnectionEntry.inUse.set(true)
-                break
+            synchronized (this) {
+                if (!httpConnectionPool[i].inUse.get()) {
+                    httpConnectionEntry = httpConnectionPool[i]
+                    httpConnectionEntry.inUse.set(true)
+                    break
+                }
             }
         }
 

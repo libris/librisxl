@@ -38,6 +38,10 @@ class Whelk {
     }
 
     static void putInAuthCache(Document authDocument) {
+        if (authDocument == null) {
+            log.warn("Tried to cache a null document (ignored)!")
+            return
+        }
         for (String uri : authDocument.getRecordIdentifiers()) {
             authCache.put(uri, authDocument)
         }

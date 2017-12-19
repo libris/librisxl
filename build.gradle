@@ -54,7 +54,6 @@ repositories {
 
 dependencies {
     def groovyVersion=GroovySystem.getVersion()
-    compile 'org.elasticsearch.client:rest:5.4.1'
 
     // KB tools
     compile 'com.github.libris:jmarctools:bb97de39cb41e7455ecb29af0ed5f27f2e9cc797'
@@ -72,6 +71,7 @@ dependencies {
     compile 'com.damnhandy:handy-uri-templates:2.0.4'
     compile 'org.apache.commons:commons-dbcp2:2.0.1'
     compile 'org.apache.jena:apache-jena-libs:3.0.1'
+    compile group: 'xerces', name: 'xercesImpl', version: '2.11.0' //KP
 
     // Logging
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
