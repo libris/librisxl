@@ -8361,7 +8361,7 @@
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Topic",
-      "$a": {"property": "keyword"},
+      "$a": {"property": "label"},
       "match": [
         {
           "when": "i2=0",
