@@ -556,6 +556,50 @@ class Document {
         }
     }
 
+    /**
+     * Add a new id (URI) to the record and displace the existing URI to
+     * the sameAs list. The same thing happens consistently to all
+     * derivative (thing/work/etc) IDs.
+     */
+    public void deepPromoteId(String aliasToPromote) {
+        String oldId = get(recordIdPath)
+        deepPromoteIdInternal(oldId, aliasToPromote, data)
+    }
+
+    private void deepPromoteIdInternal(String oldId, String newId, node) {
+        if (node instanceof List) {
+            for (element in node)
+                deepPromoteIdInternal(oldId, newId, element)
+        }
+        if (node instanceof Map) {
+            for (String key : node.keySet()) {
+                deepPromoteIdInternal(oldId, newId, node.get(key))
+            }
+
+            String nodeId = node["@id"]
+            if (nodeId != null && nodeId.startsWith(oldId)) {
+                String expectedNewDerivative = newId + nodeId.substring(oldId.length())
+
+                List sameAsList = (List) node["sameAs"]
+                if (sameAsList == null) {
+                    sameAsList = []
+                    node.put("sameAs", sameAsList)
+                }
+
+                boolean alreadyInSameAsList = false
+                for (int i = 0; i < sameAsList.size(); ++i) {
+                    Map object = (Map) sameAsList.get(i)
+                    String sameAsId = object["@id"]
+                    if (sameAsId.equals(nodeId))
+                        alreadyInSameAsList = true
+                }
+                if (!alreadyInSameAsList)
+                    sameAsList.add( ["@id": nodeId] )
+                node["@id"] = expectedNewDerivative
+            }
+        }
+    }
+
     String getChecksum() {
         long checksum = calculateCheckSum(data, 1)
         return Long.toString(checksum)
