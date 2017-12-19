@@ -5059,7 +5059,7 @@
             "hasTitle": [{
               "@type": "CaptionTitle",
               "mainTitle": "Newspaper index",
-              "date": "January 1982-",
+              "coverage": "January 1982-",
               "marc:searchControl" : {
                 "@id" : "marc:NoteAddedEntry"
               }
@@ -5078,7 +5078,7 @@
               "@type": "VariantTitle",
               "typeNote": "At head of title:",
               "mainTitle": "Science and public affairs",
-              "date": "January 1970-April 1974",
+              "coverage": "January 1970-April 1974",
               "marc:searchControl" : {
                 "@id" : "marc:NoteAddedEntry"
               }
