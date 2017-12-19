@@ -8407,7 +8407,7 @@
               "subject": [
                 {
                   "@type": "Temporal",
-                  "keyword": "Directors"
+                  "label": "Directors"
                 }
               ]
             }
