@@ -2055,12 +2055,12 @@
           "matchUriToken": "^[_abm]$"
         },
         "[6] [7] [8[": {
-          "link": "notation",
+          "link": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}",
           "matchUriToken": "^[abcdefghijklz]$"
         },
         "[9:10]": {
-          "link": "notation",
+          "link": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacSpecPhysicalCharType-{_}",
           "matchUriToken": "^[_ab]$"
         }
