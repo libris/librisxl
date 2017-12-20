@@ -457,6 +457,109 @@ class PostgreSQLComponent {
     }
 
     /**
+     * Remove both the document at 'remainingID' and the one at 'disapperaingID' and replace them
+     * with 'remainingDocument' at 'remainingID'.
+     *
+     * Will throw exception if 'remainingDocument' does not internally have id set to 'remainingID'
+     *
+     * The replacement is done atomically within a transaction.
+     */
+    public void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn, String changedBy, String collection) {
+        Connection connection = getConnection()
+        connection.setAutoCommit(false)
+        PreparedStatement selectStatement
+        PreparedStatement updateStatement
+        ResultSet resultSet
+
+        try {
+            if (! remainingDocument.getCompleteId().equals(remainingID))
+                throw new RuntimeException("Bad merge argument, remaining document must have the remaining ID.")
+
+            String remainingSystemID = getSystemIdByIri(remainingID, connection)
+            String disappearingSystemID = getSystemIdByIri(disappearingID, connection)
+
+            if (remainingSystemID.equals(disappearingSystemID))
+                throw new SQLException("Cannot self-merge.")
+
+            // Update the remaining record
+            selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
+            selectStatement.setString(1, remainingSystemID)
+            resultSet = selectStatement.executeQuery()
+            if (!resultSet.next())
+                throw new SQLException("There is no document with the id: " + remainingID)
+            Date createdTime = new Date(resultSet.getTimestamp("created").getTime())
+            Document documentToBeReplaced = assembleDocument(resultSet)
+            if (documentToBeReplaced.deleted)
+                throw new SQLException("Not allowed to merge deleted record: " + remainingID)
+            resultSet.close()
+            Date modTime = new Date()
+            updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
+            rigUpdateStatement(updateStatement, remainingDocument, modTime, changedIn, changedBy, collection, false)
+            updateStatement.execute()
+            saveVersion(remainingDocument, connection, createdTime, modTime, changedIn, changedBy, collection, false)
+            refreshDerivativeTables(remainingDocument, connection, false)
+
+            // Update dependers on the remaining record
+            List<Tuple2<String, String>> dependers = getDependers(remainingDocument.getShortId())
+            for (Tuple2<String, String> depender : dependers) {
+                String dependerShortId = depender.get(0)
+                updateMinMaxDepModified((String) dependerShortId, connection)
+            }
+
+            // Update the disappearing record
+            selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
+            selectStatement.setString(1, disappearingSystemID)
+            resultSet = selectStatement.executeQuery()
+            if (!resultSet.next())
+                throw new SQLException("There is no document with the id: " + disappearingID)
+            Document disappearingDocument = assembleDocument(resultSet)
+            if (disappearingDocument.deleted)
+                throw new SQLException("Not allowed to merge deleted record: " + disappearingID)
+            disappearingDocument.setDeleted(true)
+            createdTime = new Date(resultSet.getTimestamp("created").getTime())
+            resultSet.close()
+            updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
+            rigUpdateStatement(updateStatement, disappearingDocument, modTime, changedIn, changedBy, collection, true)
+            updateStatement.execute()
+            saveVersion(disappearingDocument, connection, createdTime, modTime, changedIn, changedBy, collection, true)
+            saveIdentifiers(disappearingDocument, connection, true, true)
+            saveDependencies(disappearingDocument, connection)
+
+            // Update dependers on the disappearing record
+            dependers = getDependers(disappearingSystemID)
+            for (Tuple2<String, String> depender : dependers) {
+                String dependerShortId = depender.get(0)
+                updateMinMaxDepModified((String) dependerShortId, connection)
+                selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
+                selectStatement.setString(1, dependerShortId)
+                resultSet = selectStatement.executeQuery()
+                if (!resultSet.next())
+                    throw new SQLException("There is no document with the id: " + dependerShortId + ", the document was to be updated because of merge of " + remainingID + " and " + disappearingID)
+                Document dependerDoc = assembleDocument(resultSet)
+                if (linkFinder != null)
+                    linkFinder.normalizeIdentifiers(dependerDoc, connection)
+                refreshDerivativeTables(dependerDoc, connection, false)
+            }
+
+            // All done
+            connection.commit()
+        } catch (Throwable e) {
+            connection.rollback()
+            throw e
+        } finally {
+            if (resultSet != null)
+                resultSet.close()
+            if (selectStatement != null)
+                selectStatement.close()
+            if (updateStatement != null)
+                updateStatement.close()
+            if (connection != null) {
+                connection.close()
+            }
+        }
+    }
+
+    /**
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
@@ -607,20 +710,24 @@ class PostgreSQLComponent {
             log.debug("Removed $numRemoved dependencies for id ${doc.getShortId()}")
         } finally { removeDependencies.close() }
 
-        // Insert the dependency list
-        PreparedStatement insertDependencies = connection.prepareStatement(INSERT_DEPENDENCIES)
-        for (String[] dependsOn : dependencies) {
-            insertDependencies.setString(1, doc.getShortId())
-            insertDependencies.setString(2, dependsOn[0])
-            insertDependencies.setString(3, dependsOn[1])
-            insertDependencies.addBatch()
+        if (!doc.deleted) { // We do not care for the dependencies of deleted documents.
+            // Insert the dependency list
+            PreparedStatement insertDependencies = connection.prepareStatement(INSERT_DEPENDENCIES)
+            for (String[] dependsOn : dependencies) {
+                insertDependencies.setString(1, doc.getShortId())
+                insertDependencies.setString(2, dependsOn[0])
+                insertDependencies.setString(3, dependsOn[1])
+                insertDependencies.addBatch()
+            }
+            try {
+                insertDependencies.executeBatch()
+            } catch (BatchUpdateException bue) {
+                log.error("Failed saving dependencies for ${doc.getShortId()}")
+                throw bue.getNextException()
+            } finally {
+                insertDependencies.close()
+            }
         }
-        try {
-            insertDependencies.executeBatch()
-        } catch(BatchUpdateException bue) {
-            log.error("Failed saving dependencies for ${doc.getShortId()}")
-            throw bue.getNextException()
-        } finally { insertDependencies.close() }
     }
 
     private void updateMinMaxDepModified(String id) {
@@ -654,11 +761,14 @@ class PostgreSQLComponent {
 
     }
 
-    private void saveIdentifiers(Document doc, Connection connection, boolean deleted) {
+    private void saveIdentifiers(Document doc, Connection connection, boolean deleted, boolean removeOnly = false) {
         PreparedStatement removeIdentifiers = connection.prepareStatement(DELETE_IDENTIFIERS)
         removeIdentifiers.setString(1, doc.getShortId())
         int numRemoved = removeIdentifiers.executeUpdate()
         log.debug("Removed $numRemoved identifiers for id ${doc.getShortId()}")
+
+        if (removeOnly)
+            return
 
         PreparedStatement altIdInsert = connection.prepareStatement(INSERT_IDENTIFIERS)
         for (altId in doc.getRecordIdentifiers()) {
@@ -1051,7 +1161,17 @@ class PostgreSQLComponent {
      *
      */
     String getRecordId(String id) {
-        return getRecordOrThingId(id, GET_RECORD_ID)
+        Connection connection = getConnection()
+        try {
+            return getRecordOrThingId(id, GET_RECORD_ID, connection)
+        } finally {
+            if (connection != null)
+                connection.close()
+        }
+    }
+
+    String getRecordId(String id, Connection connection) {
+        return getRecordOrThingId(id, GET_RECORD_ID, connection)
     }
 
     /**
@@ -1062,7 +1182,17 @@ class PostgreSQLComponent {
      *
      */
     String getThingId(String id) {
-        return getRecordOrThingId(id, GET_THING_ID)
+        Connection connection = getConnection()
+        try {
+            return getRecordOrThingId(id, GET_THING_ID, connection)
+        } finally {
+            if (connection != null)
+                connection.close()
+        }
+    }
+
+    String getThingId(String id, Connection connection) {
+        return getRecordOrThingId(id, GET_THING_ID, connection)
     }
 
     /**
@@ -1073,11 +1203,20 @@ class PostgreSQLComponent {
      *
      */
     String getMainId(String id) {
-        return getRecordOrThingId(id, GET_MAIN_ID)
+        Connection connection = getConnection()
+        try {
+            return getRecordOrThingId(id, GET_MAIN_ID, connection)
+        } finally {
+            if (connection != null)
+                connection.close()
+        }
     }
 
-    private String getRecordOrThingId(String id, String sql) {
-        Connection connection = getConnection()
+    String getMainId(String id, Connection connection) {
+        return getRecordOrThingId(id, GET_MAIN_ID, connection)
+    }
+
+    private String getRecordOrThingId(String id, String sql, Connection connection) {
         PreparedStatement selectstmt
         ResultSet rs
         try {
@@ -1100,7 +1239,10 @@ class PostgreSQLComponent {
                 return ids[0]
             }
         } finally {
-            connection.close()
+            if (rs != null)
+                rs.close()
+            if (selectstmt != null)
+                selectstmt.close()
         }
     }
 
@@ -1200,11 +1342,19 @@ class PostgreSQLComponent {
     }
 
     String getSystemIdByIri(String iri) {
-        Connection connection
+        Connection connection = getConnection()
+        try {
+            return getSystemIdByIri(iri, connection)
+        } finally {
+            if (connection != null)
+                connection.close()
+        }
+    }
+
+    String getSystemIdByIri(String iri, Connection connection) {
         PreparedStatement preparedStatement
         ResultSet rs
         try {
-            connection = getConnection()
             preparedStatement = connection.prepareStatement(GET_SYSTEMID_BY_IRI)
             preparedStatement.setString(1, iri)
             rs = preparedStatement.executeQuery()
@@ -1217,8 +1367,6 @@ class PostgreSQLComponent {
                 rs.close()
             if (preparedStatement != null)
                 preparedStatement.close()
-            if (connection != null)
-                connection.close()
         }
     }
 
@@ -1244,19 +1392,37 @@ class PostgreSQLComponent {
     }
 
     List<Tuple2<String, String>> getDependencies(String id) {
-        return getDependencyData(id, GET_DEPENDENCIES)
+        Connection connection = getConnection()
+        try {
+            return getDependencyData(id, GET_DEPENDENCIES, connection)
+        } finally {
+            if (connection != null)
+                connection.close()
+        }
     }
 
     List<Tuple2<String, String>> getDependers(String id) {
-        return getDependencyData(id, GET_DEPENDERS)
+        Connection connection = getConnection()
+        try {
+            return getDependencyData(id, GET_DEPENDERS, connection)
+        } finally {
+            if (connection != null)
+                connection.close()
+        }
     }
 
-    private List<Tuple2<String, String>> getDependencyData(String id, String query) {
-        Connection connection
+    List<Tuple2<String, String>> getDependencies(String id, Connection connection) {
+        return getDependencyData(id, GET_DEPENDENCIES, connection)
+    }
+
+    List<Tuple2<String, String>> getDependers(String id, Connection connection) {
+        return getDependencyData(id, GET_DEPENDERS, connection)
+    }
+
+    private List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection) {
         PreparedStatement preparedStatement
         ResultSet rs
         try {
-            connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
             rs = preparedStatement.executeQuery()
@@ -1271,8 +1437,6 @@ class PostgreSQLComponent {
                 rs.close()
             if (preparedStatement != null)
                 preparedStatement.close()
-            if (connection != null)
-                connection.close()
         }
     }
 
