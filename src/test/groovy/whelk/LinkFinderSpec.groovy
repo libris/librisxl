@@ -2,6 +2,7 @@ package whelk
 
 import spock.lang.Ignore
 import spock.lang.Specification
+import whelk.Whelk
 import whelk.filter.LinkFinder
 import whelk.util.PropertyLoader
 
@@ -13,8 +14,7 @@ class LinkFinderSpec extends Specification {
     def "All exists"() {
         setup:
         def props = PropertyLoader.loadProperties('secret')
-        def pico = Whelk.getPreparedComponentsContainer(props)
-        def whelk = pico.getComponent(Whelk.class)
+        Whelk whelk = new Whelk(props)
         LinkFinder authFinder = new LinkFinder(whelk.storage)
 
         def entities = [[
@@ -39,11 +39,10 @@ class LinkFinderSpec extends Specification {
 
     }
     @Ignore
-    def "S1ome extra entities"() {
+    def "Some extra entities"() {
         setup:
         def props = PropertyLoader.loadProperties('secret')
-        def pico = Whelk.getPreparedComponentsContainer(props)
-        def whelk = pico.getComponent(Whelk.class)
+        Whelk whelk = new Whelk(props)
         LinkFinder authFinder = new LinkFinder(whelk.storage)
 
         def entities = [[

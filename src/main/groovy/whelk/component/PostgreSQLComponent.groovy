@@ -104,15 +104,23 @@ class PostgreSQLComponent {
     // for testing
     PostgreSQLComponent() {}
 
+    PostgreSQLComponent(Properties properties, boolean trackConnectionFetching = true) {
+        this.trackConnectionFetching = trackConnectionFetching
+        setup(properties.getProperty("sqlUrl"), properties.getProperty("sqlMaintable"))
+    }
+
     PostgreSQLComponent(String sqlUrl, String sqlMaintable, boolean trackConnectionFetching = true) {
+        this.trackConnectionFetching = trackConnectionFetching
+        setup(sqlUrl, sqlMaintable)
+    }
+
+    private void setup(String sqlUrl, String sqlMaintable) {
         mainTableName = sqlMaintable
         String idTableName = mainTableName + "__identifiers"
         String versionsTableName = mainTableName + "__versions"
         String settingsTableName = mainTableName + "__settings"
         String dependenciesTableName = mainTableName + "__dependencies"
         String profilesTableName = mainTableName + "__profiles"
-
-        this.trackConnectionFetching = trackConnectionFetching
 
         connectionPool = new BasicDataSource()
 

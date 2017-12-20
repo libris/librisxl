@@ -2,9 +2,6 @@ package whelk
 
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.collections4.map.LRUMap
-import org.picocontainer.Characteristics
-import org.picocontainer.DefaultPicoContainer
-import org.picocontainer.containers.PropertiesPicoContainer
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.filter.JsonLdLinkExpander
@@ -72,20 +69,13 @@ class Whelk {
         log.info("Whelk started with storage $storage")
     }
 
-    public Whelk() {
+    public Whelk(Properties properties) {
+        this.storage = new PostgreSQLComponent(properties)
+        this.elastic = new ElasticSearch(properties)
+        log.info("Whelk started with storage $storage and index $elastic")
     }
 
-    public static DefaultPicoContainer getPreparedComponentsContainer(Properties properties) {
-        DefaultPicoContainer pico = new DefaultPicoContainer(new PropertiesPicoContainer(properties))
-        Properties componentProperties = PropertyLoader.loadProperties("component")
-        for (comProp in componentProperties) {
-            if (comProp.key.endsWith("Class") && comProp.value && comProp.value != "null") {
-                log.info("Adding pico component ${comProp.key} = ${comProp.value}")
-                pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(Class.forName(comProp.value))
-            }
-        }
-        pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(Whelk.class)
-        return pico
+    public Whelk() {
     }
 
     void loadCoreData() {
