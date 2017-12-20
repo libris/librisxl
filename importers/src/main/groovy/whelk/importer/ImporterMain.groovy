@@ -14,10 +14,11 @@ import java.util.concurrent.TimeUnit
 
 import groovy.util.logging.Log4j2 as Log
 import groovy.sql.Sql
-import org.picocontainer.PicoContainer
 
 import whelk.Document
 import whelk.Whelk
+import whelk.component.ElasticSearch
+import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
 import whelk.filter.LinkFinder
 import whelk.reindexer.ElasticReindexer
@@ -30,21 +31,19 @@ import whelk.util.Tools
 @Log
 class ImporterMain {
 
-    PicoContainer pico
-    Properties props
+    private Properties props
+    private Whelk whelk
+    private MarcFrameConverter converter
+
 
     ImporterMain(String... propNames) {
         log.info("Setting up import program.")
 
         props = PropertyLoader.loadProperties(propNames)
-        pico = Whelk.getPreparedComponentsContainer(props)
-        pico.addComponent(LinkFinder)
-        pico.addComponent(MarcFrameConverter)
-        pico.addComponent(ElasticReindexer)
-        pico.addComponent(DefinitionsImporter)
-        pico.addComponent(VCopyImporter)
-        pico.addComponent(MockImporter)
-        pico.start()
+        PostgreSQLComponent pg = new PostgreSQLComponent(props)
+        ElasticSearch elastic = new ElasticSearch(props)
+        converter = new MarcFrameConverter(new LinkFinder(pg))
+        whelk = new Whelk(pg, elastic)
 
         log.info("Started ...")
     }
@@ -130,18 +129,16 @@ class ImporterMain {
 
     @Command(args='FNAME')
     void defs(String fname) {
-        def defsimport = pico.getComponent(DefinitionsImporter)
-        defsimport.definitionsFilename = fname
-        defsimport.run("definitions")
+        DefinitionsImporter defsImporter = new DefinitionsImporter(whelk)
+        defsImporter.definitionsFilename = fname
+        defsImporter.run("definitions")
     }
 
     @Command(args='COLLECTION [SOURCE_SYSTEM]')
     void vcopyharvest(String collection, String sourceSystem = 'vcopy') {
-        System.err.println(collection)
-        System.err.println(sourceSystem)
+        log.info("Running vcopyharvest for collection ${collection} (source ${sourceSystem})")
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        def whelk = pico.getComponent(Whelk)
-        def importer = pico.getComponent(VCopyImporter)
+        VCopyImporter importer = new VCopyImporter(whelk, converter)
         importer.doImport(collection, sourceSystem, connUrl)
     }
 
@@ -161,7 +158,6 @@ class ImporterMain {
     @Command(args='COLLECTION')
     void benchmark(String collection) {
         log.info("Starting benchmark for collection ${collection ?: 'all'}")
-        def whelk = pico.getComponent(Whelk)
 
         long startTime = System.currentTimeMillis()
         long lastTime = startTime
@@ -176,7 +172,8 @@ class ImporterMain {
         log.info("Done!")
     }
 
-    static void sendToQueue(Whelk whelk, List doclist, LinkFinder lf, ExecutorService queue, Map counters, String collection) {
+    static void sendToQueue(Whelk whelk, List doclist, ExecutorService queue, Map counters, String collection) {
+        LinkFinder lf = new LinkFinder(whelk.storage)
         Document[] workList = new Document[doclist.size()]
         System.arraycopy(doclist.toArray(), 0, workList, 0, doclist.size())
         queue.execute({
@@ -202,7 +199,6 @@ class ImporterMain {
     @Command(args='FILE')
     void vcopyloadexampledata(String file) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        def importer = pico.getComponent(VCopyImporter)
 
         def idgroups = new File(file).readLines()
                 .findAll { String line -> ['\t', '/'].every { it -> line.contains(it) } }
@@ -215,7 +211,8 @@ class ImporterMain {
 
         def bibIds = idgroups.find{it->it.key == 'bib'}.value
 
-        importLinkedRecords(bibIds)
+        VCopyImporter importer = new VCopyImporter(whelk, converter)
+        importLinkedRecords(importer, bibIds)
 
         idgroups.each { group ->
             ImportResult importResult = importer.doImport(group.key, 'vcopy', connUrl, group.value as String[])
@@ -247,9 +244,8 @@ class ImporterMain {
         out.write(builder.toString())
     }
 
-    def importLinkedRecords(List<String> bibIds) {
+    def importLinkedRecords(VCopyImporter importer, List<String> bibIds) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        def importer = pico.getComponent(VCopyImporter)
 
         def extraAuthIds = getExtraAuthIds(connUrl,bibIds)
         System.err.println("Found ${extraAuthIds.count {it}} linked authority records from bibliographic records. Importing...")
@@ -280,9 +276,7 @@ class ImporterMain {
     @Command(args='COLLECTION')
     void linkfind(String collection) {
         log.info("Starting linkfinder for collection ${collection ?: 'all'}")
-        def whelk = pico.getComponent(Whelk)
         whelk.storage.versioning = false
-        def lf = pico.getComponent(LinkFinder)
 
         ExecutorService queue = Executors.newCachedThreadPool()
 
@@ -299,7 +293,7 @@ class ImporterMain {
             doclist << doc
             if (doclist.size() % 2000 == 0) {
                 log.info("Sending off a batch for processing ...")
-                sendToQueue(whelk, doclist, lf, queue, counters,collection)
+                sendToQueue(whelk, doclist, queue, counters,collection)
                 doclist = []
             }
             if (!log.isDebugEnabled()) {
@@ -311,7 +305,7 @@ class ImporterMain {
 
 
         if (doclist.size() > 0) {
-            sendToQueue(whelk, doclist, lf, queue, counters, collection)
+            sendToQueue(whelk, doclist, queue, counters, collection)
         }
 
         queue.shutdown()

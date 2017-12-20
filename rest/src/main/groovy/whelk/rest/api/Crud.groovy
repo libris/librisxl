@@ -3,7 +3,6 @@ package whelk.rest.api
 import groovy.util.logging.Log4j2 as Log
 import org.apache.http.entity.ContentType
 import org.codehaus.jackson.map.ObjectMapper
-import org.picocontainer.PicoContainer
 
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
@@ -89,7 +88,6 @@ class Crud extends HttpServlet {
     JsonLd jsonld
 
     SearchUtils search
-    PicoContainer pico
     static final ObjectMapper mapper = new ObjectMapper()
     AccessControl accessControl = new AccessControl()
 
@@ -99,17 +97,13 @@ class Crud extends HttpServlet {
 
         Properties props = PropertyLoader.loadProperties("secret")
 
-        // Get a properties pico container, pre-wired with components according to components.properties
-        pico = Whelk.getPreparedComponentsContainer(props)
-
-        pico.addComponent(JsonLD2MarcConverter.class)
-        pico.addComponent(JsonLD2MarcXMLConverter.class)
-        pico.start()
+        PostgreSQLComponent pg = new PostgreSQLComponent(props)
+        ElasticSearch elastic = new ElasticSearch(props)
+        whelk = new Whelk(pg, elastic)
     }
 
     @Override
     void init() {
-        whelk = pico.getComponent(Whelk.class)
         whelk.loadCoreData()
         displayData = whelk.displayData
         vocabData = whelk.vocabData
@@ -580,42 +574,6 @@ class Crud extends HttpServlet {
         }
 
         sendResponse(response, responseBody, contentType)
-    }
-
-    Document convertDocumentToAcceptedMediaType(Document document, String path, String acceptHeader, HttpServletResponse response) {
-
-        List<String> accepting = acceptHeader?.split(",").collect {
-            int last = (it.indexOf(';') == -1 ? it.length() : it.indexOf(';'))
-            it.substring(0, last)
-        }
-        log.debug("Accepting $accepting")
-
-        String extensionContentType = (mimeTypes.getContentType(path) == "application/octet-stream" ? null : mimeTypes.getContentType(path))
-        log.debug("mimetype: $extensionContentType")
-        if (!document && path ==~ /(.*\.\w+)/) {
-            log.debug("Found extension in $path")
-            if (!document && extensionContentType) {
-                document = whelk.storage.load(path.substring(1, path.lastIndexOf(".")))
-            }
-            accepting = [extensionContentType]
-        }
-
-        if (document && accepting && !accepting.contains("*/*") && !accepting.contains(document.contentType) && !accepting.contains(getMajorContentType(document.contentType))) {
-            FormatConverter fc = pico.getComponents(FormatConverter.class).find {
-                accepting.contains(it.resultContentType) && it.requiredContentType == document.contentType
-            }
-            if (fc) {
-                log.debug("Found formatconverter for ${fc.resultContentType}")
-                document = fc.convert(document)
-                if (extensionContentType) {
-                    response.setHeader("Content-Location", path)
-                }
-            } else {
-                document = null
-                throw new UnsupportedContentTypeException("No supported types found in $accepting")
-            }
-        }
-        return document
     }
 
     /**
