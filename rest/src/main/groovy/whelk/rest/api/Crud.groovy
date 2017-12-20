@@ -1006,7 +1006,7 @@ class Crud extends HttpServlet {
         return false
     }
 
-    boolean isSystemUser(Map userInfo) {
+    static boolean isSystemUser(Map userInfo) {
         if (userInfo.user == "SYSTEM") {
             log.warn("User is SYSTEM. Allowing access to all.")
             return true

@@ -8,8 +8,8 @@ import whelk.exception.ModelValidationException
 
 @Log
 class AccessControl {
-    private static final XLREG_KEY = 'registrant'
-    private static final KAT_KEY = 'cataloger'
+    static final XLREG_KEY = 'registrant'
+    static final KAT_KEY = 'cataloger'
 
     boolean checkDocumentToPost(Document newDoc, Map userPrivileges, JsonLd jsonld) {
         return checkDocument(newDoc, userPrivileges, jsonld)
