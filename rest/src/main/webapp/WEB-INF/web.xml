@@ -63,6 +63,11 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
+        <servlet-name>MergeAPI</servlet-name>
+        <servlet-class>whelk.rest.api.MergeAPI</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet>
         <servlet-name>RelationsAPI</servlet-name>
         <servlet-class>whelk.rest.api.RecordRelationAPI</servlet-class>
         <load-on-startup>1</load-on-startup>
@@ -97,6 +102,11 @@
     <servlet-mapping>
         <servlet-name>HoldAPI</servlet-name>
         <url-pattern>/_findhold</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>MergeAPI</servlet-name>
+        <url-pattern>/_merge</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>

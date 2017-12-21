@@ -3,6 +3,7 @@ package whelk.rest.api
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.triples.*
 import whelk.util.LegacyIntegrationTools
@@ -22,7 +23,8 @@ class MergeAPI extends HttpServlet {
         Properties configuration = whelk.util.PropertyLoader.loadProperties("secret")
         PostgreSQLComponent storage = new PostgreSQLComponent(configuration.getProperty("sqlUrl"),
                 configuration.getProperty("sqlMaintable"))
-        m_whelk = new Whelk(storage)
+        ElasticSearch elastic = new ElasticSearch(configuration)
+        m_whelk = new Whelk(storage, elastic)
 
         m_whelk.loadCoreData()
         m_jsonld = new JsonLd(m_whelk.getDisplayData(), m_whelk.getVocabData())
@@ -102,7 +104,7 @@ class MergeAPI extends HttpServlet {
                 return
             }
 
-            m_whelk.storage.mergeExisting(remainingID, disappearingID, merged, "xl", null, collection)
+            m_whelk.mergeExisting(remainingID, disappearingID, merged, "xl", null, collection)
             response.setStatus(HttpServletResponse.SC_OK)
             return
 
