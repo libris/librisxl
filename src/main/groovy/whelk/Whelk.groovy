@@ -289,4 +289,42 @@ class Whelk {
             log.warn "storage did not remove ${id} from whelk"
         }
     }
+
+    void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn, String changedBy, String collection) {
+        // It would be more expensive to load all dependers (again), iterate their various IDs and delete them than
+        // to simply reset the cache and let it rebuild.
+        authCache.clear()
+
+        storage.mergeExisting(remainingID, disappearingID, remainingDocument, changedIn, changedBy, collection, jsonld)
+
+        if (elastic) {
+            String remainingSystemID = storage.getSystemIdByIri(remainingID)
+            String disappearingSystemID = storage.getSystemIdByIri(disappearingID)
+            List<Tuple2<String, String>> dependerRows = storage.getDependers(remainingSystemID)
+            dependerRows.addAll( storage.getDependers(disappearingSystemID) )
+            List<String> dependerSystemIDs = []
+            for (Tuple2<String, String> dependerRow : dependerRows) {
+                dependerSystemIDs.add( (String) dependerRow.get(0) )
+            }
+            Map<String, Document> dependerDocuments = bulkLoad(dependerSystemIDs)
+
+            List<Document> authDocs = []
+            List<Document> bibDocs = []
+            List<Document> holdDocs = []
+            for (Object key : dependerDocuments.keySet()) {
+                Document doc = dependerDocuments.get(key)
+                String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
+                if (dependerCollection.equals("auth"))
+                    authDocs.add(doc)
+                else if (dependerCollection.equals("bib"))
+                    bibDocs.add(doc)
+                else if (dependerCollection.equals("hold"))
+                    holdDocs.add(doc)
+            }
+
+            elastic.bulkIndex(authDocs, "auth", this)
+            elastic.bulkIndex(bibDocs, "bib", this)
+            elastic.bulkIndex(holdDocs, "hold", this)
+        }
+    }
 }

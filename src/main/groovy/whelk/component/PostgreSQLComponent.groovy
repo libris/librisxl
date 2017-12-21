@@ -2,6 +2,7 @@ package whelk.component
 
 import groovy.transform.Canonical
 import groovy.transform.CompileStatic
+import whelk.util.LegacyIntegrationTools
 
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
@@ -464,7 +465,8 @@ class PostgreSQLComponent {
      *
      * The replacement is done atomically within a transaction.
      */
-    public void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn, String changedBy, String collection) {
+    public void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn,
+                              String changedBy, String collection, JsonLd jsonld) {
         Connection connection = getConnection()
         connection.setAutoCommit(false)
         PreparedStatement selectStatement
@@ -538,6 +540,11 @@ class PostgreSQLComponent {
                 Document dependerDoc = assembleDocument(resultSet)
                 if (linkFinder != null)
                     linkFinder.normalizeIdentifiers(dependerDoc, connection)
+                updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
+                String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, jsonld)
+                rigUpdateStatement(updateStatement, dependerDoc, modTime, changedIn, changedBy, dependerCollection, false)
+                updateStatement.execute()
+                updateStatement.close()
                 refreshDerivativeTables(dependerDoc, connection, false)
             }
 
