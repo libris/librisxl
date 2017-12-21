@@ -2144,6 +2144,8 @@ class MarcSubFieldHandler extends ConversionPart {
             subUriTemplate = subDfn.uriTemplate
         }
         if (subDfn.splitValuePattern) {
+            /*TODO: assert subDfn.splitValuePattern=~ /^\^.+\$$/,
+                   'For explicit safety, these patterns must start with ^ and end with $' */
             // TODO: support repeatable?
             splitValuePattern = Pattern.compile(subDfn.splitValuePattern)
             splitValueProperties = subDfn.splitValueProperties
