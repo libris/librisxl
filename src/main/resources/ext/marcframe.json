@@ -6188,7 +6188,10 @@
       "aboutEntity": "?thing",
       "addLink": "hasNumberingOfSerials",
       "resourceType": "NumberingOfSerials",
-      "i1": {"marcDefault": "0"},
+      "i1": {
+        "marcDefault": "0",
+        "NOTE": "1 = not normalized form; but 0 has been assigned for those too."
+      },
       "$a": {"property": "label"},
       "$z": {"property": "marc:sourceOfInformation"},
       "$6": {"property": "marc:fieldref"}
