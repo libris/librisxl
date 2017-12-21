@@ -37,22 +37,28 @@ class MergeAPI extends HttpServlet {
     }
 
     @Override
+    void doGet(HttpServletRequest request, HttpServletResponse response) {
+        boolean commit = false
+        handleRequest(request, response, commit)
+    }
+
+    @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
+        boolean commit = true
+        handleRequest(request, response, commit)
+    }
+
+    void handleRequest(HttpServletRequest request, HttpServletResponse response, boolean commit) {
 
         // Validate parameters
 
         String id1 = request.getParameter("id1")
         String id2 = request.getParameter("id2")
         String promoteId2Param = request.getParameter("promote_id2")
-        String commitParam = request.getParameter("commit")
 
         boolean promoteId2 = false
         if (promoteId2Param != null && promoteId2Param.equalsIgnoreCase("true"))
             promoteId2 = true
-
-        boolean commit = false
-        if (commitParam != null && commitParam.equalsIgnoreCase("true"))
-            commit = true
 
         if (id1 == null || id2 == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
