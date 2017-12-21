@@ -103,7 +103,9 @@ class MergeAPI extends HttpServlet {
 
         if (commit) {
             Map userInfo = request.getAttribute("user")
-            boolean hasPermission = userInfo.get(whelk.rest.security.AccessControl.KAT_KEY) || Crud.isSystemUser(userInfo)
+            boolean hasPermission  = userInfo.permissions.any { item ->
+                item.get(whelk.rest.security.AccessControl.KAT_KEY)
+            } || Crud.isSystemUser(userInfo)
             if (!hasPermission) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,
                         "You must be authorized in order to commit merges.")
