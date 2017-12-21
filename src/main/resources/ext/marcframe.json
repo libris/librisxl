@@ -5062,7 +5062,7 @@
       "resourceType": "Title",
       "embedded": true,
       "aboutAlias": "_:title",
-      "subfieldOrder": "a b c p n ... h",
+      "subfieldOrder": "a n p h ... b c",
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
         "leadingPunctuation": "/", "trailingPunctuation": ".",
@@ -5101,6 +5101,40 @@
               "marc:nonfilingChars": "0"
             } ],
             "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
+          }}
+        },
+        {
+          "source": {
+            "245": {
+              "ind1": "1", "ind2": "0",
+              "subfields": [
+                {"a": "Allmänna valen 1998 ."},
+                {"n": "Del 4,"},
+                {"p": "Specialundersökningar"},
+                {"h": "[Elektronisk resurs] ="},
+                {"b": "[General elections in 1998. Part 4, Special studies] /"},
+                {"c": "Statistiska ventralbyrån"}
+              ]
+            }
+          },
+          "result": {"mainEntity": {
+            "hasTitle": [ 
+              {
+                "@type": "Title",
+                "marc:nonfilingChars": "0",
+                "mainTitle": "Allmänna valen 1998",
+                "hasPart": [
+                  {
+                    "@type": "TitlePart",
+                    "partNumber": "Del 4",
+                    "partName": "Specialundersökningar"
+                  }
+                ],
+                "marc:equalTitle": "[General elections in 1998. Part 4, Special studies]"
+              }
+            ],
+            "responsibilityStatement":  "Statistiska ventralbyrån",
+            "marc:mediaTerm" : "Elektronisk resurs] ="
           }}
         }
       ]
