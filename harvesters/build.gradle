@@ -161,13 +161,6 @@ task jettyRun(type: JettyRun, overwrite: true) {
     jettyRun.contextPath = archivesBaseName
     jettyRun.httpPort = 8180
     jettyRun.description = "Starts a jetty instance."
-
-    //reload = "automatic"
-    //scanIntervalSeconds = 1
-
-    def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
-    System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
-    System.setProperty('whelk.mode', System.getProperty("whelk.mode", "ops"))
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {

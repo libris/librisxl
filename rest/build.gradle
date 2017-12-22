@@ -168,29 +168,17 @@ war {
 
 }
 
+task jettyRun(type: JettyRun, overwrite: true) {
+    jettyRun.contextPath = '/'
+    jettyRun.httpPort = 8180
+    jettyRun.description = "Starts a jetty instance. (USAGE: To use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:etc/whelk.json'))"
+}
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
     classpath = sourceSets.test.runtimeClasspath
     main = "groovy.ui.GroovyMain"
     args(System.getProperty("args", "").split() as String[])
-}
-
-task jettyRun(type: JettyRun, overwrite: true) {
-    jettyRun.contextPath = '/'
-    jettyRun.httpPort = 8180
-    jettyRun.description = "Starts a jetty instance. (USAGE: To use a specific json-file to configure whelks, use -Dwhelk.config.uri=<URI of json file> (example: -Dwhelk.config.uri='file:etc/whelk.json'))"
-
-    //reload = "automatic"
-    //scanIntervalSeconds = 1
-
-    def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
-    System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
-    System.setProperty('whelk.mode', System.getProperty("whelk.mode", "ops"))
-    def componentProps = System.getProperty("xl.component.properties")
-    if (componentProps) {
-        System.setProperty("xl.component.properties", componentProps)
-    }
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {

@@ -167,6 +167,12 @@ task(doRun, dependsOn: "classes", type: JavaExec) {
     args(System.getProperty("args", "").split() as String[])
 }
 
+task jettyRun(type: JettyRun, overwrite: true) {
+    jettyRun.contextPath = '/'
+    jettyRun.httpPort = 8181
+    jettyRun.description = "Starts a jetty instance."
+}
+
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
     classpath = sourceSets.test.runtimeClasspath
@@ -178,14 +184,4 @@ task(console, dependsOn: 'classes', type: JavaExec) {
     description "Launch a Groovy Console"
     classpath = sourceSets.main.runtimeClasspath
     main = 'groovy.ui.Console'
-}
-
-task jettyRun(type: JettyRun, overwrite: true) {
-    jettyRun.contextPath = '/'
-    jettyRun.httpPort = 8181
-    jettyRun.description = "Starts a jetty instance."
-
-    def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
-    System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
-    System.setProperty('whelk.mode', System.getProperty("whelk.mode", "ops"))
 }
