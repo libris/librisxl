@@ -169,14 +169,14 @@ To start the whelk, run the following commands:
 ```
 $ cd $LIBRISXL/rest
 $ export JAVA_OPTS="-Dfile.encoding=utf-8"
-$ ../gradlew -Dxl.secret.properties=../secret.properties jettyRun
+$ ../gradlew -Dxl.secret.properties=../secret.properties appRun
 ```
 
 Windows:
 ```
 $ cd $LIBRISXL/rest
 $ setx JAVA_OPTS "-Dfile.encoding=utf-8"
-$ ../gradlew.bat -Dxl.secret.properties=../secret.properties jettyRun
+$ ../gradlew.bat -Dxl.secret.properties=../secret.properties appRun
 ```
 
 The system is then available on <http://localhost:8180>.

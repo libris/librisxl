@@ -1,8 +1,9 @@
+apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'application'
-apply plugin: 'java'
-apply plugin: 'jetty'
 apply plugin: 'war'
+apply from: '../gretty.plugin'
+
 
 loadConfiguration()
 def loadConfiguration() {
@@ -128,50 +129,55 @@ jar {
 configurations {
     executableWarDeps
 }
-war {
-    //mainClassName = "whelk.vcopyServlet.vcopyImporterServlet"
-    archivesBaseName = "vcopyImporter"
 
-    from {
-        configurations.executableWarDeps.collect {
-            //it.isDirectory() ? it : project.zipTree(it)
-            it.isDirectory() ? it : project.zipTree(it).matching {
-                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+project.afterEvaluate {
+    war {
+        //mainClassName = "whelk.vcopyServlet.vcopyImporterServlet"
+        archivesBaseName = "vcopyImporter"
+
+        from {
+            configurations.executableWarDeps.collect {
+                //it.isDirectory() ? it : project.zipTree(it)
+                it.isDirectory() ? it : project.zipTree(it).matching {
+                    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+                }
             }
         }
+        //from "$buildDir/classes/main"
+
+        def manifestClasspath = configurations.compile.collect {
+            "/WEB-INF/lib/${it.getName()}"
+        }.join(',')
+
+        manifest {
+            attributes 'Implementation-Title': 'Standalone Whelk Importer',
+                    'Implementation-Version': versionNumber,
+                    'Class-Path': manifestClasspath
+        }
     }
-    //from "$buildDir/classes/main"
-
-    def manifestClasspath = configurations.compile.collect {
-         "/WEB-INF/lib/${it.getName()}"
-     }.join(',')
-
-    manifest {
-         attributes 'Implementation-Title': 'Standalone Whelk',
-                 'Implementation-Version': versionNumber,
-                 'Class-Path': manifestClasspath
-     }
-
-
 }
 
 task(doRun, dependsOn: "classes", type: JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     main = "whelk.importer.ImporterMain"
-    systemProperties([
-            'xl.secret.properties': System.getProperty("xl.secret.properties"),
-            'xl.mysql.properties' : System.getProperty("xl.mysql.properties")
-    ])
+    systemProperties(
+        'xl.secret.properties': System.getProperty("xl.secret.properties"),
+        'xl.mysql.properties' : System.getProperty("xl.mysql.properties")
+    )
     minHeapSize = "1g"
     maxHeapSize = "4g"
     args(System.getProperty("args", "").split() as String[])
 }
 
-task jettyRun(type: JettyRun, overwrite: true) {
-    jettyRun.contextPath = '/'
-    jettyRun.httpPort = 8181
-    jettyRun.description = "Starts a jetty instance."
+gretty {
+    httpPort = 8181
+    contextPath = '/'
+    systemProperties(
+        'xl.secret.properties': System.getProperty("xl.secret.properties"),
+        'xl.mysql.properties' : System.getProperty("xl.mysql.properties")
+    )
 }
+
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
