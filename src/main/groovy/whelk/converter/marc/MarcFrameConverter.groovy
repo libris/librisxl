@@ -1778,7 +1778,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     Map getLocalEntity(Map state, Map owner, String id, Map localEntities, boolean forceNew = false) {
-        def entity = (Map) localEntities[id]
+        Map entity = (Map) localEntities[id]
         if (entity == null || forceNew) {
             def pending = pendingResources[id]
             entity = localEntities[id] = newEntity(state,
