@@ -8,6 +8,12 @@ public class Script
 {
     private List<String> m_operations = new ArrayList<>();
 
+    // Temporary state, held only during a single MOVE resolution
+    private List<String> head = new ArrayList<>();
+    private List<String> tail = new ArrayList<>();
+    private List<String> fromDiff;
+    private List<String> toDiff;
+
     public void resolveMove(String fromPath, String toPath)
     {
         //System.err.println("Attempting to resolve " + fromPath + " INTO " + toPath);
@@ -18,10 +24,10 @@ public class Script
         // make:
         // from = head + fromDiff + tail
         // to = head + toDiff + tail
-        List<String> head = new ArrayList<>();
-        List<String> tail = new ArrayList<>();
-        List<String> fromDiff;
-        List<String> toDiff;
+        head = new ArrayList<>();
+        tail = new ArrayList<>();
+        fromDiff = new ArrayList<>();
+        toDiff = new ArrayList<>();
         int i = 0;
         while ( from.get(i).equals(to.get(i)) )
             head.add( from.get(i++) );
@@ -36,7 +42,7 @@ public class Script
 
         System.err.println("head: " + head + " tail: " + tail + "\n\tfromDiff: " + fromDiff + "\n\ttoDiff: " + toDiff);
 
-        List<String> operations = generatePivotPointMoves(head, fromDiff, toDiff);
+        List<String> operations = generatePivotPointMoves();
         if (!operations.isEmpty())
         {
             m_operations.add("# Resulting from observed grammar diff:\n# " + fromPath + " -> " + toPath);
@@ -53,41 +59,48 @@ public class Script
      * each list must be matched up to its transformed equivalence. If the number of "_list"s diff, the change
      * can't be resolved with any certainty (Which list should be collapsed?).
      */
-    private List<String> generatePivotPointMoves(List<String> head, List<String> fromDiff, List<String> toDiff)
+    private List<String> generatePivotPointMoves()
     {
         List<String> resultingOperations = new ArrayList<>();
 
-        int fromIndex = 0, toIndex = 0;
-        while (fromIndex < fromDiff.size() && toIndex < toDiff.size())
-        {
-            if ( fromDiff.get(fromIndex).equals("_list") && toDiff.get(toIndex).equals("_list") )
+        boolean done;
+
+        do {
+            done = true;
+            int fromIndex = 0, toIndex = 0;
+            while (fromIndex < fromDiff.size() && toIndex < toDiff.size())
             {
-                List<String> sourceList = new ArrayList<>();
-                sourceList.addAll(head);
-                sourceList.addAll(fromDiff.subList(0, fromIndex));
-                //String source = String.join(",", sourceList);
+                if (fromDiff.get(fromIndex).equals("_list") && toDiff.get(toIndex).equals("_list"))
+                {
+                    List<String> sourceList = new ArrayList<>();
+                    sourceList.addAll(head);
+                    sourceList.addAll(fromDiff.subList(0, fromIndex));
 
-                List<String> targetList = new ArrayList<>();
-                targetList.addAll(head);
-                targetList.addAll(toDiff.subList(0, toIndex));
-                //String target = String.join(",", targetList);
+                    List<String> targetList = new ArrayList<>();
+                    targetList.addAll(head);
+                    targetList.addAll(toDiff.subList(0, toIndex));
 
-                // Issue a command to make this move
-                //System.err.println("MOVE " + source + " -> " + target);
-                resultingOperations.addAll( generateMoveSequence(sourceList, targetList) );
+                    // Issue a command to make this move
+                    resultingOperations.addAll(generateMoveSequence(sourceList, targetList));
 
-                // Keep looking
-                ++fromIndex;
-                ++toIndex;
-                continue;
+                    // Keep looking
+                    head.addAll(toDiff.subList(0, toIndex+1));
+                    toDiff = toDiff.subList(toIndex+1, toDiff.size());
+                    fromDiff = fromDiff.subList(fromIndex+1, fromDiff.size());
+                    done = false;
+                    break;
+                }
+
+                if (!fromDiff.get(fromIndex).equals("_list"))
+                    ++fromIndex;
+
+                if (!toDiff.get(toIndex).equals("_list"))
+                    ++toIndex;
             }
+        } while (!done);
 
-            if ( ! fromDiff.get(fromIndex).equals("_list"))
-                ++fromIndex;
 
-            if ( ! toDiff.get(toIndex).equals("_list"))
-                ++toIndex;
-        }
+        System.err.println("Remaining: " + fromDiff + " / " + toDiff);
 
         return resultingOperations;
     }
@@ -96,18 +109,21 @@ public class Script
     {
         List<String> resultingOperations = new ArrayList<>();
 
+        int openBrackets = 0;
         for (int i = 0; i < Integer.min(sourcePath.size(), targetPath.size()); ++i)
         {
             if (sourcePath.get(i).equals("_list") && targetPath.get(i).equals("_list"))
             {
                 resultingOperations.add("FOREACH it : " + String.join(",", sourcePath.subList(0, i)));
                 resultingOperations.add("{");
+                ++openBrackets;
                 resultingOperations.add("MOVE " +
                         String.join(",", sourcePath.subList(0, i)) + ",it," + String.join(",", sourcePath.subList(i+1, sourcePath.size())) + " -> " +
                         String.join(",", targetPath.subList(0, i)) + ",it," + String.join(",", targetPath.subList(i+1, targetPath.size())) );
-                resultingOperations.add("}");
             }
         }
+        for (int i = 0; i < openBrackets; ++i)
+            resultingOperations.add("}");
 
         return resultingOperations;
     }
