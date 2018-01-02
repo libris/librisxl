@@ -65,6 +65,7 @@ public class Script
 
         boolean done;
 
+        // Generate a move sequence for each _list pivot point
         do {
             done = true;
             int fromIndex = 0, toIndex = 0;
@@ -81,7 +82,7 @@ public class Script
                     targetList.addAll(toDiff.subList(0, toIndex));
 
                     // Issue a command to make this move
-                    resultingOperations.addAll(generateMoveSequence(sourceList, targetList));
+                    resultingOperations.addAll(generateMoveSequence(sourceList, targetList, 0, 0));
 
                     // Keep looking
                     head.addAll(toDiff.subList(0, toIndex+1));
@@ -99,31 +100,52 @@ public class Script
             }
         } while (!done);
 
-
         System.err.println("Remaining: " + fromDiff + " / " + toDiff);
+
+        // Generate a move sequence for the remainder [last pivotpoint] -> end of toPath
+        List<String> sourceList = new ArrayList<>();
+        sourceList.addAll(head);
+        sourceList.addAll(fromDiff);
+        List<String> targetList = new ArrayList<>();
+        targetList.addAll(head);
+        targetList.addAll(toDiff);
+        resultingOperations.addAll(generateMoveSequence(sourceList, targetList, 0, 0));
 
         return resultingOperations;
     }
 
-    private List<String> generateMoveSequence(List<String> sourcePath, List<String> targetPath)
+    private List<String> generateMoveSequence(List<String> sourcePath, List<String> targetPath, int startIndex, int indentation)
     {
         List<String> resultingOperations = new ArrayList<>();
 
-        int openBrackets = 0;
-        for (int i = 0; i < Integer.min(sourcePath.size(), targetPath.size()); ++i)
+        for (int i = startIndex; i < Integer.min(sourcePath.size(), targetPath.size()); ++i)
         {
             if (sourcePath.get(i).equals("_list") && targetPath.get(i).equals("_list"))
             {
-                resultingOperations.add("FOREACH it : " + String.join(",", sourcePath.subList(0, i)));
-                resultingOperations.add("{");
-                ++openBrackets;
-                resultingOperations.add("MOVE " +
-                        String.join(",", sourcePath.subList(0, i)) + ",it," + String.join(",", sourcePath.subList(i+1, sourcePath.size())) + " -> " +
-                        String.join(",", targetPath.subList(0, i)) + ",it," + String.join(",", targetPath.subList(i+1, targetPath.size())) );
+                List<String> newSourcePath = new ArrayList<>();
+                newSourcePath.addAll(sourcePath.subList(0, i));
+                newSourcePath.add("it");
+                newSourcePath.addAll(sourcePath.subList(i+1, sourcePath.size()));
+
+                List<String> newTargetPath = new ArrayList<>();
+                newTargetPath.addAll(targetPath.subList(0, i));
+                newTargetPath.add("it");
+                newTargetPath.addAll(targetPath.subList(i+1, targetPath.size()));
+
+                String tabs = "";
+                for (int j = 0; j < indentation; ++j)
+                    tabs += "  ";
+                String tabsP1 = "";
+                for (int j = 0; j < indentation+1; ++j)
+                    tabsP1 += "  ";
+
+                resultingOperations.add(tabs + "FOREACH it : " + String.join(",", sourcePath.subList(0, i)));
+                resultingOperations.add(tabs + "{");
+                resultingOperations.addAll(generateMoveSequence(newSourcePath, newTargetPath, startIndex+1, indentation+1));
+                resultingOperations.add(tabsP1 + "MOVE " + String.join(",",newSourcePath) + " -> " + String.join(",",newTargetPath));
+                resultingOperations.add(tabs + "}");
             }
         }
-        for (int i = 0; i < openBrackets; ++i)
-            resultingOperations.add("}");
 
         return resultingOperations;
     }
