@@ -5,9 +5,6 @@ import whelk.Document;
 import whelk.JsonLd;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
 public class Main
@@ -62,7 +59,7 @@ public class Main
 
         /*ScriptGenerator scriptGenerator = new ScriptGenerator();
         scriptGenerator.generate(syntax1, syntax2, json1Reader, json2Reader);*/
-        ScriptGenerator.generate(syntax1, syntax2, json1Reader, json2Reader);
+        SyntaxDiffReduce.generate(syntax1, syntax2, json1Reader, json2Reader);
 
         json1Reader.close();
         json2Reader.close();

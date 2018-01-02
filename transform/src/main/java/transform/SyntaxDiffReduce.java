@@ -8,7 +8,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.*;
 
-public class ScriptGenerator
+public class SyntaxDiffReduce
 {
     public static void generate(Syntax oldSyntax, Syntax newSyntax, BufferedReader oldJsonReader, BufferedReader newJsonReader)
             throws IOException
@@ -22,6 +22,9 @@ public class ScriptGenerator
         Set<Syntax.Rule> appearingRules = new HashSet<>();
         appearingRules.addAll( newSyntax.rules );
         appearingRules.removeAll( oldSyntax.rules );
+
+        // A container for the resulting script
+        Script script = new Script();
 
         // For each (+) diff, attempt to find an equivalent (-) diff, matching on the values in the streams.
         // If one is found, the diff can be settled.
@@ -38,12 +41,12 @@ public class ScriptGenerator
             Map newData = mapper.readValue(newJsonString, Map.class);
             newData = JsonLd.frame(doc.getCompleteId(), newData);
 
-            attemptToReduceDiff(appearingRules, disappearingRules, oldData, newData);
+            attemptToReduceDiff(appearingRules, disappearingRules, oldData, newData, script);
         }
     }
 
     private static void attemptToReduceDiff(Set<Syntax.Rule> appearingRules, Set<Syntax.Rule> disappearingRules,
-                                     Map oldDataExample, Map newDataExample)
+                                     Map oldDataExample, Map newDataExample, Script script)
     {
         for (Syntax.Rule rule : appearingRules)
         {
@@ -64,6 +67,8 @@ public class ScriptGenerator
             {
                 System.err.println("Tracked a move through value (" + value + "), "
                         + rule.path + "," + rule.followedByKey + " [has equivalent] " + foundAtPath);
+
+                script.resolveMove(rule.path + "," + rule.followedByKey, foundAtPath);
             }
         }
     }
@@ -107,7 +112,8 @@ public class ScriptGenerator
             for (int i = 0; i < list.size(); ++i)
             {
                 Object element = list.get(i);
-                String foundPath = searchForValue(element, path+","+i, target);
+                //String foundPath = searchForValue(element, path+","+i, target);
+                String foundPath = searchForValue(element, path+",_list", target);
                 if (foundPath != null)
                     return foundPath;
             }
