@@ -124,12 +124,12 @@ public class Script
             {
                 List<String> newSourcePath = new ArrayList<>();
                 newSourcePath.addAll(sourcePath.subList(0, i));
-                newSourcePath.add("it");
+                newSourcePath.add("it"+indentation);
                 newSourcePath.addAll(sourcePath.subList(i+1, sourcePath.size()));
 
                 List<String> newTargetPath = new ArrayList<>();
                 newTargetPath.addAll(targetPath.subList(0, i));
-                newTargetPath.add("it");
+                newTargetPath.add("it"+indentation);
                 newTargetPath.addAll(targetPath.subList(i+1, targetPath.size()));
 
                 String tabs = "";
@@ -139,11 +139,14 @@ public class Script
                 for (int j = 0; j < indentation+1; ++j)
                     tabsP1 += "  ";
 
-                resultingOperations.add(tabs + "FOREACH it : " + String.join(",", sourcePath.subList(0, i)));
+                resultingOperations.add(tabs + "FOREACH it" + indentation + " : " + String.join(",", sourcePath.subList(0, i+1)));
                 resultingOperations.add(tabs + "{");
-                resultingOperations.addAll(generateMoveSequence(newSourcePath, newTargetPath, startIndex+1, indentation+1));
-                resultingOperations.add(tabsP1 + "MOVE " + String.join(",",newSourcePath) + " -> " + String.join(",",newTargetPath));
+                List<String> nestedOps = generateMoveSequence(newSourcePath, newTargetPath, startIndex+1, indentation+1);
+                resultingOperations.addAll(nestedOps);
+                if (nestedOps.isEmpty())
+                    resultingOperations.add(tabsP1 + "MOVE " + String.join(",",newSourcePath) + " -> " + String.join(",",newTargetPath));
                 resultingOperations.add(tabs + "}");
+                break;
             }
         }
 
