@@ -10,7 +10,7 @@ import java.util.*;
 
 public class SyntaxDiffReduce
 {
-    public static void generate(Syntax oldSyntax, Syntax newSyntax, BufferedReader oldJsonReader, BufferedReader newJsonReader)
+    public static Script generateScript(Syntax oldSyntax, Syntax newSyntax, BufferedReader oldJsonReader, BufferedReader newJsonReader)
             throws IOException
     {
         // Generate syntax minus diff
@@ -44,9 +44,25 @@ public class SyntaxDiffReduce
             newData = JsonLd.frame(doc.getCompleteId(), newData);
 
             attemptToReduceDiff(appearingRules, disappearingRules, oldData, newData, script);
-            System.err.println("Still remaining +diff: " + appearingRules);
-            System.err.println("Still remaining -diff: " + disappearingRules);
+            //System.err.println("Still remaining +diff: " + appearingRules);
+            //System.err.println("Still remaining -diff: " + disappearingRules);
         }
+
+        for (Syntax.Rule rule : appearingRules)
+        {
+            script.m_warnings.add("# The following path contained data in the new format, but no equivalent could be found\n" +
+                    "# in the old format. Did you map in new data from MARC? (Severity: LOW)\n" +
+                    "# " + String.join(",", rule.path) + "," + rule.followedByKey + "\n#");
+        }
+
+        for (Syntax.Rule rule : disappearingRules)
+        {
+            script.m_warnings.add("# The following path contained data in the old format, but no equivalent could be found\n" +
+                    "# in the new format. Are we mapping in less data from MARC in the new format? (Severity: HIGH)\n" +
+                    "# " + String.join(",", rule.path) + "," + rule.followedByKey + "\n#");
+        }
+
+        return script;
     }
 
     private static void collapseRedundantRules(Set<Syntax.Rule> rules)

@@ -57,11 +57,11 @@ public class Main
         BufferedReader json1Reader = new BufferedReader(new FileReader(args[3]));
         BufferedReader json2Reader = new BufferedReader(new FileReader(args[4]));
 
-        /*ScriptGenerator scriptGenerator = new ScriptGenerator();
-        scriptGenerator.generate(syntax1, syntax2, json1Reader, json2Reader);*/
-        SyntaxDiffReduce.generate(syntax1, syntax2, json1Reader, json2Reader);
+        Script script = SyntaxDiffReduce.generateScript(syntax1, syntax2, json1Reader, json2Reader);
 
         json1Reader.close();
         json2Reader.close();
+
+        System.out.println(script);
     }
 }

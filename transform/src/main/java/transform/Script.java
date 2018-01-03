@@ -1,11 +1,14 @@
 package transform;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class Script
 {
+    public List<String> m_warnings = new ArrayList<>();
     private List<String> m_operations = new ArrayList<>();
 
     // Temporary state, held only during a single MOVE resolution
@@ -14,10 +17,34 @@ public class Script
     private List<String> fromDiff;
     private List<String> toDiff;
 
+    @Override
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("# Generated: " + ZonedDateTime.now( ZoneOffset.UTC ) + " (UTC)\n#\n");
+
+        sb.append("# WARNINGS:\n#\n");
+        for (String s : m_warnings)
+        {
+            sb.append(s);
+            sb.append("\n");
+        }
+        if (m_warnings.isEmpty())
+            sb.append("# I got 99 problems, but your changes ain't one.\n");
+
+        sb.append("\n# SCRIPT:\n\nMODE FRAMED\n\n");
+        for (String s : m_operations)
+        {
+            sb.append(s);
+            sb.append("\n");
+        }
+
+        return sb.toString();
+    }
+
     public void resolveMove(String fromPath, String toPath)
     {
-        //System.err.println("Attempting to resolve " + fromPath + " INTO " + toPath);
-
         List<String> from = Arrays.asList(fromPath.split(","));
         List<String> to = Arrays.asList(toPath.split(","));
 
@@ -49,9 +76,6 @@ public class Script
             m_operations.addAll(operations);
             m_operations.add(""); // empty line
         }
-
-        for (String op : m_operations)
-            System.out.println(op);
     }
 
     /**
