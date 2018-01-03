@@ -40,7 +40,7 @@ public class Script
         fromDiff = from.subList( head.size(), from.size()-tail.size() );
         toDiff = to.subList( head.size(), to.size()-tail.size() );
 
-        System.err.println("head: " + head + " tail: " + tail + "\n\tfromDiff: " + fromDiff + "\n\ttoDiff: " + toDiff);
+        //System.err.println("head: " + head + " tail: " + tail + "\n\tfromDiff: " + fromDiff + "\n\ttoDiff: " + toDiff);
 
         List<String> operations = generatePivotPointMoves();
         if (!operations.isEmpty())
@@ -100,7 +100,7 @@ public class Script
             }
         } while (!done);
 
-        System.err.println("Remaining: " + fromDiff + " / " + toDiff);
+        //System.err.println("Remaining: " + fromDiff + " / " + toDiff);
 
         // Generate a move sequence for the remainder [last pivotpoint] -> end of toPath
         List<String> sourceList = new ArrayList<>();

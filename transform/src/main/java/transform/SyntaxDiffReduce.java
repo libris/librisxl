@@ -17,11 +17,13 @@ public class SyntaxDiffReduce
         Set<Syntax.Rule> disappearingRules = new HashSet<>();
         disappearingRules.addAll( oldSyntax.rules );
         disappearingRules.removeAll( newSyntax.rules );
+        collapseRedundantRules(disappearingRules);
 
         // Generate syntax plus diff
         Set<Syntax.Rule> appearingRules = new HashSet<>();
         appearingRules.addAll( newSyntax.rules );
         appearingRules.removeAll( oldSyntax.rules );
+        collapseRedundantRules(appearingRules);
 
         // A container for the resulting script
         Script script = new Script();
@@ -42,14 +44,66 @@ public class SyntaxDiffReduce
             newData = JsonLd.frame(doc.getCompleteId(), newData);
 
             attemptToReduceDiff(appearingRules, disappearingRules, oldData, newData, script);
+            System.err.println("Still remaining +diff: " + appearingRules);
+            System.err.println("Still remaining -diff: " + disappearingRules);
         }
+    }
+
+    private static void collapseRedundantRules(Set<Syntax.Rule> rules)
+    {
+        List<Syntax.Rule> rulesToRemove = new ArrayList<>();
+
+        for (Syntax.Rule outerRule : rules)
+        {
+            String[] outerPath = outerRule.path.split(",");
+
+            for (Syntax.Rule innerRule : rules)
+            {
+                // Is the inner rule implicitly covered by the outer?
+                String[] innerPath = innerRule.path.split(",");
+                String innerLeaf = innerRule.followedByKey;
+
+                boolean innerIsSubRule = true;
+                if (innerPath.length >= outerPath.length)
+                {
+                    innerIsSubRule = false;
+                } else
+                {
+                    for (int i = 0; i < innerPath.length; ++i)
+                    {
+                        if ( ! innerPath[i].equals(outerPath[i]) )
+                        {
+                            innerIsSubRule = false;
+                            break;
+                        }
+                    }
+
+                    if (!innerLeaf.equals(outerPath[innerPath.length]))
+                    {
+                        innerIsSubRule = false;
+                    }
+                }
+
+                if (innerIsSubRule)
+                {
+                    //System.err.println("Found that " + innerRule + " is contained within " + outerRule);
+                    rulesToRemove.add(innerRule);
+                }
+            }
+        }
+
+        rules.removeAll(rulesToRemove);
     }
 
     private static void attemptToReduceDiff(Set<Syntax.Rule> appearingRules, Set<Syntax.Rule> disappearingRules,
                                      Map oldDataExample, Map newDataExample, Script script)
     {
-        for (Syntax.Rule rule : appearingRules)
+        List<Syntax.Rule> rulesToRemoveFromDisappearing = new ArrayList<>();
+        Iterator<Syntax.Rule> iterator = appearingRules.iterator();
+        while (iterator.hasNext())
         {
+            Syntax.Rule rule = iterator.next();
+
             // Look for a value at appearingRule.path in the new document.
             // Try to find the same value in the old document, if so, at what path?
 
@@ -69,8 +123,17 @@ public class SyntaxDiffReduce
                         + rule.path + "," + rule.followedByKey + " [has equivalent] " + foundAtPath);
 
                 script.resolveMove(foundAtPath, rule.path + "," + rule.followedByKey);
+                // Remove this part of the diff (and if a corresponding "disappearing" rule exists)
+                // remove that too
+                iterator.remove();
+                List<String> parts = Arrays.asList(foundAtPath.split(","));
+                String correspondingPath = String.join(",", parts.subList(0, parts.size()-1));
+                String followedByKey = parts.get(parts.size()-1);
+                Syntax.Rule correspondingRule = new Syntax.Rule(correspondingPath, followedByKey);
+                rulesToRemoveFromDisappearing.add(correspondingRule);
             }
         }
+        disappearingRules.removeAll(rulesToRemoveFromDisappearing);
     }
 
     private static Object searchAtRulePath(List<String> rulePath, Object data)
@@ -112,7 +175,6 @@ public class SyntaxDiffReduce
             for (int i = 0; i < list.size(); ++i)
             {
                 Object element = list.get(i);
-                //String foundPath = searchForValue(element, path+","+i, target);
                 String foundPath = searchForValue(element, path+",_list", target);
                 if (foundPath != null)
                     return foundPath;

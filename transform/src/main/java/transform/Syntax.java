@@ -6,7 +6,7 @@ import java.util.*;
 
 public class Syntax
 {
-    public class Rule
+    public static class Rule
     {
         public Rule(String path, String followedByKey)
         {
