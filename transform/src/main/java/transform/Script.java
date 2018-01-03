@@ -72,7 +72,7 @@ public class Script
         List<String> operations = generatePivotPointMoves();
         if (!operations.isEmpty())
         {
-            m_operations.add("# Resulting from observed grammar diff:\n# " + fromPath + " -> " + toPath);
+            m_operations.add("# Resulting from observed grammar diff:\n#    " + fromPath + "\n# -> " + toPath);
             m_operations.addAll(operations);
             m_operations.add(""); // empty line
         }
@@ -168,7 +168,7 @@ public class Script
                 List<String> nestedOps = generateMoveSequence(newSourcePath, newTargetPath, startIndex+1, indentation+1);
                 resultingOperations.addAll(nestedOps);
                 if (nestedOps.isEmpty())
-                    resultingOperations.add(tabsP1 + "MOVE " + String.join(",",newSourcePath) + " -> " + String.join(",",newTargetPath));
+                    resultingOperations.add(tabsP1 + "MOVE " + String.join(",",newSourcePath) + "\n" + tabsP1 + "->   " + String.join(",",newTargetPath));
                 resultingOperations.add(tabs + "}");
                 break;
             }
