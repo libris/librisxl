@@ -134,10 +134,10 @@ public class Script
 
                 String tabs = "";
                 for (int j = 0; j < indentation; ++j)
-                    tabs += "  ";
+                    tabs += "   ";
                 String tabsP1 = "";
                 for (int j = 0; j < indentation+1; ++j)
-                    tabsP1 += "  ";
+                    tabsP1 += "   ";
 
                 resultingOperations.add(tabs + "FOREACH it" + indentation + " : " + String.join(",", sourcePath.subList(0, i+1)));
                 resultingOperations.add(tabs + "{");

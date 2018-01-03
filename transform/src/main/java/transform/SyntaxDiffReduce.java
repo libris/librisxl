@@ -68,7 +68,7 @@ public class SyntaxDiffReduce
                 System.err.println("Tracked a move through value (" + value + "), "
                         + rule.path + "," + rule.followedByKey + " [has equivalent] " + foundAtPath);
 
-                script.resolveMove(rule.path + "," + rule.followedByKey, foundAtPath);
+                script.resolveMove(foundAtPath, rule.path + "," + rule.followedByKey);
             }
         }
     }
