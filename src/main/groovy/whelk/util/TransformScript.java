@@ -166,18 +166,16 @@ public class TransformScript
 
             Object value = Document._get(fromPathWithSymbols, json);
 
-            System.out.println("   the moving object: " + value);
-
             Type containerType;
             if (toPathWithSymbols.get(toPathWithSymbols.size()-1) instanceof String)
                 containerType = HashMap.class;
             else
                 containerType = ArrayList.class;
-            boolean success = Document._set(toPathWithSymbols, value, containerType, json);
-            if (success)
+
+            if (path1DependsOnPath2(toPathWithSymbols, fromPathWithSymbols))
                 Document._removeLeafObject(fromPathWithSymbols, containerType, json);
 
-            System.out.println("   Existing at toPath after set: " + Document._get(toPathWithSymbols, json));
+            Document._set(toPathWithSymbols, value, containerType, json);
         }
     }
 
@@ -235,6 +233,22 @@ public class TransformScript
         return resultingPath;
     }
 
+    /**
+     * For example [_root,something] depends on [_root]
+     */
+    private boolean path1DependsOnPath2(List<Object> path1, List<Object> path2)
+    {
+        if (path1.size() < path2.size())
+            return false;
+
+        for (int i = 0; i < path2.size(); ++i)
+        {
+            if ( ! path1.get(i).equals(path2.get(i)))
+                return false;
+        }
+        return true;
+    }
+
     public String executeOn(String json) throws IOException
     {
         ObjectMapper mapper = new ObjectMapper();
@@ -243,7 +257,7 @@ public class TransformScript
         if (m_modeFramed)
             data = JsonLd.frame(doc.getShortId(), data);
 
-        System.out.println("Before execution:\n" + mapper.writeValueAsString(data) + "\n\n");
+        //System.out.println("Before execution:\n" + mapper.writeValueAsString(data) + "\n\n");
 
         for (Operation op : m_operations)
             op.execute(data, new HashMap<>());
