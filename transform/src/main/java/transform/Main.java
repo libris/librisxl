@@ -3,18 +3,21 @@ package transform;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
 import whelk.JsonLd;
+import whelk.util.TransformScript;
 
 import java.io.*;
 import java.util.Map;
 
 public class Main
 {
-    public static void main(String[] args) throws IOException
+    public static void main(String[] args) throws IOException, TransformScript.TransformSyntaxException
     {
         if (args[0].equals("syntax"))
             generateAndPrintSyntax(args);
         else if (args[0].equals("transform"))
             generateAndPrintTransform(args);
+        else if (args[0].equals("execute"))
+            executeScript(args);
         else
             System.err.println(
                     "Usage:\n" +
@@ -24,7 +27,9 @@ public class Main
                             "java -jar transform.jar transform [syntax1file] [syntax2file] [file1] [file2]\n" +
                             "  Generate a diff script from syntax1 to syntax2 using values found in the streams\n" +
                             "  each element in order in file1 and file2 is expected to represent the \"the same\"" +
-                            "  record, in the various format forms.");
+                            "  record, in the various format forms.\n" +
+                            "java -jar transform.jar execute [scriptfile] [file]\n" +
+                            "  Execute the given script on each json document in [file], one document per line.");
     }
 
     private static void generateAndPrintSyntax(String[] args) throws IOException
@@ -63,5 +68,23 @@ public class Main
         json2Reader.close();
 
         System.out.println(script);
+    }
+
+    private static void executeScript(String[] args) throws IOException, TransformScript.TransformSyntaxException
+    {
+        BufferedReader scriptReader = new BufferedReader(new FileReader(args[1]));
+        StringBuilder scriptText = new StringBuilder();
+        for(String line = scriptReader.readLine(); line != null; line = scriptReader.readLine())
+        {
+            scriptText.append(line + "\n");
+        }
+
+        TransformScript script = new TransformScript(scriptText.toString());
+
+        BufferedReader jsonReader = new BufferedReader(new FileReader(args[2]));
+        for(String line = jsonReader.readLine(); line != null; line = jsonReader.readLine())
+        {
+            System.out.println(script.executeOn(line));
+        }
     }
 }
