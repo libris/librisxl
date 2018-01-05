@@ -16,6 +16,7 @@ import whelk.util.TransformScript;
 public class TransformTest
 {
     static ObjectMapper mapper = new ObjectMapper();
+    
     @Test
     public void testBasicMove() throws Exception
     {
@@ -29,6 +30,38 @@ public class TransformTest
                 "    \"key1\":\"value0\"" +
                 "}";
 
+        testTransform(oldFormatExample, oldFormatExample, newFormatExample, newFormatExample);
+    }
+
+    @Test
+    public void testPreserveValue() throws Exception
+    {
+        String oldFormatExample = "" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}";
+
+        String newFormatExample = "" +
+                "{" +
+                "    \"key1\":\"value0\"" +
+                "}";
+
+        String toBeTransformed = "" +
+                "{" +
+                "    \"key0\":\"OTHERVALUE\"" +
+                "}";
+
+        String expectedResult = "" +
+                "{" +
+                "    \"key1\":\"OTHERVALUE\"" +
+                "}";
+
+        testTransform(oldFormatExample, toBeTransformed, newFormatExample, expectedResult);
+    }
+
+    private void testTransform(String oldFormatExample, String toBeTransformed,
+                               String newFormatExample, String expectedTransformedResult) throws Exception
+    {
         Map oldData = mapper.readValue(oldFormatExample, Map.class);
         Map newData = mapper.readValue(newFormatExample, Map.class);
 
@@ -45,12 +78,13 @@ public class TransformTest
         String transformScript = scriptGenerator.toString();
 
         TransformScript executableScript = new TransformScript(transformScript);
-        String transformed = executableScript.executeOn(oldFormatExample);
+        String transformed = executableScript.executeOn(toBeTransformed);
 
         Map transformedData = mapper.readValue(transformed, Map.class);
-        if ( ! rdfEquals( newData, transformedData ) )
+        Map expectedData = mapper.readValue(expectedTransformedResult, Map.class);
+        if ( ! rdfEquals( expectedData, transformedData ) )
         {
-            System.out.println("expected transformation result:\n"+newFormatExample);
+            System.out.println("expected transformation result:\n"+expectedTransformedResult);
             System.out.println("\nactual transformation result:\n"+transformed);
             System.out.println("\ntransformed performed on:\n"+oldFormatExample);
             System.out.println("\nusing script:\n" + transformScript);
