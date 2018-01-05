@@ -163,7 +163,7 @@ public class Script
                 for (int j = 0; j < indentation+1; ++j)
                     tabsP1 += "   ";
 
-                resultingOperations.add(tabs + "FOREACH it" + indentation + " : " + String.join(",", sourcePath.subList(0, i+1)));
+                resultingOperations.add(tabs + "FOREACH it" + indentation + " : " + String.join(",", sourcePath.subList(0, i)));
                 resultingOperations.add(tabs + "{");
                 List<String> nestedOps = generateMoveSequence(newSourcePath, newTargetPath, startIndex+1, indentation+1);
                 resultingOperations.addAll(nestedOps);
