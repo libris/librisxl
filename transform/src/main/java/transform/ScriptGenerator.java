@@ -60,7 +60,7 @@ public class ScriptGenerator
         while ( from.get(i).equals(to.get(i)) )
             head.add( from.get(i++) );
         i = 0;
-        while ( from.get( from.size()-i-1 ).equals(to.get( to.size()-i-1 )) )
+        while ( from.size() > i+1 && to.size() > i+1 && from.get( from.size()-i-1 ).equals(to.get( to.size()-i-1 )) )
         {
             tail.add(0, from.get(from.size() - i - 1));
             ++i;

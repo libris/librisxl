@@ -16,7 +16,7 @@ import whelk.util.TransformScript;
 public class TransformTest
 {
     static ObjectMapper mapper = new ObjectMapper();
-    
+
     @Test
     public void testBasicMove() throws Exception
     {
@@ -28,6 +28,41 @@ public class TransformTest
         String newFormatExample = "" +
                 "{" +
                 "    \"key1\":\"value0\"" +
+                "}";
+
+        testTransform(oldFormatExample, oldFormatExample, newFormatExample, newFormatExample);
+    }
+
+    @Test
+    public void testListMove() throws Exception
+    {
+        String oldFormatExample = "" +
+                "{" +
+                "\"list\":" +
+                "[" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}," +
+                "{" +
+                "    \"key1\":\"value1\"" +
+                "}" +
+                "]" +
+                "}";
+
+        String newFormatExample = "" +
+                "{" +
+                "\"someobject\":" +
+                "{" +
+                "\"list\":" +
+                "[" +
+                "{" +
+                "\"key0\":\"value0\"" +
+                "}," +
+                "{" +
+                "\"key1\":\"value1\"" +
+                "}" +
+                "]" +
+                "}" +
                 "}";
 
         testTransform(oldFormatExample, oldFormatExample, newFormatExample, newFormatExample);
@@ -76,6 +111,8 @@ public class TransformTest
                 new BufferedReader(new StringReader(newFormatExample)));
 
         String transformScript = scriptGenerator.toString();
+
+        System.err.println("\nResulting script:\n" + transformScript);
 
         TransformScript executableScript = new TransformScript(transformScript);
         String transformed = executableScript.executeOn(toBeTransformed);
