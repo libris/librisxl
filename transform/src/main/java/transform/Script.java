@@ -4,6 +4,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Script
@@ -68,6 +69,13 @@ public class Script
         toDiff = to.subList( head.size(), to.size()-tail.size() );
 
         //System.err.println("head: " + head + " tail: " + tail + "\n\tfromDiff: " + fromDiff + "\n\ttoDiff: " + toDiff);
+        if (Collections.frequency(fromDiff, "_list") != Collections.frequency(toDiff, "_list"))
+        {
+            m_warnings.add("# I dare not generate code for this diff, because the paths differ in number of lists.\n" +
+                    "# Please resolve the diff manually. (Severity: HIGH)" +
+                    "#    " + fromPath + "\n# -> " + toPath);
+            return;
+        }
 
         List<String> operations = generatePivotPointMoves();
         if (!operations.isEmpty())
