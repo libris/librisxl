@@ -52,14 +52,14 @@ public class SyntaxDiffReduce
         {
             script.m_warnings.add("# The following path contained data in the new format, but no equivalent could be found\n" +
                     "# in the old format. Did you map in new data from MARC? (Severity: LOW)\n" +
-                    "# " + String.join(",", rule.path) + "," + rule.followedByKey + "\n#");
+                    "# " + rule.path + "," + rule.followedByKey + "\n#");
         }
 
         for (Syntax.Rule rule : disappearingRules)
         {
             script.m_warnings.add("# The following path contained data in the old format, but no equivalent could be found\n" +
                     "# in the new format. Are we mapping in less data from MARC in the new format? (Severity: HIGH)\n" +
-                    "# " + String.join(",", rule.path) + "," + rule.followedByKey + "\n#");
+                    "# " + rule.path + "," + rule.followedByKey + "\n#");
         }
 
         return script;
@@ -138,7 +138,8 @@ public class SyntaxDiffReduce
                 System.err.println("Tracked a move through value (" + value + "), "
                         + rule.path + "," + rule.followedByKey + " [has equivalent] " + foundAtPath);
 
-                script.resolveMove(foundAtPath, rule.path + "," + rule.followedByKey);
+                script.resolveMove(foundAtPath.substring(6, foundAtPath.length()),
+                        rule.path.substring(6, rule.path.length()) + "," + rule.followedByKey);
                 // Remove this part of the diff (and if a corresponding "disappearing" rule exists)
                 // remove that too
                 iterator.remove();
