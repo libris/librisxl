@@ -3,6 +3,7 @@ package transform;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
 import whelk.JsonLd;
+import whelk.util.TransformScript;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,8 +11,10 @@ import java.util.*;
 
 public class SyntaxDiffReduce
 {
+    static final ObjectMapper mapper = new ObjectMapper();
+
     public static ScriptGenerator generateScript(Syntax oldSyntax, Syntax newSyntax, BufferedReader oldJsonReader, BufferedReader newJsonReader)
-            throws IOException
+            throws IOException, TransformScript.TransformSyntaxException
     {
         // Generate syntax minus diff
         Set<Syntax.Rule> disappearingRules = new HashSet<>();
@@ -31,7 +34,6 @@ public class SyntaxDiffReduce
         // For each (+) diff, attempt to find an equivalent (-) diff, matching on the values in the streams.
         // If one is found, the diff can be settled.
 
-        ObjectMapper mapper = new ObjectMapper();
         String oldJsonString;
         while ( (oldJsonString = oldJsonReader.readLine()) != null)
         {
@@ -43,12 +45,12 @@ public class SyntaxDiffReduce
             Map newData = mapper.readValue(newJsonString, Map.class);
             newData = JsonLd.frame(doc.getCompleteId(), newData);
 
-            System.err.println("Start with +diff: " + appearingRules);
-            System.err.println("Start with -diff: " + disappearingRules);
+            //System.err.println("Start with +diff: " + appearingRules);
+            //System.err.println("Start with -diff: " + disappearingRules);
             while(attemptToReduceDiff(appearingRules, disappearingRules, oldData, newData, scriptGenerator))
             {
-                System.err.println("Still remaining +diff: " + appearingRules);
-                System.err.println("Still remaining -diff: " + disappearingRules);
+                //System.err.println("Still remaining +diff: " + appearingRules);
+                //System.err.println("Still remaining -diff: " + disappearingRules);
             }
         }
 
@@ -117,27 +119,35 @@ public class SyntaxDiffReduce
 
     private static boolean attemptToReduceDiff(Set<Syntax.Rule> appearingRules, Set<Syntax.Rule> disappearingRules,
                                      Map oldDataExample, Map newDataExample, ScriptGenerator scriptGenerator)
+            throws IOException, TransformScript.TransformSyntaxException
     {
+        // First apply the current state of the script to the incoming data, so that any changes we make now
+        // are not in conflict with any already added to the script.
+        TransformScript executableScript = new TransformScript(scriptGenerator.toString());
+        String transformed = executableScript.executeOn(mapper.writeValueAsString(oldDataExample));
+        oldDataExample = mapper.readValue(transformed, Map.class);
+
         boolean hadEffect = false;
-        List<Syntax.Rule> rulesToRemoveFromDisappearing = new ArrayList<>();
-        Iterator<Syntax.Rule> iterator = appearingRules.iterator();
+
+        List<Syntax.Rule> rulesToRemoveFromAppearing = new ArrayList<>();
+        Iterator<Syntax.Rule> iterator = disappearingRules.iterator();
         while (iterator.hasNext())
         {
             Syntax.Rule rule = iterator.next();
 
-            // Look for a value at appearingRule.path in the new document.
-            // Try to find the same value in the old document, if so, at what path?
+            // Look for a value at disappearingRule.path in the old document.
+            // Try to find the same value in the new document, if so, at what path?
 
             String[] rulePathArray = (rule.path + "," + rule.followedByKey).split(",");
             LinkedList<String> rulePath = new LinkedList<>();
             for (String s: rulePathArray)
                 rulePath.add(s);
 
-            Object value = searchAtRulePath(rulePath , newDataExample);
+            Object value = searchAtRulePath(rulePath , oldDataExample);
             if (value == null)
                 continue;
 
-            String foundAtPath = searchForValue(oldDataExample, "_root", value);
+            String foundAtPath = searchForValue(newDataExample, "_root", value);
             if (foundAtPath != null)
             {
                 hadEffect = true;
@@ -145,19 +155,22 @@ public class SyntaxDiffReduce
                 System.err.println("Tracked a move through value (" + value + "), "
                         + completeRulePath + " [has equivalent] " + foundAtPath);
 
-                scriptGenerator.resolveMove(foundAtPath.substring(6, foundAtPath.length()),
-                        completeRulePath.substring(6, completeRulePath.length()));
-                // Remove this part of the diff (and if a corresponding "disappearing" rule exists)
+                scriptGenerator.resolveMove(completeRulePath.substring(6, completeRulePath.length()),
+                        foundAtPath.substring(6, foundAtPath.length()));
+                // Remove this part of the diff (and if a corresponding "appearing" rule exists)
                 // remove that too
                 iterator.remove();
                 List<String> parts = Arrays.asList(foundAtPath.split(","));
                 String correspondingPath = String.join(",", parts.subList(0, parts.size()-1));
                 String followedByKey = parts.get(parts.size()-1);
                 Syntax.Rule correspondingRule = new Syntax.Rule(correspondingPath, followedByKey);
-                rulesToRemoveFromDisappearing.add(correspondingRule);
+                rulesToRemoveFromAppearing.add(correspondingRule);
             }
+            if (hadEffect)
+                break;
         }
-        disappearingRules.removeAll(rulesToRemoveFromDisappearing);
+        appearingRules.removeAll(rulesToRemoveFromAppearing);
+
         return hadEffect;
     }
 

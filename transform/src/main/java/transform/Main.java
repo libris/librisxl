@@ -50,7 +50,7 @@ public class Main
         System.out.println(syntax);
     }
 
-    private static void generateAndPrintTransform(String[] args) throws IOException
+    private static void generateAndPrintTransform(String[] args) throws IOException, TransformScript.TransformSyntaxException
     {
         BufferedReader syntax1Reader = new BufferedReader(new FileReader(args[1]));
         BufferedReader syntax2Reader = new BufferedReader(new FileReader(args[2]));

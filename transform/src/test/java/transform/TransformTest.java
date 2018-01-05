@@ -112,7 +112,7 @@ public class TransformTest
 
         String transformScript = scriptGenerator.toString();
 
-        System.err.println("\nResulting script:\n" + transformScript);
+        //System.err.println("\nResulting script:\n" + transformScript);
 
         TransformScript executableScript = new TransformScript(transformScript);
         String transformed = executableScript.executeOn(toBeTransformed);
