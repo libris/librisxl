@@ -164,6 +164,9 @@ public class TransformScript
 
             Object value = Document._get(fromPathWithSymbols, json);
 
+            if (value == null)
+                return;
+
             Type containerType;
             if (toPathWithSymbols.get(toPathWithSymbols.size()-1) instanceof String)
                 containerType = HashMap.class;
