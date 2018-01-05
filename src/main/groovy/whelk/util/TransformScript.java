@@ -191,7 +191,6 @@ public class TransformScript
         public void execute(Map json, Map<String, Object> context)
         {
             List<String> path = Arrays.asList( m_listPath.split(",") );
-            path = path.subList(0, path.size()-1); // Filter out the postfix "_list"
             List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
 
             System.out.println("Executing FOREACH " + pathWithSymbols);
