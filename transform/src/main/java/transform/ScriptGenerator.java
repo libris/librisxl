@@ -12,12 +12,6 @@ public class ScriptGenerator
     public List<String> m_warnings = new ArrayList<>();
     private List<String> m_operations = new ArrayList<>();
 
-    // Temporary state, held only during a single MOVE resolution
-    private List<String> head = new ArrayList<>();
-    private List<String> tail = new ArrayList<>();
-    private List<String> fromDiff;
-    private List<String> toDiff;
-
     @Override
     public String toString()
     {
@@ -49,27 +43,7 @@ public class ScriptGenerator
         List<String> from = Arrays.asList(fromPath.split(","));
         List<String> to = Arrays.asList(toPath.split(","));
 
-        // make:
-        // from = head + fromDiff + tail
-        // to = head + toDiff + tail
-        head = new ArrayList<>();
-        tail = new ArrayList<>();
-        fromDiff = new ArrayList<>();
-        toDiff = new ArrayList<>();
-        int i = 0;
-        while ( from.get(i).equals(to.get(i)) )
-            head.add( from.get(i++) );
-        i = 0;
-        while ( from.size() > i+1 && to.size() > i+1 && from.get( from.size()-i-1 ).equals(to.get( to.size()-i-1 )) )
-        {
-            tail.add(0, from.get(from.size() - i - 1));
-            ++i;
-        }
-        fromDiff = from.subList( head.size(), from.size()-tail.size() );
-        toDiff = to.subList( head.size(), to.size()-tail.size() );
-
-        //System.err.println("head: " + head + " tail: " + tail + "\n\tfromDiff: " + fromDiff + "\n\ttoDiff: " + toDiff);
-        if (Collections.frequency(fromDiff, "_list") != Collections.frequency(toDiff, "_list"))
+        if (Collections.frequency(from, "_list") != Collections.frequency(to, "_list"))
         {
             m_warnings.add("# I dare not generate code for this diff, because the paths differ in number of lists.\n" +
                     "# Please resolve the diff manually. (Severity: HIGH)" +
@@ -77,7 +51,7 @@ public class ScriptGenerator
             return;
         }
 
-        List<String> operations = generatePivotPointMoves();
+        List<String> operations = generatePivotPointMoves(from, to);
         if (!operations.isEmpty())
         {
             m_operations.add("# Resulting from observed grammar diff:\n#    " + fromPath + "\n# -> " + toPath);
@@ -91,63 +65,51 @@ public class ScriptGenerator
      * each list must be matched up to its transformed equivalence. If the number of "_list"s diff, the change
      * can't be resolved with any certainty (Which list should be collapsed?).
      */
-    private List<String> generatePivotPointMoves()
+    private List<String> generatePivotPointMoves(List<String> from, List<String> to)
     {
         List<String> resultingOperations = new ArrayList<>();
 
-        boolean done;
-
-        // Generate a move sequence for each _list pivot point
-        do {
-            done = true;
-            int fromIndex = 0, toIndex = 0;
-            while (fromIndex < fromDiff.size() && toIndex < toDiff.size())
-            {
-                if (fromDiff.get(fromIndex).equals("_list") && toDiff.get(toIndex).equals("_list"))
-                {
-                    List<String> sourceList = new ArrayList<>();
-                    sourceList.addAll(head);
-                    sourceList.addAll(fromDiff.subList(0, fromIndex));
-
-                    List<String> targetList = new ArrayList<>();
-                    targetList.addAll(head);
-                    targetList.addAll(toDiff.subList(0, toIndex));
-
-                    // Issue a command to make this move
-                    resultingOperations.addAll(generateMoveSequence(sourceList, targetList, 0, 0));
-
-                    // Keep looking
-                    head.addAll(toDiff.subList(0, toIndex+1));
-                    toDiff = toDiff.subList(toIndex+1, toDiff.size());
-                    fromDiff = fromDiff.subList(fromIndex+1, fromDiff.size());
-                    done = false;
-                    break;
-                }
-
-                if (!fromDiff.get(fromIndex).equals("_list"))
-                    ++fromIndex;
-
-                if (!toDiff.get(toIndex).equals("_list"))
-                    ++toIndex;
-            }
-        } while (!done);
-
-        //System.err.println("Remaining: " + fromDiff + " / " + toDiff);
-
-        // Generate a move sequence for the remainder [last pivotpoint] -> end of toPath
         List<String> sourceList = new ArrayList<>();
-        sourceList.addAll(head);
-        sourceList.addAll(fromDiff);
         List<String> targetList = new ArrayList<>();
-        targetList.addAll(head);
-        targetList.addAll(toDiff);
 
-        resultingOperations.addAll(generateMoveSequence(sourceList, targetList, 0, 0));
+        int level = 0;
+        List<Integer> listsAtFromDiffIndex = new ArrayList<>();
+        for (int i = 0; i < from.size(); ++i)
+        {
+            String node = from.get(i);
+            if (node.equals("_list"))
+            {
+                sourceList.add("it" + (level++));
+                listsAtFromDiffIndex.add(i);
+            }
+            else
+                sourceList.add(node);
+        }
+
+        level = 0;
+        for (String node: to)
+        {
+            if (node.equals("_list"))
+                targetList.add("it"+(level++));
+            else
+                targetList.add(node);
+        }
+
+        for (int i = 0; i < listsAtFromDiffIndex.size(); ++i)
+        {
+            resultingOperations.add("FOREACH it" + i + " : " + String.join(",", sourceList.subList(0, listsAtFromDiffIndex.get(i))));
+            resultingOperations.add("{");
+        }
+
+        resultingOperations.add("MOVE " + String.join(",",sourceList) + "\n" + "  -> " + String.join(",",targetList));
+
+        for (int i = 0; i < listsAtFromDiffIndex.size(); ++i)
+            resultingOperations.add("}");
 
         return resultingOperations;
     }
 
-    private List<String> generateMoveSequence(List<String> sourcePath, List<String> targetPath, int startIndex, int indentation)
+    /*private List<String> generateMoveSequence(List<String> sourcePath, List<String> targetPath, int startIndex, int indentation)
     {
         List<String> resultingOperations = new ArrayList<>();
 
@@ -185,5 +147,5 @@ public class ScriptGenerator
             resultingOperations.add(tabs + "MOVE " + String.join(",",sourcePath) + "\n" + tabs + "  -> " + String.join(",",targetPath));
 
         return resultingOperations;
-    }
+    }*/
 }
