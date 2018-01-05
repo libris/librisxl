@@ -10,7 +10,7 @@ import java.util.*;
 
 public class SyntaxDiffReduce
 {
-    public static Script generateScript(Syntax oldSyntax, Syntax newSyntax, BufferedReader oldJsonReader, BufferedReader newJsonReader)
+    public static ScriptGenerator generateScript(Syntax oldSyntax, Syntax newSyntax, BufferedReader oldJsonReader, BufferedReader newJsonReader)
             throws IOException
     {
         // Generate syntax minus diff
@@ -26,7 +26,7 @@ public class SyntaxDiffReduce
         collapseRedundantRules(appearingRules);
 
         // A container for the resulting script
-        Script script = new Script();
+        ScriptGenerator scriptGenerator = new ScriptGenerator();
 
         // For each (+) diff, attempt to find an equivalent (-) diff, matching on the values in the streams.
         // If one is found, the diff can be settled.
@@ -43,26 +43,26 @@ public class SyntaxDiffReduce
             Map newData = mapper.readValue(newJsonString, Map.class);
             newData = JsonLd.frame(doc.getCompleteId(), newData);
 
-            attemptToReduceDiff(appearingRules, disappearingRules, oldData, newData, script);
+            attemptToReduceDiff(appearingRules, disappearingRules, oldData, newData, scriptGenerator);
             //System.err.println("Still remaining +diff: " + appearingRules);
             //System.err.println("Still remaining -diff: " + disappearingRules);
         }
 
         for (Syntax.Rule rule : appearingRules)
         {
-            script.m_warnings.add("# The following path contained data in the new format, but no equivalent could be found\n" +
+            scriptGenerator.m_warnings.add("# The following path contained data in the new format, but no equivalent could be found\n" +
                     "# in the old format. Did you map in new data from MARC? (Severity: LOW)\n" +
                     "# " + rule.path + "," + rule.followedByKey + "\n#");
         }
 
         for (Syntax.Rule rule : disappearingRules)
         {
-            script.m_warnings.add("# The following path contained data in the old format, but no equivalent could be found\n" +
+            scriptGenerator.m_warnings.add("# The following path contained data in the old format, but no equivalent could be found\n" +
                     "# in the new format. Are we mapping in less data from MARC in the new format? (Severity: HIGH)\n" +
                     "# " + rule.path + "," + rule.followedByKey + "\n#");
         }
 
-        return script;
+        return scriptGenerator;
     }
 
     private static void collapseRedundantRules(Set<Syntax.Rule> rules)
@@ -112,7 +112,7 @@ public class SyntaxDiffReduce
     }
 
     private static void attemptToReduceDiff(Set<Syntax.Rule> appearingRules, Set<Syntax.Rule> disappearingRules,
-                                     Map oldDataExample, Map newDataExample, Script script)
+                                     Map oldDataExample, Map newDataExample, ScriptGenerator scriptGenerator)
     {
         List<Syntax.Rule> rulesToRemoveFromDisappearing = new ArrayList<>();
         Iterator<Syntax.Rule> iterator = appearingRules.iterator();
@@ -135,11 +135,12 @@ public class SyntaxDiffReduce
             String foundAtPath = searchForValue(oldDataExample, "_root", value);
             if (foundAtPath != null)
             {
+                String completeRulePath = rule.path + "," + rule.followedByKey;
                 System.err.println("Tracked a move through value (" + value + "), "
-                        + rule.path + "," + rule.followedByKey + " [has equivalent] " + foundAtPath);
+                        + completeRulePath + " [has equivalent] " + foundAtPath);
 
-                script.resolveMove(foundAtPath.substring(6, foundAtPath.length()),
-                        rule.path.substring(6, rule.path.length()) + "," + rule.followedByKey);
+                scriptGenerator.resolveMove(foundAtPath.substring(6, foundAtPath.length()),
+                        completeRulePath.substring(6, completeRulePath.length()));
                 // Remove this part of the diff (and if a corresponding "disappearing" rule exists)
                 // remove that too
                 iterator.remove();

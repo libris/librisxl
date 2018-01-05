@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class Script
+public class ScriptGenerator
 {
     public List<String> m_warnings = new ArrayList<>();
     private List<String> m_operations = new ArrayList<>();
@@ -141,6 +141,7 @@ public class Script
         List<String> targetList = new ArrayList<>();
         targetList.addAll(head);
         targetList.addAll(toDiff);
+
         resultingOperations.addAll(generateMoveSequence(sourceList, targetList, 0, 0));
 
         return resultingOperations;
@@ -150,10 +151,17 @@ public class Script
     {
         List<String> resultingOperations = new ArrayList<>();
 
+        String tabs = "";
+        for (int j = 0; j < indentation; ++j)
+            tabs += "   ";
+
+        boolean listInPath = false;
         for (int i = startIndex; i < Integer.min(sourcePath.size(), targetPath.size()); ++i)
         {
             if (sourcePath.get(i).equals("_list") && targetPath.get(i).equals("_list"))
             {
+                listInPath = true;
+
                 List<String> newSourcePath = new ArrayList<>();
                 newSourcePath.addAll(sourcePath.subList(0, i));
                 newSourcePath.add("it"+indentation);
@@ -164,23 +172,17 @@ public class Script
                 newTargetPath.add("it"+indentation);
                 newTargetPath.addAll(targetPath.subList(i+1, targetPath.size()));
 
-                String tabs = "";
-                for (int j = 0; j < indentation; ++j)
-                    tabs += "   ";
-                String tabsP1 = "";
-                for (int j = 0; j < indentation+1; ++j)
-                    tabsP1 += "   ";
-
                 resultingOperations.add(tabs + "FOREACH it" + indentation + " : " + String.join(",", sourcePath.subList(0, i)));
                 resultingOperations.add(tabs + "{");
                 List<String> nestedOps = generateMoveSequence(newSourcePath, newTargetPath, startIndex+1, indentation+1);
                 resultingOperations.addAll(nestedOps);
-                if (nestedOps.isEmpty())
-                    resultingOperations.add(tabsP1 + "MOVE " + String.join(",",newSourcePath) + "\n" + tabsP1 + "->   " + String.join(",",newTargetPath));
                 resultingOperations.add(tabs + "}");
                 break;
             }
         }
+
+        if (!listInPath)
+            resultingOperations.add(tabs + "MOVE " + String.join(",",sourcePath) + "\n" + tabs + "->   " + String.join(",",targetPath));
 
         return resultingOperations;
     }

@@ -62,12 +62,12 @@ public class Main
         BufferedReader json1Reader = new BufferedReader(new FileReader(args[3]));
         BufferedReader json2Reader = new BufferedReader(new FileReader(args[4]));
 
-        Script script = SyntaxDiffReduce.generateScript(syntax1, syntax2, json1Reader, json2Reader);
+        ScriptGenerator scriptGenerator = SyntaxDiffReduce.generateScript(syntax1, syntax2, json1Reader, json2Reader);
 
         json1Reader.close();
         json2Reader.close();
 
-        System.out.println(script);
+        System.out.println(scriptGenerator);
     }
 
     private static void executeScript(String[] args) throws IOException, TransformScript.TransformSyntaxException
