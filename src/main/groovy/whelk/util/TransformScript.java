@@ -155,11 +155,9 @@ public class TransformScript
         public void execute(Map json, Map<String, Object> context)
         {
             List<String> fromPath = Arrays.asList( m_fromPath.split(",") );
-            fromPath = fromPath.subList(1, fromPath.size()); // Filter out the prefix "_root"
             List<Object> fromPathWithSymbols = insertContextSymbolsIntoPath(fromPath, context);
 
             List<String> toPath = Arrays.asList( m_toPath.split(",") );
-            toPath = toPath.subList(1, toPath.size()); // Filter out the prefix "_root"
             List<Object> toPathWithSymbols = insertContextSymbolsIntoPath(toPath, context);
 
             System.out.println("Executing MOVE " + fromPathWithSymbols + " -> " + toPathWithSymbols + " my context was: " + context);
@@ -193,7 +191,7 @@ public class TransformScript
         public void execute(Map json, Map<String, Object> context)
         {
             List<String> path = Arrays.asList( m_listPath.split(",") );
-            path = path.subList(1, path.size()-1); // Filter out the prefix "_root" and postfix "_list"
+            path = path.subList(0, path.size()-1); // Filter out the postfix "_list"
             List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
 
             System.out.println("Executing FOREACH " + pathWithSymbols);
