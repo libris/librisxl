@@ -172,9 +172,7 @@ public class TransformScript
             else
                 containerType = ArrayList.class;
 
-            if (path1DependsOnPath2(toPathWithSymbols, fromPathWithSymbols))
-                Document._removeLeafObject(fromPathWithSymbols, containerType, json);
-
+            Document._removeLeafObject(fromPathWithSymbols, containerType, json);
             Document._set(toPathWithSymbols, value, containerType, json);
         }
     }
@@ -231,22 +229,6 @@ public class TransformScript
                 resultingPath.add(step);
         }
         return resultingPath;
-    }
-
-    /**
-     * For example [_root,something] depends on [_root]
-     */
-    private boolean path1DependsOnPath2(List<Object> path1, List<Object> path2)
-    {
-        if (path1.size() < path2.size())
-            return false;
-
-        for (int i = 0; i < path2.size(); ++i)
-        {
-            if ( ! path1.get(i).equals(path2.get(i)))
-                return false;
-        }
-        return true;
     }
 
     public String executeOn(String json) throws IOException
