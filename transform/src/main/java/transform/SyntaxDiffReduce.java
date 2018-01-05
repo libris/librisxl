@@ -43,9 +43,13 @@ public class SyntaxDiffReduce
             Map newData = mapper.readValue(newJsonString, Map.class);
             newData = JsonLd.frame(doc.getCompleteId(), newData);
 
-            attemptToReduceDiff(appearingRules, disappearingRules, oldData, newData, scriptGenerator);
-            //System.err.println("Still remaining +diff: " + appearingRules);
-            //System.err.println("Still remaining -diff: " + disappearingRules);
+            System.err.println("Start with +diff: " + appearingRules);
+            System.err.println("Start with -diff: " + disappearingRules);
+            while(attemptToReduceDiff(appearingRules, disappearingRules, oldData, newData, scriptGenerator))
+            {
+                System.err.println("Still remaining +diff: " + appearingRules);
+                System.err.println("Still remaining -diff: " + disappearingRules);
+            }
         }
 
         for (Syntax.Rule rule : appearingRules)
@@ -111,9 +115,10 @@ public class SyntaxDiffReduce
         rules.removeAll(rulesToRemove);
     }
 
-    private static void attemptToReduceDiff(Set<Syntax.Rule> appearingRules, Set<Syntax.Rule> disappearingRules,
+    private static boolean attemptToReduceDiff(Set<Syntax.Rule> appearingRules, Set<Syntax.Rule> disappearingRules,
                                      Map oldDataExample, Map newDataExample, ScriptGenerator scriptGenerator)
     {
+        boolean hadEffect = false;
         List<Syntax.Rule> rulesToRemoveFromDisappearing = new ArrayList<>();
         Iterator<Syntax.Rule> iterator = appearingRules.iterator();
         while (iterator.hasNext())
@@ -135,6 +140,7 @@ public class SyntaxDiffReduce
             String foundAtPath = searchForValue(oldDataExample, "_root", value);
             if (foundAtPath != null)
             {
+                hadEffect = true;
                 String completeRulePath = rule.path + "," + rule.followedByKey;
                 System.err.println("Tracked a move through value (" + value + "), "
                         + completeRulePath + " [has equivalent] " + foundAtPath);
@@ -152,6 +158,7 @@ public class SyntaxDiffReduce
             }
         }
         disappearingRules.removeAll(rulesToRemoveFromDisappearing);
+        return hadEffect;
     }
 
     private static Object searchAtRulePath(List<String> rulePath, Object data)
@@ -173,7 +180,7 @@ public class SyntaxDiffReduce
             for (int i = 0; i < list.size(); ++i)
             {
                 Object element = ((List) data).get(i);
-                Object result = searchAtRulePath(rulePath, element);
+                Object result = searchAtRulePath(new ArrayList<>(rulePath), element);
                 if (result != null)
                     return result;
             }

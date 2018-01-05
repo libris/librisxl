@@ -182,7 +182,7 @@ public class ScriptGenerator
         }
 
         if (!listInPath)
-            resultingOperations.add(tabs + "MOVE " + String.join(",",sourcePath) + "\n" + tabs + "->   " + String.join(",",targetPath));
+            resultingOperations.add(tabs + "MOVE " + String.join(",",sourcePath) + "\n" + tabs + "  -> " + String.join(",",targetPath));
 
         return resultingOperations;
     }

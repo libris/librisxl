@@ -161,6 +161,9 @@ public class TransformTest
 
     private static boolean rdfEquals(List l1, List l2)
     {
+        if (l2 == null)
+            return false;
+
         if (l1.size() != l2.size())
             return false;
 
