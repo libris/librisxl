@@ -45,7 +45,6 @@ class Document {
     static final List recordIdPath = ["@graph", 0, "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
     static final List recordTypedIDsPath = ["@graph", 0, "identifiedBy"]
-    static final List failedApixExportPath = ["@graph", 0, "apixExportFailedAt"]
     static final List controlNumberPath = ["@graph", 0, "controlNumber"]
     static final List holdingForPath = ["@graph", 1, "itemOf", "@id"]
     static final List heldByPath = ["@graph", 1, "heldBy", "@id"]
@@ -75,17 +74,6 @@ class Document {
     String getDataAsString() {
         return mapper.writeValueAsString(data)
     }
-
-    void setApixExportFailFlag(boolean failed) {
-        if (failed == false) {
-            removeLeafObject(failedApixExportPath, LinkedHashMap)
-        }
-        else {
-            set(failedApixExportPath, failed, LinkedHashMap)
-        }
-    }
-
-    boolean getApixExportFailFlag() { get(failedApixExportPath) }
 
     void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber, LinkedHashMap) }
 
@@ -381,8 +369,12 @@ class Document {
      * Adds empty structure to the document so that 'path' can be traversed.
      */
     private boolean preparePath(List path, Type leafType) {
+        return _preparePath(path, leafType, data)
+    }
+
+    public static boolean _preparePath(List path, Type leafType, Object root) {
         // Start at root data node
-        Object node = data
+        Object node = root
 
         for (int i = 0; i < path.size(); ++i) {
             Object step = path.get(i)
@@ -418,7 +410,7 @@ class Document {
                          (i + 1) + ", expected data to be: " +
                          nextReplacementType + ", data class was: " +
                          candidate.getClass())
-                log.debug("preparePath integrity check failed, data was: ${data}")
+                log.debug("preparePath integrity check failed, data was: ${root}")
                 return false
             }
 
@@ -431,11 +423,15 @@ class Document {
      * Set 'value' at 'path'. 'container' should be ArrayList or HashMap depending on if value should reside in a list or an object
      */
     private boolean set(List path, Object value, Type container) {
-        if (!preparePath(path, container))
+        return _set(path, value, container, data)
+    }
+
+    public static boolean _set(List path, Object value, Type container, Object root) {
+        if (!_preparePath(path, container, root))
             return false
 
         // Start at root data node
-        Object node = data
+        Object node = root
 
         for (int i = 0; i < path.size() - 1; ++i) // follow all but last step
         {
@@ -447,12 +443,12 @@ class Document {
         return true
     }
 
-    private boolean removeLeafObject(List path, Type container) {
-        if (!preparePath(path, container))
+    public static boolean _removeLeafObject(List path, Type container, Object root) {
+        if (!_preparePath(path, container, root))
             return false
 
         // Start at root data node
-        Object node = data
+        Object node = root
 
         for (int i = 0; i < path.size() - 1; ++i) // follow all but last step
         {
@@ -464,7 +460,7 @@ class Document {
         return true
     }
 
-    private boolean matchingContainer(Class c1, Class c2) {
+    private static boolean matchingContainer(Class c1, Class c2) {
         if ((Map.class.isAssignableFrom(c1)) && (Map.class.isAssignableFrom(c2)))
             return true
         if ((List.class.isAssignableFrom(c1)) && (List.class.isAssignableFrom(c2)))
@@ -473,8 +469,12 @@ class Document {
     }
 
     private Object get(List path) {
+        return _get(path, data)
+    }
+
+    public static Object _get(List path, Object root) {
         // Start at root data node
-        Object node = data
+        Object node = root
 
         for (Object step : path) {
             if ((node instanceof Map) && !(step instanceof String)) {
