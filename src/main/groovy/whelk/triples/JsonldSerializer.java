@@ -334,7 +334,10 @@ public class JsonldSerializer
     private static String[] getStaticallyPositionedNodeIDs(List graphList, String mainId)
     {
         String[] result = new String[3];
-        result[0] = Document.getBASE_URI()+mainId;
+        if (mainId.startsWith("https://") || mainId.startsWith("http://"))
+            result[0] = mainId;
+        else
+            result[0] = Document.getBASE_URI()+mainId;
 
         // find the resource (thing) node id.
         for (int i = 0; i < graphList.size(); ++i)

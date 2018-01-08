@@ -160,8 +160,6 @@ public class TransformScript
             List<String> toPath = Arrays.asList( m_toPath.split(",") );
             List<Object> toPathWithSymbols = insertContextSymbolsIntoPath(toPath, context);
 
-            System.out.println("Executing MOVE " + fromPathWithSymbols + " -> " + toPathWithSymbols + " my context was: " + context);
-
             Object value = Document._get(fromPathWithSymbols, json);
 
             if (value == null)
@@ -195,8 +193,6 @@ public class TransformScript
         {
             List<String> path = Arrays.asList( m_listPath.split(",") );
             List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
-
-            System.out.println("Executing FOREACH " + pathWithSymbols);
 
             Object listObject = Document._get(pathWithSymbols, json);
             if (listObject instanceof List)
