@@ -69,6 +69,41 @@ public class TransformTest
     }
 
     @Test
+    public void testReverseListMove() throws Exception
+    {
+        String newFormatExample = "" +
+                "{" +
+                "\"list\":" +
+                "[" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}," +
+                "{" +
+                "    \"key1\":\"value1\"" +
+                "}" +
+                "]" +
+                "}";
+
+        String oldFormatExample = "" +
+                "{" +
+                "\"someobject\":" +
+                "{" +
+                "\"list\":" +
+                "[" +
+                "{" +
+                "\"key0\":\"value0\"" +
+                "}," +
+                "{" +
+                "\"key1\":\"value1\"" +
+                "}" +
+                "]" +
+                "}" +
+                "}";
+
+        testTransform(oldFormatExample, oldFormatExample, newFormatExample, newFormatExample);
+    }
+
+    @Test
     public void testPreserveValue() throws Exception
     {
         String oldFormatExample = "" +

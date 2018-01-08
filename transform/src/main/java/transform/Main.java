@@ -3,6 +3,7 @@ package transform;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
 import whelk.JsonLd;
+import whelk.triples.JsonldSerializer;
 import whelk.util.TransformScript;
 
 import java.io.*;
@@ -10,6 +11,8 @@ import java.util.Map;
 
 public class Main
 {
+    private static ObjectMapper mapper = new ObjectMapper();
+
     public static void main(String[] args) throws IOException, TransformScript.TransformSyntaxException
     {
         if (args[0].equals("syntax"))
@@ -34,7 +37,6 @@ public class Main
 
     private static void generateAndPrintSyntax(String[] args) throws IOException
     {
-        ObjectMapper mapper = new ObjectMapper();
         BufferedReader in = new BufferedReader(new FileReader(args[1]));
 
         String jsonString;
@@ -84,7 +86,11 @@ public class Main
         BufferedReader jsonReader = new BufferedReader(new FileReader(args[2]));
         for(String line = jsonReader.readLine(); line != null; line = jsonReader.readLine())
         {
-            System.out.println(script.executeOn(line));
+            Map data = mapper.readValue(line, Map.class);
+            Map transformed = script.executeOn(data);
+            transformed = JsonLd.flatten(transformed);
+            JsonldSerializer.normalize(transformed, (String) Document._get(Document.getRecordIdPath(), data), true);
+            System.out.println(mapper.writeValueAsString(transformed));
         }
     }
 }
