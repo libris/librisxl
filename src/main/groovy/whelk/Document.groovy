@@ -443,10 +443,7 @@ class Document {
         return true
     }
 
-    public static boolean _removeLeafObject(List path, Type container, Object root) {
-        if (!_preparePath(path, container, root))
-            return false
-
+    public static boolean _removeLeafObject(List path, Object root) {
         // Start at root data node
         Object node = root
 

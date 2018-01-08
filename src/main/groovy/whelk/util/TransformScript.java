@@ -1,5 +1,6 @@
 package whelk.util;
 
+import com.google.common.collect.Lists;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
 import whelk.JsonLd;
@@ -171,8 +172,9 @@ public class TransformScript
             else
                 containerType = ArrayList.class;
 
-            Document._removeLeafObject(fromPathWithSymbols, containerType, json);
+            Document._removeLeafObject(fromPathWithSymbols, json);
             Document._set(toPathWithSymbols, value, containerType, json);
+            pruneBranch(fromPathWithSymbols, json);
         }
     }
 
@@ -225,6 +227,27 @@ public class TransformScript
                 resultingPath.add(step);
         }
         return resultingPath;
+    }
+
+    /**
+     * Delete data structure only where it is empty
+     */
+    private void pruneBranch(List<Object> path, Map json)
+    {
+        for (int i = 0; i < path.size(); ++i)
+        {
+            List<Object> subPath = path.subList(0, path.size()-i);
+            Object container = Document._get( subPath, json );
+            if (container instanceof List)
+            {
+                if (((List) container).isEmpty())
+                    Document._removeLeafObject(subPath, json);
+            } else if (container instanceof Map)
+            {
+                if (((Map) container).isEmpty())
+                    Document._removeLeafObject(subPath, json);
+            }
+        }
     }
 
     public String executeOn(String json) throws IOException
