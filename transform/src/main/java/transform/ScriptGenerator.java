@@ -108,44 +108,4 @@ public class ScriptGenerator
 
         return resultingOperations;
     }
-
-    /*private List<String> generateMoveSequence(List<String> sourcePath, List<String> targetPath, int startIndex, int indentation)
-    {
-        List<String> resultingOperations = new ArrayList<>();
-
-        String tabs = "";
-        for (int j = 0; j < indentation; ++j)
-            tabs += "   ";
-
-        boolean listInPath = false;
-        for (int i = startIndex; i < Integer.min(sourcePath.size(), targetPath.size()); ++i)
-        {
-            if (sourcePath.get(i).equals("_list") && targetPath.get(i).equals("_list"))
-            {
-                listInPath = true;
-
-                List<String> newSourcePath = new ArrayList<>();
-                newSourcePath.addAll(sourcePath.subList(0, i));
-                newSourcePath.add("it"+indentation);
-                newSourcePath.addAll(sourcePath.subList(i+1, sourcePath.size()));
-
-                List<String> newTargetPath = new ArrayList<>();
-                newTargetPath.addAll(targetPath.subList(0, i));
-                newTargetPath.add("it"+indentation);
-                newTargetPath.addAll(targetPath.subList(i+1, targetPath.size()));
-
-                resultingOperations.add(tabs + "FOREACH it" + indentation + " : " + String.join(",", sourcePath.subList(0, i)));
-                resultingOperations.add(tabs + "{");
-                List<String> nestedOps = generateMoveSequence(newSourcePath, newTargetPath, startIndex+1, indentation+1);
-                resultingOperations.addAll(nestedOps);
-                resultingOperations.add(tabs + "}");
-                break;
-            }
-        }
-
-        if (!listInPath)
-            resultingOperations.add(tabs + "MOVE " + String.join(",",sourcePath) + "\n" + tabs + "  -> " + String.join(",",targetPath));
-
-        return resultingOperations;
-    }*/
 }
