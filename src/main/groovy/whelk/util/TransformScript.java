@@ -239,10 +239,19 @@ public class TransformScript
         if (m_modeFramed)
             data = JsonLd.frame(doc.getShortId(), data);
 
-        //System.out.println("Before execution:\n" + mapper.writeValueAsString(data) + "\n\n");
-
         for (Operation op : m_operations)
             op.execute(data, new HashMap<>());
         return mapper.writeValueAsString(data);
+    }
+
+    public Map executeOn(Map data) throws IOException
+    {
+        Document doc = new Document(data);
+        if (m_modeFramed)
+            data = JsonLd.frame(doc.getShortId(), data);
+
+        for (Operation op : m_operations)
+            op.execute(data, new HashMap<>());
+        return data;
     }
 }
