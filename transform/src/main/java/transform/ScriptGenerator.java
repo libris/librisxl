@@ -46,7 +46,7 @@ public class ScriptGenerator
         if (Collections.frequency(from, "_list") != Collections.frequency(to, "_list"))
         {
             m_warnings.add("# I dare not generate code for this diff, because the paths differ in number of lists.\n" +
-                    "# Please resolve the diff manually. (Severity: HIGH)" +
+                    "# Please resolve the diff manually. (Severity: HIGH)\n" +
                     "#    " + fromPath + "\n# -> " + toPath);
             return;
         }

@@ -42,6 +42,8 @@ public class SyntaxDiffReduce
             oldData = JsonLd.frame(doc.getCompleteId(), oldData);
 
             String newJsonString = newJsonReader.readLine();
+            if (newJsonString == null)
+                continue;
             Map newData = mapper.readValue(newJsonString, Map.class);
             newData = JsonLd.frame(doc.getCompleteId(), newData);
 
@@ -189,6 +191,9 @@ public class SyntaxDiffReduce
 
         if (node.equals("_list"))
         {
+            if (! (data instanceof List))
+                return null;
+
             List list = (List) data;
             for (int i = 0; i < list.size(); ++i)
             {
@@ -199,6 +204,9 @@ public class SyntaxDiffReduce
             }
         } else
         {
+            if (! (data instanceof Map))
+                return null;
+
             data = ((Map) data).get(node);
             return searchAtRulePath(rulePath, data);
         }
