@@ -1822,13 +1822,13 @@
       "Serial": {
         "[1:2]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
-          "link": "frequency",
+          "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}",
           "matchUriToken": "^[_abcdefghijkmqstw]$"
         },
         "[2:3]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
-          "link": "frequency",
+          "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}",
           "matchUriToken": "^[nrx]$"
         },
@@ -2749,12 +2749,12 @@
       "Serial": {
         "[18:19]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
-          "link": "frequency",
+          "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}"
         },
         "[19:20]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
-          "link": "frequency",
+          "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}"
         },
         "[20:21]": {
@@ -5965,7 +5965,7 @@
 
     "310": {
       "aboutEntity": "?thing",
-      "$a": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
+      "$a": {"addLink": "frequency", "resourceType": "Frequency", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "TODO:$b": "Compare with 321"
     },
@@ -5974,7 +5974,7 @@
       "addLink": "replaces",
       "embedded": true,
       "resourceType": "Serial",
-      "$a": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
+      "$a": {"addLink": "frequency", "resourceType": "Frequency", "property": "label"},
       "$b": {"property": "date"}
     },
 
