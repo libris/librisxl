@@ -7,6 +7,7 @@ import whelk.Document
 import whelk.component.PostgreSQLComponent
 import whelk.util.LegacyIntegrationTools
 
+import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
@@ -73,7 +74,11 @@ class LinkFinder {
         }
     }
 
-    void normalizeIdentifiers(Document document, boolean cacheAuthForever = false) {
+    void normalizeIdentifiers(Document document, boolean cacheAuthForever = false ) {
+        normalizeIdentifiers(document, null, cacheAuthForever)
+    }
+
+    void normalizeIdentifiers(Document document, Connection connection, boolean cacheAuthForever = false) {
 
         // Normalize ISBN and ISSN identifiers. No hyphens and upper case.
         List typedIDs = document.get(Document.thingTypedIDsPath)
@@ -94,14 +99,14 @@ class LinkFinder {
             }
         }
 
-        replaceSameAsLinksWithPrimaries(document.data, cacheAuthForever)
+        replaceSameAsLinksWithPrimaries(document.data, connection, cacheAuthForever)
     }
 
-    private void replaceSameAsLinksWithPrimaries(Map data, boolean cacheAuthForever = false) {
+    private void replaceSameAsLinksWithPrimaries(Map data, Connection connection, boolean cacheAuthForever = false) {
         // If this is a link (an object containing _only_ an id)
         String id = data.get("@id")
         if (id != null && data.keySet().size() == 1) {
-            String primaryId = lookupPrimaryId(id, cacheAuthForever)
+            String primaryId = lookupPrimaryId(id, connection, cacheAuthForever)
             if (primaryId != null)
                 data.put("@id", primaryId)
         }
@@ -117,26 +122,27 @@ class LinkFinder {
             Object value = data.get(key)
 
             if (value instanceof List)
-                replaceSameAsLinksWithPrimaries( (List) value)
+                replaceSameAsLinksWithPrimaries( (List) value, connection )
             if (value instanceof Map)
-                replaceSameAsLinksWithPrimaries( (Map) value)
+                replaceSameAsLinksWithPrimaries( (Map) value, connection )
         }
     }
 
-    private void replaceSameAsLinksWithPrimaries(List data) {
+    private void replaceSameAsLinksWithPrimaries(List data, Connection connection) {
         for (Object element : data){
             if (element instanceof List)
-                replaceSameAsLinksWithPrimaries( (List) element)
+                replaceSameAsLinksWithPrimaries( (List) element, connection )
             else if (element instanceof Map)
-                replaceSameAsLinksWithPrimaries( (Map) element)
+                replaceSameAsLinksWithPrimaries( (Map) element, connection )
         }
     }
 
-    private String lookupPrimaryId(String id, boolean cacheAuthForever) {
+    private String lookupPrimaryId(String id, Connection connection, boolean cacheAuthForever) {
 
         if (!cacheAuthForever) {
-            String mainId = postgres.getMainId(id)
-                return mainId
+            if (connection == null)
+                return postgres.getMainId(id)
+            return postgres.getMainId(id, connection)
         }
 
         if (id.startsWith("http://libris.kb.se/resource/")) {
@@ -163,14 +169,22 @@ class LinkFinder {
             if (uriCache.containsKey(id)) {
                 return uriCache.get(id)
             } else {
-                String mainId = postgres.getMainId(id)
+                String mainId
+                if (connection == null)
+                    mainId = postgres.getMainId(id)
+                else
+                    mainId = postgres.getMainId(id, connection)
                 if (mainId != null) {
                     uriCache.put(id, mainId)
                     return mainId
                 }
             }
         } else { // Fallback -> Look for a primary ID in postgres (expensive)
-            String mainId = postgres.getMainId(id)
+            String mainId
+            if (connection == null)
+                mainId = postgres.getMainId(id)
+            else
+                mainId = postgres.getMainId(id, connection)
                 return mainId
         }
 

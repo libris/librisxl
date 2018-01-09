@@ -85,8 +85,6 @@ dependencies {
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile 'com.vividsolutions:jts:1.13'
     compile 'org.postgresql:postgresql:9.4.1212.jre7'
-    //compile 'org.postgresql:postgresql:9.4-1200-jdbc41'
-    compile 'org.picocontainer:picocontainer:2.15'
 
     // profiling and test
     testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"

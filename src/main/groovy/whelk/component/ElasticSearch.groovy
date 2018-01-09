@@ -41,17 +41,33 @@ class ElasticSearch {
 
     private static final ObjectMapper mapper = new ObjectMapper()
 
+    ElasticSearch(Properties props) {
+        this.elasticHosts = getElasticHosts(props.getProperty("elasticHost"))
+        this.elasticCluster = props.getProperty("elasticCluster")
+        this.defaultIndex = props.getProperty("elasticIndex")
+        setup()
+    }
+
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex,
                     JsonLdLinkExpander expander=null) {
-        this.elasticHosts = []
-        for (String host : elasticHost.split(",")) {
-            if (!host.contains(":"))
-                host += ":9200"
-            this.elasticHosts.add("http://" + host)
-        }
+        this.elasticHosts = getElasticHosts(elasticHost)
         this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
         this.expander = expander
+        setup()
+    }
+
+    private List<String> getElasticHosts(String elasticHost) {
+        List<String> hosts = []
+        for (String host : elasticHost.split(",")) {
+            if (!host.contains(":"))
+                host += ":9200"
+            hosts.add("http://" + host)
+        }
+        return hosts
+    }
+
+    private void setup() {
         for (int i = 0; i < CONNECTION_POOL_SIZE; ++i) {
             String host = elasticHosts[ i % elasticHosts.size() ]
             httpConnectionPool.add(new ConnectionPoolEntry(new LongTermHttpConnection(host)))

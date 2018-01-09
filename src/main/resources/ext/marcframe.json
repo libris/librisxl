@@ -1036,6 +1036,22 @@
 
     "classification-ddc": {
       "NOTE:resourceType": "ClassificationDdc",
+      "match": [
+        {
+          "when": "i1=0 & $2 =~ ^full$",
+          "$2": {"property": "edition"}
+        },
+        {
+          "when": "i1=1 & $2 =~ ^abridged$",
+          "$2": {"property": "edition"}
+        },
+        {
+          "NOTE": "Given a $2, ignore i1 on convert and set i1=7 on revert",
+          "when": "$2",
+          "i1": {"marcDefault": "7"},
+          "$2": {"property": "edition"}
+        }
+      ],
       "i1": {
         "property": "edition",
         "tokenMap": {
@@ -1100,7 +1116,7 @@
         "itemPos": "rest",
         "property": "prefLabel"},
       "$x": {"addLink": "termComponentList",
-        "resourceType": "Subdivision",
+        "resourceType": "TopicSubdivision",
         "itemPos": "rest",
         "property": "prefLabel"},
       "$y": {"addLink": "termComponentList",
@@ -2039,12 +2055,12 @@
           "matchUriToken": "^[_abm]$"
         },
         "[6] [7] [8[": {
-          "link": "notation",
+          "link": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}",
           "matchUriToken": "^[abcdefghijklz]$"
         },
         "[9:10]": {
-          "link": "notation",
+          "link": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacSpecPhysicalCharType-{_}",
           "matchUriToken": "^[_ab]$"
         }
@@ -3086,7 +3102,7 @@
       },
       "$l": {"property": "marc:issnL"},
       "$m": {"addProperty": "marc:canceledIssnL"},
-      "$2": {"property": "marc:source"},
+      "$2": {"link": "source", "resourceType": "marc:NationalIssnCentre", "property": "code"},
       "$y": {"addProperty": "marc:incorrectIssn"},
       "TODO:$y?": {"TODO": "inherit:$z + specific: marc:incorrectIssn"},
       "$6": {"property": "marc:fieldref"},
@@ -3879,9 +3895,9 @@
       "aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "ClassificationDdc",
-      "include": ["classification-ddc"],
       "match": [
         {
+          "include": ["classification-ddc"],
           "when": "i2=4 & $q",
           "$q": {
             "requires-i2": "4",
@@ -3889,6 +3905,10 @@
             "resourceType": "Source",
             "property": "label"
           }
+        },
+        {
+          "when": null,
+          "include": ["classification-ddc"]
         }
       ],
       "i2": {
@@ -3997,6 +4017,79 @@
             }
           }}
         }
+      ],
+      "_spec": [
+        {
+          "source": {
+            "082": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "344.485074"}
+            ]}},
+          "normalized": {
+            "082": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "344.485074"},
+              {"2": "abridged"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "edition": "abridged",
+                  "code": "344.485074"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "082": {"ind1": "7", "ind2": " ", "subfields": [
+              {"a": "344.485074"},
+              {"2": "abridged"}
+            ]}},
+          "normalized": {
+            "082": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "344.485074"},
+              {"2": "abridged"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "edition": "abridged",
+                  "code": "344.485074"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "082": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "344.485074"},
+              {"2": "23/swe"}
+            ]}},
+          "normalized": {
+            "082": {"ind1": "7", "ind2": " ", "subfields": [
+              {"a": "344.485074"},
+              {"2": "23/swe"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "edition": "23/swe",
+                  "code": "344.485074"
+                }
+              ]
+            }
+          }}
+        }
       ]
     },
     "083": {
@@ -4015,6 +4108,11 @@
           "source": {
             "083": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "158.1"}
+            ]}},
+          "normalized": {
+            "083": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "158.1"},
+              {"2": "full"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -4964,7 +5062,7 @@
       "resourceType": "Title",
       "embedded": true,
       "aboutAlias": "_:title",
-      "subfieldOrder": "a b c p n ... h",
+      "subfieldOrder": "a n p h ... b c",
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
         "leadingPunctuation": "/", "trailingPunctuation": ".",
@@ -5004,6 +5102,40 @@
             } ],
             "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
           }}
+        },
+        {
+          "source": {
+            "245": {
+              "ind1": "1", "ind2": "0",
+              "subfields": [
+                {"a": "Allmänna valen 1998 ."},
+                {"n": "Del 4,"},
+                {"p": "Specialundersökningar"},
+                {"h": "[Elektronisk resurs] ="},
+                {"b": "[General elections in 1998. Part 4, Special studies] /"},
+                {"c": "Statistiska ventralbyrån"}
+              ]
+            }
+          },
+          "result": {"mainEntity": {
+            "hasTitle": [ 
+              {
+                "@type": "Title",
+                "marc:nonfilingChars": "0",
+                "mainTitle": "Allmänna valen 1998",
+                "hasPart": [
+                  {
+                    "@type": "TitlePart",
+                    "partNumber": "Del 4",
+                    "partName": "Specialundersökningar"
+                  }
+                ],
+                "marc:equalTitle": "[General elections in 1998. Part 4, Special studies]"
+              }
+            ],
+            "responsibilityStatement":  "Statistiska ventralbyrån",
+            "marc:mediaTerm" : "Elektronisk resurs] ="
+          }}
         }
       ]
     },
@@ -5030,7 +5162,7 @@
         "TODO:if _": "use $i",
         "tokenMap": {
           " ": "VariantTitle",
-          "0": "TitlePart",
+          "0": "TitlePortion",
           "1": "ParallelTitle",
           "2": "DistinctiveTitle",
           "3": "marc:OtherTitle",
@@ -5041,7 +5173,7 @@
           "8": "SpineTitle"
         }
       },
-      "$f": {"property": "date"},
+      "$f": {"property": "coverage"},
       "$g": {"property": "comment"},
       "$h": {"property": "marc:mediaTerm", "surroundingChars": "[]"},
       "$i": {"property": "typeNote"},
@@ -5059,7 +5191,7 @@
             "hasTitle": [{
               "@type": "CaptionTitle",
               "mainTitle": "Newspaper index",
-              "date": "January 1982-",
+              "coverage": "January 1982-",
               "marc:searchControl" : {
                 "@id" : "marc:NoteAddedEntry"
               }
@@ -5078,7 +5210,7 @@
               "@type": "VariantTitle",
               "typeNote": "At head of title:",
               "mainTitle": "Science and public affairs",
-              "date": "January 1970-April 1974",
+              "coverage": "January 1970-April 1974",
               "marc:searchControl" : {
                 "@id" : "marc:NoteAddedEntry"
               }
@@ -6087,9 +6219,15 @@
     "355": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "357": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "362": {
-      "i1": {"marcDefault": "0"},
       "aboutEntity": "?thing",
-      "$a": {"addProperty": "issueNumber"},
+      "addLink": "hasNumberingOfSerials",
+      "resourceType": "NumberingOfSerials",
+      "i1": {
+        "marcDefault": "0",
+        "NOTE": "1 = not normalized form; but 0 has been assigned for those too."
+      },
+      "$a": {"property": "label"},
+      "$z": {"property": "marc:sourceOfInformation"},
       "$6": {"property": "marc:fieldref"}
     },
     "363": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
@@ -7360,7 +7498,7 @@
                       "name": "Butler family."
                     },
                     {
-                      "@type" : "Subdivision",
+                      "@type" : "TopicSubdivision",
                       "prefLabel" : "Health"
                     }
                   ],
@@ -7395,7 +7533,7 @@
                       "givenName": "Andy",
                       "marc:titlesAndOtherWordsAssociatedWithAName": ["(Composer)"]
                     },
-                    {"@type" : "Subdivision", "prefLabel" : "Travel"},
+                    {"@type" : "TopicSubdivision", "prefLabel" : "Travel"},
                     {"@type" : "Geographic", "prefLabel" : "Morocco"},
                     {"@type" : "Geographic", "prefLabel" : "Marrakech"}
                   ],
@@ -7437,8 +7575,8 @@
                       "givenName" : "Y. B.",
                       "lifeSpan": "1929-1999"
                     },
-                    {"@type" : "Subdivision", "prefLabel" : "Criticism and interpretation"},
-                    {"@type" : "Subdivision", "prefLabel" : "History"},
+                    {"@type" : "TopicSubdivision", "prefLabel" : "Criticism and interpretation"},
+                    {"@type" : "TopicSubdivision", "prefLabel" : "History"},
                     {"@type" : "Temporal", "prefLabel" : "21st century."}
                   ],
                   "inScheme": {
@@ -7627,7 +7765,7 @@
                     "name" : "Kungl. biblioteket"},
                   "termComponentList": [
                     {"@type": "Organization", "name": "Kungl. biblioteket"},
-                    {"@type": "Subdivision", "prefLabel": "samlingar"}
+                    {"@type": "TopicSubdivision", "prefLabel": "samlingar"}
                   ],
                   "prefLabel" : "samlingar",
                   "inScheme": {
@@ -8339,7 +8477,7 @@
                       "prefLabel": "Aix-en-Provence (France)"
                     },
                     {
-                      "@type": "Subdivision",
+                      "@type": "TopicSubdivision",
                       "prefLabel": "Social life and customs"
                     },
                     {
@@ -8358,7 +8496,7 @@
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Topic",
-      "$a": {"property": "keyword"},
+      "$a": {"property": "label"},
       "match": [
         {
           "when": "i2=0",
@@ -8404,7 +8542,7 @@
               "subject": [
                 {
                   "@type": "Temporal",
-                  "keyword": "Directors"
+                  "label": "Directors"
                 }
               ]
             }
@@ -11998,7 +12136,7 @@
                   "prefLabel": "Barn"
                 },
                 {
-                  "@type": "Subdivision",
+                  "@type": "TopicSubdivision",
                   "prefLabel": "psykologi"
                 }
               ]
@@ -12028,7 +12166,7 @@
 
     "180" : {
       "include": "termid",
-      "aboutType": "Subdivision",
+      "aboutType": "TopicSubdivision",
       "$x": {"property": "prefLabel"}
     },
     "181" : {
@@ -13454,7 +13592,7 @@
     "562": {"ignored": true, "NOTE:record-count": 0},
     "580": {
       "include": ["relation_from_w"],
-      "resourceType": "Subdivision",
+      "resourceType": "TopicSubdivision",
       "$x": {"property": "prefLabel"}
     },
     "581": {"ignored": true, "NOTE:record-count": 0},
