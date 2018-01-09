@@ -2902,13 +2902,13 @@
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],
                 "contentType": [
-                  {"@id": "https://id.kb.se/marc/BooksContentsType-e"},
                   {
                     "@type": "ContentType",
                     "label": "just challenging column itemPos"
                   }
                 ],
-                "genreForm": [{"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
+                "genreForm": [{"@id": "https://id.kb.se/marc/BooksContentsType-e"},
+                              {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
                               {"@id": "https://id.kb.se/marc/BooksBiographyType-a"}
                 ],
                 "illustrativeContent": [
