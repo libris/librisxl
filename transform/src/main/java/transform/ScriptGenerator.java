@@ -67,6 +67,7 @@ public class ScriptGenerator
      */
     private List<String> generatePivotPointMoves(List<String> from, List<String> to)
     {
+        final String indentation = "    ";
         List<String> resultingOperations = new ArrayList<>();
 
         List<String> sourceList = new ArrayList<>();
@@ -95,16 +96,24 @@ public class ScriptGenerator
                 targetList.add(node);
         }
 
+        String tabs = "";
         for (int i = 0; i < listsAtFromDiffIndex.size(); ++i)
         {
-            resultingOperations.add("FOREACH it" + i + " : " + String.join(",", sourceList.subList(0, listsAtFromDiffIndex.get(i))));
-            resultingOperations.add("{");
+            resultingOperations.add(tabs + "FOREACH it" + i + " : " + String.join(",", sourceList.subList(0, listsAtFromDiffIndex.get(i))));
+            resultingOperations.add(tabs + "{");
+            tabs += indentation;
         }
 
-        resultingOperations.add("MOVE " + String.join(",",sourceList) + "\n" + "  -> " + String.join(",",targetList));
+        resultingOperations.add(tabs + "MOVE " + String.join(",",sourceList) +
+                "\n" + tabs + "  -> " + String.join(",",targetList));
 
         for (int i = 0; i < listsAtFromDiffIndex.size(); ++i)
-            resultingOperations.add("}");
+        {
+            tabs = "";
+            for (int j = 1; j < (listsAtFromDiffIndex.size()-i); ++j)
+                tabs += indentation;
+            resultingOperations.add(tabs + "}");
+        }
 
         return resultingOperations;
     }
