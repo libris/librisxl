@@ -15,7 +15,17 @@ public class Main
 
     public static void main(String[] args) throws IOException, TransformScript.TransformSyntaxException
     {
-        if (args[0].equals("syntax"))
+        if (args.length == 0)
+        {
+            javax.swing.SwingUtilities.invokeLater(new Runnable()
+            {
+                public void run()
+                {
+                    new ExecuteGui();
+                }
+            });
+        }
+        else if (args[0].equals("syntax"))
             generateAndPrintSyntax(args);
         else if (args[0].equals("transform"))
             generateAndPrintTransform(args);
