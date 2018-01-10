@@ -10,6 +10,8 @@ import java.util.Properties;
 
 public class ExecuteGui extends JFrame
 {
+    public JTextArea m_scriptTextArea;
+
     public ExecuteGui()
     {
         ActionResponse actionResponse = new ActionResponse(this);
@@ -40,11 +42,12 @@ public class ExecuteGui extends JFrame
         loadEnvironment.addActionListener(actionResponse);
         fileMenu.add(loadEnvironment);
 
-        JComponent jc = makeLeftAligned(getTextArea("SELECT * from lddb", 4, 40, false, true));
+        JComponent jc = makeLeftAligned(getTextArea("SELECT * from lddb", 4, 40, true));
         this.getContentPane().add( makeLeftAligned(new JLabel("Run on:")) );
         this.getContentPane().add( jc );
 
-        JComponent scriptArea = makeLeftAligned(getTextArea("# SCRIPT GOES HERE", 20, 40, true, true));
+        m_scriptTextArea = getTextArea("# SCRIPT GOES HERE", 20, 40, true);
+        JComponent scriptArea = makeLeftAligned(new JScrollPane(m_scriptTextArea));
         JComponent editPanel = makeLeftAligned(new JPanel());
         editPanel.setLayout(new BorderLayout());
         editPanel.add( makeLeftAligned(new JLabel("Transformation Script:")), BorderLayout.NORTH );
@@ -62,12 +65,12 @@ public class ExecuteGui extends JFrame
         JPanel before = new JPanel();
         before.setLayout(new BorderLayout(10, 10));
         before.add( new JLabel("Before execution:"), BorderLayout.NORTH );
-        before.add( getTextArea("", 20, 40, true, false), BorderLayout.CENTER );
+        before.add( new JScrollPane(getTextArea("", 20, 40, false)), BorderLayout.CENTER );
 
         JPanel after = new JPanel();
         after.setLayout(new BorderLayout(10, 10));
         after.add( new JLabel("After execution:"), BorderLayout.NORTH );
-        after.add( getTextArea("", 20, 40, true, false), BorderLayout.CENTER );
+        after.add( new JScrollPane(getTextArea("", 20, 40, false)), BorderLayout.CENTER );
 
         jsonDisplay.add( makeLeftAligned(before), 0 );
         jsonDisplay.add( makeLeftAligned(after), 1 );
@@ -78,16 +81,11 @@ public class ExecuteGui extends JFrame
         this.setVisible(true);
     }
 
-    private JComponent getTextArea(String s, int lines, int columns, boolean scrolls, boolean editable)
+    private JTextArea getTextArea(String s, int lines, int columns, boolean editable)
     {
         JTextArea area = new JTextArea(s, lines, columns);
         area.setLineWrap(true);
         area.setEditable(editable);
-        if (scrolls)
-        {
-            JScrollPane sp = new JScrollPane(area);
-            return sp;
-        }
         return area;
     }
 
@@ -173,7 +171,7 @@ public class ExecuteGui extends JFrame
                     sb.append(line);
                     sb.append("\n");
                 }
-                System.out.println(sb.toString());
+                ((ExecuteGui) m_parent).m_scriptTextArea.setText(sb.toString());
             } catch (IOException ioe)
             {
                 JOptionPane.showMessageDialog(m_parent, ioe.toString());
