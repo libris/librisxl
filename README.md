@@ -44,23 +44,9 @@ Related external repositories:
 
 1. [Gradle](http://gradle.org/)
 
-    For OS X, install http://brew.sh/, then:
-    ```
-    $ brew install gradle
-    ```
-
-    For Debian, install http://sdkman.io/, then:
-    ```
-    $ sdk install gradle
-    ```
-
-    For Windows, install https://chocolatey.org/, then:
-    ```
-    $ choco install gradle
-    ```
-
-    **NOTE:** Check `gradle -version` and make sure that Groovy version matches
-    `groovyVersion` in `build.gradle`.
+    No setup required. Just use the checked-in
+    [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html)
+    to automatically get the specified version of Gradle and Groovy.
 
 2. [Elasticsearch](http://elasticsearch.org/)
 
@@ -183,14 +169,14 @@ To start the whelk, run the following commands:
 ```
 $ cd $LIBRISXL/rest
 $ export JAVA_OPTS="-Dfile.encoding=utf-8"
-$ gradle -Dxl.secret.properties=../secret.properties jettyRun
+$ ../gradlew -Dxl.secret.properties=../secret.properties appRun
 ```
 
 Windows:
 ```
 $ cd $LIBRISXL/rest
 $ setx JAVA_OPTS "-Dfile.encoding=utf-8"
-$ gradle -Dxl.secret.properties=../secret.properties jettyRun
+$ ../gradlew.bat -Dxl.secret.properties=../secret.properties appRun
 ```
 
 The system is then available on <http://localhost:8180>.
@@ -217,7 +203,7 @@ Go back to the importers module and load the resulting resources into the runnin
 
 ```
 $ cd $LIBRISXL/importers
-$ gradle -Dxl.secret.properties=../secret.properties \
+$ ../gradlew -Dxl.secret.properties=../secret.properties \
     -Dargs="defs ../../definitions/build/definitions.jsonld.lines" doRun
 ```
 
@@ -269,7 +255,7 @@ If you need to work locally (e.g. in this, the "whelk-core" or the
 
 ```
 $ (cd ../definitions && .venv/bin/python datasets.py -l)
-$ (cd importers/ && gradle jar -DuseLocalDeps)
+$ (cd importers/ && ../gradlew jar -DuseLocalDeps)
 $ ./librisxl-tools/scripts/setup-dev-whelk.sh -n whelk_dev
 ```
 
@@ -320,6 +306,6 @@ option is to reload the data from vcopy using the importers application.
 Produce a stats file (here for bib) by running:
 
 ```
-$ cd importers && gradle build
+$ cd importers && ../gradlew build
 $ RECTYPE=bib && time java -Dxl.secret.properties=../secret.properties -Dxl.mysql.properties=../mysql.properties -jar build/libs/vcopyImporter.jar vcopyjsondump $RECTYPE | grep '^{' | pypy ../librisxl-tools/scripts/get_marc_usage_stats.py $RECTYPE /tmp/usage-stats-$RECTYPE.json
 ```
