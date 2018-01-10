@@ -172,17 +172,26 @@ public class ExecuteGui extends JFrame
                     sb.append("\n");
                 }
                 ((ExecuteGui) m_parent).m_scriptTextArea.setText(sb.toString());
+                reader.close();
             } catch (IOException ioe)
             {
                 JOptionPane.showMessageDialog(m_parent, ioe.toString());
             }
 
-            System.out.println("Load from: " + m_currentFile);
         }
 
         private void save()
         {
-            System.out.println("Save to: " + m_currentFile);
+            try
+            {
+                PrintWriter writer = new PrintWriter(m_currentFile);
+                String text = ((ExecuteGui) m_parent).m_scriptTextArea.getText();
+                writer.write(text);
+                writer.close();
+            } catch (IOException ioe)
+            {
+                JOptionPane.showMessageDialog(m_parent, ioe.toString());
+            }
         }
     }
 }
