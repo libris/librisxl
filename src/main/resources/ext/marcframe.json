@@ -6598,7 +6598,7 @@
     },
     "505": {
       "i1": {"marcDefault": "8", "NOTE:LC": "nac"},
-      "i2": {"marcDefault": "", "NOTE:LC": "ignore"},
+      "i2": {"marcDefault": " ", "NOTE:LC": "ignore"},
       "aboutEntity": "?thing",
       "addLink": "tableOfContents",
       "resourceType": "TableOfContents",
