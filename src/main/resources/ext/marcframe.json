@@ -6609,16 +6609,16 @@
         }
       },
       "subfieldOrder": "a t r g u",
+      "TODO": "No $a if i2=0",
       "$a": {"property": "label"},
       "$t": {"aboutNew": "_:tocEntry", "property": "title"},
       "$r": {"about": "_:tocEntry", "property": "responsibilityStatement"},
       "$g": {"about": "_:tocEntry", "property": "comment"},
       "$u": {"about": "_:tocEntry", "addProperty": "uri"},
       "$6": {"property": "marc:fieldref"},
-      "TOOO:6": {},
       "_spec": [
         {
-          "source": {"505": {"ind1": " ", "ind2": " ", "subfields": [
+          "source": {"505": {"ind1": "8", "ind2": " ", "subfields": [
             {"a": "Contents:"},
             {"t": "Enoralehu"},
             {"r": "(Gigi)"},
