@@ -1,5 +1,7 @@
 package transform;
 
+import whelk.Whelk;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -7,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.*;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ExecuteGui extends JFrame
 {
@@ -101,6 +104,8 @@ public class ExecuteGui extends JFrame
         private JFileChooser m_fileChooser = new JFileChooser();
         private File m_currentFile = null;
         private Properties m_envProps = null;
+        JLabel m_progressLabel = null;
+        Whelk m_whelk = null;
 
         public ActionResponse(Component parent)
         {
@@ -146,13 +151,22 @@ public class ExecuteGui extends JFrame
                     result = m_fileChooser.showOpenDialog(m_parent);
                     if (result == JFileChooser.APPROVE_OPTION)
                     {
-                        File envFile = m_fileChooser.getSelectedFile();
-                        System.out.println("Load env-file from: " + envFile);
-                        try
-                        {
-                            InputStream propStream = new FileInputStream(envFile);
-                            m_envProps.load(propStream);
-                        } catch (IOException e){/* ignore */}
+                        executeUnderDialog("Connecting", "Connecting to XL environment, please wait..", () ->
+                            {
+                                try
+                                {
+                                    javax.swing.SwingUtilities.invokeLater( () -> m_progressLabel.setText("Loading config..") );
+                                    File envFile = m_fileChooser.getSelectedFile();
+                                    InputStream propStream = new FileInputStream(envFile);
+                                    m_envProps = new Properties();
+                                    m_envProps.load(propStream);
+                                    javax.swing.SwingUtilities.invokeLater( () -> m_progressLabel.setText("Starting Whelk..") );
+                                    m_whelk = new Whelk(m_envProps);
+                                } catch (IOException e)
+                                {
+                                    System.err.println(e);
+                                }
+                            });
                     }
                     break;
             }
@@ -192,6 +206,36 @@ public class ExecuteGui extends JFrame
             {
                 JOptionPane.showMessageDialog(m_parent, ioe.toString());
             }
+        }
+
+        private void executeUnderDialog(String title, String description, Runnable runnable)
+        {
+            JDialog dialog = new JDialog( (JFrame) m_parent, title, true );
+            dialog.setSize(280, 80);
+            dialog.getContentPane().setLayout(new BoxLayout( dialog.getContentPane(), BoxLayout.Y_AXIS ));
+            m_progressLabel = new JLabel(description);
+            dialog.add(m_progressLabel);
+            JProgressBar pb = new JProgressBar();
+            pb.setIndeterminate(true);
+            dialog.add(pb);
+            dialog.setLocationRelativeTo(m_parent);
+            dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+
+            // The horror, FU swing.
+            Thread worker = new Thread(runnable);
+            worker.start();
+            new Thread( () ->
+            {
+                while (true)
+                {
+                    if (worker.getState() == Thread.State.TERMINATED)
+                    {
+                        dialog.setVisible(false);
+                        return;
+                    }
+                }
+            }).start();
+            new Thread( () -> dialog.setVisible(true) ).start();
         }
     }
 }
