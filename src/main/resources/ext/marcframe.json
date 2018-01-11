@@ -6497,7 +6497,7 @@
       "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "qvalue"},
       "$6": {"property": "marc:fieldref"},
-      "$9": {"addProperty": "marc:formOfNonfilingChars"},
+      "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "_spec": [
         {
           "source": {"490": {"ind1": "0", "ind2": " ", "subfields": [
@@ -10772,7 +10772,6 @@
       ]
     },
     "830": {
-      "NOTE": "Temporarily move conversion/revert rules of 830 before 800/810/811? Otherwise 830 always reverts to 800/810/811, since have no 'contribution'",
       "addLink": "hasSeries",
       "resourceType": "Instance",
       "include": "titledetails",
