@@ -3,7 +3,9 @@ package transform;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
+import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.triples.JsonldSerializer;
 import whelk.util.TransformScript;
 
 import javax.swing.*;
@@ -281,6 +283,8 @@ public class ExecuteGui extends JFrame
                 parent.m_originalRecordArea.setText(formattedOriginal);
                 TransformScript script = new TransformScript(parent.m_scriptTextArea.getText());
                 Map transformedData = script.executeOn(document.data);
+                transformedData = JsonLd.flatten(transformedData);
+                JsonldSerializer.normalize(transformedData, document.getCompleteId(), false);
                 String formattedTransformed = m_mapper.writerWithDefaultPrettyPrinter().writeValueAsString(transformedData);
                 parent.m_transformedRecordArea.setText(formattedTransformed);
             } catch (IOException | TransformScript.TransformSyntaxException e)
