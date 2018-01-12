@@ -20,7 +20,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ExecuteGui extends JFrame
 {
@@ -62,8 +61,10 @@ public class ExecuteGui extends JFrame
 
         m_sqlTextArea = getTextArea("SELECT id FROM lddb WHERE collection <> 'definitions'", 4, 40, true);
         JComponent jc = makeLeftAligned(m_sqlTextArea);
-        this.getContentPane().add( makeLeftAligned(new JLabel("Select (short) IDs to operate on:")) );
-        this.getContentPane().add( jc );
+        JComponent selectPanel = makeLeftAligned(new JPanel());
+        selectPanel.setLayout(new BorderLayout());
+        selectPanel.add( makeLeftAligned(new JLabel("Select (short) IDs to operate on:")), BorderLayout.NORTH );
+        selectPanel.add( jc, BorderLayout.CENTER );
 
         m_scriptTextArea = getTextArea("# SCRIPT GOES HERE", 20, 40, true);
         JComponent scriptArea = makeLeftAligned(new JScrollPane(m_scriptTextArea));
@@ -71,13 +72,14 @@ public class ExecuteGui extends JFrame
         editPanel.setLayout(new BorderLayout());
         editPanel.add( makeLeftAligned(new JLabel("Transformation Script:")), BorderLayout.NORTH );
         editPanel.add( scriptArea, BorderLayout.CENTER );
-        this.getContentPane().add( editPanel );
+
+        JSplitPane split1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, selectPanel, editPanel);
+        this.getContentPane().add( split1 );
 
         JPanel jsonDisplay = new JPanel();
         jsonDisplay.setLayout(new GridLayout(1, 2));
 
         JPanel buttonPanel = new JPanel();
-        this.getContentPane().add(makeLeftAligned(buttonPanel));
         JButton b0 = new JButton("Try again (without saving)");
         b0.setActionCommand("TryAgain");
         b0.addActionListener(actionResponse);
@@ -107,10 +109,17 @@ public class ExecuteGui extends JFrame
         m_transformedRecordArea = getTextArea("", 20, 40, false);
         after.add( new JScrollPane(m_transformedRecordArea), BorderLayout.CENTER );
 
+        JPanel resultPanel = (JPanel) makeLeftAligned(new JPanel());
+        resultPanel.setLayout(new BorderLayout());
+        resultPanel.add(makeLeftAligned(buttonPanel), BorderLayout.NORTH);
+
         jsonDisplay.add( makeLeftAligned(before), 0 );
         jsonDisplay.add( makeLeftAligned(after), 1 );
 
-        this.getContentPane().add(makeLeftAligned(jsonDisplay));
+        resultPanel.add(makeLeftAligned(jsonDisplay), BorderLayout.CENTER);
+
+        JSplitPane split2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, split1, resultPanel);
+        this.getContentPane().add(split2);
 
         this.pack();
         this.setVisible(true);
@@ -275,8 +284,9 @@ public class ExecuteGui extends JFrame
             }
         }
 
-        private void showTransformation(Document document)
+        private void showTransformation(Document _document)
         {
+            Document document = _document.clone();
             try {
                 String formattedOriginal = m_mapper.writerWithDefaultPrettyPrinter().writeValueAsString(document.data);
                 ExecuteGui parent = (ExecuteGui) m_parent;
