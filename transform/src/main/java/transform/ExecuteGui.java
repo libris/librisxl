@@ -76,18 +76,22 @@ public class ExecuteGui extends JFrame
 
         JPanel buttonPanel = new JPanel();
         this.getContentPane().add(makeLeftAligned(buttonPanel));
+        JButton b0 = new JButton("Try again (without saving)");
+        b0.setActionCommand("TryAgain");
+        b0.addActionListener(actionResponse);
         JButton b1 = new JButton("Try next (without saving)");
         b1.setActionCommand("Try");
         b1.addActionListener(actionResponse);
-        JButton b2 = new JButton("Execute and save (all records)");
+        JButton b2 = new JButton("Execute and save all records");
         b2.setActionCommand("ExecuteAll");
         b2.addActionListener(actionResponse);
         JButton b3 = new JButton("Reset");
         b3.setActionCommand("Reset");
         b3.addActionListener(actionResponse);
+        buttonPanel.add(b0);
         buttonPanel.add(b1);
-        buttonPanel.add(b2);
         buttonPanel.add(b3);
+        buttonPanel.add(b2);
 
         JPanel before = new JPanel();
         before.setLayout(new BorderLayout(10, 10));
@@ -137,6 +141,7 @@ public class ExecuteGui extends JFrame
         private Connection m_connection;
         private PreparedStatement m_statement;
         private ResultSet m_resultSet;
+        private Document m_lastDocument;
 
         public ActionResponse(Component parent)
         {
@@ -210,6 +215,12 @@ public class ExecuteGui extends JFrame
                         showNextInTrySeries();
                     }
                     break;
+                case "TryAgain":
+                    if (m_lastDocument != null)
+                    {
+                        showTransformation(m_lastDocument);
+                    }
+                    break;
                 case "Reset":
                     resetTrySeries();
                     break;
@@ -248,21 +259,31 @@ public class ExecuteGui extends JFrame
                 {
                     String shortId = m_resultSet.getString(1);
                     Document document = m_whelk.getStorage().load(shortId);
-                    String formattedOriginal = m_mapper.writerWithDefaultPrettyPrinter().writeValueAsString(document.data);
-
-                    ExecuteGui parent = (ExecuteGui) m_parent;
-                    parent.m_originalRecordArea.setText(formattedOriginal);
-                    TransformScript script = new TransformScript(parent.m_scriptTextArea.getText());
-                    Map transformedData = script.executeOn(document.data);
-                    String formattedTransformed = m_mapper.writerWithDefaultPrettyPrinter().writeValueAsString(transformedData);
-                    parent.m_transformedRecordArea.setText(formattedTransformed);
+                    m_lastDocument = document.clone();
+                    showTransformation(document);
                 }
                 else
                 {
                     JOptionPane.showMessageDialog(m_parent, "All changes reviewed.");
                     resetTrySeries();
                 }
-            } catch (IOException | SQLException | TransformScript.TransformSyntaxException e)
+            } catch (SQLException e)
+            {
+                JOptionPane.showMessageDialog(m_parent, e.toString());
+            }
+        }
+
+        private void showTransformation(Document document)
+        {
+            try {
+                String formattedOriginal = m_mapper.writerWithDefaultPrettyPrinter().writeValueAsString(document.data);
+                ExecuteGui parent = (ExecuteGui) m_parent;
+                parent.m_originalRecordArea.setText(formattedOriginal);
+                TransformScript script = new TransformScript(parent.m_scriptTextArea.getText());
+                Map transformedData = script.executeOn(document.data);
+                String formattedTransformed = m_mapper.writerWithDefaultPrettyPrinter().writeValueAsString(transformedData);
+                parent.m_transformedRecordArea.setText(formattedTransformed);
+            } catch (IOException | TransformScript.TransformSyntaxException e)
             {
                 JOptionPane.showMessageDialog(m_parent, e.toString());
             }
