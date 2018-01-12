@@ -1,7 +1,10 @@
 package transform;
 
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import whelk.Document;
 import whelk.Whelk;
+import whelk.util.TransformScript;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,6 +15,8 @@ import java.io.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -19,6 +24,8 @@ public class ExecuteGui extends JFrame
 {
     public JTextArea m_scriptTextArea;
     public JTextArea m_sqlTextArea;
+    public JTextArea m_originalRecordArea;
+    public JTextArea m_transformedRecordArea;
 
     public ExecuteGui()
     {
@@ -75,18 +82,24 @@ public class ExecuteGui extends JFrame
         JButton b2 = new JButton("Execute and save (all records)");
         b2.setActionCommand("ExecuteAll");
         b2.addActionListener(actionResponse);
+        JButton b3 = new JButton("Reset");
+        b3.setActionCommand("Reset");
+        b3.addActionListener(actionResponse);
         buttonPanel.add(b1);
         buttonPanel.add(b2);
+        buttonPanel.add(b3);
 
         JPanel before = new JPanel();
         before.setLayout(new BorderLayout(10, 10));
         before.add( new JLabel("Before execution:"), BorderLayout.NORTH );
-        before.add( new JScrollPane(getTextArea("", 20, 40, false)), BorderLayout.CENTER );
+        m_originalRecordArea = getTextArea("", 20, 40, false);
+        before.add( new JScrollPane(m_originalRecordArea), BorderLayout.CENTER );
 
         JPanel after = new JPanel();
         after.setLayout(new BorderLayout(10, 10));
         after.add( new JLabel("After execution:"), BorderLayout.NORTH );
-        after.add( new JScrollPane(getTextArea("", 20, 40, false)), BorderLayout.CENTER );
+        m_transformedRecordArea = getTextArea("", 20, 40, false);
+        after.add( new JScrollPane(m_transformedRecordArea), BorderLayout.CENTER );
 
         jsonDisplay.add( makeLeftAligned(before), 0 );
         jsonDisplay.add( makeLeftAligned(after), 1 );
@@ -117,8 +130,13 @@ public class ExecuteGui extends JFrame
         private JFileChooser m_fileChooser = new JFileChooser();
         private File m_currentFile = null;
         private Properties m_envProps = null;
-        JLabel m_progressLabel = null;
-        Whelk m_whelk = null;
+        private JLabel m_progressLabel = null;
+        private Whelk m_whelk = null;
+        private ObjectMapper m_mapper = new ObjectMapper();
+
+        private Connection m_connection;
+        private PreparedStatement m_statement;
+        private ResultSet m_resultSet;
 
         public ActionResponse(Component parent)
         {
@@ -185,31 +203,79 @@ public class ExecuteGui extends JFrame
                 case "Try":
                     if (m_whelk != null)
                     {
-                        ExecuteGui parent = (ExecuteGui) m_parent;
-                        String sqlString = parent.m_sqlTextArea.getText();
-                        if (isObviouslyBadSql(sqlString))
+                        if (m_resultSet == null)
                         {
-                            JOptionPane.showMessageDialog(m_parent, "Denied: Suspicious SQL statement.");
-                            return;
+                            startNewTrySeries();
                         }
-                        try(Connection connection = m_whelk.getStorage().getConnection();
-                            PreparedStatement statement = connection.prepareStatement(sqlString);
-                            ResultSet resultSet = statement.executeQuery())
-                        {
-                            if (resultSet.next())
-                                System.out.println(resultSet);
-                        } catch (Exception e)
-                        {
-                            JOptionPane.showMessageDialog(m_parent, e.toString());
-                        }
-
+                        showNextInTrySeries();
                     }
+                    break;
+                case "Reset":
+                    resetTrySeries();
                     break;
                 case "ExecuteAll":
                     System.out.println("DO ALL");
                     break;
             }
 
+        }
+
+        private void startNewTrySeries()
+        {
+            ExecuteGui parent = (ExecuteGui) m_parent;
+            String sqlString = parent.m_sqlTextArea.getText();
+            if (isObviouslyBadSql(sqlString)) {
+                JOptionPane.showMessageDialog(m_parent, "Denied: Suspicious SQL statement.");
+                return;
+            }
+
+            try
+            {
+                m_connection = m_whelk.getStorage().getConnection();
+                m_statement = m_connection.prepareStatement(sqlString);
+                m_resultSet = m_statement.executeQuery();
+            } catch (Exception e) {
+                resetTrySeries();
+                JOptionPane.showMessageDialog(m_parent, e.toString());
+            }
+        }
+
+        private void showNextInTrySeries()
+        {
+            try
+            {
+                if (m_resultSet.next())
+                {
+                    String shortId = m_resultSet.getString(1);
+                    Document document = m_whelk.getStorage().load(shortId);
+                    String formattedOriginal = m_mapper.writerWithDefaultPrettyPrinter().writeValueAsString(document.data);
+
+                    ExecuteGui parent = (ExecuteGui) m_parent;
+                    parent.m_originalRecordArea.setText(formattedOriginal);
+                    TransformScript script = new TransformScript(parent.m_scriptTextArea.getText());
+                    Map transformedData = script.executeOn(document.data);
+                    String formattedTransformed = m_mapper.writerWithDefaultPrettyPrinter().writeValueAsString(transformedData);
+                    parent.m_transformedRecordArea.setText(formattedTransformed);
+                }
+                else
+                {
+                    JOptionPane.showMessageDialog(m_parent, "All changes reviewed.");
+                    resetTrySeries();
+                }
+            } catch (IOException | SQLException | TransformScript.TransformSyntaxException e)
+            {
+                JOptionPane.showMessageDialog(m_parent, e.toString());
+            }
+        }
+
+        private void resetTrySeries()
+        {
+            try { if (m_resultSet != null) m_resultSet.close(); } catch (SQLException e) { /* ignore */ }
+            try { if (m_statement != null) m_statement.close(); } catch (SQLException e) { /* ignore */ }
+            try { if (m_connection != null) m_connection.close(); } catch (SQLException e) { /* ignore */ }
+            m_resultSet = null;
+            m_statement = null;
+            m_connection = null;
         }
 
         private boolean isObviouslyBadSql(String sql)
