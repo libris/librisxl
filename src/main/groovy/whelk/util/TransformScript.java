@@ -57,14 +57,14 @@ public class TransformScript
             throw new TransformSyntaxException("The script did not begin with MODE [FRAMED/NORMAL] (required).");
 
         String symbol = symbols.pollFirst();
-        if (!symbol.equals("MODE"))
+        if (!symbol.equalsIgnoreCase("MODE"))
             throw new TransformSyntaxException("The script did not begin with MODE [FRAMED/NORMAL] (required).");
 
         symbol = symbols.pollFirst();
-        if (!symbol.equals("FRAMED") && !symbol.equals("NORMAL"))
+        if (!symbol.equalsIgnoreCase("FRAMED") && !symbol.equalsIgnoreCase("NORMAL"))
             throw new TransformSyntaxException("The script did not begin with MODE [FRAMED/NORMAL] (required).");
 
-        if (symbol.equals("FRAMED"))
+        if (symbol.equalsIgnoreCase("FRAMED"))
             m_modeFramed = true;
 
         m_operations = parseStatementList(symbols);
@@ -83,9 +83,11 @@ public class TransformScript
 
             switch (symbol) {
                 case "MOVE":
+                case "move":
                     operations.add( parseMoveStatement(symbols) );
                     break;
                 case "FOREACH":
+                case "foreach":
                     operations.add( parseForEachStatement(symbols) );
                     break;
                 case "{":
