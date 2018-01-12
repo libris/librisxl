@@ -1,5 +1,6 @@
 package transform;
 
+import org.apache.commons.lang3.StringUtils;
 import whelk.Whelk;
 
 import javax.swing.*;
@@ -8,17 +9,22 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ExecuteGui extends JFrame
 {
     public JTextArea m_scriptTextArea;
+    public JTextArea m_sqlTextArea;
 
     public ExecuteGui()
     {
         ActionResponse actionResponse = new ActionResponse(this);
 
+        this.setLocationRelativeTo(null);
         this.setTitle("Libris XL data transform");
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         BoxLayout boxLayout = new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS);
@@ -45,8 +51,9 @@ public class ExecuteGui extends JFrame
         loadEnvironment.addActionListener(actionResponse);
         fileMenu.add(loadEnvironment);
 
-        JComponent jc = makeLeftAligned(getTextArea("SELECT * from lddb", 4, 40, true));
-        this.getContentPane().add( makeLeftAligned(new JLabel("Run on:")) );
+        m_sqlTextArea = getTextArea("SELECT id FROM lddb WHERE collection <> 'definitions'", 4, 40, true);
+        JComponent jc = makeLeftAligned(m_sqlTextArea);
+        this.getContentPane().add( makeLeftAligned(new JLabel("Select (short) IDs to operate on:")) );
         this.getContentPane().add( jc );
 
         m_scriptTextArea = getTextArea("# SCRIPT GOES HERE", 20, 40, true);
@@ -62,8 +69,14 @@ public class ExecuteGui extends JFrame
 
         JPanel buttonPanel = new JPanel();
         this.getContentPane().add(makeLeftAligned(buttonPanel));
-        buttonPanel.add(new JButton("Next"));
-        buttonPanel.add(new JButton("Run"));
+        JButton b1 = new JButton("Try next (without saving)");
+        b1.setActionCommand("Try");
+        b1.addActionListener(actionResponse);
+        JButton b2 = new JButton("Execute and save (all records)");
+        b2.setActionCommand("ExecuteAll");
+        b2.addActionListener(actionResponse);
+        buttonPanel.add(b1);
+        buttonPanel.add(b2);
 
         JPanel before = new JPanel();
         before.setLayout(new BorderLayout(10, 10));
@@ -162,15 +175,58 @@ public class ExecuteGui extends JFrame
                                     m_envProps.load(propStream);
                                     javax.swing.SwingUtilities.invokeLater( () -> m_progressLabel.setText("Starting Whelk..") );
                                     m_whelk = new Whelk(m_envProps);
-                                } catch (IOException e)
+                                } catch (IOException ioe)
                                 {
-                                    System.err.println(e);
+                                    JOptionPane.showMessageDialog(m_parent, ioe.toString());
                                 }
                             });
                     }
                     break;
+                case "Try":
+                    if (m_whelk != null)
+                    {
+                        ExecuteGui parent = (ExecuteGui) m_parent;
+                        String sqlString = parent.m_sqlTextArea.getText();
+                        if (isObviouslyBadSql(sqlString))
+                        {
+                            JOptionPane.showMessageDialog(m_parent, "Denied: Suspicious SQL statement.");
+                            return;
+                        }
+                        try(Connection connection = m_whelk.getStorage().getConnection();
+                            PreparedStatement statement = connection.prepareStatement(sqlString);
+                            ResultSet resultSet = statement.executeQuery())
+                        {
+                            if (resultSet.next())
+                                System.out.println(resultSet);
+                        } catch (Exception e)
+                        {
+                            JOptionPane.showMessageDialog(m_parent, e.toString());
+                        }
+
+                    }
+                    break;
+                case "ExecuteAll":
+                    System.out.println("DO ALL");
+                    break;
             }
 
+        }
+
+        private boolean isObviouslyBadSql(String sql)
+        {
+            String[] badWords =
+                    {
+                            "DROP",
+                            "TRUNCATE",
+                            "MODIFY",
+                            "ALTER",
+                            "UPDATE",
+                    };
+
+            for (String word : badWords)
+                if (StringUtils.containsIgnoreCase(sql, word))
+                    return true;
+            return false;
         }
 
         private void load()
