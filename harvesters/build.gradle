@@ -1,9 +1,9 @@
-apply plugin: 'groovy'
-apply plugin: 'jetty'
-apply plugin: 'war'
-apply plugin: 'application'
-apply plugin: 'maven'
 apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'application'
+apply plugin: 'war'
+apply from: '../gretty.plugin'
 
 
 loadConfiguration()
@@ -130,44 +130,41 @@ dependencies {
     executableWarDeps 'commons-cli:commons-cli:1.2'
 }
 
-war {
-    baseName = archivesBaseName
+project.afterEvaluate {
+    war {
+        baseName = archivesBaseName
 
-    from {
-        configurations.executableWarDeps.collect {
-            //it.isDirectory() ? it : project.zipTree(it)
-            it.isDirectory() ? it : project.zipTree(it).matching {
-                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+        from {
+            configurations.executableWarDeps.collect {
+                //it.isDirectory() ? it : project.zipTree(it)
+                it.isDirectory() ? it : project.zipTree(it).matching {
+                    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+                }
             }
         }
+        from "$buildDir/classes/main"
+
+        def manifestClasspath = configurations.compile.collect {
+            "/WEB-INF/lib/${it.getName()}"
+        }.join(',')
+
+        manifest {
+            attributes 'Implementation-Title': 'Standalone Whelk Harvester',
+                    'Implementation-Version': versionNumber,
+                    'Main-Class': 'whelk.component.support.JettyServer',
+                    'Class-Path': manifestClasspath
+        }
     }
-    from "$buildDir/classes/main"
-
-    def manifestClasspath = configurations.compile.collect {
-        "/WEB-INF/lib/${it.getName()}"
-    }.join(',')
-
-    manifest {
-        attributes 'Implementation-Title': 'Standalone Whelk',
-                'Implementation-Version': versionNumber,
-                'Main-Class': 'whelk.component.support.JettyServer',
-                'Class-Path': manifestClasspath
-    }
-
-
 }
 
-task jettyRun(type: JettyRun, overwrite: true) {
-    jettyRun.contextPath = archivesBaseName
-    jettyRun.httpPort = 8180
-    jettyRun.description = "Starts a jetty instance."
-
-    //reload = "automatic"
-    //scanIntervalSeconds = 1
-
-    def mock_cluster = java.net.InetAddress.getLocalHost().getHostName() + "-es-cluster"
-    System.setProperty('elastic.cluster', System.getProperty("elastic.cluster", mock_cluster))
-    System.setProperty('whelk.mode', System.getProperty("whelk.mode", "ops"))
+gretty {
+    contextPath = archivesBaseName
+    httpPort = 8180
+    contextPath = '/'
+    systemProperties(
+        'xl.secret.properties': System.getProperty("xl.secret.properties"),
+        'xl.mysql.properties' : System.getProperty("xl.mysql.properties")
+    )
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {
