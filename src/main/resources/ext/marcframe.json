@@ -1822,13 +1822,13 @@
       "Serial": {
         "[1:2]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
-          "link": "frequency",
+          "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}",
           "matchUriToken": "^[_abcdefghijkmqstw]$"
         },
         "[2:3]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
-          "link": "frequency",
+          "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}",
           "matchUriToken": "^[nrx]$"
         },
@@ -2581,7 +2581,7 @@
         },
         "[24] [25] [26] [27]": {
           "aboutEntity": "?work",
-          "addLink": "contentType",
+          "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}"
         },
         "[28:29]": {
@@ -2749,12 +2749,12 @@
       "Serial": {
         "[18:19]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
-          "link": "frequency",
+          "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}"
         },
         "[19:20]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
-          "link": "frequency",
+          "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}"
         },
         "[20:21]": {
@@ -2902,13 +2902,13 @@
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],
                 "contentType": [
-                  {"@id": "https://id.kb.se/marc/BooksContentsType-e"},
                   {
                     "@type": "ContentType",
                     "label": "just challenging column itemPos"
                   }
                 ],
-                "genreForm": [{"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
+                "genreForm": [{"@id": "https://id.kb.se/marc/BooksContentsType-e"},
+                              {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
                               {"@id": "https://id.kb.se/marc/BooksBiographyType-a"}
                 ],
                 "illustrativeContent": [
@@ -5965,7 +5965,7 @@
 
     "310": {
       "aboutEntity": "?thing",
-      "$a": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
+      "$a": {"addLink": "frequency", "resourceType": "Frequency", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "TODO:$b": "Compare with 321"
     },
@@ -5974,7 +5974,7 @@
       "addLink": "replaces",
       "embedded": true,
       "resourceType": "Serial",
-      "$a": {"link": "frequency", "resourceType": "Frequency", "property": "label"},
+      "$a": {"addLink": "frequency", "resourceType": "Frequency", "property": "label"},
       "$b": {"property": "date"}
     },
 
@@ -6497,7 +6497,7 @@
       "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "qvalue"},
       "$6": {"property": "marc:fieldref"},
-      "$9": {"addProperty": "marc:formOfNonfilingChars"},
+      "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "_spec": [
         {
           "source": {"490": {"ind1": "0", "ind2": " ", "subfields": [
@@ -6598,7 +6598,7 @@
     },
     "505": {
       "i1": {"marcDefault": "8", "NOTE:LC": "nac"},
-      "i2": {"marcDefault": "", "NOTE:LC": "ignore"},
+      "i2": {"marcDefault": " ", "NOTE:LC": "ignore"},
       "aboutEntity": "?thing",
       "addLink": "tableOfContents",
       "resourceType": "TableOfContents",
@@ -6609,16 +6609,16 @@
         }
       },
       "subfieldOrder": "a t r g u",
+      "TODO": "No $a if i2=0",
       "$a": {"property": "label"},
       "$t": {"aboutNew": "_:tocEntry", "property": "title"},
       "$r": {"about": "_:tocEntry", "property": "responsibilityStatement"},
       "$g": {"about": "_:tocEntry", "property": "comment"},
       "$u": {"about": "_:tocEntry", "addProperty": "uri"},
       "$6": {"property": "marc:fieldref"},
-      "TOOO:6": {},
       "_spec": [
         {
-          "source": {"505": {"ind1": " ", "ind2": " ", "subfields": [
+          "source": {"505": {"ind1": "8", "ind2": " ", "subfields": [
             {"a": "Contents:"},
             {"t": "Enoralehu"},
             {"r": "(Gigi)"},
@@ -10772,7 +10772,6 @@
       ]
     },
     "830": {
-      "NOTE": "Temporarily move conversion/revert rules of 830 before 800/810/811? Otherwise 830 always reverts to 800/810/811, since have no 'contribution'",
       "addLink": "hasSeries",
       "resourceType": "Instance",
       "include": "titledetails",
@@ -14711,32 +14710,32 @@
       "$x": {"addProperty": "marc:hasHold948-x"},
       "$y": {"addProperty": "marc:hasHold948-y"},
       "$z": {"addProperty": "marc:hasHold948-z"},
-      "$A": {"addProperty": "marc:hasHold948-a"},
-      "$B": {"addProperty": "marc:hasHold948-b"},
-      "$C": {"addProperty": "marc:hasHold948-c"},
-      "$D": {"addProperty": "marc:hasHold948-d"},
-      "$E": {"addProperty": "marc:hasHold948-e"},
-      "$F": {"addProperty": "marc:hasHold948-f"},
-      "$G": {"addProperty": "marc:hasHold948-g"},
-      "$H": {"addProperty": "marc:hasHold948-h"},
-      "$I": {"addProperty": "marc:hasHold948-i"},
-      "$J": {"addProperty": "marc:hasHold948-j"},
-      "$K": {"addProperty": "marc:hasHold948-k"},
-      "$L": {"addProperty": "marc:hasHold948-l"},
-      "$M": {"addProperty": "marc:hasHold948-m"},
-      "$N": {"addProperty": "marc:hasHold948-n"},
-      "$O": {"addProperty": "marc:hasHold948-o"},
-      "$P": {"addProperty": "marc:hasHold948-p"},
-      "$Q": {"addProperty": "marc:hasHold948-q"},
-      "$R": {"addProperty": "marc:hasHold948-r"},
-      "$S": {"addProperty": "marc:hasHold948-s"},
-      "$T": {"addProperty": "marc:hasHold948-t"},
-      "$U": {"addProperty": "marc:hasHold948-u"},
-      "$V": {"addProperty": "marc:hasHold948-v"},
-      "$W": {"addProperty": "marc:hasHold948-w"},
-      "$X": {"addProperty": "marc:hasHold948-x"},
-      "$Y": {"addProperty": "marc:hasHold948-y"},
-      "$Z": {"addProperty": "marc:hasHold948-z"},
+      "$A": {"addProperty": "marc:hasHold948-A"},
+      "$B": {"addProperty": "marc:hasHold948-B"},
+      "$C": {"addProperty": "marc:hasHold948-C"},
+      "$D": {"addProperty": "marc:hasHold948-D"},
+      "$E": {"addProperty": "marc:hasHold948-E"},
+      "$F": {"addProperty": "marc:hasHold948-F"},
+      "$G": {"addProperty": "marc:hasHold948-G"},
+      "$H": {"addProperty": "marc:hasHold948-H"},
+      "$I": {"addProperty": "marc:hasHold948-I"},
+      "$J": {"addProperty": "marc:hasHold948-J"},
+      "$K": {"addProperty": "marc:hasHold948-K"},
+      "$L": {"addProperty": "marc:hasHold948-L"},
+      "$M": {"addProperty": "marc:hasHold948-M"},
+      "$N": {"addProperty": "marc:hasHold948-N"},
+      "$O": {"addProperty": "marc:hasHold948-O"},
+      "$P": {"addProperty": "marc:hasHold948-P"},
+      "$Q": {"addProperty": "marc:hasHold948-Q"},
+      "$R": {"addProperty": "marc:hasHold948-R"},
+      "$S": {"addProperty": "marc:hasHold948-S"},
+      "$T": {"addProperty": "marc:hasHold948-T"},
+      "$U": {"addProperty": "marc:hasHold948-U"},
+      "$V": {"addProperty": "marc:hasHold948-V"},
+      "$W": {"addProperty": "marc:hasHold948-W"},
+      "$X": {"addProperty": "marc:hasHold948-X"},
+      "$Y": {"addProperty": "marc:hasHold948-Y"},
+      "$Z": {"addProperty": "marc:hasHold948-Z"},
       "$0": {"addProperty": "marc:hasHold948-0"},
       "$1": {"addProperty": "marc:hasHold948-1"},
       "$2": {"addProperty": "marc:hasHold948-2"},
@@ -14780,32 +14779,32 @@
       "$x": {"addProperty": "marc:hasHold949-x"},
       "$y": {"addProperty": "marc:hasHold949-y"},
       "$z": {"addProperty": "marc:hasHold949-z"},
-      "$A": {"addProperty": "marc:hasHold949-a"},
-      "$B": {"addProperty": "marc:hasHold949-b"},
-      "$C": {"addProperty": "marc:hasHold949-c"},
-      "$D": {"addProperty": "marc:hasHold949-d"},
-      "$E": {"addProperty": "marc:hasHold949-e"},
-      "$F": {"addProperty": "marc:hasHold949-f"},
-      "$G": {"addProperty": "marc:hasHold949-g"},
-      "$H": {"addProperty": "marc:hasHold949-h"},
-      "$I": {"addProperty": "marc:hasHold949-i"},
-      "$J": {"addProperty": "marc:hasHold949-j"},
-      "$K": {"addProperty": "marc:hasHold949-k"},
-      "$L": {"addProperty": "marc:hasHold949-l"},
-      "$M": {"addProperty": "marc:hasHold949-m"},
-      "$N": {"addProperty": "marc:hasHold949-n"},
-      "$O": {"addProperty": "marc:hasHold949-o"},
-      "$P": {"addProperty": "marc:hasHold949-p"},
-      "$Q": {"addProperty": "marc:hasHold949-q"},
-      "$R": {"addProperty": "marc:hasHold949-r"},
-      "$S": {"addProperty": "marc:hasHold949-s"},
-      "$T": {"addProperty": "marc:hasHold949-t"},
-      "$U": {"addProperty": "marc:hasHold949-u"},
-      "$V": {"addProperty": "marc:hasHold949-v"},
-      "$W": {"addProperty": "marc:hasHold949-w"},
-      "$X": {"addProperty": "marc:hasHold949-x"},
-      "$Y": {"addProperty": "marc:hasHold949-y"},
-      "$Z": {"addProperty": "marc:hasHold949-z"},
+      "$A": {"addProperty": "marc:hasHold949-A"},
+      "$B": {"addProperty": "marc:hasHold949-B"},
+      "$C": {"addProperty": "marc:hasHold949-C"},
+      "$D": {"addProperty": "marc:hasHold949-D"},
+      "$E": {"addProperty": "marc:hasHold949-E"},
+      "$F": {"addProperty": "marc:hasHold949-F"},
+      "$G": {"addProperty": "marc:hasHold949-G"},
+      "$H": {"addProperty": "marc:hasHold949-H"},
+      "$I": {"addProperty": "marc:hasHold949-I"},
+      "$J": {"addProperty": "marc:hasHold949-J"},
+      "$K": {"addProperty": "marc:hasHold949-K"},
+      "$L": {"addProperty": "marc:hasHold949-L"},
+      "$M": {"addProperty": "marc:hasHold949-M"},
+      "$N": {"addProperty": "marc:hasHold949-N"},
+      "$O": {"addProperty": "marc:hasHold949-O"},
+      "$P": {"addProperty": "marc:hasHold949-P"},
+      "$Q": {"addProperty": "marc:hasHold949-Q"},
+      "$R": {"addProperty": "marc:hasHold949-R"},
+      "$S": {"addProperty": "marc:hasHold949-S"},
+      "$T": {"addProperty": "marc:hasHold949-T"},
+      "$U": {"addProperty": "marc:hasHold949-U"},
+      "$V": {"addProperty": "marc:hasHold949-V"},
+      "$W": {"addProperty": "marc:hasHold949-W"},
+      "$X": {"addProperty": "marc:hasHold949-X"},
+      "$Y": {"addProperty": "marc:hasHold949-Y"},
+      "$Z": {"addProperty": "marc:hasHold949-Z"},
       "$0": {"addProperty": "marc:hasHold949-0"},
       "$1": {"addProperty": "marc:hasHold949-1"},
       "$2": {"addProperty": "marc:hasHold949-2"},
