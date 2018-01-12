@@ -155,10 +155,10 @@ public class TransformScript
 
         public void execute(Map json, Map<String, Object> context)
         {
-            List<String> fromPath = Arrays.asList( m_fromPath.split(",") );
+            List<Object> fromPath = Arrays.asList( withIntAsInteger(m_fromPath.split(",")) );
             List<Object> fromPathWithSymbols = insertContextSymbolsIntoPath(fromPath, context);
 
-            List<String> toPath = Arrays.asList( m_toPath.split(",") );
+            List<Object> toPath = Arrays.asList( withIntAsInteger(m_toPath.split(",")) );
             List<Object> toPathWithSymbols = insertContextSymbolsIntoPath(toPath, context);
 
             Object value = Document._get(fromPathWithSymbols, json);
@@ -193,7 +193,7 @@ public class TransformScript
 
         public void execute(Map json, Map<String, Object> context)
         {
-            List<String> path = Arrays.asList( m_listPath.split(",") );
+            List<Object> path = Arrays.asList( withIntAsInteger(m_listPath.split(",")) );
             List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
 
             Object listObject = Document._get(pathWithSymbols, json);
@@ -215,12 +215,27 @@ public class TransformScript
         }
     }
 
-    private List<Object> insertContextSymbolsIntoPath(List<String> path, Map<String, Object> context)
+    private Object[] withIntAsInteger(String[] pathArray)
+    {
+        Object[] result = new Object[pathArray.length];
+
+        for (int i = 0; i < pathArray.length; ++i)
+        {
+            if (pathArray[i].matches("^\\d+$")) // if its a number
+                result[i] = new Integer(pathArray[i]);
+            else
+                result[i] = pathArray[i];
+        }
+
+        return result;
+    }
+
+    private List<Object> insertContextSymbolsIntoPath(List<Object> path, Map<String, Object> context)
     {
         List<Object> resultingPath = new ArrayList<>();
         for (int i = 0; i < path.size(); ++i)
         {
-            String step = path.get(i);
+            Object step = path.get(i);
             if (context.containsKey(step))
                 resultingPath.add(context.get(step));
             else
