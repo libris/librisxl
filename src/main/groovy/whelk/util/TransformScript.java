@@ -33,21 +33,57 @@ public class TransformScript
     public TransformScript(String scriptText) throws TransformSyntaxException
     {
         LinkedList<String> symbolList = new LinkedList<>();
-        String[] lines = scriptText.split("\n");
 
-        for (String line : lines)
+        boolean buildingQuotedSymbol = false;
+        StringBuilder symbol = new StringBuilder();
+        int i = 0;
+        while (i < scriptText.length())
         {
-            int commentStartAt = line.indexOf('#');
-            if (commentStartAt != -1)
-                line = line.substring(0, commentStartAt);
-            line = line.trim();
-            if ( ! line.equals("") )
+            if (buildingQuotedSymbol)
             {
-                String[] symbols = line.split("\\s+");
-                symbolList.addAll(Arrays.asList(symbols));
+                char c = scriptText.charAt(i++);
+                while (c != '\"' && i < scriptText.length())
+                {
+                    symbol.append(c);
+                    c = scriptText.charAt(i++);
+                }
+                symbolList.add(symbol.toString());
+                symbol = new StringBuilder();
+                buildingQuotedSymbol = false;
+                ++i;
+            } else {
+                char c = scriptText.charAt(i);
+                if (c == '#') // line comment, skip until "\n"
+                {
+                    while (c != '\n' && i < scriptText.length())
+                        c = scriptText.charAt(i++);
+                }
+                else if (c == '\"')
+                {
+                    buildingQuotedSymbol = true;
+                    ++i;
+                }
+                else if (!Character.isWhitespace(c))
+                {
+                    symbol.append(c);
+                    ++i;
+                }
+                else // whitespace
+                {
+                    if (symbol.length() > 0)
+                        symbolList.add(symbol.toString());
+                    symbol = new StringBuilder();
+                    while(Character.isWhitespace(c) && i < scriptText.length()-1) // end of symbol skip until next non-whitespace
+                        c = scriptText.charAt(++i);
+                }
             }
         }
+        if (symbol.length() > 0)
+            symbolList.add(symbol.toString());
 
+        if (buildingQuotedSymbol)
+            throw new TransformSyntaxException("Mismatched quotes.");
+        
         parseScript(symbolList);
     }
 
