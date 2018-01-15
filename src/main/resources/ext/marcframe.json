@@ -6138,7 +6138,7 @@
       "$g": {"addProperty": "marc:playbackChannels"},
       "$h": {"addProperty": "marc:playbackCharacteristic"},
       "$2": {"property": "marc:source"},
-      "$3": {"property": "marc:materialsSpecified"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "345": {
       "addLink": "projectionCharacteristic",
@@ -6147,7 +6147,7 @@
       "$a": {"addProperty": "marc:presentationFormat"},
       "$b": {"addProperty": "marc:projectionSpeed"},
       "$2": {"property": "marc:source"},
-      "$3": {"property": "marc:materialsSpecified"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "346": {
       "addLink": "videoCharacteristic",
@@ -6156,7 +6156,7 @@
       "$a": {"addProperty": "marc:videoFormat"},
       "$b": {"addProperty": "marc:broadcastStandard"},
       "$2": {"property": "marc:source"},
-      "$3": {"property": "marc:materialsSpecified"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "347": {
       "aboutEntity": "?thing",
@@ -6961,7 +6961,7 @@
       "$c": {"addProperty": "marc:country"},
       "$d": {"addProperty": "marc:telecommunicationsAddress"},
       "$g": {"property": "marc:repositoryLocationCode"},
-      "$3": {"property": "marc:materialsSpecified"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "536": {
       "aboutEntity": "?thing",
@@ -6982,7 +6982,7 @@
       "resourceType": "marc:SystemDetailsNote",
       "$a": {"property": "marc:systemDetailsNote"},
       "$u": {"addProperty": "marc:uniformResourceIdentifier"},
-      "$3": {"property": "marc:materialsSpecified"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"addProperty": "marc:institutionToWhichFieldApplies", "NOTE:local": "Används ej"},
       "$6": {"property": "marc:fieldref"}
     },
@@ -10011,7 +10011,7 @@
       "$a": {"property": "marc:geographicName"},
       "$e": {"addProperty": "marc:relatorTerm"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
-      "$3": {"property": "marc:materialsSpecified"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "TODO:$4": "Change to: {'addLink': 'role', 'resourceType': 'Role', 'property': 'code', 'uriTemplate': '{code}', 'TODO:mapping': 'relatorCode'}??",
       "$4": {"addProperty": "marc:relatorCode"},
       "$0": {"addProperty": "marc:authorityRecordControlNumber"}
@@ -10082,7 +10082,7 @@
       "$y": {"addProperty": "marc:chronologicalSubdivision"},
       "$z": {"addProperty": "marc:geographicSubdivision"},
       "$2": {"property": "marc:sourceOfTerm"},
-      "$3": {"property": "marc:materialsSpecified"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
 
     "760": {"aboutEntity": "?work", "NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSeries"},
@@ -13903,7 +13903,7 @@
       "$a": {"property": "marc:geographicName"},
       "$e": {"addProperty": "marc:relatorTerm"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
-      "$3": {"property": "marc:materialsSpecified"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$4": {"addProperty": "marc:relatorCode"},
       "$0": {"addProperty": "marc:authorityRecordControlNumber"}
     },
@@ -14450,7 +14450,7 @@
       "$c": {"addProperty": "marc:agencyResponsibleForReproduction"},
       "$d": {"property": "marc:dateOfReproduction"},
       "$e": {"property": "marc:physicalDescriptionOfReproduction"},
-      "$3": {"property": "marc:materialsSpecified"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "844": {
       "link": "marc:hasNameOfUnit",
@@ -14658,7 +14658,7 @@
       "$t": {"property": "marc:copyNumber"},
       "$x": {"addProperty": "marc:cataloguersNote", "TODO": "ignore?"},
       "$z": {"addProperty": "marc:copyNote"},
-      "$3": {"property": "marc:materialsSpecified"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "marc:organizationalUnit"}
     },
