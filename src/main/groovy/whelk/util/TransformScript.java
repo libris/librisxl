@@ -83,7 +83,7 @@ public class TransformScript
 
         if (buildingQuotedSymbol)
             throw new TransformSyntaxException("Mismatched quotes.");
-        
+
         parseScript(symbolList);
     }
 
@@ -130,6 +130,10 @@ public class TransformScript
                 case "set":
                     operations.add( parseSetStatement(symbols) );
                     break;
+                case "DELETE":
+                case "delete":
+                    operations.add( parseDeleteStatement(symbols) );
+                    break;
                 case "{":
                     operations.addAll( parseStatementList(symbols) );
                     break;
@@ -159,15 +163,27 @@ public class TransformScript
     private SetOperation parseSetStatement(LinkedList<String> symbols) throws TransformSyntaxException
     {
         if (symbols.size() < 3)
-            throw new TransformSyntaxException("'SET' must be followed by [ _LITERAL '->' pathTo]");
+            throw new TransformSyntaxException("'SET' must be followed by [_LITERAL '->' pathTo]");
 
         String literal = symbols.pollFirst();
         String arrow = symbols.pollFirst();
         String to = symbols.pollFirst();
         if (!arrow.equals("->") || !isValidPath(to))
-            throw new TransformSyntaxException("'SET' must be followed by [ _LITERAL '->' pathTo]");
+            throw new TransformSyntaxException("'SET' must be followed by [_LITERAL '->' pathTo]");
 
         return new SetOperation(literal, to);
+    }
+
+    private DeletedOperation parseDeleteStatement(LinkedList<String> symbols) throws TransformSyntaxException
+    {
+        if (symbols.size() < 1)
+            throw new TransformSyntaxException("'DELETE' must be followed by [path]");
+
+        String path = symbols.pollFirst();
+        if (!isValidPath(path))
+            throw new TransformSyntaxException("'DELETE' must be followed by [path]");
+
+        return new DeletedOperation(path);
     }
 
     private ForEachOperation parseForEachStatement(LinkedList<String> symbols) throws TransformSyntaxException
@@ -257,6 +273,25 @@ public class TransformScript
                 containerType = ArrayList.class;
 
             Document._set(toPathWithSymbols, m_value, containerType, json);
+        }
+    }
+
+    private class DeletedOperation implements Operation
+    {
+        private String m_path;
+
+        public DeletedOperation(String path)
+        {
+            m_path = path;
+        }
+
+        public void execute(Map json, Map<String, Object> context)
+        {
+            List<Object> path = Arrays.asList( withIntAsInteger(m_path.split(",")) );
+            List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
+
+            Document._removeLeafObject(pathWithSymbols, json);
+            pruneBranch(pathWithSymbols, json);
         }
     }
 
