@@ -73,8 +73,12 @@ public class TransformScript
                     if (symbol.length() > 0)
                         symbolList.add(symbol.toString());
                     symbol = new StringBuilder();
-                    while(Character.isWhitespace(c) && i < scriptText.length()-1) // end of symbol skip until next non-whitespace
-                        c = scriptText.charAt(++i);
+                    while(Character.isWhitespace(c) && i < scriptText.length()) // end of symbol skip until next non-whitespace
+                    {
+                        ++i;
+                        if (i < scriptText.length())
+                            c = scriptText.charAt(i);
+                    }
                 }
             }
         }
@@ -139,6 +143,8 @@ public class TransformScript
                     break;
                 case "}":
                     return operations;
+                default:
+                    throw new TransformSyntaxException("Unexpected symbol: \"" + symbol + "\"");
             }
         }
 
