@@ -90,6 +90,10 @@ public class TransformScript
                 case "foreach":
                     operations.add( parseForEachStatement(symbols) );
                     break;
+                case "SET":
+                case "set":
+                    operations.add( parseSetStatement(symbols) );
+                    break;
                 case "{":
                     operations.addAll( parseStatementList(symbols) );
                     break;
@@ -114,6 +118,20 @@ public class TransformScript
             throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '->' pathTo]");
 
         return new MoveOperation(from, to);
+    }
+
+    private SetOperation parseSetStatement(LinkedList<String> symbols) throws TransformSyntaxException
+    {
+        if (symbols.size() < 3)
+            throw new TransformSyntaxException("'SET' must be followed by [ _LITERAL '->' pathTo]");
+
+        String literal = symbols.pollFirst();
+        String arrow = symbols.pollFirst();
+        String to = symbols.pollFirst();
+        if (!arrow.equals("->") || !isValidPath(to))
+            throw new TransformSyntaxException("'SET' must be followed by [ _LITERAL '->' pathTo]");
+
+        return new SetOperation(literal, to);
     }
 
     private ForEachOperation parseForEachStatement(LinkedList<String> symbols) throws TransformSyntaxException
@@ -177,6 +195,32 @@ public class TransformScript
             Document._removeLeafObject(fromPathWithSymbols, json);
             Document._set(toPathWithSymbols, value, containerType, json);
             pruneBranch(fromPathWithSymbols, json);
+        }
+    }
+
+    private class SetOperation implements Operation
+    {
+        private String m_value;
+        private String m_toPath;
+
+        public SetOperation(String value, String toPath)
+        {
+            m_value = value;
+            m_toPath = toPath;
+        }
+
+        public void execute(Map json, Map<String, Object> context)
+        {
+            List<Object> toPath = Arrays.asList( withIntAsInteger(m_toPath.split(",")) );
+            List<Object> toPathWithSymbols = insertContextSymbolsIntoPath(toPath, context);
+
+            Type containerType;
+            if (toPathWithSymbols.get(toPathWithSymbols.size()-1) instanceof String)
+                containerType = HashMap.class;
+            else
+                containerType = ArrayList.class;
+
+            Document._set(toPathWithSymbols, m_value, containerType, json);
         }
     }
 
