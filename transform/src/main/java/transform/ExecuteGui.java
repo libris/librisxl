@@ -66,7 +66,37 @@ public class ExecuteGui extends JFrame
         selectPanel.add( makeLeftAligned(new JLabel("Select (short) IDs to operate on:")), BorderLayout.NORTH );
         selectPanel.add( jc, BorderLayout.CENTER );
 
-        m_scriptTextArea = getTextArea("# SCRIPT GOES HERE", 20, 40, true);
+        m_scriptTextArea = getTextArea("# All key words are case-insensitive. Any symbol that contains whitespace must be\n" +
+                "# surrounded by double quotes.\n" +
+                "# The #-character considers the rest of the line a comment and ignores it.\n" +
+                "# Every script must begin with either \"mode normal\" or \"mode framed\"\n" +
+                "# If framed mode is used, data will be framed before the script is applied.\n" +
+                "# Framed or not, data is always returned to Libris-normal form after application of the script.\n" +
+                "#\n" +
+                "# MOVE [path1] -> [path2]\n" +
+                "# Moves a part of the data structure from path1 to path2 (creating path2 if necessary)\n" +
+                "# example:\n" +
+                "#   move @graph,0,created -> @graph,0,minted\n" +
+                "#\n" +
+                "# SET [value] -> [path]\n" +
+                "# Set a literal value at a specific path (creating the path if necessary)\n" +
+                "# example:\n" +
+                "#   set http://libris.kb.se/library/S -> @graph,1,heldBy,@id\n" +
+                "#\n" +
+                "# DELETE [path]\n" +
+                "# Deletes whatever is at path\n" +
+                "# example:\n" +
+                "#   delete @graph,0,modified\n" +
+                "#\n" +
+                "# FOREACH [iterator-symbol] : [path]\n" +
+                "# Run the subsequent block of code, once for each member of the list at path, which\n" +
+                "# must point to a list. The elements are always traversed in descending order, to avoid\n" +
+                "# the iterator invalidation problem in case of removals.\n" +
+                "# example:\n" +
+                "#   foreach it : @graph {\n" +
+                "#     set \"ok\" -> @graph,it,someKey\n" +
+                "#   }\n" +
+                "\nmode normal\n", 35, 40, true);
         JComponent scriptArea = makeLeftAligned(new JScrollPane(m_scriptTextArea));
         JComponent editPanel = makeLeftAligned(new JPanel());
         editPanel.setLayout(new BorderLayout());
@@ -297,7 +327,7 @@ public class ExecuteGui extends JFrame
                 JsonldSerializer.normalize(transformedData, document.getCompleteId(), false);
                 String formattedTransformed = m_mapper.writerWithDefaultPrettyPrinter().writeValueAsString(transformedData);
                 parent.m_transformedRecordArea.setText(formattedTransformed);
-            } catch (IOException | TransformScript.TransformSyntaxException e)
+            } catch (Throwable e)
             {
                 JOptionPane.showMessageDialog(m_parent, e.toString());
             }
