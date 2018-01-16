@@ -1,63 +1,145 @@
 digraph system_overview {
-    edge [color="blue"];
+    rankdir="LR";
+    edge[color="blue"];
+
+    subgraph cluster_components {
+        graph[style=dashed];
+        label="Komponenter";
+
+        lddb [label="Databas"];
+        search [label="Sökmotor"];
+        marc_converter [label="MARC-konverterare"];
+        transform [label="Transformationsskript"];
+    }
+    marc_converter -> {
+        defs
+        model
+    } [color="green"];
+    transform -> {
+        lddb
+        search
+    };
+
+    subgraph cluster_metadata {
+        graph[style=dashed];
+        label="Metadata";
+
+        defs [label="Definitions"];
+        model [label="Datamodell"];
+        help [label="Hjälp"];
+    }
+    defs -> { defs_importer };
+    help -> {
+        viewer
+        model
+        defs
+    } [color="green"];
+
     subgraph cluster_apis {
-        graph[style=solid];
+        graph[style=dashed];
         label="APIs";
+
         apix [label="APIX"];
         http_api [label="HTTP-API"]; // subgraph?
         oaipmh [label="OAI-PMH"];
         search_api [label="Sök-API"];
+        write_api [label="Skriv-API"];
+        record [label="RDF-poster"];
     }
+    apix -> {
+        lddb
+        marc_converter
+    };
+    http_api -> {
+        auth
+        lddb
+        search
+    };
+    oaipmh -> {
+        lddb
+        marc_converter
+    } ;
+    search_api -> { search };
+    write_api -> { lddb }[color="red"];
+    record -> { viewer };
 
-    auth [label="Autentiseringstjänst"];
-    batch [label="Batch-export"];
-    bibdb [label="BibDB"];
-    data_importer [label="Data-importer"];
-    defs_importer [label="Definitions-importer"];
-    defs [label="Definitions"];
-    editor [label="Redigeringsklient"];
-    // export [label="Export"]; // subgraph?
-    export_program [label="Exportprogam"];
-    help [label="Hjälp"];
-    id [label="id.kb.se"];
-    import_program [label="Importprogram"];
-    lddb [label="Databas"];
-    marc_converter [label="MARC-konverterare"];
-    metadata_funnel [label="Metadatatratten"];
-    model [label="Datamodell"];
-    record [label="RDF-poster"];
-    search [label="Sökmotor"];
-    transform [label="Transformationsskript"];
-    viewer [label="Grafisk klient"];
+    subgraph cluster_importers {
+        graph[style=dashed];
+        label="Import";
 
-    // solid black edge := depends on
-    // solid red edge := writes to
-    apix -> lddb;
-    apix -> marc_converter;
-    auth -> bibdb;
-    batch -> export_program;
-    defs -> defs_importer;
-    data_importer -> lddb;
-    data_importer -> search;
-    editor -> auth;
-    editor -> viewer;
-    export_program -> oaipmh;
-    help -> viewer;
-    http_api -> auth;
-    http_api -> lddb;
-    http_api -> search;
-    id -> viewer;
-    import_program -> lddb [color="red"];
-    import_program -> marc_converter;
-    import_program -> search;
-    marc_converter -> defs;
-    marc_converter -> model;
-    metadata_funnel -> import_program;
-    oaipmh -> lddb;
-    oaipmh -> marc_converter;
-    record -> viewer;
-    search_api -> viewer;
-    transform -> lddb;
-    transform -> search;
-    viewer -> http_api;
+        import_program [label="Importprogram"];
+        metadata_funnel [label="Metadatatratten"];
+        data_importer [label="Data-importer"];
+        defs_importer [label="Definitions-importer"];
+    }
+    import_program -> {
+        marc_converter
+        search
+    };
+    import_program -> {
+        lddb
+    } [color="red"];
+    data_importer -> {
+        lddb
+        search
+    };
+    defs_importer -> {
+        data_importer
+    };
+    metadata_funnel -> { import_program };
+
+    subgraph cluster_exporters {
+        graph[style=dashed];
+        label="Export";
+
+        batch [label="Batch-export"];
+        export_program [label="Exportprogam"];
+    }
+    batch -> { export_program };
+    export_program -> {
+        oaipmh
+    };
+
+    subgraph cluster_webservices {
+        graph[style=dashed];
+        label="Webbtjänster";
+
+        viewer [label="Grafisk klient"];
+        editor [label="Redigeringsklient"];
+        id [label="id.kb.se"];
+        auth [label="Autentiseringstjänst"];
+        bibdb [label="BibDB"];
+    }
+    viewer -> {
+        search_api
+        http_api
+    };
+    editor -> {
+        auth
+        viewer
+    };
+    id -> { viewer };
+    auth -> { bibdb };
+
+    /**
+     * LEGEND
+     */
+    subgraph cluster_legend { 
+        style="dashed";
+        node [shape=plaintext]
+        label = "Legend";
+        key [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+            <tr><td align="right" port="i1">depends on</td></tr>
+            <tr><td align="right" port="i2">writes to</td></tr>
+            <tr><td align="right" port="i3">conforms to</td></tr>
+            </table>>]
+            key2 [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+            <tr><td port="i1">&nbsp;</td></tr>
+            <tr><td port="i2">&nbsp;</td></tr>
+            <tr><td port="i3">&nbsp;</td></tr>
+            </table>>]
+        key:i1:e -> key2:i1:w [clor=blue]
+        key:i2:e -> key2:i2:w [color=red]
+        key:i3:e -> key2:i3:w [color=green]
+    }
 }
