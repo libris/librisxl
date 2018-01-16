@@ -1,0 +1,63 @@
+digraph system_overview {
+    edge [color="blue"];
+    subgraph cluster_apis {
+        graph[style=solid];
+        label="APIs";
+        apix [label="APIX"];
+        http_api [label="HTTP-API"]; // subgraph?
+        oaipmh [label="OAI-PMH"];
+        search_api [label="Sök-API"];
+    }
+
+    auth [label="Autentiseringstjänst"];
+    batch [label="Batch-export"];
+    bibdb [label="BibDB"];
+    data_importer [label="Data-importer"];
+    defs_importer [label="Definitions-importer"];
+    defs [label="Definitions"];
+    editor [label="Redigeringsklient"];
+    // export [label="Export"]; // subgraph?
+    export_program [label="Exportprogam"];
+    help [label="Hjälp"];
+    id [label="id.kb.se"];
+    import_program [label="Importprogram"];
+    lddb [label="Databas"];
+    marc_converter [label="MARC-konverterare"];
+    metadata_funnel [label="Metadatatratten"];
+    model [label="Datamodell"];
+    record [label="RDF-poster"];
+    search [label="Sökmotor"];
+    transform [label="Transformationsskript"];
+    viewer [label="Grafisk klient"];
+
+    // solid black edge := depends on
+    // solid red edge := writes to
+    apix -> lddb;
+    apix -> marc_converter;
+    auth -> bibdb;
+    batch -> export_program;
+    defs -> defs_importer;
+    data_importer -> lddb;
+    data_importer -> search;
+    editor -> auth;
+    editor -> viewer;
+    export_program -> oaipmh;
+    help -> viewer;
+    http_api -> auth;
+    http_api -> lddb;
+    http_api -> search;
+    id -> viewer;
+    import_program -> lddb [color="red"];
+    import_program -> marc_converter;
+    import_program -> search;
+    marc_converter -> defs;
+    marc_converter -> model;
+    metadata_funnel -> import_program;
+    oaipmh -> lddb;
+    oaipmh -> marc_converter;
+    record -> viewer;
+    search_api -> viewer;
+    transform -> lddb;
+    transform -> search;
+    viewer -> http_api;
+}
