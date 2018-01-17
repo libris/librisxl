@@ -234,9 +234,9 @@
       "$a": {
         "property": "value",
         "splitValuePattern": "([^ ()]*)(?:\\s*\\(([^)]+)\\))?",
-        "splitValueProperties": ["value", "note"]
+        "splitValueProperties": ["value", "qualifier"]
       },
-      "$q": {"property": "note"},
+      "$q": {"property": "qualifier"},
       "$z": {"addProperty": "marc:hiddenValue"}
     },
 
@@ -3022,7 +3022,7 @@
               {
                 "@type": "ISBN",
                 "value": "91-0-056322-6",
-                "note": "inb.",
+                "qualifier": "inb.",
                 "acquisitionTerms": "310:00"
               }
             ]
@@ -3051,7 +3051,7 @@
               {
                 "@type": "ISBN",
                 "marc:hiddenValue": ["9780230274396 (print)"],
-                "note": "e-book",
+                "qualifier": "e-book",
                 "value": "9781137368331"
               }
             ]
@@ -3084,7 +3084,7 @@
             "identifiedBy": [
               {
                 "@type": "ISBN",
-                "note": "US"
+                "qualifier": "US"
               }
             ]
           }}
