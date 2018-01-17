@@ -6,7 +6,9 @@ import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.triples.JsonldSerializer;
+import whelk.util.PropertyLoader;
 import whelk.util.TransformScript;
+import whelk.util.URIWrapper;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,6 +20,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 
@@ -239,6 +242,8 @@ public class ExecuteGui extends JFrame
                                     m_envProps.load(propStream);
                                     javax.swing.SwingUtilities.invokeLater( () -> m_progressLabel.setText("Starting Whelk..") );
                                     m_whelk = new Whelk(m_envProps);
+                                    Document.setBASE_URI( new URIWrapper( (String) m_envProps.get("baseUri")) );
+                                    m_whelk.loadCoreData();
                                 } catch (IOException ioe)
                                 {
                                     JOptionPane.showMessageDialog(m_parent, ioe.toString());
@@ -291,31 +296,38 @@ public class ExecuteGui extends JFrame
             {
                 final TransformScript script = new TransformScript(parent.m_scriptTextArea.getText());
 
+                Date now = new Date();
+
                 try(Connection connection = m_whelk.getStorage().getConnection();
                 PreparedStatement statement = connection.prepareStatement(sqlString);
-                ResultSet resultSet = statement.executeQuery())
+                ResultSet resultSet = statement.executeQuery();
+                PrintWriter successWriter = new PrintWriter("transformations_ok" + now.toString() + ".log");
+                PrintWriter failureWriter = new PrintWriter("transformations_failed" + now.toString() + ".log"))
                 {
                     while (resultSet.next())
                     {
-                        String shortId = m_resultSet.getString(1);
+                        String shortId = resultSet.getString(1);
+                        System.out.println("Will now do: " + shortId);
                         m_whelk.storeAtomicUpdate(shortId, false, "xl", "Libris admin", (Document doc) ->
                         {
                             try
                             {
                                 doc.data = script.executeOn(doc.data);
+                                doc.data = JsonLd.flatten(doc.data);
+                                JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
                             } catch (Throwable e)
                             {
-                                // Output ID into failure list
+                                failureWriter.println(shortId);
                             }
                         });
 
-                        // OUTPUT ID into OK-list
+                        successWriter.println(shortId);
                     }
                 } catch (SQLException e)
                 {
                     JOptionPane.showMessageDialog(m_parent, "SQL failure: " + e);
                 }
-            } catch (TransformScript.TransformSyntaxException e)
+            } catch (TransformScript.TransformSyntaxException | FileNotFoundException e)
             {
                 JOptionPane.showMessageDialog(m_parent, e.toString());
             }
