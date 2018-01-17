@@ -22,7 +22,7 @@ class Document {
     // If we _statically_ call loadProperties("secret"), without a try/catch it means that no code with a dependency on
     // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
     // depending on whelk-core) sometimes need to do.
-    static final URIWrapper BASE_URI
+    static URIWrapper BASE_URI
 
     static
     {
