@@ -1,3 +1,6 @@
+// Build with:
+//dot -Tpng -o overview.png system_overview.dot
+
 digraph system_overview {
     rankdir="LR";
     edge[color="blue"];
@@ -18,7 +21,7 @@ digraph system_overview {
     transform -> {
         lddb
         search
-    };
+    } [color="red"];
 
     subgraph cluster_metadata {
         graph[style=dashed];
@@ -74,15 +77,18 @@ digraph system_overview {
     }
     import_program -> {
         marc_converter
-        search
     };
+    import_program -> {
+        search
+    }[color="red"];
+
     import_program -> {
         lddb
     } [color="red"];
     data_importer -> {
         lddb
         search
-    };
+    } [color="red"];
     defs_importer -> {
         data_importer
     };
@@ -94,11 +100,13 @@ digraph system_overview {
 
         batch [label="Batch-export"];
         export_program [label="Exportprogam"];
+	wdb [label="Wdb (Webbsök)"];
     }
     batch -> { export_program };
     export_program -> {
         oaipmh
     };
+    wdb -> { oaipmh };
 
     subgraph cluster_webservices {
         graph[style=dashed];
