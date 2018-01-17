@@ -7,6 +7,7 @@ import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.triples.JsonldSerializer;
 import whelk.util.PropertyLoader;
+import whelk.util.ThreadPool;
 import whelk.util.TransformScript;
 import whelk.util.URIWrapper;
 
@@ -20,6 +21,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
@@ -275,7 +277,7 @@ public class ExecuteGui extends JFrame
                             "Please understand that performing this operation will permanently alter data in Libris.\n" +
                             "To show that you understand this and want to proceed, please answer \"DESTROY DATA\".");
                     if (confirmation.equals("DESTROY DATA"))
-                        executeUnderDialog("Running transformation", "Running.", this::executeAll);
+                        executeUnderDialog("Running transformation", "Starting..", this::executeAll);
                     else
                         JOptionPane.showMessageDialog(m_parent, "You did not correctly type \"DESTROY DATA\", so no changes were made.");
                     break;
@@ -297,6 +299,7 @@ public class ExecuteGui extends JFrame
                 final TransformScript script = new TransformScript(parent.m_scriptTextArea.getText());
 
                 Date now = new Date();
+                ThreadPool threadPool = new ThreadPool(64);
 
                 try(Connection connection = m_whelk.getStorage().getConnection();
                 PreparedStatement statement = connection.prepareStatement(sqlString);
@@ -304,25 +307,32 @@ public class ExecuteGui extends JFrame
                 PrintWriter successWriter = new PrintWriter("transformations_ok" + now.toString() + ".log");
                 PrintWriter failureWriter = new PrintWriter("transformations_failed" + now.toString() + ".log"))
                 {
+                    long startTime = System.currentTimeMillis();
+                    long count = 0;
+                    final int BATCH_SIZE = 100;
+                    ArrayList<String> batch = new ArrayList(BATCH_SIZE);
                     while (resultSet.next())
                     {
                         String shortId = resultSet.getString(1);
-                        System.out.println("Will now do: " + shortId);
-                        m_whelk.storeAtomicUpdate(shortId, false, "xl", "Libris admin", (Document doc) ->
-                        {
-                            try
-                            {
-                                doc.data = script.executeOn(doc.data);
-                                doc.data = JsonLd.flatten(doc.data);
-                                JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
-                            } catch (Throwable e)
-                            {
-                                failureWriter.println(shortId);
-                            }
-                        });
+                        ++count;
 
-                        successWriter.println(shortId);
+                        batch.add(shortId);
+
+                        if (batch.size() >= BATCH_SIZE)
+                        {
+                            threadPool.executeOnThread(batch, (ArrayList<String> _batch, int i) -> executeAllIn(_batch, script, successWriter, failureWriter));
+                            batch = new ArrayList<>(BATCH_SIZE);
+                        }
+
+                        if (count % 100 == 0)
+                        {
+                            long elapsedMillis = System.currentTimeMillis() - startTime;
+                            double speed = ((double) count) / ((double) elapsedMillis) * 1000.0;
+                            m_progressLabel.setText("" + count + " transformed so far. Running average: " + speed + " records per second.");
+                        }
                     }
+                    if (!batch.isEmpty())
+                        executeAllIn(batch, script, successWriter, failureWriter);
                 } catch (SQLException e)
                 {
                     JOptionPane.showMessageDialog(m_parent, "SQL failure: " + e);
@@ -330,6 +340,26 @@ public class ExecuteGui extends JFrame
             } catch (TransformScript.TransformSyntaxException | FileNotFoundException e)
             {
                 JOptionPane.showMessageDialog(m_parent, e.toString());
+            }
+        }
+
+        private void executeAllIn(ArrayList<String> shortIds, TransformScript script, PrintWriter successWriter, PrintWriter failureWriter)
+        {
+            for (String shortId : shortIds)
+            {
+                m_whelk.storeAtomicUpdate(shortId, false, "xl", "Libris admin", (Document doc) ->
+                {
+                    try
+                    {
+                        doc.data = script.executeOn(doc.data);
+                        doc.data = JsonLd.flatten(doc.data);
+                        JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
+                    } catch (Throwable e)
+                    {
+                        failureWriter.println(shortId);
+                    }
+                });
+                successWriter.println(shortId);
             }
         }
 
@@ -459,7 +489,7 @@ public class ExecuteGui extends JFrame
         private void executeUnderDialog(String title, String description, Runnable runnable)
         {
             JDialog dialog = new JDialog( (JFrame) m_parent, title, true );
-            dialog.setSize(280, 80);
+            dialog.setSize(480, 120);
             dialog.getContentPane().setLayout(new BoxLayout( dialog.getContentPane(), BoxLayout.Y_AXIS ));
             m_progressLabel = new JLabel(description);
             dialog.add(m_progressLabel);
