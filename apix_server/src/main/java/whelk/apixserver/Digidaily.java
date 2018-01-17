@@ -227,7 +227,7 @@ public class Digidaily {
                     Utils.s_whelk.createDocument(bibToBeSaved, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), "bib", false);
                     out.write(bibToBeSaved.getShortId() + "\tDIGI CREATED\n");
                 } else {
-                    Utils.s_whelk.storeAtomicUpdate(bibToBeSaved.getShortId(), false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), "bib", false,
+                    Utils.s_whelk.storeAtomicUpdate(bibToBeSaved.getShortId(), false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(),
                             (Document doc) -> {
                                 doc.data = bibToBeSaved.data;
                             });
@@ -291,7 +291,7 @@ public class Digidaily {
                     MarcXmlRecordWriter marcXmlRecordWriter = new MarcXmlRecordWriter(baos);
                     marcXmlRecordWriter.writeRecord(eRecord);
                     Document printBibToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "bib", null);
-                    Utils.s_whelk.storeAtomicUpdate(printBibToBeSaved.getShortId(), false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), "bib", false,
+                    Utils.s_whelk.storeAtomicUpdate(printBibToBeSaved.getShortId(), false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(),
                             (Document doc) -> {
                                 doc.data = printBibToBeSaved.data;
                             });

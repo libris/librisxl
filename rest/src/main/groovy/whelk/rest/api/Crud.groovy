@@ -868,7 +868,7 @@ class Crud extends HttpServlet {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
 
                 if (isUpdate) {
-                    whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", activeSigel, collection, false, {
+                    whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", activeSigel, {
                         Document _doc ->
                             log.warn("If-Match: ${request.getHeader('If-Match')}")
                             log.warn("Modified: ${_doc.modified}")

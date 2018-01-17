@@ -169,7 +169,7 @@ public class ApixCatServlet extends HttpServlet
         } else // save/overwrite existing
         {
             incomingDocument.setId(id);
-            Utils.s_whelk.storeAtomicUpdate(id, false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false,
+            Utils.s_whelk.storeAtomicUpdate(id, false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(),
                     (Document doc) ->
                     {
                         doc.data = incomingDocument.data;

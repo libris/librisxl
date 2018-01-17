@@ -59,7 +59,7 @@ public class ExecuteGui extends JFrame
         loadEnvironment.addActionListener(actionResponse);
         fileMenu.add(loadEnvironment);
 
-        m_sqlTextArea = getTextArea("SELECT id FROM lddb WHERE collection <> 'definitions'", 4, 40, true);
+        m_sqlTextArea = getTextArea("SELECT id FROM lddb WHERE collection <> 'definitions' and deleted = false", 4, 40, true);
         JComponent jc = makeLeftAligned(m_sqlTextArea);
         JComponent selectPanel = makeLeftAligned(new JPanel());
         selectPanel.setLayout(new BorderLayout());
@@ -266,10 +266,59 @@ public class ExecuteGui extends JFrame
                     resetTrySeries();
                     break;
                 case "ExecuteAll":
-                    System.out.println("DO ALL");
+                    String confirmation = JOptionPane.showInputDialog(m_parent,
+                            "Please understand that performing this operation will permanently alter data in Libris.\n" +
+                            "To show that you understand this and want to proceed, please answer \"DESTROY DATA\".");
+                    if (confirmation.equals("DESTROY DATA"))
+                        executeUnderDialog("Running transformation", "Running.", this::executeAll);
+                    else
+                        JOptionPane.showMessageDialog(m_parent, "You did not correctly type \"DESTROY DATA\", so no changes were made.");
                     break;
             }
 
+        }
+
+        private void executeAll()
+        {
+            ExecuteGui parent = (ExecuteGui) m_parent;
+            String sqlString = parent.m_sqlTextArea.getText();
+            if (isObviouslyBadSql(sqlString)) {
+                JOptionPane.showMessageDialog(m_parent, "Denied: Suspicious SQL statement.");
+                return;
+            }
+
+            try
+            {
+                final TransformScript script = new TransformScript(parent.m_scriptTextArea.getText());
+
+                try(Connection connection = m_whelk.getStorage().getConnection();
+                PreparedStatement statement = connection.prepareStatement(sqlString);
+                ResultSet resultSet = statement.executeQuery())
+                {
+                    while (resultSet.next())
+                    {
+                        String shortId = m_resultSet.getString(1);
+                        m_whelk.storeAtomicUpdate(shortId, false, "xl", "Libris admin", (Document doc) ->
+                        {
+                            try
+                            {
+                                doc.data = script.executeOn(doc.data);
+                            } catch (Throwable e)
+                            {
+                                // Output ID into failure list
+                            }
+                        });
+
+                        // OUTPUT ID into OK-list
+                    }
+                } catch (SQLException e)
+                {
+                    JOptionPane.showMessageDialog(m_parent, "SQL failure: " + e);
+                }
+            } catch (TransformScript.TransformSyntaxException e)
+            {
+                JOptionPane.showMessageDialog(m_parent, e.toString());
+            }
         }
 
         private void startNewTrySeries()
