@@ -242,8 +242,9 @@ class Whelk {
         return document
     }
 
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, PostgreSQLComponent.UpdateAgent updateAgent) {
-        Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, collection, deleted, updateAgent)
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+        Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
+        String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
         if (collection == "auth" || collection == "definitions")
             putInAuthCache(updated)
         if (elastic) {
@@ -275,7 +276,7 @@ class Whelk {
     void remove(String id, String changedIn, String changedBy, String collection) {
         log.debug "Deleting ${id} from Whelk"
         Document toBeRemoved = storage.load(id)
-        if (storage.remove(id, changedIn, changedBy, collection)) {
+        if (storage.remove(id, changedIn, changedBy)) {
             if (collection == "auth" || collection == "definitions")
                 removeFromAuthCache(toBeRemoved)
             if (elastic) {

@@ -166,7 +166,7 @@ class PostgreSQLComponent {
                 "ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"
 
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
-        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ? FOR UPDATE"
+        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted FROM $mainTableName WHERE id= ? FOR UPDATE"
         GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_DOCUMENT_VERSION_BY_MAIN_ID = "SELECT id,data FROM $versionsTableName " +
                                           "WHERE id = (SELECT id FROM $idTableName " +
@@ -570,7 +570,7 @@ class PostgreSQLComponent {
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, String collection, boolean deleted, UpdateAgent updateAgent) {
+    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
@@ -591,13 +591,14 @@ class PostgreSQLComponent {
 
             doc = assembleDocument(resultSet)
 
+            String collection = resultSet.getString("collection")
+
             // Performs the callers updates on the document
             updateAgent.update(doc)
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc)
 
-            // Make the document aware of it's deleted-status, or lack thereof
-            doc.setDeleted(deleted)
+            boolean deleted = doc.getDeleted()
 
             Date createdTime = new Date(resultSet.getTimestamp("created").getTime())
             Date modTime = new Date()
@@ -1832,12 +1833,13 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean remove(String identifier, String changedIn, String changedBy, String collection) {
+    boolean remove(String identifier, String changedIn, String changedBy) {
         if (versioning) {
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
-                storeAtomicUpdate(identifier, false, changedIn, changedBy, collection, true,
+                storeAtomicUpdate(identifier, false, changedIn, changedBy,
                     { Document doc ->
+                        doc.setDeleted(true)
                         // Add a tombstone marker (without removing anything) perhaps?
                     })
             } catch (Throwable e) {
