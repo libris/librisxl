@@ -200,20 +200,37 @@ public class TransformScript
 
     private ValueOperation parseValueStatement(LinkedList<String> symbols) throws TransformSyntaxException
     {
+        ValueOperation leftOperand = parseUnaryValueStatement(symbols);
+        String next = symbols.peekFirst();
+        String arithmeticOps = "+-/*";
+        if (next != null && arithmeticOps.contains(next))
+        {
+            String binaryOperator = symbols.pollFirst();
+            ValueOperation rightOperand = parseValueStatement(symbols);
+            return new BinaryValueOperation(leftOperand, rightOperand, binaryOperator);
+        }
+        else
+            return leftOperand;
+    }
+
+    private ValueOperation parseUnaryValueStatement(LinkedList<String> symbols) throws TransformSyntaxException
+    {
         if (symbols.size() < 1)
             throw new TransformSyntaxException("A value_statement must consist of either a literal value, or a composite of value_statements");
 
         String symbol = symbols.pollFirst();
-        String next = symbols.peekFirst();
 
-        String arithmeticOps = "+-";
-        if (symbol.equals("*"))
+        if (symbol.equals("("))
+        {
+            ValueOperation subOp = new ValueOperation(parseValueStatement(symbols));
+            String closingPar = symbols.pollFirst();
+            if (!closingPar.equals(")"))
+                throw new TransformSyntaxException("Mismatched parenthesis");
+            return subOp;
+        }
+        else if (symbol.equals("*"))
         {
             return new DerefValueOperation(symbols.pollFirst());
-        } else if (next != null && arithmeticOps.contains(next))
-        {
-            // FANCY STUFF
-            return null;
         } else
         {
             return new LiteralValueOperation(symbol);
@@ -341,9 +358,19 @@ public class TransformScript
         }
     }
 
-    private abstract class ValueOperation implements Operation
+    private class ValueOperation implements Operation
     {
-        public abstract Object execute(Map json, Map<String, Object> context);
+        private ValueOperation m_subOp;
+        ValueOperation() {}
+        public ValueOperation(ValueOperation subOperation)
+        {
+            m_subOp = subOperation;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            return m_subOp.execute(json, context);
+        }
     }
 
     private class LiteralValueOperation extends ValueOperation
@@ -360,6 +387,8 @@ public class TransformScript
             // The value might be a variable name
             if (m_value instanceof String && context.containsKey(m_value))
                 return context.get(m_value);
+            if (m_value instanceof String && ((String) m_value).matches("-?\\d+"))
+                return Integer.parseInt((String)m_value);
             return m_value;
         }
     }
@@ -379,6 +408,51 @@ public class TransformScript
             List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
 
             return Document._get(pathWithSymbols, json);
+        }
+    }
+
+    private class BinaryValueOperation extends ValueOperation
+    {
+        private ValueOperation m_leftOperand;
+        private ValueOperation m_rightOperand;
+        private String m_operator;
+
+        public BinaryValueOperation(ValueOperation leftOperand, ValueOperation rightOperand, String operator)
+        {
+            m_leftOperand = leftOperand;
+            m_rightOperand = rightOperand;
+            m_operator = operator;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object concreteLeftValue = m_leftOperand.execute(json, context);
+            Object concreteRightValue = m_rightOperand.execute(json, context);
+
+            if (concreteLeftValue instanceof String || concreteRightValue instanceof String)
+            {
+                if (m_operator.equals("+"))
+                    return "" + concreteLeftValue + concreteRightValue; // String concatenation
+                else
+                    throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
+            }
+
+            // Both values must now be integers
+            int left = ((Integer) concreteLeftValue);
+            int right = ((Integer) concreteRightValue);
+
+            switch (m_operator)
+            {
+                case "+":
+                    return left + right;
+                case "-":
+                    return left - right;
+                case "*":
+                    return left * right;
+                case "/":
+                    return left / right;
+            }
+            return null;
         }
     }
 
