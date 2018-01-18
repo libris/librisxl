@@ -25,54 +25,50 @@ public class Main
                 }
             });
         }
-        else if (args[0].equals("syntax"))
-            generateAndPrintSyntax(args);
-        else if (args[0].equals("transform"))
+        else if (args[0].equals("generate"))
             generateAndPrintTransform(args);
         else if (args[0].equals("execute"))
             executeScript(args);
         else
             System.err.println(
                     "Usage:\n" +
-                            "java -jar transform.jar syntax [file1]\n" +
-                            "  Generate a syntax that convers all json in [file1], one json document per line.\n" +
-                            "\n" +
-                            "java -jar transform.jar transform [syntax1file] [syntax2file] [file1] [file2]\n" +
-                            "  Generate a diff script from syntax1 to syntax2 using values found in the streams\n" +
+                            "java -jar transform.jar generate [file1] [file2]\n" +
+                            "  Generate a diff script from using values found in the streams\n" +
                             "  each element in order in file1 and file2 is expected to represent the \"the same\"" +
-                            "  record, in the various format forms.\n" +
+                            "  record, in the new format forms.\n" +
                             "java -jar transform.jar execute [scriptfile] [file]\n" +
                             "  Execute the given script on each json document in [file], one document per line.");
     }
 
-    private static void generateAndPrintSyntax(String[] args) throws IOException
+    private static void generateAndPrintTransform(String[] args) throws IOException, TransformScript.TransformSyntaxException
     {
-        BufferedReader in = new BufferedReader(new FileReader(args[1]));
+        BufferedReader json1Reader = new BufferedReader(new FileReader(args[1]));
+        BufferedReader json2Reader = new BufferedReader(new FileReader(args[2]));
 
         String jsonString;
-        Syntax syntax = new Syntax();
-        while ( (jsonString = in.readLine()) != null)
+
+        Syntax syntax1 = new Syntax();
+        while ( (jsonString = json1Reader.readLine()) != null)
         {
             Map data = mapper.readValue(jsonString, Map.class);
             Document doc = new Document(data);
             data = JsonLd.frame(doc.getCompleteId(), data);
-            syntax.expandSyntaxToCover(data);
+            syntax1.expandSyntaxToCover(data);
         }
-        in.close();
-        System.out.println(syntax);
-    }
+        json1Reader.close();
 
-    private static void generateAndPrintTransform(String[] args) throws IOException, TransformScript.TransformSyntaxException
-    {
-        BufferedReader syntax1Reader = new BufferedReader(new FileReader(args[1]));
-        BufferedReader syntax2Reader = new BufferedReader(new FileReader(args[2]));
-        Syntax syntax1 = new Syntax(syntax1Reader);
-        Syntax syntax2 = new Syntax(syntax2Reader);
-        syntax1Reader.close();
-        syntax2Reader.close();
+        Syntax syntax2 = new Syntax();
+        while ( (jsonString = json2Reader.readLine()) != null)
+        {
+            Map data = mapper.readValue(jsonString, Map.class);
+            Document doc = new Document(data);
+            data = JsonLd.frame(doc.getCompleteId(), data);
+            syntax2.expandSyntaxToCover(data);
+        }
+        json2Reader.close();
 
-        BufferedReader json1Reader = new BufferedReader(new FileReader(args[3]));
-        BufferedReader json2Reader = new BufferedReader(new FileReader(args[4]));
+        json1Reader = new BufferedReader(new FileReader(args[1]));
+        json2Reader = new BufferedReader(new FileReader(args[2]));
 
         ScriptGenerator scriptGenerator = SyntaxDiffReduce.generateScript(syntax1, syntax2, json1Reader, json2Reader);
 
