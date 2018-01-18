@@ -207,12 +207,10 @@ public class TransformScript
         String next = symbols.peekFirst();
 
         String arithmeticOps = "+-";
-
-        if (symbol.equals('*'))
+        if (symbol.equals("*"))
         {
             return new DerefValueOperation(symbols.pollFirst());
-        }
-        else if (next != null && arithmeticOps.contains(next))
+        } else if (next != null && arithmeticOps.contains(next))
         {
             // FANCY STUFF
             return null;
@@ -359,6 +357,9 @@ public class TransformScript
 
         public Object execute(Map json, Map<String, Object> context)
         {
+            // The value might be a variable name
+            if (m_value instanceof String && context.containsKey(m_value))
+                return context.get(m_value);
             return m_value;
         }
     }
@@ -374,10 +375,10 @@ public class TransformScript
 
         public Object execute(Map json, Map<String, Object> context)
         {
-            List<Object> toPath = Arrays.asList( withIntAsInteger(m_path.split(",")) );
-            List<Object> toPathWithSymbols = insertContextSymbolsIntoPath(toPath, context);
+            List<Object> path = Arrays.asList( withIntAsInteger(m_path.split(",")) );
+            List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
 
-            return toPathWithSymbols.get(toPathWithSymbols.size());
+            return Document._get(pathWithSymbols, json);
         }
     }
 
@@ -501,8 +502,10 @@ public class TransformScript
         if (m_modeFramed)
             data = JsonLd.frame(doc.getShortId(), data);
 
+        HashMap<String, Object> context = new HashMap<>();
+
         for (Operation op : m_operations)
-            op.execute(data, new HashMap<>());
+            op.execute(data, context);
         return mapper.writeValueAsString(data);
     }
 
@@ -512,8 +515,10 @@ public class TransformScript
         if (m_modeFramed)
             data = JsonLd.frame(doc.getShortId(), data);
 
+        HashMap<String, Object> context = new HashMap<>();
+
         for (Operation op : m_operations)
-            op.execute(data, new HashMap<>());
+            op.execute(data, context);
         return data;
     }
 }
