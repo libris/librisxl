@@ -40,31 +40,27 @@ digraph system_overview {
 
     subgraph cluster_apis {
         graph[style=dashed];
-        label="APIs";
+        label="APIer";
 
         apix [label="APIX"];
         http_api [label="HTTP-API"]; // subgraph?
         oaipmh [label="OAI-PMH"];
         search_api [label="Sök-API"];
         write_api [label="Skriv-API"];
-        record [label="RDF-poster"];
+        record [label="JSON-LD-poster"];
     }
     apix -> {
         lddb
         marc_converter
     };
-    http_api -> {
-        auth
-        lddb
-        search
-    };
+    write_api -> { auth };
+    write_api -> { lddb }[color="red"];
     oaipmh -> {
         lddb
         marc_converter
     } ;
     search_api -> { search };
-    write_api -> { lddb }[color="red"];
-    record -> { viewer };
+    record -> { lddb };
 
     subgraph cluster_importers {
         graph[style=dashed];
@@ -99,8 +95,8 @@ digraph system_overview {
         label="Export";
 
         batch [label="Batch-export"];
-        export_program [label="Exportprogam"];
-	wdb [label="Wdb (Webbsök)"];
+        export_program [label="Exportprogram"];
+        wdb [label="Wdb (Webbsök)"];
     }
     batch -> { export_program };
     export_program -> {
@@ -112,7 +108,7 @@ digraph system_overview {
         graph[style=dashed];
         label="Webbtjänster";
 
-        viewer [label="Grafisk klient"];
+        viewer [label="Visningsklient"];
         editor [label="Redigeringsklient"];
         id [label="id.kb.se"];
         auth [label="Autentiseringstjänst"];
@@ -120,7 +116,7 @@ digraph system_overview {
     }
     viewer -> {
         search_api
-        http_api
+        record
     };
     editor -> {
         auth
@@ -133,7 +129,7 @@ digraph system_overview {
      * LEGEND
      */
     subgraph cluster_legend { 
-        style="dashed";
+        style="dotted";
         node [shape=plaintext]
         label = "Legend";
         key [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
