@@ -26,6 +26,84 @@ public class ScriptTest
         testScript(data, transformed, script);
     }
 
+    @Test
+    public void testBasicLet() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set value0 -> key0 " +
+                "let x = 1";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testLetSetMove() throws Exception
+    {
+        String data = "{\"key0\":\"value0\"}";
+
+        String script = "mode normal " +
+                "let var = * key0 " +
+                "set var -> key1 " +
+                "set literal -> key2 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"," +
+                "    \"key1\":\"value0\"," +
+                "    \"key2\":\"literal\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testBasicParenthesis() throws Exception
+    {
+        String data = "{\"key0\":\"value0\"}";
+
+        String script = "mode normal " +
+                "let var = ( * key0 ) " +
+                "set ( var ) -> key1 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"," +
+                "    \"key1\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testBasicArithmetic() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "let x = 1 + 1 " +
+                "set x -> key0 " +
+                "let y = 1 + 1 + 2 " +
+                "set y -> key1 " +
+                "let z = ( 1 + 1 ) * 3 " +
+                "set z -> key2 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":2," +
+                "    \"key1\":4," +
+                "    \"key2\":6" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
     private void testScript(String beforeTransformText, String expectedResultText, String transformScript) throws Exception
     {
         Map oldData = mapper.readValue(beforeTransformText, Map.class);
