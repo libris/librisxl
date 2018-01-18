@@ -23,7 +23,7 @@ public class TransformScript
 
     private interface Operation
     {
-        public void execute(Map json, Map<String, Object> context);
+        public Object execute(Map json, Map<String, Object> context);
     }
 
     /*******************************************************************************************************************
@@ -134,6 +134,10 @@ public class TransformScript
                 case "set":
                     operations.add( parseSetStatement(symbols) );
                     break;
+                case "LET":
+                case "let":
+                    operations.add( parseLetStatement(symbols) );
+                    break;
                 case "DELETE":
                 case "delete":
                     operations.add( parseDeleteStatement(symbols) );
@@ -169,15 +173,53 @@ public class TransformScript
     private SetOperation parseSetStatement(LinkedList<String> symbols) throws TransformSyntaxException
     {
         if (symbols.size() < 3)
-            throw new TransformSyntaxException("'SET' must be followed by [_LITERAL '->' pathTo]");
+            throw new TransformSyntaxException("'SET' must be followed by [value_statement '->' pathTo]");
 
-        String literal = symbols.pollFirst();
+        ValueOperation valueOp = parseValueStatement(symbols);
         String arrow = symbols.pollFirst();
         String to = symbols.pollFirst();
         if (!arrow.equals("->") || !isValidPath(to))
-            throw new TransformSyntaxException("'SET' must be followed by [_LITERAL '->' pathTo]");
+            throw new TransformSyntaxException("'SET' must be followed by [value_statement '->' pathTo]");
 
-        return new SetOperation(literal, to);
+        return new SetOperation(valueOp, to);
+    }
+
+    private LetOperation parseLetStatement(LinkedList<String> symbols) throws TransformSyntaxException
+    {
+        if (symbols.size() < 3)
+            throw new TransformSyntaxException("'LET' must be followed by [name '=' value_statement]");
+
+        String name = symbols.pollFirst();
+        String eqSign = symbols.pollFirst();
+
+        if (!eqSign.equals("="))
+            throw new TransformSyntaxException("'LET' must be followed by [name '=' value_statement]");
+
+        return new LetOperation(name, parseValueStatement(symbols));
+    }
+
+    private ValueOperation parseValueStatement(LinkedList<String> symbols) throws TransformSyntaxException
+    {
+        if (symbols.size() < 1)
+            throw new TransformSyntaxException("A value_statement must consist of either a literal value, or a composite of value_statements");
+
+        String symbol = symbols.pollFirst();
+        String next = symbols.peekFirst();
+
+        String arithmeticOps = "+-";
+
+        if (symbol.equals('*'))
+        {
+            return new DerefValueOperation(symbols.pollFirst());
+        }
+        else if (next != null && arithmeticOps.contains(next))
+        {
+            // FANCY STUFF
+            return null;
+        } else
+        {
+            return new LiteralValueOperation(symbol);
+        }
     }
 
     private DeletedOperation parseDeleteStatement(LinkedList<String> symbols) throws TransformSyntaxException
@@ -231,7 +273,7 @@ public class TransformScript
             m_toPath = toPath;
         }
 
-        public void execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context)
         {
             List<Object> fromPath = Arrays.asList( withIntAsInteger(m_fromPath.split(",")) );
             List<Object> fromPathWithSymbols = insertContextSymbolsIntoPath(fromPath, context);
@@ -242,7 +284,7 @@ public class TransformScript
             Object value = Document._get(fromPathWithSymbols, json);
 
             if (value == null)
-                return;
+                return null;
 
             Type containerType;
             if (toPathWithSymbols.get(toPathWithSymbols.size()-1) instanceof String)
@@ -253,21 +295,22 @@ public class TransformScript
             Document._removeLeafObject(fromPathWithSymbols, json);
             Document._set(toPathWithSymbols, value, containerType, json);
             pruneBranch(fromPathWithSymbols, json);
+            return null;
         }
     }
 
     private class SetOperation implements Operation
     {
-        private String m_value;
+        private ValueOperation m_value;
         private String m_toPath;
 
-        public SetOperation(String value, String toPath)
+        public SetOperation(ValueOperation value, String toPath)
         {
             m_value = value;
             m_toPath = toPath;
         }
 
-        public void execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context)
         {
             List<Object> toPath = Arrays.asList( withIntAsInteger(m_toPath.split(",")) );
             List<Object> toPathWithSymbols = insertContextSymbolsIntoPath(toPath, context);
@@ -278,7 +321,63 @@ public class TransformScript
             else
                 containerType = ArrayList.class;
 
-            Document._set(toPathWithSymbols, m_value, containerType, json);
+            Document._set(toPathWithSymbols, m_value.execute(json, context), containerType, json);
+            return null;
+        }
+    }
+
+    private class LetOperation implements Operation
+    {
+        private Operation m_valueOp;
+        private String m_name;
+        public LetOperation(String name, Operation valueOperation)
+        {
+            m_valueOp = valueOperation;
+            m_name = name;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            context.put(m_name, m_valueOp.execute(json, context));
+            return null;
+        }
+    }
+
+    private abstract class ValueOperation implements Operation
+    {
+        public abstract Object execute(Map json, Map<String, Object> context);
+    }
+
+    private class LiteralValueOperation extends ValueOperation
+    {
+        Object m_value;
+
+        public LiteralValueOperation(Object value)
+        {
+            m_value = value;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            return m_value;
+        }
+    }
+
+    private class DerefValueOperation extends ValueOperation
+    {
+        String m_path;
+
+        public DerefValueOperation(String path)
+        {
+            m_path = path;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            List<Object> toPath = Arrays.asList( withIntAsInteger(m_path.split(",")) );
+            List<Object> toPathWithSymbols = insertContextSymbolsIntoPath(toPath, context);
+
+            return toPathWithSymbols.get(toPathWithSymbols.size());
         }
     }
 
@@ -291,13 +390,14 @@ public class TransformScript
             m_path = path;
         }
 
-        public void execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context)
         {
             List<Object> path = Arrays.asList( withIntAsInteger(m_path.split(",")) );
             List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
 
             Document._removeLeafObject(pathWithSymbols, json);
             pruneBranch(pathWithSymbols, json);
+            return null;
         }
     }
 
@@ -314,7 +414,7 @@ public class TransformScript
             m_iteratorSymbol = iteratorSymbol;
         }
 
-        public void execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context)
         {
             List<Object> path = Arrays.asList( withIntAsInteger(m_listPath.split(",")) );
             List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
@@ -335,8 +435,13 @@ public class TransformScript
                     }
                 }
             }
+            return null;
         }
     }
+
+    /*******************************************************************************************************************
+     * Helpers
+     ******************************************************************************************************************/
 
     private Object[] withIntAsInteger(String[] pathArray)
     {
