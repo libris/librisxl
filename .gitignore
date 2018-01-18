@@ -6,6 +6,7 @@
 whelkoperator.lck
 .venv
 
+/.gradle
 /*/.gradle
 /*.properties
 /dep/locgov-*/build
