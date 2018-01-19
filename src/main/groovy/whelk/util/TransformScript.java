@@ -528,10 +528,10 @@ public class TransformScript
 
                 for (int i = list.size()-1; i > -1; --i) // For each iterator-index (in reverse) do:
                 {
+                    Map<String, Object> nextContext = new HashMap<>();
+                    nextContext.putAll(context); // inherit scope
                     for (Operation op : m_operations)
                     {
-                        Map<String, Object> nextContext = new HashMap<>();
-                        nextContext.putAll(context); // inherit scope
                         nextContext.put(m_iteratorSymbol, i);
                         op.execute(json, nextContext);
                     }
