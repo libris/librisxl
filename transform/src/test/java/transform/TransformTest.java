@@ -158,6 +158,69 @@ public class TransformTest
         testTransform(oldFormatExample, oldFormatExample, newFormatExample, newFormatExample);
     }
 
+    @Test
+    public void testAppendsToNonsharedLists() throws Exception
+    {
+        String oldFormatExample = "" +
+                "{" +
+                "    \"categories\":" +
+                "   [" +
+                "       {" +
+                "           \"notes\":" +
+                "           [" +
+                "               {\"note\":\"somenote\"}" +
+                "           ]" +
+                "       }" +
+                "   ]" +
+                "}";
+
+        String newFormatExample = "" +
+                "{" +
+                "    \"categories\":" +
+                "   [" +
+                "       {" +
+                "           \"values\":" +
+                "           [" +
+                "               {\"value\":\"somenote\"}" +
+                "           ]" +
+                "       }" +
+                "   ]" +
+                "}";
+
+        String toBeTransformed = "" +
+                "{" +
+                "    \"categories\":" +
+                "   [" +
+                "       {" +
+                "           \"notes\":" +
+                "           [" +
+                "               {\"note\":\"somenote\"}" +
+                "           ]," +
+                "           \"values\":" +
+                "           [" +
+                "               {\"value\":\"othervalue\"}" +
+                "           ]" +
+                "       }" +
+                "   ]" +
+                "}";
+
+        String expectedResult = "" +
+                "{" +
+                "    \"categories\":" +
+                "   [" +
+                "       {" +
+                "           \"values\":" +
+                "           [" +
+                "               {\"value\":\"othervalue\"}," +
+                "               {\"value\":\"somenote\"}" +
+                "           ]" +
+                "       }" +
+                "   ]" +
+                "}";
+
+        testTransform(oldFormatExample, toBeTransformed, newFormatExample, expectedResult);
+    }
+
     private void testTransform(String oldFormatExample, String toBeTransformed,
                                String newFormatExample, String expectedTransformedResult) throws Exception
     {

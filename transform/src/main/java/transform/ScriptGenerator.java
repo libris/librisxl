@@ -73,6 +73,19 @@ public class ScriptGenerator
      */
     private List<String> generatePivotPointMoves(List<String> from, List<String> to)
     {
+        int toAndFromShareFirstNLists = 0;
+        for (int i = 0; i < Integer.min(from.size(), to.size()); ++i)
+        {
+            if (from.get(i).equals(to.get(i)))
+            {
+                if (from.get(i).equals("_list"))
+                    ++toAndFromShareFirstNLists;
+            }
+            else
+                break;
+        }
+        System.err.println(to + " and " + from + "share the first " + toAndFromShareFirstNLists + " list paths.");
+
         final String indentation = "    ";
         List<String> resultingOperations = new ArrayList<>();
 
@@ -80,14 +93,14 @@ public class ScriptGenerator
         List<String> targetList = new ArrayList<>();
 
         int level = 0;
-        List<Integer> listsAtFromDiffIndex = new ArrayList<>();
+        List<Integer> _listsAtInFromList = new ArrayList<>();
         for (int i = 0; i < from.size(); ++i)
         {
             String node = from.get(i);
             if (node.equals("_list"))
             {
                 sourceList.add("it" + (level++));
-                listsAtFromDiffIndex.add(i);
+                _listsAtInFromList.add(i);
             }
             else
                 sourceList.add(node);
@@ -101,8 +114,13 @@ public class ScriptGenerator
             {
                 // Only replace a _list node with a toX node if there's a corresponding list in the from path.
                 // otherwise, just pick the first element (0).
-                if (targetPathLists < listsAtFromDiffIndex.size())
-                    targetList.add("to" + (level++));
+                if (targetPathLists < _listsAtInFromList.size())
+                {
+                    if (targetPathLists < toAndFromShareFirstNLists)
+                        targetList.add("it" + (level++));
+                    else
+                        targetList.add("to" + (level++));
+                }
                 else
                     targetList.add("0");
                 ++targetPathLists;
@@ -112,21 +130,22 @@ public class ScriptGenerator
         }
 
         String tabs = "";
-        for (int i = 0; i < listsAtFromDiffIndex.size(); ++i)
+        for (int i = 0; i < _listsAtInFromList.size(); ++i)
         {
-            resultingOperations.add(tabs + "foreach it" + i + " : " + String.join(",", sourceList.subList(0, listsAtFromDiffIndex.get(i))));
+            resultingOperations.add(tabs + "foreach it" + i + " : " + String.join(",", sourceList.subList(0, _listsAtInFromList.get(i))));
             resultingOperations.add(tabs + "{");
             tabs += indentation;
-            resultingOperations.add(tabs + "let to" + i + " = it" + i + " + sizeof " + String.join(",", sourceList.subList(0, listsAtFromDiffIndex.get(i))));
+            if (i >= toAndFromShareFirstNLists)
+                resultingOperations.add(tabs + "let to" + i + " = it" + i + " + sizeof " + String.join(",", sourceList.subList(0, _listsAtInFromList.get(i))));
         }
 
         resultingOperations.add(tabs + "move " + String.join(",",sourceList) +
                 "\n" + tabs + "  -> " + String.join(",",targetList));
 
-        for (int i = 0; i < listsAtFromDiffIndex.size(); ++i)
+        for (int i = 0; i < _listsAtInFromList.size(); ++i)
         {
             tabs = "";
-            for (int j = 1; j < (listsAtFromDiffIndex.size()-i); ++j)
+            for (int j = 1; j < (_listsAtInFromList.size()-i); ++j)
                 tabs += indentation;
             resultingOperations.add(tabs + "}");
         }
