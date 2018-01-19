@@ -21,11 +21,15 @@ public class Utils
 
             if (value instanceof Map)
             {
+                if ( ! (m2.get(key) instanceof Map) )
+                    return false;
                 if ( ! rdfEquals( (Map) value, (Map) m2.get(key)) )
                     return false;
             }
             else if (value instanceof List)
             {
+                if ( ! (m2.get(key) instanceof List) )
+                    return false;
                 if ( ! rdfEquals( (List) value, (List) m2.get(key)) )
                     return false;
             }

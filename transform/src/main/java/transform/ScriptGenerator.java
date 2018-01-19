@@ -40,8 +40,20 @@ public class ScriptGenerator
 
     public void resolveMove(String fromPath, String toPath)
     {
-        List<String> from = Arrays.asList(fromPath.split(","));
-        List<String> to = Arrays.asList(toPath.split(","));
+        List<String> _from = Arrays.asList(fromPath.split(","));
+        List<String> _to = Arrays.asList(toPath.split(","));
+        ArrayList<String> from = new ArrayList<>(_from);
+        ArrayList<String> to = new ArrayList<>(_to);
+
+        // Clear out similar tails, to potentially move more than just leaf values.
+        for (int i = 0; i < Integer.min(from.size(), to.size()); ++i)
+        {
+            if (from.get( from.size()-i-1).equals( to.get( to.size()-i-1 ) ))
+            {
+                from.remove(from.size()-1);
+                to.remove(to.size()-1);
+            }
+        }
 
         List<String> operations = generatePivotPointMoves(from, to);
         if (!operations.isEmpty())
@@ -85,10 +97,10 @@ public class ScriptGenerator
         {
             if (node.equals("_list"))
             {
-                // Only replace a _list node with a itX node if there's a corresponding list in the from path.
+                // Only replace a _list node with a toX node if there's a corresponding list in the from path.
                 // otherwise, just pick the first element (0).
                 if (targetPathLists < listsAtFromDiffIndex.size())
-                    targetList.add("it" + (level++));
+                    targetList.add("to" + (level++));
                 else
                     targetList.add("0");
                 ++targetPathLists;
@@ -103,6 +115,7 @@ public class ScriptGenerator
             resultingOperations.add(tabs + "foreach it" + i + " : " + String.join(",", sourceList.subList(0, listsAtFromDiffIndex.get(i))));
             resultingOperations.add(tabs + "{");
             tabs += indentation;
+            resultingOperations.add(tabs + "let to" + i + " = it" + i + " + sizeof " + String.join(",", sourceList.subList(0, listsAtFromDiffIndex.get(i))));
         }
 
         resultingOperations.add(tabs + "move " + String.join(",",sourceList) +
