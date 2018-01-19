@@ -84,7 +84,6 @@ public class ScriptGenerator
             else
                 break;
         }
-        System.err.println(to + " and " + from + "share the first " + toAndFromShareFirstNLists + " list paths.");
 
         final String indentation = "    ";
         List<String> resultingOperations = new ArrayList<>();
