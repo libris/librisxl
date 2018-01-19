@@ -48,11 +48,13 @@ public class ScriptGenerator
         // Clear out similar tails, to potentially move more than just leaf values.
         for (int i = 0; i < Integer.min(from.size(), to.size()); ++i)
         {
-            if (from.get( from.size()-i-1).equals( to.get( to.size()-i-1 ) ))
+            if (from.get( from.size()-1).equals( to.get( to.size()-1 ) ))
             {
                 from.remove(from.size()-1);
                 to.remove(to.size()-1);
             }
+            else
+                break;
         }
 
         List<String> operations = generatePivotPointMoves(from, to);
