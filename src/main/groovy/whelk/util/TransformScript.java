@@ -227,10 +227,12 @@ public class TransformScript
             if (!closingPar.equals(")"))
                 throw new TransformSyntaxException("Mismatched parenthesis");
             return subOp;
-        }
-        else if (symbol.equals("*"))
+        } else if (symbol.equals("*"))
         {
             return new DerefValueOperation(symbols.pollFirst());
+        } else if (symbol.equals("sizeof"))
+        {
+            return new SizeofValueOperation(symbols.pollFirst());
         } else
         {
             return new LiteralValueOperation(symbol);
@@ -408,6 +410,31 @@ public class TransformScript
             List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
 
             return Document._get(pathWithSymbols, json);
+        }
+    }
+
+    private class SizeofValueOperation extends ValueOperation
+    {
+        String m_path;
+
+        public SizeofValueOperation(String path)
+        {
+            m_path = path;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            List<Object> path = Arrays.asList( withIntAsInteger(m_path.split(",")) );
+            List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
+
+            Object atPath = Document._get(pathWithSymbols, json);
+            if (atPath instanceof List)
+                return ((List) atPath).size();
+            else if (atPath instanceof Map)
+                return ((Map) atPath).keySet().size();
+            else if (atPath instanceof String)
+                return ((String) atPath).length();
+            return 0;
         }
     }
 
