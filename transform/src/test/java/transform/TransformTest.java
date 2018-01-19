@@ -126,6 +126,38 @@ public class TransformTest
         testTransform(oldFormatExample, toBeTransformed, newFormatExample, expectedResult);
     }
 
+    @Test
+    public void testExtraListInTarget() throws Exception
+    {
+        String oldFormatExample = "" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}";
+
+        String newFormatExample = "" +
+                "{" +
+                "    \"somelist\":[{\"key1\":\"value0\"}]" +
+                "}";
+
+        testTransform(oldFormatExample, oldFormatExample, newFormatExample, newFormatExample);
+    }
+
+    @Test
+    public void testExtraListInSource() throws Exception
+    {
+        String oldFormatExample = "" +
+                "{" +
+                "    \"somelist\":[{\"key0\":\"value0\"}]" +
+                "}";
+
+        String newFormatExample = "" +
+                "{" +
+                "    \"key1\":\"value0\"" +
+                "}";
+
+        testTransform(oldFormatExample, oldFormatExample, newFormatExample, newFormatExample);
+    }
+
     private void testTransform(String oldFormatExample, String toBeTransformed,
                                String newFormatExample, String expectedTransformedResult) throws Exception
     {
