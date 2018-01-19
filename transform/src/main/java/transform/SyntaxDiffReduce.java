@@ -123,12 +123,6 @@ public class SyntaxDiffReduce
                                      Map oldDataExample, Map newDataExample, ScriptGenerator scriptGenerator)
             throws IOException, TransformScript.TransformSyntaxException
     {
-        // First apply the current state of the script to the incoming data, so that any changes we make now
-        // are not in conflict with any already added to the script.
-        TransformScript executableScript = new TransformScript(scriptGenerator.toString());
-        String transformed = executableScript.executeOn(mapper.writeValueAsString(oldDataExample));
-        oldDataExample = mapper.readValue(transformed, Map.class);
-
         boolean hadEffect = false;
 
         List<Syntax.Rule> rulesToRemoveFromAppearing = new ArrayList<>();
