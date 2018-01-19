@@ -104,6 +104,32 @@ public class ScriptTest
         testScript(data, transformed, script);
     }
 
+    @Test
+    public void testSizeOf() throws Exception
+    {
+        String data = "" +
+                "{" +
+                "   \"somelist\":" +
+                "   [" +
+                "       {\"somekey\":\"somevalue\"}," +
+                "       {\"somekey\":\"somevalue\"}," +
+                "       {\"somekey\":\"somevalue\"}" +
+                "   ]" +
+                "}";
+
+        String script = "mode normal " +
+                "let x = sizeof somelist * 2 " +
+                "delete somelist " +
+                "set x -> result ";
+
+        String transformed = "" +
+                "{" +
+                "    \"result\":6" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
     private void testScript(String beforeTransformText, String expectedResultText, String transformScript) throws Exception
     {
         Map oldData = mapper.readValue(beforeTransformText, Map.class);
