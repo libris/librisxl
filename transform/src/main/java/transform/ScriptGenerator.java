@@ -28,7 +28,7 @@ public class ScriptGenerator
         if (m_warnings.isEmpty())
             sb.append("# I got 99 problems, but your changes ain't one.\n");
 
-        sb.append("\n# SCRIPT:\n\nMODE FRAMED\n\n");
+        sb.append("\n# SCRIPT:\n\nmode framed\n\n");
         for (String s : m_operations)
         {
             sb.append(s);
@@ -100,12 +100,12 @@ public class ScriptGenerator
         String tabs = "";
         for (int i = 0; i < listsAtFromDiffIndex.size(); ++i)
         {
-            resultingOperations.add(tabs + "FOREACH it" + i + " : " + String.join(",", sourceList.subList(0, listsAtFromDiffIndex.get(i))));
+            resultingOperations.add(tabs + "foreach it" + i + " : " + String.join(",", sourceList.subList(0, listsAtFromDiffIndex.get(i))));
             resultingOperations.add(tabs + "{");
             tabs += indentation;
         }
 
-        resultingOperations.add(tabs + "MOVE " + String.join(",",sourceList) +
+        resultingOperations.add(tabs + "move " + String.join(",",sourceList) +
                 "\n" + tabs + "  -> " + String.join(",",targetList));
 
         for (int i = 0; i < listsAtFromDiffIndex.size(); ++i)

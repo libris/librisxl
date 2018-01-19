@@ -56,17 +56,15 @@ public class SyntaxDiffReduce
             }
         }
 
-        for (Syntax.Rule rule : appearingRules)
+        /*for (Syntax.Rule rule : appearingRules)
         {
-            scriptGenerator.m_warnings.add("# The following path contained data in the new format, but no equivalent could be found\n" +
-                    "# in the old format. Did you map in new data from MARC? (Severity: LOW)\n" +
+            scriptGenerator.m_warnings.add("# Did you map in new data here? (Severity: LOW)\n" +
                     "# " + rule.path + "," + rule.followedByKey + "\n#");
-        }
+        }*/
 
         for (Syntax.Rule rule : disappearingRules)
         {
-            scriptGenerator.m_warnings.add("# The following path contained data in the old format, but no equivalent could be found\n" +
-                    "# in the new format. Are we mapping in less data from MARC in the new format? (Severity: HIGH)\n" +
+            scriptGenerator.m_warnings.add("# Value lost and found no replacement for what used to be here:\n" +
                     "# " + rule.path + "," + rule.followedByKey + "\n#");
         }
 
@@ -110,7 +108,6 @@ public class SyntaxDiffReduce
 
                 if (innerIsSubRule)
                 {
-                    //System.err.println("Found that " + innerRule + " is contained within " + outerRule);
                     rulesToRemove.add(innerRule);
                 }
             }
