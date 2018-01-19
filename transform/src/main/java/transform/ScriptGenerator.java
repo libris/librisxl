@@ -28,7 +28,7 @@ public class ScriptGenerator
         if (m_warnings.isEmpty())
             sb.append("# I got 99 problems, but your changes ain't one.\n");
 
-        sb.append("\n# SCRIPT:\n\nmode framed\n\n");
+        sb.append("\nmode framed\n\n");
         for (String s : m_operations)
         {
             sb.append(s);
