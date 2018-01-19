@@ -43,14 +43,6 @@ public class ScriptGenerator
         List<String> from = Arrays.asList(fromPath.split(","));
         List<String> to = Arrays.asList(toPath.split(","));
 
-        if (Collections.frequency(from, "_list") != Collections.frequency(to, "_list"))
-        {
-            m_warnings.add("# I dare not generate code for this diff, because the paths differ in number of lists.\n" +
-                    "# Please resolve the diff manually. (Severity: HIGH)\n" +
-                    "#    " + fromPath + "\n# -> " + toPath);
-            return;
-        }
-
         List<String> operations = generatePivotPointMoves(from, to);
         if (!operations.isEmpty())
         {
@@ -62,8 +54,8 @@ public class ScriptGenerator
 
     /**
      * Lists ("_list") forms pivots points of sorts in the transformation. In the diffing part of the path,
-     * each list must be matched up to its transformed equivalence. If the number of "_list"s diff, the change
-     * can't be resolved with any certainty (Which list should be collapsed?).
+     * each list must be matched up to its transformed equivalence. If the number of "_list"s diff, the rightmost lists
+     * are selected to be collapsed.
      */
     private List<String> generatePivotPointMoves(List<String> from, List<String> to)
     {
@@ -88,10 +80,19 @@ public class ScriptGenerator
         }
 
         level = 0;
+        int targetPathLists = 0;
         for (String node: to)
         {
             if (node.equals("_list"))
-                targetList.add("it"+(level++));
+            {
+                // Only replace a _list node with a itX node if there's a corresponding list in the from path.
+                // otherwise, just pick the first element (0).
+                if (targetPathLists < listsAtFromDiffIndex.size())
+                    targetList.add("it" + (level++));
+                else
+                    targetList.add("0");
+                ++targetPathLists;
+            }
             else
                 targetList.add(node);
         }
