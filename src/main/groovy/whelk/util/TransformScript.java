@@ -12,7 +12,7 @@ import java.util.*;
 public class TransformScript
 {
     private boolean m_modeFramed = false;
-    private List<Operation> m_operations = new ArrayList<>();
+    private StatementListOperation m_rootStatement;
     public static class TransformSyntaxException extends Exception
     {
         public TransformSyntaxException(String message)
@@ -107,10 +107,11 @@ public class TransformScript
         if (symbol.equalsIgnoreCase("FRAMED"))
             m_modeFramed = true;
 
-        m_operations = parseStatementList(symbols);
+        //m_operations = parseStatementList(symbols);
+        m_rootStatement = parseStatementList(symbols);
     }
 
-    private List<Operation> parseStatementList(LinkedList<String> symbols) throws TransformSyntaxException
+    private StatementListOperation parseStatementList(LinkedList<String> symbols) throws TransformSyntaxException
     {
         List<Operation> operations = new ArrayList<>();
 
@@ -143,17 +144,17 @@ public class TransformScript
                     operations.add( parseDeleteStatement(symbols) );
                     break;
                 case "{":
-                    operations.addAll( parseStatementList(symbols) );
+                    operations.add( parseStatementList(symbols) );
                     break;
                 case "}":
-                    return operations;
+                    return new StatementListOperation(operations);
                 default:
                     throw new TransformSyntaxException("Unexpected symbol: \"" + symbol + "\"");
             }
         }
 
         // End of script
-        return operations;
+        return new StatementListOperation(operations);
     }
 
     private MoveOperation parseMoveStatement(LinkedList<String> symbols) throws TransformSyntaxException
@@ -266,7 +267,7 @@ public class TransformScript
         if (colon == null || !colon.equals(":"))
             throw new TransformSyntaxException("'FOREACH' must be followed by [identifier ':' pathToList STATEMENT]");
 
-        List<Operation> operations = parseStatementList(symbols);
+        StatementListOperation operations = parseStatementList(symbols);
         return new ForEachOperation(path, iteratorSymbol, operations);
     }
 
@@ -278,6 +279,27 @@ public class TransformScript
     /*******************************************************************************************************************
      * Execution
      ******************************************************************************************************************/
+
+    private class StatementListOperation implements Operation
+    {
+        private List<Operation> m_operations = new ArrayList<>();
+
+        public StatementListOperation(List<Operation> operations)
+        {
+            m_operations = operations;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Map<String, Object> nextContext = new HashMap<>();
+            nextContext.putAll(context); // inherit scope
+            for (Operation operation : m_operations)
+            {
+                operation.execute(json, nextContext);
+            }
+            return null;
+        }
+    }
 
     private class MoveOperation implements Operation
     {
@@ -506,10 +528,10 @@ public class TransformScript
     private class ForEachOperation implements Operation
     {
         private String m_listPath;
-        private List<Operation> m_operations;
+        private StatementListOperation m_operations;
         private String m_iteratorSymbol;
 
-        public ForEachOperation(String listPath, String iteratorSymbol, List<Operation> operations)
+        public ForEachOperation(String listPath, String iteratorSymbol, StatementListOperation operations)
         {
             m_listPath = listPath;
             m_operations = operations;
@@ -525,16 +547,12 @@ public class TransformScript
             if (listObject instanceof List)
             {
                 List list = (List) listObject;
-
                 for (int i = list.size()-1; i > -1; --i) // For each iterator-index (in reverse) do:
                 {
                     Map<String, Object> nextContext = new HashMap<>();
                     nextContext.putAll(context); // inherit scope
-                    for (Operation op : m_operations)
-                    {
-                        nextContext.put(m_iteratorSymbol, i);
-                        op.execute(json, nextContext);
-                    }
+                    nextContext.put(m_iteratorSymbol, i);
+                    m_operations.execute(json, nextContext);
                 }
             }
             return null;
@@ -604,9 +622,7 @@ public class TransformScript
             data = JsonLd.frame(doc.getShortId(), data);
 
         HashMap<String, Object> context = new HashMap<>();
-
-        for (Operation op : m_operations)
-            op.execute(data, context);
+        m_rootStatement.execute(data, context);
         return mapper.writeValueAsString(data);
     }
 
@@ -617,9 +633,7 @@ public class TransformScript
             data = JsonLd.frame(doc.getShortId(), data);
 
         HashMap<String, Object> context = new HashMap<>();
-
-        for (Operation op : m_operations)
-            op.execute(data, context);
+        m_rootStatement.execute(data, context);
         return data;
     }
 }
