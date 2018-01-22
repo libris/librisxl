@@ -130,6 +130,28 @@ public class ScriptTest
         testScript(data, transformed, script);
     }
 
+    @Test
+    public void testLocalScope() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "let x = 2 " +
+                "{ " +
+                "   let x = 3 " +
+                "   set x -> result0 " +
+                "} " +
+                "set x -> result1 ";
+
+        String transformed = "" +
+                "{" +
+                "   \"result0\":3," +
+                "   \"result1\":2" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
     private void testScript(String beforeTransformText, String expectedResultText, String transformScript) throws Exception
     {
         Map oldData = mapper.readValue(beforeTransformText, Map.class);
