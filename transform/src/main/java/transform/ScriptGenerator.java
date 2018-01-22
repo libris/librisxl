@@ -135,7 +135,7 @@ public class ScriptGenerator
             resultingOperations.add(tabs + "{");
             tabs += indentation;
             if (i >= toAndFromShareFirstNLists)
-                resultingOperations.add(tabs + "let to" + i + " = it" + i + " + sizeof " + String.join(",", sourceList.subList(0, _listsAtInFromList.get(i))));
+                resultingOperations.add(tabs + "let to" + i + " = it" + i + " + sizeof * " + String.join(",", sourceList.subList(0, _listsAtInFromList.get(i))));
         }
 
         resultingOperations.add(tabs + "move " + String.join(",",sourceList) +

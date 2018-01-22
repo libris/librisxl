@@ -114,17 +114,25 @@ public class ScriptTest
                 "       {\"somekey\":\"somevalue\"}," +
                 "       {\"somekey\":\"somevalue\"}," +
                 "       {\"somekey\":\"somevalue\"}" +
-                "   ]" +
+                "   ]," +
+                "   \"somekey\":\"somevalue\"" +
                 "}";
 
         String script = "mode normal " +
-                "let x = sizeof somelist * 2 " +
+                "let x = sizeof * somelist * 2 " +
+                "set x -> result0 " +
+                "let y = sizeof sometext " +
+                "set y -> result1 " +
+                "let z = sizeof * somekey " +
+                "set z -> result2 " +
                 "delete somelist " +
-                "set x -> result ";
+                "delete somekey";
 
         String transformed = "" +
                 "{" +
-                "    \"result\":6" +
+                "   \"result0\":6," + // list length, somelist
+                "   \"result1\":8," + // string length "sometext"
+                "   \"result2\":9" + // string length "somevalue"
                 "}";
 
         testScript(data, transformed, script);
