@@ -27,6 +27,26 @@ public class ScriptTest
     }
 
     @Test
+    public void testComplexSet() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "let x = 3 " +
+                "set ( 3 * x ) + 2 -> result0 " +
+                "let y = hej " +
+                "set y + baberiba -> result1 ";
+
+        String transformed = "" +
+                "{" +
+                "   \"result0\":11," +
+                "   \"result1\":\"hejbaberiba\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
     public void testBasicLet() throws Exception
     {
         String data = "{}";
