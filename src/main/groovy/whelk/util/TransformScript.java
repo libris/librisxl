@@ -233,7 +233,14 @@ public class TransformScript
             return new DerefValueOperation(symbols.pollFirst());
         } else if (symbol.equals("sizeof"))
         {
-            return new SizeofValueOperation(symbols.pollFirst());
+            String derefSymbol = symbols.peekFirst();
+            boolean direct = true;
+            if (derefSymbol.equals("*"))
+            {
+                symbols.pollFirst(); // chew the deref-symbol
+                direct = false;
+            }
+            return new SizeofValueOperation(symbols.pollFirst(), direct);
         } else
         {
             return new LiteralValueOperation(symbol);
@@ -437,25 +444,34 @@ public class TransformScript
 
     private class SizeofValueOperation extends ValueOperation
     {
-        String m_path;
+        String m_operand;
+        boolean m_direct;
 
-        public SizeofValueOperation(String path)
+        public SizeofValueOperation(String operand, boolean direct)
         {
-            m_path = path;
+            m_operand = operand;
+            m_direct = direct;
         }
 
         public Object execute(Map json, Map<String, Object> context)
         {
-            List<Object> path = Arrays.asList( withIntAsInteger(m_path.split(",")) );
-            List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
+            Object operand;
+            if (!m_direct)
+            {
+                List<Object> path = Arrays.asList( withIntAsInteger(m_operand.split(",")) );
+                List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
+                operand = Document._get(pathWithSymbols, json);
+            } else
+            {
+                operand = m_operand;
+            }
 
-            Object atPath = Document._get(pathWithSymbols, json);
-            if (atPath instanceof List)
-                return ((List) atPath).size();
-            else if (atPath instanceof Map)
-                return ((Map) atPath).keySet().size();
-            else if (atPath instanceof String)
-                return ((String) atPath).length();
+            if (operand instanceof List)
+                return ((List) operand).size();
+            else if (operand instanceof Map)
+                return ((Map) operand).keySet().size();
+            else if (operand instanceof String)
+                return ((String) operand).length();
             return 0;
         }
     }
