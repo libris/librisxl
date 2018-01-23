@@ -78,15 +78,21 @@ public class ExecuteGui extends JFrame
                 "# If framed mode is used, data will be framed before the script is applied.\n" +
                 "# Framed or not, data is always returned to Libris-normal form after application of the script.\n" +
                 "#\n" +
-                "# MOVE [path1] -> [path2]\n" +
+                "# MOVE [path1] > [path2]\n" +
                 "# Moves a part of the data structure from path1 to path2 (creating path2 if necessary)\n" +
                 "# example:\n" +
-                "#   move @graph,0,created -> @graph,0,minted\n" +
+                "#   move @graph,0,created > @graph,0,minted\n" +
                 "#\n" +
-                "# SET [value] -> [path]\n" +
-                "# Set a literal value at a specific path (creating the path if necessary)\n" +
+                "# LET symbol = [value]\n" +
+                "# Assigns [value] to symbol. Symbols can be used as part of a path or instead of literal values.\n" +
                 "# example:\n" +
-                "#   set http://libris.kb.se/library/S -> @graph,1,heldBy,@id\n" +
+                "#   let x = (1 + 1) * 2 # x will have value 4\n" +
+                "#   let x = hej + \" baberiba\" # x will have value \"hej baberiba\"\n" +
+                "#\n" +
+                "# SET [value] > [path]\n" +
+                "# Set a value at a specific path (creating the path if necessary)\n" +
+                "# example:\n" +
+                "#   set http://libris.kb.se/library/S > @graph,1,heldBy,@id\n" +
                 "#\n" +
                 "# DELETE [path]\n" +
                 "# Deletes whatever is at path\n" +
@@ -99,7 +105,7 @@ public class ExecuteGui extends JFrame
                 "# the iterator invalidation problem in case of removals.\n" +
                 "# example:\n" +
                 "#   foreach it : @graph {\n" +
-                "#     set \"ok\" -> @graph,it,someKey\n" +
+                "#     set \"ok\" > @graph,it,someKey\n" +
                 "#   }\n" +
                 "\nmode normal\n", 35, 40, true);
         JComponent scriptArea = makeLeftAligned(new JScrollPane(m_scriptTextArea));

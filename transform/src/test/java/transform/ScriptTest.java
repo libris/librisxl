@@ -16,7 +16,7 @@ public class ScriptTest
         String data = "{}";
 
         String script = "mode normal " +
-                "set value0 -> key0";
+                "set value0 > key0";
 
         String transformed = "" +
                 "{" +
@@ -33,9 +33,9 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "let x = 3 " +
-                "set ( 3 * x ) + 2 -> result0 " +
+                "set ( 3 * x ) + 2 > result0 " +
                 "let y = hej " +
-                "set y + baberiba -> result1 ";
+                "set y + baberiba > result1 ";
 
         String transformed = "" +
                 "{" +
@@ -52,7 +52,7 @@ public class ScriptTest
         String data = "{}";
 
         String script = "mode normal " +
-                "set value0 -> key0 " +
+                "set value0 > key0 " +
                 "let x = 1";
 
         String transformed = "" +
@@ -70,8 +70,8 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "let var = * key0 " +
-                "set var -> key1 " +
-                "set literal -> key2 ";
+                "set var > key1 " +
+                "set literal > key2 ";
 
         String transformed = "" +
                 "{" +
@@ -90,7 +90,7 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "let var = ( * key0 ) " +
-                "set ( var ) -> key1 ";
+                "set ( var ) > key1 ";
 
         String transformed = "" +
                 "{" +
@@ -108,11 +108,11 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "let x = 1 + 1 " +
-                "set x -> key0 " +
+                "set x > key0 " +
                 "let y = 1 + 1 + 2 " +
-                "set y -> key1 " +
+                "set y > key1 " +
                 "let z = ( 1 + 1 ) * 3 " +
-                "set z -> key2 ";
+                "set z > key2 ";
 
         String transformed = "" +
                 "{" +
@@ -140,11 +140,11 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "let x = sizeof * somelist * 2 " +
-                "set x -> result0 " +
+                "set x > result0 " +
                 "let y = sizeof sometext " +
-                "set y -> result1 " +
+                "set y > result1 " +
                 "let z = sizeof * somekey " +
-                "set z -> result2 " +
+                "set z > result2 " +
                 "delete somelist " +
                 "delete somekey";
 
@@ -167,14 +167,48 @@ public class ScriptTest
                 "let x = 2 " +
                 "{ " +
                 "   let x = 3 " +
-                "   set x -> result0 " +
+                "   set x > result0 " +
                 "} " +
-                "set x -> result1 ";
+                "set x > result1 ";
 
         String transformed = "" +
                 "{" +
                 "   \"result0\":3," +
                 "   \"result1\":2" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testNonWhitespaceSeparatedOperators() throws Exception
+    {
+        String data = "" +
+                "{" +
+                "   \"somelist\":" +
+                "   [" +
+                "       {\"somekey\":\"somevalue\"}," +
+                "       {\"somekey\":\"somevalue\"}," +
+                "       {\"somekey\":\"somevalue\"}" +
+                "   ]," +
+                "   \"somekey\":\"somevalue\"" +
+                "}";
+
+        String script = "mode normal " +
+                "let x=(sizeof*somelist*2) " +
+                "set x>result0 " +
+                "let y=sizeof sometext " +
+                "set y>result1 " +
+                "let z=sizeof*somekey " +
+                "set z>result2 " +
+                "delete somelist " +
+                "delete somekey";
+
+        String transformed = "" +
+                "{" +
+                "   \"result0\":6," + // list length, somelist
+                "   \"result1\":8," + // string length "sometext"
+                "   \"result2\":9" + // string length "somevalue"
                 "}";
 
         testScript(data, transformed, script);

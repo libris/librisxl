@@ -4,7 +4,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class ScriptGenerator
@@ -139,7 +138,7 @@ public class ScriptGenerator
         }
 
         resultingOperations.add(tabs + "move " + String.join(",",sourceList) +
-                "\n" + tabs + "  -> " + String.join(",",targetList));
+                "\n" + tabs + "   > " + String.join(",",targetList));
 
         for (int i = 0; i < _listsAtInFromList.size(); ++i)
         {
