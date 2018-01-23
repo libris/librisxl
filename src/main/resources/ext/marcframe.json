@@ -14373,7 +14373,8 @@
       "TODO:linkedEntity": "?example-$i",
       "inherit": "bib",
       "addLink": "marc:hasCopyAndVersionIdentificationNote",
-      "resourceType": "marc:CopyAndVersionIdentificationNote"
+      "resourceType": "marc:CopyAndVersionIdentificationNote",
+      "$a": {"property": "marc:itemCondition"}
     },
     "563": {
       "TODO:linkedEntity": "?example-$i",
@@ -14383,7 +14384,7 @@
       "repeatable": true
     },
     "583": {
-      "addLink": "hasNote",
+      "addLink": "marc:hasActionNote",
       "resourceType": "marc:ActionNote",
       "TODO:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 1 post",
       "$a": {"property": "label"},
