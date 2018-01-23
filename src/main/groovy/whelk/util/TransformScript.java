@@ -1,6 +1,5 @@
 package whelk.util;
 
-import com.google.common.collect.Lists;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
 import whelk.JsonLd;
@@ -36,12 +35,12 @@ public class TransformScript
 
         boolean buildingQuotedSymbol = false;
         StringBuilder symbol = new StringBuilder();
-        int i = 0;
+        Integer i = 0;
         while (i < scriptText.length())
         {
             if (buildingQuotedSymbol)
             {
-                char c = scriptText.charAt(i++);
+                Character c = scriptText.charAt(i++);
                 while (c != '\"' && i < scriptText.length())
                 {
                     symbol.append(c);
@@ -63,6 +62,12 @@ public class TransformScript
                     buildingQuotedSymbol = true;
                     ++i;
                 }
+                else if (isSingleCharOperator(c))
+                {
+                    addToSymbolList(symbol, symbolList);
+                    symbolList.add(""+c);
+                    skipTillNonWhiteSpace(++i, scriptText);
+                }
                 else if (!Character.isWhitespace(c))
                 {
                     symbol.append(c);
@@ -70,15 +75,8 @@ public class TransformScript
                 }
                 else // whitespace
                 {
-                    if (symbol.length() > 0)
-                        symbolList.add(symbol.toString());
-                    symbol = new StringBuilder();
-                    while(Character.isWhitespace(c) && i < scriptText.length()) // end of symbol skip until next non-whitespace
-                    {
-                        ++i;
-                        if (i < scriptText.length())
-                            c = scriptText.charAt(i);
-                    }
+                    addToSymbolList(symbol, symbolList);
+                    skipTillNonWhiteSpace(++i, scriptText);
                 }
             }
         }
@@ -89,6 +87,40 @@ public class TransformScript
             throw new TransformSyntaxException("Mismatched quotes.");
 
         parseScript(symbolList);
+    }
+
+    private void addToSymbolList(StringBuilder currentSymbol, LinkedList<String> symbolList)
+    {
+        if (currentSymbol.length() > 0)
+            symbolList.add(currentSymbol.toString());
+        currentSymbol.setLength(0);
+    }
+
+    private void skipTillNonWhiteSpace(Integer i, String source)
+    {
+        while(i < source.length() && Character.isWhitespace(source.charAt(i))) // end of symbol skip until next non-whitespace
+        {
+            ++i;
+        }
+    }
+
+    private boolean isSingleCharOperator(char c)
+    {
+        switch (c)
+        {
+            case '=' : return true;
+            case '>' : return true;
+            case '(' : return true;
+            case ')' : return true;
+            case '{' : return true;
+            case '}' : return true;
+            case '+' : return true;
+            case '-' : return true;
+            case '*' : return true;
+            case '/' : return true;
+            default:
+            return false;
+        }
     }
 
     private void parseScript(LinkedList<String> symbols) throws TransformSyntaxException
@@ -160,13 +192,13 @@ public class TransformScript
     private MoveOperation parseMoveStatement(LinkedList<String> symbols) throws TransformSyntaxException
     {
         if (symbols.size() < 3)
-            throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '->' pathTo]");
+            throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '>' pathTo]");
 
         String from = symbols.pollFirst();
         String arrow = symbols.pollFirst();
         String to = symbols.pollFirst();
-        if (!arrow.equals("->") || !isValidPath(from) || !isValidPath(to))
-            throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '->' pathTo]");
+        if (!arrow.equals(">") || !isValidPath(from) || !isValidPath(to))
+            throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '>' pathTo]");
 
         return new MoveOperation(from, to);
     }
@@ -174,13 +206,13 @@ public class TransformScript
     private SetOperation parseSetStatement(LinkedList<String> symbols) throws TransformSyntaxException
     {
         if (symbols.size() < 3)
-            throw new TransformSyntaxException("'SET' must be followed by [value_statement '->' pathTo]");
+            throw new TransformSyntaxException("'SET' must be followed by [value_statement '>' pathTo]");
 
         ValueOperation valueOp = parseValueStatement(symbols);
         String arrow = symbols.pollFirst();
         String to = symbols.pollFirst();
-        if (!arrow.equals("->") || !isValidPath(to))
-            throw new TransformSyntaxException("'SET' must be followed by [value_statement '->' pathTo]");
+        if (!arrow.equals(">") || !isValidPath(to))
+            throw new TransformSyntaxException("'SET' must be followed by [value_statement '>' pathTo]");
 
         return new SetOperation(valueOp, to);
     }
