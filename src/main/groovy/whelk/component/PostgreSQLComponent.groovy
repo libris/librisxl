@@ -615,6 +615,7 @@ class PostgreSQLComponent {
             for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
                 updateMinMaxDepModified((String) depender.get(0), connection)
             }
+            updateMinMaxDepModified(doc.getShortId(), connection)
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
