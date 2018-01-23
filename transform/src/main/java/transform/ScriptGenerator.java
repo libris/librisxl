@@ -59,7 +59,7 @@ public class ScriptGenerator
         List<String> operations = generatePivotPointMoves(from, to);
         if (!operations.isEmpty())
         {
-            m_operations.add("# Resulting from observed grammar diff:\n#    " + fromPath + "\n# -> " + toPath);
+            m_operations.add("# Resulting from observed grammar diff:\n#    " + fromPath + "\n#  > " + toPath);
             m_operations.addAll(operations);
             m_operations.add(""); // empty line
         }
@@ -133,7 +133,7 @@ public class ScriptGenerator
             resultingOperations.add(tabs + "foreach it" + i + " : " + String.join(",", sourceList.subList(0, _listsAtInFromList.get(i))));
             resultingOperations.add(tabs + "{");
             tabs += indentation;
-            if (i >= toAndFromShareFirstNLists)
+            if (i >= toAndFromShareFirstNLists && i < targetPathLists)
                 resultingOperations.add(tabs + "let to" + i + " = it" + i + " + sizeof * " + String.join(",", sourceList.subList(0, _listsAtInFromList.get(i))));
         }
 
