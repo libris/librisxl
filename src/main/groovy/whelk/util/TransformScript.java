@@ -159,8 +159,8 @@ public class TransformScript
                 case "move":
                     operations.add( parseMoveStatement(symbols) );
                     break;
-                case "FOREACH":
-                case "foreach":
+                case "FOR":
+                case "for":
                     operations.add( parseForEachStatement(symbols) );
                     break;
                 case "SET":
