@@ -130,7 +130,7 @@ public class ScriptGenerator
         String tabs = "";
         for (int i = 0; i < _listsAtInFromList.size(); ++i)
         {
-            resultingOperations.add(tabs + "foreach it" + i + " : " + String.join(",", sourceList.subList(0, _listsAtInFromList.get(i))));
+            resultingOperations.add(tabs + "for it" + i + " : " + String.join(",", sourceList.subList(0, _listsAtInFromList.get(i))));
             resultingOperations.add(tabs + "{");
             tabs += indentation;
             if (i >= toAndFromShareFirstNLists && i < targetPathLists)

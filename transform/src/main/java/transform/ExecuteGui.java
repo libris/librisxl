@@ -99,14 +99,21 @@ public class ExecuteGui extends JFrame
                 "# example:\n" +
                 "#   delete @graph,0,modified\n" +
                 "#\n" +
-                "# FOREACH [iterator-symbol] : [path]\n" +
+                "# FOR [iterator-symbol] : [path]\n" +
                 "# Run the subsequent block of code, once for each member of the list at path, which\n" +
                 "# must point to a list. The elements are always traversed in descending order, to avoid\n" +
                 "# the iterator invalidation problem in case of removals.\n" +
                 "# example:\n" +
-                "#   foreach it : @graph {\n" +
+                "#   for it : @graph {\n" +
                 "#     set \"ok\" > @graph,it,someKey\n" +
                 "#   }\n" +
+                "#\n" +
+                "# sizeof [*] symbol\n" +
+                "# Returns the size of symbol, or the size of whatever symbol points to if the optional\n" +
+                "# ampersand '*' is used.\n" +
+                "# example:\n" +
+                "# let x = sizeof * @graph # Returns the number of elements in the @graph list.\n" +
+                "# let y = sizeof \"hej\" # Returns the number 3\n" +
                 "\nmode normal\n", 35, 40, true);
         JComponent scriptArea = makeLeftAligned(new JScrollPane(m_scriptTextArea));
         JComponent editPanel = makeLeftAligned(new JPanel());
