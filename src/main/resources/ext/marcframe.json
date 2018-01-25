@@ -8812,7 +8812,7 @@
               {"a": "Jansson, Tove"},
               {"t": "Anteckningar från en ö"}
             ]}},
-          "FIXME:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "relationship": [
@@ -14499,7 +14499,7 @@
       "$f": {"addProperty": "codedLocationQualifier"},
       "$g": {"addProperty": "nonCodedLocationQualifier"},
       "$h": {
-        "property": "shelfMark",
+        "link": "shelfMark", "resourceType": "ShelfMark", "property": "label",
         "NOTE": "libris deviates from standard classificationPart (libris use it for all kinds of shelfControlNumber?)"
       },
       "$i": {
@@ -14545,7 +14545,7 @@
         },
         {
           "source": [
-            {"852": {"ind1": " ", "ind2": " ", "subfields": [{"b": "X"}, {"t": "1"}]}},
+            {"852": {"ind1": " ", "ind2": " ", "subfields": [{"b": "X"}, {"h": "Z"}, {"t": "1"}]}},
             {"852": {"ind1": " ", "ind2": " ", "subfields": [{"b": "Y"}, {"t": "2"}]}}
           ],
           "result": {
@@ -14558,7 +14558,11 @@
                   "heldBy": {
                     "@id": "https://libris.kb.se/library/X", "@type": "Organization", "code": "X"},
                   "marc:shelvingOrder": " ",
-                  "marc:shelvingScheme": " "
+                  "marc:shelvingScheme": " ",
+                  "shelfMark": {
+                    "@type": "ShelfMark",
+                    "label": "Z"
+                  }
                 },
                 {
                   "@type": "Item",
