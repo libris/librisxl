@@ -50,6 +50,7 @@ public class VCopyToWhelkConverter {
         def controlNumber = getControlNumber(doc)
         Document whelkDocument = convertDocument(marcFrameConverter, doc, row.collection, getOaipmhSetSpecs(rows))
         whelkDocument.created = row.created
+        Document._urlDecodeURIs(whelkDocument.data)
 
         return [collection: row.collection, document: whelkDocument, isDeleted: row.isDeleted, timestamp: timestamp, controlNumber: controlNumber, checksum: whelkDocument.getChecksum()]
 

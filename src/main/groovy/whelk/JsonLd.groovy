@@ -465,7 +465,7 @@ public class JsonLd {
         Map flatCopy = mutate ? flatJsonLd : (Map) Document.deepCopy(flatJsonLd)
 
         if (mainId) {
-            mainId = Document.BASE_URI.resolve(mainId)
+            mainId = URLDecoder.decode(Document.BASE_URI.resolve(mainId).toString(), "utf-8")
         }
 
         def idMap = getIdMap(flatCopy)

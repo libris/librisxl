@@ -87,7 +87,7 @@ public class URIWrapper {
         }
     }
 
-    public String toString() { return getDecoded(m_internalUri.toString()) }
+    public String toString() { return getDecoded( URLDecoder.decode(m_internalUri.toString(), "utf-8")) }
     public String getPath() { return getDecoded(m_internalUri.getPath()) }
     public String getAuthority() { return getDecoded(m_internalUri.getAuthority()) }
     public String getFragment() { return getDecoded(m_internalUri.getFragment()) }
