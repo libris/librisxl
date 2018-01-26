@@ -5113,7 +5113,20 @@
                 {"p": "Specialundersökningar"},
                 {"h": "[Elektronisk resurs] ="},
                 {"b": "[General elections in 1998. Part 4, Special studies] /"},
-                {"c": "Statistiska ventralbyrån"}
+                {"c": "Statistiska centralbyrån"}
+              ]
+            }
+          },
+          "normalized": {
+            "245": {
+              "ind1": "1", "ind2": "0",
+              "subfields": [
+                {"a": "Allmänna valen 1998 ."},
+                {"n": "Del 4"},
+                {"p": "Specialundersökningar"},
+                {"h": "[Elektronisk resurs] ="},
+                {"b": "[General elections in 1998. Part 4, Special studies] /"},
+                {"c": "Statistiska centralbyrån"}
               ]
             }
           },
@@ -5133,7 +5146,7 @@
                 "marc:equalTitle": "[General elections in 1998. Part 4, Special studies]"
               }
             ],
-            "responsibilityStatement":  "Statistiska ventralbyrån",
+            "responsibilityStatement":  "Statistiska centralbyrån",
             "marc:mediaTerm" : "Elektronisk resurs] ="
           }}
         }
@@ -8812,7 +8825,7 @@
               {"a": "Jansson, Tove"},
               {"t": "Anteckningar från en ö"}
             ]}},
-          "FIXME:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "relationship": [
@@ -11754,32 +11767,38 @@
         {
           "when": "$b & $t & i1=2",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber"]
+          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "$b & $t & i1=1",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionJurisdiction", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber"]
+          "include": ["pendingContributionJurisdiction", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "$b & $t & i1=0",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber"]
+          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "$t & i1=2",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetailsSansPartNumber"]
+          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetailsSansPartNumber"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "$t & i1=1",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionJurisdiction", "agentdataOrganization", "titledetailsSansPartNumber"]
+          "include": ["pendingContributionJurisdiction", "agentdataOrganization", "titledetailsSansPartNumber"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "$t & i1=0",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetailsSansPartNumber"]
+          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetailsSansPartNumber"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
 
         {
@@ -11798,6 +11817,7 @@
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
           "aboutAlias": "_:agent",
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
           "i1": {"marcDefault": "2"}
         },
@@ -11812,6 +11832,7 @@
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
           "aboutAlias": "_:agent",
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11825,6 +11846,7 @@
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
           "aboutAlias": "_:agent",
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11838,6 +11860,7 @@
           },
           "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
           "i1": {"marcDefault": "2"}
         },
@@ -11852,6 +11875,7 @@
           },
           "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11865,6 +11889,7 @@
           },
           "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         },
         {
@@ -11878,10 +11903,10 @@
           },
           "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
-      "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
       "subfieldOrder": "a b n d c g e 4 t p l k f o v x y z",
       "_spec": [
         {
@@ -12019,13 +12044,13 @@
           "pendingResources": {"_:agent": {"link": "agent", "resourceType": "Meeting"}},
           "aboutAlias": "_:agent",
           "include": "agentdataMeeting",
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
           "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
         }
       ],
       "pendingResources": {
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
-      "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
       "i1": {"marcDefault": "2"},
       "subfieldOrder": "a q n d c g e j 4 t p l k f  v x y z",
       "_spec": [
@@ -12938,11 +12963,11 @@
         },
         {
           "when": null,
-          "include": ["exactMatchMeeting", "agentdataMeeting"]
+          "include": ["exactMatchMeeting", "agentdataMeeting"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         }
       ],
       "$h": {"ignored": true},
-      "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
@@ -13277,23 +13302,28 @@
         },
         {
           "when": "$b & i1=2",
-          "include": ["seeAlsoOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["seeAlsoOrganization", "agentdataOrganizationSubUnit"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "$b & i1=1",
-          "include": ["seeAlsoJurisdiction", "agentdataOrganizationSubUnit"]
+          "include": ["seeAlsoJurisdiction", "agentdataOrganizationSubUnit"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "$b & i1=0",
-          "include": ["seeAlsoOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["seeAlsoOrganization", "agentdataOrganizationSubUnit"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "i1=0 | i1=2",
-          "include": ["seeAlsoOrganization", "agentdataOrganization"]
+          "include": ["seeAlsoOrganization", "agentdataOrganization"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "i1=1",
-          "include": ["seeAlsoJurisdiction", "agentdataOrganization"]
+          "include": ["seeAlsoJurisdiction", "agentdataOrganization"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "$t",
@@ -13301,11 +13331,11 @@
         },
         {
           "when": null,
-          "include": ["seeAlsoOrganization", "agentdataOrganization"]
+          "include": ["seeAlsoOrganization", "agentdataOrganization"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         }
       ],
       "$h": {"ignored": true},
-      "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
       "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
       "subfieldOrder": "w i a b c d g  e 4 t m n p r s l k f o v x y z",
       "_spec": [
@@ -13383,11 +13413,11 @@
         },
         {
           "when": null,
-          "include": ["seeAlsoMeeting", "agentdataMeeting"]
+          "include": ["seeAlsoMeeting", "agentdataMeeting"],
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         }
       ],
       "$h": {"ignored": true},
-      "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
       "subfieldOrder": "w i a n d c e g j 4 t n s l k f v x y z",
       "_spec": [
         {
@@ -14499,7 +14529,7 @@
       "$f": {"addProperty": "codedLocationQualifier"},
       "$g": {"addProperty": "nonCodedLocationQualifier"},
       "$h": {
-        "property": "shelfMark",
+        "link": "shelfMark", "resourceType": "ShelfMark", "property": "label",
         "NOTE": "libris deviates from standard classificationPart (libris use it for all kinds of shelfControlNumber?)"
       },
       "$i": {
@@ -14545,7 +14575,7 @@
         },
         {
           "source": [
-            {"852": {"ind1": " ", "ind2": " ", "subfields": [{"b": "X"}, {"t": "1"}]}},
+            {"852": {"ind1": " ", "ind2": " ", "subfields": [{"b": "X"}, {"h": "Z"}, {"t": "1"}]}},
             {"852": {"ind1": " ", "ind2": " ", "subfields": [{"b": "Y"}, {"t": "2"}]}}
           ],
           "result": {
@@ -14558,7 +14588,11 @@
                   "heldBy": {
                     "@id": "https://libris.kb.se/library/X", "@type": "Organization", "code": "X"},
                   "marc:shelvingOrder": " ",
-                  "marc:shelvingScheme": " "
+                  "marc:shelvingScheme": " ",
+                  "shelfMark": {
+                    "@type": "ShelfMark",
+                    "label": "Z"
+                  }
                 },
                 {
                   "@type": "Item",
