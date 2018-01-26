@@ -5113,7 +5113,20 @@
                 {"p": "Specialundersökningar"},
                 {"h": "[Elektronisk resurs] ="},
                 {"b": "[General elections in 1998. Part 4, Special studies] /"},
-                {"c": "Statistiska ventralbyrån"}
+                {"c": "Statistiska centralbyrån"}
+              ]
+            }
+          },
+          "normalized": {
+            "245": {
+              "ind1": "1", "ind2": "0",
+              "subfields": [
+                {"a": "Allmänna valen 1998 ."},
+                {"n": "Del 4"},
+                {"p": "Specialundersökningar"},
+                {"h": "[Elektronisk resurs] ="},
+                {"b": "[General elections in 1998. Part 4, Special studies] /"},
+                {"c": "Statistiska centralbyrån"}
               ]
             }
           },
@@ -5133,7 +5146,7 @@
                 "marc:equalTitle": "[General elections in 1998. Part 4, Special studies]"
               }
             ],
-            "responsibilityStatement":  "Statistiska ventralbyrån",
+            "responsibilityStatement":  "Statistiska centralbyrån",
             "marc:mediaTerm" : "Elektronisk resurs] ="
           }}
         }
