@@ -6702,8 +6702,8 @@
 
     "507": {
       "$a": {"aboutEntity": "?thing", "property": "scale"},
-      "NOTE:$b": "concatenate with a, record-count: 0",
-      "$6": {"ignored": true, "NOTE:local": "scale property sits directly on thing, record-count: 0"}
+      "NOTE:$b": "BF2 concatenate with a, record-count: 0",
+      "NOTE:$6": {"ignored": true, "NOTE:local": "scale property sits directly on thing, record-count: 0"}
     },
 
     "508": {
