@@ -6606,7 +6606,7 @@
     },
     "504": {
       "aboutEntity": "?thing",
-      "addLink": "marc:hasBibliographyEtcNote",
+      "addLink": "hasNote",
       "resourceType": "marc:BibliographyEtcNote",
       "$a": {"property": "label"},
       "$b": {"property": "count"},
