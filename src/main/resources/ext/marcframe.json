@@ -6561,7 +6561,7 @@
     },
     "501": {
       "aboutEntity": "?thing",
-      "addLink": "marc:hasWithNote",
+      "addLink": "hasNote",
       "resourceType": "marc:WithNote",
       "$a": {"property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"}
