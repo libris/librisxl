@@ -6741,18 +6741,34 @@
       "$a": {"addProperty": "label"},
       "$6": {"property": "marc:fieldref"}
     },
-
     "513": {
-      "addLink": "marc:hasTypeOfReportAndPeriodCoveredNote",
+      "addLink": "hasNote",
       "resourceType": "marc:TypeOfReportAndPeriodCoveredNote",
       "aboutEntity": "?thing",
       "$a": {"property": "label"},
       "$b": {"property": "marc:periodCovered", "TODO": "Concatenate with $b"}
     },
+
     "514": {
       "NOTE:LC": "nac",
+      "NOTE:Local": "record-count: 0",
       "aboutEntity": "?thing",
-      "$a": {"property": "marc:dataQualityNote"}
+      "link": "marc:hasDataQualityNote",
+      "resourceType": "marc:DataQualityNote",
+      "$a": {"property": "marc:attributeAccuracyReport"},
+      "$b": {"addProperty": "marc:attributeAccuracyValue"},
+      "$c": {"addProperty": "marc:attributeAccuracyExplanation"},
+      "$d": {"addProperty": "marc:logicalConsistencyReport"},
+      "$e": {"property": "marc:completenessReport"},
+      "$f": {"property": "marc:horizontalPositionAccuracyReport"},
+      "$g": {"addProperty": "marc:horizontalPositionAccuracyValue"},
+      "$h": {"addProperty": "marc:horizontalPositionAccuracyExplanation"},
+      "$i": {"property": "marc:verticalPositionalAccuracyReport"},
+      "$j": {"addProperty": "marc:verticalPositionalAccuracyValue"},
+      "$k": {"addProperty": "marc:verticalPositionalAccuracyExplanation"},
+      "$m": {"property": "marc:cloudCover"},
+      "$u": {"addProperty": "marc:uniformResourceIdentifier"},
+      "$z": {"addProperty": "marc:displayNote"}
     },
     "515": {
       "aboutEntity": "?thing",
