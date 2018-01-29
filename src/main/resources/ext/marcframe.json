@@ -6538,18 +6538,21 @@
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
-      "repeatable": true,
-      "TODO:_spec": "Add repeated, more complex testcase",
       "_spec": [
         {
-          "source": {"500": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "Skolkartor"}
-          ]}},
+          "source": [
+            {"500": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Inbunden"}]}},
+            {"500": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Första svenska upplaga 1976 med annan illustratör. Första upplaga i denna version 2003"}]}}
+          ],
           "result": {"mainEntity": {
             "hasNote": [
               {
                 "@type": "Note",
-                "label": "Skolkartor"
+                "label": "Inbunden"
+              },
+              {
+                "@type": "Note",
+                "label": "Första svenska upplaga 1976 med annan illustratör. Första upplaga i denna version 2003"
               }
             ]
           }}
