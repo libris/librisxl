@@ -277,6 +277,13 @@
       "$s": {"about": "_:work", "property": "marc:version"}
     },
 
+    "i1-nonfiling": {
+      "i1": {"about": "_:title", "property": "marc:nonfilingChars", "marcDefault": "0"}
+    },
+    "i2-nonfiling": {
+      "i2": {"about": "_:title", "property": "marc:nonfilingChars", "marcDefault": "0"}
+    },
+
     "titledetailsSansPartNumber": {
       "include": ["workdetails"],
       "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
@@ -4759,7 +4766,7 @@
     "130": {
       "aboutEntity": "?work",
       "link": "expressionOf",
-      "include": ["titledetails"],
+      "include": ["titledetails", "i1-nonfiling"],
       "resourceType": "Work",
       "aboutAlias": "_:work",
       "pendingResources": {
@@ -4768,7 +4775,6 @@
           "embedded": true
         }
       },
-      "i1": {"about": "_:title", "property": "marc:nonfilingChars"},
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"property": "legalDate"},
       "$0": {"addLink": "identifiedBy", "property": "value"},
@@ -4790,8 +4796,7 @@
                 "@type": "Work",
                 "hasTitle" : [ {
                   "@type" : "Title",
-                  "mainTitle" : "Treaty of the Non-proliferation of Nuclear Weapons",
-                  "marc:nonfilingChars" : "0"
+                  "mainTitle" : "Treaty of the Non-proliferation of Nuclear Weapons"
                 } ],
                 "language": {"@type": "Language", "label": "Spanish."},
                 "legalDate": "(1968).",
@@ -4874,9 +4879,10 @@
       "addLink": "hasTitle",
       "embedded": true,
       "resourceType": "KeyTitle",
+      "aboutAlias": "_:title",
+      "include": ["i2-nonfiling"],
       "$a": {"property": "mainTitle"},
       "$b": {"property": "qualifier"},
-      "i2": {"property": "marc:nonfilingChars"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
@@ -4891,8 +4897,7 @@
               "hasTitle": [{
                 "@type": "KeyTitle",
                 "mainTitle": "Plant prot. bull.",
-                "qualifier": "(Faridabad)",
-                "marc:nonfilingChars" : "0"
+                "qualifier": "(Faridabad)"
               }]
             }
           }}
@@ -4903,8 +4908,7 @@
     "240": {
       "aboutEntity": "?work",
       "aboutAlias": "_:work",
-      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
-      "include": ["titledetails", "titlesearchelem"],
+      "include": ["titledetails", "titlesearchelem", "i2-nonfiling"],
       "pendingResources": {
         "_:title": {
           "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
@@ -4944,7 +4948,7 @@
     },
 
     "242": {
-      "include": ["structuredtitle", "titlesearchelem"],
+      "include": ["structuredtitle", "titlesearchelem", "i2-nonfiling"],
       "aboutEntity": "?thing",
       "addLink": "marc:hasTranslatedTitle",
       "resourceType": "Title",
@@ -4953,7 +4957,6 @@
       "$c": {"property": "responsibilityStatement"},
       "$h": {"property": "marc:mediaTerm"},
       "$y": {"link": "language", "resourceType": "Language", "property": "code"},
-      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
       "TODO": "Translation of? merge into 245?",
       "_spec": [
         {
@@ -4968,8 +4971,7 @@
               "@type": "Title",
               "mainTitle": "New regulation on public order",
               "titleRemainder": "an addendum to the instruction of the ward chairmen.",
-              "language": {"@type": "Language", "code": "eng"},
-              "marc:nonfilingChars" : "0"
+              "language": {"@type": "Language", "code": "eng"}
             }]
           }}
         },
@@ -4990,8 +4992,7 @@
                 "partName" : "Organic chemistry and biochemistry.",
                 "partNumber" : "Series C,."
               }],
-              "language": {"@type": "Language", "code": "eng"},
-              "marc:nonfilingChars" : "0"
+              "language": {"@type": "Language", "code": "eng"}
             }]
           }}
         }
@@ -5001,7 +5002,7 @@
     "243": {
       "aboutEntity": "?work",
       "aboutAlias": "_:work",
-      "include": ["titledetails", "titlesearchelem"],
+      "include": ["titledetails", "titlesearchelem", "i2-nonfiling"],
       "pendingResources": {
         "_:title": {
           "addLink": "hasTitle",
@@ -5012,7 +5013,6 @@
       },
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"property": "legalDate"},
-      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
       "_spec": [
         {
           "source": {
@@ -5026,8 +5026,7 @@
               "hasTitle": [ {
                 "@type": "CollectiveTitle",
                 "mainTitle": "Philosophical works",
-                "marc:formSubheading": ["Selsections"],
-                "marc:nonfilingChars": "0"
+                "marc:formSubheading": ["Selsections"]
               } ]
             }
           }}
@@ -5044,8 +5043,7 @@
               "@type": "Text",
               "hasTitle": [ {
                 "@type": "CollectiveTitle",
-                "mainTitle": "Correspondence",
-                "marc:nonfilingChars": "0"
+                "mainTitle": "Correspondence"
               } ],
               "language": {"@type": "Language", "label": "English"},
               "marc:version": "Selections"
@@ -5056,7 +5054,7 @@
     },
 
     "245": {
-      "include": ["structuredtitle", "titlesearchelem"],
+      "include": ["structuredtitle", "titlesearchelem", "i2-nonfiling"],
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
       "resourceType": "Title",
@@ -5074,7 +5072,6 @@
       "$s": {"property": "version"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
-      "i2": {"property": "marc:nonfilingChars"},
       "_spec": [
         {
           "source": {
@@ -5083,8 +5080,7 @@
           ]}},
           "result": {"mainEntity": {
             "hasTitle": [ {"@type": "Title",
-              "mainTitle":  "Anteckningar från en ö",
-              "marc:nonfilingChars": "0"
+              "mainTitle":  "Anteckningar från en ö"
             } ]
           }}
         },
@@ -5097,8 +5093,7 @@
           "result": {"mainEntity": {
             "hasTitle": [ {"@type": "Title",
               "mainTitle":  "Anteckningar från en ö",
-              "marc:searchElement": false,
-              "marc:nonfilingChars": "0"
+              "marc:searchElement": false
             } ],
             "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
           }}
@@ -5134,7 +5129,6 @@
             "hasTitle": [ 
               {
                 "@type": "Title",
-                "marc:nonfilingChars": "0",
                 "mainTitle": "Allmänna valen 1998",
                 "hasPart": [
                   {
@@ -6262,10 +6256,10 @@
     "411": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
 
     "440": {
-      "ignoreOnRevertInFavourOf": "830",
+      "ignoreOnRevertInFavourOf": "490 + 830",
       "addLink": "hasSeries",
       "resourceType": "Instance",
-      "include": "titledetails",
+      "include": ["titledetails", "i2-nonfiling"],
       "pendingResources": {
         "_:work": {
           "link": "instanceOf",
@@ -6276,11 +6270,10 @@
           "embedded": true
         }
       },
-      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$v": {"property": "seriesEnumeration"},
       "$w": {"property": "marc:bibliographicRecordControlNumber"},
-      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -6307,11 +6300,11 @@
                     "@type": "Title",
                     "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar",
                     "marc:nonfilingChars" : " "
-                  }],
-                  "identifiedBy": {
-                    "@type": "ISSN",
-                    "value": "0023-5377"
-                  }
+                  }]
+                },
+                "identifiedBy": {
+                  "@type": "ISSN",
+                  "value": "0023-5377"
                 },
                 "seriesEnumeration": "N.F. 13:7"
               }
@@ -6346,11 +6339,11 @@
                     "mainTitle": "Corpus christianorum",
                     "partName": ["Series Latina,"],
                     "marc:nonfilingChars" : " "
-                  }],
-                  "identifiedBy": {
-                    "@type": "ISSN",
-                    "value": "0589-798X"
-                  }
+                  }]
+                },
+                "identifiedBy": {
+                  "@type": "ISSN",
+                  "value": "0589-798X"
                 },
                 "seriesEnumeration": "156 B",
                 "marc:filingOfSeriesenumeration" : [ "156", "B" ]
@@ -6386,11 +6379,11 @@
                     "mainTitle": "Lunds universitets årsskrift",
                     "partName": ["Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"],
                     "marc:nonfilingChars" : " "
-                  }],
-                  "identifiedBy": {
-                    "@type": "ISSN",
-                    "value": "0368-8151"
-                  }
+                  }]
+                },
+                "identifiedBy": {
+                  "@type": "ISSN",
+                  "value": "0368-8151"
                 },
                 "seriesEnumeration": "9:15",
                 "marc:filingOfSeriesenumeration" : [ "9", "15" ]
@@ -6415,13 +6408,12 @@
                   "@type": "Work",
                   "hasTitle": [{
                     "@type": "Title",
-                    "mainTitle": "Sveriges officiella statistik",
-                    "marc:nonfilingChars" : "0"
-                  }],
-                  "identifiedBy": {
-                    "@type": "ISSN",
-                    "value": "99-0111480-2"
-                  }
+                    "mainTitle": "Sveriges officiella statistik"
+                  }]
+                },
+                "identifiedBy": {
+                  "@type": "ISSN",
+                  "value": "99-0111480-2"
                 }
               }
             ]
@@ -6449,13 +6441,12 @@
                   "hasTitle": [{
                     "@type": "Title",
                     "mainTitle": "Stockholms stads statistik",
-                    "partName" : ["3, Hälso- och sjukvård,"],
-                    "marc:nonfilingChars" : "0"
-                  }],
-                  "identifiedBy": {
-                    "@type": "ISSN",
-                    "value": "99-2058355-3"
-                  }
+                    "partName" : ["3, Hälso- och sjukvård,"]
+                  }]
+                },
+                "identifiedBy": {
+                  "@type": "ISSN",
+                  "value": "99-2058355-3"
                 },
                 "seriesEnumeration": "2"
               }
@@ -6481,13 +6472,12 @@
                   "@type": "Work",
                   "hasTitle": [{
                     "@type": "Title",
-                    "mainTitle": "Kungl. Skogs- och Lantbruksakademiens tidskrift",
-                    "marc:nonfilingChars" : "0"
-                  }],
-                  "identifiedBy": {
-                    "@type": "ISSN",
-                    "value": "0023-5350"
-                  }
+                    "mainTitle": "Kungl. Skogs- och Lantbruksakademiens tidskrift"
+                  }]
+                },
+                "identifiedBy": {
+                  "@type": "ISSN",
+                  "value": "0023-5350"
                 },
                 "seriesEnumeration": "nr 7 (2005) årg. 144"
               }
@@ -6497,9 +6487,8 @@
       ]
     },
     "490": {
-      "TOOO:i1": {"when: 8xx[$t] | 830": "1", "else": "0"},
       "TODO:allowSpillOverOnRevert": "800-830",
-      "i1": {"property": "marc:seriesTracingPolicy"},
+      "i1": {"property": "marc:seriesTracingPolicy", "TODO:marcDefault": 0, "TOOO": {"when: 8xx[$t] | 830": "1", "else": "0"}},
       "i2": null,
       "addLink": "hasSeries",
       "resourceType": "Serial",
@@ -9843,8 +9832,7 @@
 
     "730": {
       "aboutEntity": "?work",
-      "include": "titledetails",
-      "i1": {"about": "_:title", "property": "marc:nonfilingChars", "marcDefault": "0"},
+      "include": ["titledetails", "i1-nonfiling"],
       "match": [
         {
           "when": "i2=2",
@@ -9888,8 +9876,7 @@
                     "@type": "Work",
                     "hasTitle": [ {
                       "@type": "Title",
-                      "mainTitle": "Abyss (Motion picture : 1989)",
-                      "marc:nonfilingChars" : "0"
+                      "mainTitle": "Abyss (Motion picture : 1989)"
                     } ]
                   },
                   "relation": [{"@type": "Relation", "label": "Novelization of (work)"}]
@@ -9913,8 +9900,7 @@
                     "@type": "Work",
                     "hasTitle": [ {
                       "@type": "Title",
-                      "mainTitle": "Macaroons and biscuits.",
-                      "marc:nonfilingChars" : "0"
+                      "mainTitle": "Macaroons and biscuits."
                     } ],
                     "language": {"@type": "Language", "label": "Svenska."}
                   }
@@ -9964,8 +9950,7 @@
     "740": {
       "TODO:inherit?": "730",
       "aboutEntity": "?thing",
-      "include": "titledetails",
-      "i1": {"about": "_:title", "property": "marc:nonfilingChars", "marcDefault": "0"},
+      "include": ["titledetails", "i1-nonfiling"],
       "match": [
         {
           "when": "i2=2",
@@ -10006,8 +9991,7 @@
                   "@type": "Title",
                   "mainTitle": "Economics library selections",
                   "partName": ["New books in economics"],
-                  "partNumber": ["Series 1"],
-                  "marc:nonfilingChars" : "0"
+                  "partNumber": ["Series 1"]
                 } ]
               }
             ]
@@ -10806,7 +10790,7 @@
     "830": {
       "addLink": "hasSeries",
       "resourceType": "Instance",
-      "include": "titledetails",
+      "include": ["titledetails", "i2-nonfiling"],
       "pendingResources": {
         "_:work": {
           "link": "instanceOf",
@@ -10817,7 +10801,6 @@
           "embedded": true
         }
       },
-      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$d": {"addProperty": "legalDate"},
       "$v": {"property": "seriesEnumeration"},
@@ -10844,8 +10827,7 @@
                   "hasTitle": [{
                     "@type": "Title",
                     "mainTitle": "Europarecht (Munich, germany)",
-                    "partName": ["Beiheft"],
-                    "marc:nonfilingChars": "0"
+                    "partName": ["Beiheft"]
                   }]
                 },
                 "seriesEnumeration": "2002/1"
@@ -10875,8 +10857,7 @@
                   "hasTitle": [{
                     "@type": "Title",
                     "mainTitle": "Archiv für Papyrusforschung und verwandte Gebiete",
-                    "partName": ["Ergänzungsband.", "Kleine Reihe ;"],
-                    "marc:nonfilingChars": "0"
+                    "partName": ["Ergänzungsband.", "Kleine Reihe ;"]
                   }]
                 },
                 "seriesEnumeration": "5."
@@ -13511,7 +13492,7 @@
     "530": {
       "aboutEntity": "?thing",
       "link": "relatedTo",
-      "include": ["titledetails"],
+      "include": ["titledetails", "i2-nonfiling"],
       "resourceType": "Work",
       "aboutAlias": "_:work",
       "pendingResources": {
@@ -13520,7 +13501,6 @@
           "embedded": true
         }
       },
-      "i2": {"about": "_:title", "property": "marc:nonfilingChars"},
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"property": "legalDate"},
       "$g": {"addProperty": "marc:miscellaneousInformation"},
@@ -13551,8 +13531,7 @@
                 "@type": "Work",
                 "hasTitle": [{
                   "@type": "Title",
-                  "mainTitle": "Vedas",
-                  "marc:nonfilingChars": "0"
+                  "mainTitle": "Vedas"
                 }],
                 "marc:controlSubfield": "g",
                 "marc:generalSubdivision": ["Criticism, interpretation, etc."]
@@ -14586,9 +14565,7 @@
               "copyNumber": "1",
               "heldBy": {"@id": "https://libris.kb.se/library/H", "@type": "Organization", "code": "H"},
               "shelfControlNumber": "65.465",
-              "physicalLocation": ["MAG"],
-              "marc:shelvingOrder": " ",
-              "marc:shelvingScheme": " "
+              "physicalLocation": ["MAG"]
             }
           }
         },
@@ -14606,8 +14583,6 @@
                   "copyNumber": "1",
                   "heldBy": {
                     "@id": "https://libris.kb.se/library/X", "@type": "Organization", "code": "X"},
-                  "marc:shelvingOrder": " ",
-                  "marc:shelvingScheme": " ",
                   "shelfMark": {
                     "@type": "ShelfMark",
                     "label": "Z"
@@ -14616,9 +14591,7 @@
                 {
                   "@type": "Item",
                   "copyNumber": "2",
-                  "heldBy": {"@id": "https://libris.kb.se/library/Y", "@type": "Organization", "code": "Y"},
-                  "marc:shelvingOrder": " ",
-                  "marc:shelvingScheme": " "
+                  "heldBy": {"@id": "https://libris.kb.se/library/Y", "@type": "Organization", "code": "Y"}
                 }
               ]
             }

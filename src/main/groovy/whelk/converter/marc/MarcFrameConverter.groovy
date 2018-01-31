@@ -2226,12 +2226,14 @@ class MarcSubFieldHandler extends ConversionPart {
             }
         }
         if (!didSplit && property) {
-            if (overwrite) {
-                ent[property] = subVal
-            } else {
-                fieldHandler.addValue(ent, property, subVal, repeatProperty)
+            if (marcDefault == null || subVal != marcDefault) {
+                if (overwrite) {
+                    ent[property] = subVal
+                } else {
+                    fieldHandler.addValue(ent, property, subVal, repeatProperty)
+                }
+                fieldHandler.addValue(uriTemplateParams, uriTemplateKeyBase + property, subVal, true)
             }
-            fieldHandler.addValue(uriTemplateParams, uriTemplateKeyBase + property, subVal, true)
             ok = true
         }
 
