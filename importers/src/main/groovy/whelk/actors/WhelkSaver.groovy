@@ -69,7 +69,7 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
                             if (conflictingDocument == null)
                                 whelk.createDocument(doc, sourceSystem, null, record.collection as String, false)
                             else
-                                whelk.storeAtomicUpdate(doc.getShortId(), false, sourceSystem, null, record.collection as String, false, {
+                                whelk.storeAtomicUpdate(doc.getShortId(), false, sourceSystem, null, {
                                     Document _doc ->
                                         _doc.data = doc.data
                                 })
