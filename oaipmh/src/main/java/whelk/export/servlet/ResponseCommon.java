@@ -246,6 +246,7 @@ public class ResponseCommon
 
             writer.writeStartElement("holding");
             writer.writeAttribute("sigel", sigel);
+            writer.writeAttribute("id", holding.getShortId());
             ResponseCommon.writeConvertedDocument(writer, requestedFormat, holding);
             writer.writeEndElement(); // holding
         }
