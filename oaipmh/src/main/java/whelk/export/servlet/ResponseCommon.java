@@ -213,7 +213,7 @@ public class ResponseCommon
 
         if (!onlyIdentifiers && requestedFormat.contains(OaiPmh.FORMAT_INCLUDE_HOLD_POSTFIX) && dataset.equals("bib"))
         {
-            emitAttachedHoldings(document.getThingIdentifiers(), writer);
+            emitAttachedHoldings(document.getThingIdentifiers(), writer, requestedFormat);
         }
 
         String itemOf = resultSet.getString("itemOf");
@@ -230,7 +230,7 @@ public class ResponseCommon
             writer.writeEndElement(); // record
     }
 
-    private static void emitAttachedHoldings(List<String> itIds, XMLStreamWriter writer)
+    private static void emitAttachedHoldings(List<String> itIds, XMLStreamWriter writer, String requestedFormat)
             throws SQLException, XMLStreamException, IOException
     {
         List<Document> holdings = OaiPmh.s_postgreSqlComponent.getAttachedHoldings(itIds);
@@ -246,7 +246,7 @@ public class ResponseCommon
 
             writer.writeStartElement("holding");
             writer.writeAttribute("sigel", sigel);
-            writer.writeAttribute("id", holding.getShortId());
+            ResponseCommon.writeConvertedDocument(writer, requestedFormat, holding);
             writer.writeEndElement(); // holding
         }
         writer.writeEndElement(); // about

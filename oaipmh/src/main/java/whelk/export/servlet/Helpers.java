@@ -115,8 +115,6 @@ public class Helpers
         preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
         preparedStatement.setString(parameterIndex++, LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset()));
 
-        System.out.println(preparedStatement);
-
         return preparedStatement;
     }
 
