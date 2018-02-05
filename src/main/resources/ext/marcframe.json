@@ -6697,7 +6697,7 @@
 
     "508": {
       "aboutEntity": "?work", 
-      "addLink": "marc:hasCreationProductionCreditsNote",
+      "addLink": "hasNote",
       "resourceType": "marc:CreationProductionCreditsNote",
       "$a": {"addProperty": "label"},
       "$6": {"property": "marc:fieldref"}
@@ -6722,7 +6722,7 @@
 
     "511": {
       "aboutEntity": "?work",
-      "addLink": "marc:hasParticipantOrPerformerNote",
+      "addLink": "hasNote",
       "resourceType": "marc:ParticipantOrPerformerNote",
       "i1": {
         "marcDefault": "0"
@@ -6761,17 +6761,20 @@
     },
     "515": {
       "aboutEntity": "?thing",
-      "addLink": "marc:hasNumberingPeculiaritiesNote",
+      "addLink": "hasNote",
       "resourceType": "marc:NumberingPeculiaritiesNote",
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
     "516": {
       "aboutEntity": "?thing",
-      "addLink": "marc:hasTypeOfComputerFileOrDataNote",
+      "addLink": "hasNote",
       "resourceType": "marc:TypeOfComputerFileOrDataNote",
-      "$a": {"property": "label"},
-      "NOTE:i1": "ignore"
+      "i1": {
+        "NOTE:LC": "nac",
+        "marcDefault": " "
+      },
+      "$a": {"property": "label"}
     },
     "518": {
       "aboutEntity": "?work",
@@ -7137,19 +7140,20 @@
     },
     "547": {
       "aboutEntity": "?thing",
-      "addLink": "marc:hasFormerTitleComplexityNote",
+      "addLink": "hasNote",
       "resourceType": "marc:FormerTitleComplexityNote",
-      "$a": {"property": "label"}
+      "$a": {"property": "label"},
+      "NOTE:$6": {"property": "marc:fieldref", "NOTE:record-count": 0}
     },
 
     "550": {
       "aboutEntity": "?thing",
-      "addLink": "marc:hasIssuingBodyNote",
+      "addLink": "hasNote",
       "resourceType": "marc:IssuingBodyNote",
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
-    "552": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "nac"},
+    "552": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "555": {
       "aboutEntity": "?thing",
       "addLink": "marc:hasCumulativeIndexFindingAidsNote",
