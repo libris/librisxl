@@ -7,6 +7,7 @@ import whelk.util.LegacyIntegrationTools
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
+import java.time.OffsetDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 
 import static groovy.transform.TypeCheckingMode.SKIP
@@ -1323,7 +1324,7 @@ class PostgreSQLComponent {
         return doc
     }
 
-    Tuple2<String, String> getMinMaxModified(List<String> ids) {
+    Tuple2<Timestamp, Timestamp> getMinMaxModified(List<String> ids) {
         Connection connection
         PreparedStatement preparedStatement
         ResultSet rs
@@ -1336,8 +1337,8 @@ class PostgreSQLComponent {
             }
             rs = preparedStatement.executeQuery()
             if (rs.next()) {
-                String min = rs.getString(1)
-                String max = rs.getString(2)
+                Timestamp min = (Timestamp) rs.getObject(1)
+                Timestamp max = (Timestamp) rs.getObject(2)
                 return new Tuple2(min, max)
             }
             else
