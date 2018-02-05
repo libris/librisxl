@@ -13,6 +13,12 @@ import whelk.util.ThreadPool
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.sql.Timestamp
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * Created by theodortolstoy on 2017-01-24.
@@ -87,18 +93,28 @@ class FileDumper implements MySQLLoader.LoadHandler {
                 if (recordMap != null) {
                     List<String[]> externalDependencies = postgreSQLComponent.calculateDependenciesSystemIDs(recordMap.document)
                     recordMap["dependencies"] = externalDependencies
-                    recordMap.document.setModified(new Date())
+                    Date now = new Date()
+                    recordMap.document.setModified(now)
                     boolean cacheAuthForever = true
                     converterPool[threadIndex].linkFinder.normalizeIdentifiers(recordMap.document, cacheAuthForever)
                     if (externalDependencies.size() > 0) {
-                        List<String> dependencyIDsIncludingThis = []
+                        List<String> dependencyIDs = []
                         for (String[] reference : externalDependencies) {
-                            dependencyIDsIncludingThis.add(reference[1])
+                            dependencyIDs.add(reference[1])
                         }
-                        dependencyIDsIncludingThis.add( recordMap.document.getShortId() )
-                        String[] depMinMaxModified = postgreSQLComponent.getMinMaxModified(dependencyIDsIncludingThis)
-                        recordMap["depMinModified"] = depMinMaxModified[0]
-                        recordMap["depMaxModified"] = depMinMaxModified[1]
+                        Tuple2<Timestamp, Timestamp> depMinMaxModified = postgreSQLComponent.getMinMaxModified(dependencyIDs)
+
+                        Instant min = ((Timestamp) depMinMaxModified.get(0)).toInstant()
+                        Instant max = ((Timestamp) depMinMaxModified.get(1)).toInstant()
+                        Instant nowInstant = now.toInstant()
+
+                        if (nowInstant.isBefore(min))
+                            min = nowInstant
+                        if (nowInstant.isAfter(max))
+                            max = nowInstant
+
+                        recordMap["depMinModified"] = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( ZonedDateTime.ofInstant(min, ZoneId.systemDefault()) )
+                        recordMap["depMaxModified"] = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( ZonedDateTime.ofInstant(max, ZoneId.systemDefault()) )
                     }
                     else
                         recordMap["depMinModified"] = recordMap["depMaxModified"] = recordMap.document.getModified()
