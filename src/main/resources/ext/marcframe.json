@@ -6861,7 +6861,7 @@
     },
 
     "521": {
-      "aboutEntity": "?work",
+      "aboutEntity": "?thing",
       "embedded": true,
       "addLink": "intendedAudience",
       "resourceType": "IntendedAudience",
@@ -6880,6 +6880,7 @@
       },
       "$a": {"property": "label"},
       "$b": {"link": "source", "resourceType": "Source","property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
     "522": {
