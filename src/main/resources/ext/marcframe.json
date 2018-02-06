@@ -6706,7 +6706,7 @@
     "510": {
       "addLink": "citedBy",
       "resourceType": "Instance",
-      "TOOO:i1": {
+      "TODO:i1": {
         "link": null,
         "tokenMap": {
           "0": "coverageUnknown",
@@ -6717,7 +6717,11 @@
         }
       },
       "$a": {"property": "title"},
-      "$c": {"property": "pagination"},
+      "$b": {"property": "marc:coverageOfSource"},
+      "$c": {"property": "marc:locationWithinSource"},
+      "$u": {"addProperty": "uri"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$8": {"property": "marc:groupid"}
     },
 
