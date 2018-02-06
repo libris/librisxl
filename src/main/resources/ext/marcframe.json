@@ -6957,7 +6957,7 @@
     },
     "534": {
       "addLink": "hasNote",
-      "resourceType": "Note",
+      "resourceType": "marc:OriginalVersionNote",
       "$a": {"property": "marc:mainEntryOfOriginal"},
       "$b": {"property": "marc:editionStatementOfOriginal"},
       "$c": {"property": "marc:publicationDistributionEtcOfOriginal"},
@@ -6972,9 +6972,9 @@
       "$t": {"property": "marc:titleStatementOfOriginal"},
       "$x": {"addProperty": "marc:internationalStandardSerialNumber"},
       "$z": {"addProperty": "marc:internationalStandardBookNumber"},
-      "TODO:$3": "?",
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
-      "TODO:$8": "?"
+      "NOTE:$8": {"property": "marc:groupid", "record-count": 0}
     },
     "535": {
       "addLink": "marc:hasLocationOfOriginalsDuplicatesNote",
