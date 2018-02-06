@@ -15,6 +15,15 @@ class JsonLdSpec extends Specification {
 
     static final ObjectMapper mapper = new ObjectMapper()
 
+    static final Map VOCAB_DATA = [
+        "@graph": [
+            ["@id": "http://example.org/ns/ProvisionActivity",
+             "subClassOf": [ ["@id": "http://example.org/ns/Event"] ]],
+            ["@id": "http://example.org/ns/Publication",
+             "subClassOf": ["@id": "http://example.org/ns/ProvisionActivity"]]
+        ]
+    ]
+
     def "should get id map"() {
         expect:
         JsonLd.getIdMap(['@graph': items]).keySet() == ids as Set
@@ -326,15 +335,6 @@ class JsonLdSpec extends Specification {
                                                                     "instanceOf"]]]]]]
 
 
-        Map vocabData = [
-            "@graph": [
-                    ["@id": "http://example.org/ns/ProvisionActivity",
-                     "subClassOf": [ ["@id": "http://example.org/ns/Event"] ]],
-                    ["@id": "http://example.org/ns/Publication",
-                     "subClassOf": ["@id": "http://example.org/ns/ProvisionActivity"]]
-                ]
-            ]
-
         Map expected = ["@type": "Instance",
                       "mediaType": "foobar",
                       "instanceOf": ["@type": "Work",
@@ -348,7 +348,7 @@ class JsonLdSpec extends Specification {
 
 
         expect:
-        Map output = new JsonLd(displayData, vocabData).toCard(input)
+        Map output = new JsonLd(displayData, VOCAB_DATA).toCard(input)
         output == expected
     }
 
@@ -367,6 +367,17 @@ class JsonLdSpec extends Specification {
         expect:
         def props = ld.displayData.lensGroups.chips.lenses.Thing.showProperties
         props == ['notation', 'label', 'labelByLang', 'note']
+    }
+
+    def "use vocab to match a subclass to a base class"() {
+        given:
+        Map displayData = [
+            "@context": ["@vocab": "http://example.org/ns/"]
+        ]
+        def ld = new JsonLd(displayData, VOCAB_DATA)
+        expect:
+        ld.isSubClassOf('Publication', 'ProvisionActivity')
+        !ld.isSubClassOf('Work', 'ProvisionActivity')
     }
 
 }

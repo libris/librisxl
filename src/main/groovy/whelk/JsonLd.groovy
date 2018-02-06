@@ -54,14 +54,20 @@ public class JsonLd {
 
     Map displayData
     Map vocabIndex
-    Map superClassOf
+    private Map superClassOf
+    private Map<String, Set> subClassesByType
     private String vocabId
+
     Set forcedSetTerms
 
     /**
      * Make an instance to incapsulate model driven behaviour.
      */
     JsonLd(Map displayData, Map vocabData) {
+        setSupportData(displayData, vocabData)
+    }
+
+    void setSupportData(Map displayData, Map vocabData) {
         this.displayData = displayData ?: Collections.emptyMap()
         Map context = displayData?.get(CONTEXT_KEY)
         vocabId = context?.get(VOCAB_KEY)
@@ -71,6 +77,8 @@ public class JsonLd {
                 [toTermKey(it[JsonLd.ID_KEY]), it]
             }
             : Collections.emptyMap()
+
+        subClassesByType = new HashMap<String, Set>()
 
         generateSubClassesLists()
 
@@ -786,7 +794,24 @@ public class JsonLd {
         }
     }
 
-    public void getSubClasses(String type, List<String> result) {
+    public boolean isSubClassOf(String type, String baseType) {
+        if (type == baseType)
+            return true
+        Set<String> bases = getSubClasses(baseType)
+        return type in bases
+    }
+
+    public Set<String> getSubClasses(String type) {
+        Set<String> subClasses = subClassesByType[type]
+        if (subClasses.is(null)) {
+            subClasses = new HashSet<String>()
+            getSubClasses(type, subClasses)
+            subClassesByType[type] = subClasses
+        }
+        return subClasses
+    }
+
+    public void getSubClasses(String type, Collection<String> result) {
         if (type == null)
             return
 
