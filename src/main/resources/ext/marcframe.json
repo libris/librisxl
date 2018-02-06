@@ -7226,7 +7226,7 @@
     "567": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "580": {
       "aboutEntity": "?work",
-      "addLink": "marc:hasLinkingEntryComplexityNote",
+      "addLink": "hasNote",
       "resourceType": "marc:LinkingEntryComplexityNote",
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
