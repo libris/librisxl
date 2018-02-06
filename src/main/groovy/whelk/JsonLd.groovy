@@ -296,29 +296,6 @@ public class JsonLd {
         return result
     }
 
-    /*
-    @Deprecated
-    public static Map embellish(Map jsonLd, Map additionalObjects, Map displayData) {
-        return new JsonLd(displayData, null).embellish(jsonLd, additionalObjects)
-    }
-
-    @Deprecated
-    public static List<Map> toCards(List<Map> things, Map displayData) {
-        def ld = new JsonLd(displayData, null)
-        return things.collect { ld.toCard(it) }
-    }
-
-    @Deprecated
-    public static Map toCard(Map thing, Map displayData) {
-        return new JsonLd(displayData, null).toCard(thing)
-    }
-
-    @Deprecated
-    public static Object toChip(Object object, Map displayData) {
-        return new JsonLd(displayData, null).toChip(object)
-    }*/
-
-
     Map embellish(Map jsonLd, Map additionalObjects, boolean filterOutNonChipTerms = true) {
         if (!jsonLd.get(GRAPH_KEY)) {
             return jsonLd
