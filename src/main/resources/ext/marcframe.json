@@ -6553,7 +6553,8 @@
       "addLink": "hasNote",
       "resourceType": "marc:WithNote",
       "$a": {"property": "label"},
-      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"}
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
+      "NOTE:$6": {"property": "marc:fieldref", "NOTE:record-count": 0}
     },
     "502": {
       "aboutEntity": "?work",
