@@ -6684,7 +6684,7 @@
       "$e": {"addProperty": "marc:authorization"},
       "$f": {"addProperty": "marc:standardizedTerminologyForAccessRestriction"},
       "$u": {"property": "uri"},
-      "$2": {"ignored": true, "NOTE:LC": "nac"},
+      "NOTE:$2": {"ignored": true, "NOTE:LC": "nac"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
       "$6": {"property": "marc:fieldref"}
