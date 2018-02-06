@@ -6740,7 +6740,8 @@
       "resourceType": "marc:TypeOfReportAndPeriodCoveredNote",
       "aboutEntity": "?thing",
       "$a": {"property": "label"},
-      "$b": {"property": "marc:periodCovered", "TODO": "Concatenate with $b"}
+      "$b": {"property": "marc:periodCovered", "TODO": "Concatenate with $b"},
+      "NOTE:$6": {"property": "marc:fieldref", "NOTE:record-count": 0}
     },
 
     "514": {
