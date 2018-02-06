@@ -6997,10 +6997,11 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "536": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "marc:FundingInformationNote",
-      "$a": {"property": "marc:textOfNote"},
+      "$a": {"property": "label"},
       "$b": {"addProperty": "marc:contractNumber"},
       "$c": {"addProperty": "marc:grantNumber"},
       "$d": {"addProperty": "marc:undifferentiatedNumber"},
