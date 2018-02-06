@@ -6894,6 +6894,7 @@
     "524": {
       "aboutEntity": "?thing",
       "i1": {
+        "marcDefault": "8",
         "ignored": true,
         "NOTE:LC": "nac"
       },
