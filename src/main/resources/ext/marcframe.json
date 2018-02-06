@@ -6780,7 +6780,8 @@
         "NOTE:LC": "nac",
         "marcDefault": " "
       },
-      "$a": {"property": "label"}
+      "$a": {"property": "label"},
+      "NOTE:$6": {"property": "marc:fieldref", "NOTE:record-count": 0}
     },
     "518": {
       "aboutEntity": "?work",
