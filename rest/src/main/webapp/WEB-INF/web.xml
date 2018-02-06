@@ -85,11 +85,6 @@
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>WhelkServlet</servlet-name>
-        <url-pattern>/_iri/*</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
         <servlet-name>RemoteSearch</servlet-name>
         <url-pattern>/_remotesearch</url-pattern>
     </servlet-mapping>
