@@ -7100,7 +7100,7 @@
     "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "544": {
       "aboutEntity": "?thing",
-      "addLink": "marc:hasLocationOfOtherArchivalMaterialsNote",
+      "addLink": "hasNote",
       "resourceType": "marc:LocationOfOtherArchivalMaterialsNote",
       "$a": {"addProperty": "label"}
     },
@@ -7141,7 +7141,7 @@
     },
     "546": {
       "aboutEntity": "?work",
-      "addLink": "marc:hasLanguageNote",
+      "addLink": "hasNote",
       "resourceType": "marc:LanguageNote",
       "$a": {"property": "label"},
       "$b": {"addLink": "hasNotation", "resourceType": "Notation", "property": "label"},
@@ -7166,8 +7166,9 @@
     "552": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "555": {
       "aboutEntity": "?thing",
-      "addLink": "marc:hasCumulativeIndexFindingAidsNote",
+      "addLink": "hasNote",
       "resourceType": "marc:CumulativeIndexFindingAidsNote",
+      "TODO:i1": {"marcDefault": "8"},
       "$a": {"property": "label"},
       "$c": {"property": "marc:degreeOfControl", "NOTE": "concatenate with $a", "NOTE:record-count": 2}
     },
@@ -7176,9 +7177,9 @@
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "Note",
-      "i1": {"ignored": true, "NOTE:lc": "ignore"},
+      "NOTE:i1": {"ignored": true, "NOTE:lc": "ignore"},
       "$a": {"property": "label"},
-      "$z": {"ignored": true, "NOTE:lc": "nac"},
+      "NOTE:$z": {"ignored": true, "NOTE:lc": "nac"},
       "$6": {"property": "marc:fieldref"}
     },
     "561": {
