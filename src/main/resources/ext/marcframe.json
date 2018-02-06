@@ -6907,8 +6907,8 @@
     },
     "525": {
       "aboutEntity": "?thing",
-      "link": "marc:hasSupplementNote",
-      "resourceType": "marc:SupplementNote",
+      "link": "supplementaryContent",
+      "resourceType": "SupplementaryContent",
       "$a": {"property": "label"}
     },
     "526": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ", "NOTE:LC": "nac"},
