@@ -16,9 +16,7 @@ dependencies {
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
 
     // XL dependencies
-    compile('../../whelk-core' in project.subprojects*.name?
-            project(':../../whelk-core') :
-            'com.github.libris:whelk-core:develop-SNAPSHOT')
+    compile(project(':../whelk-core'))
 
     // Testing
     testCompile 'junit:junit:4.12'

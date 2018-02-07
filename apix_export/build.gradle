@@ -18,9 +18,7 @@ dependencies {
     def jettyVersion="9.3.6.v20151106"
 
     // XL dependencies
-    compile('../../whelk-core' in project.subprojects*.name?
-            project(':../../whelk-core') :
-            'com.github.libris:whelk-core:develop-SNAPSHOT')
+    compile(project(':../whelk-core'))
 
     // Jetty
     compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"

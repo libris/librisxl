@@ -5,12 +5,13 @@
 .idea
 *.iml
 /.venv
-/.gradle
 
 # Local Config
 /*.properties
 
 # Java/Gradle Artifacts
+/.gradle
+/*/.gradle
 /*/build
 /*/catalina.base_IS_UNDEFINED
 /*/logs

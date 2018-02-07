@@ -14,9 +14,7 @@ repositories {
 dependencies {
 
     // XL dependencies
-    compile('../../whelk-core' in project.subprojects*.name?
-            project(':../../whelk-core') :
-            'com.github.libris:whelk-core:develop-SNAPSHOT')
+    compile(project(':../whelk-core'))
 
     /*
     // local jmarctools
