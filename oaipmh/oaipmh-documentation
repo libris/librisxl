@@ -28,7 +28,7 @@ Dessa är:
 [huvudformat]_expanded för en post (A) innebär att poster (B,C ..) som (A) länkar till också i möjligaste mån också monteras in i (A).
 T ex: Om metadataPrefix=marcxml_expanded används för en bibliografisk post så innebär detta att relevant auktoritetsinformation bakas in i posten.
 
-[huvudformat]_includehold skiljer sig bara ifrån [huvudformat] för bibliografiska poster. Dessa poster följs då av en lista på IDn till beståndsposter för den bibliografiska posten i fråga (listan finns i <about>-delen av svaret för posten).
+[huvudformat]_includehold skiljer sig bara ifrån [huvudformat] för bibliografiska poster. Dessa poster följs då av en lista med beståndsposter för den bibliografiska posten i fråga (listan finns i <about>-delen av svaret för posten).
 
 [huvudformat]_includehold_expanded kombinerar [huvudformat]_includehold och [huvudformat]_expanded
 
