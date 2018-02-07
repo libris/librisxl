@@ -1,0 +1,221 @@
+{
+  "about": {
+    "comment": [
+      "Impressum från kolofon",
+      "Kolofon \"Clavdii Ptolomei viri Alexandrini Cosmographie octavvs et vltimvs liber explicit opvs Donni Nicolai Germani secvndvm Ptolomevm finit. Anno MCCCCLXXXII. Avgvsti vero Kalendas. XVII.  Imprssvm Vlme per ingeniosvm virvm Leonardvm Hol prefati oppidi civem\"",
+      "Översatt från grekiskan till latin av Jacopo d'Angelo",
+      "31 kartuppslag och 1 kartblad. Till varje karta finns en kort text på ena bladets baksida",
+      "For variant editions see BMC. 32 woodcut maps.",
+      "Microfiche. Reading: Research Publications (Primary Source Media), 1993 (Incunabula Unit 3 - Image of the World: Geography and Cosmography, GC 100)."
+    ],
+    "mediaTerm": "Kartografiskt material",
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/N%28ya%29"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Ptolemaios&givenName=Klaudios&birthYear=170"
+    },
+    "cartographicScale": "Varierande skala",
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Anno%20MCCCCLXXXII%2C%20avgvsti%20vero%20kalendas%20XVII.%20Imprssvm%20Vlme%20per%20ingeniosvm%20virvm%20Leonardvm%20Hol%20prefati%20oppidi%20civem"
+        },
+        "@type": "ProviderEvent",
+        "providerDate": "1482"
+      }
+    ],
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Beatissimo%20Patri%20Paulo%20Secundo%20Pontifici%20Maximo%20Donis%20Nicolaus%20Germanus%20..."
+      }
+    ],
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=Geographia."
+    },
+    "editor": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/grc"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "cartographer": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "Inledningsord:",
+        "@type": "Title",
+        "titleValue": "Beatissimo Patri Pavlo Secvndo Pontifici Maximo Donis Nicolavs Germanvs ..."
+      }
+    ],
+    "hasPart": [
+      {
+        "@id": "/some?type=Cartography"
+      }
+    ],
+    "material": {
+      "@id": "/def/enum/content/Atlas"
+    },
+    "hasFormat": [
+      {
+        "@id": "/some?type=Map"
+      },
+      {
+        "otherPhysicalDetails": "32 kartor (träsnitt)",
+        "@type": "Product",
+        "extent": "1 atlas ([138] s., 64 pl-bl., [2] s.)",
+        "dimensions": "fol"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/gw"
+      }
+    ],
+    "genre": [
+      {
+        "@id": "/topic/gmgpc//swe/V%C3%A4rldsatlaser/1400-talet"
+      }
+    ],
+    "@id": "/resource/bib/8932622",
+    "translator": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/lat"
+      }
+    ],
+    "workExample": [
+      {
+        "@type": "Product",
+        "itemCondition": [
+          "Kungl bibliotekets KoB ex: Endast de 32 kartorna. Samtliga är handkolorerade"
+        ]
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Cosmographia"
+    },
+    "relief": {
+      "@id": "/def/enum/content/Pictorially"
+    },
+    "@type": [
+      "Cartography",
+      "Monograph"
+    ],
+    "cartographicAscensionAndDeclination": [
+      {
+        "@type": "CartographyCoordinates",
+        "cartographicScale": "a"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=ISTC"
+    },
+    {
+      "@id": "/some?type=Organization&notation=BRAN"
+    }
+  ],
+  "created": "1980-06-30T00:00:00.0+02:00",
+  "technicalNote": [
+    "Indexeringslänk"
+  ],
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "transcribingAgency": {
+    "@id": "/some?type=Organization&name=Uk"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "8932622",
+  "modified": "2015-09-28T08:17:56.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "563": {
+        "subfields": [
+          {
+            "a": "Kungl. bibliotekets ex: Ink 914: Brunt halvskinnband med pärmar av trä och till en del skinn som har blindtryckt dekor, rygg med 3 bind. Träpärmarna ej original ; KoB-ex: Marmorerat skinnband, Slät rygg med guldtryckt dekor. Rygg med lagning från 1900-talet"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Världsatlaser"
+          },
+          {
+            "y": "1400-talet"
+          },
+          {
+            "2": "gmgpc//swe"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "752": {
+        "subfields": [
+          {
+            "a": "Tyskland"
+          },
+          {
+            "d": "Ulm"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=CStRLIN"
+  },
+  "systemNumber": [
+    "(Uk)UK\\BK\\1\\ip01084000"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Uk"
+  },
+  "@id": "/bib/8932622",
+  "@type": "Record"
+}

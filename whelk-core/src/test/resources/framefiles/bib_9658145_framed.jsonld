@@ -1,0 +1,134 @@
+{
+  "about": {
+    "comment": [
+      "Ljudbok CD (CD-audio)"
+    ],
+    "alternateEdition": [
+      {
+        "@id": "/some?type=CreativeWork&title=Livl%C3%A4karens%20bes%C3%B6k&placePublisherAndDateOfPublication=1999&partNumber=2002"
+      }
+    ],
+    "mediaTerm": "Ljudupptagning] /",
+    "classification": [
+      {
+        "@id": "/topic/kssb/7/Hc.01%2FLC"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "author": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "text": {
+      "@id": "/def/enum/content/Fiction"
+    },
+    "responsibilityStatement": "Per Olov Enquist",
+    "attributedTo": {
+      "@id": "_:b-0"
+    },
+    "@id": "/resource/bib/9658145",
+    "audience": {
+      "@id": "/def/enum/content/General"
+    },
+    "hasFormat": [
+      {
+        "@id": "/some?type=SoundRecording"
+      },
+      {
+        "@type": "Product",
+        "extent": "9 CD (11 tim.)"
+      }
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/Ljudb%C3%B6cker"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Livläkarens besök"
+    },
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "participantNote": [
+      "Inläsare: Torsten Wahlund"
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "91-7313-094-X"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "@type": [
+      "Audio",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Pan Hörböcker",
+        "providerDate": "2004"
+      }
+    ]
+  },
+  "created": "2004-10-05T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "9658145",
+  "modified": "2015-02-20T10:49:57.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Ljudböcker"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Li"
+  },
+  "@id": "/bib/9658145",
+  "@type": "Record"
+}

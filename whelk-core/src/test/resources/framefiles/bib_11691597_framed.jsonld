@@ -1,0 +1,184 @@
+{
+  "about": {
+    "comment": [
+      "Kartans bakgrund utgörs av information från Stadskartan, framtagen av Stockholms stadsbyggnadskontor",
+      "Med höjdkurvor",
+      "Bilaga till text med samma titel (SBK ; 2009:6)"
+    ],
+    "mediaTerm": "Kartografiskt material] :",
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Odgm-cz%20Stockholm"
+      },
+      {
+        "@id": "/topic/kssb/8/Ncaa"
+      }
+    ],
+    "cartographicCoordinates": "(Ö 18°00'52''-Ö 18°09'53''/N 59°22'49''-N 59°18'51'')",
+    "cartographicScale": "Skala 1:11 000",
+    "subject": [
+      {
+        "@id": "/topic/sao/Nationalstadsparker/Sverige/Stockholm/kartor"
+      },
+      {
+        "@id": "/topic/_/Kungliga%20nationalstadsparken"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "listOfContents": [
+      "Med hänvisningar till översiktsplanens textdel. - Infälld karta: Kungliga nationalstadsparken : Ulriksdal - Haga - Brunnsviken - Djurgården inom Solna, Stockholm och Lidingö skala ca 1:70 000"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Stockholms stadsbyggnadskontor",
+        "providerDate": "2009"
+      }
+    ],
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Nationalstadsparken"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=%5BV%C3%A4ster%C3%A5s"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Edita Västra Aros])"
+      }
+    ],
+    "hasPart": [
+      {
+        "@id": "/some?type=Cartography"
+      }
+    ],
+    "material": {
+      "@id": "/def/enum/content/SeparateMapSupplementToAnotherWork"
+    },
+    "hasFormat": [
+      {
+        "@id": "/some?type=Map"
+      },
+      {
+        "otherPhysicalDetails": "färg",
+        "@type": "Product",
+        "extent": "1 karta",
+        "dimensions": "67 x 78 cm vikt till 23 x 20 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "systemRequirements": [
+      "Läge: 10I"
+    ],
+    "@id": "/resource/bib/11691597",
+    "publisher": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "stockholmsdelen : antagen av kommunfullmäktige, 20 april 2009",
+      "@type": "Title",
+      "titleValue": "Översiktsplan för nationalstadsparken"
+    },
+    "relief": {
+      "@id": "/def/enum/content/Contour"
+    },
+    "@type": [
+      "Cartography",
+      "Monograph"
+    ],
+    "cartographicAscensionAndDeclination": [
+      {
+        "northernmostLatitudeCoordinates": "n0592249",
+        "westernmostLongitudeCoordinates": "e0180052",
+        "constantRatioLinearHorizontalScale": [
+          "11000"
+        ],
+        "southernmostLatitudeCoordinates": "n0591851",
+        "easternmostLongitudeCoordinates": "e0180953",
+        "cartographicScale": "a",
+        "@type": "CartographyCoordinates"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    }
+  ],
+  "created": "2009-11-19T00:00:00.0+01:00",
+  "modified": "2013-08-15T12:36:55.0+02:00",
+  "controlNumber": "11691597",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Nationalstadsparker"
+          },
+          {
+            "z": "Sverige"
+          },
+          {
+            "z": "Stockholm"
+          },
+          {
+            "v": "kartor"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "651": {
+        "subfields": [
+          {
+            "a": "Kungliga nationalstadsparken"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/bib/11691597",
+  "@type": "Record"
+}

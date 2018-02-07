@@ -1,0 +1,128 @@
+{
+  "about": {
+    "comment": [
+      "TV-spel (Playstation 3)"
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/797.7/e23/"
+      },
+      {
+        "@id": "/topic/kssb/8/Rdc%2FD"
+      }
+    ],
+    "mediaTerm": "Elektronisk resurs] :",
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Game"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "_providerYear": "2012",
+    "audience": [
+      {
+        "@type": "Audience",
+        "label": "Rekommenderas från 18 år"
+      }
+    ],
+    "hasFormat": [
+      {
+        "@id": "/some?type=Electronic"
+      },
+      {
+        "accompanyingMaterial": "handledning 8 s. :",
+        "otherPhysicalDetails": "ljud, färg",
+        "@type": "Product",
+        "extent": "1 Blu-ray Disc"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxk"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "TV-spel (Playstation 3)",
+      "@type": "Title",
+      "titleValue": "Borderlands 2"
+    },
+    "systemRequirements": [
+      "Systemkrav: Playstation 3"
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/Datorspel"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/EAN"
+        },
+        "@type": "Identifier",
+        "identifierValue": "5026555407625"
+      }
+    ],
+    "@id": "/resource/bib/13602899",
+    "@type": [
+      "Multimedia",
+      "Monograph"
+    ],
+    "languageNote": [
+      "Tal, text och manual på engelska."
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=%5BLondon%5D"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "2K",
+        "providerDate": "cop. 2012"
+      }
+    ]
+  },
+  "created": "2012-11-26T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "13602899",
+  "modified": "2015-07-17T14:40:16.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Datorspel"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Gbg"
+  },
+  "@id": "/bib/13602899",
+  "@type": "Record"
+}

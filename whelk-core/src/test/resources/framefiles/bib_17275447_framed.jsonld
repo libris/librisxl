@@ -1,0 +1,256 @@
+{
+  "about": {
+    "comment": [
+      "Materiały z konf., 28-29 października 2013 r., Kraków."
+    ],
+    "classification": [
+      {
+        "@id": "/some?type=Concept&notation=821.162.1%28091%29%2219%22"
+      },
+      {
+        "@id": "http://dewey.info/class/891.8509/e23/"
+      },
+      {
+        "@id": "/topic/kssb/01"
+      }
+    ],
+    "series": [
+      {
+        "issn": "0519-9336",
+        "volumeNumberSequentialDesignation": "t. 299.",
+        "@type": "Serial",
+        "title": "Biblioteka \"Więzi\""
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "subject": [
+      {
+        "@id": "/some?type=Person&familyName=Bobkowski&givenName=Andrzej&birthYear=1913&deathYear=1961"
+      },
+      {
+        "@id": "/topic/sao/1900-talet"
+      },
+      {
+        "@id": "/topic/sao/Polsk%20litteratur/historia"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/IndexPresent"
+    },
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Warszawa"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Towarzystwo \"Więź\"",
+        "providerDate": "[2014]."
+      }
+    ],
+    "@id": "/resource/bib/17275447",
+    "editor": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "illustrations": {
+      "@id": "/def/enum/content/Illustration"
+    },
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      }
+    ],
+    "_providerYear": "2014",
+    "responsibilityStatement": "pod red. Krzysztofa Ćwiklińskiego, Andrzeja Stanisława Kowalczyka i Macieja Urbanowskiego.",
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "il.",
+        "@type": "Product",
+        "extent": "405, [1] s.",
+        "dimensions": "24 cm."
+      }
+    ],
+    "isPartOf": [
+      {
+        "@id": "/some?type=PublicationVolume&uniformTitle=Biblioteka%20%22Wi%C4%99zi%22%2C&issn=0519-9336&volumeNumber=t.%20299."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/pl"
+      }
+    ],
+    "genre": [
+      {
+        "@id": "/topic/_/Literatura%20polska/historia/20%20w."
+      },
+      {
+        "@id": "/topic/saogf/Materia%C5%82y%20konferencyjne."
+      }
+    ],
+    "supplementaryContentNote": [
+      "Indeks."
+    ],
+    "nationalBibliographicNumber": "PB 2014/32944",
+    "publisher": [
+      {
+        "@id": "_:b-3"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/pol"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/ConferencePublication"
+    },
+    "instanceTitle": {
+      "searchElement": false,
+      "subtitle": "w setną rocznicę urodzin pisarza",
+      "@type": "Title",
+      "titleValue": "Andrzej Bobkowski wielokrotnie"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9788362610655"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "created": "2014-11-18T00:00:00.0+01:00",
+  "transcribingAgency": {
+    "@id": "/some?type=Organization&name=WA%20N"
+  },
+  "technicalNote": [
+    "Imported from: alpha.bn.org.pl:210/INNOPAC (Do not remove)"
+  ],
+  "modified": "2015-03-18T15:16:53.0+01:00",
+  "controlNumber": "17275447",
+  "catForm": {
+    "@id": "/def/enum/record/ISBD"
+  },
+  "_marcUncompleted": [
+    {
+      "536": {
+        "subfields": [
+          {
+            "a": "Współfinansowanie: Ministerstwo Kultury i Dziedzictwa Narodowego."
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "648": {
+        "subfields": [
+          {
+            "a": "1900-talet"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      },
+      "_unhandled": [
+        "ind2"
+      ]
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Polsk litteratur"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Literatura polska"
+          },
+          {
+            "x": "historia"
+          },
+          {
+            "y": "20 w."
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Materiały konferencyjne."
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Uh"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=WA%20N"
+  },
+  "@id": "/bib/17275447",
+  "@type": "Record"
+}

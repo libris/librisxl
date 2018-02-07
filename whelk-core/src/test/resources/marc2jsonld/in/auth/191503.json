@@ -1,0 +1,293 @@
+{
+    "leader": "01131cz  a2200313n  4500",
+    "fields": [
+        {
+            "001": "191503"
+        },
+        {
+            "005": "20081112101447.0"
+        },
+        {
+            "008": "931215n| ac|nnaabn          |n aaa     c"
+        },
+        {
+            "035": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "(LIBRIS)991836095X"
+                    }
+                ]
+            }
+        },
+        {
+            "040": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "L"
+                    },
+                    {
+                        "b": "swe"
+                    },
+                    {
+                        "d": "NB"
+                    }
+                ]
+            }
+        },
+        {
+            "043": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "fi"
+                    }
+                ]
+            }
+        },
+        {
+            "100": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Jansson, Tove,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "400": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Haij, Vera,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "400": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Janssonová, Tove,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "400": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Janson, Tuve,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "400": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Jansson, Tuve,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "400": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Janssonova, Tove,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "400": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Jānsone, Tūve,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "400": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Yanson, Tōbe,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "400": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Yānsūn, Tūfā,"
+                    },
+                    {
+                        "d": "1914-2001"
+                    }
+                ]
+            }
+        },
+        {
+            "670": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Sara och Pelle och neckens bläckfiskar / Vera Haij, 1933"
+                    }
+                ]
+            }
+        },
+        {
+            "670": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "NE"
+                    }
+                ]
+            }
+        },
+        {
+            "670": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "LC Auth"
+                    },
+                    {
+                        "b": "Jansson, Tove"
+                    }
+                ]
+            }
+        },
+        {
+            "678": {
+                "ind1": "0",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Finlandssvensk författare & konstnär"
+                    }
+                ]
+            }
+        },
+        {
+            "678": {
+                "ind1": "0",
+                "ind2": " ",
+                "subfields": [
+                    {
+                        "a": "Har även publicerat sig under pseudonymen Vera Haij"
+                    }
+                ]
+            }
+        },
+        {
+            "856": {
+                "ind1": "4",
+                "ind2": "8",
+                "subfields": [
+                    {
+                        "u": "http://viaf.org/viaf/111533709"
+                    },
+                    {
+                        "z": "VIAF"
+                    }
+                ]
+            }
+        },
+        {
+            "856": {
+                "ind1": "4",
+                "ind2": "8",
+                "subfields": [
+                    {
+                        "u": "http://dbpedia.org/resource/Tove_Jansson"
+                    },
+                    {
+                        "z": "DBPedia"
+                    }
+                ]
+            }
+        },
+        {
+            "856": {
+                "ind1": "4",
+                "ind2": "8",
+                "subfields": [
+                    {
+                        "u": "http://en.wikipedia.org/wiki/Tove_Jansson"
+                    },
+                    {
+                        "z": "Wikipedia"
+                    }
+                ]
+            }
+        },
+        {
+            "856": {
+                "ind1": "4",
+                "ind2": "8",
+                "subfields": [
+                    {
+                        "u": "http://id.loc.gov/authorities/names/n79046514"
+                    },
+                    {
+                        "z": "LC Name Authority"
+                    }
+                ]
+            }
+        }
+    ]
+}

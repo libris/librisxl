@@ -1,21 +1,16 @@
+# Tooling
 .DS_Store
 .*.swp
 *.*~
 .idea
-.log
-whelkoperator.lck
-.venv
-
+*.iml
+/.venv
 /.gradle
-/*/.gradle
+
+# Local Config
 /*.properties
-/dep/locgov-*/build
-/work
-/mystuff
+
+# Java/Gradle Artifacts
 /*/build
-/*.iml
-/*/src/main/resources/version.properties
-/*/src/main/resources/logback.xml
 /*/catalina.base_IS_UNDEFINED
-/*/out/artifacts/librisxl/exploded/whelk-0.8.14.x.war/META-INF/MANIFEST.MF
 /*/logs

@@ -1,0 +1,181 @@
+{
+  "about": {
+    "comment": [
+      "Bd 12-20: Chefredaktör: Christer Engström",
+      "Även bibliofilupplaga i helfranskt band",
+      "Supplement i 3 vol. utkom 2000"
+    ],
+    "classification": [
+      {
+        "@id": "/some?type=Concept&notation=030.1"
+      },
+      {
+        "@id": "http://dewey.info/class/038.7/e23/"
+      },
+      {
+        "@id": "/topic/kssb/6/Ba-c"
+      },
+      {
+        "@id": "/topic/fiaf/2/F%2803%29"
+      },
+      {
+        "@id": "/topic/sab/Ba-c"
+      }
+    ],
+    "titleVariation": [
+      {
+        "titleType": "4",
+        "@type": "Title",
+        "titleValue": "NE."
+      }
+    ],
+    "subject": [
+      {
+        "@id": "/topic/mesh/Encyclopedias"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "editor": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "_providerYear": "1989",
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Encyclopedia"
+      }
+    ],
+    "responsibilityStatement": "[divisionschef och chefredaktör: Kari Marklund]",
+    "hasFormat": [
+      {
+        "accompanyingMaterial": "1 rättelsehäfte",
+        "otherPhysicalDetails": "ill. (vissa i färg), diagr. (vissa i färg), kartor (huvudsakligen i färg), tab.",
+        "@type": "Product",
+        "extent": "20 vol.",
+        "dimensions": "29 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "_providerOtherYear": "1996",
+    "@id": "/resource/bib/8211184",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=H%C3%B6gan%C3%A4s"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Bra böcker",
+        "providerDate": "1989-1996"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/MultipleDates"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "subtitle": "ett uppslagsverk på vetenskaplig grund utarbetat på initiativ av Statens kulturråd",
+      "@type": "Title",
+      "titleValue": "Nationalencyklopedin"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "bd 1-20 (konstläderbd",
+        "@type": "Identifier",
+        "identifierValue": "91-7024-619-X"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "bd 1-20 (halvfr. bd",
+        "@type": "Identifier",
+        "identifierValue": "91-7024-620-3"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "bd 1-20 (helfr. bd",
+        "@type": "Identifier",
+        "identifierValue": "91-7024-621-1"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=NBI"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SEE"
+    }
+  ],
+  "created": "1987-09-07T00:00:00.0+02:00",
+  "technicalNote": [
+    "Huvudpost (flerbandsverk)"
+  ],
+  "modified": "2014-12-04T10:16:13.0+01:00",
+  "controlNumber": "8211184",
+  "librisIIINumber": [
+    "990674569X"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=Sfi"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/bib/8211184",
+  "@type": "Record"
+}

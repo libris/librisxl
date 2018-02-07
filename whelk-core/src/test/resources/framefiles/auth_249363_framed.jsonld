@@ -1,0 +1,76 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "reference": {
+    "@id": "/def/enum/content/TracingsAreConsistentWithTheHeading"
+  },
+  "created": "2005-01-21T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "focus": {
+    "name": "Arnaldur Indriðason,",
+    "note": [
+      "Isländsk skönlitterär författare"
+    ],
+    "birthYear": "1961",
+    "nationality": {
+      "@id": "/def/nationalities/e-ic---"
+    },
+    "@id": "/resource/auth/249363",
+    "@type": "Person"
+  },
+  "controlNumber": "249363",
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "sameAs": [
+    {
+      "birthYear": "1961",
+      "givenName": "Arnaldur",
+      "familyName": "Indriðason",
+      "@type": "Person"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "source": [
+    {
+      "citation": "t.p. (Arnaldur Indriðason)",
+      "@type": "CreativeWork",
+      "label": "Arnaldur Indriðason. Kvinna i grönt, 2005:"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "VIAF (2012-05-12)"
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "modified": "2014-12-12T08:40:28.0+01:00",
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/auth/249363",
+  "@type": "PersonTerm"
+}

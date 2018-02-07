@@ -1,0 +1,189 @@
+{
+  "about": {
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "249 s."
+      }
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/700.9/e23/"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/vie"
+      },
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "author": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "@id": "/resource/bib/16939890",
+    "responsibilityStatement": "[edited by] Đông Vĩnh, Nguyẽ̂n Thanh Mai, Bùi Thị Thanh Mai",
+    "titleVariation": [
+      {
+        "titleType": "1",
+        "@type": "Title",
+        "titleValue": "Connecting art and heritage"
+      }
+    ],
+    "subject": [
+      {
+        "@id": "/some?type=Organization&name=Vietnam%20University%20of%20Fine%20Arts"
+      },
+      {
+        "@id": "/topic/sao/Kulturarv"
+      },
+      {
+        "@id": "/topic/sao/Konst"
+      }
+    ],
+    "authorOfIntroduction": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/vm"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Ké̂t nó̂i nghệ thuật và di sản = Connecting art and heritage"
+    },
+    "editor": [
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9786047708642"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      },
+      {
+        "@id": "_:b-3"
+      },
+      {
+        "@id": "_:b-4"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "languageNote": [
+      "Parallelltext på vietnamesiska och engelska"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Hanoi"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Giới Pubblishers",
+        "providerDate": "2014"
+      }
+    ]
+  },
+  "created": "2014-09-16T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "16939890",
+  "modified": "2014-09-17T09:15:46.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "610": {
+        "subfields": [
+          {
+            "a": "Vietnam University of Fine Arts"
+          }
+        ],
+        "ind1": "1",
+        "ind2": "4"
+      },
+      "_unhandled": [
+        "ind2"
+      ]
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Kulturarv"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Konst"
+          },
+          {
+            "2": "sao"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Q"
+  },
+  "@id": "/bib/16939890",
+  "@type": "Record"
+}

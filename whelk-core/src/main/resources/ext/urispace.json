@@ -1,0 +1,80 @@
+{
+  "base": "http://id.kb.se/",
+  "thingUriTemplate": "{+document}#it",
+  "objectLink": "about",
+  "alphabet": "0123456789bcdfghjklmnpqrstvwxz",
+  "randomVariable": "randomKey",
+  "maxRandom": 899,
+  "timestampVariable": "timeKey",
+  "epochDate": "2014-01-01",
+  "timestampCaesarCipher": true,
+  "uuidVariable": null,
+  "slugCharInAlphabet": true,
+  "slugCase": "lower",
+  "compoundSlugSeparator": "",
+  "rulesByDataset": {
+    "auth": {
+      "uriTemplate": "/{+basePath}/{timeKey}-{randomKey}-{compoundSlug}",
+      "ruleByBaseType": {
+        "Person": {
+          "subclasses": ["Persona"],
+          "basePath": "person",
+          "compoundSlugFrom": [
+            [["familyName", "givenName"], "name"], "numeration", "birthYear", "deathYear", "personTitle"
+          ]
+        },
+        "Family": {
+          "basePath": "family",
+          "compoundSlugFrom": ["name"]
+        },
+        "Organization": {
+          "basePath": "org",
+          "compoundSlugFrom": ["name"]
+        },
+        "Meeting": {
+          "basePath": "event",
+          "compoundSlugFrom": ["name", "date"]
+        },
+        "Jurisdiction": {
+          "basePath": "gov",
+          "compoundSlugFrom": ["name", "isPartOf"]
+        },
+        "Place": {
+          "basePath": "place",
+          "compoundSlugFrom": [["prefLabel", "label"]]
+        },
+        "CreativeWork": {
+          "subclasses": ["ConceptualWork"],
+          "basePath": "work",
+          "compoundSlugFrom": [["title", "uniformTitle"], {"attributedTo": ["name"]}]
+        },
+        "Concept": {
+          "basePath": "term",
+          "compoundSlugFrom": [{"inScheme": ["notation"]}, "prefLabel"]
+        },
+        "ConceptScheme": {
+          "uriTemplate": "/def/scheme/{notation}",
+          "variables": ["notation"]
+        },
+        "*": {
+          "uriTemplate": "/auth/{identifier}",
+          "thingUriTemplate": "/resource{+document}"
+        }
+      }
+    },
+    "bib": {
+      "uriTemplate": "/bib/{timeKey}-{randomKey}",
+      "ruleByBaseType": {
+        "CreativeWork": {
+          "compoundSlugFrom": [["title", "uniformTitle"], {"attributedTo": ["name"]}, "publicationYear"]
+        },
+        "*": {
+          "thingUriTemplate": "{+document}#it"
+        }
+      }
+    },
+    "hold": {
+      "uriTemplate": "/hold/{owner}/{timeKey}-{randomKey}"
+    }
+  }
+}

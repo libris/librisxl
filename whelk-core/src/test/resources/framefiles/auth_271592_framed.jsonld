@@ -1,0 +1,220 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "editorialNote": [
+    "Titel enl. form i Anonymous classics. Den bibliografiska posten kompletteras med titeluppslaget \"Rävsagan (djurepos)\" i 730 + språk. Detta för att samla alla olika versioner av sagan enl. AACR 25.12B. Även som ämnesord i 630. 060612/BUS/EA"
+  ],
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2006-04-11T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "271592",
+  "focus": {
+    "@id": "/resource/auth/271592",
+    "@type": "UniformWork",
+    "uniformTitle": "Roman de Renart"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "source": [
+    {
+      "citation": "(\"Collection of various satirical tales, earlier part 12th c.\")",
+      "@type": "CreativeWork",
+      "label": "Anonymous classics, 2. ed."
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Le renard ou le procez des bestes : Traduction enrichie de figures en teille-douce, 1739"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Le roman du Renard : Publié d'après les manuscrits de la Bibliothèque du roi des 13e, 14e et 15e siècles; par D.M. Méon, 1826"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Le livre de Regnart : edition critique avec introduction, notes et glossaire du manuscrit 473 de la Bibliothèque du Musée Condé de Cha ntilly /  par Elina Suomila-Härmä, 1998"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "BnF"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "NE"
+    },
+    {
+      "citation": "Renard",
+      "@type": "CreativeWork",
+      "label": "SPI"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "_marcUncompleted": [
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Renard"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Le livre de Regnart"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "3"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Roman du Renard"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Roman de Renard"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för tysk version:"
+          },
+          {
+            "a": "Reineke Fuchs"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för svensk version:"
+          },
+          {
+            "a": "Rävsagan"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för nederländsk version:"
+          },
+          {
+            "a": "Reinaert"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för engelsk version:"
+          },
+          {
+            "a": "Reynad the Fox"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för dansk version:"
+          },
+          {
+            "a": "Rævebogen"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "a": "Couronnement de Renart"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "a": "Renart le Contrefait"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "modified": "2006-06-16T12:54:21.0+02:00",
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/auth/271592",
+  "@type": "WorkTerm"
+}

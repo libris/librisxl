@@ -1,0 +1,73 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "1999-09-29T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "focus": {
+    "name": "E-Type,",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Eriksson&givenName=Martin&birthYear=1965"
+    },
+    "note": [
+      "Musiker och låtskrivare, artistnamn för Martin Eriksson"
+    ],
+    "birthYear": "1965",
+    "nationality": {
+      "@id": "/def/nationalities/e-sw---"
+    },
+    "@id": "/resource/auth/209925",
+    "@type": "Person"
+  },
+  "controlNumber": "209925",
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "systemNumber": [
+    "(LIBRIS)9930177981"
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "NE"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Wikipedia"
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "modified": "2012-09-25T09:28:13.0+02:00",
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=X"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/auth/209925",
+  "@type": "PersonTerm"
+}

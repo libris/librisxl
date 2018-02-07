@@ -1,0 +1,188 @@
+{
+  "about": {
+    "comment": [
+      "Grünsee first published in 1978, Brachland first published in 1980.",
+      "CD title: Rückkehr zur Herkunft : Archivmaterialien zu Christoph Geisers Romanen Grünsee und Brachland / zusammengestellt und kommentiert  von Michael Schläfli.",
+      "CD includes text, video files, audio files about the two novels Grünsee and Brachland as well as biographical information on Geiser.",
+      "Disc in pocket."
+    ],
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Hf.02"
+      }
+    ],
+    "series": [
+      {
+        "volumeNumberSequentialDesignation": "Bd. 91",
+        "@type": "Serial",
+        "title": "Meridiane aus aller Welt"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Geiser&givenName=Christoph&birthYear=1949"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "biography": {
+      "@id": "/def/enum/content/ContainsBiographicalInformation"
+    },
+    "subject": [
+      {
+        "@id": "/topic/lcco/PT"
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Z%C3%BCrich"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Ammann",
+        "providerDate": "2006."
+      }
+    ],
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=1.%20Aufl."
+      }
+    ],
+    "@id": "/resource/bib/10630108",
+    "influentialRelation": [
+      {
+        "@id": "/some?type=UniformWork&title=Brachland"
+      },
+      {
+        "@id": "/some?type=UniformWork&title=Gr%C3%BCnsee"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/Novel"
+    },
+    "influencedBy": [
+      {
+        "@id": "/some?type=Person&familyName=Detering&givenName=Heinrich."
+      },
+      {
+        "influencedBy": [
+          {
+            "@id": "/some?type=Person&familyName=Geiser&givenName=Christoph&birthYear=1949"
+          }
+        ],
+        "@type": "UniformWork",
+        "title": "Grünsee."
+      },
+      {
+        "influencedBy": [
+          {
+            "@id": "/some?type=Person&familyName=Geiser&givenName=Christoph&birthYear=1949"
+          }
+        ],
+        "@type": "UniformWork",
+        "title": "Brachland."
+      }
+    ],
+    "responsibilityStatement": "Christoph Geiser ; mit einem Nachwort von Heinrich Detering.",
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Bibliography"
+      }
+    ],
+    "hasPart": [
+      {
+        "@id": "/some?type=Digital"
+      },
+      {
+        "@id": "/some?type=Audio"
+      },
+      {
+        "@id": "/some?type=Visual&runningTime=nnn"
+      }
+    ],
+    "_providerYear": "2006",
+    "hasFormat": [
+      {
+        "@id": "/some?type=Electronic&imageBitDepth=---"
+      },
+      {
+        "accompanyingMaterial": "1 CD-ROM (4 3/4 in.)",
+        "@type": "Product",
+        "extent": "537, [3] p."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sz"
+      }
+    ],
+    "supplementaryContentNote": [
+      "Includes bibliographical references (CD-ROM)."
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/ger"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "subtitle": "Brachland : zwei Romane",
+      "@type": "Title",
+      "titleValue": "Grünsee."
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "3250600911"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "9783250600916"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "created": "2006-01-20T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "transcribingAgency": {
+    "@id": "/some?type=Organization&name=OHX"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "10630108",
+  "modified": "2007-12-13T12:36:17.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=WTU"
+  },
+  "systemNumber": [
+    "(OCoLC)ocm63127502",
+    "(OCoLC)63127502"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=OHX"
+  },
+  "@id": "/bib/10630108",
+  "@type": "Record"
+}
