@@ -18,6 +18,10 @@ sourceSets {
     test {
         groovy { srcDir 'src/test/groovy/' }
     }
+    integTest {
+        groovy.srcDir 'src/integTest/groovy/'
+        resources.srcDir 'src/integTest/resources'
+    }
 }
 
 test {
@@ -90,6 +94,34 @@ dependencies {
     testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"
     testCompile 'cglib:cglib-nodep:3.1'
     testCompile "org.spockframework:spock-core:1.0-groovy-2.4"
+
+    // Integration Testing
+    integTestCompile sourceSets.main.output
+    integTestCompile sourceSets.test.output
+
+    integTestCompile configurations.compile
+    integTestCompile configurations.testCompile
+
+    integTestRuntime configurations.runtime
+    integTestRuntime configurations.testRuntime
+}
+
+task integTest(type: Test) {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = 'Runs the integration tests.'
+    outputs.upToDateWhen { false }
+    testClassesDirs = sourceSets.integTest.output.classesDirs
+    classpath = sourceSets.integTest.runtimeClasspath
+    testLogging {
+        showStandardStreams true
+        exceptionFormat "full"
+    }
+    binResultsDir = file("$buildDir/integration-test-results/binary/integTest")
+    reports {
+        html.destination = file("$buildDir/reports/integration-test")
+        junitXml.destination = file("$buildDir/integration-test-results")
+    }
+    mustRunAfter tasks.test
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
