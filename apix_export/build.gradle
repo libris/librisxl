@@ -1,8 +1,8 @@
 apply plugin: 'java'
-apply plugin: 'jetty'
 apply plugin: 'war'
 apply plugin: 'application'
 apply plugin: 'maven'
+apply from: '../gretty.plugin'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8

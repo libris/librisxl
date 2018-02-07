@@ -41,7 +41,7 @@ test {
     jacoco {
         append = false
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
-        classDumpFile = file("$buildDir/jacoco/classpathdumps")
+        classDumpDir = file("$buildDir/jacoco/classpathdumps")
     }
 }
 
@@ -59,7 +59,7 @@ jacocoTestReport {
     reports {
         xml.enabled false
         csv.enabled false
-        html.destination "${buildDir}/coverage_report/html"
+        html.destination file("${buildDir}/coverage_report/html")
     }
 }
 
