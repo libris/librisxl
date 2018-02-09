@@ -21,8 +21,8 @@ You read a post by sending a `GET` request to the post's URI (e.g.
 `application/ld+json`. The default content type is `text/html`, which would
 give you an HTML rendering of the post and not just the underlying data.
 
-The response also contains an `ETag` header, which you must use if you are
-going to update the post.
+The response also contains an `ETag` header, which you must use (as a
+If-Match header) if you are going to update the post.
 
 #### Example
 
@@ -93,8 +93,8 @@ You delete a post by sending a `DELETE` request to the post URI (e.g.
 
 You can only delete posts that are not linked to by other posts. That is, if
 you want to delete a bibliographic post, you can only do so if there are no
-holding posts related to it. If that is the case, the API will respond with a
-`403 Forbidden`.
+holding posts related to it. If there are holding posts related to it, the API
+will respond with a `403 Forbidden`.
 
 A successful deletion will get a `204 No Content` response. Any subsequent
 requests to the post's URI will get a `410 Gone` response.
@@ -184,12 +184,16 @@ $ curl -XGET 'https://libris-qa.kb.se/_findhold?id=http://libris.kb.se/bib/1234&
 ### `/_merge` - Merge two posts - Requires authentication
 
 This endpoint allows you to automatically merge two bibliographic posts. This
-is useful when you have a duplicate post, as we take care to preserve all
-information in the posts, but combined in a single post.
+is useful when you have a duplicate post. The resulting merged post will
+generally contain information from both of the original posts, but only
+the original post identified as `id1` is guaranteed to have all it's
+information present in the resulting merged post. Information from the
+other post will be added where possible (where not in conflict with the
+first post).
 
 Calling this with two unrelated posts is never a good idea.
 
-The endpoint allows GET requets to preview the merge, while POST requests
+The endpoint allows GET requests to preview the merge, while POST requests
 stores the result in the database.
 
 POST requests requires a valid access token, which must be set in the
@@ -200,7 +204,7 @@ POST requests requires a valid access token, which must be set in the
 * `id1` - First bibliographic post (e.g. http://libris.kb.se/bib/1234)
 * `id2` - Second bibliographic post (e.g. http://libris.kb.se/bib/7149593)
 * `promote_id2` - Boolean to indicate that `id2` should be used instead of
-  `id1` (defaults to false)
+  `id1` for the resulting post (defaults to false)
 
 #### Examples
 
@@ -219,7 +223,7 @@ ever try to merge two unrelated posts like this.
 #### Parameters
 
 * `id` - Bibliographic post ID (e.g. http://libris.kb.se/bib/1234)
-* `relation` - Type of relation
+* `relation` - Type of relation (this parameter is optional and may be omitted)
 * `reverse` - Boolean to indicate reverse relation (defaults to false)
 
 #### Example
@@ -230,7 +234,7 @@ $ curl -XGET 'https://libris-qa.kb.se/_dependencies?id=http://libris.kb.se/bib/1
 ```
 
 
-### `/_compilemarc` - Download MARC21 bibliographic post with holding information
+### `/_compilemarc` - Download MARC21 bibliographic post with holding and authority information
 
 This endpoint allows you to download a complete bibliographic post with holding
 information in MARC21.
