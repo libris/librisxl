@@ -181,7 +181,7 @@ class XL
         {
             try
             {
-                m_whelk.storeAtomicUpdate(ourId, false, IMPORT_SYSTEM_CODE, null, collection, false,
+                m_whelk.storeAtomicUpdate(ourId, false, IMPORT_SYSTEM_CODE, null,
                         (Document doc) ->
                         {
                             if (collection.equals("bib"))
