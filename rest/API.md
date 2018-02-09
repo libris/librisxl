@@ -1,18 +1,18 @@
 # Libris XL 'REST' API
 
-## [CRUD API]
+## CRUD API
 
 Libris XL uses JSON-LD as data format, and we provide an API to create, read,
 update, and delete posts. Read operations are available without authentication,
 but all other requests require an access token. More information about
-authentication can be found [here][Authentication].
+authentication can be found in the Authentication section in this document.
 
 We have version handling of documents and for this we keep track of which sigel
 is responsible for the change. Because of this, we require the header
 `XL-Active-Sigel` to be set to the authenticated user's selected sigel.
 
 An example of how to work with the API can be found in our [integration
-tests][https://github.com/libris/lxl_api_tests].
+tests](https://github.com/libris/lxl_api_tests).
 
 ### Reading a post
 
@@ -248,9 +248,9 @@ $ curl -XGET 'https://libris-qa.kb.se/_compilemarc?id=http://libris.kb.se/bib/12
  aS. 451-800bill.1 aCiaccio, Leonard L.4edt0 dNew York : Marcel Dekker, cop. 1971-1973w99000064967nn92ced. by L.L. CiacciotWater and water pollution handbook  a{"@id":"s93ns5h436dxqsh","modified":"2018-01-26T13:55:47.68+01:00","checksum":"12499440084"}2librisxl  5SEKax  ab150526||    |   1001||und|901128e4  5SEKbSEKhTEST2  5SEKa{"@id":"48h9kp894jm8kzz","modified":"2018-01-27T11:29:46.804+01:00","checksum":"-426929336"}2librisxl
 ```
 
-## [Authentication]
+## Authentication
 
-The API uses [Libris Login][https://login.libris.kb.se] as OAuth2 provider. All
+The API uses [Libris Login](https://login.libris.kb.se) as OAuth2 provider. All
 users need a personal account and this means that if you will need OAuth2
 client credentials if you want to authenticate users.
 
@@ -258,7 +258,7 @@ If the authentication is successful, you will get back a bearer token, a
 refresh token, and a list of permissions for the user. This list can (and
 probably should) be used to allow the user to select which sigel they want to
 work as. This information is required for creating, updating, and deleting
-posts (see [CRUD API][CRUD API] for more details).
+posts (see the CRUD API section in this document for more details).
 
 Once the user is authenticated, you include the bearer token in the API
 requests by setting the `Authentication` header to `Bearer: <the bearer
