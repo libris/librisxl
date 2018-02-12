@@ -4,8 +4,12 @@
 
 Libris XL uses JSON-LD as data format, and we provide an API to create, read,
 update, and delete posts. Read operations are available without authentication,
-but all other requests require an access token. More information about
-authentication can be found in the Authentication section in this document.
+but all other requests require an access token. There are two different
+permission levels for users: one for working with holding posts and one for
+cataloging (which also allows working with holding posts). User permissions are
+connected to sigels, and a user may only work with holding posts belonging to a
+sigel that the user has permissions for. More information about authentication
+can be found in the Authentication section in this document.
 
 We have version handling of documents and for this we keep track of which sigel
 is responsible for the change. Because of this, we require the header
