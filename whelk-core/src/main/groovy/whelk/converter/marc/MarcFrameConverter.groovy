@@ -27,11 +27,13 @@ class MarcFrameConverter implements FormatConverter {
     ObjectMapper mapper = new ObjectMapper()
     String cfgBase = "ext"
     LinkFinder linkFinder
+    JsonLd ld
 
     protected MarcConversion conversion
 
-    MarcFrameConverter(LinkFinder linkFinder = null) {
+    MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null) {
         this.linkFinder = linkFinder
+        this.ld = ld
         def config = readConfig("$cfgBase/marcframe.json")
         initialize(config)
     }
@@ -742,6 +744,10 @@ class ConversionPart {
     String tokenMapName // TODO: remove in columns in favour of @type+code/uriTemplate ?
     Map reverseTokenMap
     boolean embedded = false
+
+    JsonLd getLd() {
+        return ruleSet.conversion.converter.ld
+    }
 
     void setTokenMap(BaseMarcFieldHandler fieldHandler, Map dfn) {
         def tokenMap = dfn.tokenMap
