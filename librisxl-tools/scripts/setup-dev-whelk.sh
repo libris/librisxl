@@ -79,7 +79,7 @@ fi
 JAR=build/libs/vcopyImporter.jar
 if [ "$FORCE_REBUILD" = true ] || [ ! -f importers/$JAR ]; then
     pushd importers
-    gradle jar
+    ../gradlew jar
     java -jar $JAR generateEsConfig ../librisxl-tools/elasticsearch/libris_config.json ../../definitions/source/vocab/display.jsonld ../../definitions/build/vocab.jsonld generated_es_config.json
     echo ""
     echo "Removing es configuration..."
