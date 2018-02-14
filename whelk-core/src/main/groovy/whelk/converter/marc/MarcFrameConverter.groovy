@@ -842,6 +842,15 @@ class ConversionPart {
         obj[key] = value
     }
 
+    boolean isInstanceOf(Map entity, String baseType) {
+        def type = entity['@type']
+        if (type == null)
+            return false
+        List<String> types = type instanceof String ? [(String) type] : (List<String>) type
+        return ld ? types.any { ld.isSubClassOf(it, baseType) }
+                  : types.contains(baseType)
+    }
+
 }
 
 @CompileStatic
@@ -1821,12 +1830,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         final Map topEntity = getEntity(data)
 
-        def types = topEntity['@type']
-        if (types instanceof String) {
-            types = [types]
-        }
-        if (definesDomainEntityType && !(types.contains(definesDomainEntityType)))
+        if (definesDomainEntityType && !isInstanceOf(topEntity, definesDomainEntityType)) {
             return null
+        }
 
         def results = []
 
@@ -1869,9 +1875,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                                 return false
                             }
                         }
-                        def type = it['@type']
-                        return (type instanceof List) ?
-                                useLink.resourceType in type : type == useLink.resourceType
+                        return isInstanceOf(it, useLink.resourceType)
                     }
                 }
             }
@@ -1894,7 +1898,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    static Tuple2<Boolean, Map<String, List>> buildAboutMap(String aboutAlias, Map pendingResources, Map entity) {
+    Tuple2<Boolean, Map<String, List>> buildAboutMap(String aboutAlias, Map pendingResources, Map entity) {
         Map<String, List> aboutMap = [:]
         boolean requiredOk = true
 
@@ -1916,7 +1920,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     parents?.each {
                         def about = it[pending.link ?: pending.addLink]
                         if (!about && pending.absorbSingle) {
-                            if (pending.resourceType in Util.asList(it['@type'])) {
+                            if (isInstanceOf(it, pending.resourceType)) {
                                 about = it
                             } else {
                                 requiredOk = false
@@ -2300,7 +2304,7 @@ class MarcSubFieldHandler extends ConversionPart {
             } else if (itemPos == "first")
                 break
 
-            if (resourceType && entity['@type'] != resourceType)
+            if (resourceType && !isInstanceOf(entity, resourceType))
                 continue
 
             if (splitValueProperties && rejoin) {
@@ -2489,6 +2493,7 @@ class MatchRule {
 
     MarcFieldHandler getHandler(Map entity, value) {
         if (matchDomain) {
+            // TODO: !isInstanceOf(entity, matchDomain)
             if (entity['@type'] != matchDomain)
                 return null
             else if (whenTests.size() == 0)
