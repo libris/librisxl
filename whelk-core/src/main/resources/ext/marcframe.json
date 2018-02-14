@@ -2,6 +2,8 @@
 
   "NOTE:baseUri:fromSystem": "https://libris.kb.se/",
 
+  "keepGroupIds": true,
+
   "pendingResources": {
     "?record": {
       "about": "?thing",
@@ -1601,6 +1603,7 @@
       "TODO:pendingResources": {"_:aspectWork":{"link": "instanceOf"}},
       "aboutEntity": "?work",
       "addLink": "hasPart",
+      "groupId": "#workpart-$seq",
       "[0:1]": {
         "tokenMap": {
           "a": "Text",
@@ -5994,8 +5997,8 @@
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Work",
-        "embedded": true,
-        "TODO:implement:mergeWithExistingLinkedAtPosition": true
+        "groupId": "#workpart-$seq",
+        "TODO": "sync groupId with other appropriate ?work hasPart"
       },
       "pendingResources": {
         "_:contentType": {"addLink": "contentType", "resourceType": "ContentType"}
@@ -6009,7 +6012,7 @@
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
-        "embedded": true
+        "groupId": "#part-$seq"
       },
       "pendingResources": {
         "_:mediaType": {"addLink": "mediaType", "resourceType": "MediaType"}
@@ -6024,7 +6027,7 @@
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
-        "embedded": true
+        "groupId": "#part-$seq"
       },
       "pendingResources": {
         "_:carrierType": {"addLink": "carrierType", "resourceType": "CarrierType"}
@@ -6497,6 +6500,7 @@
       "i2": null,
       "addLink": "hasSeries",
       "resourceType": "Instance",
+      "groupId": "#series-$seq",
       "$a": {"addProperty": "seriesStatement"},
       "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
       "$v": {"property": "seriesEnumeration"},
@@ -9860,6 +9864,7 @@
           "addLink": "hasPart",
           "resourceType": "Work",
           "aboutAlias": "_:work",
+          "groupId": "#workpart-$seq",
           "$d": {"property": "legalDate"},
           "$n": {"about": "_:title", "addProperty": "partNumber", "punctuationChars": ","},
           "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
@@ -10265,6 +10270,7 @@
       "inherit": "772",
       "addLink": "hasPart",
       "NOTE:domainIncludes": "Serial",
+      "FIXME": "this is overeagerly reverted from a hasPart converted from 740; should only be added if issuanceType = 'Serial'...",
       "resourceType": "Work"
     },
     "775": {
@@ -10811,6 +10817,7 @@
     "830": {
       "addLink": "hasSeries",
       "resourceType": "Instance",
+      "groupId": "#series-$seq",
       "include": ["titledetails", "i2-nonfiling"],
       "pendingResources": {
         "_:work": {
@@ -14378,7 +14385,7 @@
     "520": {"inherit": "bib", "aboutEntity": "?thing", "NOTE:local": "LIBRIS-definierat beståndsfält."},
     "538": {"inherit": "bib", "$5": null},
     "541": {
-      "TODO:linkedEntity": "?example-$i",
+      "groupId": "?example-$seq",
       "TODO:i1": "0 = Sekretessbelagd information. Används f.n. ej. = ca 5000 poster",
       "addLink": "immediateAcquisition", "resourceType": "ImmediateAcquisition",
       "$a": {"addProperty": "marc:sourceOfAcquisition"},
@@ -14399,7 +14406,7 @@
       "$a": {"property": "label"}
     },
     "561": {
-      "TODO:linkedEntity": "?example-$i",
+      "groupId": "?example-$seq",
       "NOTE:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster. Remove i1 when revert",
       "i1": {"ignored": true,"marcDefault": " "},
       "$a": {"property": "custodialHistory"},
@@ -14419,15 +14426,15 @@
       ]
     },
     "562": {
-      "TODO:linkedEntity": "?example-$i",
       "inherit": "bib",
       "addLink": "marc:hasCopyAndVersionIdentificationNote",
       "resourceType": "marc:CopyAndVersionIdentificationNote",
+      "groupId": "?example-$seq",
       "$a": {"property": "marc:itemCondition"}
     },
     "563": {
-      "TODO:linkedEntity": "?example-$i",
       "addLink": "marc:hasBindingInformation", "embedded": true, "resourceType": "marc:BindingInformationNote",
+      "groupId": "?example-$seq",
       "$a": {"property": "label"},
       "$8": {"property": "marc:groupid"},
       "repeatable": true
