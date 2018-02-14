@@ -37,8 +37,8 @@ if [[ ! -d "$defsdir" ]]; then
     popd
 else
     pushd $defsdir
-        local=$(git rev-parse @)
-        remote=$(git rev-parse "@{u}")
+        local=$(git rev-parse HEAD)
+        remote=$(git rev-parse "@{upstream}")
         git fetch
         if [[ $local != $remote ]]; then
             git pull
