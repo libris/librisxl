@@ -6496,7 +6496,7 @@
       "i1": {"property": "marc:seriesTracingPolicy", "TODO:marcDefault": 0, "TOOO": {"when: 8xx[$t] | 830": "1", "else": "0"}},
       "i2": null,
       "addLink": "hasSeries",
-      "resourceType": "Serial",
+      "resourceType": "Instance",
       "$a": {"addProperty": "seriesStatement"},
       "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
       "$v": {"property": "seriesEnumeration"},
@@ -6513,7 +6513,7 @@
           "result": {"mainEntity": {
             "hasSeries": [
               {
-                "@type": "Serial",
+                "@type": "Instance",
                 "seriesStatement": ["Wiley classics library"],
                 "marc:seriesTracingPolicy": "0"
               }
