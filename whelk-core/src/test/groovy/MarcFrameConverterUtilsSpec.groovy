@@ -93,7 +93,7 @@ class MarcFrameConverterUtilsSpec extends Specification {
             ]
         ]
         when:
-        def (ok, amap) = MarcFieldHandler.buildAboutMap((String) null, pendingResources, entity)
+        def (ok, amap) = newMarcFieldHandler().buildAboutMap((String) null, pendingResources, entity)
         then:
         ok
         amap.a*.label == ['A']
@@ -105,7 +105,7 @@ class MarcFrameConverterUtilsSpec extends Specification {
 
     def "should order and group subfields"() {
         given:
-        def field = new MarcFieldHandler(new MarcRuleSet(new MarcConversion(null, [:], [:]), 'blip'), 'xxx', [:])
+        def field = newMarcFieldHandler()
 
         when:
         def subfields = MarcFieldHandler.orderAndGroupSubfields(
@@ -153,6 +153,10 @@ class MarcFrameConverterUtilsSpec extends Specification {
          '[0:2]'    | [[0, 2]]
          '[0]'      | [[0, 1]]
          '[0] [1] [2:4]'  | [[0, 1], [1, 2], [2,4]]
+    }
+
+    def newMarcFieldHandler() {
+        new MarcFieldHandler(new MarcRuleSet(new MarcConversion(null, [:], [:]), 'blip'), 'xxx', [:])
     }
 
     static subHandler(field, code, subDfn) {

@@ -355,7 +355,8 @@ class MarcConversion {
         def marc = [:]
         def fields = []
         marc['fields'] = fields
-        marcRuleSet.fieldHandlers.each { tag, handler ->
+        marcRuleSet.revertFieldOrder.each { tag ->
+            def handler = marcRuleSet.fieldHandlers[tag]
             def value = handler.revert(data, marc)
             if (tag == "000") {
                 marc.leader = value
@@ -399,6 +400,8 @@ class MarcRuleSet {
     List<MarcFramePostProcStep> postProcSteps
 
     Set primaryTags = new HashSet()
+
+    List<String> revertFieldOrder = []
 
     // aboutTypeMap is used on revert to determine which ruleSet to use
     Map<String, Set<String>> aboutTypeMap = new HashMap<String, Set<String>>()
@@ -478,6 +481,7 @@ class MarcRuleSet {
                 handler = new MarcSimpleFieldHandler(this, tag, dfn)
                 assert handler.property || handler.uriTemplate, "Incomplete: $tag: $dfn"
             }
+
             fieldHandlers[tag] = handler
         }
 
@@ -485,6 +489,19 @@ class MarcRuleSet {
         if (defaultThingType) {
             aboutTypeMap['?thing'] << defaultThingType
         }
+
+
+        fieldHandlers.each { tag, handler ->
+            if (handler instanceof MarcFieldHandler && handler.onRevertPrefer) {
+                revertFieldOrder += handler.onRevertPrefer.findAll {
+                    it in fieldHandlers
+                }
+            }
+            if (!(tag in revertFieldOrder)) {
+                revertFieldOrder << tag
+            }
+        }
+
     }
 
     def processInherit(config, subConf, tag, fieldDfn) {
@@ -1496,7 +1513,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     List<MatchRule> matchRules
     Map<String, Map> pendingResources
     String aboutAlias
-    String ignoreOnRevertInFavourOf
+    List<String> onRevertPrefer
 
     static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
 
@@ -1517,7 +1534,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             uriTemplateKeys = fromTemplate(uriTemplate).variables as Set
             uriTemplateDefaults = fieldDfn.uriTemplateDefaults
         }
-        ignoreOnRevertInFavourOf = fieldDfn.ignoreOnRevertInFavourOf
+        onRevertPrefer = (List<String>) (fieldDfn.onRevertPrefer instanceof String ?
+                [fieldDfn.onRevertPrefer] : fieldDfn.onRevertPrefer)
 
         computeLinks = (fieldDfn.computeLinks) ? new HashMap(fieldDfn.computeLinks) : [:]
         if (computeLinks) {
@@ -1811,11 +1829,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     @CompileStatic(SKIP)
     def revert(Map data, Map result, List<MatchRule> usedMatchRules = []) {
-
-        // TODO:IMPROVE: only ignore if the one in favour succeeds.
-        if (ignoreOnRevertInFavourOf) {
-            return null
-        }
 
         def matchedResults = []
 

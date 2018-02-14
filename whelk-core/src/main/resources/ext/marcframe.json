@@ -3853,7 +3853,7 @@
         },
         "definedElsewhereToken": "7"
       },
-      "$a": {"property": "label"},
+      "$a": {"property": "label", "required": true},
       "$x": {"link": "inCollection", "property": "label"},
       "$2": {"requires-i2": "7", "link": "inScheme", "resourceType": "ConceptScheme", "property": "code"}
     },
@@ -4909,9 +4909,12 @@
       "aboutEntity": "?work",
       "aboutAlias": "_:work",
       "include": ["titledetails", "titlesearchelem", "i2-nonfiling"],
+      "onRevertPrefer": "243",
       "pendingResources": {
         "_:title": {
-          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "about": "_:work",
+          "addLink": "hasTitle",
+          "resourceType": "Title",
           "embedded": true
         }
       },
@@ -5058,6 +5061,7 @@
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
       "resourceType": "Title",
+      "onRevertPrefer": "246",
       "embedded": true,
       "aboutAlias": "_:title",
       "subfieldOrder": "a n p h ... b c",
@@ -5369,7 +5373,7 @@
 
     "260": {
       "aboutEntity": "?thing",
-      "ignoreOnRevertInFavourOf": "264",
+      "onRevertPrefer": "264",
       "TODO:appendToExistingEntity": "When repeated field, exist to existing provisionActivity and don't create new provisionActivity",
       "pendingResources": {
         "_:publication": {"addLink": "publication", "resourceType": "Publication", "embedded": true},
@@ -6256,7 +6260,8 @@
     "411": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
 
     "440": {
-      "ignoreOnRevertInFavourOf": "490 + 830",
+      "NOTE:ignoreOnRevertInFavourOfCombo": "490 + 830",
+      "onRevertPrefer": ["490", "800", "810", "811", "830"],
       "addLink": "hasSeries",
       "resourceType": "Instance",
       "include": ["titledetails", "i2-nonfiling"],
@@ -6666,6 +6671,7 @@
       "addLink": "usageAndAccessPolicy",
       "embedded": true,
       "resourceType": "UsageAndAccessPolicy",
+      "onRevertPrefer": "540",
       "i1": {
         "NOTE:LC": "nac",
         "marcDefault": " ",
@@ -7173,7 +7179,7 @@
       "$c": {"property": "marc:degreeOfControl", "NOTE": "concatenate with $a", "NOTE:record-count": 2}
     },
     "556": {
-      "ignoreOnRevertInFavourOf": "500",
+      "onRevertPrefer": "500",
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "Note",
@@ -7253,7 +7259,7 @@
     "584": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "585": {
       "NOTE:local": "För anmärkning till utställningskataloger används fält 500.",
-      "ignoreOnRevertInFavourOf": "500",
+      "onRevertPrefer": "500",
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "Note",
@@ -11471,7 +11477,7 @@
     "072": {"ignored": true, "NOTE:record-count": 0},
     "073" : {
       "TODO": "ignore entirely (should be removed)",
-      "ignoreOnRevertInFavourOf": "550",
+      "onRevertPrefer": "550",
       "addLink": "broader",
       "resourceType": "Topic",
       "$a": {"property": "prefLabel"},
@@ -14388,7 +14394,7 @@
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "Note",
-      "ignoreOnRevertInFavourOf": "500",
+      "onRevertPrefer": "500",
       "NOTE:local": "Definierat för konvertering av MO-bestånd",
       "$a": {"property": "label"}
     },
