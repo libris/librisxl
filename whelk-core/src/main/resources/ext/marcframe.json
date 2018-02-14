@@ -1,5 +1,16 @@
 {
 
+  "NOTE:baseUri:fromSystem": "https://libris.kb.se/",
+
+  "pendingResources": {
+    "?record": {
+      "about": "?thing",
+      "TODO:link": "meta",
+      "resourceType": "Record",
+      "uriTemplate": "http://libris.kb.se/{marcType}/{controlNumber}"
+    }
+  },
+
   "marcTypeFromTypeOfRecord": {
     "*": "bib",
     "u": "hold",
@@ -1300,17 +1311,6 @@
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
     }
 
-  },
-
-  "NOTE:baseUri:fromSystem": "https://libris.kb.se/",
-
-  "pendingResources": {
-    "?record": {
-      "about": "?thing",
-      "TODO:link": "meta",
-      "resourceType": "Record",
-      "uriTemplate": "http://libris.kb.se/{marcType}/{controlNumber}"
-    }
   },
 
   "bib": {
