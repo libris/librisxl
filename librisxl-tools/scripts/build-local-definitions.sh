@@ -37,9 +37,9 @@ if [[ ! -d "$defsdir" ]]; then
     popd
 else
     pushd $defsdir
+        git fetch
         local=$(git rev-parse HEAD)
         remote=$(git rev-parse "@{upstream}")
-        git fetch
         if [[ $local != $remote ]]; then
             git pull
             if [[ requirements.txt -nt .venv ]]; then
