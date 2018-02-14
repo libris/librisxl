@@ -14403,8 +14403,8 @@
       "NOTE:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster. Remove i1 when revert",
       "i1": {"ignored": true,"marcDefault": " "},
       "$a": {"property": "custodialHistory"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$8": {"property": "marc:groupid"},
+      "FIXME:not-directly-on-top:$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "FIXME:not-directly-on-top:$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {"561": {"ind1": "0", "ind2": " ","subfields": [{"a": "xxx"}]}},
