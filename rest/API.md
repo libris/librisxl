@@ -1,5 +1,8 @@
 # Libris XL 'REST' API
 
+**NOTE:** This document is a work in progress. It can be useful for testing,
+but the interface is likely to change before the system is in production.
+
 ## CRUD API
 
 Libris XL uses JSON-LD as data format, and we provide an API to create, read,
@@ -114,6 +117,32 @@ $ curl -XDELETE -H "Authorization: Bearer xxxx" \
 
 
 ## Other API endpoints
+
+### `/find` - Search the Libris database
+
+This endpoint allows you to query the internal Libris database.
+
+The default operator is `AND`, which means that a search for `tove jansson` is
+equivalent to a search for `tove AND jansson`. `-` excludes terms, `|` means
+`OR`, `*` is used for prefix queries, `""` matches the whole phrase, and `()`
+is used for operator precedence.
+
+### Parameters
+
+* `q` - Search query
+* `_limit` - Max number of hits to include in result, used for pagination.
+  Default is 200.
+* `_offset` - Number of hits to skip in the result, used for pagination.
+  Default is 0.
+
+### Example
+
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    https://libris-qa.kb.se/find\?q\=tove%20\(jansson\|lindgren\)\&_limit=2
+...
+```
+
 
 ### `/_remotesearch` - Search external databases
 
