@@ -124,6 +124,7 @@ class MarcConversion {
     Map<String, MarcRuleSet> marcRuleSets = [:]
     boolean doPostProcessing = true
     boolean flatLinkedForm = true
+    boolean keepGroupIds = false
     Map marcTypeMap = [:]
     Map tokenMaps
 
@@ -134,6 +135,7 @@ class MarcConversion {
         this.tokenMaps = tokenMaps
         this.converter = converter
         //this.baseUri = new URI(config.baseUri ?: '/')
+        this.keepGroupIds = config.keepGroupIds == true
 
         this.sharedPostProcSteps = config.postProcessing.collect {
             parsePostProcStep(it)
@@ -249,6 +251,20 @@ class MarcConversion {
             }
         }
 
+        URIWrapper recordUri = record["@id"] ? new URIWrapper(record["@id"]) : null
+        state.quotedEntities.each {
+            def entityId = it['@id']
+            // TODO: Prepend groupId with prefix to avoid collision with
+            // other possible uses of relative id:s?
+            if (entityId && (entityId.startsWith('#') || entityId.startsWith('_:'))) {
+                if (keepGroupIds && recordUri) {
+                    it['@id'] = recordUri.resolve(entityId).toString()
+                } else {
+                    it.remove('@id')
+                }
+            }
+        }
+
         marcRuleSet.completeEntities(state.entityMap)
 
         def linkedThing = record[marcRuleSet.thingLink]
@@ -288,8 +304,6 @@ class MarcConversion {
                 }
             }
         }
-
-        def quotedIds = new HashSet()
 
         if (converter.linkFinder) {
             def recordCandidates = extraData?.get("oaipmhSetSpecs")?.findResults {
@@ -845,6 +859,10 @@ class ConversionPart {
             if (vId) {
                 def existing = l.find { it instanceof Map && it["@id"] == vId }
                 if (existing) {
+                    // TODO: Unchecked mappings might overwrite data here!
+                    // - check if overwritten @type is on the same
+                    //   hierarchical path as the new, use most specific
+                    // - merge values as lists?
                     ((Map) value).putAll((Map) existing)
                     l[l.indexOf(existing)] = value
                     return
@@ -873,6 +891,11 @@ class ConversionPart {
 @CompileStatic
 abstract class BaseMarcFieldHandler extends ConversionPart {
 
+    /**
+     * Keep actual field tag intact on handlers having a specific "when"
+     * condition. (See {@link MatchRule}).
+     */
+    String baseTag
     String tag
     Map tokenMaps
     String definesDomainEntityType
@@ -880,15 +903,18 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     Map computeLinks
     boolean repeatable = false
     String resourceType
+    String groupId
     Map linkRepeated = null
     boolean onlySubsequentRepeated = false
 
     static final ConvertResult OK = new ConvertResult(true)
     static final ConvertResult FAIL = new ConvertResult(false)
 
-    BaseMarcFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn) {
+    BaseMarcFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn,
+            String baseTag = tag) {
         this.ruleSet = ruleSet
         this.tag = tag
+        this.baseTag = baseTag
         this.tokenMaps = ruleSet.conversion.tokenMaps
         if (fieldDfn.aboutType) {
             definesDomainEntityType = fieldDfn.aboutType
@@ -901,6 +927,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
             link = fieldDfn.link
         }
         resourceType = fieldDfn.resourceType
+        groupId = fieldDfn.groupId
         embedded = fieldDfn.embedded == true
 
         Map dfn = (Map) fieldDfn['linkEveryIfRepeated']
@@ -914,6 +941,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
                     link        : dfn.addLink ?: dfn.link,
                     repeatable  : dfn.containsKey('addLink'),
                     resourceType: dfn.resourceType,
+                    groupId     : dfn.groupId,
                     embedded    : dfn.embedded
             ]
 
@@ -929,21 +957,51 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     }
 
     Map getLinkRule(Map state, value) {
-        if (linkRepeated) {
-            Collection tagValues = (Collection) state.sourceMap[tag]
-            if (tagValues.size() > 1) {
-                boolean firstOccurrence = value.is(tagValues[0][tag])
+        if (this.linkRepeated) {
+            Map linkRepeated = [:]
+            linkRepeated.putAll(this.linkRepeated)
+            Collection fieldGroup = (Collection) state.sourceMap[baseTag]
+            if (fieldGroup.size() > 1) {
+                boolean firstOccurrence = value.is(fieldGroup[0][baseTag])
                 if (!(firstOccurrence && onlySubsequentRepeated)) {
+                    if (linkRepeated.groupId) {
+                        linkRepeated.groupId = makeGroupId(
+                                baseTag, (String) linkRepeated.groupId,
+                                fieldGroup, value, -1)
+                    }
                     return linkRepeated
                 }
             }
         }
+        String groupId = this.groupId ?
+            makeGroupId(baseTag, this.groupId,
+                    (Collection) state.sourceMap[baseTag], value)
+            : null
         return [
                 link        : this.link,
                 repeatable  : this.repeatable,
                 resourceType: this.resourceType,
+                groupId     : groupId,
                 embedded    : this.embedded
         ]
+    }
+
+    /**
+     * The groupId mechanism combines fields describing the same entity.
+     *
+     * This is based on a heuristic of "balanced" groups, where the fields in
+     * question have to use the same groupId, and be repeated exactly the same
+     * number of times.
+     */
+    String makeGroupId(String tag, String groupId, Collection fieldGroup, value,
+            int offset = 0) {
+        def seq = (fieldGroup.withIndex()).findResult { it, int i ->
+            if (it[tag].is(value)) {
+                return "g${fieldGroup.size() + offset}-${i + 1 + offset}"
+            }
+        }
+        // TODO: also support $6/$8
+        return groupId.replaceFirst('\\$seq', "$seq")
     }
 
 }
@@ -1209,7 +1267,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         def entityMap = state.entityMap
         if (linkRule.link) {
             def ent = entityMap[aboutEntityName]
-            def newEnt = newEntity(state, linkRule.resourceType, null, linkRule.embedded)
+            def newEnt = newEntity(state, linkRule.resourceType, linkRule.groupId, linkRule.embedded)
             addValue(ent, linkRule.link, newEnt, linkRule.repeatable)
             state = state.clone()
             state.entityMap = entityMap.clone()
@@ -1518,8 +1576,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
 
     @CompileStatic(SKIP)
-    MarcFieldHandler(ruleSet, tag, fieldDfn) {
-        super(ruleSet, tag, fieldDfn)
+    MarcFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn,
+            String baseTag = tag) {
+        super(ruleSet, tag, fieldDfn, baseTag)
         ind1 = fieldDfn.i1 ? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1) : null
         ind2 = fieldDfn.i2 ? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2) : null
         pendingResources = fieldDfn.pendingResources
@@ -1789,7 +1848,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 linkRule.repeatable = true
             }
 
-            newEnt = newEntity(state, linkRule.resourceType, null, linkRule.embedded)
+            newEnt = newEntity(state, linkRule.resourceType, linkRule.groupId, linkRule.embedded)
 
             // TODO: use @id (existing or added bnode-id) instead of duplicating newEnt
             def entRef = newEnt
@@ -1940,7 +1999,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                             }
                         }
                         Util.asList(about).eachWithIndex { item, pos ->
-                            if (!item || (pending.resourceType && !(pending.resourceType in Util.asList(item['@type'])))) {
+                            if (!item || (pending.resourceType && !isInstanceOf(item, pending.resourceType))) {
                                 return
                             } else if (pos == 0 && pending.itemPos == 'rest') {
                                 return
@@ -2024,9 +2083,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
                 // TODO: This check is rather crude for determining if an
                 // entity has already been reverted. There *might* be several
-                // fields contributing to a nested entity...
-                if ((selectedEntity != topEntity && selectedEntity._revertedBy) ||
-                    selectedEntity._revertedBy == thisTag) {
+                // fields contributing to a nested entity. (Using groupId for
+                // those is now adviced.)
+                if (
+                        (selectedEntity != topEntity &&
+                         selectedEntity._revertedBy && (!groupId || selectedEntity._groupId != groupId)) ||
+                        selectedEntity._revertedBy == thisTag) {
                     failedRequired = true
                     return
                     //subs << ['DEBUG:blockedSinceRevertedBy': selectedEntity._revertedBy]
@@ -2083,7 +2145,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             // TODO: store reverted input refs instead of tagging input data
-            usedEntities.each { it._revertedBy = thisTag }
+            usedEntities.each { it._revertedBy = thisTag; it._groupId = groupId }
             //field._revertedBy = this.tag
             return field
         } else {
@@ -2437,7 +2499,7 @@ class MatchRule {
         if (when) {
             tag += "[${when}]"
         }
-        handler = new MarcFieldHandler(parent.ruleSet, tag, dfn)
+        handler = new MarcFieldHandler(parent.ruleSet, tag, dfn, parent.baseTag)
         // Fixate matched indicator values in nested match rules
         handler.matchRules.each {
             if (ind1) {
