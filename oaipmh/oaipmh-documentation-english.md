@@ -33,7 +33,7 @@ For example if `metadataPrefix=marcxml_expanded` is used for a bilbiographic rec
 ## Libris specific parameters:
 The Libris OAI-PMH implementation allows one extra parameter which is not a part of the OAI-PMH specification. This parameter is called `x-withDeletedData` and may be used with the verbs `GetRecord` and `ListRecords`. If `x-withDeletedData` is set to `true` this results in data being delivered for records even if those records are marked deleted. This violates the OAI-PMH specification, which explicitly forbids both extra parameters and delivering deleted data. The parameter has been included anyway, because it is necessary for certain Libris functionality.
 
-#### Exempel
+#### Example
 To harvest (from the Libris QA-environment) all bibliographic records (with a list of holding records attached) for which there exists holding records with the sigel `S` and that have been modified between 13/2 and 12:00 14/2 (UTC):
 
 ```
