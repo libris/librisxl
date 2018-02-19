@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -60,6 +61,16 @@ public class Utils
     {
         try
         {
+            // Embellish data
+            List externalRefs = document.getExternalRefs();
+            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) s_jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()));
+            Map referencedData = s_whelk.bulkLoad(convertedExternalLinks);
+            Map referencedData2 = new HashMap();
+            for (Object key : referencedData.keySet())
+                referencedData2.put(key, ((Document)referencedData.get(key)).data );
+
+            s_jsonld.embellish(document.data, referencedData2, false);
+
             return (String) s_toMarcConverter.convert(document.data, document.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY());
         }
         catch (Exception | Error e)
