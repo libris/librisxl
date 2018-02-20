@@ -150,7 +150,8 @@ class ImporterMain {
                 props.getProperty("elasticHost"),
                 props.getProperty("elasticCluster"),
                 props.getProperty("elasticIndex"))
-        Whelk whelk = new Whelk(postgreSqlComponent, elasticSearch)
+        boolean useCache = true
+        Whelk whelk = new Whelk(postgreSqlComponent, elasticSearch, useCache)
         def reindex = new ElasticReindexer(whelk)
         reindex.reindex(collection)
     }

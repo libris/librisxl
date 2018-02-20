@@ -114,7 +114,6 @@ class Crud extends HttpServlet {
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
                      String dataset) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
-        String callback = queryParameters.remove("callback")
 
         try {
             Map results = search.doSearch(queryParameters, dataset, jsonld)
@@ -279,13 +278,7 @@ class Crud extends HttpServlet {
     }
 
     private Document getEmbellishedDocument(Document doc) {
-        List externalRefs = doc.getExternalRefs()
-        List convertedExternalLinks = convertExternalLinks(externalRefs)
-        Map referencedData = getReferencedData(convertedExternalLinks)
-        boolean filterOutNonChipTerms = false
-        doc.embellish(referencedData, jsonld, filterOutNonChipTerms)
-
-        return doc
+        return whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
     }
 
     /**
@@ -1091,7 +1084,7 @@ class Crud extends HttpServlet {
             } else {
                 log.debug("Removing resource at ${doc.getShortId()}")
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
-                whelk.remove(doc.getShortId(), "xl", activeSigel, LegacyIntegrationTools.determineLegacyCollection(doc, jsonld))
+                whelk.remove(doc.getShortId(), "xl", activeSigel)
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
         } catch (ModelValidationException mve) {
