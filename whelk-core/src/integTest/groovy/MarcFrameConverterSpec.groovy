@@ -2,6 +2,7 @@ package whelk.converter.marc
 
 
 import spock.lang.*
+import whelk.JsonLd
 import whelk.util.URIWrapper
 
 
@@ -26,6 +27,8 @@ class MarcFrameConverterSpec extends Specification {
     static postProcStepSpecs = []
 
     static {
+
+        MarcFrameCli.addJsonLd(converter)
 
         converter.conversion.sharedPostProcSteps.eachWithIndex { step, i ->
             def dfn = converter.config.postProcessing

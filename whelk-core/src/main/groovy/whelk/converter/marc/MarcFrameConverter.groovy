@@ -27,28 +27,34 @@ class MarcFrameConverter implements FormatConverter {
     ObjectMapper mapper = new ObjectMapper()
     String cfgBase = "ext"
     LinkFinder linkFinder
+    JsonLd ld
 
     protected MarcConversion conversion
 
-    MarcFrameConverter(LinkFinder linkFinder = null) {
+    MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null) {
         this.linkFinder = linkFinder
-        def config = readConfig("$cfgBase/marcframe.json")
-        initialize(config)
+        setLd(ld)
     }
 
-    private MarcFrameConverter(Map config) {
-        initialize(config)
+    void setLd(JsonLd ld) {
+        this.ld = ld
+        if (ld) initialize()
+    }
+
+    void initialize() {
+        if (conversion) return
+        initialize(readConfig("$cfgBase/marcframe.json"))
+    }
+
+    void initialize(Map config) {
+        def tokenMaps = loadTokenMaps(config.tokenMaps)
+        conversion = new MarcConversion(this, config, tokenMaps)
     }
 
     Map readConfig(String path) {
         return getClass().classLoader.getResourceAsStream(path).withStream {
             mapper.readValue(it, SortedMap)
         }
-    }
-
-    void initialize(Map config) {
-        def tokenMaps = loadTokenMaps(config.tokenMaps)
-        conversion = new MarcConversion(this, config, tokenMaps)
     }
 
     Map loadTokenMaps(tokenMaps) {
@@ -79,10 +85,12 @@ class MarcFrameConverter implements FormatConverter {
     }
 
     Map runConvert(Map marcSource, String recordId = null, Map extraData = null) {
+        initialize()
         return conversion.convert(marcSource, recordId, extraData)
     }
 
     Map runRevert(Map data) {
+        initialize()
         if (data['@graph']) {
             def entryId = data['@graph'][0]['@id']
             data = JsonLd.frame(entryId, data)
@@ -122,8 +130,10 @@ class MarcConversion {
     Map<String, MarcRuleSet> marcRuleSets = [:]
     boolean doPostProcessing = true
     boolean flatLinkedForm = true
+    boolean keepGroupIds = false
     Map marcTypeMap = [:]
     Map tokenMaps
+    private Set missingTerms = [] as Set
 
     URIWrapper baseUri = Document.BASE_URI
 
@@ -132,6 +142,7 @@ class MarcConversion {
         this.tokenMaps = tokenMaps
         this.converter = converter
         //this.baseUri = new URI(config.baseUri ?: '/')
+        this.keepGroupIds = config.keepGroupIds == true
 
         this.sharedPostProcSteps = config.postProcessing.collect {
             parsePostProcStep(it)
@@ -143,6 +154,23 @@ class MarcConversion {
             marcRuleSet.buildHandlers(config)
         }
         addTypeMaps()
+
+        if (missingTerms) {
+            // log.warn? Though, this "should" not happen in prod...
+            missingTerms.each {
+                System.err.println "Missing: $it.key a $it.type"
+            }
+        }
+    }
+
+    void checkTerm(key, type) {
+        if (!key || key == '@type' || !converter.ld)
+            return
+        def terms = converter.ld.vocabIndex.keySet()
+        String term = converter.ld.expand((String) key)
+        if (!(term in terms)) {
+            missingTerms << [key: term, type: type]
+        }
     }
 
     MarcFramePostProcStep parsePostProcStep(Map stepDfn) {
@@ -247,6 +275,20 @@ class MarcConversion {
             }
         }
 
+        URIWrapper recordUri = record["@id"] ? new URIWrapper(record["@id"]) : null
+        state.quotedEntities.each {
+            def entityId = it['@id']
+            // TODO: Prepend groupId with prefix to avoid collision with
+            // other possible uses of relative id:s?
+            if (entityId && (entityId.startsWith('#') || entityId.startsWith('_:'))) {
+                if (keepGroupIds && recordUri) {
+                    it['@id'] = recordUri.resolve(entityId).toString()
+                } else {
+                    it.remove('@id')
+                }
+            }
+        }
+
         marcRuleSet.completeEntities(state.entityMap)
 
         def linkedThing = record[marcRuleSet.thingLink]
@@ -286,8 +328,6 @@ class MarcConversion {
                 }
             }
         }
-
-        def quotedIds = new HashSet()
 
         if (converter.linkFinder) {
             def recordCandidates = extraData?.get("oaipmhSetSpecs")?.findResults {
@@ -353,7 +393,8 @@ class MarcConversion {
         def marc = [:]
         def fields = []
         marc['fields'] = fields
-        marcRuleSet.fieldHandlers.each { tag, handler ->
+        marcRuleSet.revertFieldOrder.each { tag ->
+            def handler = marcRuleSet.fieldHandlers[tag]
             def value = handler.revert(data, marc)
             if (tag == "000") {
                 marc.leader = value
@@ -397,6 +438,8 @@ class MarcRuleSet {
     List<MarcFramePostProcStep> postProcSteps
 
     Set primaryTags = new HashSet()
+
+    Iterable<String> revertFieldOrder = new LinkedHashSet<>()
 
     // aboutTypeMap is used on revert to determine which ruleSet to use
     Map<String, Set<String>> aboutTypeMap = new HashMap<String, Set<String>>()
@@ -476,6 +519,7 @@ class MarcRuleSet {
                 handler = new MarcSimpleFieldHandler(this, tag, dfn)
                 assert handler.property || handler.uriTemplate, "Incomplete: $tag: $dfn"
             }
+
             fieldHandlers[tag] = handler
         }
 
@@ -483,6 +527,27 @@ class MarcRuleSet {
         if (defaultThingType) {
             aboutTypeMap['?thing'] << defaultThingType
         }
+
+
+        fieldHandlers.each { tag, handler ->
+            if (handler instanceof MarcFieldHandler && handler.onRevertPrefer) {
+                Collection tagsToPrefer = handler.onRevertPrefer.findAll {
+                    it in fieldHandlers
+                }
+                tagsToPrefer.each {
+                    def prefHandler = fieldHandlers[it]
+                    if (prefHandler instanceof MarcFieldHandler && prefHandler.onRevertPrefer) {
+                        assert !(tag in prefHandler.onRevertPrefer),
+                                "$name $it onRevertPrefer conflicts with $tag"
+                    }
+                }
+                revertFieldOrder += tagsToPrefer
+            }
+            if (!(tag in revertFieldOrder)) {
+                revertFieldOrder << tag
+            }
+        }
+
     }
 
     def processInherit(config, subConf, tag, fieldDfn) {
@@ -733,6 +798,7 @@ class MarcRuleSet {
 }
 
 
+@Log
 @CompileStatic
 class ConversionPart {
 
@@ -742,6 +808,27 @@ class ConversionPart {
     String tokenMapName // TODO: remove in columns in favour of @type+code/uriTemplate ?
     Map reverseTokenMap
     boolean embedded = false
+
+    JsonLd getLd() {
+        return ruleSet.conversion.converter.ld
+    }
+
+    def propTerm(key) {
+        term(key, 'DatatypeProperty')
+    }
+
+    def linkTerm(key) {
+        term(key, 'ObjectProperty')
+    }
+
+    def typeTerm(key) {
+        term(key, 'Class')
+    }
+
+    def term(key, type) {
+        ruleSet.conversion.checkTerm(key, type)
+        return key
+    }
 
     void setTokenMap(BaseMarcFieldHandler fieldHandler, Map dfn) {
         def tokenMap = dfn.tokenMap
@@ -822,6 +909,10 @@ class ConversionPart {
             if (vId) {
                 def existing = l.find { it instanceof Map && it["@id"] == vId }
                 if (existing) {
+                    // TODO: Unchecked mappings might overwrite data here!
+                    // - check if overwritten @type is on the same
+                    //   hierarchical path as the new, use most specific
+                    // - merge values as lists?
                     ((Map) value).putAll((Map) existing)
                     l[l.indexOf(existing)] = value
                     return
@@ -836,11 +927,25 @@ class ConversionPart {
         obj[key] = value
     }
 
+    boolean isInstanceOf(Map entity, String baseType) {
+        def type = entity['@type']
+        if (type == null)
+            return false
+        List<String> types = type instanceof String ? [(String) type] : (List<String>) type
+        return ld ? types.any { ld.isSubClassOf(it, baseType) }
+                  : types.contains(baseType)
+    }
+
 }
 
 @CompileStatic
 abstract class BaseMarcFieldHandler extends ConversionPart {
 
+    /**
+     * Keep actual field tag intact on handlers having a specific "when"
+     * condition. (See {@link MatchRule}).
+     */
+    String baseTag
     String tag
     Map tokenMaps
     String definesDomainEntityType
@@ -848,27 +953,28 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     Map computeLinks
     boolean repeatable = false
     String resourceType
+    String groupId
     Map linkRepeated = null
     boolean onlySubsequentRepeated = false
 
     static final ConvertResult OK = new ConvertResult(true)
     static final ConvertResult FAIL = new ConvertResult(false)
 
-    BaseMarcFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn) {
+    BaseMarcFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn,
+            String baseTag = tag) {
         this.ruleSet = ruleSet
         this.tag = tag
+        this.baseTag = baseTag
         this.tokenMaps = ruleSet.conversion.tokenMaps
         if (fieldDfn.aboutType) {
             definesDomainEntityType = fieldDfn.aboutType
         }
         aboutEntityName = fieldDfn.aboutEntity ?: '?thing'
-        if (fieldDfn.addLink) {
-            link = fieldDfn.addLink
-            repeatable = true
-        } else {
-            link = fieldDfn.link
-        }
-        resourceType = fieldDfn.resourceType
+
+        link = linkTerm(fieldDfn.link ?: fieldDfn.addLink)
+        repeatable = fieldDfn.containsKey('addLink')
+        resourceType = typeTerm(fieldDfn.resourceType)
+        groupId = fieldDfn.groupId
         embedded = fieldDfn.embedded == true
 
         Map dfn = (Map) fieldDfn['linkEveryIfRepeated']
@@ -879,9 +985,10 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         }
         if (dfn) {
             linkRepeated = [
-                    link        : dfn.addLink ?: dfn.link,
+                    link        : linkTerm(dfn.addLink ?: dfn.link),
                     repeatable  : dfn.containsKey('addLink'),
-                    resourceType: dfn.resourceType,
+                    resourceType: typeTerm(dfn.resourceType),
+                    groupId     : dfn.groupId,
                     embedded    : dfn.embedded
             ]
 
@@ -897,21 +1004,51 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     }
 
     Map getLinkRule(Map state, value) {
-        if (linkRepeated) {
-            Collection tagValues = (Collection) state.sourceMap[tag]
-            if (tagValues.size() > 1) {
-                boolean firstOccurrence = value.is(tagValues[0][tag])
+        if (this.linkRepeated) {
+            Map linkRepeated = [:]
+            linkRepeated.putAll(this.linkRepeated)
+            Collection fieldGroup = (Collection) state.sourceMap[baseTag]
+            if (fieldGroup.size() > 1) {
+                boolean firstOccurrence = value.is(fieldGroup[0][baseTag])
                 if (!(firstOccurrence && onlySubsequentRepeated)) {
+                    if (linkRepeated.groupId) {
+                        linkRepeated.groupId = makeGroupId(
+                                baseTag, (String) linkRepeated.groupId,
+                                fieldGroup, value, -1)
+                    }
                     return linkRepeated
                 }
             }
         }
+        String groupId = this.groupId ?
+            makeGroupId(baseTag, this.groupId,
+                    (Collection) state.sourceMap[baseTag], value)
+            : null
         return [
                 link        : this.link,
                 repeatable  : this.repeatable,
                 resourceType: this.resourceType,
+                groupId     : groupId,
                 embedded    : this.embedded
         ]
+    }
+
+    /**
+     * The groupId mechanism combines fields describing the same entity.
+     *
+     * This is based on a heuristic of "balanced" groups, where the fields in
+     * question have to use the same groupId, and be repeated exactly the same
+     * number of times.
+     */
+    String makeGroupId(String tag, String groupId, Collection fieldGroup, value,
+            int offset = 0) {
+        def seq = (fieldGroup.withIndex()).findResult { it, int i ->
+            if (it[tag].is(value)) {
+                return "g${fieldGroup.size() + offset}-${i + 1 + offset}"
+            }
+        }
+        // TODO: also support $6/$8
+        return groupId.replaceFirst('\\$seq', "$seq")
     }
 
 }
@@ -1177,7 +1314,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         def entityMap = state.entityMap
         if (linkRule.link) {
             def ent = entityMap[aboutEntityName]
-            def newEnt = newEntity(state, linkRule.resourceType, null, linkRule.embedded)
+            def newEnt = newEntity(state, linkRule.resourceType, linkRule.groupId, linkRule.embedded)
             addValue(ent, linkRule.link, newEnt, linkRule.repeatable)
             state = state.clone()
             state.entityMap = entityMap.clone()
@@ -1267,12 +1404,12 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     MarcSimpleFieldHandler(ruleSet, tag, fieldDfn) {
         super(ruleSet, tag, fieldDfn)
         super.setTokenMap(this, fieldDfn)
+        property = propTerm(fieldDfn.property ?: fieldDfn.addProperty)
         if (fieldDfn.addProperty) {
-            property = fieldDfn.addProperty
+            // This is shared with repeated link in BaseMarcFieldHandler...
             repeatable = true
-        } else {
-            property = fieldDfn.property
         }
+
         def parseDateTime = fieldDfn.parseDateTime
         if (parseDateTime) {
             missingCentury = (parseDateTime == "yyMMdd")
@@ -1481,16 +1618,23 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     List<MatchRule> matchRules
     Map<String, Map> pendingResources
     String aboutAlias
-    String ignoreOnRevertInFavourOf
+    List<String> onRevertPrefer
 
     static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
 
     @CompileStatic(SKIP)
-    MarcFieldHandler(ruleSet, tag, fieldDfn) {
-        super(ruleSet, tag, fieldDfn)
+    MarcFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn,
+            String baseTag = tag) {
+        super(ruleSet, tag, fieldDfn, baseTag)
         ind1 = fieldDfn.i1 ? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1) : null
         ind2 = fieldDfn.i2 ? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2) : null
         pendingResources = fieldDfn.pendingResources
+        pendingResources?.values().each {
+            linkTerm(it.link ?: it.addLink)
+            typeTerm(it.resourceType)
+            propTerm(it.property ?: it.addProperty)
+        }
+
         aboutAlias = fieldDfn.aboutAlias
 
         dependsOn = fieldDfn.dependsOn
@@ -1502,7 +1646,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             uriTemplateKeys = fromTemplate(uriTemplate).variables as Set
             uriTemplateDefaults = fieldDfn.uriTemplateDefaults
         }
-        ignoreOnRevertInFavourOf = fieldDfn.ignoreOnRevertInFavourOf
+        onRevertPrefer = (List<String>) (fieldDfn.onRevertPrefer instanceof String ?
+                [fieldDfn.onRevertPrefer] : fieldDfn.onRevertPrefer)
 
         computeLinks = (fieldDfn.computeLinks) ? new HashMap(fieldDfn.computeLinks) : [:]
         if (computeLinks) {
@@ -1756,7 +1901,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 linkRule.repeatable = true
             }
 
-            newEnt = newEntity(state, linkRule.resourceType, null, linkRule.embedded)
+            newEnt = newEntity(state, linkRule.resourceType, linkRule.groupId, linkRule.embedded)
 
             // TODO: use @id (existing or added bnode-id) instead of duplicating newEnt
             def entRef = newEnt
@@ -1797,11 +1942,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     @CompileStatic(SKIP)
     def revert(Map data, Map result, List<MatchRule> usedMatchRules = []) {
 
-        // TODO:IMPROVE: only ignore if the one in favour succeeds.
-        if (ignoreOnRevertInFavourOf) {
-            return null
-        }
-
         def matchedResults = []
 
         // NOTE: Each possible match rule might produce data from *different* entities.
@@ -1815,12 +1955,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         final Map topEntity = getEntity(data)
 
-        def types = topEntity['@type']
-        if (types instanceof String) {
-            types = [types]
-        }
-        if (definesDomainEntityType && !(types.contains(definesDomainEntityType)))
+        if (definesDomainEntityType && !isInstanceOf(topEntity, definesDomainEntityType)) {
             return null
+        }
 
         def results = []
 
@@ -1863,9 +2000,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                                 return false
                             }
                         }
-                        def type = it['@type']
-                        return (type instanceof List) ?
-                                useLink.resourceType in type : type == useLink.resourceType
+                        return isInstanceOf(it, useLink.resourceType)
                     }
                 }
             }
@@ -1888,7 +2023,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    static Tuple2<Boolean, Map<String, List>> buildAboutMap(String aboutAlias, Map pendingResources, Map entity) {
+    Tuple2<Boolean, Map<String, List>> buildAboutMap(String aboutAlias, Map pendingResources, Map entity) {
         Map<String, List> aboutMap = [:]
         boolean requiredOk = true
 
@@ -1910,14 +2045,14 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     parents?.each {
                         def about = it[pending.link ?: pending.addLink]
                         if (!about && pending.absorbSingle) {
-                            if (pending.resourceType in Util.asList(it['@type'])) {
+                            if (isInstanceOf(it, pending.resourceType)) {
                                 about = it
                             } else {
                                 requiredOk = false
                             }
                         }
                         Util.asList(about).eachWithIndex { item, pos ->
-                            if (!item || (pending.resourceType && !(pending.resourceType in Util.asList(item['@type'])))) {
+                            if (!item || (pending.resourceType && !isInstanceOf(item, pending.resourceType))) {
                                 return
                             } else if (pos == 0 && pending.itemPos == 'rest') {
                                 return
@@ -2001,9 +2136,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
                 // TODO: This check is rather crude for determining if an
                 // entity has already been reverted. There *might* be several
-                // fields contributing to a nested entity...
-                if ((selectedEntity != topEntity && selectedEntity._revertedBy) ||
-                    selectedEntity._revertedBy == thisTag) {
+                // fields contributing to a nested entity. (Using groupId for
+                // those is now adviced.)
+                if (
+                        (selectedEntity != topEntity &&
+                         selectedEntity._revertedBy && (!groupId || selectedEntity._groupId != groupId)) ||
+                        selectedEntity._revertedBy == thisTag) {
                     failedRequired = true
                     return
                     //subs << ['DEBUG:blockedSinceRevertedBy': selectedEntity._revertedBy]
@@ -2060,7 +2198,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             // TODO: store reverted input refs instead of tagging input data
-            usedEntities.each { it._revertedBy = thisTag }
+            usedEntities.each { it._revertedBy = thisTag; it._groupId = groupId }
             //field._revertedBy = this.tag
             return field
         } else {
@@ -2113,7 +2251,6 @@ class MarcSubFieldHandler extends ConversionPart {
         punctuationChars = (subDfn.punctuationChars ?: trailingPunctuation?.trim())?.toCharArray()
         surroundingChars = subDfn.surroundingChars?.toCharArray()
         super.setTokenMap(fieldHandler, subDfn)
-        link = subDfn.link
 
         if (subDfn.aboutNew) {
             about = subDfn.aboutNew
@@ -2126,23 +2263,21 @@ class MarcSubFieldHandler extends ConversionPart {
             about = subDfn.about
         }
 
-        required = subDfn.required
-        repeatable = false
-        if (subDfn.addLink) {
-            repeatable = true
-            link = subDfn.addLink
-        }
-        property = subDfn.property
-        repeatProperty = false
-        if (subDfn.addProperty) {
-            property = subDfn.addProperty
-            repeatProperty = true
-        }
+        link = linkTerm(subDfn.link ?: subDfn.addLink)
+        repeatable = subDfn.containsKey('addLink')
+
+        property = propTerm(subDfn.property ?: subDfn.addProperty)
+        repeatProperty = subDfn.containsKey('addProperty')
+
+        resourceType = typeTerm(subDfn.resourceType)
+
+        required = subDfn.required == true
         overwrite = subDfn.overwrite == true
-        resourceType = subDfn.resourceType
+
         if (subDfn.uriTemplate) {
             subUriTemplate = subDfn.uriTemplate
         }
+
         if (subDfn.splitValuePattern) {
             /*TODO: assert subDfn.splitValuePattern=~ /^\^.+\$$/,
                    'For explicit safety, these patterns must start with ^ and end with $' */
@@ -2294,7 +2429,7 @@ class MarcSubFieldHandler extends ConversionPart {
             } else if (itemPos == "first")
                 break
 
-            if (resourceType && entity['@type'] != resourceType)
+            if (resourceType && !isInstanceOf(entity, resourceType))
                 continue
 
             if (splitValueProperties && rejoin) {
@@ -2414,7 +2549,7 @@ class MatchRule {
         if (when) {
             tag += "[${when}]"
         }
-        handler = new MarcFieldHandler(parent.ruleSet, tag, dfn)
+        handler = new MarcFieldHandler(parent.ruleSet, tag, dfn, parent.baseTag)
         // Fixate matched indicator values in nested match rules
         handler.matchRules.each {
             if (ind1) {
@@ -2483,6 +2618,7 @@ class MatchRule {
 
     MarcFieldHandler getHandler(Map entity, value) {
         if (matchDomain) {
+            // TODO: !isInstanceOf(entity, matchDomain)
             if (entity['@type'] != matchDomain)
                 return null
             else if (whenTests.size() == 0)

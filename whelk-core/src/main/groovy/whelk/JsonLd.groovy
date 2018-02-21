@@ -112,6 +112,10 @@ public class JsonLd {
         return JsonLd.expandLinks(refs, displayData[JsonLd.CONTEXT_KEY])
     }
 
+    String expand(String ref) {
+        return JsonLd.expand(ref, displayData[JsonLd.CONTEXT_KEY])
+    }
+
     /**
      * This flatten-method does not create description-based flat json (i.e. with entry, items and quoted)
      */
@@ -156,7 +160,6 @@ public class JsonLd {
         return updated
     }
 
-
     public static List getExternalReferences(Map jsonLd){
         Set allReferences = getAllReferences(jsonLd)
         Set localObjects = getLocalObjects(jsonLd)
@@ -167,23 +170,22 @@ public class JsonLd {
     }
 
     static List expandLinks(List refs, Map context) {
-        List result = []
-        refs.each { ref ->
-            def match
-            if (ref =~ $/^https?:///$) {
-                result << ref
-            } else if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
-                def resolved = context[match[0][1]]
-                if (resolved) {
-                    URIWrapper base = new URIWrapper(resolved)
-                    result << base.resolve(match[0][2]).toString()
-                }
-            } else {
-                result << ref
-            }
-        }
+        return refs.collect { expand(it) }
+    }
 
-        return result
+    static String expand(String ref, Map context) {
+        def match
+        if (ref =~ $/^https?:///$) {
+            return ref
+        } else if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
+            def resolved = context[match[0][1]]
+            if (resolved) {
+                URIWrapper base = new URIWrapper(resolved)
+                return base.resolve(match[0][2]).toString()
+            }
+        } else {
+            return ref
+        }
     }
 
     private static Set getLocalObjects(Map jsonLd) {
