@@ -33,24 +33,28 @@ class MarcFrameConverter implements FormatConverter {
 
     MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null) {
         this.linkFinder = linkFinder
-        this.ld = ld
-        def config = readConfig("$cfgBase/marcframe.json")
-        initialize(config)
+        setLd(ld)
     }
 
-    private MarcFrameConverter(Map config) {
-        initialize(config)
+    void setLd(JsonLd ld) {
+        this.ld = ld
+        if (ld) initialize()
+    }
+
+    void initialize() {
+        if (conversion) return
+        initialize(readConfig("$cfgBase/marcframe.json"))
+    }
+
+    void initialize(Map config) {
+        def tokenMaps = loadTokenMaps(config.tokenMaps)
+        conversion = new MarcConversion(this, config, tokenMaps)
     }
 
     Map readConfig(String path) {
         return getClass().classLoader.getResourceAsStream(path).withStream {
             mapper.readValue(it, SortedMap)
         }
-    }
-
-    void initialize(Map config) {
-        def tokenMaps = loadTokenMaps(config.tokenMaps)
-        conversion = new MarcConversion(this, config, tokenMaps)
     }
 
     Map loadTokenMaps(tokenMaps) {
@@ -81,10 +85,12 @@ class MarcFrameConverter implements FormatConverter {
     }
 
     Map runConvert(Map marcSource, String recordId = null, Map extraData = null) {
+        initialize()
         return conversion.convert(marcSource, recordId, extraData)
     }
 
     Map runRevert(Map data) {
+        initialize()
         if (data['@graph']) {
             def entryId = data['@graph'][0]['@id']
             data = JsonLd.frame(entryId, data)
@@ -774,6 +780,7 @@ class MarcRuleSet {
 }
 
 
+@Log
 @CompileStatic
 class ConversionPart {
 
@@ -786,6 +793,18 @@ class ConversionPart {
 
     JsonLd getLd() {
         return ruleSet.conversion.converter.ld
+    }
+
+    def term(key) {
+        if (ld && key) {
+            def terms = ld.vocabIndex.keySet()
+            String term = ld.expand((String) key)
+            if (!(term in terms)) {
+                // log.warn? Though, this "should" not happen in prod...
+                System.err.println "Missing term: $term"
+            }
+        }
+        return key
     }
 
     void setTokenMap(BaseMarcFieldHandler fieldHandler, Map dfn) {
@@ -929,12 +948,12 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         }
         aboutEntityName = fieldDfn.aboutEntity ?: '?thing'
         if (fieldDfn.addLink) {
-            link = fieldDfn.addLink
+            link = term(fieldDfn.addLink)
             repeatable = true
         } else {
-            link = fieldDfn.link
+            link = term(fieldDfn.link)
         }
-        resourceType = fieldDfn.resourceType
+        resourceType = term(fieldDfn.resourceType)
         groupId = fieldDfn.groupId
         embedded = fieldDfn.embedded == true
 
