@@ -380,4 +380,12 @@ class JsonLdSpec extends Specification {
         !ld.isSubClassOf('Work', 'ProvisionActivity')
     }
 
+    def "expand prefixes"() {
+        given:
+        Map context = ["ex": "http://example.org/ns/"]
+        expect:
+        JsonLd.expandLinks(['/path', 'ex:path', 'other:path'], context) ==
+                ['/path', 'http://example.org/ns/path', 'other:path']
+    }
+
 }

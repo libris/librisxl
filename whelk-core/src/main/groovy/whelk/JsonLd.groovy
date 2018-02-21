@@ -183,9 +183,8 @@ public class JsonLd {
                 URIWrapper base = new URIWrapper(resolved)
                 return base.resolve(match[0][2]).toString()
             }
-        } else {
-            return ref
         }
+        return ref
     }
 
     private static Set getLocalObjects(Map jsonLd) {
