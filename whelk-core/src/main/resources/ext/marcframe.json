@@ -10128,7 +10128,7 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
 
-    "760": {"aboutEntity": "?work", "NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSeries"},
+    "760": {"aboutEntity": "?work", "NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "subseriesOf"},
     "762": {"aboutEntity": "?work","NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSubseries"},
     "765": {"inherit": "772", "addLink": "translationOf"},
     "767": {"inherit": "772", "addLink": "translation"},
