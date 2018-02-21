@@ -6016,7 +6016,7 @@
       "$a": {"about": "_:contentType", "property": "label"},
       "$b": {"about": "_:contentType", "property": "code"},
       "$2": {"about": "_:contentType", "property": "termGroup"},
-      "$8": {"about": "_:contentType", "property": "_groupID"}
+      "$8": {"about": "_:contentType", "property": "marc:groupid"}
     },
     "337": {
       "linkSubsequentRepeated": {
@@ -6031,7 +6031,7 @@
       "$a": {"about": "_:mediaType", "property": "label"},
       "$b": {"about": "_:mediaType", "property": "code"},
       "$2": {"about": "_:mediaType", "property": "termGroup"},
-      "$8": {"about": "_:mediaType", "property": "_groupID"}
+      "$8": {"about": "_:mediaType", "property": "marc:groupid"}
     },
     "338": {
       "linkSubsequentRepeated": {
@@ -6045,7 +6045,7 @@
       "$a": {"about": "_:carrierType", "property": "label"},
       "$b": {"about": "_:carrierType", "property": "code"},
       "$2": {"about": "_:carrierType", "property": "termGroup"},
-      "$8": {"about": "_:carrierType", "property": "_groupID"},
+      "$8": {"about": "_:carrierType", "property": "marc:groupid"},
       "_spec": [
         {
           "source": {
