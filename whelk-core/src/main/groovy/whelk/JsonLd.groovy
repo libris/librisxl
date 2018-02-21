@@ -170,7 +170,7 @@ public class JsonLd {
     }
 
     static List expandLinks(List refs, Map context) {
-        return refs.collect { expand(it) }
+        return refs.collect { expand(it, context) }
     }
 
     static String expand(String ref, Map context) {
