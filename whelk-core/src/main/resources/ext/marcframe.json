@@ -1089,6 +1089,7 @@
     },
 
     "hasSeriesInstance": {
+      "include": "record_from_w",
       "pendingResources": {
         "_:work": {
           "link": "instanceOf",
@@ -1106,7 +1107,6 @@
         }
       },
       "$t": {"about": "_:title", "property": "mainTitle"},
-      "$w": {"property": "marc:bibliographicRecordControlNumber"},
       "$v": {"property": "seriesEnumeration"},
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
@@ -1311,6 +1311,16 @@
 
     "relation_from_w": {
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
+    },
+
+    "record_from_w": {
+      "$w": {
+        "addLink": "describedBy",
+        "resourceType": "Record",
+        "property": "controlNumber",
+        "uriTemplate": "http://libris.kb.se/bib/{_}",
+        "matchUriToken": "^[0-9a-z]+$"
+      }
     }
 
   },
@@ -6267,7 +6277,7 @@
       "onRevertPrefer": ["490", "800", "810", "811", "830"],
       "addLink": "hasSeries",
       "resourceType": "Instance",
-      "include": ["titledetails", "i2-nonfiling"],
+      "include": ["titledetails", "i2-nonfiling", "record_from_w"],
       "pendingResources": {
         "_:work": {
           "link": "instanceOf",
@@ -6280,7 +6290,6 @@
       },
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$v": {"property": "seriesEnumeration"},
-      "$w": {"property": "marc:bibliographicRecordControlNumber"},
       "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
@@ -6495,16 +6504,16 @@
       ]
     },
     "490": {
-      "TODO:allowSpillOverOnRevert": "800-830",
+      "include": "record_from_w",
       "i1": {"property": "marc:seriesTracingPolicy", "TODO:marcDefault": 0, "TOOO": {"when: 8xx[$t] | 830": "1", "else": "0"}},
       "i2": null,
       "addLink": "hasSeries",
       "resourceType": "Instance",
       "groupId": "#series-$seq",
+      "TODO:allowSpillOverOnRevert": "800-830 (solved by groupId?)",
       "$a": {"addProperty": "seriesStatement"},
       "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
       "$v": {"property": "seriesEnumeration"},
-      "$w": {"property": "marc:bibliographicRecordControlNumber"},
       "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "qvalue"},
       "$6": {"property": "marc:fieldref"},
@@ -10134,6 +10143,7 @@
     "767": {"inherit": "772", "addLink": "translation"},
     "770": {"inherit": "772", "addLink": "supplement"},
     "772": {
+      "include": "record_from_w",
       "addLink": "supplementTo",
       "resourceType": "Work",
       "aboutAlias": "_:supplementTo",
@@ -10183,10 +10193,6 @@
       "$s": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "240"},
       "$t": {"about": "_:title", "property": "title", "TODO:targetMatch": "222, 245"},
       "$u": {"addLink": "identifiedBy", "resourceType": "STRN", "property": "value", "TODO:targetMatch": "027"},
-      "$w": {
-        "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
-        "uriTemplate": "http://libris.kb.se/bib/{_}"
-      },
       "$x": {
         "TODO:targetMatch": "022",
         "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"
@@ -10819,7 +10825,7 @@
       "addLink": "hasSeries",
       "resourceType": "Instance",
       "groupId": "#series-$seq",
-      "include": ["titledetails", "i2-nonfiling"],
+      "include": ["titledetails", "i2-nonfiling", "record_from_w"],
       "pendingResources": {
         "_:work": {
           "link": "instanceOf",
@@ -10833,7 +10839,6 @@
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$d": {"addProperty": "legalDate"},
       "$v": {"property": "seriesEnumeration"},
-      "$w": {"property": "marc:bibliographicRecordControlNumber"},
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
