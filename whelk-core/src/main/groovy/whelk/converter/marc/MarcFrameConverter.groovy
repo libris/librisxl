@@ -415,7 +415,7 @@ class MarcRuleSet {
 
     Set primaryTags = new HashSet()
 
-    List<String> revertFieldOrder = []
+    Iterable<String> revertFieldOrder = new LinkedHashSet<>()
 
     // aboutTypeMap is used on revert to determine which ruleSet to use
     Map<String, Set<String>> aboutTypeMap = new HashMap<String, Set<String>>()
@@ -507,9 +507,17 @@ class MarcRuleSet {
 
         fieldHandlers.each { tag, handler ->
             if (handler instanceof MarcFieldHandler && handler.onRevertPrefer) {
-                revertFieldOrder += handler.onRevertPrefer.findAll {
+                Collection tagsToPrefer = handler.onRevertPrefer.findAll {
                     it in fieldHandlers
                 }
+                tagsToPrefer.each {
+                    def prefHandler = fieldHandlers[it]
+                    if (prefHandler instanceof MarcFieldHandler && prefHandler.onRevertPrefer) {
+                        assert !(tag in prefHandler.onRevertPrefer),
+                                "$name $it onRevertPrefer conflicts with $tag"
+                    }
+                }
+                revertFieldOrder += tagsToPrefer
             }
             if (!(tag in revertFieldOrder)) {
                 revertFieldOrder << tag

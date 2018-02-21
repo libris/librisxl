@@ -6531,6 +6531,7 @@
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "Note",
+      "onRevertPrefer": ["501", "502", "504", "508", "511", "513", "515", "516", "534", "536", "544", "546", "547", "550", "555", "580", "581", "583", "588"],
       "$a": {"property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
@@ -14380,7 +14381,11 @@
     "337": {"ignored": true, "NOTE:record-count": 0, "NOTE:": "Media only on work or instance"},
     "338": {"ignored": true, "NOTE:record-count": 0, "NOTE:": "Carrier only on instance"},
     "347": {"ignored": true, "NOTE:record-count": 0},
-    "500": {"inherit": "bib", "NOTE:local": "LIBRIS-definierat beståndsfält."},
+    "500": {
+      "inherit": "bib",
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "onRevertPrefer": ["562", "563", "583"]
+    },
     "506": {"inherit": "bib", "aboutEntity": "?thing"},
     "520": {"inherit": "bib", "aboutEntity": "?thing", "NOTE:local": "LIBRIS-definierat beståndsfält."},
     "538": {"inherit": "bib", "$5": null},
