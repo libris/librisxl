@@ -240,7 +240,7 @@ class Crud extends HttpServlet {
             return
         } else {
             String contentType = CrudUtils.getBestContentType(request)
-            def responseBody = getFormattedResponseBody(doc, path, contentType)
+            def responseBody = getFormattedResponseBody(doc, path, contentType, version != null)
             String modified = doc.getModified()
             response = maybeAddProposal25Headers(response, loc)
             sendGetResponse(request, response, responseBody, modified,
@@ -250,7 +250,7 @@ class Crud extends HttpServlet {
     }
 
     private Object getFormattedResponseBody(Document doc, String path,
-                                            String contentType) {
+                                            String contentType, boolean archivedVersion) {
         FormattingType format = getFormattingType(path, contentType)
         log.debug("Formatting document ${doc.getCompleteId()} with format " +
                 "${format} and content type ${contentType}")
@@ -260,14 +260,16 @@ class Crud extends HttpServlet {
                 result = doc.data
                 break
             case FormattingType.EMBELLISHED:
-                doc = getEmbellishedDocument(doc)
+                if (!archivedVersion)
+                    doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
                 result = doc.data
                 break
             case FormattingType.FRAMED:
                 result = JsonLd.frame(doc.getCompleteId(), doc.data)
                 break
             case FormattingType.FRAMED_AND_EMBELLISHED:
-                doc = getEmbellishedDocument(doc)
+                if (!archivedVersion)
+                    doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
                 result = JsonLd.frame(doc.getCompleteId(), doc.data)
                 break
             default:
@@ -275,10 +277,6 @@ class Crud extends HttpServlet {
         }
 
         return formatResponseBody(result, contentType)
-    }
-
-    private Document getEmbellishedDocument(Document doc) {
-        return whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
     }
 
     /**
