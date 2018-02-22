@@ -262,7 +262,8 @@ class Crud extends HttpServlet {
             case FormattingType.EMBELLISHED:
                 if (!archivedVersion)
                     doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
-                result = doc.data
+                if (doc != null) // FU unit tests
+                    result = doc.data
                 break
             case FormattingType.FRAMED:
                 result = JsonLd.frame(doc.getCompleteId(), doc.data)
@@ -270,7 +271,8 @@ class Crud extends HttpServlet {
             case FormattingType.FRAMED_AND_EMBELLISHED:
                 if (!archivedVersion)
                     doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
-                result = JsonLd.frame(doc.getCompleteId(), doc.data)
+                if (doc != null) // FU unit tests
+                    result = JsonLd.frame(doc.getCompleteId(), doc.data)
                 break
             default:
                 throw new WhelkRuntimeException("Invalid formatting type: ${format}")

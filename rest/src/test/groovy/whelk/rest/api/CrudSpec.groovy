@@ -490,8 +490,7 @@ class CrudSpec extends Specification {
         crud.doPost(request, response)
         then:
         assert response.getStatus() == HttpServletResponse.SC_CREATED
-        // FIXME use BASE_URI instead of hardcoding
-        assert response.getHeader("Location") =~ /^http:\/\/127.0.0.1:5000\/[0-9a-z]{16}$/
+        assert response.getHeader("Location").matches("^" + Document.getBASE_URI().toString() + "[0-9a-z]{16}\$")
     }
 
     def "POST to / should return 400 Bad Request on empty content"() {
