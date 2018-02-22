@@ -53,18 +53,6 @@ class Whelk {
         authCache.put(authDocument.getShortId(), authDocument)
     }
 
-    void removeFromAuthCache(Document authDocument) {
-        if (!useAuthCache)
-            return
-        for (String uri : authDocument.getRecordIdentifiers()) {
-            authCache.remove(uri)
-        }
-        for (String uri : authDocument.getThingIdentifiers()) {
-            authCache.remove(uri)
-        }
-        authCache.remove(authDocument.getShortId())
-    }
-
     public Whelk(PostgreSQLComponent pg, ElasticSearch es, boolean useCache = false) {
         this.storage = pg
         this.elastic = es
@@ -292,12 +280,10 @@ class Whelk {
         }
     }
 
-    void remove(String id, String changedIn, String changedBy, String collection) {
+    void remove(String id, String changedIn, String changedBy) {
         log.debug "Deleting ${id} from Whelk"
         Document toBeRemoved = storage.load(id)
         if (storage.remove(id, changedIn, changedBy)) {
-            if (collection == "auth" || collection == "definitions")
-                removeFromAuthCache(toBeRemoved)
             if (elastic) {
                 elastic.remove(id)
                 log.debug "Object ${id} was removed from Whelk"
@@ -311,10 +297,6 @@ class Whelk {
     }
 
     void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn, String changedBy, String collection) {
-        // It would be more expensive to load all dependers (again), iterate their various IDs and delete them than
-        // to simply reset the cache and let it rebuild.
-        authCache.clear()
-
         storage.mergeExisting(remainingID, disappearingID, remainingDocument, changedIn, changedBy, collection, jsonld)
 
         if (elastic) {
