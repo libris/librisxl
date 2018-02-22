@@ -79,7 +79,7 @@ class XL
         if (collection.equals("hold") && incomingMarcRecord.getLeader(5) == 'd')
         {
             for (String id : duplicateIDs)
-                m_whelk.remove(id, IMPORT_SYSTEM_CODE, null, "hold");
+                m_whelk.remove(id, IMPORT_SYSTEM_CODE, null);
             return null;
         }
 
