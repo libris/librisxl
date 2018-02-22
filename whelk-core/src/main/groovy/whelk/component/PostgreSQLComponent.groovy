@@ -59,7 +59,7 @@ class PostgreSQLComponent {
 
     // SQL statements
     protected String UPDATE_DOCUMENT, INSERT_DOCUMENT,
-                     INSERT_DOCUMENT_VERSION, GET_DOCUMENT,
+                     INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_EMBELLISHED_DOCUMENT,
                      GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS,
                      GET_DOCUMENT_VERSION_BY_MAIN_ID,
                      GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID,
@@ -76,9 +76,12 @@ class PostgreSQLComponent {
     protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
     protected String GET_SYSTEMID_BY_IRI
+    protected String GET_DOCUMENT_BY_IRI
     protected String GET_MINMAX_MODIFIED
     protected String UPDATE_MINMAX_MODIFIED
     protected String GET_LEGACY_PROFILE
+    protected String INSERT_EMBELLISHED_DOCUMENT
+    protected String DELETE_EMBELLISHED_DOCUMENT
 
     // Deprecated
     protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
@@ -123,6 +126,7 @@ class PostgreSQLComponent {
         String settingsTableName = mainTableName + "__settings"
         String dependenciesTableName = mainTableName + "__dependencies"
         String profilesTableName = mainTableName + "__profiles"
+        String embellishedTableName = mainTableName + "__embellished"
 
         connectionPool = new BasicDataSource()
 
@@ -166,7 +170,11 @@ class PostgreSQLComponent {
                 "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
                 "ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"
 
+        INSERT_EMBELLISHED_DOCUMENT = "INSERT INTO $embellishedTableName (id, data) VALUES (?,?)"
+        DELETE_EMBELLISHED_DOCUMENT = "DELETE FROM $embellishedTableName WHERE id = ?"
+
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
+        GET_EMBELLISHED_DOCUMENT = "SELECT data from lddb__embellished where id = ?"
         GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted FROM $mainTableName WHERE id= ? FOR UPDATE"
         GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_DOCUMENT_VERSION_BY_MAIN_ID = "SELECT id,data FROM $versionsTableName " +
@@ -239,6 +247,7 @@ class PostgreSQLComponent {
                    "OR data->'@graph' @> ?"
 
         GET_SYSTEMID_BY_IRI = "SELECT id FROM $idTableName WHERE iri = ?"
+        GET_DOCUMENT_BY_IRI = "SELECT data FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
      }
@@ -667,6 +676,7 @@ class PostgreSQLComponent {
     public refreshDerivativeTables(Document doc, Connection connection, boolean deleted) {
         saveIdentifiers(doc, connection, deleted)
         saveDependencies(doc, connection)
+        removeEmbellishedDocument(doc.getShortId(), connection)
     }
 
     /**
@@ -1301,6 +1311,86 @@ class PostgreSQLComponent {
         }
     }
 
+    private void cacheEmbellishedDocument(String id, Document embellishedDocument, Connection connection) {
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            preparedStatement = connection.prepareStatement(INSERT_EMBELLISHED_DOCUMENT)
+            preparedStatement.setString(1, id)
+            preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
+            preparedStatement.execute()
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+        }
+    }
+
+    private void removeEmbellishedDocument(String id, Connection connection) {
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            preparedStatement = connection.prepareStatement(DELETE_EMBELLISHED_DOCUMENT)
+            preparedStatement.setString(1, id)
+            preparedStatement.execute()
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+        }
+    }
+
+    Document loadEmbellished(String id, JsonLd jsonld) {
+        Connection connection = getConnection()
+        try {
+            return loadEmbellished(id, jsonld, connection)
+        } finally {
+            connection.close()
+        }
+    }
+
+    /**
+     * Loads the embellished version of the stored document 'id'.
+     * If there isn't an embellished version cached already, one will be created
+     * (lazy caching).
+     */
+    Document loadEmbellished(String id, JsonLd jsonld, Connection connection) {
+        PreparedStatement selectStatement
+        ResultSet resultSet
+
+        try {
+            selectStatement = connection.prepareStatement(GET_EMBELLISHED_DOCUMENT)
+            selectStatement.setString(1, id)
+            resultSet = selectStatement.executeQuery()
+
+            if (resultSet.next()) {
+                return new Document(mapper.readValue(resultSet.getString("data"), Map))
+            }
+
+            // Cache-miss, embellish and store
+            Document document = load(id, connection)
+            List externalRefs = document.getExternalRefs()
+            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
+            Map referencedData = [:]
+            for (String iri : convertedExternalLinks) {
+                Document externalDocument = getDocumentByIri(iri, connection)
+                if (externalDocument != null)
+                    referencedData.put(externalDocument.getShortId(), externalDocument.data)
+            }
+            jsonld.embellish(document.data, referencedData, false)
+            cacheEmbellishedDocument(id, document, connection)
+            return document
+        }
+        finally {
+            try {resultSet.close()} catch (Exception e) { /* ignore */ }
+            try {selectStatement.close()} catch (Exception e) { /* ignore */}
+        }
+    }
+
     Document load(String id, Connection conn = null) {
         return load(id, null, conn)
     }
@@ -1373,6 +1463,35 @@ class PostgreSQLComponent {
             rs = preparedStatement.executeQuery()
             if (rs.next())
                 return rs.getString(1)
+            return null
+        }
+        finally {
+            if (rs != null)
+                rs.close()
+            if (preparedStatement != null)
+                preparedStatement.close()
+        }
+    }
+
+    Document getDocumentByIri(String iri) {
+        Connection connection = getConnection()
+        try {
+            return getDocumentByIri(iri, connection)
+        } finally {
+            if (connection != null)
+                connection.close()
+        }
+    }
+
+    Document getDocumentByIri(String iri, Connection connection) {
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            preparedStatement = connection.prepareStatement(GET_DOCUMENT_BY_IRI)
+            preparedStatement.setString(1, iri)
+            rs = preparedStatement.executeQuery()
+            if (rs.next())
+                return new Document(mapper.readValue(rs.getString("data"), Map))
             return null
         }
         finally {

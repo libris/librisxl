@@ -18,23 +18,28 @@ class Whelk {
 
     PostgreSQLComponent storage
     ElasticSearch elastic
-    JsonLdLinkExpander expander
     Map displayData
     Map vocabData
     JsonLd jsonld
 
+    // useAuthCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
+    // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
+    // resulting in potential serving of stale data.
+    boolean useAuthCache = false
+
     String vocabDisplayUri = "https://id.kb.se/vocab/display" // TODO: encapsulate and configure (LXL-260)
     String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
 
-    private static Map<String, Document> authCache
-    private static final int CACHE_MAX_SIZE = 1000
+    private Map<String, Document> authCache
+    private final int CACHE_MAX_SIZE = 1000
 
     static {
-        authCache = Collections.synchronizedMap(
-                new LRUMap<String, Document>(CACHE_MAX_SIZE))
+
     }
 
-    static void putInAuthCache(Document authDocument) {
+    void putInAuthCache(Document authDocument) {
+        if (!useAuthCache)
+            return
         if (authDocument == null) {
             log.warn("Tried to cache a null document (ignored)!")
             return
@@ -48,30 +53,32 @@ class Whelk {
         authCache.put(authDocument.getShortId(), authDocument)
     }
 
-    static void removeFromAuthCache(Document authDocument) {
-        for (String uri : authDocument.getRecordIdentifiers()) {
-            authCache.remove(uri)
-        }
-        for (String uri : authDocument.getThingIdentifiers()) {
-            authCache.remove(uri)
-        }
-        authCache.remove(authDocument.getShortId())
-    }
-
-    public Whelk(PostgreSQLComponent pg, ElasticSearch es) {
+    public Whelk(PostgreSQLComponent pg, ElasticSearch es, boolean useCache = false) {
         this.storage = pg
         this.elastic = es
+        this.useAuthCache = useCache
+        if (useCache)
+            authCache = Collections.synchronizedMap(
+                new LRUMap<String, Document>(CACHE_MAX_SIZE))
         log.info("Whelk started with storage $storage and index $elastic")
     }
 
-    public Whelk(PostgreSQLComponent pg) {
+    public Whelk(PostgreSQLComponent pg, boolean useCache = false) {
         this.storage = pg
+        this.useAuthCache = useCache
+        if (useCache)
+            authCache = Collections.synchronizedMap(
+                    new LRUMap<String, Document>(CACHE_MAX_SIZE))
         log.info("Whelk started with storage $storage")
     }
 
-    public Whelk(Properties properties) {
+    public Whelk(Properties properties, boolean useCache = false) {
         this.storage = new PostgreSQLComponent(properties)
         this.elastic = new ElasticSearch(properties)
+        this.useAuthCache = useCache
+        if (useCache)
+            authCache = Collections.synchronizedMap(
+                    new LRUMap<String, Document>(CACHE_MAX_SIZE))
         log.info("Whelk started with storage $storage and index $elastic")
     }
 
@@ -102,7 +109,7 @@ class Whelk {
             Document doc
 
             // Check the auth cache
-            if (authCache.containsKey(id)) {
+            if (useAuthCache && authCache.containsKey(id)) {
                 /*if (hits++ % 100 == 0)
                     println("Fetching with cache: $id, Sofar hits: $hits , misses: $misses")*/
                 result[id] = authCache.get(id)
@@ -273,12 +280,10 @@ class Whelk {
         }
     }
 
-    void remove(String id, String changedIn, String changedBy, String collection) {
+    void remove(String id, String changedIn, String changedBy) {
         log.debug "Deleting ${id} from Whelk"
         Document toBeRemoved = storage.load(id)
         if (storage.remove(id, changedIn, changedBy)) {
-            if (collection == "auth" || collection == "definitions")
-                removeFromAuthCache(toBeRemoved)
             if (elastic) {
                 elastic.remove(id)
                 log.debug "Object ${id} was removed from Whelk"
@@ -292,10 +297,6 @@ class Whelk {
     }
 
     void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn, String changedBy, String collection) {
-        // It would be more expensive to load all dependers (again), iterate their various IDs and delete them than
-        // to simply reset the cache and let it rebuild.
-        authCache.clear()
-
         storage.mergeExisting(remainingID, disappearingID, remainingDocument, changedIn, changedBy, collection, jsonld)
 
         if (elastic) {

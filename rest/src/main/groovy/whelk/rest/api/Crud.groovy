@@ -114,7 +114,6 @@ class Crud extends HttpServlet {
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
                      String dataset) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
-        String callback = queryParameters.remove("callback")
 
         try {
             Map results = search.doSearch(queryParameters, dataset, jsonld)
@@ -241,7 +240,7 @@ class Crud extends HttpServlet {
             return
         } else {
             String contentType = CrudUtils.getBestContentType(request)
-            def responseBody = getFormattedResponseBody(doc, path, contentType)
+            def responseBody = getFormattedResponseBody(doc, path, contentType, version != null)
             String modified = doc.getModified()
             response = maybeAddProposal25Headers(response, loc)
             sendGetResponse(request, response, responseBody, modified,
@@ -251,7 +250,7 @@ class Crud extends HttpServlet {
     }
 
     private Object getFormattedResponseBody(Document doc, String path,
-                                            String contentType) {
+                                            String contentType, boolean archivedVersion) {
         FormattingType format = getFormattingType(path, contentType)
         log.debug("Formatting document ${doc.getCompleteId()} with format " +
                 "${format} and content type ${contentType}")
@@ -261,31 +260,25 @@ class Crud extends HttpServlet {
                 result = doc.data
                 break
             case FormattingType.EMBELLISHED:
-                doc = getEmbellishedDocument(doc)
-                result = doc.data
+                if (!archivedVersion)
+                    doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
+                if (doc != null) // FU unit tests
+                    result = doc.data
                 break
             case FormattingType.FRAMED:
                 result = JsonLd.frame(doc.getCompleteId(), doc.data)
                 break
             case FormattingType.FRAMED_AND_EMBELLISHED:
-                doc = getEmbellishedDocument(doc)
-                result = JsonLd.frame(doc.getCompleteId(), doc.data)
+                if (!archivedVersion)
+                    doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
+                if (doc != null) // FU unit tests
+                    result = JsonLd.frame(doc.getCompleteId(), doc.data)
                 break
             default:
                 throw new WhelkRuntimeException("Invalid formatting type: ${format}")
         }
 
         return formatResponseBody(result, contentType)
-    }
-
-    private Document getEmbellishedDocument(Document doc) {
-        List externalRefs = doc.getExternalRefs()
-        List convertedExternalLinks = convertExternalLinks(externalRefs)
-        Map referencedData = getReferencedData(convertedExternalLinks)
-        boolean filterOutNonChipTerms = false
-        doc.embellish(referencedData, jsonld, filterOutNonChipTerms)
-
-        return doc
     }
 
     /**
@@ -1091,7 +1084,7 @@ class Crud extends HttpServlet {
             } else {
                 log.debug("Removing resource at ${doc.getShortId()}")
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
-                whelk.remove(doc.getShortId(), "xl", activeSigel, LegacyIntegrationTools.determineLegacyCollection(doc, jsonld))
+                whelk.remove(doc.getShortId(), "xl", activeSigel)
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
         } catch (ModelValidationException mve) {

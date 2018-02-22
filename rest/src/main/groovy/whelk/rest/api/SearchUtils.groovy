@@ -235,7 +235,7 @@ class SearchUtils {
             items = esResult['items'].collect { ld.toCard(it) }
         }
 
-        items = embellishItems(items)
+        //items = embellishItems(items)
         if (statsTree) {
             stats = buildStats(esResult['aggregations'],
                                makeFindUrl(SearchType.ELASTIC, pageParams))

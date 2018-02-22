@@ -60,7 +60,7 @@ dependencies {
     def groovyVersion=GroovySystem.getVersion()
 
     // KB tools
-    compile 'com.github.libris:jmarctools:bb97de39cb41e7455ecb29af0ed5f27f2e9cc797'
+    compile files('lib/jmarctools.jar')
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
