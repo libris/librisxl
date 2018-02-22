@@ -120,7 +120,7 @@ public class ApixCatServlet extends HttpServlet
             return;
         }
 
-        Utils.s_whelk.remove(xlShortId, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection);
+        Utils.s_whelk.remove(xlShortId, Utils.APIX_SYSTEM_CODE, request.getRemoteUser());
         s_logger.info("Successful delete on: " + xlShortId);
         Utils.send200Response(response, "");
     }
