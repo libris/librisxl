@@ -14035,7 +14035,7 @@
     "oaipmhSetSpecPrefixMap": {
       "bibid": {
         "about": "?thing",
-        "link": "holdingFor",
+        "link": "itemOf",
         "uriTemplate": "http://libris.kb.se/resource/bib/{_}"
       },
       "location": {
