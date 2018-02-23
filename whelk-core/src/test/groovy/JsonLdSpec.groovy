@@ -291,7 +291,7 @@ class JsonLdSpec extends Specification {
                          ],
                          "heldBy": ["@type":"Organization",
                                     "notation":"Gbg"],
-                         "holdingFor": ["@id": "https://libris.kb.se/foobar"]]]
+                         "itemOf": ["@id": "https://libris.kb.se/foobar"]]]
             ])
         def invalidDocument = new Document(["foo": "bar"])
 

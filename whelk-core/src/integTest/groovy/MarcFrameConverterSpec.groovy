@@ -270,7 +270,7 @@ class MarcFrameConverterSpec extends Specification {
         conv.marcRuleSets['hold'].processExtraData(entityMap, extraData)
         then:
         thing['heldBy']['@id'] == 'https://libris.kb.se/library/S'
-        thing['holdingFor']['@id'] == 'http://libris.kb.se/resource/bib/123'
+        thing['itemOf']['@id'] == 'http://libris.kb.se/resource/bib/123'
     }
 
     def completeEntities = converter.conversion.marcRuleSets['auth'].&completeEntities

@@ -45,7 +45,6 @@ public class JsonLd {
     static final String ABOUT_KEY = "mainEntity"
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
-    static final String HOLDING_FOR_KEY = "holdingFor"
 
     static final ObjectMapper mapper = new ObjectMapper()
     static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter()
