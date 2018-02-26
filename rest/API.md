@@ -122,10 +122,10 @@ $ curl -XDELETE -H "Authorization: Bearer xxxx" \
 
 This endpoint allows you to query the internal Libris database.
 
-The default operator is `AND`, which means that a search for `tove jansson` is
-equivalent to a search for `tove AND jansson`. `-` excludes terms, `|` means
-`OR`, `*` is used for prefix queries, `""` matches the whole phrase, and `()`
-is used for operator precedence.
+The default operator is `+` (`AND`), which means that a search for `tove
+jansson` is equivalent to a search for `tove +jansson`. `-` excludes terms, `|`
+means `OR`, `*` is used for prefix queries, `""` matches the whole phrase, and
+`()` is used for operator precedence.
 
 ### Parameters
 
