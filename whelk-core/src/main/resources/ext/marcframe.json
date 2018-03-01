@@ -3125,6 +3125,7 @@
       "$2": {"link": "source", "resourceType": "marc:NationalIssnCentre", "property": "code"},
       "$y": {"addProperty": "marc:incorrectIssn"},
       "TODO:$y?": {"TODO": "inherit:$z + specific: marc:incorrectIssn"},
+      "$z": {"addProperty": "marc:canceledIssn"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
