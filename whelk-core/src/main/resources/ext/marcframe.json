@@ -246,7 +246,7 @@
       "include": ["idbase"],
       "$a": {
         "property": "value",
-        "splitValuePattern": "([^ ()]*)(?:\\s*\\(([^)]+)\\))?",
+        "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
         "splitValueProperties": ["value", "qualifier"]
       },
       "$q": {"property": "qualifier"},
@@ -2913,7 +2913,24 @@
       "include": ["identifier"],
       "resourceType": "LCCN",
       "$b": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
-      "$8": {"property": "marc:groupid"}
+      "$8": {"property": "marc:groupid"},
+      "_spec": [
+        {
+          "source": {
+            "010": {
+              "ind1": " ", "ind2": " ",
+              "subfields": [{"a": "a 54009564"}]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {"@type": "LCCN", "value": "a 54009564"}
+              ]
+            }
+          }
+        }
+      ]
     },
 
     "013": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
@@ -3016,6 +3033,34 @@
         {
           "source": {
             "020": {
+              "ind1": " ", "ind2": " ",
+              "subfields": [{"a": "91-47-07941-X (texth.) (i ringpärm)"}]
+            }
+          },
+          "normalized": {
+            "020": {
+              "ind1": " ", "ind2": " ",
+              "subfields": [
+                {"a": "91-47-07941-X"},
+                {"q": "texth.) (i ringpärm"}
+              ]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "ISBN",
+                  "value": "91-47-07941-X",
+                  "qualifier": "texth.) (i ringpärm"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "020": {
               "ind1":" ", "ind2":" ", "subfields": [
                 {"a": "9781137368331 (e-book)"},
                 {"z": "9780230274396 (print)"}
@@ -3061,15 +3106,11 @@
             "020":
             {"ind1":" ","ind2":" ","subfields":[{"a":"(US)"} ]}
           },
-          "normalized": {
-            "020": {"ind1": " ", "ind2": " ", "subfields": [
-              {"q": "US"} ]}
-          },
           "result": {"mainEntity": {
             "identifiedBy": [
               {
                 "@type": "ISBN",
-                "qualifier": "US"
+                "value": "(US)"
               }
             ]
           }}
@@ -3176,6 +3217,43 @@
                   "@type": "Identifier",
                   "value":  "1234567890",
                   "typeNote": "xyz"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "024": {
+              "ind1": "7", "ind2": " ",
+              "subfields": [{"a": "A 148"}, {"2": "KB-signum"}]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value": "A 148",
+                  "typeNote": "KB-signum"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "024": {
+              "ind1": "7", "ind2": " ",
+              "subfields": [{"a": "A(148)"}]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value": "A(148)"
                 }
               ]
             }
