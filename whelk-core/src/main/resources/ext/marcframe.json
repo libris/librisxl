@@ -3119,19 +3119,19 @@
     },
 
     "022": {
-      "include": ["identifier"],
+      "include": ["idbase"],
       "TODO:aboutEntity": "?work",
       "resourceType": "ISSN",
       "i1": {
         "property": "marc:internationalInterest",
         "tokenMap": {"0": true, "1": false}, "marcDefault": " "
       },
-      "$l": {"property": "marc:issnL"},
+      "$a": {"property": "value"},
       "$m": {"addProperty": "marc:canceledIssnL"},
       "$2": {"link": "source", "resourceType": "marc:NationalIssnCentre", "property": "code"},
       "$y": {"addProperty": "marc:incorrectIssn"},
       "TODO:$y?": {"TODO": "inherit:$z + specific: marc:incorrectIssn"},
-      "TODO:$z": {"addProperty": "marc:canceledIssn"},
+      "$z": {"addProperty": "marc:canceledIssn"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
@@ -3148,7 +3148,7 @@
         },
         {
           "source": {
-          "022": {"ind1": "0", "ind2": " ", "subfields": [{"a": "0345-0856"}]}
+          "022": {"ind1": "0", "ind2": " ", "subfields": [{"a": "0345-0856"},{"2": "f"}]}
           },
           "result": {
             "mainEntity": {
@@ -3156,8 +3156,11 @@
                 {
                   "@type": "ISSN",
                   "value":  "0345-0856",
-                  "marc:internationalInterest": true
-
+                  "marc:internationalInterest": true,
+                  "source": {
+                    "@type": "marc:NationalIssnCentre",
+                    "code": "f"
+                  }
                 }
               ]
             }
