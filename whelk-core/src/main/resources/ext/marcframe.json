@@ -3446,13 +3446,9 @@
       "$r": {"property": "marc:distanceFromEarth"},
       "$s": {"addProperty": "marc:gRingLatitude"},
       "$t": {"addProperty": "marc:gRingLongitude"},
-      "$x": {"property": "startDate"},
-      "$y": {"property": "endDate"},
-      "$z": {
-          "link": "marc:extraterrestrialBody",
-          "resourceType": "PlanetaryObject",
-          "property": "name"
-      },
+      "$x": {"property": "marc:beginningDate"},
+      "$y": {"property": "marc:endingDate"},
+      "$z": {"property": "marc:nameOfExtraterrestrialBody"},
       "_spec": [
         {
           "source": [
