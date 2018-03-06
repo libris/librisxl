@@ -11468,7 +11468,7 @@
     "042": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I AUKTORITETSFORMATET",
       "NOTE:record-count": 34043,
-      "$a": {"property": "authenticationCode"},
+      "$a": {"addLink": "descriptionAuthentication", "resourceType": "DescriptionAuthentication", "property": "code"},
       "$9": {
         "addLink": "inCollection",
         "resourceType": "TermCollection",
