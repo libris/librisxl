@@ -6558,7 +6558,7 @@
       "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
       "$v": {"property": "seriesEnumeration"},
       "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "qvalue"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "_spec": [
