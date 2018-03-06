@@ -12277,7 +12277,7 @@
     },
     "182" : {
       "include": "termid",
-      "aboutType": "ChronologicalSubdivision",
+      "aboutType": "TemporalSubdivision",
       "$y": {"property": "prefLabel"}
     },
     "185" : {
@@ -14033,7 +14033,7 @@
     },
     "782": {
       "inherit": "750",
-      "resourceType": "ChronologicalSubdivision",
+      "resourceType": "TemporalSubdivision",
       "$y": {"property": "prefLabel"}
     },
     "785": {
