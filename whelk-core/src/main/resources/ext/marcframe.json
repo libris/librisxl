@@ -6247,7 +6247,7 @@
       "aboutEntity": "?work",
       "addLink": "arrangement",
       "resourceType": "Arrangement",
-      "$a": {"addProperty": "organization"},
+      "$a": {"addProperty": "organizationOfMaterial"},
       "$b": {"addProperty": "pattern"},
       "$c": {"property": "hierarchicalLevel"},
       "TODO:3": "",
