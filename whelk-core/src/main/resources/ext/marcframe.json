@@ -6767,7 +6767,7 @@
       "$6": {"property": "marc:fieldref"}
     },
     "510": {
-      "addLink": "citedBy",
+      "addLink": "indexedIn",
       "resourceType": "Instance",
       "TODO:i1": {
         "link": null,
@@ -6779,7 +6779,7 @@
           "4": "locationInSourceGiven"
         }
       },
-      "$a": {"property": "title"},
+      "$a": {"link": "hasTitle", "resourceType": "Title", "property": "label"},
       "$b": {"property": "marc:coverageOfSource"},
       "$c": {"property": "marc:locationWithinSource"},
       "$u": {"addProperty": "uri"},
