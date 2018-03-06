@@ -121,6 +121,197 @@ for col0 in 's':
     ]
 
 
+# 007 Map:
+for col0 in 'a':
+    COLSPECS['bib']['007'][col0] = [
+        # Map
+        [1], # genreForm
+        [3], # colorContent
+        [4], # baseMaterial
+        [5], # generation
+        [6], # generation
+        [7], # polarity
+        [2], # marc:aspect
+    ]
+
+# 007 Electronic:
+for col0 in 'c':
+    COLSPECS['bib']['007'][col0] = [
+        # Electronic
+        [1], # carrierType
+        [3], # colorContent
+        [4], # hasDimensions
+        [5], # soundContent
+        [6], # undefined
+        [9], # marc:fileFormats
+        [1,0], # marc:qATarget
+        [1,1], # marc:antecedent
+        [1,2], # marc:compression
+        [1,3], # marc:reformattingQuality
+        [2], # marc:fileAspect
+    ]
+
+# 007 Globe:
+for col0 in 'd':
+    COLSPECS['bib']['007'][col0] = [
+        # Globe
+        [1], # genreForm
+        [3], # colorContent
+        [4], # baseMaterial
+        [5], # generation
+        [2], # marc:aspect
+    ]
+
+# 007 Tactile:
+for col0 in 'f':
+    COLSPECS['bib']['007'][col0] = [
+        # Tactile
+        [1], # layout
+        [3], # layout
+        [4], # layout
+        [5], # layout
+        [6], # hasNotation
+        [7], # hasNotation
+        [8], # hasNotation
+        [9], # hasNotation
+    ]
+
+# 007 ProjectedImageInstance:
+for col0 in 'g':
+    COLSPECS['bib']['007'][col0] = [
+        # ProjectedImageInstance
+        [1], # carrierType
+        [3], # colorContent
+        [4], # baseMaterial
+        [5], # soundContent
+        [6], # soundCharacteristic
+        [7], # hasDimensions
+        [8], # mount
+        [2], # marc:projGraphAspect
+    ]
+
+# 007 Microform:
+for col0 in 'h':
+    COLSPECS['bib']['007'][col0] = [
+        # Microform
+        [1], # carrierType
+        [3], # polarity
+        [4], # hasDimensions
+        [5], # reductionRatio
+        [6], # undefined
+        [9], # colorContent
+        [1,0], # emulsion
+        [1,1], # generation
+        [1,2], # baseMaterial
+        [2], # marc:aspect
+    ]
+
+# 007 StillImageInstance:
+for col0 in 'k':
+    COLSPECS['bib']['007'][col0] = [
+        # StillImageInstance
+        [1], # genreForm
+        [3], # colorContent
+        [4], # baseMaterial
+        [5], # mount
+        [2], # marc:nonProjAspect
+    ]
+
+# 007 MovingImageInstance:
+for col0 in 'm':
+    COLSPECS['bib']['007'][col0] = [
+        # MovingImageInstance
+        [1], # carrierType
+        [3], # colorContent
+        [4], # projectionCharacteristic
+        [5], # soundContent
+        [6], # soundCharacteristic
+        [7], # hasDimensions
+        [8], # soundCharacteristic
+        [9], # genreForm
+        [1,0], # polarity
+        [1,1], # generation
+        [1,2], # baseMaterial
+        [1,3], # marc:motionPicCategories
+        [1,4], # marc:motionPicColorStock
+        [1,5], # marc:motionPicDeterioration
+        [1,6], # marc:motionPicCompleteness
+        [1,7], # undefined
+        [2], # marc:motionPicAspect
+    ]
+
+# 007 KitInstance:
+for col0 in 'o':
+    COLSPECS['bib']['007'][col0] = [
+        # KitInstance
+        [1], # carrierType
+    ]
+
+# 007 NotatedMusicInstance:
+for col0 in 'q':
+    COLSPECS['bib']['007'][col0] = [
+        # NotatedMusicInstance
+        [1], # carrierType
+    ]
+
+# 007 RemoteSensingImage:
+for col0 in 'r':
+    COLSPECS['bib']['007'][col0] = [
+        # RemoteSensingImage
+        [1], # carrierType
+        [3], # marc:remoteSensImageAltitude
+        [4], # marc:remoteSensImageAttitude
+        [5], # marc:remoteSensImageCloud
+        [6], # marc:remoteSensImageConstruction
+        [7], # marc:remoteSensImageUse
+        [8], # marc:remoteSensImageSensor
+        [9], # marc:remoteSensImageData
+    ]
+
+# 007 SoundRecording:
+for col0 in 's':
+    COLSPECS['bib']['007'][col0] = [
+        # SoundRecording
+        [1], # carrierType
+        [3], # soundCharacteristic
+        [4], # soundCharacteristic
+        [5], # soundCharacteristic
+        [6], # hasDimensions
+        [7], # hasDimensions
+        [8], # soundCharacteristic
+        [9], # generation
+        [1,0], # marc:soundKindOfMaterial
+        [1,1], # soundCharacteristic
+        [1,2], # soundCharacteristic
+        [1,3], # marc:soundCapture
+        [2], # marc:soundAspect
+    ]
+
+# 007 TextInstance:
+for col0 in 't':
+    COLSPECS['bib']['007'][col0] = [
+        # TextInstance
+        [1], # carrierType
+    ]
+
+# 007 VideoRecording:
+for col0 in 'v':
+    COLSPECS['bib']['007'][col0] = [
+        # VideoRecording
+        [1], # carrierType
+        [3], # colorContent
+        [4], # videoCharacteristic
+        [5], # soundContent
+        [6], # soundCharacteristic
+        [7], # hasDimensions
+        [8], # soundCharacteristic
+    ]
+
+# 007 null:
+for col0 in 'z':
+    COLSPECS['bib']['007'][col0] = []
+
+
 # 008 Text:
 for rt in 'aht':
     for bl in 'acdm':
