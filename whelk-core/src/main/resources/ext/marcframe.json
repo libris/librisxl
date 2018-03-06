@@ -2039,7 +2039,7 @@
           "uriTemplate": "https://id.kb.se/marc/TacContractionType-{_}",
           "matchUriToken": "^[_abm]$"
         },
-        "[6] [7] [8[": {
+        "[6] [7] [8]": {
           "link": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}",
           "matchUriToken": "^[abcdefghijklz]$"
