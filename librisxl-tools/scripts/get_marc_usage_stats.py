@@ -144,10 +144,10 @@ for col0 in 'c':
         [5], # soundContent
         [6], # undefined
         [9], # marc:fileFormats
-        [1,0], # marc:qATarget
-        [1,1], # marc:antecedent
-        [1,2], # marc:compression
-        [1,3], # marc:reformattingQuality
+        [10], # marc:qATarget
+        [11], # marc:antecedent
+        [12], # marc:compression
+        [13], # marc:reformattingQuality
         [2], # marc:fileAspect
     ]
 
@@ -200,9 +200,9 @@ for col0 in 'h':
         [5], # reductionRatio
         [6], # undefined
         [9], # colorContent
-        [1,0], # emulsion
-        [1,1], # generation
-        [1,2], # baseMaterial
+        [10], # emulsion
+        [11], # generation
+        [12], # baseMaterial
         [2], # marc:aspect
     ]
 
@@ -229,14 +229,14 @@ for col0 in 'm':
         [7], # hasDimensions
         [8], # soundCharacteristic
         [9], # genreForm
-        [1,0], # polarity
-        [1,1], # generation
-        [1,2], # baseMaterial
-        [1,3], # marc:motionPicCategories
-        [1,4], # marc:motionPicColorStock
-        [1,5], # marc:motionPicDeterioration
-        [1,6], # marc:motionPicCompleteness
-        [1,7], # undefined
+        [10], # polarity
+        [11], # generation
+        [12], # baseMaterial
+        [13], # marc:motionPicCategories
+        [14], # marc:motionPicColorStock
+        [15], # marc:motionPicDeterioration
+        [16], # marc:motionPicCompleteness
+        [17,23], # marc:timeOfExamination
         [2], # marc:motionPicAspect
     ]
 
@@ -265,7 +265,7 @@ for col0 in 'r':
         [6], # marc:remoteSensImageConstruction
         [7], # marc:remoteSensImageUse
         [8], # marc:remoteSensImageSensor
-        [9], # marc:remoteSensImageData
+        [9,11], # marc:remoteSensImageData
     ]
 
 # 007 SoundRecording:
@@ -280,10 +280,10 @@ for col0 in 's':
         [7], # hasDimensions
         [8], # soundCharacteristic
         [9], # generation
-        [1,0], # marc:soundKindOfMaterial
-        [1,1], # soundCharacteristic
-        [1,2], # soundCharacteristic
-        [1,3], # marc:soundCapture
+        [10], # marc:soundKindOfMaterial
+        [11], # soundCharacteristic
+        [12], # soundCharacteristic
+        [13], # marc:soundCapture
         [2], # marc:soundAspect
     ]
 
@@ -306,10 +306,6 @@ for col0 in 'v':
         [7], # hasDimensions
         [8], # soundCharacteristic
     ]
-
-# 007 null:
-for col0 in 'z':
-    COLSPECS['bib']['007'][col0] = []
 
 
 # 008 Text:
