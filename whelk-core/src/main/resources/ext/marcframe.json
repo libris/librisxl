@@ -10314,7 +10314,7 @@
       "resourceType": "Aggregate",
       "$c": null,
       "$p": {"property": "abbreviatedTitle", "TODO:targetMatch": "210"},
-      "$q": {"property": "pagination"}
+      "$q": {"property": "marc:enumerationAndFirstPage"}
     },
     "774": {
       "inherit": "772",
