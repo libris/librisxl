@@ -158,16 +158,7 @@ public class ResponseCommon
 
         if (embellish)
         {
-            List externalRefs = document.getExternalRefs();
-            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) OaiPmh.s_jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()));
-            Map referencedData = OaiPmh.s_whelk.bulkLoad(convertedExternalLinks);
-
-            // The madness
-            Map referencedData2 = new HashMap();
-            for (Object key : referencedData.keySet())
-                referencedData2.put(key, ((Document)referencedData.get(key)).data );
-
-            OaiPmh.s_jsonld.embellish(document.data, referencedData2, false);
+            document = OaiPmh.s_postgreSqlComponent.loadEmbellished(document.getShortId(), OaiPmh.s_jsonld);
         }
 
         if (!onlyIdentifiers)
