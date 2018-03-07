@@ -3281,7 +3281,7 @@
       "$d": {"addProperty": "marc:numberOfVolumeOrPart"},
       "$e": {"property": "marc:unparsedFingerprint"},
       "$2": {"link": "source", "resourceType": "Source", "property": "label"},
-      "$5": {"property": "marc:institutionToWhichFieldApplies"}
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"}
     },
     "027": {
       "include": ["identifier"],
@@ -7000,7 +7000,7 @@
       "$m": {"addProperty": "marc:datesAndOrSequentialDesignationOfIssuesReproduced"},
       "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$5": {"property": "institutionToWhichFieldApplies"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
       "$7": {"TODO:fixedField": "fixedLengthDataElementsOfReproduction"},
       "_spec": [
         {
@@ -7080,7 +7080,7 @@
       "$a": {"property": "marc:systemDetailsNote"},
       "$u": {"addProperty": "marc:uniformResourceIdentifier"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies", "NOTE:local": "Används ej"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
       "$6": {"property": "marc:fieldref"}
     },
     "540": {
