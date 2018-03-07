@@ -92,15 +92,28 @@ class XL
             else
                 importedHoldRecords.inc();
         }
-        else if (duplicateIDs.size() == 1)
+        else if (duplicateIDs.size() == 1) // Enrich ("merge") or replace
         {
-            // Enrich (or "merge")
-            resultingResourceId = enrichRecord( (String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId );
-
-            if (collection.equals("bib"))
+            if (collection.equals("bib")) // Only merge allowed for bib
+            {
+                resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
                 enrichedBibRecords.inc();
-            else
-                enrichedHoldRecords.inc();
+            }
+            else // collection = hold
+            {
+                if ( m_parameters.getReplaceHold() ) // Replace hold
+                {
+                    for (String id : duplicateIDs)
+                        m_whelk.remove(id, IMPORT_SYSTEM_CODE, null);
+                    resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId);
+                    importedHoldRecords.inc();
+                }
+                else // Merge hold
+                {
+                    resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
+                    enrichedHoldRecords.inc();
+                }
+            }
         }
         else
         {
@@ -506,7 +519,7 @@ class XL
     {
         String libraryUri = LegacyIntegrationTools.legacySigelToUri(heldBy);
 
-        // Here be dragons. The allways-works query is this:
+        // Here be dragons. The always-works query is this:
         /*String query =
                 "SELECT lddb.id from lddb " +
                 "INNER JOIN lddb__identifiers id1 ON lddb.data#>>'{@graph,1,itemOf,@id}' = id1.iri " +

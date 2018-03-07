@@ -21,6 +21,7 @@ class Parameters
     private boolean parallel = false;
     private boolean enrichMulDup = false;
     private boolean verbose = false;
+    private boolean replaceHold = false;
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
@@ -31,6 +32,7 @@ class Parameters
     boolean getRunParallel() { return parallel; }
     boolean getEnrichMulDup() { return enrichMulDup; }
     boolean getVerbose() { return verbose; }
+    boolean getReplaceHold() { return replaceHold; }
 
     enum INPUT_FORMAT
     {
@@ -137,7 +139,10 @@ class Parameters
         System.err.println("              document, the incoming document is normally ignored/skipped. If this flag is");
         System.err.println("              set however, all found duplicates will be enriched with the information from");
         System.err.println("              the incoming record.");
+        System.err.println("");
         System.err.println("--verbose     Verbose logging.");
+        System.err.println("");
+        System.err.println("--replaceHold If this flag is set, holding records (only) will be replaced instead of merged.");
     }
 
     private void interpretBinaryParameter(String parameter, String value)
@@ -216,7 +221,10 @@ class Parameters
                 enrichMulDup = true;
                 break;
             case "--verbose":
-		verbose = true;	
+                verbose = true;
+                break;
+            case "--replaceHold":
+                replaceHold = true;
                 break;
             default:
                 throw new IllegalArgumentException(parameter);

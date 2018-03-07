@@ -122,13 +122,18 @@ public class Main
             }
         }
 
-        PushGateway pg = new PushGateway(METRICS_PUSHGATEWAY);
-        pg.pushAdd(registry, "batch_import");
-
-	if ( verbose )
+        try
+        {
+            PushGateway pg = new PushGateway(METRICS_PUSHGATEWAY);
+            pg.pushAdd(registry, "batch_import");
+        } catch (Throwable e)
+        {
+            System.err.println("Metrics server connection failed. No metrics will be generated.");
+        }
+	    if ( verbose )
         {
             System.err.println("info: All done.");
-	}
+        }
     }
 
     /**
