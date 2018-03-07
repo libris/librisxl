@@ -606,10 +606,12 @@ class PostgreSQLComponent {
             String collection = resultSet.getString("collection")
 
             // Performs the callers updates on the document
+            Document preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc)
             Document._urlDecodeURIs(doc.data)
+            verifyDocumentURIupdates(preUpdateDoc, doc)
 
             boolean deleted = doc.getDeleted()
 
@@ -667,6 +669,44 @@ class PostgreSQLComponent {
         }
 
         return doc
+    }
+
+    /**
+     * Returns if the URIs pointing to 'doc' are acceptable for an update to 'pre_update_doc',
+     * otherwise throws.
+     */
+    private void verifyDocumentURIupdates(Document preUpdateDoc, Document postUpdateDoc) {
+
+        // Compile list of all old IDs
+        HashSet<String> oldIDs = new HashSet<>()
+        oldIDs.addAll( preUpdateDoc.getRecordIdentifiers() )
+        oldIDs.addAll( preUpdateDoc.getThingIdentifiers() )
+
+        // Compile list of all new IDs
+        HashSet<String> newIDs = new HashSet<>()
+        newIDs.addAll( postUpdateDoc.getRecordIdentifiers() )
+        newIDs.addAll( postUpdateDoc.getThingIdentifiers() )
+
+        // (#work identifiers integrity is not enforced, because doing so would disable breaking out works.)
+
+        // Are any IDs missing?
+        HashSet<String> missingIDs = new HashSet<>()
+        missingIDs.addAll( oldIDs )
+        missingIDs.removeAll( newIDs )
+        if ( ! missingIDs.isEmpty() )
+            throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST contain all URIs pertaining to the original record and its main entity and their sameAs-es. Missing URIs: " + missingIDs)
+
+        // Are any of the added IDs already in use?
+        HashSet<String> addedIDs = new HashSet<>()
+        addedIDs.addAll( newIDs )
+        addedIDs.removeAll( oldIDs )
+        for (String id : addedIDs) {
+            if ( getSystemIdByIri(id) != null )
+                throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST NOT have URIs that are already in use for other records. The update contained an offending URI: " + id)
+        }
+
+        // We're ok.
+        return
     }
 
     public refreshDerivativeTables(Document doc) {
