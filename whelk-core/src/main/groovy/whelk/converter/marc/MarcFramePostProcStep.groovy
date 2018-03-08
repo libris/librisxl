@@ -171,6 +171,7 @@ class VerboseRevertDataStep extends MarcFramePostProcStepBase {
 
     String sourceProperty
     String addLink
+    String property
     String addProperty
 
     void modify(Map record, Map thing) {
@@ -199,7 +200,13 @@ class VerboseRevertDataStep extends MarcFramePostProcStepBase {
                 owner = [:]
                 entity.get(addLink, []) << owner
             }
-            owner[addProperty] = v
+            if (property)
+                owner[property] = v
+            else {
+                def list = [v]
+                owner[addProperty] = list
+            }
+
         }
     }
 

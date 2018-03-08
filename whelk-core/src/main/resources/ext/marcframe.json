@@ -196,8 +196,7 @@
     {
       "type": "VerboseRevertData",
       "sourceProperty": "@id",
-      "addLink": "identifiedBy",
-      "addProperty": "value",
+      "addProperty": "marc:uri",
       "_name": "Use @id for $0 on revert",
       "_spec": [
         {
@@ -224,7 +223,7 @@
               "subject": [
                 {
                   "@id": "http://id.kb.se/term/sao/Steampunk",
-                  "identifiedBy": [{"value": "http://id.kb.se/term/sao/Steampunk"}]
+                  "marc:uri": ["http://id.kb.se/term/sao/Steampunk"]
                 }
               ]
             }
@@ -377,7 +376,7 @@
       },
       "$t": {"about": "_:title", "property": "mainTitle"},
       "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+      "$0": {"about": "_:work", "addProperty": "marc:uri"}
     },
 
     "hasPartDataSansLabelledRole": {
@@ -632,7 +631,7 @@
       },
       "$i": {"addLink": "relation", "resourceType": "Relation", "property": "label"},
       "$t": {"about": "_:title", "property": "mainTitle"},
-      "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+      "$0": {"about": "_:work", "addProperty": "marc:uri"}
     },
 
     "relationshipData": {
@@ -709,7 +708,7 @@
       "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
       "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
       "$z": {"about": "_:work", "property": "marc:geographicSubdivision"},
-      "$0": {"about": "_:work", "addLink": "identifiedBy", "property": "value"}
+      "$0": {"about": "_:work", "addProperty": "marc:uri"}
     },
 
     "hasRelatedToPerson": {
@@ -833,7 +832,7 @@
         }
       },
       "$t": {"about": "_:title", "property": "mainTitle"},
-      "$0": {"addLink": "identifiedBy", "property": "value"}
+      "$0": {"about": "_:work", "addProperty": "marc:uri"}
     },
 
     "contributionPerson": {
@@ -1074,7 +1073,7 @@
       "$t": {"about": "_:title", "property": "mainTitle"},
       "$v": {"property": "seriesEnumeration"},
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$0": {"about": "_:work", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"}
     },
@@ -4309,7 +4308,7 @@
       "resourceType": "PrimaryContribution",
       "aboutAlias": "_:contribution",
       "include": ["contributiondata"],
-      "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
+      "$0": {"about": "_:agent", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "subfieldOrder": "a b c q d j g u e 4 t n p l k f",
       "_spec": [
@@ -4502,7 +4501,7 @@
 
       "subfieldOrder": "a b n d c g u e 4 k", "NOTE:notInLibris": "t p l k f",
 
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "$0": {"about": "_:agent", "addProperty": "marc:uri"},
       "$k": {"addProperty": "qualifier", "NOTE": "not allowed but used in the wild"},
       "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
@@ -4715,7 +4714,7 @@
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "i1": {"marcDefault": "2"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "$0": {"about": "_:agent", "addProperty": "marc:uri"},
       "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -4833,7 +4832,7 @@
       },
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"property": "legalDate"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "$0": {"about": "_:work", "addProperty": "marc:uri"},
       "subfieldOrder": "a d m n r p k l s f o",
       "$6": {"property": "marc:fieldref"},
       "_spec": [
@@ -6334,7 +6333,7 @@
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$v": {"property": "seriesEnumeration"},
       "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$0": {"about": "_:work", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
@@ -6558,7 +6557,7 @@
       "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
       "$v": {"property": "seriesEnumeration"},
       "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$0": {"addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "_spec": [
@@ -8845,7 +8844,7 @@
           "resourceType": "Contribution",
           "aboutAlias": "_:contribution",
           "include": ["contributiondata"],
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$0": {"about": "_:agent", "addProperty": "marc:uri"}
         }
       ],
       "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
@@ -9227,7 +9226,6 @@
       "i1": {"marcDefault": "2"},
 
       "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
-      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
 
@@ -9937,7 +9935,7 @@
       "$d": {"about": "_:work","property": "legalDate"},
       "$i": {"addLink": "relation", "resourceType": "Relation", "property": "label"},
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$0": {"about": "_:work", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
@@ -10109,7 +10107,7 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "TODO:$4": "Change to: {'addLink': 'role', 'resourceType': 'Role', 'property': 'code', 'uriTemplate': '{code}', 'TODO:mapping': 'relatorCode'}??",
       "$4": {"addProperty": "marc:relatorCode"},
-      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+      "$0": {"addProperty": "marc:uri"}
     },
     "752": {
       "TODO": "map to madsrdf terms?",
@@ -10123,7 +10121,7 @@
       "$g": {"addProperty": "marc:otherNonjurisdictionalGeographicRegionAndFeature"},
       "$h": {"addProperty": "marc:extraterrestrialArea"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
-      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+      "$0": {"addProperty": "marc:uri"}
     },
     "753": {
       "aboutEntity": "?thing",
@@ -10165,7 +10163,7 @@
       "$x": {"addProperty": "marc:cataloguersNote"},
       "$z": {"addProperty": "marc:copyNote"},
       "$2": {"property": "marc:sourceOfTaxonomicIdentification"},
-      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+      "$0": {"addProperty": "marc:uri"}
     },
     "755": {
       "addLink": "marc:hasPhysicalCharacteristicsAddedEntryOBSOLETE",
@@ -10883,7 +10881,7 @@
       "$d": {"addProperty": "legalDate"},
       "$v": {"property": "seriesEnumeration"},
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$0": {"about": "_:work", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
@@ -12456,7 +12454,7 @@
       "resourceType": "GenreForm",
       "TODO": "link to gf",
       "$a": {"addProperty": "label"},
-      "$0": {},
+      "$0": {"addProperty": "marc:uri"},
       "$2": {"property": "marc:sourceOfTerm"}
     },
     "381": {"ignored": true, "NOTE:record-count": 0},
@@ -13992,9 +13990,7 @@
                     "@id": "https://id.kb.se/term/lcsh",
                     "code": "lcsh"
                   },
-                  "identifiedBy": [
-                    {"@type": "Identifier", "value": "(DLC)sh 85006507"}
-                  ]
+                  "identifiedBy": [{"@type": "Identifier", "value": "(DLC)sh 85006507"}]
                 }
               ]
             }
