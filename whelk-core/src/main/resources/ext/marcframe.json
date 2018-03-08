@@ -383,7 +383,8 @@
       "include": ["hasWork"],
       "addLink": "hasPart",
       "resourceType": "Work",
-      "aboutAlias": "_:work"
+      "aboutAlias": "_:work",
+      "$x": {"about": "_:work", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"}
     },
 
     "hasPartData": {
@@ -631,6 +632,7 @@
       },
       "$i": {"addLink": "relation", "resourceType": "Relation", "property": "label"},
       "$t": {"about": "_:title", "property": "mainTitle"},
+      "$x": {"about": "_:work", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "$0": {"about": "_:work", "addProperty": "marc:uri"}
     },
 
@@ -8847,7 +8849,6 @@
           "$0": {"about": "_:agent", "addProperty": "marc:uri"}
         }
       ],
-      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "subfieldOrder": " i a b c q d j e u 4 t g m n p r s l k f o",
@@ -9010,9 +9011,10 @@
         {
           "source": {
             "700": {"ind1": "1", "ind2": "2", "subfields": [
-              {"a": "Jansson, Tove"},
-              {"d": "1914-2001"},
-              {"t": "Anteckningar från en ö"}
+              {"a": "Schubert, Franz"},
+              {"d": "1797-1828"},
+              {"t": "Neue Ausgabe sämtlicher Werke"},
+              {"x": "99-0014962-9"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9022,16 +9024,20 @@
                   "@type": "Work",
                   "hasTitle": [ {
                     "@type": "Title",
-                    "mainTitle": "Anteckningar från en ö"
+                    "mainTitle": "Neue Ausgabe sämtlicher Werke"
                   } ],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "99-0014962-9"
+                  }],
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Person",
-                        "familyName":  "Jansson",
-                        "givenName":  "Tove",
-                        "lifeSpan":  "1914-2001"}
+                        "familyName":  "Schubert",
+                        "givenName":  "Franz",
+                        "lifeSpan":  "1797-1828"}
                     }
                   ]
                 }
@@ -9138,6 +9144,47 @@
           }}
         },
         {
+          "source": {
+            "700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Shakespeare, William"},
+              {"d": "1564-1616"},
+              {"t": "The new Cambridge Shakespeare"},
+              {"x": "99-0463846-2"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relationship": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "The new Cambridge Shakespeare"
+                    } ],
+                    "identifiedBy": [{
+                      "@type": "ISSN",
+                      "value": "99-0463846-2"
+                    }],
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
+                        "agent": {
+                          "@type": "Person",
+                          "familyName":  "Shakespeare",
+                          "givenName":  "William",
+                          "lifeSpan": "1564-1616"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
           "source": [
             {"700": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Breitholtz, Lennart,"}, {"d": "1909-1998"}, {"4": "edt"}]}},
             {"700": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Breitholtz, Lennart,"}, {"d": "1909-1998"}, {"4": "oth"}]}}
@@ -9225,11 +9272,9 @@
 
       "i1": {"marcDefault": "2"},
 
-      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
 
-      "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
       "subfieldOrder": "i a b c d g u e 4 t m n p r s l k f o x",
       "TOOO:i2": "How to map when no $t?",
       "_spec": [
@@ -9237,7 +9282,8 @@
           "source": {
             "710": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "National Fire Protection Association."},
-              {"t": "National electrical code (1993)"}
+              {"t": "National electrical code (1993)"},
+              {"x": "1111-1111"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9251,6 +9297,10 @@
                       "@type": "Title",
                       "mainTitle": "National electrical code (1993)"
                     } ],
+                    "identifiedBy": [{
+                      "@type": "ISSN",
+                      "value": "1111-1111"
+                    }],
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
@@ -9548,7 +9598,8 @@
           "source": {
             "710": {"ind1": "1", "ind2": "2", "subfields": [
               {"a": "Sverige."},
-              {"t": "Lagen om vissa kommunala befogenheter"}
+              {"t": "Lagen om vissa kommunala befogenheter"},
+              {"x": "2222-2222"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9560,6 +9611,10 @@
                     "@type": "Title",
                     "mainTitle": "Lagen om vissa kommunala befogenheter"
                   } ],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "2222-2222"
+                  }],
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
@@ -9717,7 +9772,6 @@
           }
         }
       ],
-      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "i1": {"marcDefault": "2"},
       "$6": {"property": "marc:fieldref"},
       "subfieldOrder": "i a n d c e g u j 4 t n s l k f x",
@@ -9788,7 +9842,8 @@
               {"d": "1962-1965 :"},
               {"c": "Basilica di San Pietro in Vaticano)."},
               {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
-              {"i": "Facsimile (manifestation):"}
+              {"i": "Facsimile (manifestation):"},
+              {"x": "1111-1111"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9801,6 +9856,10 @@
                     "@type": "Title",
                     "mainTitle": "Constitutio pastoralis de ecclesia in mundo huius temporis."
                   } ],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "1111-1111"
+                  }],
                   "contribution": [
                     {"@type": "PrimaryContribution",
                       "agent": {
@@ -9823,7 +9882,8 @@
           "source": {
             "711": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Westminster Assembly"},
-              {"t": "Larger catechism."}
+              {"t": "Larger catechism."},
+              {"x": "2222-2222"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9837,6 +9897,10 @@
                       "@type": "Title",
                       "mainTitle": "Larger catechism."
                     } ],
+                    "identifiedBy": [{
+                      "@type": "ISSN",
+                      "value": "2222-2222"
+                    }],
                     "contribution": [
                       {"@type": "PrimaryContribution",
                         "agent": {"@type": "Meeting", "name": "Westminster Assembly"}}
