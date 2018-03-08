@@ -179,8 +179,6 @@ public class Helpers
             }
         }
 
-        System.out.println(preparedStatement);
-
         return preparedStatement;
     }
 }
