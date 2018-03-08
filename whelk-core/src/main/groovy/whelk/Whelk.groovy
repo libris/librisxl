@@ -4,11 +4,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.collections4.map.LRUMap
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
-import whelk.filter.JsonLdLinkExpander
 import whelk.util.LegacyIntegrationTools
-import whelk.util.PropertyLoader
-
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Created by markus on 15-09-03.

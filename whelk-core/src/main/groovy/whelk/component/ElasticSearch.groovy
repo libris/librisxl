@@ -11,7 +11,6 @@ import whelk.util.LongTermHttpConnection
 import whelk.Document
 import whelk.JsonLd
 import whelk.exception.*
-import whelk.filter.JsonLdLinkExpander
 import whelk.Whelk
 
 import java.util.concurrent.atomic.AtomicBoolean
@@ -37,8 +36,6 @@ class ElasticSearch {
     private List<String> elasticHosts
     private String elasticCluster
 
-    JsonLdLinkExpander expander
-
     private static final ObjectMapper mapper = new ObjectMapper()
 
     ElasticSearch(Properties props) {
@@ -48,12 +45,10 @@ class ElasticSearch {
         setup()
     }
 
-    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex,
-                    JsonLdLinkExpander expander=null) {
+    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
         this.elasticHosts = getElasticHosts(elasticHost)
         this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
-        this.expander = expander
         setup()
     }
 
