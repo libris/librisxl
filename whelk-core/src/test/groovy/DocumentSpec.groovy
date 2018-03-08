@@ -197,13 +197,11 @@ class DocumentSpec extends Specification {
                                    ["@graph": ["@id": "/externalBar",
                                                "@type": "Work",
                                                "hasTitle": "aTitle",
-                                               "language": "danska"],
-                                    "@id": "/externalBar"],
+                                               "language": "danska"]],
                                    ["@graph": ["@id": "/externalBaz",
                                                "@type": "ProvisionActivity",
                                                "date": "aDate",
-                                               "place": "aPlace"],
-                                    "@id": "/externalBaz"]]]
+                                               "place": "aPlace"]]]]
 
         Map displayData = ["lensGroups":
                                    ["chips":
