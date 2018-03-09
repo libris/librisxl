@@ -2,7 +2,11 @@
 
   "NOTE:baseUri:fromSystem": "https://libris.kb.se/",
 
-  "keepGroupIds": true,
+  "keepGroupIds": false,
+
+  "TODO:s": [
+    "addLink:identifiedBy (+ NOTE:marc-repeatable: false where link)"
+  ],
 
   "pendingResources": {
     "?record": {
@@ -1054,32 +1058,6 @@
       }
     },
 
-    "hasSeriesInstance": {
-      "include": "record_from_w",
-      "pendingResources": {
-        "_:work": {
-          "link": "instanceOf",
-          "resourceType": "Work"
-        },
-        "_:contribution": {
-          "about": "_:work",
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
-        "_:title": {
-          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
-          "embedded": true
-        }
-      },
-      "$t": {"about": "_:title", "property": "mainTitle"},
-      "$v": {"property": "seriesEnumeration"},
-      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$0": {"about": "_:work", "addProperty": "marc:uri"},
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"}
-    },
-
     "termid": {
       "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
     },
@@ -1273,6 +1251,54 @@
 
     "worksubject": {
       "include": ["worksubjectData", "titledetails"]
+    },
+
+    "inseries": {
+      "addLink": "seriesMembership",
+      "resourceType": "SeriesMembership",
+      "FIXME:embedded:whenGroupIdsAreStrippedFromEmbedded": true,
+      "pendingResources": {
+        "_:seriesinstance": {
+          "groupId": "#seriesinstance-$seq",
+          "link": "inSeries",
+          "resourceType": "Instance"
+        },
+        "_:work": {
+          "about": "_:seriesinstance",
+          "link": "instanceOf",
+          "resourceType": "Work"
+        },
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "$v": {"property": "seriesEnumeration"},
+      "$w": {
+        "about": "_:seriesinstance",
+        "addLink": "describedBy",
+        "resourceType": "Record",
+        "property": "controlNumber",
+        "uriTemplate": "http://libris.kb.se/bib/{_}",
+        "matchUriToken": "^[0-9a-z]+$"
+      }
+    },
+
+    "hasSeriesInstance": {
+      "include": ["inseries"],
+      "pendingResources": {
+        "_:contribution": {
+          "about": "_:work",
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        }
+      },
+      "$t": {"about": "_:title", "property": "mainTitle"},
+      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
+      "$0": {"about": "_:work", "addProperty": "marc:uri"},
+      "$6": {"property": "marc:fieldref"},
+      "$8": {"property": "marc:groupid"}
     },
 
     "relation_from_w": {
@@ -6319,23 +6345,10 @@
     "440": {
       "NOTE:ignoreOnRevertInFavourOfCombo": "490 + 830",
       "onRevertPrefer": ["490", "800", "810", "811", "830"],
-      "addLink": "hasSeries",
-      "resourceType": "Instance",
-      "include": ["titledetails", "i2-nonfiling", "record_from_w"],
-      "pendingResources": {
-        "_:work": {
-          "link": "instanceOf",
-          "resourceType": "Work"
-        },
-        "_:title": {
-          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
-          "embedded": true
-        }
-      },
+      "include": ["inseries", "titledetails", "i2-nonfiling"],
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
-      "$v": {"property": "seriesEnumeration"},
-      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$0": {"about": "_:work", "addProperty": "marc:uri"},
+      "$x": {"about": "_:seriesinstance", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
+      "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
@@ -6352,22 +6365,25 @@
             {"v": "N.F. 13:7"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [
+            "seriesMembership": [
               {
-                "@type": "Instance",
-                "instanceOf": {
-                  "@type": "Work",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar",
-                    "marc:nonfilingChars" : " "
-                  }]
-                },
-                "identifiedBy": {
-                  "@type": "ISSN",
-                  "value": "0023-5377"
-                },
-                "seriesEnumeration": "N.F. 13:7"
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "N.F. 13:7",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar",
+                      "marc:nonfilingChars" : " "
+                    }]
+                  },
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0023-5377"
+                  }
+                }
               }
             ]
           }}
@@ -6390,24 +6406,27 @@
             {"9": "B"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [
+            "seriesMembership": [
               {
-                "@type": "Instance",
-                "instanceOf": {
-                  "@type": "Work",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Corpus christianorum",
-                    "partName": ["Series Latina,"],
-                    "marc:nonfilingChars" : " "
-                  }]
-                },
-                "identifiedBy": {
-                  "@type": "ISSN",
-                  "value": "0589-798X"
-                },
+                "@type": "SeriesMembership",
                 "seriesEnumeration": "156 B",
-                "marc:filingOfSeriesenumeration" : [ "156", "B" ]
+                "marc:filingOfSeriesenumeration" : [ "156", "B" ],
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Corpus christianorum",
+                      "partName": ["Series Latina,"],
+                      "marc:nonfilingChars" : " "
+                    }]
+                  },
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0589-798X"
+                  }
+                }
               }
             ]
           }}
@@ -6430,24 +6449,27 @@
             {"9": "15"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [
+            "seriesMembership": [
               {
-                "@type": "Instance",
-                "instanceOf": {
-                  "@type": "Work",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Lunds universitets årsskrift",
-                    "partName": ["Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"],
-                    "marc:nonfilingChars" : " "
-                  }]
-                },
-                "identifiedBy": {
-                  "@type": "ISSN",
-                  "value": "0368-8151"
-                },
+                "@type": "SeriesMembership",
                 "seriesEnumeration": "9:15",
-                "marc:filingOfSeriesenumeration" : [ "9", "15" ]
+                "marc:filingOfSeriesenumeration" : [ "9", "15" ],
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Lunds universitets årsskrift",
+                      "partName": ["Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"],
+                      "marc:nonfilingChars" : " "
+                    }]
+                  },
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0368-8151"
+                  }
+                }
               }
             ]
           }}
@@ -6462,19 +6484,22 @@
             {"x": "99-0111480-2"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [
+            "seriesMembership": [
               {
-                "@type": "Instance",
-                "instanceOf": {
-                  "@type": "Work",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Sveriges officiella statistik"
-                  }]
-                },
-                "identifiedBy": {
-                  "@type": "ISSN",
-                  "value": "99-0111480-2"
+                "@type": "SeriesMembership",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Sveriges officiella statistik"
+                    }]
+                  },
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "99-0111480-2"
+                  }
                 }
               }
             ]
@@ -6494,22 +6519,25 @@
             {"v": "2"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [
+            "seriesMembership": [
               {
-                "@type": "Instance",
-                "instanceOf": {
-                  "@type": "Work",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Stockholms stads statistik",
-                    "partName" : ["3, Hälso- och sjukvård,"]
-                  }]
-                },
-                "identifiedBy": {
-                  "@type": "ISSN",
-                  "value": "99-2058355-3"
-                },
-                "seriesEnumeration": "2"
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "2",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Stockholms stads statistik",
+                      "partName" : ["3, Hälso- och sjukvård,"]
+                    }]
+                  },
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "99-2058355-3"
+                  }
+                }
               }
             ]
           }}
@@ -6526,21 +6554,24 @@
             {"v": "nr 7 (2005) årg. 144"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [
+            "seriesMembership": [
               {
-                "@type": "Instance",
-                "instanceOf": {
-                  "@type": "Work",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Kungl. Skogs- och Lantbruksakademiens tidskrift"
-                  }]
-                },
-                "identifiedBy": {
-                  "@type": "ISSN",
-                  "value": "0023-5350"
-                },
-                "seriesEnumeration": "nr 7 (2005) årg. 144"
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "nr 7 (2005) årg. 144",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Kungl. Skogs- och Lantbruksakademiens tidskrift"
+                    }]
+                  },
+                  "identifiedBy": {
+                    "@type": "ISSN",
+                    "value": "0023-5350"
+                  }
+                }
               }
             ]
           }}
@@ -6548,18 +6579,15 @@
       ]
     },
     "490": {
-      "include": "record_from_w",
+      "include": ["inseries"],
+      "groupId": "#seriesmember-$seq",
       "i1": {"property": "marc:seriesTracingPolicy", "TODO:marcDefault": 0, "TOOO": {"when: 8xx[$t] | 830": "1", "else": "0"}},
       "i2": null,
-      "addLink": "hasSeries",
-      "resourceType": "Instance",
-      "groupId": "#series-$seq",
       "TODO:allowSpillOverOnRevert": "800-830 (solved by groupId?)",
       "$a": {"addProperty": "seriesStatement"},
       "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
-      "$v": {"property": "seriesEnumeration"},
-      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
-      "$0": {"addProperty": "marc:uri"},
+      "$x": {"about": "_:seriesinstance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
+      "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "_spec": [
@@ -6568,11 +6596,11 @@
             {"a": "Wiley classics library"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [
+            "seriesMembership": [
               {
-                "@type": "Instance",
-                "seriesStatement": ["Wiley classics library"],
-                "marc:seriesTracingPolicy": "0"
+                "@type": "SeriesMembership",
+                "marc:seriesTracingPolicy": "0",
+                "seriesStatement": ["Wiley classics library"]
               }
             ]
           }}
@@ -10518,10 +10546,8 @@
       "addLink": "relatedTo"
     },
     "800": {
-      "addLink": "hasSeries",
-      "resourceType": "Instance",
-      "TODO:aboutEntity?": "?series",
       "include": ["hasSeriesInstance", "titledetails", "contributionRole_4_e"],
+      "groupId": "#seriesmember-$seq",
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -10556,26 +10582,29 @@
             {"v": "v 4"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [
+            "seriesMembership": [
               {
-                "@type": "Instance",
-                "instanceOf": {
-                  "@type": "Work",
-                  "contribution": [{
-                    "@type": "PrimaryContribution",
-                    "agent": {
-                      "@type": "Person",
-                      "lifeSpan": "1924-",
-                      "familyName": "Sandemo",
-                      "givenName": "Margit"
-                    }
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Sandemo-serien ;"
-                  }]
-                },
-                "seriesEnumeration" : "v 4"
+                "@type": "SeriesMembership",
+                "seriesEnumeration" : "v 4",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "contribution": [{
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Person",
+                        "lifeSpan": "1924-",
+                        "familyName": "Sandemo",
+                        "givenName": "Margit"
+                      }
+                    }],
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Sandemo-serien ;"
+                    }]
+                  }
+                }
               }
             ]
           }}
@@ -10588,27 +10617,31 @@
             {"v": "v 2"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [{
-              "@type": "Instance",
-              "instanceOf": {
-                "@type": "Work",
-                "contribution" : [{
-                  "@type": "PrimaryContribution",
-                  "agent": {
-                    "@type": "Person",
-                    "name": "Raymond Feist"
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "v 2",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "contribution" : [{
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Person",
+                        "name": "Raymond Feist"
+                      }
+                    }],
+                    "language": {
+                      "@type": "Language",
+                      "label": "Svenska"
+                    },
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Demonwar saga."
+                    }]
                   }
-                }],
-                "language": {
-                  "@type": "Language",
-                  "label": "Svenska"
-                },
-                "hasTitle": [{
-                  "@type": "Title",
-                  "mainTitle": "Demonwar saga."
-                }]
-              },
-              "seriesEnumeration": "v 2"
+                }
             }]
           }}
         },
@@ -10622,27 +10655,31 @@
             {"v": "v.1."}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [{
-              "@type": "Instance",
-              "instanceOf": {
-                "@type": "Work",
-                "contribution": [{
-                  "@type": "PrimaryContribution",
-                  "agent": {
-                    "@type": "Person",
-                    "familyName": "Sousa",
-                    "givenName": "John Philip",
-                    "lifeSpan": "1854-1932"
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "v.1.",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "contribution": [{
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Person",
+                        "familyName": "Sousa",
+                        "givenName": "John Philip",
+                        "lifeSpan": "1854-1932"
+                      }
+                    }],
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Marches",
+                      "marc:formSubheading": ["Selections (Sousa American bicentennial collection);"]
+                    }],
+                    "musicMedium": ["band."]
                   }
-                }],
-                "hasTitle": [{
-                  "@type": "Title",
-                  "mainTitle": "Marches",
-                  "marc:formSubheading": ["Selections (Sousa American bicentennial collection);"]
-                }],
-                "musicMedium": ["band."]
-              },
-              "seriesEnumeration": "v.1."
+                }
             }]
           }}
         },
@@ -10652,33 +10689,34 @@
             {"t": "A title"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [{
-              "@type": "Instance",
-              "instanceOf": {
-                "@type": "Work",
-                "contribution": [{
-                  "@type": "PrimaryContribution",
-                  "agent": {
-                    "@type": "Family",
-                    "name": "Family X"
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "contribution": [{
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Family",
+                        "name": "Family X"
+                      }
+                    }],
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "A title"
+                    }]
                   }
-                }],
-                "hasTitle": [{
-                  "@type": "Title",
-                  "mainTitle": "A title"
-                }]
-              }
+                }
             }]
           }}
         }
       ]
     },
     "810": {
-      "addLink": "hasSeries",
-      "resourceType": "Instance",
-      "TODO:aboutEntity?": "?series",
       "include": ["hasSeriesInstance", "agentdataOrganization", "titledetails", "contributionRole_4_e"],
-      "embedded": true,
+      "groupId": "#seriesmember-$seq",
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -10724,23 +10762,27 @@
             {"v": "v 40"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [{
-              "@type": "Instance",
-              "instanceOf": {
-                "@type": "Work",
-                "contribution" : [{
-                  "@type": "PrimaryContribution",
-                  "agent": {
-                    "@type": "Organization",
-                    "name": "German Institute of Global and Area Studies <Hamburg>,"
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "v 40",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "contribution" : [{
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Organization",
+                        "name": "German Institute of Global and Area Studies <Hamburg>,"
+                      }
+                    }],
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "GIGA working papers"
+                    }]
                   }
-                }],
-                "hasTitle": [{
-                  "@type": "Title",
-                  "mainTitle": "GIGA working papers"
-                }]
-              },
-              "seriesEnumeration": "v 40"
+                }
             }]
           }}
         },
@@ -10753,27 +10795,31 @@
             {"v": "1"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [{
-              "@type": "Instance",
-              "instanceOf": {
-                "@type": "Work",
-                "contribution": [{
-                  "@type": "PrimaryContribution",
-                  "agent": {
-                    "@type": "Jurisdiction",
-                    "marc:subordinateUnit": ["Universidad nacional.", "Instituto de Literatura Española."],
-                    "isPartOf": {
-                      "@type": "Jurisdiction",
-                      "name": "Buenos Aires (Argentina)."
-                    }
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "1",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "contribution": [{
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Jurisdiction",
+                        "marc:subordinateUnit": ["Universidad nacional.", "Instituto de Literatura Española."],
+                        "isPartOf": {
+                          "@type": "Jurisdiction",
+                          "name": "Buenos Aires (Argentina)."
+                        }
+                      }
+                    }],
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Bibliografías criticas ;"
+                    }]
                   }
-                }],
-                "hasTitle": [{
-                  "@type": "Title",
-                  "mainTitle": "Bibliografías criticas ;"
-                }]
-              },
-              "seriesEnumeration": "1"
+                }
             }]
           }}
         },
@@ -10785,27 +10831,31 @@
             {"v": "no. 20."}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [{
-              "@type": "Instance",
-              "instanceOf": {
-                "@type": "Work",
-                "contribution": [{
-                  "@type": "PrimaryContribution",
-                  "agent": {
-                    "@type": "Organization",
-                    "marc:subordinateUnit": ["Bureau of Business Research."],
-                    "isPartOf": {
-                      "@type": "Organization",
-                      "name": "Harvard University."
-                    }
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "no. 20.",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "contribution": [{
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Organization",
+                        "marc:subordinateUnit": ["Bureau of Business Research."],
+                        "isPartOf": {
+                          "@type": "Organization",
+                          "name": "Harvard University."
+                        }
+                      }
+                    }],
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Bulletin"
+                    }]
                   }
-                }],
-                "hasTitle": [{
-                  "@type": "Title",
-                  "mainTitle": "Bulletin"
-                }]
-              },
-              "seriesEnumeration": "no. 20."
+                }
             }]
           }}
         },
@@ -10823,39 +10873,40 @@
             {"v": "4/5."}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [{
-              "@type": "Instance",
-              "instanceOf": {
-                "@type": "Work",
-                "contribution": [{
-                  "@type": "PrimaryContribution",
-                  "agent": {
-                    "@type": "Organization",
-                    "name": "Stadtbibliothek.",
-                    "place": [{
-                      "@type": "Place",
-                      "label": "Königsberg"
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "4/5.",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "contribution": [{
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Organization",
+                        "name": "Stadtbibliothek.",
+                        "place": [{
+                          "@type": "Place",
+                          "label": "Königsberg"
+                        }]
+                      }
+                    }],
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Mitteilungen aus der Stadtbibliothek Königsberg"
                     }]
                   }
-                }],
-                "hasTitle": [{
-                  "@type": "Title",
-                  "mainTitle": "Mitteilungen aus der Stadtbibliothek Königsberg"
-                }]
-              },
-              "seriesEnumeration": "4/5."
+                }
             }]
           }}
         }
       ]
     },
     "811": {
-      "addLink": "hasSeries",
-      "resourceType": "Instance",
-      "TODO:aboutEntity?": "?series",
       "include": ["hasSeriesInstance", "agentdataOrganization", "titledetails", "contributionRole_4"],
+      "groupId": "#seriesmember-$seq",
       "i1": {"marcDefault": "2"},
-      "embedded": true,
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -10874,23 +10925,27 @@
             {"t": "Decretum de presbyterorum ministerio et vita."}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [{
-              "@type": "Instance",
-                "instanceOf": {
-                  "@type": "Work",
-                  "contribution": [{
-                    "@type": "PrimaryContribution",
-                    "agent": {
-                      "@type": "Meeting",
-                      "name": "Vatican Council",
-                      "date": ["1962-1964)"]
-                    }
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Decretum de presbyterorum ministerio et vita.",
-                    "partNumber": [ "(2nd:" ]
-                  }]
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "contribution": [{
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Meeting",
+                        "name": "Vatican Council",
+                        "date": ["1962-1964)"]
+                      }
+                    }],
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Decretum de presbyterorum ministerio et vita.",
+                      "partNumber": [ "(2nd:" ]
+                    }]
+                  }
                 }
             }]
           }}
@@ -10905,45 +10960,37 @@
             {"t": "Bar"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [{
-              "@type": "Instance",
-              "instanceOf": {
-                "@type": "Work",
-                "contribution": [{
-                  "@type": "PrimaryContribution",
-                  "agent": {
-                    "@type": "Meeting",
-                    "name": "Foo"
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "contribution": [{
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Meeting",
+                        "name": "Foo"
+                      }
+                    }],
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Bar"
+                    }]
                   }
-                }],
-                "hasTitle": [{
-                  "@type": "Title",
-                  "mainTitle": "Bar"
-                }]
-              }
+                }
             }]
           }}
         }
       ]
     },
     "830": {
-      "addLink": "hasSeries",
-      "resourceType": "Instance",
-      "groupId": "#series-$seq",
-      "include": ["titledetails", "i2-nonfiling", "record_from_w"],
-      "pendingResources": {
-        "_:work": {
-          "link": "instanceOf",
-          "resourceType": "Work"
-        },
-        "_:title": {
-          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
-          "embedded": true
-        }
-      },
+      "onRevertPrefer": ["800", "810", "811"],
+      "include": ["inseries", "titledetails", "i2-nonfiling"],
+      "groupId": "#seriesmember-$seq",
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
-      "$d": {"addProperty": "legalDate"},
-      "$v": {"property": "seriesEnumeration"},
+      "$d": {"about": "_:work", "addProperty": "legalDate"},
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"about": "_:work", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
@@ -10958,18 +11005,21 @@
             {"v": "2002/1"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [
+            "seriesMembership": [
               {
-                "@type": "Instance",
-                "instanceOf": {
-                  "@type": "Work",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Europarecht (Munich, germany)",
-                    "partName": ["Beiheft"]
-                  }]
-                },
-                "seriesEnumeration": "2002/1"
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "2002/1",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Europarecht (Munich, germany)",
+                      "partName": ["Beiheft"]
+                    }]
+                  }
+                }
               }
             ]
           }}
@@ -10988,18 +11038,21 @@
             {"v": "5."}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [
+            "seriesMembership": [
               {
-                "@type": "Instance",
-                "instanceOf": {
-                  "@type": "Work",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Archiv für Papyrusforschung und verwandte Gebiete",
-                    "partName": ["Ergänzungsband.", "Kleine Reihe ;"]
-                  }]
-                },
-                "seriesEnumeration": "5."
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "5.",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Archiv für Papyrusforschung und verwandte Gebiete",
+                      "partName": ["Ergänzungsband.", "Kleine Reihe ;"]
+                    }]
+                  }
+                }
               }
             ]
           }}
@@ -11016,22 +11069,25 @@
             {"x": "0169-9962"}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [
+            "seriesMembership": [
               {
-                "@type": "Instance",
-                "instanceOf": {
-                  "@type": "Work",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Studies on the texts of the desert of Judah",
-                    "marc:nonfilingChars": "4"
-                  }],
-                  "identifiedBy": {
-                    "@type": "ISSN",
-                    "value": "0169-9962"
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "101",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Studies on the texts of the desert of Judah",
+                      "marc:nonfilingChars": "4"
+                    }],
+                    "identifiedBy": {
+                      "@type": "ISSN",
+                      "value": "0169-9962"
+                    }
                   }
-                },
-                "seriesEnumeration": "101"
+                }
               }
             ]
           }}
@@ -11050,23 +11106,26 @@
             {"v": "5."}
           ]}},
           "result": {"mainEntity": {
-            "hasSeries": [
+            "seriesMembership": [
               {
-                "@type": "Instance",
-                "instanceOf": {
-                  "@type": "Work",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Migrationsstudier",
-                    "partNumber": ["B"],
-                    "marc:nonfilingChars": " "
-                  }],
-                  "identifiedBy": {
-                    "@type": "ISSN",
-                    "value": "0358-0083"
+                "@type": "SeriesMembership",
+                "seriesEnumeration": "5.",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Migrationsstudier",
+                      "partNumber": ["B"],
+                      "marc:nonfilingChars": " "
+                    }],
+                    "identifiedBy": {
+                      "@type": "ISSN",
+                      "value": "0358-0083"
+                    }
                   }
-                },
-                "seriesEnumeration": "5."
+                }
               }
             ]
           }}
