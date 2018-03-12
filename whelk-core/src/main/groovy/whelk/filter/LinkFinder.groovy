@@ -4,6 +4,7 @@ package whelk.filter
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
+import whelk.JsonLd
 import whelk.component.PostgreSQLComponent
 import whelk.util.LegacyIntegrationTools
 
@@ -100,6 +101,7 @@ class LinkFinder {
         }
 
         replaceSameAsLinksWithPrimaries(document.data, connection, cacheAuthForever)
+        clearReferenceAmbiguities(document)
     }
 
     private void replaceSameAsLinksWithPrimaries(Map data, Connection connection, boolean cacheAuthForever = false) {
@@ -189,5 +191,66 @@ class LinkFinder {
         }
 
         return null
+    }
+
+    /**
+     * A heavy-handed last line of defense against confusing embedded entities with references.
+     * After running this, 'document' can no longer have both @id and other data in any same
+     * embedded entity (root entities are exempt).
+     */
+    private void clearReferenceAmbiguities(Document document) {
+        List graphList = document.data.get(JsonLd.GRAPH_KEY)
+        for (Object entry : graphList) {
+            clearReferenceAmbiguities_internal(entry, true)
+        }
+    }
+
+    private void clearReferenceAmbiguities_internal(Map data, boolean isRootEntry) {
+        if (!isRootEntry) {
+            Object id = data.get("@id")
+            // If we have both @id and data (which is bad)
+            if (id != null && data.size() > 1) {
+
+                if (postgres.getSystemIdByIri(id) != null) { // If we have such a record, then the link (@id) is enough.
+                    data.clear()
+                    data.put("@id", id)
+                } else if (id.startsWith("https://libris.kb.se/library/")) {
+                    // A FUGLY special case/hack for library URIs, which we want as URIs alone, despite them not being XL-URIs.
+                    data.clear()
+                    data.put("@id", id)
+                } else
+                { // Otherwise convert @id into sameAs entry
+                    Object sameAsList = data["sameAs"]
+                    if (sameAsList == null) {
+                        data.put("sameAs", [])
+                        sameAsList = data["sameAs"]
+                    } else if (!sameAsList instanceof List) { // Paranoia check
+                        data.put("sameAs", [sameAsList])
+                        sameAsList = data["sameAs"]
+                    }
+                    data.remove("@id")
+                    ((List) sameAsList).add(["@id": id])
+                }
+            }
+        }
+
+        // Keep looking
+        for (Object key : data.keySet()) {
+            Object value = data.get(key)
+
+            if (value instanceof List)
+                clearReferenceAmbiguities_internal( (List) value )
+            if (value instanceof Map)
+                clearReferenceAmbiguities_internal( (Map) value, false )
+        }
+    }
+
+    private void clearReferenceAmbiguities_internal(List data) {
+        for (Object element : data){
+            if (element instanceof List)
+                clearReferenceAmbiguities_internal( (List) element )
+            else if (element instanceof Map)
+                clearReferenceAmbiguities_internal( (Map) element, false )
+        }
     }
 }
