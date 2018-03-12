@@ -412,6 +412,10 @@ class MarcConversion {
                 }
             }
         }
+
+        // Order fields in result by number, not by revertFieldOrder.
+        fields.sort { it.keySet()[0] }
+
         // TODO: how to re-add only partially _unhandled?
         data._marcUncompleted.each {
             def field = it.clone()
@@ -528,7 +532,10 @@ class MarcRuleSet {
             aboutTypeMap['?thing'] << defaultThingType
         }
 
-
+        // Process onRevertPrefer to do two things:
+        // 1. Build the revertFieldOrder to ensure the most prefered field is
+        //    reverted first.
+        // 2. Populate sharesGroupIdWith (see comment below).
         fieldHandlers.each { tag, handler ->
             if (handler instanceof MarcFieldHandler && handler.onRevertPrefer) {
                 Collection tagsToPrefer = handler.onRevertPrefer.findAll {
@@ -540,6 +547,15 @@ class MarcRuleSet {
                         assert !(tag in prefHandler.onRevertPrefer),
                                 "$name $it onRevertPrefer conflicts with $tag"
                     }
+                    // Populate sharesGroupIdWith to allow fields to share a
+                    // groupId (to be combined with other fields), but exclude
+                    // similar fields which are to be prefered on revert (see
+                    // use of sharesGroupIdWith in revert).
+                    if (handler.groupId && handler.groupId == prefHandler.groupId) {
+                        prefHandler.sharesGroupIdWith = handler.sharesGroupIdWith
+                        prefHandler.sharesGroupIdWith << tag
+                        prefHandler.sharesGroupIdWith << it
+                    }
                 }
                 revertFieldOrder += tagsToPrefer
             }
@@ -547,6 +563,12 @@ class MarcRuleSet {
                 revertFieldOrder << tag
             }
         }
+
+        // DEBUG:
+        //fieldHandlers.each { tag, handler ->
+        //    if (handler instanceof MarcFieldHandler && handler.sharesGroupIdWith)
+        //        System.err.println "$tag: $handler.sharesGroupIdWith"
+        //}
 
     }
 
@@ -909,20 +931,31 @@ class ConversionPart {
             if (vId) {
                 def existing = l.find { it instanceof Map && it["@id"] == vId }
                 if (existing) {
-                    // TODO: Unchecked mappings might overwrite data here!
+                    // TODO:
                     // - check if overwritten @type is on the same
                     //   hierarchical path as the new, use most specific
-                    // - merge values as lists?
-                    ((Map) value).putAll((Map) existing)
+                    ((Map) existing).each { k, v ->
+                        if (v instanceof List) {
+                            v.each {
+                                addValue((Map) value, (String) k, it, true)
+                            }
+                        } else {
+                            addValue((Map) value, (String) k, v, false)
+                        }
+                    }
                     l[l.indexOf(existing)] = value
-                    return
+                } else {
+                    l << value
                 }
-            } else if (l.find { it == value }) {
-                return
+            } else if (!l.find { it == value }) {
+                l << value
             }
 
-            l << value
             value = l
+        }
+
+        if (!repeatable && value instanceof List && ((List) value).size() == 1) {
+            value = value[0]
         }
         obj[key] = value
     }
@@ -1619,6 +1652,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map<String, Map> pendingResources
     String aboutAlias
     List<String> onRevertPrefer
+    Set<String> sharesGroupIdWith = new HashSet<String>()
 
     static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
 
@@ -1768,7 +1802,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         [ind1: ind1, ind2: ind2].each { indKey, handler ->
             if (!handler)
                 return
-            def ok = handler.convertSubValue(state, value[indKey], entity,
+            def ok = handler.convertSubValue(state, value, value[indKey], entity,
                     uriTemplateParams, localEntities)
             if (!ok && handler.marcDefault == null) {
                 unhandled << indKey
@@ -1788,7 +1822,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                             (subDfn.requiresI2 && subDfn.requiresI2 != value.ind2)) {
                         ok = true // rule does not apply here
                     } else {
-                        ok = subDfn.convertSubValue(state, subVal, ent,
+                        ok = subDfn.convertSubValue(state, value, subVal, ent,
                                 uriTemplateParams, localEntities,
                                 code != precedingCode && precedingNewAbout)
                     }
@@ -1922,17 +1956,23 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         ]
     }
 
-    Map getLocalEntity(Map state, Map owner, String id, Map localEntities, boolean forceNew = false) {
-        Map entity = (Map) localEntities[id]
+    Map getLocalEntity(Map state, Map fieldValue, Map owner, String pendingKey, Map localEntities, boolean forceNew = false) {
+        Map entity = (Map) localEntities[pendingKey]
         if (entity == null || forceNew) {
-            def pending = pendingResources[id]
-            entity = localEntities[id] = newEntity(state,
+            def pending = pendingResources[pendingKey]
+
+            String pendingId = pending.groupId ?
+                makeGroupId(baseTag, (String) pending.groupId,
+                        (Collection) state.sourceMap[baseTag], fieldValue)
+                : null
+
+            entity = localEntities[pendingKey] = newEntity(state,
                     (String) pending.resourceType,
-                    null, // id
+                    pendingId,
                     (Boolean) pending.embedded)
             def link = (String) (pending.link ?: pending.addLink)
             if (pending.about) {
-                owner = getLocalEntity(state, owner, (String) pending.about, localEntities)
+                owner = getLocalEntity(state, fieldValue, owner, (String) pending.about, localEntities)
             }
             addValue(owner, link, entity, pending.containsKey('addLink'))
         }
@@ -2090,7 +2130,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def failedRequired = false
 
         def usedEntities = new HashSet()
-        def thisTag = this.tag.split(/[\[:]/)[0]
 
         def prevAdded = null
 
@@ -2141,7 +2180,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 if (
                         (selectedEntity != topEntity &&
                          selectedEntity._revertedBy && (!groupId || selectedEntity._groupId != groupId)) ||
-                        selectedEntity._revertedBy == thisTag) {
+                        selectedEntity._revertedBy == baseTag ||
+                        selectedEntity._revertedBy in sharesGroupIdWith) {
                     failedRequired = true
                     return
                     //subs << ['DEBUG:blockedSinceRevertedBy': selectedEntity._revertedBy]
@@ -2198,7 +2238,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             // TODO: store reverted input refs instead of tagging input data
-            usedEntities.each { it._revertedBy = thisTag; it._groupId = groupId }
+            usedEntities.each { it._revertedBy = baseTag; it._groupId = groupId }
             //field._revertedBy = this.tag
             return field
         } else {
@@ -2296,7 +2336,7 @@ class MarcSubFieldHandler extends ConversionPart {
         assert !resourceType || link, "Expected link on ${fieldHandler.fieldId}-$code"
     }
 
-    boolean convertSubValue(Map state, def subVal, Map ent,
+    boolean convertSubValue(Map state, Map value, def subVal, Map ent,
                             Map uriTemplateParams, Map localEntities,
                             boolean precedingNewAbout = false) {
         def ok = false
@@ -2322,7 +2362,7 @@ class MarcSubFieldHandler extends ConversionPart {
             // entity ("about"), unless it's an alternative trigger and a new
             // entity was just triggered (i.e. the preceding subfield has a
             // different code and also triggers a new entity).
-            ent = fieldHandler.getLocalEntity(state, ent, about, localEntities,
+            ent = fieldHandler.getLocalEntity(state, value, ent, about, localEntities,
                     altNew && precedingNewAbout ? false : newAbout)
         }
 
