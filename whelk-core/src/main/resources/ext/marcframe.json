@@ -7818,10 +7818,14 @@
         {
           "when": "$b & i1=0",
           "include": ["agentdataOrganizationSubUnit", "subjectbase"],
-          "addLink": "subject",
-          "resourceType": "Organization",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
+            "_:agent": {
+              "addLink": "termComponentList",
+              "resourceType": "Organization",
+              "itemPos": "first",
+              "absorbSingle": true,
+              "required": true
+            },
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
@@ -7829,10 +7833,14 @@
         {
           "when": "$b & i1=1",
           "include": ["agentdataOrganizationSubUnit", "subjectbase"],
-          "addLink": "subject",
-          "resourceType": "Jurisdiction",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Jurisdiction", "required": true},
+            "_:agent": {
+              "addLink": "termComponentList",
+              "resourceType": "Jurisdiction",
+              "itemPos": "first",
+              "absorbSingle": true,
+              "required": true
+            },
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
@@ -7840,10 +7848,14 @@
         {
           "when": "i1=1",
           "include": ["agentdataOrganization", "subjectbase"],
-          "addLink": "subject",
-          "resourceType": "Jurisdiction",
           "pendingResources": {
-            "_:agent": {"link": "agent", "resourceType": "Jurisdiction", "required": true},
+            "_:agent": {
+              "addLink": "termComponentList",
+              "resourceType": "Jurisdiction",
+              "itemPos": "first",
+              "absorbSingle": true,
+              "required": true
+            },
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
         },
@@ -7882,20 +7894,16 @@
               {"x": "samlingar"},
               {"2": "sao"}]}
           },
-          "FIXME-termComponentListOrganization:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "Organization",
-                  "agent" : {
-                    "@type" : "Organization",
-                    "name" : "Kungl. biblioteket"},
+                  "@type": "ComplexSubject",
                   "termComponentList": [
                     {"@type": "Organization", "name": "Kungl. biblioteket"},
                     {"@type": "TopicSubdivision", "prefLabel": "samlingar"}
                   ],
-                  "prefLabel" : "samlingar",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/sao",
                     "@type": "ConceptScheme",
@@ -7921,19 +7929,16 @@
               "subject": [
                 {
                   "@type": "Jurisdiction",
-                  "agent" : {
+                  "date" : ["(1792 :"],
+                  "isPartOf" : {
                     "@type" : "Jurisdiction",
-                    "date" : ["(1792 :"],
-                    "isPartOf" : {
-                      "@type" : "Jurisdiction",
-                      "name" : "Sverige"
-                    },
-                    "marc:subordinateUnit" : ["Riksdagen"],
-                    "place" : [{
-                      "@type" : "Place",
-                      "label" : "Gävle)"
-                    }]
+                    "name" : "Sverige"
                   },
+                  "marc:subordinateUnit" : ["Riksdagen"],
+                  "place" : [{
+                    "@type" : "Place",
+                    "label" : "Gävle)"
+                  }],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/sao",
                     "@type": "ConceptScheme",
