@@ -26,11 +26,15 @@ class ConverterAPI extends HttpServlet {
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
-        response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED)
+        handleConversion(request, response)
     }
 
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
+        handleConversion(request, response)
+    }
+
+    void handleConversion(HttpServletRequest request, HttpServletResponse response) {
         String ctype = ContentType.parse(request.getContentType()).getMimeType()
         if (ctype != "application/ld+json") {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
@@ -44,8 +48,8 @@ class ConverterAPI extends HttpServlet {
         }
 
         String requestedContentType = request.getParameter("to") ?:
-            ContentType.parse(request.getHeader("Accept")).getMimeType() ?:
-            "application/x-marc-json"
+                ContentType.parse(request.getHeader("Accept")).getMimeType() ?:
+                        "application/x-marc-json"
 
         if (requestedContentType == "application/x-marc-json") {
             String jsonText = Tools.normalizeString(request.getInputStream().getText("UTF-8"))

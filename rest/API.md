@@ -181,7 +181,7 @@ $ curl -XGET 'https://libris-qa.kb.se/_remotesearch?q=tove&databases=BIBSYS,DANB
 ```
 
 
-### `/_convert` - Preview MARC21 conversion - Requires authentication
+### `/_convert` - Preview MARC21 conversion
 
 This endpoint allows you to preview what a JSON-LD document would look like
 converted to MARC21.
@@ -189,9 +189,8 @@ converted to MARC21.
 #### Example
 
 ```
-$ curl -XPOST -H "Content-Type: application/ld+json" \
+$ curl -XGET -H "Content-Type: application/ld+json" \
     -H "Accept: application/x-marc-json" \
-    -H "Authorization: Bearer xxxx" \
     -d@my_post.jsonld https://libris-qa.kb.se/_convert
 ...
 ```
