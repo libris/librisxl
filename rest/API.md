@@ -144,7 +144,7 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ```
 
 
-### `/_remotesearch` - Search external databases
+### `/_remotesearch` - Search external databases - Requires authentication
 
 This endpoint allows you to query external databases.
 
@@ -163,7 +163,7 @@ This endpoint allows you to query external databases.
 List available databases:
 
 ```
-$ curl -XGET 'https://libris-qa.kb.se/_remotesearch?databases=true'
+$ curl -XGET -H "Authorization: Bearer xxxx" 'https://libris-qa.kb.se/_remotesearch?databases=true'
 [{"database":"AGRALIN","name":"Wageningen UR",
   "alternativeName":"Wageningen UR Library",
   "country":"Nederländerna",

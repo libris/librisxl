@@ -155,7 +155,7 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ```
 
 
-### `/_remotesearch` - Sök i externa databaser
+### `/_remotesearch` - Sök i externa databaser  - Kräver autentisering
 
 Detta anrop låter dig slå mot externa databaser.
 
@@ -176,7 +176,7 @@ Detta anrop låter dig slå mot externa databaser.
 Lista tillgängliga databaser:
 
 ```
-$ curl -XGET 'https://libris-qa.kb.se/_remotesearch?databases=true'
+$ curl -XGET -H "Authorization: Bearer xxxx" 'https://libris-qa.kb.se/_remotesearch?databases=true'
 [{"database":"AGRALIN","name":"Wageningen UR",
   "alternativeName":"Wageningen UR Library",
   "country":"Nederländerna",
@@ -194,7 +194,7 @@ $ curl -XGET 'https://libris-qa.kb.se/_remotesearch?q=tove&databases=BIBSYS,DANB
 ```
 
 
-### `/_convert` - Förhandsgranska MARC21-konvertering - Kräver autentisering
+### `/_convert` - Förhandsgranska MARC21-konvertering
 
 Detta anrop låter dig förhandsgrandska hur ett JSON-LD-dokument kommer se ut
 efter konvertering till MARC21.
@@ -205,7 +205,6 @@ efter konvertering till MARC21.
 ```
 $ curl -XPOST -H "Content-Type: application/ld+json" \
     -H "Accept: application/x-marc-json" \
-    -H "Authorization: Bearer xxxx" \
     -d@my_post.jsonld https://libris-qa.kb.se/_convert
 ...
 ```
