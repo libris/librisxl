@@ -4,10 +4,12 @@ import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.collections4.map.LRUMap
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
+import whelk.converter.marc.MarcFrameConverter
+import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 
 /**
- * Created by markus on 15-09-03.
+ * The Whelk is the root component of the XL system.
  */
 @Log
 class Whelk {
@@ -79,6 +81,10 @@ class Whelk {
     }
 
     public Whelk() {
+    }
+
+    MarcFrameConverter createMarcFrameConverter() {
+        return new MarcFrameConverter(new LinkFinder(pg), jsonld)
     }
 
     void loadCoreData() {
