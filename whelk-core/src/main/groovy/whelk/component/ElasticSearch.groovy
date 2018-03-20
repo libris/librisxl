@@ -198,8 +198,13 @@ class ElasticSearch {
         Document copy = document.clone()
 
         copy.setThingMeta(document.getCompleteId())
-        Map framed = JsonLd.frame(copy.getThingIdentifiers().get(0), copy.data)
-        //Map framed = JsonLd.frame(document.getCompleteId(), document.data)
+        List<String> thingIds = document.getThingIdentifiers()
+        if (thingIds.isEmpty()) {
+            log.warn("Missing mainEntity? In: " + document.getCompleteId())
+            return copy.data
+        }
+        String thingId = thingIds.get(0)
+        Map framed = JsonLd.frame(thingId, copy.data)
 
         log.trace("Framed data: ${framed}")
 
