@@ -23,56 +23,7 @@ class JsonLdSpec extends Specification {
              "subClassOf": ["@id": "http://example.org/ns/ProvisionActivity"]]
         ]
     ]
-
-    def "should get id map"() {
-        expect:
-        JsonLd.getIdMap(['@graph': items]).keySet() == ids as Set
-        where:
-        ids                     | items
-        ['/some', '/other']     | [['@id': '/some'], ['@id': '/other']]
-        ['/some', '/other']     | [['@id': '/some'], ['@graph': [['@id': '/other']]]]
-        // once we've got an @id, we don't go deeper into the structure
-        ['/some']               | [['@id': '/some', 'sameAs': [['@id': '/other']]]]
-    }
-
-    def "should get nested id map"() {
-        given:
-        def graph = ['@graph': [['@id': '/foo', 'some': 'value'],
-                                ['@graph': [['@id': '/bar']]]],
-                     '@context': 'base.jsonln']
-        def expected = ['/foo', '/bar']
-        expect:
-        assert JsonLd.getIdMap(graph).keySet() == expected as Set
-
-    }
-
-    def "should get id map with bnode"() {
-        given:
-        def bnode_graph = ['@graph': [['@id': '/some',
-                                       'foo': ['@id': '_:foo']],
-                                      ['@graph': [['@id': '/other']]],
-                                      ['@graph': [['@id': '_:bar']]]]]
-        def expected = ['/some', '/other', '_:bar']
-        expect:
-        assert JsonLd.getIdMap(bnode_graph).keySet() == expected as Set
-    }
-
-    def "should accept list and map as @graph value when getting id map"() {
-        given:
-        def graph = ['@graph': [['@id': '/some',
-                                 'foo': ['@id': '_:foo']],
-                                ['@graph': [['@id': '_:baz']]],
-                                ['@graph': ['@id': '_:bar']]]]
-
-        def expected = ['/some': ['@id': '/some',
-                                  'foo': ['@id': '_:foo']],
-                        '_:baz': ['@id': '_:baz'],
-                        '_:bar': ['@id': '_:bar']]
-
-        expect:
-        assert JsonLd.getIdMap(graph) == expected
-    }
-
+    
     def "should find external references"() {
         given:
         def graph = ['@graph': [['@id': '/foo',

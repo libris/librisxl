@@ -43,6 +43,7 @@ class Document {
     static final List thingSameAsPath = ["@graph", 1, "sameAs"]
     static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
     static final List recordIdPath = ["@graph", 0, "@id"]
+    static final List thingMetaPath = ["@graph", 1, "meta"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
     static final List recordTypedIDsPath = ["@graph", 0, "identifiedBy"]
     static final List controlNumberPath = ["@graph", 0, "controlNumber"]
@@ -96,6 +97,8 @@ class Document {
     String getRecordStatus() { return get(statusPath) }
 
     void setRecordStatus(status) { set(statusPath, status, HashMap) }
+
+    void setThingMeta(meta) { set(thingMetaPath, meta, HashMap) }
 
     /**
      * Will have base URI prepended if not already there

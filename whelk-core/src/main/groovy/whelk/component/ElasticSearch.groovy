@@ -195,7 +195,12 @@ class ElasticSearch {
         }
 
         log.debug("Framing ${document.getShortId()}")
-        Map framed = JsonLd.frame(document.getCompleteId(), JsonLd.THING_KEY, document.data)
+        Document copy = document.clone()
+
+        copy.setThingMeta(document.getCompleteId())
+        Map framed = JsonLd.frame(copy.getThingIdentifiers().get(0), copy.data)
+        //Map framed = JsonLd.frame(document.getCompleteId(), document.data)
+
         log.trace("Framed data: ${framed}")
 
         return framed

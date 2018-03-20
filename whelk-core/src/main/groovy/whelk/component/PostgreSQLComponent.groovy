@@ -2084,7 +2084,7 @@ class PostgreSQLComponent {
      * if attempted (and produce error messages in your log).
      */
     Connection getConnection(){
-        
+
         // Dangerous mode, without tracking, for fast imports.
         if (!trackConnectionFetching)
             return connectionPool.getConnection()

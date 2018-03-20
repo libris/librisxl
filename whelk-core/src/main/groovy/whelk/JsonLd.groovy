@@ -431,64 +431,86 @@ public class JsonLd {
         return (key in propertiesToKeep || key.startsWith("@"))
     }
 
-
-    public static Map frame(String mainId, Map flatJsonLd) {
-        return frame(mainId, null, flatJsonLd)
+    private static Map getIdMap(Map data) {
+        Map idMap = new HashMap()
+        populateIdMap(data, idMap)
+        return idMap
     }
 
-    public static Map frame(String mainId, String thingLink, Map flatJsonLd, boolean mutate = false) {
-        if (isFramed(flatJsonLd)) {
-            return flatJsonLd
+    private static void populateIdMap(Map data, Map idMap) {
+        for (Object key : data.keySet()) {
+
+            if (key.equals("@id") && data.keySet().size() > 1)
+                idMap.put(data.get(key), data)
+
+            Object obj = data.get(key)
+            if (obj instanceof List)
+                populateIdMap( (List) obj, idMap )
+            else if (obj instanceof Map)
+                populateIdMap( (Map) obj, idMap )
+        }
+    }
+
+    private static void populateIdMap(List data, Map idMap) {
+        for (Object element : data) {
+            if (element instanceof List)
+                populateIdMap( (List) element, idMap )
+            else if (element instanceof Map)
+                populateIdMap( (Map) element, idMap )
+        }
+    }
+
+    private static void assembleFramed(Map currentNode, Map idMap) {
+        String id = currentNode.get("@id")
+        if (id != null ) {
+            println(idMap)
+            Map object = (Map) idMap.get(id)
+            if (object != null) {
+                currentNode.clear()
+                currentNode.putAll( (Map) Document.deepCopy(object) )
+            }
         }
 
-        Map flatCopy = mutate ? flatJsonLd : (Map) Document.deepCopy(flatJsonLd)
+        for (Object key : currentNode.keySet()) {
+            Object object = currentNode.get(key)
+            if (object instanceof Map)
+                assembleFramed( (Map) object, idMap )
+            else if (object instanceof List)
+                assembleFramed( (List) object, idMap )
+        }
 
+    }
+
+    private static void assembleFramed(List list, Map idMap){
+        for (Object element: list) {
+            if (element instanceof Map)
+                assembleFramed((Map) element, idMap)
+            else if (element instanceof List)
+                assembleFramed((List) element, idMap)
+        }
+    }
+
+    public static Map frame(String mainId, Map originalData) {
         if (mainId) {
             mainId = Document.BASE_URI.resolve(mainId)
         }
 
-        def idMap = getIdMap(flatCopy)
+        Map idMap = getIdMap(originalData)
 
-        def mainItem = idMap[mainId]
-        if (mainItem) {
-            if (thingLink) {
-                def thingRef = mainItem[thingLink]
-                if (thingRef) {
-                    def thingId = thingRef[ID_KEY]
-                    def thing = idMap[thingId]
-                    thing[RECORD_KEY] = [(ID_KEY): mainId]
-                    mainId = thingId
-                    idMap[mainId] = thingRef
-                    mainItem = thing
-                    log.debug("Using think-link. Framing around ${mainId}")
-                }
-            }
-        } else {
-            log.debug("No main item map found for $mainId, trying to find an identifier")
-            // Try to find an identifier to frame around
-            String foundIdentifier = Document.BASE_URI.resolve(findIdentifier(flatCopy))
+        // preamble
+        HashMap mainObject = new HashMap()
+        mainObject.put("@id", mainId)
 
-            log.debug("Result of findIdentifier: $foundIdentifier")
-            if (foundIdentifier) {
-                mainItem = idMap.get(foundIdentifier)
-            }
-        }
-        Map framedMap
-        try {
-            framedMap = embed(mainId, mainItem, idMap, new HashSet<String>())
-            if (!framedMap) {
-                throw new FramingException("Failed to frame JSONLD ($flatJsonLd)")
-            }
-        } catch (StackOverflowError sofe) {
-            throw new FramingException("Unable to frame JSONLD ($flatJsonLd). Recursive loop?)", sofe)
-        }
+        // assemble
+        assembleFramed(mainObject, idMap)
 
+        // clean up
         Set referencedBNodes = new HashSet()
-        getReferencedBNodes(framedMap, referencedBNodes)
+        getReferencedBNodes(mainObject, referencedBNodes)
+        cleanUnreferencedBNodeIDs(mainObject, referencedBNodes)
 
-        cleanUnreferencedBNodeIDs(framedMap, referencedBNodes)
 
-        return framedMap
+        return mainObject
     }
 
     /**
@@ -639,25 +661,6 @@ public class JsonLd {
             return true
         }
         return false
-    }
-
-    /*
-     * Traverse the JSON doc and grab all @id and their respective objects
-     *
-     * This is then useful for framing, since we can easily find the object
-     * we'll replace the reference with.
-     *
-     */
-    private static Map getIdMap(Map flatJsonLd) {
-        Map idMap = [:]
-        if (flatJsonLd.containsKey(GRAPH_KEY)) {
-            def graphObject = flatJsonLd.get(GRAPH_KEY)
-            // we expect this to be a list
-            for (item in graphObject) {
-                idMap = idMap + getIdMapRecursively(item)
-            }
-        }
-        return idMap
     }
 
     private static Map getIdMapRecursively(Object thing) {
