@@ -351,8 +351,6 @@ class PostgreSQLComponent {
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
 
-            Document._urlDecodeURIs(doc.data)
-
             insert = rigInsertStatement(insert, doc, changedIn, changedBy, collection, deleted)
             insert.executeUpdate()
             connection.commit()
@@ -610,7 +608,6 @@ class PostgreSQLComponent {
             updateAgent.update(doc)
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc)
-            Document._urlDecodeURIs(doc.data)
             verifyDocumentURIupdates(preUpdateDoc, doc)
 
             boolean deleted = doc.getDeleted()

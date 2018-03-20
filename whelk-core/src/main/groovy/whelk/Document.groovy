@@ -597,24 +597,6 @@ class Document {
         }
     }
 
-    public static void _urlDecodeURIs(node)
-    {
-        if (node instanceof List) {
-            for (element in node)
-                _urlDecodeURIs(element)
-        }
-        if (node instanceof Map) {
-            Object o = node.get("@id")
-            if (o != null && o instanceof String){
-                node.put("@id", java.net.URLDecoder.decode(o, "utf-8"))
-            }
-
-            for (String key : node.keySet()) {
-                _urlDecodeURIs(node.get(key))
-            }
-        }
-    }
-
     String getChecksum() {
         long checksum = calculateCheckSum(data, 1)
         return Long.toString(checksum)
