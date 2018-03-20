@@ -52,7 +52,7 @@ class PostgreSQLComponent {
 
     boolean versioning = true
 
-    final int MAX_CONNECTION_COUNT = 40
+    final int MAX_CONNECTION_COUNT = 300
     final int CONNECTION_POOL_SEGMENTS = 5
     final int CONNECTIONS_PER_SEGMENT = 5
 
@@ -2087,7 +2087,7 @@ class PostgreSQLComponent {
      * if attempted (and produce error messages in your log).
      */
     Connection getConnection(){
-
+        
         // Dangerous mode, without tracking, for fast imports.
         if (!trackConnectionFetching)
             return connectionPool.getConnection()

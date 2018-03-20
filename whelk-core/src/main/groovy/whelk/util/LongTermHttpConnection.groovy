@@ -16,7 +16,7 @@ public class LongTermHttpConnection
     private Socket m_socket
     private int m_port
     private URL m_properUrl
-    private final byte[] m_buf = new byte[1024*8]
+    private final byte[] m_buf = new byte[1024]
     private ByteArrayOutputStream m_completeResponse
 
     public LongTermHttpConnection(String host)

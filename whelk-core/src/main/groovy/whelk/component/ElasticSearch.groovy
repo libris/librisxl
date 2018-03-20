@@ -29,7 +29,7 @@ class ElasticSearch {
 
     static final int DEFAULT_PAGE_SIZE = 50
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
-    static final int CONNECTION_POOL_SIZE = 9
+    static final int CONNECTION_POOL_SIZE = 54
 
     Vector<ConnectionPoolEntry> httpConnectionPool = []
     String defaultIndex = null
@@ -120,7 +120,10 @@ class ElasticSearch {
                 else
                     backOffTime *= 2
             }
-        } finally {
+        } catch(Throwable e) {
+            log.error(e)
+        } finally
+        {
             httpConnectionEntry.inUse.set(false)
         }
 
