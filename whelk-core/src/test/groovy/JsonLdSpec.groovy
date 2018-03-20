@@ -23,7 +23,7 @@ class JsonLdSpec extends Specification {
              "subClassOf": ["@id": "http://example.org/ns/ProvisionActivity"]]
         ]
     ]
-    
+
     def "should find external references"() {
         given:
         def graph = ['@graph': [['@id': '/foo',

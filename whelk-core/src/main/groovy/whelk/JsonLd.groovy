@@ -460,10 +460,10 @@ public class JsonLd {
         }
     }
 
-    private static void assembleFramed(Map currentNode, Map idMap) {
+    private static void assembleFramed(Map currentNode, Map idMap, Set passedIDs) {
         String id = currentNode.get("@id")
-        if (id != null ) {
-            println(idMap)
+        if (id != null && !passedIDs.contains(id)) {
+            passedIDs.add(id)
             Map object = (Map) idMap.get(id)
             if (object != null) {
                 currentNode.clear()
@@ -474,19 +474,19 @@ public class JsonLd {
         for (Object key : currentNode.keySet()) {
             Object object = currentNode.get(key)
             if (object instanceof Map)
-                assembleFramed( (Map) object, idMap )
+                assembleFramed( (Map) object, idMap, passedIDs )
             else if (object instanceof List)
-                assembleFramed( (List) object, idMap )
+                assembleFramed( (List) object, idMap, passedIDs )
         }
 
     }
 
-    private static void assembleFramed(List list, Map idMap){
+    private static void assembleFramed(List list, Map idMap, Set passedIDs){
         for (Object element: list) {
             if (element instanceof Map)
-                assembleFramed((Map) element, idMap)
+                assembleFramed((Map) element, idMap, passedIDs)
             else if (element instanceof List)
-                assembleFramed((List) element, idMap)
+                assembleFramed((List) element, idMap, passedIDs)
         }
     }
 
@@ -502,7 +502,7 @@ public class JsonLd {
         mainObject.put("@id", mainId)
 
         // assemble
-        assembleFramed(mainObject, idMap)
+        assembleFramed(mainObject, idMap, new HashSet())
 
         // clean up
         Set referencedBNodes = new HashSet()

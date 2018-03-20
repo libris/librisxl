@@ -43,7 +43,7 @@ class Document {
     static final List thingSameAsPath = ["@graph", 1, "sameAs"]
     static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
     static final List recordIdPath = ["@graph", 0, "@id"]
-    static final List thingMetaPath = ["@graph", 1, "meta"]
+    static final List thingMetaPath = ["@graph", 1, "meta", "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
     static final List recordTypedIDsPath = ["@graph", 0, "identifiedBy"]
     static final List controlNumberPath = ["@graph", 0, "controlNumber"]
