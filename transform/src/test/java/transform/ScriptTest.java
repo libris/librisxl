@@ -16,7 +16,7 @@ public class ScriptTest
         String data = "{}";
 
         String script = "mode normal " +
-                "set value0 > key0";
+                "set value0 -> key0";
 
         String transformed = "" +
                 "{" +
@@ -33,9 +33,9 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "let x = 3 " +
-                "set ( 3 * x ) + 2 > result0 " +
+                "set ( 3 * x ) + 2 -> result0 " +
                 "let y = hej " +
-                "set y + baberiba > result1 ";
+                "set y + baberiba -> result1 ";
 
         String transformed = "" +
                 "{" +
@@ -52,7 +52,7 @@ public class ScriptTest
         String data = "{}";
 
         String script = "mode normal " +
-                "set value0 > key0 " +
+                "set value0 -> key0 " +
                 "let x = 1";
 
         String transformed = "" +
@@ -70,8 +70,8 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "let var = * key0 " +
-                "set var > key1 " +
-                "set literal > key2 ";
+                "set var -> key1 " +
+                "set literal -> key2 ";
 
         String transformed = "" +
                 "{" +
@@ -90,7 +90,7 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "let var = ( * key0 ) " +
-                "set ( var ) > key1 ";
+                "set ( var ) -> key1 ";
 
         String transformed = "" +
                 "{" +
@@ -108,11 +108,11 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "let x = 1 + 1 " +
-                "set x > key0 " +
+                "set x -> key0 " +
                 "let y = 1 + 1 + 2 " +
-                "set y > key1 " +
+                "set y -> key1 " +
                 "let z = ( 1 + 1 ) * 3 " +
-                "set z > key2 ";
+                "set z -> key2 ";
 
         String transformed = "" +
                 "{" +
@@ -140,11 +140,11 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "let x = sizeof * somelist * 2 " +
-                "set x > result0 " +
+                "set x -> result0 " +
                 "let y = sizeof sometext " +
-                "set y > result1 " +
+                "set y -> result1 " +
                 "let z = sizeof * somekey " +
-                "set z > result2 " +
+                "set z -> result2 " +
                 "delete somelist " +
                 "delete somekey";
 
@@ -167,9 +167,9 @@ public class ScriptTest
                 "let x = 2 " +
                 "{ " +
                 "   let x = 3 " +
-                "   set x > result0 " +
+                "   set x -> result0 " +
                 "} " +
-                "set x > result1 ";
+                "set x -> result1 ";
 
         String transformed = "" +
                 "{" +
@@ -196,11 +196,11 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "let x=(sizeof*somelist*2) " +
-                "set x>result0 " +
+                "set x->result0 " +
                 "let y=sizeof sometext " +
-                "set y>result1 " +
+                "set y->result1 " +
                 "let z=sizeof*somekey " +
-                "set z>result2 " +
+                "set z->result2 " +
                 "delete somelist " +
                 "delete somekey";
 
@@ -221,9 +221,9 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "if true " +
-                "  set value0 > key0 " +
+                "  set value0 -> key0 " +
                 "if false" +
-                "  set notValue0 > key0 ";
+                "  set notValue0 -> key0 ";
 
         String transformed = "" +
                 "{" +
@@ -239,10 +239,10 @@ public class ScriptTest
         String data = "{}";
 
         String script = "mode normal " +
-                "if hej = hej " +
-                "  set value0 > key0 " +
-                "if hej = intehej " +
-                "  set notValue0 > key0 ";
+                "if hej == hej " +
+                "  set value0 -> key0 " +
+                "if hej == intehej " +
+                "  set notValue0 -> key0 ";
 
         String transformed = "" +
                 "{" +
@@ -258,10 +258,111 @@ public class ScriptTest
         String data = "{}";
 
         String script = "mode normal " +
-                "if 456 = 455 + 1 " +
-                "  set value0 > key0 " +
-                "if 1 = 2 " +
-                "  set notValue0 > key0 ";
+                "if 456 == 455 + 1 " +
+                "  set value0 -> key0 " +
+                "if 1 == 2 " +
+                "  set notValue0 -> key0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testIntegerGreaterThan() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if 456 > 455 " +
+                "  set value0 -> key0 " +
+                "if 454 > 455 " +
+                "  set value1 -> key1 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testIntegerLessThan() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if 454 < 455 " +
+                "  set value0 -> key0 " +
+                "if 456 < 455 " +
+                "  set value1 -> key1 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testIntegerLessOrEqualThan() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if 454 <= 455 " +
+                "  set value0 -> key0 " +
+                "if 455 <= 455 " +
+                "  set value1 -> key1 " +
+                "if 456 <= 455 " +
+                "  set value2 -> key2 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"," +
+                "    \"key1\":\"value1\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testIntegerGreaterOrEqualThan() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if 456 >= 455 " +
+                "  set value0 -> key0 " +
+                "if 455 >= 455 " +
+                "  set value1 -> key1 " +
+                "if 454 >= 455 " +
+                "  set value2 -> key2 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"," +
+                "    \"key1\":\"value1\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testNotEqualsThan() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if 454 != 455 " +
+                "  set value0 -> key0 " +
+                "if 455 != 455 " +
+                "  set value1 -> key1 ";
 
         String transformed = "" +
                 "{" +
@@ -277,10 +378,10 @@ public class ScriptTest
         String data = "{}";
 
         String script = "mode normal " +
-                "if false = false " +
-                "  set value0 > key0 " +
-                "if true = false " +
-                "  set notValue0 > key0 ";
+                "if false == false " +
+                "  set value0 -> key0 " +
+                "if true == false " +
+                "  set notValue0 -> key0 ";
 
         String transformed = "" +
                 "{" +
@@ -297,11 +398,11 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "if true { " +
-                "  set value0 > key0 " +
-                "  set value1 > key1" +
+                "  set value0 -> key0 " +
+                "  set value1 -> key1" +
                 "} " +
-                "if true = false " +
-                "  set notValue0 > key0 ";
+                "if true == false " +
+                "  set notValue0 -> key0 ";
 
         String transformed = "" +
                 "{" +
@@ -319,9 +420,9 @@ public class ScriptTest
 
         String script = "mode normal " +
                 "if false { " +
-                "  set value0 > key0 " +
+                "  set value0 -> key0 " +
                 "} " +
-                "set value1 > key1 ";
+                "set value1 -> key1 ";
 
         String transformed = "" +
                 "{" +

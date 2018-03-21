@@ -35,7 +35,8 @@ public class TransformScript
 
         boolean buildingQuotedSymbol = false;
         StringBuilder symbol = new StringBuilder();
-        Integer i = 0;
+        int i = 0;
+        int reservedSymbolLength = 0;
         while (i < scriptText.length())
         {
             if (buildingQuotedSymbol)
@@ -49,7 +50,6 @@ public class TransformScript
                 symbolList.add(symbol.toString());
                 symbol = new StringBuilder();
                 buildingQuotedSymbol = false;
-                ++i;
             } else {
                 char c = scriptText.charAt(i);
                 if (c == '#') // line comment, skip until "\n"
@@ -62,11 +62,14 @@ public class TransformScript
                     buildingQuotedSymbol = true;
                     ++i;
                 }
-                else if (isSingleCharOperator(c))
+                else if ( (reservedSymbolLength = isReserverdOperator(i, scriptText)) != 0 )
                 {
                     addToSymbolList(symbol, symbolList);
-                    symbolList.add(""+c);
-                    skipTillNonWhiteSpace(++i, scriptText);
+
+                    symbolList.add( scriptText.substring(i, i+reservedSymbolLength) );
+                    i += reservedSymbolLength;
+                    while(i < scriptText.length() && Character.isWhitespace(scriptText.charAt(i))) // skip until next non-whitespace
+                        ++i;
                 }
                 else if (!Character.isWhitespace(c))
                 {
@@ -76,7 +79,8 @@ public class TransformScript
                 else // whitespace
                 {
                     addToSymbolList(symbol, symbolList);
-                    skipTillNonWhiteSpace(++i, scriptText);
+                    while(i < scriptText.length() && Character.isWhitespace(scriptText.charAt(i))) // skip until next non-whitespace
+                        ++i;
                 }
             }
         }
@@ -85,6 +89,8 @@ public class TransformScript
 
         if (buildingQuotedSymbol)
             throw new TransformSyntaxException("Mismatched quotes.");
+
+        //System.out.println(symbolList);
 
         parseScript(symbolList);
     }
@@ -96,31 +102,18 @@ public class TransformScript
         currentSymbol.setLength(0);
     }
 
-    private void skipTillNonWhiteSpace(Integer i, String source)
+    private int isReserverdOperator(int i, String scriptText)
     {
-        while(i < source.length() && Character.isWhitespace(source.charAt(i))) // end of symbol skip until next non-whitespace
+        String[] reserverdOperators = {
+                "==", "!=", "->", ">=", "<=", "<", ">", "(", ")", "{", "}", "*", "+", "-", "/", "="};
+        for (int j = 0; j < reserverdOperators.length; ++j)
         {
-            ++i;
+            if (scriptText.length() < i + reserverdOperators[j].length())
+                return 0;
+            if (scriptText.substring(i, i+reserverdOperators[j].length()).equals(reserverdOperators[j]))
+                return reserverdOperators[j].length();
         }
-    }
-
-    private boolean isSingleCharOperator(char c)
-    {
-        switch (c)
-        {
-            case '=' : return true;
-            case '>' : return true;
-            case '(' : return true;
-            case ')' : return true;
-            case '{' : return true;
-            case '}' : return true;
-            case '+' : return true;
-            case '-' : return true;
-            case '*' : return true;
-            case '/' : return true;
-            default:
-            return false;
-        }
+        return 0;
     }
 
     private void parseScript(LinkedList<String> symbols) throws TransformSyntaxException
@@ -198,13 +191,13 @@ public class TransformScript
     private MoveOperation parseMoveStatement(LinkedList<String> symbols) throws TransformSyntaxException
     {
         if (symbols.size() < 3)
-            throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '>' pathTo]");
+            throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '->' pathTo]");
 
         String from = symbols.pollFirst();
         String arrow = symbols.pollFirst();
         String to = symbols.pollFirst();
-        if (!arrow.equals(">") || !isValidPath(from) || !isValidPath(to))
-            throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '>' pathTo]");
+        if (!arrow.equals("->") || !isValidPath(from) || !isValidPath(to))
+            throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '->' pathTo]");
 
         return new MoveOperation(from, to);
     }
@@ -212,13 +205,13 @@ public class TransformScript
     private SetOperation parseSetStatement(LinkedList<String> symbols) throws TransformSyntaxException
     {
         if (symbols.size() < 3)
-            throw new TransformSyntaxException("'SET' must be followed by [value_statement '>' pathTo]");
+            throw new TransformSyntaxException("'SET' must be followed by [value_statement '->' pathTo]");
 
         ValueOperation valueOp = parseValueStatement(symbols);
         String arrow = symbols.pollFirst();
         String to = symbols.pollFirst();
-        if (!arrow.equals(">") || !isValidPath(to))
-            throw new TransformSyntaxException("'SET' must be followed by [value_statement '>' pathTo]");
+        if (!arrow.equals("->") || !isValidPath(to))
+            throw new TransformSyntaxException("'SET' must be followed by [value_statement '->' pathTo]");
 
         return new SetOperation(valueOp, to);
     }
@@ -241,8 +234,20 @@ public class TransformScript
     {
         ValueOperation leftOperand = parseUnaryValueStatement(symbols);
         String next = symbols.peekFirst();
-        String arithmeticOps = "+-/*=";
-        if (next != null && arithmeticOps.contains(next))
+
+        HashSet<String> binaryOps = new HashSet<>();
+        binaryOps.add("+");
+        binaryOps.add("-");
+        binaryOps.add("*");
+        binaryOps.add("/");
+        binaryOps.add("==");
+        binaryOps.add("!=");
+        binaryOps.add("<");
+        binaryOps.add(">");
+        binaryOps.add("<=");
+        binaryOps.add(">=");
+
+        if (next != null && binaryOps.contains(next))
         {
             String binaryOperator = symbols.pollFirst();
             ValueOperation rightOperand = parseValueStatement(symbols);
@@ -549,7 +554,7 @@ public class TransformScript
             {
                 if (m_operator.equals("+"))
                     return "" + concreteLeftValue + concreteRightValue; // String concatenation
-                else if (m_operator.equals("="))
+                else if (m_operator.equals("=="))
                     return concreteLeftValue.equals(concreteRightValue); // String comparison
                 else
                     throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
@@ -559,7 +564,7 @@ public class TransformScript
             {
                 if (!(concreteLeftValue instanceof Boolean) || !(concreteRightValue instanceof Boolean))
                     throw new RuntimeException("Type mismatch. Cannot combine booleans with other types");
-                else if (m_operator.equals("="))
+                else if (m_operator.equals("=="))
                     return concreteLeftValue.equals(concreteRightValue); // Boolean to boolean comparison
                 throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
             }
@@ -578,8 +583,18 @@ public class TransformScript
                     return left * right;
                 case "/":
                     return left / right;
-                case "=":
+                case "==":
                     return left == right;
+                case "!=":
+                    return left != right;
+                case "<":
+                    return left < right;
+                case ">":
+                    return left > right;
+                case "<=":
+                    return left <= right;
+                case ">=":
+                    return left >= right;
             }
             return null;
         }

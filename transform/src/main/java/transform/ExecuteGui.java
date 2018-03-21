@@ -78,10 +78,10 @@ public class ExecuteGui extends JFrame
                 "# If framed mode is used, data will be framed before the script is applied.\n" +
                 "# Framed or not, data is always returned to Libris-normal form after application of the script.\n" +
                 "#\n" +
-                "# MOVE [path1] > [path2]\n" +
+                "# MOVE [path1] -> [path2]\n" +
                 "# Moves a part of the data structure from path1 to path2 (creating path2 if necessary)\n" +
                 "# example:\n" +
-                "#   move @graph,0,created > @graph,0,minted\n" +
+                "#   move @graph,0,created -> @graph,0,minted\n" +
                 "#\n" +
                 "# LET symbol = [value]\n" +
                 "# Assigns [value] to symbol. Symbols can be used as part of a path or instead of literal values.\n" +
@@ -89,10 +89,10 @@ public class ExecuteGui extends JFrame
                 "#   let x = (1 + 1) * 2 # x will have value 4\n" +
                 "#   let x = hej + \" baberiba\" # x will have value \"hej baberiba\"\n" +
                 "#\n" +
-                "# SET [value] > [path]\n" +
+                "# SET [value] -> [path]\n" +
                 "# Set a value at a specific path (creating the path if necessary)\n" +
                 "# example:\n" +
-                "#   set http://libris.kb.se/library/S > @graph,1,heldBy,@id\n" +
+                "#   set http://libris.kb.se/library/S -> @graph,1,heldBy,@id\n" +
                 "#\n" +
                 "# DELETE [path]\n" +
                 "# Deletes whatever is at path\n" +
@@ -100,11 +100,18 @@ public class ExecuteGui extends JFrame
                 "#   delete @graph,0,modified\n" +
                 "#\n" +
                 "# FOR [iterator-symbol] : [path]\n" +
-                "# Run the subsequent block of code, once for each member of the list at path, which\n" +
+                "# Run the subsequent statement or block of code, once for each member of the list at path, which\n" +
                 "# must point to a list. The elements are always traversed in descending order, to avoid\n" +
                 "# the iterator invalidation problem in case of removals.\n" +
                 "# example:\n" +
                 "#   for it : @graph {\n" +
+                "#     set \"ok\" -> @graph,it,someKey\n" +
+                "#   }\n" +
+                "#\n" +
+                "# IF [boolean expression]\n" +
+                "# Run the subsequent statement or block of code, if the expression evaluates to true\n" +
+                "# example:\n" +
+                "#   if 1 + 1 == 2 {\n" +
                 "#     set \"ok\" > @graph,it,someKey\n" +
                 "#   }\n" +
                 "#\n" +
@@ -414,7 +421,7 @@ public class ExecuteGui extends JFrame
                 }
             } catch (SQLException e)
             {
-                JOptionPane.showMessageDialog(m_parent, e.toString());
+                JOptionPane.showMessageDialog(m_parent, e.toString() + " " + e.getStackTrace());
             }
         }
 

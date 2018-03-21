@@ -138,7 +138,7 @@ public class ScriptGenerator
         }
 
         resultingOperations.add(tabs + "move " + String.join(",",sourceList) +
-                "\n" + tabs + "   > " + String.join(",",targetList));
+                "\n" + tabs + "   -> " + String.join(",",targetList));
 
         for (int i = 0; i < _listsAtInFromList.size(); ++i)
         {
