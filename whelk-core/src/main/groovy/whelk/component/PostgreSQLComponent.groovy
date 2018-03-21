@@ -24,7 +24,6 @@ import whelk.Location
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
 import whelk.filter.LinkFinder
-import whelk.util.URIWrapper
 
 import java.sql.*
 import java.time.ZoneId
@@ -253,7 +252,7 @@ class PostgreSQLComponent {
      }
 
 
-    public Map status(URIWrapper uri, Connection connection = null) {
+    public Map status(URI uri, Connection connection = null) {
         Map statusMap = [:]
         boolean newConnection = (connection == null)
         try {
@@ -1155,7 +1154,7 @@ class PostgreSQLComponent {
                 return new Location(doc)
             }
 
-            URIWrapper uri = null
+            URI uri = null
             try {
                 uri = Document.BASE_URI.resolve(identifier)
             } catch (IllegalArgumentException iae) {

@@ -10,7 +10,6 @@ import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
 import whelk.filter.LinkFinder
 import whelk.util.PropertyLoader
-import whelk.util.URIWrapper
 
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -135,7 +134,7 @@ class MarcConversion {
     Map tokenMaps
     private Set missingTerms = [] as Set
 
-    URIWrapper baseUri = Document.BASE_URI
+    URI baseUri = Document.BASE_URI
 
     MarcConversion(MarcFrameConverter converter, Map config, Map tokenMaps) {
         marcTypeMap = config.marcTypeFromTypeOfRecord
@@ -275,7 +274,7 @@ class MarcConversion {
             }
         }
 
-        URIWrapper recordUri = record["@id"] ? new URIWrapper(record["@id"]) : null
+        URI recordUri = record["@id"] ? new URI(record["@id"]) : null
         state.quotedEntities.each {
             def entityId = it['@id']
             // TODO: Prepend groupId with prefix to avoid collision with
