@@ -30,9 +30,13 @@ class SearchUtils {
     JsonLd ld
     URI vocabUri
 
-    SearchUtils(Whelk whelk, Map displayData, Map vocabData) {
+    SearchUtils(Whelk whelk) {
+        this(whelk.jsonld)
         this.whelk = whelk
-        ld = new JsonLd(displayData, vocabData)
+    }
+
+    SearchUtils(JsonLd jsonld) {
+        this.ld = jsonld
         if (ld.vocabId) {
             vocabUri = new URI(ld.vocabId)
         }

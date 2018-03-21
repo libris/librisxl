@@ -95,10 +95,8 @@ class Crud extends HttpServlet {
     @Override
     void init() {
         whelk.loadCoreData()
-        displayData = whelk.displayData
-        vocabData = whelk.vocabData
         jsonld = whelk.jsonld
-        search = new SearchUtils(whelk, displayData, vocabData)
+        search = new SearchUtils(whelk)
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
