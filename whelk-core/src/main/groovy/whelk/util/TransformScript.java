@@ -143,10 +143,38 @@ public class TransformScript
         m_rootStatement = parseStatementList(symbols);
     }
 
-    /*private Operation parseStatement(LinkedList<String> symbols) throws TransformSyntaxException
+    private Operation parseStatement(LinkedList<String> symbols) throws TransformSyntaxException
     {
+        String symbol = symbols.pollFirst();
 
-    }*/
+        if (symbol == null)
+            throw new TransformSyntaxException("Unexpected end of script.");
+
+        switch (symbol) {
+            case "MOVE":
+            case "move":
+                return parseMoveStatement(symbols);
+            case "FOR":
+            case "for":
+                return parseForEachStatement(symbols);
+            case "IF":
+            case "if":
+                return parseIfStatement(symbols);
+            case "SET":
+            case "set":
+                return parseSetStatement(symbols);
+            case "LET":
+            case "let":
+                return parseLetStatement(symbols);
+            case "DELETE":
+            case "delete":
+                return parseDeleteStatement(symbols);
+            case "{":
+                return parseStatementList(symbols);
+            default:
+                throw new TransformSyntaxException("Unexpected symbol: \"" + symbol + "\"");
+        }
+    }
 
     private StatementListOperation parseStatementList(LinkedList<String> symbols) throws TransformSyntaxException
     {
@@ -154,44 +182,13 @@ public class TransformScript
 
         while(!symbols.isEmpty())
         {
-            String symbol = symbols.pollFirst();
-
-            if (symbol == null)
-                throw new TransformSyntaxException("Unexpected end of script.");
-
-            switch (symbol) {
-                case "MOVE":
-                case "move":
-                    operations.add( parseMoveStatement(symbols) );
-                    break;
-                case "FOR":
-                case "for":
-                    operations.add( parseForEachStatement(symbols) );
-                    break;
-                case "IF":
-                case "if":
-                    operations.add( parseIfStatement(symbols) );
-                    break;
-                case "SET":
-                case "set":
-                    operations.add( parseSetStatement(symbols) );
-                    break;
-                case "LET":
-                case "let":
-                    operations.add( parseLetStatement(symbols) );
-                    break;
-                case "DELETE":
-                case "delete":
-                    operations.add( parseDeleteStatement(symbols) );
-                    break;
-                case "{":
-                    operations.add( parseStatementList(symbols) );
-                    break;
-                case "}":
-                    return new StatementListOperation(operations);
-                default:
-                    throw new TransformSyntaxException("Unexpected symbol: \"" + symbol + "\"");
+            String symbol = symbols.peekFirst();
+            if (symbol.equals("}"))
+            {
+                symbols.pollFirst();
+                return new StatementListOperation(operations);
             }
+            operations.add( parseStatement(symbols) );
         }
 
         // End of script
@@ -315,7 +312,7 @@ public class TransformScript
         if (colon == null || !colon.equals(":"))
             throw new TransformSyntaxException("'FOREACH' must be followed by [identifier ':' pathToList STATEMENT]");
 
-        StatementListOperation operations = parseStatementList(symbols);
+        Operation operations = parseStatement(symbols);
         return new ForEachOperation(path, iteratorSymbol, operations);
     }
 
@@ -324,7 +321,7 @@ public class TransformScript
         if (symbols.size() < 3)
             throw new TransformSyntaxException("'IF' must be followed by a boolean value or expression.");
         ValueOperation value = parseValueStatement(symbols);
-        StatementListOperation operations = parseStatementList(symbols);
+        Operation operations = parseStatement(symbols);
         return new IfOperation(value, operations);
     }
 
@@ -611,10 +608,10 @@ public class TransformScript
     private class ForEachOperation implements Operation
     {
         private String m_listPath;
-        private StatementListOperation m_operations;
+        private Operation m_operations;
         private String m_iteratorSymbol;
 
-        public ForEachOperation(String listPath, String iteratorSymbol, StatementListOperation operations)
+        public ForEachOperation(String listPath, String iteratorSymbol, Operation operations)
         {
             m_listPath = listPath;
             m_operations = operations;
@@ -644,10 +641,10 @@ public class TransformScript
 
     private class IfOperation implements Operation
     {
-        private StatementListOperation m_operations;
+        private Operation m_operations;
         private ValueOperation m_booleanValue;
 
-        public IfOperation(ValueOperation booleanValue, StatementListOperation operations)
+        public IfOperation(ValueOperation booleanValue, Operation operations)
         {
             m_operations = operations;
             m_booleanValue = booleanValue;
