@@ -214,6 +214,123 @@ public class ScriptTest
         testScript(data, transformed, script);
     }
 
+    @Test
+    public void testBasicIf() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if true " +
+                "  set value0 > key0 " +
+                "if false" +
+                "  set notValue0 > key0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testStringComparison() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if hej = hej " +
+                "  set value0 > key0 " +
+                "if hej = intehej " +
+                "  set notValue0 > key0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testIntegerComparison() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if 456 = 455 + 1 " +
+                "  set value0 > key0 " +
+                "if 1 = 2 " +
+                "  set notValue0 > key0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testBooleanComparison() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if false = false " +
+                "  set value0 > key0 " +
+                "if true = false " +
+                "  set notValue0 > key0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testIfBlock() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if true { " +
+                "  set value0 > key0 " +
+                "  set value1 > key1" +
+                "} " +
+                "if true = false " +
+                "  set notValue0 > key0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"," +
+                "    \"key1\":\"value1\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testIfBlockEnd() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if false { " +
+                "  set value0 > key0 " +
+                "} " +
+                "set value1 > key1 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key1\":\"value1\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
     private void testScript(String beforeTransformText, String expectedResultText, String transformScript) throws Exception
     {
         Map oldData = mapper.readValue(beforeTransformText, Map.class);

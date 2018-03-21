@@ -12,7 +12,6 @@ import whelk.exception.ModelValidationException
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
 import se.kb.libris.util.marc.MarcRecord
 import whelk.util.PropertyLoader
-import whelk.util.URIWrapper
 
 public class JsonLd {
 
@@ -179,7 +178,7 @@ public class JsonLd {
         } else if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
             def resolved = context[match[0][1]]
             if (resolved) {
-                URIWrapper base = new URIWrapper(resolved)
+                URI base = new URI(resolved)
                 return base.resolve(match[0][2]).toString()
             }
         }
@@ -431,64 +430,87 @@ public class JsonLd {
         return (key in propertiesToKeep || key.startsWith("@"))
     }
 
-
-    public static Map frame(String mainId, Map flatJsonLd) {
-        return frame(mainId, null, flatJsonLd)
+    private static Map getIdMap(Map data) {
+        Map idMap = new HashMap()
+        populateIdMap(data, idMap)
+        return idMap
     }
 
-    public static Map frame(String mainId, String thingLink, Map flatJsonLd, boolean mutate = false) {
-        if (isFramed(flatJsonLd)) {
-            return flatJsonLd
+    private static void populateIdMap(Map data, Map idMap) {
+        for (Object key : data.keySet()) {
+
+            if (key.equals("@id") && data.keySet().size() > 1)
+                idMap.put(data.get(key), data)
+
+            Object obj = data.get(key)
+            if (obj instanceof List)
+                populateIdMap( (List) obj, idMap )
+            else if (obj instanceof Map)
+                populateIdMap( (Map) obj, idMap )
         }
+    }
 
-        Map flatCopy = mutate ? flatJsonLd : (Map) Document.deepCopy(flatJsonLd)
-
-        if (mainId) {
-            mainId = URLDecoder.decode(Document.BASE_URI.resolve(mainId).toString(), "utf-8")
+    private static void populateIdMap(List data, Map idMap) {
+        for (Object element : data) {
+            if (element instanceof List)
+                populateIdMap( (List) element, idMap )
+            else if (element instanceof Map)
+                populateIdMap( (Map) element, idMap )
         }
+    }
 
-        def idMap = getIdMap(flatCopy)
-
-        def mainItem = idMap[mainId]
-        if (mainItem) {
-            if (thingLink) {
-                def thingRef = mainItem[thingLink]
-                if (thingRef) {
-                    def thingId = thingRef[ID_KEY]
-                    def thing = idMap[thingId]
-                    thing[RECORD_KEY] = [(ID_KEY): mainId]
-                    mainId = thingId
-                    idMap[mainId] = thingRef
-                    mainItem = thing
-                    log.debug("Using think-link. Framing around ${mainId}")
-                }
-            }
-        } else {
-            log.debug("No main item map found for $mainId, trying to find an identifier")
-            // Try to find an identifier to frame around
-            String foundIdentifier = Document.BASE_URI.resolve(findIdentifier(flatCopy))
-
-            log.debug("Result of findIdentifier: $foundIdentifier")
-            if (foundIdentifier) {
-                mainItem = idMap.get(foundIdentifier)
+    private static void assembleFramed(Map currentNode, Map idMap, Set passedIDs) {
+        String id = currentNode.get("@id")
+        if (id != null && !passedIDs.contains(id)) {
+            passedIDs.add(id)
+            Map object = (Map) idMap.get(id)
+            if (object != null) {
+                currentNode.clear()
+                currentNode.putAll( (Map) Document.deepCopy(object) )
             }
         }
-        Map framedMap
-        try {
-            framedMap = embed(mainId, mainItem, idMap, new HashSet<String>())
-            if (!framedMap) {
-                throw new FramingException("Failed to frame JSONLD ($flatJsonLd)")
-            }
-        } catch (StackOverflowError sofe) {
-            throw new FramingException("Unable to frame JSONLD ($flatJsonLd). Recursive loop?)", sofe)
+
+        for (Object key : currentNode.keySet()) {
+            Object object = currentNode.get(key)
+            if (object instanceof Map)
+                assembleFramed( (Map) object, idMap, passedIDs )
+            else if (object instanceof List)
+                assembleFramed( (List) object, idMap, passedIDs )
         }
 
+    }
+
+    private static void assembleFramed(List list, Map idMap, Set passedIDs){
+        for (Object element: list) {
+            if (element instanceof Map)
+                assembleFramed((Map) element, idMap, passedIDs)
+            else if (element instanceof List)
+                assembleFramed((List) element, idMap, passedIDs)
+        }
+    }
+
+    public static Map frame(String mainId, Map originalData) {
+        if (mainId)
+            mainId = Document.BASE_URI.resolve(mainId)
+        else
+            return originalData
+
+        Map idMap = getIdMap(originalData)
+
+        // preamble
+        HashMap mainObject = new HashMap()
+        mainObject.put("@id", mainId)
+
+        // assemble
+        assembleFramed(mainObject, idMap, new HashSet())
+
+        // clean up
         Set referencedBNodes = new HashSet()
-        getReferencedBNodes(framedMap, referencedBNodes)
+        getReferencedBNodes(mainObject, referencedBNodes)
+        cleanUnreferencedBNodeIDs(mainObject, referencedBNodes)
 
-        cleanUnreferencedBNodeIDs(framedMap, referencedBNodes)
 
-        return framedMap
+        return mainObject
     }
 
     /**
@@ -582,7 +604,7 @@ public class JsonLd {
         return o
     }
 
-    static URIWrapper findRecordURI(Map jsonLd) {
+    static URI findRecordURI(Map jsonLd) {
         String foundIdentifier = findIdentifier(jsonLd)
         if (foundIdentifier) {
             return Document.BASE_URI.resolve(foundIdentifier)
@@ -639,25 +661,6 @@ public class JsonLd {
             return true
         }
         return false
-    }
-
-    /*
-     * Traverse the JSON doc and grab all @id and their respective objects
-     *
-     * This is then useful for framing, since we can easily find the object
-     * we'll replace the reference with.
-     *
-     */
-    private static Map getIdMap(Map flatJsonLd) {
-        Map idMap = [:]
-        if (flatJsonLd.containsKey(GRAPH_KEY)) {
-            def graphObject = flatJsonLd.get(GRAPH_KEY)
-            // we expect this to be a list
-            for (item in graphObject) {
-                idMap = idMap + getIdMapRecursively(item)
-            }
-        }
-        return idMap
     }
 
     private static Map getIdMapRecursively(Object thing) {

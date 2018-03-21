@@ -14,7 +14,6 @@ import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
-import whelk.util.URIWrapper
 
 import javax.servlet.ServletInputStream
 import javax.servlet.ServletOutputStream
@@ -34,7 +33,7 @@ class CrudSpec extends Specification {
     HttpServletRequest request
     HttpServletResponse response
     LegacyIntegrationTools legacyIntegrationTools
-    static final URIWrapper BASE_URI = Document.BASE_URI
+    static final URI BASE_URI = Document.BASE_URI
     private static final ObjectMapper mapper = new ObjectMapper()
 
 

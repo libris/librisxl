@@ -14,6 +14,7 @@ public class TransformTest
 {
     static ObjectMapper mapper = new ObjectMapper();
 
+
     @Test
     public void testBasicMove() throws Exception
     {

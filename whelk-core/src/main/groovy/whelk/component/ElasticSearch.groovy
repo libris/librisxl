@@ -29,7 +29,7 @@ class ElasticSearch {
 
     static final int DEFAULT_PAGE_SIZE = 50
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
-    static final int CONNECTION_POOL_SIZE = 9
+    static final int CONNECTION_POOL_SIZE = 54
 
     Vector<ConnectionPoolEntry> httpConnectionPool = []
     String defaultIndex = null
@@ -120,7 +120,10 @@ class ElasticSearch {
                 else
                     backOffTime *= 2
             }
-        } finally {
+        } catch(Throwable e) {
+            log.error(e)
+        } finally
+        {
             httpConnectionEntry.inUse.set(false)
         }
 
@@ -192,7 +195,17 @@ class ElasticSearch {
         }
 
         log.debug("Framing ${document.getShortId()}")
-        Map framed = JsonLd.frame(document.getCompleteId(), JsonLd.THING_KEY, document.data)
+        Document copy = document.clone()
+
+        copy.setThingMeta(document.getCompleteId())
+        List<String> thingIds = document.getThingIdentifiers()
+        if (thingIds.isEmpty()) {
+            log.warn("Missing mainEntity? In: " + document.getCompleteId())
+            return copy.data
+        }
+        String thingId = thingIds.get(0)
+        Map framed = JsonLd.frame(thingId, copy.data)
+
         log.trace("Framed data: ${framed}")
 
         return framed

@@ -143,46 +143,52 @@ public class TransformScript
         m_rootStatement = parseStatementList(symbols);
     }
 
+    private Operation parseStatement(LinkedList<String> symbols) throws TransformSyntaxException
+    {
+        String symbol = symbols.pollFirst();
+
+        if (symbol == null)
+            throw new TransformSyntaxException("Unexpected end of script.");
+
+        switch (symbol) {
+            case "MOVE":
+            case "move":
+                return parseMoveStatement(symbols);
+            case "FOR":
+            case "for":
+                return parseForEachStatement(symbols);
+            case "IF":
+            case "if":
+                return parseIfStatement(symbols);
+            case "SET":
+            case "set":
+                return parseSetStatement(symbols);
+            case "LET":
+            case "let":
+                return parseLetStatement(symbols);
+            case "DELETE":
+            case "delete":
+                return parseDeleteStatement(symbols);
+            case "{":
+                return parseStatementList(symbols);
+            default:
+                throw new TransformSyntaxException("Unexpected symbol: \"" + symbol + "\"");
+        }
+    }
+
     private StatementListOperation parseStatementList(LinkedList<String> symbols) throws TransformSyntaxException
     {
         List<Operation> operations = new ArrayList<>();
 
         while(!symbols.isEmpty())
         {
-            String symbol = symbols.pollFirst();
-
-            if (symbol == null)
-                throw new TransformSyntaxException("Unexpected end of script.");
-
-            switch (symbol) {
-                case "MOVE":
-                case "move":
-                    operations.add( parseMoveStatement(symbols) );
-                    break;
-                case "FOR":
-                case "for":
-                    operations.add( parseForEachStatement(symbols) );
-                    break;
-                case "SET":
-                case "set":
-                    operations.add( parseSetStatement(symbols) );
-                    break;
-                case "LET":
-                case "let":
-                    operations.add( parseLetStatement(symbols) );
-                    break;
-                case "DELETE":
-                case "delete":
-                    operations.add( parseDeleteStatement(symbols) );
-                    break;
-                case "{":
-                    operations.add( parseStatementList(symbols) );
-                    break;
-                case "}":
-                    return new StatementListOperation(operations);
-                default:
-                    throw new TransformSyntaxException("Unexpected symbol: \"" + symbol + "\"");
+            String symbol = symbols.peekFirst();
+            if (symbol.equals("}"))
+            {
+                symbols.pollFirst();
+                return new StatementListOperation(operations);
             }
+            operations.add( parseStatement(symbols) );
         }
 
         // End of script
@@ -235,7 +241,7 @@ public class TransformScript
     {
         ValueOperation leftOperand = parseUnaryValueStatement(symbols);
         String next = symbols.peekFirst();
-        String arithmeticOps = "+-/*";
+        String arithmeticOps = "+-/*=";
         if (next != null && arithmeticOps.contains(next))
         {
             String binaryOperator = symbols.pollFirst();
@@ -306,8 +312,17 @@ public class TransformScript
         if (colon == null || !colon.equals(":"))
             throw new TransformSyntaxException("'FOREACH' must be followed by [identifier ':' pathToList STATEMENT]");
 
-        StatementListOperation operations = parseStatementList(symbols);
+        Operation operations = parseStatement(symbols);
         return new ForEachOperation(path, iteratorSymbol, operations);
+    }
+
+    private IfOperation parseIfStatement(LinkedList<String> symbols) throws TransformSyntaxException
+    {
+        if (symbols.size() < 3)
+            throw new TransformSyntaxException("'IF' must be followed by a boolean value or expression.");
+        ValueOperation value = parseValueStatement(symbols);
+        Operation operations = parseStatement(symbols);
+        return new IfOperation(value, operations);
     }
 
     private boolean isValidPath(String symbol)
@@ -452,6 +467,10 @@ public class TransformScript
                 return context.get(m_value);
             if (m_value instanceof String && ((String) m_value).matches("-?\\d+"))
                 return Integer.parseInt((String)m_value);
+            if (m_value instanceof String && ((String) m_value).equalsIgnoreCase("true") )
+                return true;
+            if (m_value instanceof String && ((String) m_value).equalsIgnoreCase("false") )
+                return false;
             return m_value;
         }
     }
@@ -530,8 +549,19 @@ public class TransformScript
             {
                 if (m_operator.equals("+"))
                     return "" + concreteLeftValue + concreteRightValue; // String concatenation
+                else if (m_operator.equals("="))
+                    return concreteLeftValue.equals(concreteRightValue); // String comparison
                 else
                     throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
+            }
+
+            if (concreteLeftValue instanceof Boolean || concreteRightValue instanceof Boolean)
+            {
+                if (!(concreteLeftValue instanceof Boolean) || !(concreteRightValue instanceof Boolean))
+                    throw new RuntimeException("Type mismatch. Cannot combine booleans with other types");
+                else if (m_operator.equals("="))
+                    return concreteLeftValue.equals(concreteRightValue); // Boolean to boolean comparison
+                throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
             }
 
             // Both values must now be integers
@@ -548,6 +578,8 @@ public class TransformScript
                     return left * right;
                 case "/":
                     return left / right;
+                case "=":
+                    return left == right;
             }
             return null;
         }
@@ -576,10 +608,10 @@ public class TransformScript
     private class ForEachOperation implements Operation
     {
         private String m_listPath;
-        private StatementListOperation m_operations;
+        private Operation m_operations;
         private String m_iteratorSymbol;
 
-        public ForEachOperation(String listPath, String iteratorSymbol, StatementListOperation operations)
+        public ForEachOperation(String listPath, String iteratorSymbol, Operation operations)
         {
             m_listPath = listPath;
             m_operations = operations;
@@ -603,6 +635,25 @@ public class TransformScript
                     m_operations.execute(json, nextContext);
                 }
             }
+            return null;
+        }
+    }
+
+    private class IfOperation implements Operation
+    {
+        private Operation m_operations;
+        private ValueOperation m_booleanValue;
+
+        public IfOperation(ValueOperation booleanValue, Operation operations)
+        {
+            m_operations = operations;
+            m_booleanValue = booleanValue;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            if ( (Boolean) m_booleanValue.execute(json, context) )
+                m_operations.execute(json, context);
             return null;
         }
     }

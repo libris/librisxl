@@ -24,7 +24,6 @@ import whelk.Location
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
 import whelk.filter.LinkFinder
-import whelk.util.URIWrapper
 
 import java.sql.*
 import java.time.ZoneId
@@ -52,7 +51,7 @@ class PostgreSQLComponent {
 
     boolean versioning = true
 
-    final int MAX_CONNECTION_COUNT = 40
+    final int MAX_CONNECTION_COUNT = 300
     final int CONNECTION_POOL_SEGMENTS = 5
     final int CONNECTIONS_PER_SEGMENT = 5
 
@@ -253,7 +252,7 @@ class PostgreSQLComponent {
      }
 
 
-    public Map status(URIWrapper uri, Connection connection = null) {
+    public Map status(URI uri, Connection connection = null) {
         Map statusMap = [:]
         boolean newConnection = (connection == null)
         try {
@@ -350,8 +349,6 @@ class PostgreSQLComponent {
 
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
-
-            Document._urlDecodeURIs(doc.data)
 
             insert = rigInsertStatement(insert, doc, changedIn, changedBy, collection, deleted)
             insert.executeUpdate()
@@ -610,7 +607,6 @@ class PostgreSQLComponent {
             updateAgent.update(doc)
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc)
-            Document._urlDecodeURIs(doc.data)
             verifyDocumentURIupdates(preUpdateDoc, doc)
 
             boolean deleted = doc.getDeleted()
@@ -1158,7 +1154,7 @@ class PostgreSQLComponent {
                 return new Location(doc)
             }
 
-            URIWrapper uri = null
+            URI uri = null
             try {
                 uri = Document.BASE_URI.resolve(identifier)
             } catch (IllegalArgumentException iae) {

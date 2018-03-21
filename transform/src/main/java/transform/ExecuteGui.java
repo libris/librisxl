@@ -6,10 +6,8 @@ import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.triples.JsonldSerializer;
-import whelk.util.PropertyLoader;
 import whelk.util.ThreadPool;
 import whelk.util.TransformScript;
-import whelk.util.URIWrapper;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,6 +15,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -257,9 +257,9 @@ public class ExecuteGui extends JFrame
                                     m_envProps.load(propStream);
                                     javax.swing.SwingUtilities.invokeLater( () -> m_progressLabel.setText("Starting Whelk..") );
                                     m_whelk = new Whelk(m_envProps);
-                                    Document.setBASE_URI( new URIWrapper( (String) m_envProps.get("baseUri")) );
+                                    Document.setBASE_URI( new URI( (String) m_envProps.get("baseUri")) );
                                     m_whelk.loadCoreData();
-                                } catch (IOException ioe)
+                                } catch (IOException | URISyntaxException ioe)
                                 {
                                     JOptionPane.showMessageDialog(m_parent, ioe.toString());
                                 }

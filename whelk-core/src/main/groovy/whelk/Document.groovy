@@ -4,7 +4,6 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
-import whelk.util.URIWrapper
 
 import java.lang.reflect.Type
 import java.time.ZoneId
@@ -22,16 +21,16 @@ class Document {
     // If we _statically_ call loadProperties("secret"), without a try/catch it means that no code with a dependency on
     // whelk-core can ever run without a secret.properties file, which for example unit tests (for other projects
     // depending on whelk-core) sometimes need to do.
-    static URIWrapper BASE_URI
+    static URI BASE_URI
 
     static
     {
         try {
-            BASE_URI = new URIWrapper(PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/"))
+            BASE_URI = new URI( (String) PropertyLoader.loadProperties("secret").get("baseUri", "https://libris.kb.se/") )
         }
         catch (Exception e) {
             System.err.println(e)
-            BASE_URI = new URIWrapper("https://libris.kb.se/");
+            BASE_URI = new URI("https://libris.kb.se/")
         }
     }
 
@@ -43,6 +42,7 @@ class Document {
     static final List thingSameAsPath = ["@graph", 1, "sameAs"]
     static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
     static final List recordIdPath = ["@graph", 0, "@id"]
+    static final List thingMetaPath = ["@graph", 1, "meta", "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
     static final List recordTypedIDsPath = ["@graph", 0, "identifiedBy"]
     static final List controlNumberPath = ["@graph", 0, "controlNumber"]
@@ -67,7 +67,7 @@ class Document {
         return new Document(clonedDate)
     }
 
-    URIWrapper getURI() {
+    URI getURI() {
         return BASE_URI.resolve(getShortId())
     }
 
@@ -96,6 +96,8 @@ class Document {
     String getRecordStatus() { return get(statusPath) }
 
     void setRecordStatus(status) { set(statusPath, status, HashMap) }
+
+    void setThingMeta(meta) { set(thingMetaPath, meta, HashMap) }
 
     /**
      * Will have base URI prepended if not already there
@@ -593,24 +595,6 @@ class Document {
                 if (!alreadyInSameAsList)
                     sameAsList.add( ["@id": nodeId] )
                 node["@id"] = expectedNewDerivative
-            }
-        }
-    }
-
-    public static void _urlDecodeURIs(node)
-    {
-        if (node instanceof List) {
-            for (element in node)
-                _urlDecodeURIs(element)
-        }
-        if (node instanceof Map) {
-            Object o = node.get("@id")
-            if (o != null && o instanceof String){
-                node.put("@id", java.net.URLDecoder.decode(o, "utf-8"))
-            }
-
-            for (String key : node.keySet()) {
-                _urlDecodeURIs(node.get(key))
             }
         }
     }

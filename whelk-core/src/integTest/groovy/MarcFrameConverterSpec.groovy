@@ -2,8 +2,6 @@ package whelk.converter.marc
 
 
 import spock.lang.*
-import whelk.JsonLd
-import whelk.util.URIWrapper
 
 
 @Unroll
@@ -16,7 +14,7 @@ class MarcFrameConverterSpec extends Specification {
             this.config = config
             super.conversion.doPostProcessing = false
             super.conversion.flatLinkedForm = false
-            super.conversion.baseUri = new URIWrapper("/")
+            super.conversion.baseUri = new URI("/")
         }
     }
 
