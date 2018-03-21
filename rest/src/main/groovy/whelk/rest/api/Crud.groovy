@@ -15,15 +15,11 @@ import whelk.Whelk
 import whelk.IdGenerator
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
-import whelk.converter.FormatConverter
-import whelk.converter.marc.JsonLD2MarcConverter
-import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
-import whelk.exception.WhelkStorageException
 import whelk.rest.api.CrudUtils
 import whelk.rest.api.MimeTypes
 import whelk.rest.api.SearchUtils
@@ -38,7 +34,6 @@ import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
 import static HttpTools.sendResponse
-import static whelk.rest.api.HttpTools.getMajorContentType
 
 /**
  * Handles all GET/PUT/POST/DELETE requests against the backend.
@@ -72,8 +67,6 @@ class Crud extends HttpServlet {
         FRAMED, EMBELLISHED, FRAMED_AND_EMBELLISHED, RAW
     }
 
-    static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
-
     MimetypesFileTypeMap mimeTypes = new MimetypesFileTypeMap()
 
     final static Map contextHeaders = [
@@ -92,11 +85,8 @@ class Crud extends HttpServlet {
     AccessControl accessControl = new AccessControl()
 
     Crud() {
-        super()
         log.info("Setting up httpwhelk.")
-
         Properties props = PropertyLoader.loadProperties("secret")
-
         PostgreSQLComponent pg = new PostgreSQLComponent(props)
         ElasticSearch elastic = new ElasticSearch(props)
         whelk = new Whelk(pg, elastic)
