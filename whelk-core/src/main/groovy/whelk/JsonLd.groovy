@@ -490,9 +490,10 @@ public class JsonLd {
     }
 
     public static Map frame(String mainId, Map originalData) {
-        if (mainId) {
+        if (mainId)
             mainId = Document.BASE_URI.resolve(mainId)
-        }
+        else
+            return originalData
 
         Map idMap = getIdMap(originalData)
 

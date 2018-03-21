@@ -14,7 +14,7 @@ public class TransformTest
 {
     static ObjectMapper mapper = new ObjectMapper();
 
-    /* TESTS FAIL DUE TO TEST DATA HAVING NO ID, AND THUS CANNOT BE FRAMED. FIXME.
+
     @Test
     public void testBasicMove() throws Exception
     {
@@ -221,7 +221,6 @@ public class TransformTest
 
         testTransform(oldFormatExample, toBeTransformed, newFormatExample, expectedResult);
     }
-    */
 
     private void testTransform(String oldFormatExample, String toBeTransformed,
                                String newFormatExample, String expectedTransformedResult) throws Exception
