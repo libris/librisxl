@@ -16,6 +16,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.*;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -258,7 +259,7 @@ public class ExecuteGui extends JFrame
                                     m_whelk = new Whelk(m_envProps);
                                     Document.setBASE_URI( new URI( (String) m_envProps.get("baseUri")) );
                                     m_whelk.loadCoreData();
-                                } catch (IOException ioe)
+                                } catch (IOException | URISyntaxException ioe)
                                 {
                                     JOptionPane.showMessageDialog(m_parent, ioe.toString());
                                 }
