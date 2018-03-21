@@ -1273,7 +1273,11 @@
           "embedded": true
         }
       },
-      "$v": {"property": "seriesEnumeration"},
+      "$v": {"property": "seriesEnumeration"}
+    },
+
+    "inseries_with_w": {
+      "include": ["inseries"],
       "$w": {
         "about": "_:seriesinstance",
         "addLink": "describedBy",
@@ -6345,7 +6349,7 @@
     "440": {
       "NOTE:ignoreOnRevertInFavourOfCombo": "490 + 830",
       "onRevertPrefer": ["490", "800", "810", "811", "830"],
-      "include": ["inseries", "titledetails", "i2-nonfiling"],
+      "include": ["inseries_with_w", "titledetails", "i2-nonfiling"],
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$x": {"about": "_:seriesinstance", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
@@ -10992,7 +10996,7 @@
     },
     "830": {
       "onRevertPrefer": ["800", "810", "811"],
-      "include": ["inseries", "titledetails", "i2-nonfiling"],
+      "include": ["inseries_with_w", "titledetails", "i2-nonfiling"],
       "groupId": "#seriesmember-$seq",
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$d": {"about": "_:work", "addProperty": "legalDate"},
