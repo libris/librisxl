@@ -3028,7 +3028,7 @@
       "$a": {"property": "value"},
       "$b": {"link": "source", "resourceType": "Source", "property": "label"},
       "$d": {"property": "date"},
-      "$i": {"link": "hasNote", "resourceType": "Note", "property": "label"},
+      "$i": {"addLink": "note"},
       "$z": {"addProperty": "marc:hiddenValue"}
     },
     "018": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
@@ -3587,7 +3587,7 @@
       "$c": {"addProperty": "acquisitionTerms"},
       "$f": {"addProperty": "marc:formOfIssue"},
       "$g": {"addProperty": "marc:additionalFormatCharacteristics"},
-      "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$n": {"addProperty": "note"},
       "$6": {"property": "marc:fieldref"},
       "TODO": "_spec"
     },
@@ -6659,7 +6659,7 @@
       "$b": {"property": "degree"},
       "$c": {"link": "grantingInstitution", "resourceType": "Agent", "property": "label"},
       "$d": {"property": "date"},
-      "$g": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$g": {"addProperty": "note"},
       "$o": {"addLink": "identifiedBy", "resourceType": "DissertationIdentifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
@@ -7031,7 +7031,7 @@
       "$e": {"property": "marc:physicalDescriptionOfReproduction"},
       "$f": {"addProperty": "seriesStatement"},
       "$m": {"addProperty": "marc:datesAndOrSequentialDesignationOfIssuesReproduced"},
-      "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$n": {"addProperty": "note"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
       "$7": {"TODO:fixedField": "fixedLengthDataElementsOfReproduction"},
@@ -10329,7 +10329,7 @@
       "$i": {"addProperty": "marc:displayText"},
       "$k": {"addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
       "$m": {"property": "marc:materialSpecificDetails"},
-      "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$n": {"addProperty": "note"},
       "$o": {"ignored": true, "NOTE:subfield-count": 0},
       "$r": {"addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value", "TODO:targetMatch": "088"},
       "$s": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "240"},
@@ -11188,8 +11188,8 @@
       "$f": {"addProperty": "marc:electronicName"},
       "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
-      "$y": {"addLink": "hasNote", "resourceType": "Note", "property": "marc:linkText"},
-      "$z": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$y": {"addProperty": "marc:linkText"},
+      "$z": {"addProperty": "note"},
       "TODO": "subfieldOrder",
       "_spec": [
         {
