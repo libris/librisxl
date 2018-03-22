@@ -51,9 +51,7 @@ public class Helpers
     {
         id = LegacyIntegrationTools.fixUri(id);
 
-        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-
-        String sql = "SELECT id FROM " + tableName + "__identifiers WHERE iri = ?";
+        String sql = "SELECT id FROM lddb__identifiers WHERE iri = ?";
         PreparedStatement preparedStatement = dbconn.prepareStatement(sql);
         preparedStatement.setString(1, id);
 

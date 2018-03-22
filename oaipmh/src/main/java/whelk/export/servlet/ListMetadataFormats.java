@@ -33,7 +33,7 @@ public class ListMetadataFormats
         if (identifierUri != null)
         {
             String id = null;
-            try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
+            try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection();
                  PreparedStatement preparedStatement = Helpers.prepareSameAsStatement(dbconn, identifierUri);
                  ResultSet resultSet = preparedStatement.executeQuery())
             {
@@ -41,7 +41,7 @@ public class ListMetadataFormats
                     id = resultSet.getString("id");
             }
 
-            try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
+            try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection();
                  PreparedStatement preparedStatement = prepareMatchingDocumentStatement(dbconn, id);
                  ResultSet resultSet = preparedStatement.executeQuery())
             {
@@ -109,8 +109,7 @@ public class ListMetadataFormats
     private static PreparedStatement prepareMatchingDocumentStatement(Connection dbconn, String id)
             throws SQLException
     {
-        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-        String selectSQL = "SELECT deleted FROM " + tableName + " WHERE id = ? AND manifest->>'collection' <> 'definitions'";
+        String selectSQL = "SELECT deleted FROM lddb WHERE id = ? AND manifest->>'collection' <> 'definitions'";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);
 

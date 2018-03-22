@@ -158,7 +158,7 @@ public class ResponseCommon
 
         if (embellish)
         {
-            document = OaiPmh.s_postgreSqlComponent.loadEmbellished(document.getShortId(), OaiPmh.s_whelk.getJsonld());
+            document = OaiPmh.s_whelk.getStorage().loadEmbellished(document.getShortId(), OaiPmh.s_whelk.getJsonld());
         }
 
         if (!onlyIdentifiers)
@@ -224,7 +224,7 @@ public class ResponseCommon
     private static void emitAttachedHoldings(List<String> itIds, XMLStreamWriter writer, String requestedFormat)
             throws SQLException, XMLStreamException, IOException
     {
-        List<Document> holdings = OaiPmh.s_postgreSqlComponent.getAttachedHoldings(itIds);
+        List<Document> holdings = OaiPmh.s_whelk.getStorage().getAttachedHoldings(itIds);
         writer.writeStartElement("about");
         for (Document holding : holdings)
         {

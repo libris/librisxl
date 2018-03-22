@@ -70,8 +70,6 @@ public class OaiPmh extends HttpServlet
     public final static String FORMAT_EXPANDED_POSTFIX = "_expanded";
     public final static String FORMAT_INCLUDE_HOLD_POSTFIX = "_includehold";
 
-    public static Properties configuration;
-    public static PostgreSQLComponent s_postgreSqlComponent;
     public static Whelk s_whelk;
     private final Logger logger = LogManager.getLogger(this.getClass());
 

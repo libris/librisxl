@@ -70,7 +70,7 @@ public class GetRecord
         }
 
         String id = null;
-        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection();
              PreparedStatement preparedStatement = Helpers.prepareSameAsStatement(dbconn, identifierUri);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
@@ -84,7 +84,7 @@ public class GetRecord
             return;
         }
 
-        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection())
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection())
         {
             dbconn.setAutoCommit(false);
             try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, null, null, null, id, false);
