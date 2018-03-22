@@ -77,6 +77,8 @@ public class ExecuteGui extends JFrame
                 "# Every script must begin with either \"mode normal\" or \"mode framed\"\n" +
                 "# If framed mode is used, data will be framed before the script is applied.\n" +
                 "# Framed or not, data is always returned to Libris-normal form after application of the script.\n" +
+                "# Unary operators take precedence, but all binary operators are equal, so use parentheses\n" +
+                "# when writing arithmetic or logic composite expressions!\n" +
                 "#\n" +
                 "# MOVE [path1] -> [path2]\n" +
                 "# Moves a part of the data structure from path1 to path2 (creating path2 if necessary)\n" +

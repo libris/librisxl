@@ -770,7 +770,7 @@ public class TransformScript
         return mapper.writeValueAsString(data);
     }
 
-    public Map executeOn(Map data) throws IOException
+    public Map executeOn(Map data)
     {
         Document doc = new Document(data);
         if (m_modeFramed)

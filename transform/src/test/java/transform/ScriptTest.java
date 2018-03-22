@@ -513,7 +513,7 @@ public class ScriptTest
         String data = "{}";
 
         String script = "mode normal " +
-                "if (!(false) && !(false))" +
+                "if !false && !false" +
                 "  set value0 -> key0 " +
                 "if (true && (false || true))" +
                 "  set value1 -> key1 ";
