@@ -112,7 +112,7 @@ public class ExecuteGui extends JFrame
                 "# Run the subsequent statement or block of code, if the expression evaluates to true\n" +
                 "# example:\n" +
                 "#   if 1 + 1 == 2 {\n" +
-                "#     set \"ok\" > @graph,it,someKey\n" +
+                "#     set \"ok\" -> @graph,it,someKey\n" +
                 "#   }\n" +
                 "#\n" +
                 "# sizeof [*] symbol\n" +
