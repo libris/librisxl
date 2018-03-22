@@ -7,6 +7,7 @@ import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
+import whelk.util.PropertyLoader
 
 /**
  * The Whelk is the root component of the XL system.
@@ -31,8 +32,12 @@ class Whelk {
     private Map<String, Document> authCache
     private final int CACHE_MAX_SIZE = 1000
 
-    static {
-
+    static Whelk createLoadedCoreWhelk(String propName = "secret") {
+        Properties properties = PropertyLoader.loadProperties("secret")
+        PostgreSQLComponent storage = new PostgreSQLComponent(properties)
+        Whelk whelk = new Whelk(storage)
+        whelk.loadCoreData()
+        return whelk
     }
 
     void putInAuthCache(Document authDocument) {
@@ -84,7 +89,7 @@ class Whelk {
     }
 
     MarcFrameConverter createMarcFrameConverter() {
-        return new MarcFrameConverter(new LinkFinder(pg), jsonld)
+        return new MarcFrameConverter(new LinkFinder(storage), jsonld)
     }
 
     void loadCoreData() {
