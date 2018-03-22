@@ -14,18 +14,12 @@ import javax.servlet.http.HttpServletResponse
 class DuplicatesAPI extends HttpServlet {
 
     private Whelk whelk
-    private JsonLd jsonld
     private JsonLD2MarcXMLConverter toMarcXmlConverter
 
     @Override
     void init() {
-        Properties configuration = PropertyLoader.loadProperties("secret")
-        PostgreSQLComponent storage = new PostgreSQLComponent(configuration.getProperty("sqlUrl"),
-                configuration.getProperty("sqlMaintable"))
-        whelk = new Whelk(storage)
-        whelk.loadCoreData()
-        jsonld = new JsonLd(whelk.displayData, whelk.vocabData)
-        toMarcXmlConverter = new JsonLD2MarcXMLConverter()
+        whelk = Whelk.createLoadedCoreWhelk()
+        toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.createMarcFrameConverter())
     }
 
     @Override

@@ -164,7 +164,7 @@ public class Xml
             record.appendChild(identifier);
             identifier.setTextContent(document.getThingIdentifiers().get(0));
 
-            String collection = LegacyIntegrationTools.determineLegacyCollection(document, Utils.s_jsonld);
+            String collection = LegacyIntegrationTools.determineLegacyCollection(document, Utils.s_whelk.getJsonld());
             Element url = xmlDoc.createElement("url");
             record.appendChild(url);
             url.setTextContent(Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + document.getShortId());

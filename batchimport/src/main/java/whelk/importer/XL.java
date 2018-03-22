@@ -47,7 +47,7 @@ class XL
         m_whelk = new Whelk(storage, elastic);
         m_whelk.loadCoreData();
         m_forcedSetTerms = new JsonLd(m_whelk.getDisplayData(), m_whelk.getVocabData()).getForcedSetTerms();
-        m_marcFrameConverter = new MarcFrameConverter();
+        m_marcFrameConverter = m_whelk.createMarcFrameConverter();
     }
 
     /**

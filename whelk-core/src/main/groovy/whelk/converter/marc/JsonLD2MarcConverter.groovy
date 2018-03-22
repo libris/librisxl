@@ -18,8 +18,8 @@ class JsonLD2MarcConverter implements FormatConverter {
     @Override
     String getRequiredContentType() { "application/ld+json" }
 
-    JsonLD2MarcConverter() {
-        marcFrameConverter = new MarcFrameConverter()
+    JsonLD2MarcConverter(MarcFrameConverter marcFrameConverter) {
+        this.marcFrameConverter = marcFrameConverter
     }
 
     Map convert(Map data, String id) {

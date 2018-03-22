@@ -16,8 +16,8 @@ class MarcXml2JsonLDConverter {
 
     MarcFrameConverter marcFrameConverter
 
-    MarcXml2JsonLDConverter() {
-        marcFrameConverter = new MarcFrameConverter()
+    MarcXml2JsonLDConverter(MarcFrameConverter marcFrameConverter) {
+        this.marcFrameConverter = marcFrameConverter
     }
 
     Document doConvert(final Document document) {

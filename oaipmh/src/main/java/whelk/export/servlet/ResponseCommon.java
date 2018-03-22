@@ -158,7 +158,7 @@ public class ResponseCommon
 
         if (embellish)
         {
-            document = OaiPmh.s_postgreSqlComponent.loadEmbellished(document.getShortId(), OaiPmh.s_jsonld);
+            document = OaiPmh.s_postgreSqlComponent.loadEmbellished(document.getShortId(), OaiPmh.s_whelk.getJsonld());
         }
 
         if (!onlyIdentifiers)
