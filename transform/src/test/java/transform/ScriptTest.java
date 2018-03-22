@@ -354,7 +354,7 @@ public class ScriptTest
     }
 
     @Test
-    public void testNotEqualsThan() throws Exception
+    public void testNotEquals() throws Exception
     {
         String data = "{}";
 
@@ -426,6 +426,101 @@ public class ScriptTest
 
         String transformed = "" +
                 "{" +
+                "    \"key1\":\"value1\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testLogicAnd() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if true && true { " +
+                "  set value0 -> key0 " +
+                "} " +
+                "if true && false { " +
+                "  set value1 -> key1 " +
+                "} " +
+                "if false && true { " +
+                "  set value2 -> key2 " +
+                "} " +
+                "if false && false { " +
+                "  set value3 -> key3 " +
+                "} ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testLogicOr() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if true || true { " +
+                "  set value0 -> key0 " +
+                "} " +
+                "if true || false { " +
+                "  set value1 -> key1 " +
+                "} " +
+                "if false || true { " +
+                "  set value2 -> key2 " +
+                "} " +
+                "if false || false { " +
+                "  set value3 -> key3 " +
+                "} ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"," +
+                "    \"key1\":\"value1\"," +
+                "    \"key2\":\"value2\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testLogicNot() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if !false " +
+                "  set value0 -> key0 " +
+                "if !true" +
+                "  set notValue0 -> key0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testLogicComposite() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if (!(false) && !(false))" +
+                "  set value0 -> key0 " +
+                "if (true && (false || true))" +
+                "  set value1 -> key1 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"," +
                 "    \"key1\":\"value1\"" +
                 "}";
 

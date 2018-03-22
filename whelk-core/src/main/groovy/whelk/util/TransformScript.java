@@ -105,7 +105,7 @@ public class TransformScript
     private int isReserverdOperator(int i, String scriptText)
     {
         String[] reserverdOperators = {
-                "==", "!=", "->", ">=", "<=", "<", ">", "(", ")", "{", "}", "*", "+", "-", "/", "="};
+                "==", "!=", "->", ">=", "<=", "&&", "||", "!", "<", ">", "(", ")", "{", "}", "*", "+", "-", "/", "="};
         for (int j = 0; j < reserverdOperators.length; ++j)
         {
             if (scriptText.length() < i + reserverdOperators[j].length())
@@ -246,6 +246,9 @@ public class TransformScript
         binaryOps.add(">");
         binaryOps.add("<=");
         binaryOps.add(">=");
+        binaryOps.add("&&");
+        binaryOps.add("||");
+        binaryOps.add("!");
 
         if (next != null && binaryOps.contains(next))
         {
@@ -274,6 +277,9 @@ public class TransformScript
         } else if (symbol.equals("*"))
         {
             return new DerefValueOperation(symbols.pollFirst());
+        } else if (symbol.equals("!"))
+        {
+            return new NotValueOperation(new ValueOperation(parseValueStatement(symbols)));
         } else if (symbol.equals("sizeof"))
         {
             String derefSymbol = symbols.peekFirst();
@@ -498,6 +504,24 @@ public class TransformScript
         }
     }
 
+    private class NotValueOperation extends ValueOperation
+    {
+        ValueOperation m_valueOperation;
+
+        public NotValueOperation(ValueOperation valueOperation)
+        {
+            m_valueOperation = valueOperation;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object value = m_valueOperation.execute(json, context);
+            if ( ! (value instanceof Boolean) )
+                throw new RuntimeException("Type mismatch. Cannot combine logic not (!) with non boolean value: " + value);
+            return !((Boolean)value);
+        }
+    }
+
     private class SizeofValueOperation extends ValueOperation
     {
         String m_operand;
@@ -564,8 +588,14 @@ public class TransformScript
             {
                 if (!(concreteLeftValue instanceof Boolean) || !(concreteRightValue instanceof Boolean))
                     throw new RuntimeException("Type mismatch. Cannot combine booleans with other types");
+
                 else if (m_operator.equals("=="))
                     return concreteLeftValue.equals(concreteRightValue); // Boolean to boolean comparison
+                else if (m_operator.equals("&&"))
+                    return ((Boolean) concreteLeftValue) && ((Boolean) concreteRightValue);
+                else if (m_operator.equals("||"))
+                    return ((Boolean) concreteLeftValue) || ((Boolean) concreteRightValue);
+
                 throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
             }
 
