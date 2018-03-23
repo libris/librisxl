@@ -256,8 +256,14 @@ public class TransformScript
             ValueOperation rightOperand = parseValueStatement(symbols);
             return new BinaryValueOperation(leftOperand, rightOperand, binaryOperator);
         }
-        else
-            return leftOperand;
+        else if (next != null && next.equals("substring"))
+        {
+            symbols.pollFirst(); // chew the "substring" symbol
+            ValueOperation firstParameter = parseValueStatement(symbols);
+            ValueOperation secondParameter = parseValueStatement(symbols);
+            return new SubStringValueOperation(leftOperand, firstParameter, secondParameter);
+        }
+        return leftOperand;
     }
 
     private ValueOperation parseUnaryValueStatement(LinkedList<String> symbols) throws TransformSyntaxException
@@ -539,7 +545,35 @@ public class TransformScript
             return 0;
         }
     }
-    
+
+    private class SubStringValueOperation extends ValueOperation
+    {
+        ValueOperation m_completeString;
+        ValueOperation m_startIndex;
+        ValueOperation m_endIndex;
+
+        public SubStringValueOperation(ValueOperation completeString, ValueOperation startIndex, ValueOperation endIndex)
+        {
+            m_completeString = completeString;
+            m_startIndex = startIndex;
+            m_endIndex = endIndex;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object string = m_completeString.execute(json, context);
+            Object startIndex = m_startIndex.execute(json, context);
+            Object endIndex = m_endIndex.execute(json, context);
+
+            if (!(string instanceof String))
+                throw new RuntimeException("Type mismatch. Cannot call substring on non-string: " + string);
+            if (!(startIndex instanceof Integer) || !(endIndex instanceof Integer))
+                throw new RuntimeException("Type mismatch. Both expressions following substring must evaluate to integers.");
+
+            return ((String) string).substring( (Integer) startIndex, (Integer) endIndex);
+        }
+    }
+
     private class BinaryValueOperation extends ValueOperation
     {
         private ValueOperation m_leftOperand;
