@@ -599,6 +599,24 @@ public class ScriptTest
         testScript(data, transformed, script);
     }
 
+    @Test
+    public void testStringContains() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set contains abcde cde -> key0 " +
+                "set contains abcde ebc -> key1 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":true, " +
+                "    \"key1\":false " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
     private void testScript(String beforeTransformText, String expectedResultText, String transformScript) throws Exception
     {
         Map oldData = mapper.readValue(beforeTransformText, Map.class);
