@@ -294,6 +294,11 @@ public class TransformScript
             ValueOperation completeStringParameter = parseValueStatement(symbols);
             ValueOperation searchStringParameter = parseValueStatement(symbols);
             return new StringStartsWithValueOperation(completeStringParameter, searchStringParameter);
+        } else if (symbol.equals("endsWith"))
+        {
+            ValueOperation completeStringParameter = parseValueStatement(symbols);
+            ValueOperation searchStringParameter = parseValueStatement(symbols);
+            return new StringEndsWithValueOperation(completeStringParameter, searchStringParameter);
         }
         else
         {
@@ -600,6 +605,29 @@ public class TransformScript
                 throw new RuntimeException("Type mismatch. Cannot call startsWith on non-strings");
 
             return ((String) completeString).startsWith( (String) searchString );
+        }
+    }
+
+    private class StringEndsWithValueOperation extends ValueOperation
+    {
+        ValueOperation m_completeString;
+        ValueOperation m_searchString;
+
+        public StringEndsWithValueOperation(ValueOperation completeString, ValueOperation searchString)
+        {
+            m_completeString = completeString;
+            m_searchString = searchString;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object completeString = m_completeString.execute(json, context);
+            Object searchString = m_searchString.execute(json, context);
+
+            if (!(searchString instanceof String) || !(completeString instanceof String))
+                throw new RuntimeException("Type mismatch. Cannot call endsWith on non-strings");
+
+            return ((String) completeString).endsWith( (String) searchString );
         }
     }
 
