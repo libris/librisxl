@@ -269,7 +269,7 @@ public class TransformScript
 
         if (symbol.equals("("))
         {
-            ValueOperation subOp = new ValueOperation(parseValueStatement(symbols));
+            ValueOperation subOp = parseValueStatement(symbols);
             String closingPar = symbols.pollFirst();
             if (!closingPar.equals(")"))
                 throw new TransformSyntaxException("Mismatched parenthesis");
@@ -279,17 +279,10 @@ public class TransformScript
             return new DerefValueOperation(symbols.pollFirst());
         } else if (symbol.equals("!"))
         {
-            return new NotValueOperation(new ValueOperation(parseValueStatement(symbols)));
+            return new NotValueOperation(parseValueStatement(symbols));
         } else if (symbol.equals("sizeof"))
         {
-            String derefSymbol = symbols.peekFirst();
-            boolean direct = true;
-            if (derefSymbol.equals("*"))
-            {
-                symbols.pollFirst(); // chew the deref-symbol
-                direct = false;
-            }
-            return new SizeofValueOperation(symbols.pollFirst(), direct);
+            return new SizeofValueOperation(parseUnaryValueStatement(symbols));
         } else
         {
             return new LiteralValueOperation(symbol);
@@ -526,38 +519,27 @@ public class TransformScript
 
     private class SizeofValueOperation extends ValueOperation
     {
-        String m_operand;
-        boolean m_direct;
+        ValueOperation m_value;
 
-        public SizeofValueOperation(String operand, boolean direct)
+        public SizeofValueOperation(ValueOperation value)
         {
-            m_operand = operand;
-            m_direct = direct;
+            m_value = value;
         }
 
         public Object execute(Map json, Map<String, Object> context)
         {
-            Object operand;
-            if (!m_direct)
-            {
-                List<Object> path = Arrays.asList( withIntAsInteger(m_operand.split(",")) );
-                List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
-                operand = Document._get(pathWithSymbols, json);
-            } else
-            {
-                operand = m_operand;
-            }
+            Object value = m_value.execute(json, context);
 
-            if (operand instanceof List)
-                return ((List) operand).size();
-            else if (operand instanceof Map)
-                return ((Map) operand).keySet().size();
-            else if (operand instanceof String)
-                return ((String) operand).length();
+            if (value instanceof List)
+                return ((List) value).size();
+            else if (value instanceof Map)
+                return ((Map) value).keySet().size();
+            else if (value instanceof String)
+                return ((String) value).length();
             return 0;
         }
     }
-
+    
     private class BinaryValueOperation extends ValueOperation
     {
         private ValueOperation m_leftOperand;
