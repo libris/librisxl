@@ -704,6 +704,15 @@ public class TransformScript
             Object concreteLeftValue = m_leftOperand.execute(json, context);
             Object concreteRightValue = m_rightOperand.execute(json, context);
 
+            if (concreteLeftValue == null || concreteRightValue == null)
+            {
+                if (m_operator.equals("=="))
+                    return concreteLeftValue == concreteRightValue;
+                if (m_operator.equals("!="))
+                    return concreteLeftValue != concreteRightValue;
+                throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
+            }
+
             if (concreteLeftValue instanceof String || concreteRightValue instanceof String)
             {
                 if (m_operator.equals("+"))
@@ -725,14 +734,6 @@ public class TransformScript
                     return ((Boolean) concreteLeftValue) && ((Boolean) concreteRightValue);
                 else if (m_operator.equals("||"))
                     return ((Boolean) concreteLeftValue) || ((Boolean) concreteRightValue);
-
-                throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
-            }
-
-            if (concreteLeftValue == null)
-            {
-                if (concreteRightValue == null && m_operator.equals("=="))
-                    return true;
 
                 throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
             }

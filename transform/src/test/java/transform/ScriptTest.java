@@ -535,12 +535,17 @@ public class ScriptTest
         String script = "mode normal " +
                 "if null == null" +
                 "  set value0 -> key0 " +
+                "if \"hej\" == null" +
+                "  set value2 -> key2 " +
+                "if \"hej\" != null" +
+                "  set value3 -> key3 " +
                 "if ( *nothing,at,path == null )" +
                 "  set value1 -> key1 ";
 
         String transformed = "" +
                 "{" +
                 "    \"key0\":\"value0\"," +
+                "    \"key3\":\"value3\"," +
                 "    \"key1\":\"value1\"" +
                 "}";
 
