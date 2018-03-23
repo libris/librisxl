@@ -553,7 +553,7 @@ public class ScriptTest
         String data = "{}";
 
         String script = "mode normal " +
-                "set abcde substring 1 3 -> key0";
+                "set substring abcde 1 3 -> key0";
 
         String transformed = "" +
                 "{" +

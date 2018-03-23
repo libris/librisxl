@@ -256,14 +256,8 @@ public class TransformScript
             ValueOperation rightOperand = parseValueStatement(symbols);
             return new BinaryValueOperation(leftOperand, rightOperand, binaryOperator);
         }
-        else if (next != null && next.equals("substring"))
-        {
-            symbols.pollFirst(); // chew the "substring" symbol
-            ValueOperation firstParameter = parseValueStatement(symbols);
-            ValueOperation secondParameter = parseValueStatement(symbols);
-            return new SubStringValueOperation(leftOperand, firstParameter, secondParameter);
-        }
-        return leftOperand;
+        else
+            return leftOperand;
     }
 
     private ValueOperation parseUnaryValueStatement(LinkedList<String> symbols) throws TransformSyntaxException
@@ -289,7 +283,14 @@ public class TransformScript
         } else if (symbol.equals("sizeof"))
         {
             return new SizeofValueOperation(parseUnaryValueStatement(symbols));
-        } else
+        } else if (symbol.equals("substring"))
+        {
+            ValueOperation stringParameter = parseValueStatement(symbols);
+            ValueOperation startParameter = parseValueStatement(symbols);
+            ValueOperation endParameter = parseValueStatement(symbols);
+            return new SubStringValueOperation(stringParameter, startParameter, endParameter);
+        }
+        else
         {
             return new LiteralValueOperation(symbol);
         }
