@@ -569,8 +569,8 @@ public class ScriptTest
         String data = "{}";
 
         String script = "mode normal " +
-                "set startsWith abcde abc -> key0 " +
-                "set startsWith abcde ebc -> key1 ";
+                "set startswith abcde abc -> key0 " +
+                "set startswith abcde ebc -> key1 ";
 
         String transformed = "" +
                 "{" +
@@ -587,8 +587,8 @@ public class ScriptTest
         String data = "{}";
 
         String script = "mode normal " +
-                "set endsWith abcde cde -> key0 " +
-                "set endsWith abcde ebc -> key1 ";
+                "set endswith abcde cde -> key0 " +
+                "set endswith abcde ebc -> key1 ";
 
         String transformed = "" +
                 "{" +
@@ -623,8 +623,8 @@ public class ScriptTest
         String data = "{}";
 
         String script = "mode normal " +
-                "set indexOf abcde cde -> key0 " +
-                "set indexOf abcde bc -> key1 ";
+                "set indexof abcde cde -> key0 " +
+                "set indexof abcde bc -> key1 ";
 
         String transformed = "" +
                 "{" +

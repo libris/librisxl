@@ -289,12 +289,12 @@ public class TransformScript
             ValueOperation startParameter = parseValueStatement(symbols);
             ValueOperation endParameter = parseValueStatement(symbols);
             return new SubStringValueOperation(stringParameter, startParameter, endParameter);
-        } else if (symbol.equals("startsWith"))
+        } else if (symbol.equals("startswith"))
         {
             ValueOperation completeStringParameter = parseValueStatement(symbols);
             ValueOperation searchStringParameter = parseValueStatement(symbols);
             return new StringStartsWithValueOperation(completeStringParameter, searchStringParameter);
-        } else if (symbol.equals("endsWith"))
+        } else if (symbol.equals("endswith"))
         {
             ValueOperation completeStringParameter = parseValueStatement(symbols);
             ValueOperation searchStringParameter = parseValueStatement(symbols);
@@ -304,7 +304,7 @@ public class TransformScript
             ValueOperation completeStringParameter = parseValueStatement(symbols);
             ValueOperation searchStringParameter = parseValueStatement(symbols);
             return new StringContainsValueOperation(completeStringParameter, searchStringParameter);
-        } else if (symbol.equals("indexOf"))
+        } else if (symbol.equals("indexof"))
         {
             ValueOperation completeStringParameter = parseValueStatement(symbols);
             ValueOperation searchStringParameter = parseValueStatement(symbols);
