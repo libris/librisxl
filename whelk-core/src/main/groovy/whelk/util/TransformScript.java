@@ -585,6 +585,9 @@ public class TransformScript
             Object startIndex = m_startIndex.execute(json, context);
             Object endIndex = m_endIndex.execute(json, context);
 
+            if (string == null || startIndex == null || endIndex == null) // propagate nulls
+                return null;
+
             if (!(string instanceof String))
                 throw new RuntimeException("Type mismatch. Cannot call substring on non-string: " + string);
             if (!(startIndex instanceof Integer) || !(endIndex instanceof Integer))
@@ -610,6 +613,9 @@ public class TransformScript
             Object completeString = m_completeString.execute(json, context);
             Object searchString = m_searchString.execute(json, context);
 
+            if (completeString == null || searchString == null) // propagate nulls
+                return null;
+
             if (!(searchString instanceof String) || !(completeString instanceof String))
                 throw new RuntimeException("Type mismatch. Cannot call startsWith on non-strings");
 
@@ -632,6 +638,9 @@ public class TransformScript
         {
             Object completeString = m_completeString.execute(json, context);
             Object searchString = m_searchString.execute(json, context);
+
+            if (completeString == null || searchString == null) // propagate nulls
+                return null;
 
             if (!(searchString instanceof String) || !(completeString instanceof String))
                 throw new RuntimeException("Type mismatch. Cannot call endsWith on non-strings");
@@ -656,6 +665,9 @@ public class TransformScript
             Object completeString = m_completeString.execute(json, context);
             Object searchString = m_searchString.execute(json, context);
 
+            if (completeString == null || searchString == null) // propagate nulls
+                return null;
+
             if (!(searchString instanceof String) || !(completeString instanceof String))
                 throw new RuntimeException("Type mismatch. Cannot call contains on non-strings");
 
@@ -678,6 +690,9 @@ public class TransformScript
         {
             Object completeString = m_completeString.execute(json, context);
             Object searchString = m_searchString.execute(json, context);
+
+            if (completeString == null || searchString == null) // propagate nulls
+                return null;
 
             if (!(searchString instanceof String) || !(completeString instanceof String))
                 throw new RuntimeException("Type mismatch. Cannot call indexOf on non-strings");
