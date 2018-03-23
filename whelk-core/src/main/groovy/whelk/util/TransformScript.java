@@ -289,6 +289,11 @@ public class TransformScript
             ValueOperation startParameter = parseValueStatement(symbols);
             ValueOperation endParameter = parseValueStatement(symbols);
             return new SubStringValueOperation(stringParameter, startParameter, endParameter);
+        } else if (symbol.equals("startsWith"))
+        {
+            ValueOperation completeStringParameter = parseValueStatement(symbols);
+            ValueOperation searchStringParameter = parseValueStatement(symbols);
+            return new StringStartsWithValueOperation(completeStringParameter, searchStringParameter);
         }
         else
         {
@@ -572,6 +577,29 @@ public class TransformScript
                 throw new RuntimeException("Type mismatch. Both expressions following substring must evaluate to integers.");
 
             return ((String) string).substring( (Integer) startIndex, (Integer) endIndex);
+        }
+    }
+
+    private class StringStartsWithValueOperation extends ValueOperation
+    {
+        ValueOperation m_completeString;
+        ValueOperation m_searchString;
+
+        public StringStartsWithValueOperation(ValueOperation completeString, ValueOperation searchString)
+        {
+            m_completeString = completeString;
+            m_searchString = searchString;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object completeString = m_completeString.execute(json, context);
+            Object searchString = m_searchString.execute(json, context);
+
+            if (!(searchString instanceof String) || !(completeString instanceof String))
+                throw new RuntimeException("Type mismatch. Cannot call startsWith on non-strings");
+
+            return ((String) completeString).startsWith( (String) searchString );
         }
     }
 
