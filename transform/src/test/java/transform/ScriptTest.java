@@ -527,6 +527,26 @@ public class ScriptTest
         testScript(data, transformed, script);
     }
 
+    @Test
+    public void testNullCheck() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if null == null" +
+                "  set value0 -> key0 " +
+                "if ( *nothing,at,path == null )" +
+                "  set value1 -> key1 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\"," +
+                "    \"key1\":\"value1\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
     private void testScript(String beforeTransformText, String expectedResultText, String transformScript) throws Exception
     {
         Map oldData = mapper.readValue(beforeTransformText, Map.class);

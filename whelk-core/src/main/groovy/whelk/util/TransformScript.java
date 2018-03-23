@@ -482,6 +482,8 @@ public class TransformScript
                 return true;
             if (m_value instanceof String && ((String) m_value).equalsIgnoreCase("false") )
                 return false;
+            if (m_value instanceof String && ((String) m_value).equalsIgnoreCase("null") )
+                return null;
             return m_value;
         }
     }
@@ -595,6 +597,14 @@ public class TransformScript
                     return ((Boolean) concreteLeftValue) && ((Boolean) concreteRightValue);
                 else if (m_operator.equals("||"))
                     return ((Boolean) concreteLeftValue) || ((Boolean) concreteRightValue);
+
+                throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
+            }
+
+            if (concreteLeftValue == null)
+            {
+                if (concreteRightValue == null && m_operator.equals("=="))
+                    return true;
 
                 throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
             }
