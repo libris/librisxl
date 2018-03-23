@@ -117,12 +117,42 @@ public class ExecuteGui extends JFrame
                 "#     set \"ok\" -> @graph,it,someKey\n" +
                 "#   }\n" +
                 "#\n" +
-                "# sizeof [*] symbol\n" +
-                "# Returns the size of symbol, or the size of whatever symbol points to if the optional\n" +
-                "# ampersand '*' is used.\n" +
+                "# sizeof symbol\n" +
+                "# Returns the size of symbol.\n" +
                 "# example:\n" +
                 "# let x = sizeof * @graph # Returns the number of elements in the @graph list.\n" +
-                "# let y = sizeof \"hej\" # Returns the number 3\n" +
+                "# let y = sizeof * @graph,0,@id # Returns the number of characters in the record id.\n" +
+                "# let z = sizeof \"hej\" # Returns the number 3\n" +
+                "#\n" +
+                "# substring originalString startIndex endIndex\n" +
+                "# Returns a substring of 'originalString'\n" +
+                "# example:\n" +
+                "# let x = substing abcde 1 3 # Returns \"bc\"\n" +
+                "#\n" +
+                "# startsWith originalString searchString\n" +
+                "# Returns true if 'originalString' starts with 'searchString'\n" +
+                "# example:\n" +
+                "# let x = startsWith abcde ab # Returns true\n" +
+                "# let y = startsWith abcde bc # Returns false\n" +
+                "#\n" +
+                "# endsWith originalString searchString\n" +
+                "# Returns true if 'originalString' ends with 'searchString'\n" +
+                "# example:\n" +
+                "# let x = endsWith abcde de # Returns true\n" +
+                "# let y = endsWith abcde bc # Returns false\n" +
+                "#\n" +
+                "# contains originalString searchString\n" +
+                "# Returns true if 'originalString' contains 'searchString'\n" +
+                "# example:\n" +
+                "# let x = contains abcde de # Returns true\n" +
+                "# let y = contains abcde be # Returns false\n" +
+                "#\n" +
+                "# indexOf originalString searchString\n" +
+                "# Returns the index of 'searchString' within 'originalString'\n" +
+                "# example:\n" +
+                "# let x = contains abcde bc # Returns 1\n" +
+                "# let y = contains abcde cde # Returns 2\n" +
+                "#\n" +
                 "\nmode normal\n", 35, 40, true);
         JComponent scriptArea = makeLeftAligned(new JScrollPane(m_scriptTextArea));
         JComponent editPanel = makeLeftAligned(new JPanel());

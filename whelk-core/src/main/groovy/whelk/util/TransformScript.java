@@ -304,6 +304,11 @@ public class TransformScript
             ValueOperation completeStringParameter = parseValueStatement(symbols);
             ValueOperation searchStringParameter = parseValueStatement(symbols);
             return new StringContainsValueOperation(completeStringParameter, searchStringParameter);
+        } else if (symbol.equals("indexOf"))
+        {
+            ValueOperation completeStringParameter = parseValueStatement(symbols);
+            ValueOperation searchStringParameter = parseValueStatement(symbols);
+            return new StringIndexOfValueOperation(completeStringParameter, searchStringParameter);
         } else
         {
             return new LiteralValueOperation(symbol);
@@ -655,6 +660,29 @@ public class TransformScript
                 throw new RuntimeException("Type mismatch. Cannot call contains on non-strings");
 
             return ((String) completeString).contains( (String) searchString );
+        }
+    }
+
+    private class StringIndexOfValueOperation extends ValueOperation
+    {
+        ValueOperation m_completeString;
+        ValueOperation m_searchString;
+
+        public StringIndexOfValueOperation(ValueOperation completeString, ValueOperation searchString)
+        {
+            m_completeString = completeString;
+            m_searchString = searchString;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object completeString = m_completeString.execute(json, context);
+            Object searchString = m_searchString.execute(json, context);
+
+            if (!(searchString instanceof String) || !(completeString instanceof String))
+                throw new RuntimeException("Type mismatch. Cannot call indexOf on non-strings");
+
+            return ((String) completeString).indexOf( (String) searchString );
         }
     }
 

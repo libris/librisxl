@@ -617,6 +617,24 @@ public class ScriptTest
         testScript(data, transformed, script);
     }
 
+    @Test
+    public void testStringIndexOf() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set indexOf abcde cde -> key0 " +
+                "set indexOf abcde bc -> key1 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":2, " +
+                "    \"key1\":1 " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
     private void testScript(String beforeTransformText, String expectedResultText, String transformScript) throws Exception
     {
         Map oldData = mapper.readValue(beforeTransformText, Map.class);
