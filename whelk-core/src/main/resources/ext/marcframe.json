@@ -3263,6 +3263,31 @@
         {
           "source": {
             "024": {
+              "ind1": "7", "ind2": "2",
+              "subfields": [{"a": "A 148"}, {"2": "KBxxxxx"}]
+            }
+          },
+          "normalized": {
+            "024": {
+              "ind1": "7", "ind2": " ",
+              "subfields": [{"a": "A 148"}, {"2": "KBxxxxx"}]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value": "A 148",
+                  "typeNote": "KBxxxxx"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "024": {
               "ind1": "7", "ind2": " ",
               "subfields": [{"a": "A 148"}, {"2": "KB-signum"}]
             }
@@ -3338,7 +3363,7 @@
           "5": "PublisherNumber"
         }
       },
-      "TODO:i2": {},
+      "i2": {"marcDefault": "1"},
       "$a": {"property": "value"},
       "$b": {
         "link": "agent", "resourceType": "Organization", "property": "name"
