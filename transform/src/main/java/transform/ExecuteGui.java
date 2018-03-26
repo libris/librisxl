@@ -77,11 +77,13 @@ public class ExecuteGui extends JFrame
                 "# Every script must begin with either \"mode normal\" or \"mode framed\"\n" +
                 "# If framed mode is used, data will be framed before the script is applied.\n" +
                 "# Framed or not, data is always returned to Libris-normal form after application of the script.\n" +
+                "# Unary operators take precedence, but all binary operators are equal, so use parentheses\n" +
+                "# when writing arithmetic or logic composite expressions!\n" +
                 "#\n" +
-                "# MOVE [path1] > [path2]\n" +
+                "# MOVE [path1] -> [path2]\n" +
                 "# Moves a part of the data structure from path1 to path2 (creating path2 if necessary)\n" +
                 "# example:\n" +
-                "#   move @graph,0,created > @graph,0,minted\n" +
+                "#   move @graph,0,created -> @graph,0,minted\n" +
                 "#\n" +
                 "# LET symbol = [value]\n" +
                 "# Assigns [value] to symbol. Symbols can be used as part of a path or instead of literal values.\n" +
@@ -89,10 +91,10 @@ public class ExecuteGui extends JFrame
                 "#   let x = (1 + 1) * 2 # x will have value 4\n" +
                 "#   let x = hej + \" baberiba\" # x will have value \"hej baberiba\"\n" +
                 "#\n" +
-                "# SET [value] > [path]\n" +
+                "# SET [value] -> [path]\n" +
                 "# Set a value at a specific path (creating the path if necessary)\n" +
                 "# example:\n" +
-                "#   set http://libris.kb.se/library/S > @graph,1,heldBy,@id\n" +
+                "#   set http://libris.kb.se/library/S -> @graph,1,heldBy,@id\n" +
                 "#\n" +
                 "# DELETE [path]\n" +
                 "# Deletes whatever is at path\n" +
@@ -100,20 +102,57 @@ public class ExecuteGui extends JFrame
                 "#   delete @graph,0,modified\n" +
                 "#\n" +
                 "# FOR [iterator-symbol] : [path]\n" +
-                "# Run the subsequent block of code, once for each member of the list at path, which\n" +
+                "# Run the subsequent statement or block of code, once for each member of the list at path, which\n" +
                 "# must point to a list. The elements are always traversed in descending order, to avoid\n" +
                 "# the iterator invalidation problem in case of removals.\n" +
                 "# example:\n" +
                 "#   for it : @graph {\n" +
-                "#     set \"ok\" > @graph,it,someKey\n" +
+                "#     set \"ok\" -> @graph,it,someKey\n" +
                 "#   }\n" +
                 "#\n" +
-                "# sizeof [*] symbol\n" +
-                "# Returns the size of symbol, or the size of whatever symbol points to if the optional\n" +
-                "# ampersand '*' is used.\n" +
+                "# IF [boolean expression]\n" +
+                "# Run the subsequent statement or block of code, if the expression evaluates to true\n" +
+                "# example:\n" +
+                "#   if 1 + 1 == 2 {\n" +
+                "#     set \"ok\" -> @graph,it,someKey\n" +
+                "#   }\n" +
+                "#\n" +
+                "# sizeof symbol\n" +
+                "# Returns the size of symbol.\n" +
                 "# example:\n" +
                 "# let x = sizeof * @graph # Returns the number of elements in the @graph list.\n" +
-                "# let y = sizeof \"hej\" # Returns the number 3\n" +
+                "# let y = sizeof * @graph,0,@id # Returns the number of characters in the record id.\n" +
+                "# let z = sizeof \"hej\" # Returns the number 3\n" +
+                "#\n" +
+                "# substring originalString startIndex endIndex\n" +
+                "# Returns a substring of 'originalString'\n" +
+                "# example:\n" +
+                "# let x = substing abcde 1 3 # Returns \"bc\"\n" +
+                "#\n" +
+                "# startswith originalString searchString\n" +
+                "# Returns true if 'originalString' starts with 'searchString'\n" +
+                "# example:\n" +
+                "# let x = startswith abcde ab # Returns true\n" +
+                "# let y = startswith abcde bc # Returns false\n" +
+                "#\n" +
+                "# endswith originalString searchString\n" +
+                "# Returns true if 'originalString' ends with 'searchString'\n" +
+                "# example:\n" +
+                "# let x = endswith abcde de # Returns true\n" +
+                "# let y = endswith abcde bc # Returns false\n" +
+                "#\n" +
+                "# contains originalString searchString\n" +
+                "# Returns true if 'originalString' contains 'searchString'\n" +
+                "# example:\n" +
+                "# let x = contains abcde de # Returns true\n" +
+                "# let y = contains abcde be # Returns false\n" +
+                "#\n" +
+                "# indexOf originalString searchString\n" +
+                "# Returns the index of 'searchString' within 'originalString'\n" +
+                "# example:\n" +
+                "# let x = indexof abcde bc # Returns 1\n" +
+                "# let y = indexof abcde cde # Returns 2\n" +
+                "#\n" +
                 "\nmode normal\n", 35, 40, true);
         JComponent scriptArea = makeLeftAligned(new JScrollPane(m_scriptTextArea));
         JComponent editPanel = makeLeftAligned(new JPanel());
@@ -414,7 +453,7 @@ public class ExecuteGui extends JFrame
                 }
             } catch (SQLException e)
             {
-                JOptionPane.showMessageDialog(m_parent, e.toString());
+                JOptionPane.showMessageDialog(m_parent, e.toString() + " " + e.getStackTrace());
             }
         }
 

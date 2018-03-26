@@ -35,7 +35,8 @@ public class TransformScript
 
         boolean buildingQuotedSymbol = false;
         StringBuilder symbol = new StringBuilder();
-        Integer i = 0;
+        int i = 0;
+        int reservedSymbolLength = 0;
         while (i < scriptText.length())
         {
             if (buildingQuotedSymbol)
@@ -49,7 +50,6 @@ public class TransformScript
                 symbolList.add(symbol.toString());
                 symbol = new StringBuilder();
                 buildingQuotedSymbol = false;
-                ++i;
             } else {
                 char c = scriptText.charAt(i);
                 if (c == '#') // line comment, skip until "\n"
@@ -62,11 +62,14 @@ public class TransformScript
                     buildingQuotedSymbol = true;
                     ++i;
                 }
-                else if (isSingleCharOperator(c))
+                else if ( (reservedSymbolLength = isReserverdOperator(i, scriptText)) != 0 )
                 {
                     addToSymbolList(symbol, symbolList);
-                    symbolList.add(""+c);
-                    skipTillNonWhiteSpace(++i, scriptText);
+
+                    symbolList.add( scriptText.substring(i, i+reservedSymbolLength) );
+                    i += reservedSymbolLength;
+                    while(i < scriptText.length() && Character.isWhitespace(scriptText.charAt(i))) // skip until next non-whitespace
+                        ++i;
                 }
                 else if (!Character.isWhitespace(c))
                 {
@@ -76,7 +79,8 @@ public class TransformScript
                 else // whitespace
                 {
                     addToSymbolList(symbol, symbolList);
-                    skipTillNonWhiteSpace(++i, scriptText);
+                    while(i < scriptText.length() && Character.isWhitespace(scriptText.charAt(i))) // skip until next non-whitespace
+                        ++i;
                 }
             }
         }
@@ -85,6 +89,8 @@ public class TransformScript
 
         if (buildingQuotedSymbol)
             throw new TransformSyntaxException("Mismatched quotes.");
+
+        //System.out.println(symbolList);
 
         parseScript(symbolList);
     }
@@ -96,31 +102,18 @@ public class TransformScript
         currentSymbol.setLength(0);
     }
 
-    private void skipTillNonWhiteSpace(Integer i, String source)
+    private int isReserverdOperator(int i, String scriptText)
     {
-        while(i < source.length() && Character.isWhitespace(source.charAt(i))) // end of symbol skip until next non-whitespace
+        String[] reserverdOperators = {
+                "==", "!=", "->", ">=", "<=", "&&", "||", "!", "<", ">", "(", ")", "{", "}", "*", "+", "-", "/", "="};
+        for (int j = 0; j < reserverdOperators.length; ++j)
         {
-            ++i;
+            if (scriptText.length() < i + reserverdOperators[j].length())
+                return 0;
+            if (scriptText.substring(i, i+reserverdOperators[j].length()).equals(reserverdOperators[j]))
+                return reserverdOperators[j].length();
         }
-    }
-
-    private boolean isSingleCharOperator(char c)
-    {
-        switch (c)
-        {
-            case '=' : return true;
-            case '>' : return true;
-            case '(' : return true;
-            case ')' : return true;
-            case '{' : return true;
-            case '}' : return true;
-            case '+' : return true;
-            case '-' : return true;
-            case '*' : return true;
-            case '/' : return true;
-            default:
-            return false;
-        }
+        return 0;
     }
 
     private void parseScript(LinkedList<String> symbols) throws TransformSyntaxException
@@ -198,13 +191,13 @@ public class TransformScript
     private MoveOperation parseMoveStatement(LinkedList<String> symbols) throws TransformSyntaxException
     {
         if (symbols.size() < 3)
-            throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '>' pathTo]");
+            throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '->' pathTo]");
 
         String from = symbols.pollFirst();
         String arrow = symbols.pollFirst();
         String to = symbols.pollFirst();
-        if (!arrow.equals(">") || !isValidPath(from) || !isValidPath(to))
-            throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '>' pathTo]");
+        if (!arrow.equals("->") || !isValidPath(from) || !isValidPath(to))
+            throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '->' pathTo]");
 
         return new MoveOperation(from, to);
     }
@@ -212,13 +205,13 @@ public class TransformScript
     private SetOperation parseSetStatement(LinkedList<String> symbols) throws TransformSyntaxException
     {
         if (symbols.size() < 3)
-            throw new TransformSyntaxException("'SET' must be followed by [value_statement '>' pathTo]");
+            throw new TransformSyntaxException("'SET' must be followed by [value_statement '->' pathTo]");
 
         ValueOperation valueOp = parseValueStatement(symbols);
         String arrow = symbols.pollFirst();
         String to = symbols.pollFirst();
-        if (!arrow.equals(">") || !isValidPath(to))
-            throw new TransformSyntaxException("'SET' must be followed by [value_statement '>' pathTo]");
+        if (!arrow.equals("->") || !isValidPath(to))
+            throw new TransformSyntaxException("'SET' must be followed by [value_statement '->' pathTo]");
 
         return new SetOperation(valueOp, to);
     }
@@ -241,8 +234,23 @@ public class TransformScript
     {
         ValueOperation leftOperand = parseUnaryValueStatement(symbols);
         String next = symbols.peekFirst();
-        String arithmeticOps = "+-/*=";
-        if (next != null && arithmeticOps.contains(next))
+
+        HashSet<String> binaryOps = new HashSet<>();
+        binaryOps.add("+");
+        binaryOps.add("-");
+        binaryOps.add("*");
+        binaryOps.add("/");
+        binaryOps.add("==");
+        binaryOps.add("!=");
+        binaryOps.add("<");
+        binaryOps.add(">");
+        binaryOps.add("<=");
+        binaryOps.add(">=");
+        binaryOps.add("&&");
+        binaryOps.add("||");
+        binaryOps.add("!");
+
+        if (next != null && binaryOps.contains(next))
         {
             String binaryOperator = symbols.pollFirst();
             ValueOperation rightOperand = parseValueStatement(symbols);
@@ -261,7 +269,7 @@ public class TransformScript
 
         if (symbol.equals("("))
         {
-            ValueOperation subOp = new ValueOperation(parseValueStatement(symbols));
+            ValueOperation subOp = parseValueStatement(symbols);
             String closingPar = symbols.pollFirst();
             if (!closingPar.equals(")"))
                 throw new TransformSyntaxException("Mismatched parenthesis");
@@ -269,16 +277,38 @@ public class TransformScript
         } else if (symbol.equals("*"))
         {
             return new DerefValueOperation(symbols.pollFirst());
+        } else if (symbol.equals("!"))
+        {
+            return new NotValueOperation(parseValueStatement(symbols));
         } else if (symbol.equals("sizeof"))
         {
-            String derefSymbol = symbols.peekFirst();
-            boolean direct = true;
-            if (derefSymbol.equals("*"))
-            {
-                symbols.pollFirst(); // chew the deref-symbol
-                direct = false;
-            }
-            return new SizeofValueOperation(symbols.pollFirst(), direct);
+            return new SizeofValueOperation(parseUnaryValueStatement(symbols));
+        } else if (symbol.equals("substring"))
+        {
+            ValueOperation stringParameter = parseValueStatement(symbols);
+            ValueOperation startParameter = parseValueStatement(symbols);
+            ValueOperation endParameter = parseValueStatement(symbols);
+            return new SubStringValueOperation(stringParameter, startParameter, endParameter);
+        } else if (symbol.equals("startswith"))
+        {
+            ValueOperation completeStringParameter = parseValueStatement(symbols);
+            ValueOperation searchStringParameter = parseValueStatement(symbols);
+            return new StringStartsWithValueOperation(completeStringParameter, searchStringParameter);
+        } else if (symbol.equals("endswith"))
+        {
+            ValueOperation completeStringParameter = parseValueStatement(symbols);
+            ValueOperation searchStringParameter = parseValueStatement(symbols);
+            return new StringEndsWithValueOperation(completeStringParameter, searchStringParameter);
+        } else if (symbol.equals("contains"))
+        {
+            ValueOperation completeStringParameter = parseValueStatement(symbols);
+            ValueOperation searchStringParameter = parseValueStatement(symbols);
+            return new StringContainsValueOperation(completeStringParameter, searchStringParameter);
+        } else if (symbol.equals("indexof"))
+        {
+            ValueOperation completeStringParameter = parseValueStatement(symbols);
+            ValueOperation searchStringParameter = parseValueStatement(symbols);
+            return new StringIndexOfValueOperation(completeStringParameter, searchStringParameter);
         } else
         {
             return new LiteralValueOperation(symbol);
@@ -471,6 +501,8 @@ public class TransformScript
                 return true;
             if (m_value instanceof String && ((String) m_value).equalsIgnoreCase("false") )
                 return false;
+            if (m_value instanceof String && ((String) m_value).equalsIgnoreCase("null") )
+                return null;
             return m_value;
         }
     }
@@ -493,37 +525,179 @@ public class TransformScript
         }
     }
 
-    private class SizeofValueOperation extends ValueOperation
+    private class NotValueOperation extends ValueOperation
     {
-        String m_operand;
-        boolean m_direct;
+        ValueOperation m_valueOperation;
 
-        public SizeofValueOperation(String operand, boolean direct)
+        public NotValueOperation(ValueOperation valueOperation)
         {
-            m_operand = operand;
-            m_direct = direct;
+            m_valueOperation = valueOperation;
         }
 
         public Object execute(Map json, Map<String, Object> context)
         {
-            Object operand;
-            if (!m_direct)
-            {
-                List<Object> path = Arrays.asList( withIntAsInteger(m_operand.split(",")) );
-                List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
-                operand = Document._get(pathWithSymbols, json);
-            } else
-            {
-                operand = m_operand;
-            }
+            Object value = m_valueOperation.execute(json, context);
+            if ( ! (value instanceof Boolean) )
+                throw new RuntimeException("Type mismatch. Cannot combine logic not (!) with non boolean value: " + value);
+            return !((Boolean)value);
+        }
+    }
 
-            if (operand instanceof List)
-                return ((List) operand).size();
-            else if (operand instanceof Map)
-                return ((Map) operand).keySet().size();
-            else if (operand instanceof String)
-                return ((String) operand).length();
+    private class SizeofValueOperation extends ValueOperation
+    {
+        ValueOperation m_value;
+
+        public SizeofValueOperation(ValueOperation value)
+        {
+            m_value = value;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object value = m_value.execute(json, context);
+
+            if (value instanceof List)
+                return ((List) value).size();
+            else if (value instanceof Map)
+                return ((Map) value).keySet().size();
+            else if (value instanceof String)
+                return ((String) value).length();
             return 0;
+        }
+    }
+
+    private class SubStringValueOperation extends ValueOperation
+    {
+        ValueOperation m_completeString;
+        ValueOperation m_startIndex;
+        ValueOperation m_endIndex;
+
+        public SubStringValueOperation(ValueOperation completeString, ValueOperation startIndex, ValueOperation endIndex)
+        {
+            m_completeString = completeString;
+            m_startIndex = startIndex;
+            m_endIndex = endIndex;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object string = m_completeString.execute(json, context);
+            Object startIndex = m_startIndex.execute(json, context);
+            Object endIndex = m_endIndex.execute(json, context);
+
+            if (string == null || startIndex == null || endIndex == null) // propagate nulls
+                return null;
+
+            if (!(string instanceof String))
+                throw new RuntimeException("Type mismatch. Cannot call substring on non-string: " + string);
+            if (!(startIndex instanceof Integer) || !(endIndex instanceof Integer))
+                throw new RuntimeException("Type mismatch. Both expressions following substring must evaluate to integers.");
+
+            return ((String) string).substring( (Integer) startIndex, (Integer) endIndex);
+        }
+    }
+
+    private class StringStartsWithValueOperation extends ValueOperation
+    {
+        ValueOperation m_completeString;
+        ValueOperation m_searchString;
+
+        public StringStartsWithValueOperation(ValueOperation completeString, ValueOperation searchString)
+        {
+            m_completeString = completeString;
+            m_searchString = searchString;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object completeString = m_completeString.execute(json, context);
+            Object searchString = m_searchString.execute(json, context);
+
+            if (completeString == null || searchString == null) // propagate nulls
+                return null;
+
+            if (!(searchString instanceof String) || !(completeString instanceof String))
+                throw new RuntimeException("Type mismatch. Cannot call startsWith on non-strings");
+
+            return ((String) completeString).startsWith( (String) searchString );
+        }
+    }
+
+    private class StringEndsWithValueOperation extends ValueOperation
+    {
+        ValueOperation m_completeString;
+        ValueOperation m_searchString;
+
+        public StringEndsWithValueOperation(ValueOperation completeString, ValueOperation searchString)
+        {
+            m_completeString = completeString;
+            m_searchString = searchString;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object completeString = m_completeString.execute(json, context);
+            Object searchString = m_searchString.execute(json, context);
+
+            if (completeString == null || searchString == null) // propagate nulls
+                return null;
+
+            if (!(searchString instanceof String) || !(completeString instanceof String))
+                throw new RuntimeException("Type mismatch. Cannot call endsWith on non-strings");
+
+            return ((String) completeString).endsWith( (String) searchString );
+        }
+    }
+
+    private class StringContainsValueOperation extends ValueOperation
+    {
+        ValueOperation m_completeString;
+        ValueOperation m_searchString;
+
+        public StringContainsValueOperation(ValueOperation completeString, ValueOperation searchString)
+        {
+            m_completeString = completeString;
+            m_searchString = searchString;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object completeString = m_completeString.execute(json, context);
+            Object searchString = m_searchString.execute(json, context);
+
+            if (completeString == null || searchString == null) // propagate nulls
+                return null;
+
+            if (!(searchString instanceof String) || !(completeString instanceof String))
+                throw new RuntimeException("Type mismatch. Cannot call contains on non-strings");
+
+            return ((String) completeString).contains( (String) searchString );
+        }
+    }
+
+    private class StringIndexOfValueOperation extends ValueOperation
+    {
+        ValueOperation m_completeString;
+        ValueOperation m_searchString;
+
+        public StringIndexOfValueOperation(ValueOperation completeString, ValueOperation searchString)
+        {
+            m_completeString = completeString;
+            m_searchString = searchString;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object completeString = m_completeString.execute(json, context);
+            Object searchString = m_searchString.execute(json, context);
+
+            if (completeString == null || searchString == null) // propagate nulls
+                return null;
+
+            if (!(searchString instanceof String) || !(completeString instanceof String))
+                throw new RuntimeException("Type mismatch. Cannot call indexOf on non-strings");
+
+            return ((String) completeString).indexOf( (String) searchString );
         }
     }
 
@@ -545,11 +719,20 @@ public class TransformScript
             Object concreteLeftValue = m_leftOperand.execute(json, context);
             Object concreteRightValue = m_rightOperand.execute(json, context);
 
+            if (concreteLeftValue == null || concreteRightValue == null)
+            {
+                if (m_operator.equals("=="))
+                    return concreteLeftValue == concreteRightValue;
+                if (m_operator.equals("!="))
+                    return concreteLeftValue != concreteRightValue;
+                throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
+            }
+
             if (concreteLeftValue instanceof String || concreteRightValue instanceof String)
             {
                 if (m_operator.equals("+"))
                     return "" + concreteLeftValue + concreteRightValue; // String concatenation
-                else if (m_operator.equals("="))
+                else if (m_operator.equals("=="))
                     return concreteLeftValue.equals(concreteRightValue); // String comparison
                 else
                     throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
@@ -559,8 +742,14 @@ public class TransformScript
             {
                 if (!(concreteLeftValue instanceof Boolean) || !(concreteRightValue instanceof Boolean))
                     throw new RuntimeException("Type mismatch. Cannot combine booleans with other types");
-                else if (m_operator.equals("="))
+
+                else if (m_operator.equals("=="))
                     return concreteLeftValue.equals(concreteRightValue); // Boolean to boolean comparison
+                else if (m_operator.equals("&&"))
+                    return ((Boolean) concreteLeftValue) && ((Boolean) concreteRightValue);
+                else if (m_operator.equals("||"))
+                    return ((Boolean) concreteLeftValue) || ((Boolean) concreteRightValue);
+
                 throw new RuntimeException("Type mismatch. Cannot combine " + concreteLeftValue + " with " + concreteRightValue + " using " + m_operator);
             }
 
@@ -578,8 +767,18 @@ public class TransformScript
                     return left * right;
                 case "/":
                     return left / right;
-                case "=":
+                case "==":
                     return left == right;
+                case "!=":
+                    return left != right;
+                case "<":
+                    return left < right;
+                case ">":
+                    return left > right;
+                case "<=":
+                    return left <= right;
+                case ">=":
+                    return left >= right;
             }
             return null;
         }
@@ -725,7 +924,7 @@ public class TransformScript
         return mapper.writeValueAsString(data);
     }
 
-    public Map executeOn(Map data) throws IOException
+    public Map executeOn(Map data)
     {
         Document doc = new Document(data);
         if (m_modeFramed)
