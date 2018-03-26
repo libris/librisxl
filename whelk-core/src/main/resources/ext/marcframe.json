@@ -3936,13 +3936,7 @@
       "aboutEntity": "?work",
       "link": "marc:hasNationalAgriculturalLibraryCallNumber",
       "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
-      "i1": {
-        "TODO:link": null,
-        "tokenMap": {
-          "0": "itemInNal",
-          "1": "itemNotInNal"
-        }
-      },
+      "i1": {"marcDefault": " "},
       "$a": {"addProperty": "marc:classificationNumber"},
       "$b": {"property": "marc:itemNumber"}
     },
