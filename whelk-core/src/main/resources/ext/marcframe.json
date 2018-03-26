@@ -3961,8 +3961,10 @@
     },
 
     "074": {
-      "include": ["identifier"],
-      "resourceType": "marc:GPOItemNumber"
+      "include": ["idbase"],
+      "resourceType": "marc:GPOItemNumber",
+      "$a": {"property": "value"},
+      "$z": {"addProperty": "marc:hiddenValue"}
       },
 
     "080": {
