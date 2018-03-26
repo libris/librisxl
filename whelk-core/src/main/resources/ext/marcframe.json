@@ -7130,7 +7130,7 @@
       "$a": {"property": "marc:systemDetailsNote"},
       "$u": {"addProperty": "marc:uniformResourceIdentifier"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
+      "NOTE:$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
       "$6": {"property": "marc:fieldref"}
     },
     "540": {
