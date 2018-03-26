@@ -3640,7 +3640,7 @@
       "$d": {"link": "descriptionUpgrader", "resourceType": "Organization", "property": "name"},
       "$e": {"addLink": "descriptionConventions", "NOTE:repeatable": false, "resourceType": "DescriptionConventions", "property": "code"},
       "$6": {"property": "marc:fieldref"},
-      "$9": {"property": "license"},
+      "NOTE:$9": {"property": "license", "NOTE": "Removed after bibliographic review"},
       "_spec": [
         {
           "name": "ensure multiple fields matching a top entity convert and revert OK",
