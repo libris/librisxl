@@ -7385,7 +7385,7 @@
       "addLink": "hasNote",
       "resourceType": "marc:SourceOfDescriptionNote",
       "$a": {"property": "label"},
-      "NOTE:i1": "ignore"
+      "i1": {"marcDefault": " "}
     },
     "590": {"ignored": true, "NOTE:OCLC": "Use for notes pertaining only to the copy of the item located in your institution. Field 590 is not part of the standard MARC21 format." },
     "599": {
