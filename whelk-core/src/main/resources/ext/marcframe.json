@@ -3419,6 +3419,7 @@
       "$b": {"addProperty": "marc:geographicClassificationAreaCode"},
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
+      "$1": {"addProperty": "marc:realWorldObjectURI"},
       "$2": {"property": "marc:placeCodeSource"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "_spec": [
