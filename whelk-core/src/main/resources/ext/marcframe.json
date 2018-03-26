@@ -3847,7 +3847,7 @@
       "$a": {"addProperty": "marc:performerOrEnsemble"},
       "$b": {"addProperty": "marc:soloist"},
       "$2": {"property": "marc:sourceOfCode"},
-      "$8": {"property": "marc:groupid"}
+      "NOTE:$8": {"property": "marc:groupid", "NOTE": "Removed after bibliographic review"}
     },
     "049": {"ignored": true, "NOTE": "OCLC - Local Holdings. Field 049 is not part of the standard MARC 21 format."},
 
