@@ -3381,8 +3381,10 @@
     },
 
     "030": {
-      "include": ["identifier"],
-      "resourceType": "CODEN"
+      "include": ["idbase"],
+      "resourceType": "CODEN",
+      "$a": {"property": "value"},
+      "$z": {"addProperty": "marc:hiddenValue"}
     },
 
     "031": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
