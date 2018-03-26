@@ -2941,9 +2941,11 @@
     },
 
     "010": {
-      "include": ["identifier"],
+      "include": ["idbase"],
       "resourceType": "LCCN",
+      "$a": {"property": "value"},
       "$b": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
+      "$z": {"addProperty": "marc:hiddenValue"},
       "$8": {"property": "marc:groupid"},
       "_spec": [
         {
@@ -2970,6 +2972,7 @@
       "include": ["idbase"],
       "resourceType": "NBN",
       "$a": {"property": "value"},
+      "$q": {"property": "qualifier"},
       "$z": {"addProperty": "marc:hiddenValue"},
       "$2": {
         "link": "source",
