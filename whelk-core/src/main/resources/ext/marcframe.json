@@ -5346,7 +5346,7 @@
       "i1": {
         "property": "marc:isAddedEntry",
         "tokenMap": {"1": true},
-        "marcDefault": "0"
+        "marcDefault": "1"
       },
       "i2": {
         "property": "marc:showRemark",
