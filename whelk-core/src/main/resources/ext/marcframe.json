@@ -3843,12 +3843,7 @@
       "aboutEntity": "?work",
       "addLink": "marc:hasNumberOfInstrumentsOrVoicesCode",
       "resourceType": "marc:NumberOfInstrumentsOrVoicesCode",
-      "i2": {
-        "TODO:link": null,
-        "tokenMap": {
-          "7": "sourceSpecifiedInSubfield2"
-        }
-      },
+      "i2": {"property": "marc:sourceOfCode"},
       "$a": {"addProperty": "marc:performerOrEnsemble"},
       "$b": {"addProperty": "marc:soloist"},
       "$2": {"property": "marc:sourceOfCode"},
