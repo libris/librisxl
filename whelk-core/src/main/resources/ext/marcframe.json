@@ -3829,12 +3829,6 @@
       "aboutEntity": "?work",
       "addLink": "marc:hasFormOfMusicalCompositionCode",
       "resourceType": "marc:FormOfMusicalCompositionCode",
-      "i1": {
-        "TODO:link": null,
-        "tokenMap": {
-          "7": "Annat kodsystem specificerat i delfält $2"
-        }
-      },
       "i2": {
         "TODO:link": null,
         "tokenMap": {
