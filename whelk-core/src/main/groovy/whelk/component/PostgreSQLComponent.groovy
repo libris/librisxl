@@ -4,12 +4,6 @@ import groovy.transform.Canonical
 import groovy.transform.CompileStatic
 import whelk.util.LegacyIntegrationTools
 
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Method
-import java.lang.reflect.Proxy
-import java.time.OffsetDateTime
-import java.util.concurrent.atomic.AtomicBoolean
-
 import static groovy.transform.TypeCheckingMode.SKIP
 import groovy.util.logging.Log4j2 as Log
 import groovy.json.StringEscapeUtils
@@ -51,10 +45,12 @@ class PostgreSQLComponent {
 
     boolean versioning = true
 
+    /**
+     * This value is sensitiv. It must be strictly larger than the maxConnections parameter set in tomcat.
+     * This is necessary in order to not have the very expensive deadlock/connection-starvation prevention code
+     * in here.
+     */
     final int MAX_CONNECTION_COUNT = 300
-    final int CONNECTION_POOL_SEGMENTS = 5
-    final int CONNECTIONS_PER_SEGMENT = 5
-
 
     // SQL statements
     protected String UPDATE_DOCUMENT, INSERT_DOCUMENT,
@@ -108,7 +104,7 @@ class PostgreSQLComponent {
     // for testing
     PostgreSQLComponent() {}
 
-    PostgreSQLComponent(Properties properties, boolean trackConnectionFetching = true) {
+    PostgreSQLComponent(Properties properties) {
         this.trackConnectionFetching = trackConnectionFetching
         setup(properties.getProperty("sqlUrl"), properties.getProperty("sqlMaintable"))
     }
@@ -2078,142 +2074,9 @@ class PostgreSQLComponent {
 
     /**
      * Get a database connection.
-     *
-     * Taking more than CONNECTION_POOL_SEGMENTS-1 nested connections is not permitted and will return a null-connection
-     * if attempted (and produce error messages in your log).
      */
     Connection getConnection(){
-
-        // Dangerous mode, without tracking, for fast imports.
-        if (!trackConnectionFetching)
-            return connectionPool.getConnection()
-
-        pruneConnectionAllocations()
-
-        List<ConnectionAllocation> connectionsHeldByThisThread
-        synchronized (this) {
-            connectionsHeldByThisThread = connectionAllocations[Thread.currentThread()]
-        }
-
-        if (connectionsHeldByThisThread == null)
-            connectionsHeldByThisThread = []
-
-        if (connectionsHeldByThisThread.size() < CONNECTION_POOL_SEGMENTS-1) {
-
-            // Based on how many connections the thread already holds, how large a part of the pool is available?
-            // The more held connections, the more available, up to the cutoff at CONNECTION_POOL_SEGMENTS
-            int permittedConnectionsSegment = MAX_CONNECTION_COUNT -
-                    ( (CONNECTION_POOL_SEGMENTS - connectionsHeldByThisThread.size() - 1) * CONNECTIONS_PER_SEGMENT)
-            while (true) {
-                synchronized (this) {
-                    if (connectionPool.getNumActive() < permittedConnectionsSegment) {
-                        return __getConnectionInternal(connectionsHeldByThisThread)
-                    }
-                }
-                Thread.yield()
-            }
-        }
-        else
-            log.error("An attempt was made to allocate an additional nested connection, would be nr: " +
-                    connectionsHeldByThisThread.size() + 1 +
-                    " which is not allowed. " +
-                    "The offending call to getConnection() was made here:\n" +
-                    getFormattedCallStack(Thread.currentThread().getStackTrace()))
-        return null
-    }
-
-    /**
-     * This method is not thread safe and must be called under synchronization lock
-     * (it should only ever be called from getConnection()).
-     */
-    private Connection __getConnectionInternal(List<ConnectionAllocation> connectionsHeldByThisThread) {
-        // Allocate and track the requested connection
-        Connection connection = connectionPool.getConnection()
-
-        Class[] interfaces = (Class[]) [Connection].toArray()
-        connection = (Connection) Proxy.newProxyInstance(connection.getClass().getClassLoader(), interfaces, new ConnectionMethodInterceptor(connection) )
-
-        ConnectionAllocation allocation =
-                new ConnectionAllocation(
-                        connection,
-                        Thread.currentThread().getStackTrace())
-        connectionsHeldByThisThread.add(allocation)
-        connectionAllocations.put(Thread.currentThread(), connectionsHeldByThisThread)
-        return connection
-    }
-
-    /**
-     * Clear out old thread entries (and warn on connection leaks if any are found)
-     * Also clear out tracked allocations for each thread if the relevant connection
-     * has been closed.
-     */
-    private synchronized pruneConnectionAllocations() {
-        Iterator<Thread> threadIterator = connectionAllocations.keySet().iterator()
-
-        while (threadIterator.hasNext()) { // For every (tracked) thread
-            Thread thread = threadIterator.next()
-            List<ConnectionAllocation> connectionsHeldByThisThread = connectionAllocations.get(thread)
-            Iterator<ConnectionAllocation> allocationIterator = connectionsHeldByThisThread.iterator()
-
-            while (allocationIterator.hasNext()) { // For every allocation (by that thread)
-                ConnectionAllocation allocation = allocationIterator.next()
-                if (!allocation.connection.isClosed()) {
-                    if (!thread.isAlive())
-                        log.error("Connection leak detected. The never released connection was allocated here:\n" +
-                                getFormattedCallStack(allocation.origin))
-                }
-                else // The connection is closed
-                    allocationIterator.remove()
-            }
-            if (!thread.isAlive()) {
-                threadIterator.remove()
-            }
-        }
-    }
-
-    /**
-     * This looks scary, and it SHOULD! The purpose of this hack is to make the connection.isClosed()
-     * method usable from another thread than the one using the connection without compromising
-     * thread safety.
-     */
-    private class ConnectionMethodInterceptor implements InvocationHandler {
-        private final Object wrappedInstance
-        private AtomicBoolean wrappedConnectionIsClosed = new AtomicBoolean(false)
-
-        public ConnectionMethodInterceptor(Object wrappedInstance) {
-            this.wrappedInstance = wrappedInstance
-        }
-
-        @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-
-            if (method.getName().equals("close")) {
-                Object result = method.invoke(wrappedInstance, args)
-                wrappedConnectionIsClosed.set(true)
-                return result
-            } else if (method.getName().equals("isClosed")) {
-                return wrappedConnectionIsClosed.get()
-            }
-
-            return method.invoke(wrappedInstance, args)
-        }
-    }
-
-    private class ConnectionAllocation {
-        ConnectionAllocation(Connection connection, StackTraceElement[] origin) {
-            this.connection = connection
-            this.origin = origin
-        }
-        Connection connection
-        StackTraceElement[] origin
-    }
-    HashMap<Thread, List<ConnectionAllocation>> connectionAllocations = [:]
-
-    static String getFormattedCallStack(StackTraceElement[] callStackElementList) {
-        StringBuilder callStack = new StringBuilder("")
-        for (StackTraceElement frame : callStackElementList)
-            callStack.append(frame.toString() + "\n")
-        return callStack.toString()
+        return connectionPool.getConnection()
     }
 
     List<Document> findByRelation(String relation, String reference,
