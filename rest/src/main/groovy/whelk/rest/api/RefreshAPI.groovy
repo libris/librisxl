@@ -27,18 +27,9 @@ class RefreshAPI extends HttpServlet
     public final static mapper = new ObjectMapper()
     private Whelk whelk
 
-    public RefreshAPI() {
-        Properties secretProperties = PropertyLoader.loadProperties("secret")
-        PostgreSQLComponent postgreSqlComponent = new PostgreSQLComponent(
-                secretProperties.getProperty("sqlUrl"),
-                secretProperties.getProperty("sqlMaintable"))
-        ElasticSearch elasticSearch = new ElasticSearch(
-                (String) secretProperties.get("elasticHost"),
-                (String) secretProperties.get("elasticCluster"),
-                (String) secretProperties.get("elasticIndex"))
-
-        whelk = new Whelk(postgreSqlComponent, elasticSearch)
-        whelk.loadCoreData()
+    @Override
+    void init() {
+        whelk = Whelk.createLoadedSearchWhelk()
     }
 
     @Override

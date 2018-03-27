@@ -42,10 +42,7 @@ class XL
         m_parameters = parameters;
         verbose = m_parameters.getVerbose();
         m_properties = PropertyLoader.loadProperties("secret");
-        PostgreSQLComponent storage = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
-        ElasticSearch elastic = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
-        m_whelk = new Whelk(storage, elastic);
-        m_whelk.loadCoreData();
+        m_whelk = Whelk.createLoadedSearchWhelk(m_properties);
         m_forcedSetTerms = m_whelk.getJsonld().getForcedSetTerms();
         m_marcFrameConverter = m_whelk.createMarcFrameConverter();
     }

@@ -37,12 +37,7 @@ class ImporterMain {
 
     ImporterMain(String... propNames) {
         log.info("Setting up import program.")
-
-        props = PropertyLoader.loadProperties(propNames)
-        PostgreSQLComponent pg = new PostgreSQLComponent(props)
-        ElasticSearch elastic = new ElasticSearch(props)
-        whelk = new Whelk(pg, elastic)
-
+        whelk = Whelk.createLoadedSearchWhelk(propNames)
         log.info("Started ...")
     }
 
@@ -140,14 +135,8 @@ class ImporterMain {
 
     @Command(args='[COLLECTION]')
     void reindex(String collection=null) {
-        PostgreSQLComponent postgreSqlComponent =
-                new PostgreSQLComponent(props.getProperty("sqlUrl"), props.getProperty("sqlMaintable"), false)
-        ElasticSearch elasticSearch = new ElasticSearch(
-                props.getProperty("elasticHost"),
-                props.getProperty("elasticCluster"),
-                props.getProperty("elasticIndex"))
         boolean useCache = true
-        Whelk whelk = new Whelk(postgreSqlComponent, elasticSearch, useCache)
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props, useCache)
         def reindex = new ElasticReindexer(whelk)
         reindex.reindex(collection)
     }

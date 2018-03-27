@@ -42,15 +42,7 @@ public class Utils
 
     static
     {
-        Properties configuration = PropertyLoader.loadProperties("secret");
-        PostgreSQLComponent postgreSqlComponent =
-                new PostgreSQLComponent(configuration.getProperty("sqlUrl"), configuration.getProperty("sqlMaintable"));
-        ElasticSearch elasticSearch = new ElasticSearch(
-                configuration.getProperty("elasticHost"),
-                configuration.getProperty("elasticCluster"),
-                configuration.getProperty("elasticIndex"));
-        s_whelk = new Whelk(postgreSqlComponent, elasticSearch);
-        s_whelk.loadCoreData();
+        s_whelk = Whelk.createLoadedSearchWhelk();
         s_toJsonLdConverter = s_whelk.createMarcFrameConverter();
         s_toMarcConverter = new JsonLD2MarcXMLConverter(s_toJsonLdConverter);
     }

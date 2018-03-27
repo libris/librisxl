@@ -84,17 +84,9 @@ class Crud extends HttpServlet {
     static final ObjectMapper mapper = new ObjectMapper()
     AccessControl accessControl = new AccessControl()
 
-    Crud() {
-        log.info("Setting up httpwhelk.")
-        Properties props = PropertyLoader.loadProperties("secret")
-        PostgreSQLComponent pg = new PostgreSQLComponent(props)
-        ElasticSearch elastic = new ElasticSearch(props)
-        whelk = new Whelk(pg, elastic)
-    }
-
     @Override
     void init() {
-        whelk.loadCoreData()
+        whelk = Whelk.createLoadedSearchWhelk()
         jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
     }

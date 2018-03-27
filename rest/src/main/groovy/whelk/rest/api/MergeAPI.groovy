@@ -18,12 +18,7 @@ class MergeAPI extends HttpServlet {
 
     @Override
     void init() {
-        Properties configuration = whelk.util.PropertyLoader.loadProperties("secret")
-        PostgreSQLComponent storage = new PostgreSQLComponent(configuration.getProperty("sqlUrl"),
-                configuration.getProperty("sqlMaintable"))
-        ElasticSearch elastic = new ElasticSearch(configuration)
-        m_whelk = new Whelk(storage, elastic)
-        m_whelk.loadCoreData()
+        m_whelk = Whelk.createLoadedSearchWhelk()
     }
 
     private String getRecordId(String id) {

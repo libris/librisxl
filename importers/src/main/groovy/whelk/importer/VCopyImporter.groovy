@@ -13,7 +13,6 @@ class VCopyImporter {
 
     VCopyImporter(Whelk whelk) {
         this.whelk = whelk
-        this.whelk.loadCoreData()
     }
 
     ImportResult doImport(String collection, String sourceSystem, String connectionUrl, Date from) {
