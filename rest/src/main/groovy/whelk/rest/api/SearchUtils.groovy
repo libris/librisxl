@@ -7,6 +7,7 @@ import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
 import whelk.component.ElasticSearch
+import whelk.component.PostgreSQLComponent
 import whelk.component.StorageType
 import whelk.exception.WhelkRuntimeException
 import whelk.exception.InvalidQueryException
@@ -414,20 +415,19 @@ class SearchUtils {
             return ld.vocabIndex[termKey]
         }
         String fullId = vocabUri ? vocabUri.resolve(id).toString() : id
-        Location loc = whelk.storage.locate(fullId, true)
-        Document doc = loc?.document
+        Document doc = whelk.storage.getDocumentByIri(fullId)
 
         if (doc) {
-            return getEntry(doc.data)
+            return getEntry(doc.data, fullId)
         } else {
             return null
         }
     }
 
     // FIXME move to Document or JsonLd
-    private Map getEntry(Map jsonLd) {
+    private Map getEntry(Map jsonLd, String entryId) {
         // we rely on this convention for the time being.
-        return jsonLd[(JsonLd.GRAPH_KEY)][0]
+        return jsonLd[(JsonLd.GRAPH_KEY)].find { it[JsonLd.ID_KEY] == entryId }
     }
 
     /**
