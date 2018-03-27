@@ -20,6 +20,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 @Log
+@Deprecated
 class FileDumper implements MySQLLoader.LoadHandler {
 
     BufferedWriter mainTableWriter
@@ -49,6 +50,7 @@ class FileDumper implements MySQLLoader.LoadHandler {
         final int THREAD_COUNT = getThreadCount()
 
         whelk = new Whelk(postgres)
+        whelk.loadCoreData()
         mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"))
         identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"))
         dependenciesWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_dependencies"), Charset.forName("UTF-8"))

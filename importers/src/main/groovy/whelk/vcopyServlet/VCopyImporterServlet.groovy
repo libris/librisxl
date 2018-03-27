@@ -27,6 +27,7 @@ import io.prometheus.client.Summary
  * Copy of OAIPMH Harvester servlet, but using vcopy as data source.
  */
 @Log
+@Deprecated
 class VCopyImporterServlet extends HttpServlet {
 
     int scheduleDelaySeconds = 5
