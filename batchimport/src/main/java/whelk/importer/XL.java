@@ -46,7 +46,7 @@ class XL
         ElasticSearch elastic = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
         m_whelk = new Whelk(storage, elastic);
         m_whelk.loadCoreData();
-        m_forcedSetTerms = new JsonLd(m_whelk.getDisplayData(), m_whelk.getVocabData()).getForcedSetTerms();
+        m_forcedSetTerms = m_whelk.getJsonld().getForcedSetTerms();
         m_marcFrameConverter = m_whelk.createMarcFrameConverter();
     }
 

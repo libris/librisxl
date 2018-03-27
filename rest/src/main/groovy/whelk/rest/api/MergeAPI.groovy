@@ -15,8 +15,6 @@ import javax.servlet.http.HttpServletResponse
 class MergeAPI extends HttpServlet {
 
     private Whelk m_whelk
-    private Set<String> m_forcedSetTerms
-    private JsonLd m_jsonld
 
     @Override
     void init() {
@@ -25,10 +23,7 @@ class MergeAPI extends HttpServlet {
                 configuration.getProperty("sqlMaintable"))
         ElasticSearch elastic = new ElasticSearch(configuration)
         m_whelk = new Whelk(storage, elastic)
-
         m_whelk.loadCoreData()
-        m_jsonld = new JsonLd(m_whelk.getDisplayData(), m_whelk.getVocabData())
-        m_forcedSetTerms = m_jsonld.getForcedSetTerms()
     }
 
     private String getRecordId(String id) {
@@ -82,8 +77,8 @@ class MergeAPI extends HttpServlet {
         String remainingID = id1
         String disappearingID = id2
 
-        String collection = LegacyIntegrationTools.determineLegacyCollection(firstClassDocument, m_jsonld)
-        if (!LegacyIntegrationTools.determineLegacyCollection(secondClassDocument, m_jsonld).equals(collection)) {
+        String collection = LegacyIntegrationTools.determineLegacyCollection(firstClassDocument, m_whelk.getJsonld())
+        if (!LegacyIntegrationTools.determineLegacyCollection(secondClassDocument, m_whelk.getJsonld()).equals(collection)) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "$id1 and $id2 are not in the same collection.")
         }
@@ -136,12 +131,12 @@ class MergeAPI extends HttpServlet {
         Graph withGraph = new Graph(withTriples)
 
         Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>()
-        for (String term : m_forcedSetTerms)
+        for (String term : m_whelk.getJsonld().getForcedSetTerms())
             specialRules.put(term, Graph.PREDICATE_RULES.RULE_AGGREGATE)
 
         originalGraph.enrichWith(withGraph, specialRules)
 
-        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), m_forcedSetTerms)
+        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), m_whelk.getJsonld().getForcedSetTerms())
         boolean deleteUnreferencedData = true
         JsonldSerializer.normalize(enrichedData, firstClassDocument.getShortId(), deleteUnreferencedData)
         return new Document(enrichedData)
