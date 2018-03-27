@@ -95,8 +95,6 @@ class PostgreSQLComponent {
 
     LinkFinder linkFinder
 
-    final boolean trackConnectionFetching
-
     class AcquireLockException extends RuntimeException { AcquireLockException(String s) { super(s) } }
 
     class ConflictingHoldException extends RuntimeException { ConflictingHoldException(String s) { super(s) } }
@@ -105,12 +103,10 @@ class PostgreSQLComponent {
     PostgreSQLComponent() {}
 
     PostgreSQLComponent(Properties properties) {
-        this.trackConnectionFetching = trackConnectionFetching
         setup(properties.getProperty("sqlUrl"), properties.getProperty("sqlMaintable"))
     }
 
-    PostgreSQLComponent(String sqlUrl, String sqlMaintable, boolean trackConnectionFetching = true) {
-        this.trackConnectionFetching = trackConnectionFetching
+    PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
         setup(sqlUrl, sqlMaintable)
     }
 
