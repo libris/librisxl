@@ -46,7 +46,7 @@ class PostgreSQLComponent {
     boolean versioning = true
 
     /**
-     * This value is sensitiv. It must be strictly larger than the maxConnections parameter set in tomcat.
+     * This value is sensitive. It must be strictly larger than the maxConnections parameter set in tomcat.
      * This is necessary in order to not have the very expensive deadlock/connection-starvation prevention code
      * in here.
      */
