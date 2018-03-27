@@ -1,5 +1,6 @@
 package whelk
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.collections4.map.LRUMap
 import whelk.component.ElasticSearch
@@ -13,6 +14,7 @@ import whelk.util.PropertyLoader
  * The Whelk is the root component of the XL system.
  */
 @Log
+@CompileStatic
 class Whelk {
 
     PostgreSQLComponent storage
@@ -262,6 +264,9 @@ class Whelk {
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
+        if (updated == null) {
+            return null
+        }
         String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
         if (collection == "auth" || collection == "definitions")
             putInAuthCache(updated)
