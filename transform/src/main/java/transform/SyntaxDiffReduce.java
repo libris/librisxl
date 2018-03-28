@@ -1,5 +1,6 @@
 package transform;
 
+import groovy.lang.Tuple2;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
 import whelk.JsonLd;
@@ -13,7 +14,7 @@ public class SyntaxDiffReduce
 {
     static final ObjectMapper mapper = new ObjectMapper();
 
-    public static ScriptGenerator generateScript(Syntax oldSyntax, Syntax newSyntax, BufferedReader oldJsonReader, BufferedReader newJsonReader)
+    public static ScriptGenerator generateScript(Syntax oldSyntax, Syntax newSyntax, Iterator<Tuple2<String, String>> records)
             throws IOException, TransformScript.TransformSyntaxException
     {
         // Generate syntax minus diff
@@ -34,18 +35,19 @@ public class SyntaxDiffReduce
         // For each (+) diff, attempt to find an equivalent (-) diff, matching on the values in the streams.
         // If one is found, the diff can be settled.
 
-        String oldJsonString;
-        while ( (oldJsonString = oldJsonReader.readLine()) != null)
+        while (records.hasNext())
         {
-            Map oldData = mapper.readValue(oldJsonString, Map.class);
-            Document doc = new Document(oldData);
-            oldData = JsonLd.frame(doc.getCompleteId(), oldData);
-
-            String newJsonString = newJsonReader.readLine();
-            if (newJsonString == null)
+            Tuple2<String, String> recordPair = records.next();
+            if (recordPair == null)
                 continue;
-            Map newData = mapper.readValue(newJsonString, Map.class);
-            newData = JsonLd.frame(doc.getCompleteId(), newData);
+
+            Map oldData = mapper.readValue(recordPair.getFirst(), Map.class);
+            Document oldDoc = new Document(oldData);
+            oldData = JsonLd.frame(oldDoc.getCompleteId(), oldData);
+
+            Map newData = mapper.readValue(recordPair.getSecond(), Map.class);
+            Document newDoc = new Document(newData);
+            newData = JsonLd.frame(newDoc.getCompleteId(), newData);
 
             //System.err.println("Start with +diff: " + appearingRules);
             //System.err.println("Start with -diff: " + disappearingRules);
@@ -55,12 +57,6 @@ public class SyntaxDiffReduce
                 //System.err.println("Still remaining -diff: " + disappearingRules);
             }
         }
-
-        /*for (Syntax.Rule rule : appearingRules)
-        {
-            scriptGenerator.m_warnings.add("# Did you map in new data here? (Severity: LOW)\n" +
-                    "# " + rule.path + "," + rule.followedByKey + "\n#");
-        }*/
 
         for (Syntax.Rule rule : disappearingRules)
         {

@@ -1,11 +1,13 @@
 package transform;
 
+import groovy.lang.Tuple2;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Map;
 
 import whelk.util.TransformScript;
@@ -234,9 +236,15 @@ public class TransformTest
         Syntax newSyntax = new Syntax();
         newSyntax.expandSyntaxToCover(newData);
 
-        ScriptGenerator scriptGenerator = SyntaxDiffReduce.generateScript(oldSyntax, newSyntax,
+        /*ScriptGenerator scriptGenerator = SyntaxDiffReduce.generateScript(oldSyntax, newSyntax,
                 new BufferedReader(new StringReader(oldFormatExample)),
-                new BufferedReader(new StringReader(newFormatExample)));
+                new BufferedReader(new StringReader(newFormatExample)));*/
+
+        Tuple2<String, String> tuple = new Tuple2<>(oldFormatExample, newFormatExample);
+        ArrayList<Tuple2<String, String>> list = new ArrayList();
+        list.add(tuple);
+
+        ScriptGenerator scriptGenerator = SyntaxDiffReduce.generateScript(oldSyntax, newSyntax, list.iterator());
 
         String transformScript = scriptGenerator.toString();
 
