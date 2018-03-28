@@ -8230,6 +8230,7 @@
       "TOOO:i2": {},
       "inherit": "130",
       "aboutEntity": "?work",
+      "link": null,
       "addLink": "subject", "resourceType": "Work",
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
