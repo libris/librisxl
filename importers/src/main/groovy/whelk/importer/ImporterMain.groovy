@@ -1,12 +1,5 @@
 package whelk.importer
 
-import whelk.Conversiontester
-import whelk.ElasticConfigGenerator
-import whelk.actors.FileDumper
-import whelk.actors.StatsMaker
-import whelk.component.ElasticSearch
-import whelk.component.PostgreSQLComponent
-
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -15,16 +8,17 @@ import java.util.concurrent.TimeUnit
 import groovy.util.logging.Log4j2 as Log
 import groovy.sql.Sql
 
+import whelk.Conversiontester
 import whelk.Document
-import whelk.Whelk
-import whelk.component.ElasticSearch
-import whelk.component.PostgreSQLComponent
-import whelk.converter.marc.MarcFrameConverter
-import whelk.filter.LinkFinder
-import whelk.reindexer.ElasticReindexer
-
+import whelk.ElasticConfigGenerator
 import whelk.MySQLToMarcJSONDumper
 import whelk.PostgresLoadfileWriter
+import whelk.Whelk
+import whelk.actors.StatsMaker
+import whelk.component.PostgreSQLComponent
+import whelk.filter.LinkFinder
+import whelk.importer.DefinitionsImporter
+import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
 import whelk.util.Tools
 
@@ -32,27 +26,26 @@ import whelk.util.Tools
 class ImporterMain {
 
     private Properties props
-    private Whelk whelk
-
 
     ImporterMain(String... propNames) {
-        log.info("Setting up import program.")
         props = PropertyLoader.loadProperties(propNames)
-        whelk = Whelk.createLoadedSearchWhelk(props)
-        log.info("Started ...")
+    }
+
+    def getWhelk() {
+        return Whelk.createLoadedSearchWhelk(props)
     }
 
     @Command(args='TO_FILE_NAME COLLECTION')
     void vcopydump(String toFileName, String collection) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        PostgreSQLComponent psql = new PostgreSQLComponent(props.getProperty("sqlUrl"), props.getProperty("sqlMaintable"))
+        PostgreSQLComponent psql = new PostgreSQLComponent(props)
         PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, psql)
     }
 
     @Command(args='TO_FILE_NAME COLLECTION DATA_SELECTION_TSVFILE')
     void vcopydumptestdata(String toFileName, String collection, String exampleDataFileName) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        PostgreSQLComponent psql = new PostgreSQLComponent(props.getProperty("sqlUrl"), props.getProperty("sqlMaintable"))
+        PostgreSQLComponent psql = new PostgreSQLComponent(props)
         PostgresLoadfileWriter.dumpToFile(toFileName, collection, connUrl, exampleDataFileName, psql)
     }
 
@@ -90,7 +83,7 @@ class ImporterMain {
         String templateString = new File(templateFileName).text
         String displayInfoString = new File(displayInfoFileName).text
         String vocabString = new File(vocabFileName).text
-        String generatedConfig = whelk.ElasticConfigGenerator.generateConfigString(
+        String generatedConfig = ElasticConfigGenerator.generateConfigString(
                 templateString,
                 displayInfoString,
                 vocabString)
@@ -121,6 +114,7 @@ class ImporterMain {
 
     @Command(args='FNAME')
     void defs(String fname) {
+        def whelk = new Whelk(new PostgreSQLComponent(props))
         DefinitionsImporter defsImporter = new DefinitionsImporter(whelk)
         defsImporter.definitionsFilename = fname
         defsImporter.run("definitions")
