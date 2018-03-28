@@ -356,7 +356,7 @@
     },
 
     "agentpartnumber": {
-      "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","}
+      "$n": {"about": "_:agent", "addProperty": "numeration", "punctuationChars": ","}
     },
 
     "TODO:hasPlace:includeWhereThisPendingIsUsed": {
@@ -7844,34 +7844,34 @@
       "match": [
         {
           "when": "$b & i1=0 & $t",
-          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "$b & i1=1 & $t",
-          "include": ["worksubjectSansPartNumber", "subjectJurisdiction", "agentdataOrganizationSubUnit"],
+          "include": ["worksubject", "subjectJurisdiction", "agentdataOrganizationSubUnit"],
           "pendingResources": {
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction", "required": true}
           }
         },
         {
           "when": "$b & i1=2 & $t",
-          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "i1=0 & $t",
-          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganization"]
+          "include": ["worksubject", "subjectOrganization", "agentdataOrganization"]
         },
         {
           "when": "i1=1 & $t",
-          "include": ["worksubjectSansPartNumber", "subjectJurisdiction", "agentdataOrganization"]
+          "include": ["worksubject", "subjectJurisdiction", "agentdataOrganization"]
         },
         {
           "when": "i1=2 & $t",
-          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganization"]
+          "include": ["worksubject", "subjectOrganization", "agentdataOrganization"]
         },
         {
           "when": "$b & $t",
-          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "$b & i1=0",
@@ -7919,10 +7919,11 @@
         },
         {
           "when": "$t",
-          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganization"]
+          "include": ["worksubject", "subjectOrganization", "agentdataOrganization"]
         },
         {
           "when": "$b",
+          "TODO": "Correct modelled? Should it be treated as a Work when there is no $t?",
           "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
@@ -7943,15 +7944,16 @@
       },
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
-      "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
+      "$n": {"about": "_:agent", "addProperty": "numeration", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
             "610": {"ind1": "2", "ind2": "7", "subfields": [
               {"a": "Kungl. biblioteket"},
               {"x": "samlingar"},
-              {"2": "sao"}]}
-          },
+              {"n": "14"},
+              {"2": "sao"}
+            ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -7959,7 +7961,7 @@
                 {
                   "@type": "ComplexSubject",
                   "termComponentList": [
-                    {"@type": "Organization", "name": "Kungl. biblioteket"},
+                    {"@type": "Organization", "name": "Kungl. biblioteket", "numeration": ["14"]},
                     {"@type": "TopicSubdivision", "prefLabel": "samlingar"}
                   ],
                   "inScheme": {
@@ -7979,6 +7981,7 @@
               {"b": "Riksdagen"},
               {"d": "(1792 :"},
               {"c": "Gävle)"},
+              {"n": "15"},
               {"2": "sao"}]}
           },
           "result": {"mainEntity": {
@@ -7992,6 +7995,7 @@
                     "@type" : "Jurisdiction",
                     "name" : "Sverige"
                   },
+                  "numeration": ["15"],
                   "marc:subordinateUnit" : ["Riksdagen"],
                   "place" : [{
                     "@type" : "Place",
@@ -8012,6 +8016,7 @@
             "610": {"ind1": "1", "ind2": "4", "subfields": [
               {"a": "United States"},
               {"t": "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)"},
+              {"n": "4"},
               {"v": "catalogs"}]}
           },
           "result": {"mainEntity": {
@@ -8031,7 +8036,8 @@
                     } ],
                     "hasTitle": [ {
                       "@type": "Title",
-                      "mainTitle": "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)"
+                      "mainTitle": "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)",
+                      "partNumber": ["4"]
                     } ]
                   },
                   {
@@ -8070,7 +8076,6 @@
                     "@type" : "Contribution",
                     "agent" : {
                       "@type" : "Organization",
-                      "marc:partNumber" : [ "Fond 1209" ],
                       "name" : "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."
                     }
                   } ],
@@ -8078,7 +8083,8 @@
                     "@type": "Title",
                     "mainTitle": "Egentitel",
                     "marc:formSubheading" : [ "Manuscript." ],
-                    "partName" : [ "Pomestnyĭ prikaz" ]
+                    "partName" : [ "Pomestnyĭ prikaz" ],
+                    "partNumber": ["Fond 1209"]
                   } ],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
@@ -8192,7 +8198,7 @@
                       "@type": "Meeting",
                       "name": "Vatican Council",
                       "date": ["1962-1965 :"],
-                      "marc:partNumber": ["(2nd :"],
+                      "numeration": ["(2nd :"],
                       "place": [{
                         "@type": "Place",
                         "label": "Basilica di San Pietro in Vaticano)."
@@ -9294,35 +9300,35 @@
       "match": [
         {
           "when": "$b & $t & i2=2 & i1=1",
-          "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4"]
+          "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i2=2 & i1=1",
-          "include": ["hasPartJurisdiction", "agentdataOrganization", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4"]
+          "include": ["hasPartJurisdiction", "agentdataOrganization", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$b & $t & i1=1",
-          "include": ["hasRelationshipJurisdiction", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber", "agentpartnumber"]
+          "include": ["hasRelationshipJurisdiction", "agentdataOrganizationSubUnit", "titledetails"]
         },
         {
           "when": "$t & i1=1",
-          "include": ["hasRelationshipJurisdiction", "agentdataOrganization", "titledetailsSansPartNumber", "agentpartnumber"]
+          "include": ["hasRelationshipJurisdiction", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$b & $t & i2=2",
-          "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4"]
+          "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i2=2",
-          "include": ["hasPartOrganization", "agentdataOrganization", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4"]
+          "include": ["hasPartOrganization", "agentdataOrganization", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$b & $t",
-          "include": ["hasRelationshipOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber", "agentpartnumber"]
+          "include": ["hasRelationshipOrganization", "agentdataOrganizationSubUnit", "titledetails"]
         },
         {
           "when": "$t",
-          "include": ["hasRelationshipOrganization", "agentdataOrganization", "titledetailsSansPartNumber", "agentpartnumber"]
+          "include": ["hasRelationshipOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$b & i1=2",
@@ -9411,7 +9417,8 @@
               {"a": "Sverige."},
               {"b": "Riksdagen."},
               {"b": "Borgarståndet."},
-              {"t": "Protokoll"}
+              {"t": "Protokoll"},
+              {"n": "9"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9434,7 +9441,8 @@
                       }],
                     "hasTitle": [ {
                       "@type": "Title",
-                      "mainTitle": "Protokoll"
+                      "mainTitle": "Protokoll",
+                      "partNumber": ["9"]
                     } ]
                   }
                 }
@@ -9446,12 +9454,14 @@
           "source": {
             "710": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Nationell gammaldags organisation."},
-              {"t": "Handlingar 1920-1950"}
+              {"t": "Handlingar 1920-1950"},
+              {"n": "10"}
             ]}},
           "normalized": {
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Nationell gammaldags organisation."},
-              {"t": "Handlingar 1920-1950"}
+              {"t": "Handlingar 1920-1950"},
+              {"n": "10"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9463,7 +9473,8 @@
                     "@type": "Work",
                     "hasTitle": [ {
                       "@type": "Title",
-                      "mainTitle": "Handlingar 1920-1950"
+                      "mainTitle": "Handlingar 1920-1950",
+                      "partNumber": ["10"]
                     } ],
                     "contribution": [
                       {
@@ -9482,7 +9493,8 @@
           "source": {
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "National Fire Protection Association."},
-              {"t": "National electrical code (1993)"}
+              {"t": "National electrical code (1993)"},
+              {"n": "42"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9494,7 +9506,8 @@
                     "@type": "Work",
                     "hasTitle": [ {
                       "@type": "Title",
-                      "mainTitle": "National electrical code (1993)"
+                      "mainTitle": "National electrical code (1993)",
+                      "partNumber": ["42"]
                     } ],
                     "contribution": [
                       {
@@ -9529,7 +9542,7 @@
                     "@type": "Organization",
                     "marc:subordinateUnit" : ["Quinquennial Meeting"],
                     "date": ["1904"],
-                    "marc:partNumber": ["(1st :"],
+                    "numeration": ["(1st :"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "International Council of Nurses."
@@ -9550,20 +9563,9 @@
         },
         {
           "source": {
-            "710": {"ind1": "2", "ind2": " ", "subfields": [
-              {"a": "Statens kulturråd"},
-              {"4": "oth"}
-            ]}},
-          "TODO:result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text"
-            }
-          }}
-        },
-        {
-          "source": {
             "710": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "National Fire Protection Association."}
+              {"a": "National Fire Protection Association."},
+              {"n": "101"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9571,8 +9573,11 @@
                 "contribution": [
                   {
                     "@type": "Contribution",
-                    "agent":
-                      {"@type": "Jurisdiction", "name": "National Fire Protection Association."}
+                    "agent": {
+                      "@type": "Jurisdiction",
+                      "name": "National Fire Protection Association.",
+                      "numeration": ["101"]
+                    }
                   }
                 ]
             }
@@ -9583,13 +9588,15 @@
             "710": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Umeå universitet."},
               {"b": "Institutionen för ABM."},
-              {"b": "Kulturgeografi"}
+              {"b": "Kulturgeografi"},
+              {"n": "101"}
             ]}},
           "normalized": {
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Umeå universitet."},
               {"b": "Institutionen för ABM."},
-              {"b": "Kulturgeografi"}
+              {"b": "Kulturgeografi"},
+              {"n": "101"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9600,6 +9607,7 @@
                   "agent":{
                     "@type": "Organization",
                     "marc:subordinateUnit" : ["Institutionen för ABM.", "Kulturgeografi"],
+                    "numeration": ["101"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Umeå universitet."
@@ -9690,7 +9698,8 @@
             "710": {"ind1": "1", "ind2": "2", "subfields": [
               {"a": "Sverige."},
               {"t": "Lagen om vissa kommunala befogenheter"},
-              {"x": "2222-2222"}
+              {"x": "2222-2222"},
+              {"n": "9"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9700,7 +9709,8 @@
                   "@type": "Work",
                   "hasTitle": [ {
                     "@type": "Title",
-                    "mainTitle": "Lagen om vissa kommunala befogenheter"
+                    "mainTitle": "Lagen om vissa kommunala befogenheter",
+                    "partNumber": ["9"]
                   } ],
                   "identifiedBy": [{
                     "@type": "ISSN",
@@ -9723,7 +9733,8 @@
           "source": {
             "710": {"ind1": "2", "ind2": "2", "subfields": [
               {"a": "Arbetsmarknadsverket."},
-              {"t": "Arbetsmiljölagen"}
+              {"t": "Arbetsmiljölagen"},
+              {"n": "9"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9733,7 +9744,8 @@
                   "@type": "Work",
                   "hasTitle": [ {
                     "@type": "Title",
-                    "mainTitle": "Arbetsmiljölagen"
+                    "mainTitle": "Arbetsmiljölagen",
+                    "partNumber": ["9"]
                   } ],
                   "contribution": [
                     {
@@ -9752,12 +9764,14 @@
           "source": {
             "710": {"ind1": "0", "ind2": "2", "subfields": [
               {"a": "Namngalen organisation."},
-              {"t": "Söderbykyrka"}
+              {"t": "Söderbykyrka"},
+              {"n": "9"}
             ]}},
           "normalized": {
             "710": {"ind1": "2", "ind2": "2", "subfields": [
               {"a": "Namngalen organisation."},
-              {"t": "Söderbykyrka"}
+              {"t": "Söderbykyrka"},
+              {"n": "9"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9767,7 +9781,8 @@
                   "@type": "Work",
                   "hasTitle": [ {
                     "@type": "Title",
-                    "mainTitle": "Söderbykyrka"
+                    "mainTitle": "Söderbykyrka",
+                    "partNumber": ["9"]
                   } ],
                   "contribution": [
                     {
@@ -9912,7 +9927,7 @@
                       "@type": "Place",
                       "label": "Montréal, Québec)."
                     }],
-                    "marc:partNumber": ["21st :"],
+                    "numeration": ["21st :"],
                     "date": ["1976:"],
                     "marc:subordinateUnit": ["Organizing Committee." , "Arts and Culture Program." ,  "Visual Arts Section."]
                   },
@@ -9960,7 +9975,7 @@
                           "@type": "Place",
                           "label": "Basilica di San Pietro in Vaticano)."
                         }],
-                        "marc:partNumber": ["(2nd :"],
+                        "numeration": ["(2nd :"],
                         "date": ["1962-1965 :"]}
                     }
                   ]
@@ -9974,6 +9989,7 @@
             "711": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Westminster Assembly"},
               {"t": "Larger catechism."},
+              {"n": "10"},
               {"x": "2222-2222"}
             ]}},
           "result": {"mainEntity": {
@@ -9994,7 +10010,7 @@
                     }],
                     "contribution": [
                       {"@type": "PrimaryContribution",
-                        "agent": {"@type": "Meeting", "name": "Westminster Assembly"}}
+                        "agent": {"@type": "Meeting", "name": "Westminster Assembly", "numeration": ["10"]}}
                     ]
                   }
                 }
@@ -13179,7 +13195,7 @@
               "exactMatch": {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
-                "marc:partNumber": ["(13 :"],
+                "numeration": ["(13 :"],
                 "date": ["1986)."],
                 "isPartOf": {
                   "@type": "Organization",
