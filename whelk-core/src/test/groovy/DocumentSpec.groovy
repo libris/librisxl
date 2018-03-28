@@ -66,6 +66,35 @@ class DocumentSpec extends Specification {
 
     ]
 
+    JsonLd jsonld
+
+    def setup() {
+        Map contextData = ["@context":
+            ["@vocab":"https://id.kb.se/vocab/"]
+        ]
+        Map displayData = ["lensGroups":
+            ["chips": ["lenses":
+                                ["Work": ["showProperties": ["hasTitle",
+                                                            "contribution",
+                                                            "language"]],
+                                "ProvisionActivity": ["showProperties": ["date",
+                                                                        "agent",
+                                                                        "place"]]]],
+            "cards": ["lenses":
+                                ["Instance":
+                                        ["showProperties": ["mediaType",
+                                                            "hasTitle",
+                                                            "instanceOf"]]]]]]
+        Map vocabData = ["@graph": [
+            [
+                "@id": "https://id.kb.se/vocab/Item",
+                "category":["@id":"https://id.kb.se/marc/hold"]
+            ]
+        ]]
+        jsonld = new JsonLd(contextData, displayData, vocabData)
+    }
+
+
     @Unroll
     def "should find identifiers"() {
         given:
@@ -203,24 +232,9 @@ class DocumentSpec extends Specification {
                                                "date": "aDate",
                                                "place": "aPlace"]]]]
 
-        Map displayData = ["lensGroups":
-                                   ["chips":
-                                            ["lenses":
-                                                     ["Work": ["showProperties": ["hasTitle",
-                                                                                  "contribution",
-                                                                                  "language"]],
-                                                      "ProvisionActivity": ["showProperties": ["date",
-                                                                                               "agent",
-                                                                                               "place"]]]],
-                                    "cards":
-                                            ["lenses":
-                                                     ["Instance":
-                                                              ["showProperties": ["mediaType",
-                                                                                  "hasTitle",
-                                                                                  "instanceOf"]]]]]]
         when:
 
-        Map result = new JsonLd(displayData, null).embellish(input, extra)
+        Map result = jsonld.embellish(input, extra)
 
         then:
         assert result == expected
@@ -243,17 +257,8 @@ class DocumentSpec extends Specification {
                                               ["notation": "S"]]]]
         Document doc = new Document(content)
 
-        Map displayData = ["@context":
-                                   ["@vocab":"https://id.kb.se/vocab/"]
-        ]
-
-        Map vocabData = ["@graph":[
-                ["@id":"https://id.kb.se/vocab/Item",
-                 "category":["@id":"https://id.kb.se/marc/hold"]]
-        ]]
-
         expect:
-        assert doc.isHolding(new JsonLd(displayData, vocabData)) == true
+        assert doc.isHolding(jsonld) == true
     }
 
     def "should return false for non-holding"() {
@@ -271,17 +276,8 @@ class DocumentSpec extends Specification {
                                       "contains": "some new other data"]]]
         Document doc = new Document(content)
 
-        Map displayData = ["@context":
-                ["@vocab":"https://id.kb.se/vocab/"]
-        ]
-
-        Map vocabData = ["@graph":[
-                ["@id":"https://id.kb.se/vocab/Item",
-                 "category":["@id":"https://id.kb.se/marc/hold"]]
-        ]]
-
         expect:
-        assert doc.isHolding(new JsonLd(displayData, vocabData)) == false
+        assert doc.isHolding(jsonld) == false
     }
 
     def "should get sigel for holding"() {

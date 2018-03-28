@@ -48,6 +48,7 @@ public class JsonLd {
 
     private static Logger log = LogManager.getLogger(JsonLd.class)
 
+    Map<String, Map> context = [:]
     Map displayData
     Map vocabIndex
     private Map superClassOf
@@ -59,14 +60,21 @@ public class JsonLd {
     /**
      * Make an instance to incapsulate model driven behaviour.
      */
-    JsonLd(Map displayData, Map vocabData) {
-        setSupportData(displayData, vocabData)
+    JsonLd(Map contextData, Map displayData, Map vocabData) {
+        setSupportData(contextData, displayData, vocabData)
     }
 
-    void setSupportData(Map displayData, Map vocabData) {
+    void setSupportData(Map contextData, Map displayData, Map vocabData) {
+        def contextObj = contextData[CONTEXT_KEY]
+        if (contextObj instanceof List) {
+            contextObj.each {
+                context.putAll(it)
+            }
+        } else {
+            context = (Map) contextObj
+        }
         this.displayData = displayData ?: Collections.emptyMap()
-        Map context = displayData?.get(CONTEXT_KEY)
-        vocabId = context?.get(VOCAB_KEY)
+        vocabId = context.get(VOCAB_KEY)
 
         vocabIndex = vocabData ?
             vocabData[JsonLd.GRAPH_KEY].collectEntries {
@@ -85,9 +93,11 @@ public class JsonLd {
 
     private void expandAliasesInLensProperties() {
         Map propAliases = [:]
-        displayData.get(CONTEXT_KEY)?.each { k, v ->
-            if (v instanceof Map && v[CONTAINER_KEY] == LANGUAGE_KEY) {
-                propAliases[v[ID_KEY]] = k
+        for (ctx in [displayData.get(CONTEXT_KEY), context]) {
+            ctx.each { k, v ->
+                if (v instanceof Map && v[CONTAINER_KEY] == LANGUAGE_KEY) {
+                    propAliases[v[ID_KEY]] = k
+                }
             }
         }
         displayData['lensGroups']?.values().each { group ->
