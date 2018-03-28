@@ -37,7 +37,8 @@ class ImporterMain {
 
     ImporterMain(String... propNames) {
         log.info("Setting up import program.")
-        whelk = Whelk.createLoadedSearchWhelk(propNames)
+        props = PropertyLoader.loadProperties(propNames)
+        whelk = Whelk.createLoadedSearchWhelk(props)
         log.info("Started ...")
     }
 
