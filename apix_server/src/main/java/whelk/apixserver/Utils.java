@@ -36,25 +36,15 @@ public class Utils
     static final String APIX_BASEURI = "https://apix.libris.kb.se/apix";
     static final String APIX_SYSTEM_CODE = "APIX";
     static Whelk s_whelk;
-    static JsonLd s_jsonld; // For model driven behaviour
-    private static JsonLD2MarcXMLConverter s_toMarcConverter = new JsonLD2MarcXMLConverter();
-    private static MarcFrameConverter s_toJsonLdConverter = new MarcFrameConverter();
+    private static JsonLD2MarcXMLConverter s_toMarcConverter;
+    private static MarcFrameConverter s_toJsonLdConverter;
     private static final Logger s_logger = LogManager.getLogger(Utils.class);
 
     static
     {
-        Properties configuration = PropertyLoader.loadProperties("secret");
-        PostgreSQLComponent postgreSqlComponent =
-                new PostgreSQLComponent(configuration.getProperty("sqlUrl"), configuration.getProperty("sqlMaintable"));
-        ElasticSearch elasticSearch = new ElasticSearch(
-                configuration.getProperty("elasticHost"),
-                configuration.getProperty("elasticCluster"),
-                configuration.getProperty("elasticIndex"));
-        s_whelk = new Whelk(postgreSqlComponent, elasticSearch);
-        s_whelk.loadCoreData();
-        Map displayData = s_whelk.getDisplayData();
-        Map vocabData = s_whelk.getVocabData();
-        s_jsonld = new JsonLd(displayData, vocabData);
+        s_whelk = Whelk.createLoadedSearchWhelk();
+        s_toJsonLdConverter = s_whelk.createMarcFrameConverter();
+        s_toMarcConverter = new JsonLD2MarcXMLConverter(s_toJsonLdConverter);
     }
 
     static String convertToMarcXml(Document document) throws TransformerException, IOException
@@ -63,13 +53,13 @@ public class Utils
         {
             // Embellish data
             List externalRefs = document.getExternalRefs();
-            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) s_jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()));
+            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) s_whelk.getJsonld().getDisplayData().get(JsonLd.getCONTEXT_KEY()));
             Map referencedData = s_whelk.bulkLoad(convertedExternalLinks);
             Map referencedData2 = new HashMap();
             for (Object key : referencedData.keySet())
                 referencedData2.put(key, ((Document)referencedData.get(key)).data );
 
-            s_jsonld.embellish(document.data, referencedData2, false);
+            s_whelk.getJsonld().embellish(document.data, referencedData2, false);
 
             return (String) s_toMarcConverter.convert(document.data, document.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY());
         }
@@ -119,7 +109,7 @@ public class Utils
             Map convertedData = s_toJsonLdConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), generatedId);
             Document document = new Document(convertedData);
 
-            String contentClassifiedAsCollection = LegacyIntegrationTools.determineLegacyCollection(document, s_jsonld);
+            String contentClassifiedAsCollection = LegacyIntegrationTools.determineLegacyCollection(document, s_whelk.getJsonld());
 
             if (contentClassifiedAsCollection.equals(expectedCollection))
                 return document;

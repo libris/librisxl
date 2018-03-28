@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit
 
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
-import whelk.converter.marc.MarcFrameConverter
 import whelk.filter.LinkFinder
 import whelk.importer.BrokenRecordException
 import whelk.importer.ImportResult
@@ -25,17 +24,16 @@ import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
 
 /**
- * Created by Theodor on 17-01-09
- * Copy of OAIPMH Harvester servlet, but data source is vcopy
+ * Copy of OAIPMH Harvester servlet, but using vcopy as data source.
  */
 @Log
+@Deprecated
 class VCopyImporterServlet extends HttpServlet {
 
     int scheduleDelaySeconds = 5
     Properties props = new Properties()
     private Map<String, ScheduledJob> jobs = [:]
     private Whelk whelk
-    private MarcFrameConverter converter
 
     static String SETTINGS_PFX = "harvester:"
     static String DEFAULT_IMPORTER = "whelk.importer.VCopyImporter"
@@ -69,7 +67,6 @@ class VCopyImporterServlet extends HttpServlet {
         props = PropertyLoader.loadProperties('secret', 'mysql')
         PostgreSQLComponent pg = new PostgreSQLComponent(props)
         whelk = new Whelk(pg)
-        converter = new MarcFrameConverter(new LinkFinder(pg))
         log.info("Started ...")
     }
 
@@ -207,7 +204,7 @@ class VCopyImporterServlet extends HttpServlet {
             String vcopyConnectionString = props.getProperty("mysqlConnectionUrl")
             int scheduleIntervalSeconds = DEFAULT_INTERVAL as int
             String sourceSystem = DEFAULT_SYSTEM
-            def job = new ScheduledJob(whelk, new VCopyImporter(whelk, converter),
+            def job = new ScheduledJob(whelk, new VCopyImporter(whelk),
                     "${service}",
                     sourceSystem,
                     vcopyConnectionString)

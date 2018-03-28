@@ -29,7 +29,6 @@ import javax.servlet.http.HttpServletResponse
 class LegacyMarcAPI extends HttpServlet {
 
     private Whelk whelk
-    private JsonLd jsonld
     private JsonLD2MarcXMLConverter toMarcXmlConverter
 
     private static final defaultProfileString =
@@ -74,13 +73,8 @@ class LegacyMarcAPI extends HttpServlet {
 
     @Override
     void init() {
-        Properties configuration = PropertyLoader.loadProperties("secret")
-        PostgreSQLComponent storage = new PostgreSQLComponent(configuration.getProperty("sqlUrl"),
-                configuration.getProperty("sqlMaintable"))
-        whelk = new Whelk(storage)
-        whelk.loadCoreData()
-        jsonld = new JsonLd(whelk.displayData, whelk.vocabData)
-        toMarcXmlConverter = new JsonLD2MarcXMLConverter()
+        whelk = Whelk.createLoadedCoreWhelk()
+        toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.createMarcFrameConverter())
     }
 
     /**
@@ -106,7 +100,7 @@ class LegacyMarcAPI extends HttpServlet {
                 log.warn("Bad client request to LegacyMarcAPI: " + message)
                 return
             }
-            String collection = LegacyIntegrationTools.determineLegacyCollection(rootDocument, jsonld)
+            String collection = LegacyIntegrationTools.determineLegacyCollection(rootDocument, whelk.jsonld)
             if (!collection.equals("bib")) {
                 String message = "The supplied \"id\"-parameter must refer to an existing bibliographic record."
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, message)

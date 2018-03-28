@@ -26,18 +26,16 @@ public class Converter
 {
     private final Whelk m_whelk;
     private final JsonLd m_jsonld;
-    private final JsonLD2MarcXMLConverter m_converter = new JsonLD2MarcXMLConverter();
+    private final JsonLD2MarcXMLConverter m_converter;
     private MarcFrameConverter m_toJsonConverter;
     private final Logger s_logger = LogManager.getLogger(this.getClass());
 
     public Converter(Whelk whelk)
     {
         m_whelk = whelk;
-        Map displayData = m_whelk.getDisplayData();
-        Map vocabData = m_whelk.getVocabData();
-        m_jsonld = new JsonLd(displayData, vocabData);
-        LinkFinder lf = new LinkFinder(m_whelk.getStorage());
-        m_toJsonConverter = new MarcFrameConverter(lf);
+        m_jsonld = whelk.getJsonld();
+        m_toJsonConverter = whelk.createMarcFrameConverter();
+        m_converter = new JsonLD2MarcXMLConverter(m_toJsonConverter);
     }
 
     public String makeEmbellishedMarcJSONString(Document document, String collection)

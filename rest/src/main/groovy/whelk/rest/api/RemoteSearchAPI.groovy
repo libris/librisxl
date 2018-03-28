@@ -37,10 +37,13 @@ class RemoteSearchAPI extends HttpServlet {
 
     def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10","startRecord": "1"]
 
-    RemoteSearchAPI() {
+    @Override
+    void init() {
         log.info("Starting Remote Search API")
         loadMetaProxyInfo(metaProxyInfoUrl)
-        marcFrameConverter = new MarcFrameConverter()
+        Whelk whelk = Whelk.createLoadedCoreWhelk()
+        marcFrameConverter = whelk.createMarcFrameConverter()
+        log.info("Started ...")
     }
 
     List loadMetaProxyInfo(URL url) {

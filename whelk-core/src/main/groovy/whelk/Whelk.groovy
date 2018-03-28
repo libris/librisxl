@@ -1,15 +1,20 @@
 package whelk
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.collections4.map.LRUMap
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
+import whelk.converter.marc.MarcFrameConverter
+import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
+import whelk.util.PropertyLoader
 
 /**
- * Created by markus on 15-09-03.
+ * The Whelk is the root component of the XL system.
  */
 @Log
+@CompileStatic
 class Whelk {
 
     PostgreSQLComponent storage
@@ -29,8 +34,25 @@ class Whelk {
     private Map<String, Document> authCache
     private final int CACHE_MAX_SIZE = 1000
 
-    static {
+    static Whelk createLoadedCoreWhelk(String propName = "secret", boolean useCache = false) {
+        return createLoadedCoreWhelk(PropertyLoader.loadProperties(propName), useCache)
+    }
 
+    static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = false) {
+        PostgreSQLComponent storage = new PostgreSQLComponent(configuration)
+        Whelk whelk = new Whelk(storage)
+        whelk.loadCoreData()
+        return whelk
+    }
+
+    static Whelk createLoadedSearchWhelk(String propName = "secret", boolean useCache = false) {
+        return createLoadedSearchWhelk(PropertyLoader.loadProperties(propName), useCache)
+    }
+
+    static Whelk createLoadedSearchWhelk(Properties configuration, boolean useCache = false) {
+        Whelk whelk = new Whelk(configuration, useCache)
+        whelk.loadCoreData()
+        return whelk
     }
 
     void putInAuthCache(Document authDocument) {
@@ -50,13 +72,9 @@ class Whelk {
     }
 
     public Whelk(PostgreSQLComponent pg, ElasticSearch es, boolean useCache = false) {
-        this.storage = pg
+        this(pg, useCache)
         this.elastic = es
-        this.useAuthCache = useCache
-        if (useCache)
-            authCache = Collections.synchronizedMap(
-                new LRUMap<String, Document>(CACHE_MAX_SIZE))
-        log.info("Whelk started with storage $storage and index $elastic")
+        log.info("Using index: $elastic")
     }
 
     public Whelk(PostgreSQLComponent pg, boolean useCache = false) {
@@ -65,26 +83,25 @@ class Whelk {
         if (useCache)
             authCache = Collections.synchronizedMap(
                     new LRUMap<String, Document>(CACHE_MAX_SIZE))
-        log.info("Whelk started with storage $storage")
+        log.info("Started with storage: $storage")
     }
 
-    public Whelk(Properties properties, boolean useCache = false) {
-        this.storage = new PostgreSQLComponent(properties)
-        this.elastic = new ElasticSearch(properties)
-        this.useAuthCache = useCache
-        if (useCache)
-            authCache = Collections.synchronizedMap(
-                    new LRUMap<String, Document>(CACHE_MAX_SIZE))
-        log.info("Whelk started with storage $storage and index $elastic")
+    public Whelk(Properties conf, boolean useCache = false) {
+        this(new PostgreSQLComponent(conf), new ElasticSearch(conf), useCache)
     }
 
     public Whelk() {
+    }
+
+    MarcFrameConverter createMarcFrameConverter() {
+        return new MarcFrameConverter(new LinkFinder(storage), jsonld)
     }
 
     void loadCoreData() {
         loadDisplayData()
         loadVocabData()
         jsonld = new JsonLd(displayData, vocabData)
+        log.info("Loaded with core data")
     }
 
     void loadDisplayData() {
@@ -98,7 +115,7 @@ class Whelk {
     //private long hits = 0
     //private long misses = 0
 
-    Map<String, Document> bulkLoad(List ids) {
+    Map<String, Document> bulkLoad(List<String> ids) {
         Map result = [:]
         ids.each { id ->
 
@@ -192,12 +209,12 @@ class Whelk {
 
         // Typed id queries on:
         List<Tuple> typedIDs = document.getTypedRecordIdentifiers()
-        typedIDs.addAll( document.getTypedThingIdentifiers() )
+        typedIDs.addAll(document.getTypedThingIdentifiers())
         for (Tuple typedID : typedIDs) {
             String type = typedID[0]
             String value = typedID[1]
-            int graphIndex = typedID[2].intValue()
-            
+            int graphIndex = ((Integer) typedID[2]).intValue()
+
             // "Identifier" and "SystemNumber" are too general/meaningless to use for duplication checking.
             if (type.equals("Identifier") || type.equals("SystemNumber"))
                 continue
@@ -247,6 +264,9 @@ class Whelk {
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
+        if (updated == null) {
+            return null
+        }
         String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
         if (collection == "auth" || collection == "definitions")
             putInAuthCache(updated)
@@ -258,7 +278,8 @@ class Whelk {
     }
 
     void bulkStore(final List<Document> documents, String changedIn,
-                   String changedBy, String collection, boolean useDocumentCache = false) {
+                   String changedBy, String collection,
+                   @Deprecated boolean useDocumentCache = false) {
         if (storage.bulkStore(documents, changedIn, changedBy, collection)) {
             for (Document doc : documents) {
                 if (collection == "auth" || collection == "definitions") {
@@ -266,7 +287,7 @@ class Whelk {
                 }
             }
             if (elastic) {
-                elastic.bulkIndex(documents, collection, this, useDocumentCache)
+                elastic.bulkIndex(documents, collection, this)
                 for (Document doc : documents) {
                     reindexDependers(doc)
                 }

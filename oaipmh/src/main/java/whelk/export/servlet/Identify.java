@@ -51,7 +51,7 @@ public class Identify
         writer.writeEndElement(); // adminEmail
 
         writer.writeStartElement("earliestDatestamp");
-        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection();
              PreparedStatement preparedStatement = prepareStatement(dbconn);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
@@ -78,10 +78,8 @@ public class Identify
     private static PreparedStatement prepareStatement(Connection dbconn)
             throws SQLException
     {
-        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-
         // Construct the query
-        String selectSQL = "SELECT MIN(modified) as earliest FROM " + tableName;
+        String selectSQL = "SELECT MIN(modified) as earliest FROM lddb";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
 
         return preparedStatement;

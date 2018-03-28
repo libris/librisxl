@@ -101,7 +101,7 @@ public class ListRecords
             return;
         }
 
-        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection())
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection())
         {
             dbconn.setAutoCommit(false);
             boolean includeDependencies = metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX);

@@ -6,9 +6,6 @@ import whelk.Whelk
 import whelk.util.ThreadPool
 import whelk.util.Tools
 
-/**
- * Created by markus on 2015-12-10.
- */
 @Log
 class ElasticReindexer {
 
@@ -34,7 +31,6 @@ class ElasticReindexer {
 
     ElasticReindexer(Whelk w) {
         this.whelk = w
-        this.whelk.loadCoreData()
     }
 
     synchronized void reindex(String suppliedCollection) {

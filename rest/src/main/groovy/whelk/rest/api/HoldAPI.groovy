@@ -15,18 +15,12 @@ import javax.servlet.http.HttpServletResponse
 class HoldAPI extends HttpServlet {
 
     private Whelk whelk
-    private JsonLd jsonld
     private JsonLD2MarcXMLConverter toMarcXmlConverter
 
     @Override
     void init() {
-        Properties configuration = PropertyLoader.loadProperties("secret")
-        PostgreSQLComponent storage = new PostgreSQLComponent(configuration.getProperty("sqlUrl"),
-                configuration.getProperty("sqlMaintable"))
-        whelk = new Whelk(storage)
-        whelk.loadCoreData()
-        jsonld = new JsonLd(whelk.displayData, whelk.vocabData)
-        toMarcXmlConverter = new JsonLD2MarcXMLConverter()
+        whelk = Whelk.createLoadedCoreWhelk()
+        toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.createMarcFrameConverter())
     }
 
     @Override
@@ -48,7 +42,7 @@ class HoldAPI extends HttpServlet {
         }
 
         Document document = whelk.storage.loadDocumentByMainId(recordId)
-        String collection = whelk.util.LegacyIntegrationTools.determineLegacyCollection(document, jsonld)
+        String collection = whelk.util.LegacyIntegrationTools.determineLegacyCollection(document, whelk.jsonld)
         if (!collection.equals("bib")){
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "The supplied \"id\"-parameter must refer to an existing bibliographic record.")

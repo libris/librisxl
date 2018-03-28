@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.Datafield
-import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.exception.FramingException
 import whelk.exception.ModelValidationException
 
@@ -46,7 +45,6 @@ public class JsonLd {
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
 
     static final ObjectMapper mapper = new ObjectMapper()
-    static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter()
 
     private static Logger log = LogManager.getLogger(JsonLd.class)
 
@@ -702,10 +700,14 @@ public class JsonLd {
         return idMap
     }
 
-    // TODO: This doesn't quite belong here, at least not while dependent on a
-    // JsonLD2MarcXMLConverter. If validation worked on the JSON-level (e.g.
-    // used a json-schema to validate against), it would be a bit more
+    /*
+    // TODO: This doesn't belong here, but in a validation service. At least
+    // while dependent on a JsonLD2MarcXMLConverter. If validation worked on
+    // the JSON-LD, using vocab and context data, it would be more
     // appropriate here.
+    //import whelk.converter.marc.JsonLD2MarcXMLConverter
+    //static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter()
+    @Deprecated
     static boolean validateItemModel(Document doc) {
         if (!doc || !doc.data) {
             throw new ModelValidationException("Document has no data to validate.")
@@ -748,6 +750,7 @@ public class JsonLd {
 
         return true
     }
+    */
 
     public void getSuperClasses(String type, List<String> result) {
         def termMap = vocabIndex[type]

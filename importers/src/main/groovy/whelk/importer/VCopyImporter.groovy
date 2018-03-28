@@ -4,29 +4,20 @@ import groovy.json.JsonBuilder
 import groovy.util.logging.Log4j2 as Log
 import whelk.Whelk
 import whelk.actors.WhelkSaver
-import whelk.PostgresLoadfileWriter
-import whelk.component.PostgreSQLComponent
-import whelk.converter.marc.MarcFrameConverter
 
-/**
- * Created by Theodor on 2017-01-05.
- */
 @Log
 class VCopyImporter {
 
     Whelk whelk
-    MarcFrameConverter converter
 
 
-    VCopyImporter(Whelk whelk, MarcFrameConverter converter) {
+    VCopyImporter(Whelk whelk) {
         this.whelk = whelk
-        this.whelk.loadCoreData()
-        this.converter = converter
     }
 
     ImportResult doImport(String collection, String sourceSystem, String connectionUrl, Date from) {
 
-        def whelkSaver = new WhelkSaver(whelk, converter, sourceSystem, whelk.storage)
+        def whelkSaver = new WhelkSaver(whelk, sourceSystem)
         whelkSaver.importResult.sourceSystem = sourceSystem
         whelkSaver.importResult.fromDate = from
 
@@ -42,7 +33,7 @@ class VCopyImporter {
 
     ImportResult doImport(String collection, String sourceSystem, String connectionUrl, String[] vcopyIdsToImport) {
 
-        def whelkSaver = new WhelkSaver(whelk, converter, sourceSystem, whelk.storage )
+        def whelkSaver = new WhelkSaver(whelk, sourceSystem)
         whelkSaver.importResult.sourceSystem = sourceSystem
 
         String sqlQuery = MySQLLoader.selectExampleDataByMarcType[collection].replace('?', vcopyIdsToImport.collect { it -> '?' }.join(','))

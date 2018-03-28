@@ -33,18 +33,11 @@ class ImporterMain {
 
     private Properties props
     private Whelk whelk
-    private MarcFrameConverter converter
 
 
     ImporterMain(String... propNames) {
         log.info("Setting up import program.")
-
-        props = PropertyLoader.loadProperties(propNames)
-        PostgreSQLComponent pg = new PostgreSQLComponent(props)
-        ElasticSearch elastic = new ElasticSearch(props)
-        converter = new MarcFrameConverter(new LinkFinder(pg))
-        whelk = new Whelk(pg, elastic)
-
+        whelk = Whelk.createLoadedSearchWhelk(propNames)
         log.info("Started ...")
     }
 
@@ -136,20 +129,14 @@ class ImporterMain {
     void vcopyharvest(String collection, String sourceSystem = 'vcopy') {
         log.info("Running vcopyharvest for collection ${collection} (source ${sourceSystem})")
         def connUrl = props.getProperty("mysqlConnectionUrl")
-        VCopyImporter importer = new VCopyImporter(whelk, converter)
+        VCopyImporter importer = new VCopyImporter(whelk)
         importer.doImport(collection, sourceSystem, connUrl)
     }
 
     @Command(args='[COLLECTION]')
     void reindex(String collection=null) {
-        PostgreSQLComponent postgreSqlComponent =
-                new PostgreSQLComponent(props.getProperty("sqlUrl"), props.getProperty("sqlMaintable"), false)
-        ElasticSearch elasticSearch = new ElasticSearch(
-                props.getProperty("elasticHost"),
-                props.getProperty("elasticCluster"),
-                props.getProperty("elasticIndex"))
         boolean useCache = true
-        Whelk whelk = new Whelk(postgreSqlComponent, elasticSearch, useCache)
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props, useCache)
         def reindex = new ElasticReindexer(whelk)
         reindex.reindex(collection)
     }
@@ -210,7 +197,7 @@ class ImporterMain {
 
         def bibIds = idgroups.find{it->it.key == 'bib'}.value
 
-        VCopyImporter importer = new VCopyImporter(whelk, converter)
+        VCopyImporter importer = new VCopyImporter(whelk)
         importLinkedRecords(importer, bibIds)
 
         idgroups.each { group ->

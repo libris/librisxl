@@ -30,8 +30,8 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
     JsonLD2MarcConverter jsonldConverter = null
     final static ObjectMapper mapper = new ObjectMapper()
 
-    JsonLD2MarcXMLConverter() {
-        jsonldConverter = new JsonLD2MarcConverter()
+    JsonLD2MarcXMLConverter(MarcFrameConverter marcFrameConverter) {
+        jsonldConverter = new JsonLD2MarcConverter(marcFrameConverter)
     }
 
     @Override

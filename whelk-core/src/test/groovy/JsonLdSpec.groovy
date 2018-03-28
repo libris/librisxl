@@ -227,30 +227,6 @@ class JsonLdSpec extends Specification {
         s3 == "qowiudhqw"
     }
 
-    // FIXME This test contains invalid input data
-    @Ignore()
-    def "should validate item model"() {
-        when:
-        def id = Document.BASE_URI.resolve("/valid1").toString()
-        def mainEntityId = Document.BASE_URI.resolve("/valid1main").toString()
-        def validDocument = new Document(
-            ["@graph": [["@id": id,
-                         "@type": "HeldMaterial",
-                         "numberOfItems": 1,
-                         "mainEntity": [
-                           "@id": mainEntityId
-                         ],
-                         "heldBy": ["@type":"Organization",
-                                    "notation":"Gbg"],
-                         "itemOf": ["@id": "https://libris.kb.se/foobar"]]]
-            ])
-        def invalidDocument = new Document(["foo": "bar"])
-
-        then:
-        assert JsonLd.validateItemModel(validDocument)
-        assert !JsonLd.validateItemModel(invalidDocument)
-    }
-
     def "should convert to cards and chips"() {
         given:
         Map input = ["@type": "Instance",

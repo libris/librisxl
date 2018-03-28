@@ -38,6 +38,7 @@ class ConverterAPISpec extends Specification {
             String getHeader(String h) { headers.get(h) }
         }
         converterApi = new ConverterAPI()
+        converterApi.init()
     }
 
     def "should convert data"() {
