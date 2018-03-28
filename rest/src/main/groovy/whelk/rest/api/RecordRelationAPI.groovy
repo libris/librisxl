@@ -13,12 +13,15 @@ class RecordRelationAPI extends HttpServlet {
 
     private Whelk whelk
 
+    RecordRelationAPI(Whelk whelk) {
+        this.whelk = whelk
+    }
+
     @Override
     void init() {
-        Properties configuration = PropertyLoader.loadProperties("secret")
-        PostgreSQLComponent storage = new PostgreSQLComponent(configuration.getProperty("sqlUrl"),
-                configuration.getProperty("sqlMaintable"))
-        whelk = new Whelk(storage)
+        if (!whelk) {
+            whelk = Whelk.createLoadedCoreWhelk()
+        }
     }
 
     @Override

@@ -16,9 +16,15 @@ class DuplicatesAPI extends HttpServlet {
     private Whelk whelk
     private JsonLD2MarcXMLConverter toMarcXmlConverter
 
+    DuplicatesAPI(Whelk whelk) {
+        this.whelk = whelk
+    }
+
     @Override
     void init() {
-        whelk = Whelk.createLoadedCoreWhelk()
+        if (!whelk) {
+            whelk = Whelk.createLoadedCoreWhelk()
+        }
         toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.createMarcFrameConverter())
     }
 

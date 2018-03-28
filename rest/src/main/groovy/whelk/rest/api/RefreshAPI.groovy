@@ -27,9 +27,15 @@ class RefreshAPI extends HttpServlet
     public final static mapper = new ObjectMapper()
     private Whelk whelk
 
+    RefreshAPI(Whelk whelk) {
+        this.whelk = whelk
+    }
+
     @Override
     void init() {
-        whelk = Whelk.createLoadedSearchWhelk()
+        if (!whelk) {
+            whelk = Whelk.createLoadedSearchWhelk()
+        }
     }
 
     @Override

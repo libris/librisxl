@@ -20,6 +20,7 @@ import java.util.regex.Pattern
 
 @Log
 class RemoteSearchAPI extends HttpServlet {
+
     final static mapper = new ObjectMapper()
 
     String description = "Query API for remote search"
@@ -37,11 +38,19 @@ class RemoteSearchAPI extends HttpServlet {
 
     def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10","startRecord": "1"]
 
+    private Whelk whelk
+
+    RemoteSearchAPI(Whelk whelk) {
+        this.whelk = whelk
+    }
+
     @Override
     void init() {
         log.info("Starting Remote Search API")
         loadMetaProxyInfo(metaProxyInfoUrl)
-        Whelk whelk = Whelk.createLoadedCoreWhelk()
+        if (!whelk) {
+            whelk = Whelk.createLoadedCoreWhelk()
+        }
         marcFrameConverter = whelk.createMarcFrameConverter()
         log.info("Started ...")
     }

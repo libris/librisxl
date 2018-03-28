@@ -18,11 +18,17 @@ class ConverterAPI extends HttpServlet {
 
     MarcFrameConverter marcFrameConverter
 
+    public ConverterAPI(MarcFrameConverter marcFrameConverter) {
+        this.marcFrameConverter = marcFrameConverter
+    }
+
     @Override
     void init() {
         log.info("Starting converterAPI")
-        Whelk whelk = Whelk.createLoadedCoreWhelk()
-        marcFrameConverter = whelk.createMarcFrameConverter()
+        if (!marcFrameConverter) {
+            Whelk whelk = Whelk.createLoadedCoreWhelk()
+            marcFrameConverter = whelk.createMarcFrameConverter()
+        }
         log.info("Started ...")
     }
 

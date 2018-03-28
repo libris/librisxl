@@ -16,9 +16,15 @@ class MergeAPI extends HttpServlet {
 
     private Whelk m_whelk
 
+    MergeAPI(Whelk whelk) {
+        this.whelk = whelk
+    }
+
     @Override
     void init() {
-        m_whelk = Whelk.createLoadedSearchWhelk()
+        if (!whelk) {
+            m_whelk = Whelk.createLoadedSearchWhelk()
+        }
     }
 
     private String getRecordId(String id) {

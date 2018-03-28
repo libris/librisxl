@@ -84,9 +84,17 @@ class Crud extends HttpServlet {
     static final ObjectMapper mapper = new ObjectMapper()
     AccessControl accessControl = new AccessControl()
 
+    Crud(Whelk whelk) {
+        this.whelk = whelk
+    }
+
     @Override
     void init() {
-        whelk = Whelk.createLoadedSearchWhelk()
+        if (!whelk) {
+            whelk = Whelk.createLoadedSearchWhelk()
+        }
+        displayData = whelk.displayData
+        vocabData = whelk.vocabData
         jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
     }

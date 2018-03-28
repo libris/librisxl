@@ -4,6 +4,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import static whelk.JsonLd.ABOUT_KEY
+import whelk.converter.marc.MarcFrameConverter
 
 import javax.servlet.ServletInputStream
 import javax.servlet.ServletOutputStream
@@ -37,7 +38,7 @@ class ConverterAPISpec extends Specification {
             void setHeader(String h, String v) { headers.put(h, v) }
             String getHeader(String h) { headers.get(h) }
         }
-        converterApi = new ConverterAPI()
+        converterApi = new ConverterAPI(new MarcFrameConverter())
         converterApi.init()
     }
 
