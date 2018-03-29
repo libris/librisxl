@@ -33,7 +33,7 @@ class XL
 
     // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
     // has only a single member.
-    private Set<String> m_forcedSetTerms;
+    private Set<String> m_repeatableTerms;
 
     private final static String IMPORT_SYSTEM_CODE = "batch import";
 
@@ -43,7 +43,7 @@ class XL
         verbose = m_parameters.getVerbose();
         m_properties = PropertyLoader.loadProperties("secret");
         m_whelk = Whelk.createLoadedSearchWhelk(m_properties);
-        m_forcedSetTerms = m_whelk.getJsonld().getForcedSetTerms();
+        m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
         m_marcFrameConverter = m_whelk.createMarcFrameConverter();
     }
 
@@ -248,7 +248,7 @@ class XL
         // This is temporary, these special rules should not be hardcoded here, but rather obtained from (presumably)
         // whelk-core's marcframe.json.
         Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
-        for (String term : m_forcedSetTerms)
+        for (String term : m_repeatableTerms)
             specialRules.put(term, Graph.PREDICATE_RULES.RULE_AGGREGATE);
         specialRules.put("created", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
         specialRules.put("controlNumber", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
@@ -257,7 +257,7 @@ class XL
 
         originalGraph.enrichWith(withGraph, specialRules);
 
-        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), m_forcedSetTerms);
+        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), m_repeatableTerms);
         boolean deleteUnreferencedData = true;
         JsonldSerializer.normalize(enrichedData, mutableDocument.getShortId(), deleteUnreferencedData);
         mutableDocument.data = enrichedData;

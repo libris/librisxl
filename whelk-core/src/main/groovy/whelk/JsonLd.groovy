@@ -52,7 +52,11 @@ public class JsonLd {
     private Map<String, Set> subClassesByType
     private String vocabId
 
-    Set forcedSetTerms
+    /**
+     * This includes terms that are declared as either set or list containers
+     * in the context.
+     */
+    Set<String> repeatableTerms
 
     /**
      * Make an instance to incapsulate model driven behaviour.
@@ -70,10 +74,10 @@ public class JsonLd {
             context.putAll(contextObj)
         }
 
-        forcedSetTerms = context.findResults { key, value ->
+        repeatableTerms = context.findResults { key, value ->
             if (isSetContainer(value) || isListContainer(value))
                 return key
-        } as Set
+        } as Set<String>
 
         this.displayData = displayData ?: Collections.emptyMap()
 
