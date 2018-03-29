@@ -13,6 +13,10 @@ class RecordRelationAPI extends HttpServlet {
 
     private Whelk whelk
 
+    RecordRelationAPI() {
+        // Do nothing - only here for Tomcat to have something to call
+    }
+
     RecordRelationAPI(Whelk whelk) {
         this.whelk = whelk
     }

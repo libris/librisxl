@@ -16,6 +16,10 @@ class DuplicatesAPI extends HttpServlet {
     private Whelk whelk
     private JsonLD2MarcXMLConverter toMarcXmlConverter
 
+    DuplicatesAPI() {
+        // Do nothing - only here for Tomcat to have something to call
+    }
+
     DuplicatesAPI(Whelk whelk) {
         this.whelk = whelk
     }
