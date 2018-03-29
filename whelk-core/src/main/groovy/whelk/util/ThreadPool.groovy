@@ -1,5 +1,8 @@
 package whelk.util
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 public class ThreadPool {
     private final int THREAD_COUNT
     private final Thread[] s_threadPool

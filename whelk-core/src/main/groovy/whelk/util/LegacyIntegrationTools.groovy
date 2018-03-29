@@ -1,10 +1,12 @@
 package whelk.util
 
+import groovy.transform.CompileStatic
 import whelk.DateUtil
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
 
+@CompileStatic
 class LegacyIntegrationTools {
 
     static final Map<String,Long> BASETIMES = [
@@ -51,13 +53,13 @@ class LegacyIntegrationTools {
 
         if (termMap["category"] == null) {
             if (termMap["subClassOf"] != null) {
-                List superClasses = termMap["subClassOf"]
+                List superClasses = (List) termMap["subClassOf"]
 
                 for (superClass in superClasses) {
                     if (superClass == null || superClass["@id"] == null) {
                         continue
                     }
-                    String superClassType = jsonld.toTermKey( superClass["@id"] )
+                    String superClassType = jsonld.toTermKey( (String) superClass["@id"] )
                     String category = getMarcCategoryInHierarchy(superClassType, jsonld)
                     if ( category != null )
                         return category
