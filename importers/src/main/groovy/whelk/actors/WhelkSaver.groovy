@@ -26,12 +26,14 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
     int exceptionsThrown
     String sourceSystem
     Whelk whelk
+    MarcFrameConverter marcFrameConverter
 
     WhelkSaver(Whelk w, String sourceSystem) {
         exceptionsThrown = 0
         this.importResult = new ImportResult()
         this.whelk = w
         this.sourceSystem = sourceSystem
+        marcFrameConverter = whelk.createMarcFrameConverter()
     }
 
     void setLastRecordTimeStamp(Timestamp timestamp) {
@@ -40,8 +42,6 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
     }
 
     void handle(List<List<VCopyToWhelkConverter.VCopyDataRow>> batch) {
-
-        MarcFrameConverter marcFrameConverter = whelk.createMarcFrameConverter()
 
             for (List<VCopyToWhelkConverter.VCopyDataRow> argument : batch) {
                 try {
