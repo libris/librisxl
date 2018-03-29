@@ -1450,10 +1450,14 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         super(ruleSet, tag, fieldDfn)
         super.setTokenMap(this, fieldDfn)
         if (fieldDfn.addProperty) {
-            // This is shared with repeated link in BaseMarcFieldHandler...
+            // NOTE: This is shared with repeated link in BaseMarcFieldHandler.
+            // We thus disallow a combination of addLink and addProperty to
+            // work around that. Could be improved...
+            assert !fieldDfn.containsKey('addLink')
             repeatable = true
         }
-        property = propTerm(fieldDfn.property ?: fieldDfn.addProperty, repeatable)
+        property = propTerm(fieldDfn.property ?: fieldDfn.addProperty,
+                fieldDfn.containsKey('addProperty'))
 
         def parseDateTime = fieldDfn.parseDateTime
         if (parseDateTime) {
