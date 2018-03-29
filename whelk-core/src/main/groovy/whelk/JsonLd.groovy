@@ -58,14 +58,15 @@ public class JsonLd {
         setSupportData(displayData, vocabData)
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
     void setSupportData(Map displayData, Map vocabData) {
         this.displayData = displayData ?: Collections.emptyMap()
-        Map context = displayData?.get(CONTEXT_KEY)
+        Map context = (Map) displayData?.get(CONTEXT_KEY)
         vocabId = context?.get(VOCAB_KEY)
 
         vocabIndex = vocabData ?
-                ((Map)vocabData[JsonLd.GRAPH_KEY]).collectEntries {
-                [toTermKey((String)it[JsonLd.ID_KEY]), it]
+                vocabData[GRAPH_KEY].collectEntries {
+                [toTermKey((String)it[ID_KEY]), it]
             }
             : Collections.emptyMap()
 
@@ -78,25 +79,24 @@ public class JsonLd {
         loadForcedSetTerms()
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
     private void expandAliasesInLensProperties() {
         Map propAliases = [:]
-        displayData.get(CONTEXT_KEY)?.each { k, v ->
+        Map context = (Map) displayData.get(CONTEXT_KEY)
+        context.each { k, v ->
             if (v instanceof Map && v[CONTAINER_KEY] == LANGUAGE_KEY) {
                 propAliases[v[ID_KEY]] = k
             }
         }
 
-        List lensGroups = (List) displayData['lensGroups']
-        if (lensGroups != null){
-            lensGroups.each {
-                lens ->
-                    lens['showProperties'] = lens['showProperties'].collect {
-                        def alias = propAliases[it]
-                        return alias ? [it, alias] : it
-                    }.flatten()
+        displayData['lensGroups']?.values().each { group ->
+            group.get('lenses')?.values().each { lens ->
+                lens['showProperties'] = lens['showProperties'].collect {
+                    def alias = propAliases[it]
+                    return alias ? [it, alias] : it
+                }.flatten()
             }
         }
-
     }
 
     String toTermKey(String termId) {
@@ -138,7 +138,8 @@ public class JsonLd {
         return current
     }
 
-    private static Map makeFlat(obj, List result) {
+    @TypeChecked(TypeCheckingMode.SKIP)
+    private static Map makeFlat(obj, result) {
         def updated = [:]
         obj.each { key, value ->
             if (value instanceof List) {
@@ -381,7 +382,7 @@ public class JsonLd {
         Map lens = getLensFor(thing, lensGroup)
 
         if (lens) {
-            List propertiesToKeep = lens.get("showProperties")
+            List propertiesToKeep = (List) lens.get("showProperties")
 
             thing.each {key, value ->
                 if (shouldKeep((String) key, (List) propertiesToKeep)) {
