@@ -178,8 +178,7 @@ class MarcConversion {
         if (!(term in terms)) {
             missingTerms << [term: term, type: type]
         }
-        def ctxDfn = converter.ld.context[key]
-        def shouldRepeat = ctxDfn instanceof Map && ctxDfn['@container'] == '@set'
+        def shouldRepeat = key in converter.ld.repeatableTerms
         if (repeatable != shouldRepeat) {
             badRepeats << [term: term, shouldRepeat: shouldRepeat]
         }
