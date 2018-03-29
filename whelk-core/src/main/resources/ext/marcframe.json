@@ -2673,6 +2673,18 @@
         }
       },
       "Multimedia": {
+        "[18:19]": {
+          "NOTE": "Undefined in MARC21/Voyager",
+          "link": "marc:frequencyCategory",
+          "uriTemplate": "https://id.kb.se/marc/ComputerFrequencyType-{_}",
+          "matchUriToken": "^[abcdefghijmqstwz]$"
+        },
+        "[19:20]": {
+          "NOTE": "Undefined in MARC21/Voyager",
+          "link": "marc:regularity",
+          "uriTemplate": "https://id.kb.se/marc/ComputerRegularityType-{_}",
+          "matchUriToken": "^[nrx]$"
+        },
         "[22:23]": {
           "aboutEntity": "?work",
           "addLink": "intendedAudience",
@@ -2693,18 +2705,6 @@
           "aboutEntity": "?work",
           "link": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
-        },
-        "[18:19]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:frequencyCategory",
-          "uriTemplate": "https://id.kb.se/marc/ComputerFrequencyType-{_}",
-          "matchUriToken": "^[abcdefghijmqstwz]$"
-        },
-        "[19:20]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:regularity",
-          "uriTemplate": "https://id.kb.se/marc/ComputerRegularityType-{_}",
-          "matchUriToken": "^[nrx]$"
         }
       },
       "Cartography": {
@@ -2716,6 +2716,11 @@
         "[22:24]": {
           "link": "projection",
           "uriTemplate": "https://id.kb.se/marc/MapsProjectionType-{_}"
+        },
+        "[24:25]": {
+          "NOTE": "Undefined in MARC21/Voyager",
+          "link": "marc:primeMeridian",
+          "uriTemplate": "https://id.kb.se/marc/MapsPrimeMeridianType-{_}"
         },
         "[25:26]": {
           "TODO": "Add condition to 'link' to MapsMaterialType: (a|b|c|f|g|z) should be issuance. (d|e) should be genreForm (see also 006)",
@@ -2741,11 +2746,6 @@
           "aboutEntity": "?work",
           "link": "additionalType",
           "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}"
-        },
-        "[24:25]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:primeMeridian",
-          "uriTemplate": "https://id.kb.se/marc/MapsPrimeMeridianType-{_}"
         }
       },
       "Mixed": {
