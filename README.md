@@ -137,13 +137,6 @@ $ vim secret.properties
     whelk=# \q
     ```
 
-2. Create tables
-
-    ```
-    $ psql -U <database user> -h localhost whelk_dev < librisxl-tools/postgresql/tables.sql
-    $ psql -U <database user> -h localhost whelk_dev < librisxl-tools/postgresql/indexes.sql
-    ```
-
 ### Setting up Elasticsearch
 
 TODO: This is now generated! This step can probably be omitted. (See the devops
@@ -161,9 +154,20 @@ $ curl -XPOST http://localhost:9200/whelk_dev -d@librisxl-tools/elasticsearch/li
 $ choco install curl
 ```
 
+### Import test data
+
+Check out the Devops repository, which is private (ask a team member for access and put it in the same directory as the 'librisxl' repo):
+
+For *NIX:
+```bash
+$ cd devops
+$ pip install -r requirements.txt
+$ fab conf.xl_local app.whelk.reload_example_data:force=True
+```
+
 ### Running
 
-To start the whelk, run the following commands:
+To start the CRUD part of the whelk, run the following commands:
 
 *NIX-systems:
 ```
@@ -181,54 +185,15 @@ $ ../gradlew.bat -Dxl.secret.properties=../secret.properties appRun
 
 The system is then available on <http://localhost:8180>.
 
-## Data
-
-### Import definition datasets
-
-Check out the Definitions repository (put it in the same directory as the `librisxl` repo):
-
-```
-$ git clone https://github.com/libris/definitions.git
-```
-
-Follow the instructions in the README to install the necessary dependencies.
-
-Then, run the following to get/create/update datasets:
-
-```
-$ python datasets.py -l
-```
-
-Go back to the importers module and load the resulting resources into the running whelk:
-
-```
-$ cd $LIBRISXL/importers
-$ ../gradlew -Dxl.secret.properties=../secret.properties \
-    -Dargs="defs ../../definitions/build/definitions.jsonld.lines" doRun
-```
-
-### Import MARC test data
-
-Fetches example records directly from the vcopy database
-
-For *NIX:
-```bash
-$ cd $LIBRISXL
-$ java -Dxl.secret.properties=../secret.properties -jar $JAR \
-     defs ../$DEFS_FILE
-
-$ java -Dxl.secret.properties=../secret.properties \
-    -Dxl.mysql.properties=../mysql.properties \
-     -jar build/libs/vcopyImporter.jar \
-     vcopyloadexampledata ../librisxl-tools/scripts/example_records.tsv
-```
 
 ## Maintenance
 
-### Automated setup
+### Automated setup using setup-dev-whelk.sh - DEPRECATED - use the above devops-repository method instead.
 
-For convenience, there is a script that automates the above steps
-(with the exception of creating a database user). It's used like this:
+For very specific purposes where you only want to do certain parts of the
+data loading process this script is sometimes useful, but it is not the
+correct, nor the "offical" way of loading example data.
+It's used like this:
 
 ```
 $ ./librisxl-tools/scripts/setup-dev-whelk.sh -n <database name> \
@@ -250,7 +215,7 @@ $ ./librisxl-tools/scripts/setup-dev-whelk.sh -n whelk_dev \
 
 ### Development Workflow
 
-If you need to work locally (e.g. in this, the "whelk-core" or the
+If you need to work locally (e.g. in this or the
 "definitions" repo) and perform specific tests, you can use this workflow:
 
 ```
@@ -278,6 +243,7 @@ $ ./librisxl-tools/scripts/manage-whelk-storage.sh -n whelk_dev --nuke-definitio
 ### New Elasticsearch config
 
 If a new index is to be set up, and unless you run locally in a pristine setup,
+or use the recommended devops-method for loading data
 you need to PUT the config to the index, like:
 
 ```

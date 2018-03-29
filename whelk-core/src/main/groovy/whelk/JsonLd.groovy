@@ -1,31 +1,26 @@
 package whelk
 
+import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
+import groovy.transform.TypeCheckingMode
 import org.codehaus.jackson.map.ObjectMapper
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import se.kb.libris.util.marc.Controlfield
-import se.kb.libris.util.marc.Datafield
 import whelk.exception.FramingException
 import whelk.exception.ModelValidationException
 
-import se.kb.libris.util.marc.io.MarcXmlRecordReader
-import se.kb.libris.util.marc.MarcRecord
-import whelk.util.PropertyLoader
+import java.util.regex.Matcher
 
+@CompileStatic
 public class JsonLd {
 
     static final String GRAPH_KEY = "@graph"
     static final String CONTEXT_KEY = "@context"
     static final String VOCAB_KEY = "@vocab"
-    //static final String VALUE_KEY = "@base"
     static final String ID_KEY = "@id"
     static final String TYPE_KEY = "@type"
-    //static final String VALUE_KEY = "@value"
     static final String LANGUAGE_KEY = "@language"
     static final String CONTAINER_KEY = "@container"
-    //static final String VALUE_KEY = "@index"
-    //static final String VALUE_KEY = "@list"
-    //static final String VALUE_KEY = "@set"
     static final String REVERSE_KEY = "@reverse"
     static final String THING_KEY = "mainEntity"
     static final String WORK_KEY = "instanceOf"
@@ -64,6 +59,7 @@ public class JsonLd {
         setSupportData(contextData, displayData, vocabData)
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
     void setSupportData(Map contextData, Map displayData, Map vocabData) {
         def contextObj = contextData[CONTEXT_KEY]
         if (contextObj instanceof List) {
@@ -77,8 +73,8 @@ public class JsonLd {
         vocabId = context.get(VOCAB_KEY)
 
         vocabIndex = vocabData ?
-            vocabData[JsonLd.GRAPH_KEY].collectEntries {
-                [toTermKey(it[JsonLd.ID_KEY]), it]
+                vocabData[GRAPH_KEY].collectEntries {
+                [toTermKey((String)it[ID_KEY]), it]
             }
             : Collections.emptyMap()
 
@@ -91,6 +87,7 @@ public class JsonLd {
         loadForcedSetTerms()
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
     private void expandAliasesInLensProperties() {
         Map propAliases = [:]
         for (ctx in [displayData.get(CONTEXT_KEY), context]) {
@@ -100,6 +97,7 @@ public class JsonLd {
                 }
             }
         }
+
         displayData['lensGroups']?.values().each { group ->
             group.get('lenses')?.values().each { lens ->
                 lens['showProperties'] = lens['showProperties'].collect {
@@ -115,11 +113,11 @@ public class JsonLd {
     }
 
     List expandLinks(List refs) {
-        return JsonLd.expandLinks(refs, displayData[JsonLd.CONTEXT_KEY])
+        return expandLinks(refs, (Map) displayData[CONTEXT_KEY])
     }
 
     String expand(String ref) {
-        return JsonLd.expand(ref, displayData[JsonLd.CONTEXT_KEY])
+        return expand(ref, (Map) displayData[CONTEXT_KEY])
     }
 
     /**
@@ -137,7 +135,7 @@ public class JsonLd {
         return [(GRAPH_KEY): flatList.reverse()]
     }
 
-    private static Object storeFlattened(Object current, result) {
+    private static Object storeFlattened(Object current, List result) {
         if (current instanceof Map) {
             def flattened = makeFlat(current, result)
             if (flattened.containsKey(ID_KEY) && flattened.size() > 1) {
@@ -149,6 +147,7 @@ public class JsonLd {
         return current
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
     private static Map makeFlat(obj, result) {
         def updated = [:]
         obj.each { key, value ->
@@ -176,18 +175,21 @@ public class JsonLd {
     }
 
     static List expandLinks(List refs, Map context) {
-        return refs.collect { expand(it, context) }
+        return refs.collect { expand( (String) it, context) }
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
     static String expand(String ref, Map context) {
-        def match
         if (ref =~ $/^https?:///$) {
             return ref
-        } else if ((match = ref =~ /^([a-z0-9]+):(.*)$/)) {
-            def resolved = context[match[0][1]]
-            if (resolved) {
-                URI base = new URI(resolved)
-                return base.resolve(match[0][2]).toString()
+        } else {
+            Matcher match = ref =~ /^([a-z0-9]+):(.*)$/
+            if (match) {
+                def resolved = context[match[0][1]]
+                if (resolved) {
+                    URI base = new URI(resolved)
+                    return base.resolve(match[0][2]).toString()
+                }
             }
         }
         return ref
@@ -241,11 +243,11 @@ public class JsonLd {
 
         if (jsonLd.containsKey(JSONLD_ALT_ID_KEY)) {
             jsonLd.get(JSONLD_ALT_ID_KEY).each {
-                if (!it.containsKey(ID_KEY)) {
+                if (!((Map)it).containsKey(ID_KEY)) {
                     return
                 }
 
-                def id = it.get(ID_KEY)
+                def id = ((Map)it).get(ID_KEY)
                 if (!result.contains(id)) {
                     result << id
                 }
@@ -256,7 +258,7 @@ public class JsonLd {
 
     private static List filterOutDanglingBnodes(List refs) {
         return refs.findAll {
-            !it.startsWith('_:')
+            !((String)it).startsWith('_:')
         }
     }
 
@@ -276,7 +278,7 @@ public class JsonLd {
         } else if (o instanceof List){
             return getAllReferencesFromList(o)
         } else {
-            return []
+            return new HashSet()
         }
     }
 
@@ -320,7 +322,7 @@ public class JsonLd {
 
         if (filterOutNonChipTerms) {
             additionalObjects.each { id, object ->
-                Map chip = toChip(object)
+                Map chip = (Map) toChip(object)
                 if (chip.containsKey('@graph')) {
                     graphItems << chip
                 } else {
@@ -330,7 +332,7 @@ public class JsonLd {
         } else {
             additionalObjects.each { id, object ->
                 if (object instanceof Map) {
-                    if (object.containsKey('@graph')) {
+                    if (((Map)object).containsKey('@graph')) {
                         graphItems << object
                     } else {
                         graphItems << ['@graph': object]
@@ -389,10 +391,10 @@ public class JsonLd {
         Map lens = getLensFor(thing, lensGroup)
 
         if (lens) {
-            List propertiesToKeep = lens.get("showProperties")
+            List propertiesToKeep = (List) lens.get("showProperties")
 
             thing.each {key, value ->
-                if (shouldKeep(key, propertiesToKeep)) {
+                if (shouldKeep((String) key, (List) propertiesToKeep)) {
                     itemsToKeep[key] = value
                 }
             }
@@ -407,26 +409,28 @@ public class JsonLd {
         if (types instanceof String)
             types = [types]
         for (type in types) {
-            return findLensForType(type, lensGroup)
-                    ?: findLensForType('Resource', lensGroup)
+            Map lensForType = findLensForType((String)type, lensGroup)
+            if (lensForType)
+                return lensForType
+            return findLensForType('Resource', lensGroup)
         }
     }
 
     private Map findLensForType(String typeKey, Map lensGroup) {
         def lenses = lensGroup['lenses']
-        def lens = lenses.get(typeKey)
+        Map lens = ((Map)lenses).get(typeKey)
         if (lens)
             return lens
         def typedfn = vocabIndex.get(typeKey)
         if (!typedfn)
             return null
-        def basetypes = typedfn.get('subClassOf')
+        def basetypes = ((Map)typedfn).get('subClassOf')
         if (basetypes instanceof Map)
             basetypes = [basetypes]
         for (basetype in basetypes) {
             if (!basetype[ID_KEY])
                 continue
-            def baseTypeKey = toTermKey(basetype[ID_KEY])
+            def baseTypeKey = toTermKey((String)basetype[ID_KEY])
             lens = findLensForType(baseTypeKey, lensGroup)
             if (lens)
                 return lens
@@ -598,12 +602,12 @@ public class JsonLd {
             return newList
         }
         if (o instanceof Map) {
-            def obj = null
-            def oId = o.get(ID_KEY)
+            Map obj = null
+            String oId = o.get(ID_KEY)
             if (!oId) {
-                obj = o
+                obj = (Map) o
             } else if (!embedChain.contains(oId)) {
-                obj = idMap.get(oId)
+                obj = (Map) idMap.get(oId)
             }
             if (obj) {
                 return embed(oId, obj, idMap, embedChain)
@@ -630,7 +634,7 @@ public class JsonLd {
         if (isFlat(jsonLd)) {
             log.trace("Received json is flat")
             if (jsonLd.containsKey(GRAPH_KEY)) {
-                foundIdentifier = jsonLd.get(GRAPH_KEY).first().get(ID_KEY)
+                foundIdentifier = ((Map)((List)jsonLd.get(GRAPH_KEY)).first()).get(ID_KEY)
             }
         }
 
@@ -710,71 +714,19 @@ public class JsonLd {
         return idMap
     }
 
-    /*
-    // TODO: This doesn't belong here, but in a validation service. At least
-    // while dependent on a JsonLD2MarcXMLConverter. If validation worked on
-    // the JSON-LD, using vocab and context data, it would be more
-    // appropriate here.
-    //import whelk.converter.marc.JsonLD2MarcXMLConverter
-    //static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter()
-    @Deprecated
-    static boolean validateItemModel(Document doc) {
-        if (!doc || !doc.data) {
-            throw new ModelValidationException("Document has no data to validate.")
-        }
-
-        // The real test of the "Item Model" is whether or not the supplied
-        // document can be converted into some kind of correct(ish) MARC.
-
-        MarcRecord marcRecord
-        try {
-            Document convertedDocument = converter.convert(doc.data, doc.id)
-            String convertedText = (String) convertedDocument.data.get("content")
-            marcRecord = MarcXmlRecordReader.fromXml(convertedText)
-        } catch (Throwable e) {
-            // Catch _everything_ that could go wrong with the convert() call,
-            // including Asserts (Errors)
-            return false
-        }
-
-        // Do some basic sanity checking on the resulting MARC holdings post.
-
-        // Holdings posts must have 32 positions in 008
-        for (Controlfield field008 : marcRecord.getControlfields("008")) {
-            if (field008.getData().length() != 32) {
-                return false
-            }
-        }
-
-        // Holdings posts must have (at least one) 852 $b (sigel)
-        boolean containsSigel = false
-        for (Datafield field852 : marcRecord.getDatafields("852")) {
-            if (field852.getSubfields("b").size() > 0) {
-                containsSigel = true
-                break
-            }
-        }
-        if (!containsSigel) {
-            return false
-        }
-
-        return true
-    }
-    */
-
     public void getSuperClasses(String type, List<String> result) {
         def termMap = vocabIndex[type]
         if (termMap == null)
             return
 
         if (termMap["subClassOf"] != null) {
-            List superClasses = termMap["subClassOf"]
+            List superClasses = (List) termMap["subClassOf"]
 
             for (superClass in superClasses) {
                 if (superClass == null || superClass["@id"] == null) {
                     continue
                 }
-                String superClassType = toTermKey( superClass["@id"] )
+                String superClassType = toTermKey( (String) superClass["@id"] )
                 result.add(superClassType)
                 getSuperClasses(superClassType, result)
             }
@@ -796,10 +748,10 @@ public class JsonLd {
                     continue
                 }
 
-                String superClassType = toTermKey( superClass["@id"] )
+                String superClassType = toTermKey( (String) superClass["@id"] )
                 if (superClassOf[superClassType] == null)
                     superClassOf[superClassType] = []
-                superClassOf[superClassType].add(type)
+                ((List)superClassOf[superClassType]).add(type)
             }
         }
     }
@@ -825,7 +777,7 @@ public class JsonLd {
         if (type == null)
             return
 
-        def subClasses = superClassOf[type]
+        List subClasses = (List) (superClassOf[type])
         if (subClasses == null)
             return
 

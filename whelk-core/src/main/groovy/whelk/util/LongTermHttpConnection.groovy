@@ -1,5 +1,7 @@
 package whelk.util
 
+import groovy.transform.CompileStatic
+
 import java.nio.charset.Charset
 import javax.net.ssl.SSLSocketFactory
 
@@ -7,6 +9,7 @@ import javax.net.ssl.SSLSocketFactory
  * Based on the apix_exporter/longtermhttprequest. Using both socket SO_KEEPALIVE and http Connection:keep-alive
  * to keep connections open and alive for as long as possible.
  */
+@CompileStatic
 public class LongTermHttpConnection
 {
     private final int TIMEOUT_MS = 480000
