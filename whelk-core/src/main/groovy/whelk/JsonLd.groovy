@@ -21,6 +21,8 @@ public class JsonLd {
     static final String TYPE_KEY = "@type"
     static final String LANGUAGE_KEY = "@language"
     static final String CONTAINER_KEY = "@container"
+    static final String SET_KEY = "@set"
+    static final String LIST_KEY = "@list"
     static final String REVERSE_KEY = "@reverse"
     static final String THING_KEY = "mainEntity"
     static final String WORK_KEY = "instanceOf"
@@ -63,13 +65,18 @@ public class JsonLd {
     void setSupportData(Map contextData, Map displayData, Map vocabData) {
         def contextObj = contextData[CONTEXT_KEY]
         if (contextObj instanceof List) {
-            contextObj.each {
-                context.putAll(it)
-            }
+            contextObj.each { context.putAll(it) }
         } else {
-            context = (Map) contextObj
+            context.putAll(contextObj)
         }
+
+        forcedSetTerms = context.findResults { key, value ->
+            if (isSetContainer(value) || isListContainer(value))
+                return key
+        } as Set
+
         this.displayData = displayData ?: Collections.emptyMap()
+
         vocabId = context.get(VOCAB_KEY)
 
         vocabIndex = vocabData ?
@@ -83,8 +90,6 @@ public class JsonLd {
         generateSubClassesLists()
 
         expandAliasesInLensProperties()
-
-        loadForcedSetTerms()
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -106,6 +111,14 @@ public class JsonLd {
                 }.flatten()
             }
         }
+    }
+
+    boolean isSetContainer(dfn) {
+        return dfn instanceof Map && dfn[CONTAINER_KEY] == SET_KEY
+    }
+
+    boolean isListContainer(dfn) {
+        return dfn instanceof Map && dfn[CONTAINER_KEY] == LIST_KEY
     }
 
     String toTermKey(String termId) {
@@ -788,45 +801,4 @@ public class JsonLd {
         }
     }
 
-    private void loadForcedSetTerms()
-            throws IOException
-    {
-        /*
-        forcedNoSetTerms are those that are used at some point with property/link (as opposed to addProperty/addLink).
-        The intersection of forcedNoSetTerms and forcedSetTerms are in conflict, dealing with these remains an issue.
-         */
-        Set forcedNoSetTerms = new HashSet<>()
-        forcedSetTerms = new HashSet<>()
-
-        InputStream marcFrameStream = getClass().getClassLoader().getResourceAsStream("ext/marcframe.json")
-
-        ObjectMapper mapper = new ObjectMapper()
-        Map marcFrame = mapper.readValue(marcFrameStream, HashMap.class)
-        parseForcedSetTerms(marcFrame, forcedNoSetTerms)
-
-        // As an interim solution conflicted terms are considered no-set-terms.
-        forcedSetTerms.removeAll(forcedNoSetTerms)
-    }
-
-    private void parseForcedSetTerms(Map marcFrame, Set forcedNoSetTerms) {
-        for (Object key : marcFrame.keySet()) {
-            Object value = marcFrame.get(key)
-            if ( (key.equals("addLink") || key.equals("addProperty")) && value instanceof String )
-                forcedSetTerms.add((String) value)
-
-            if (value instanceof Map)
-                parseForcedSetTerms( (Map) value, forcedNoSetTerms )
-            if (value instanceof List)
-                parseForcedSetTerms( (List) value, forcedNoSetTerms )
-        }
-    }
-
-    private void parseForcedSetTerms(List marcFrame, Set forcedNoSetTerms) {
-        for (Object entry : marcFrame) {
-            if (entry instanceof Map)
-                parseForcedSetTerms( (Map) entry, forcedNoSetTerms )
-            if (entry instanceof List)
-                parseForcedSetTerms( (List) entry, forcedNoSetTerms )
-        }
-    }
 }
