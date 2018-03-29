@@ -62,13 +62,17 @@ static void addJsonLd(converter) {
 
     def defsbuild = System.env.defsbuild ?: '../../definitions/build'
 
+    def contextFile = new File("$defsbuild/vocab/context.jsonld")
+    assert contextFile.exists(), "Misssing context file: ${contextFile}"
+
     def vocabFile = new File("$defsbuild/vocab.jsonld")
     assert vocabFile.exists(), "Misssing vocab file: ${vocabFile}"
 
     def displayFile = new File("$defsbuild/vocab/display.jsonld")
     assert displayFile.exists(), "Missing display file: ${displayFile}"
 
+    def contextData = converter.mapper.readValue(contextFile, Map)
     def displayData = converter.mapper.readValue(displayFile, Map)
     def vocabData = converter.mapper.readValue(vocabFile, Map)
-    converter.ld = new JsonLd(displayData, vocabData)
+    converter.ld = new JsonLd(contextData, displayData, vocabData)
 }

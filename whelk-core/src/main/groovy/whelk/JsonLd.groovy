@@ -21,6 +21,8 @@ public class JsonLd {
     static final String TYPE_KEY = "@type"
     static final String LANGUAGE_KEY = "@language"
     static final String CONTAINER_KEY = "@container"
+    static final String SET_KEY = "@set"
+    static final String LIST_KEY = "@list"
     static final String REVERSE_KEY = "@reverse"
     static final String THING_KEY = "mainEntity"
     static final String WORK_KEY = "instanceOf"
@@ -43,26 +45,43 @@ public class JsonLd {
 
     private static Logger log = LogManager.getLogger(JsonLd.class)
 
+    Map<String, Map> context = [:]
     Map displayData
     Map vocabIndex
     private Map superClassOf
     private Map<String, Set> subClassesByType
     private String vocabId
 
-    Set forcedSetTerms
+    /**
+     * This includes terms that are declared as either set or list containers
+     * in the context.
+     */
+    Set<String> repeatableTerms
 
     /**
      * Make an instance to incapsulate model driven behaviour.
      */
-    JsonLd(Map displayData, Map vocabData) {
-        setSupportData(displayData, vocabData)
+    JsonLd(Map contextData, Map displayData, Map vocabData) {
+        setSupportData(contextData, displayData, vocabData)
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    void setSupportData(Map displayData, Map vocabData) {
+    void setSupportData(Map contextData, Map displayData, Map vocabData) {
+        def contextObj = contextData[CONTEXT_KEY]
+        if (contextObj instanceof List) {
+            contextObj.each { context.putAll(it) }
+        } else if (contextObj) {
+            context.putAll(contextObj)
+        }
+
+        repeatableTerms = context.findResults { key, value ->
+            if (isSetContainer(value) || isListContainer(value))
+                return key
+        } as Set<String>
+
         this.displayData = displayData ?: Collections.emptyMap()
-        Map context = (Map) displayData?.get(CONTEXT_KEY)
-        vocabId = context?.get(VOCAB_KEY)
+
+        vocabId = context.get(VOCAB_KEY)
 
         vocabIndex = vocabData ?
                 vocabData[GRAPH_KEY].collectEntries {
@@ -75,17 +94,16 @@ public class JsonLd {
         generateSubClassesLists()
 
         expandAliasesInLensProperties()
-
-        loadForcedSetTerms()
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
     private void expandAliasesInLensProperties() {
         Map propAliases = [:]
-        Map context = (Map) displayData.get(CONTEXT_KEY)
-        context.each { k, v ->
-            if (v instanceof Map && v[CONTAINER_KEY] == LANGUAGE_KEY) {
-                propAliases[v[ID_KEY]] = k
+        for (ctx in [displayData.get(CONTEXT_KEY), context]) {
+            ctx.each { k, v ->
+                if (v instanceof Map && v[CONTAINER_KEY] == LANGUAGE_KEY) {
+                    propAliases[v[ID_KEY]] = k
+                }
             }
         }
 
@@ -97,6 +115,14 @@ public class JsonLd {
                 }.flatten()
             }
         }
+    }
+
+    boolean isSetContainer(dfn) {
+        return dfn instanceof Map && dfn[CONTAINER_KEY] == SET_KEY
+    }
+
+    boolean isListContainer(dfn) {
+        return dfn instanceof Map && dfn[CONTAINER_KEY] == LIST_KEY
     }
 
     String toTermKey(String termId) {
@@ -779,45 +805,4 @@ public class JsonLd {
         }
     }
 
-    private void loadForcedSetTerms()
-            throws IOException
-    {
-        /*
-        forcedNoSetTerms are those that are used at some point with property/link (as opposed to addProperty/addLink).
-        The intersection of forcedNoSetTerms and forcedSetTerms are in conflict, dealing with these remains an issue.
-         */
-        Set forcedNoSetTerms = new HashSet<>()
-        forcedSetTerms = new HashSet<>()
-
-        InputStream marcFrameStream = getClass().getClassLoader().getResourceAsStream("ext/marcframe.json")
-
-        ObjectMapper mapper = new ObjectMapper()
-        Map marcFrame = mapper.readValue(marcFrameStream, HashMap.class)
-        parseForcedSetTerms(marcFrame, forcedNoSetTerms)
-
-        // As an interim solution conflicted terms are considered no-set-terms.
-        forcedSetTerms.removeAll(forcedNoSetTerms)
-    }
-
-    private void parseForcedSetTerms(Map marcFrame, Set forcedNoSetTerms) {
-        for (Object key : marcFrame.keySet()) {
-            Object value = marcFrame.get(key)
-            if ( (key.equals("addLink") || key.equals("addProperty")) && value instanceof String )
-                forcedSetTerms.add((String) value)
-
-            if (value instanceof Map)
-                parseForcedSetTerms( (Map) value, forcedNoSetTerms )
-            if (value instanceof List)
-                parseForcedSetTerms( (List) value, forcedNoSetTerms )
-        }
-    }
-
-    private void parseForcedSetTerms(List marcFrame, Set forcedNoSetTerms) {
-        for (Object entry : marcFrame) {
-            if (entry instanceof Map)
-                parseForcedSetTerms( (Map) entry, forcedNoSetTerms )
-            if (entry instanceof List)
-                parseForcedSetTerms( (List) entry, forcedNoSetTerms )
-        }
-    }
 }

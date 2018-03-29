@@ -15,6 +15,12 @@ class JsonLdSpec extends Specification {
 
     static final ObjectMapper mapper = new ObjectMapper()
 
+    static final Map CONTEXT_DATA = [
+        "@context": [
+            "@vocab": "http://example.org/ns/"
+        ]
+    ]
+
     static final Map VOCAB_DATA = [
         "@graph": [
             ["@id": "http://example.org/ns/ProvisionActivity",
@@ -26,21 +32,22 @@ class JsonLdSpec extends Specification {
 
     def "should find external references"() {
         given:
-        def graph = ['@graph': [['@id': '/foo',
-                                 'sameAs': [['@id': '/bar'], ['@id': '/baz']],
-                                 'third': ['@id': '/third']
-                                ],
-                                ['@id': '/second',
-                                 'foo': '/foo',
-                                 'some': 'value'],
-                                ['@id': '/third',
-                                 'external': ['@id': '/external']],
-								['@id': '/fourth',
-								 'internal': ['@id': '/some_id']],
-								['@graph': [['@id': '/some_id']]],
-								['@graph': ['@id': '/some_other_id']]
-                               ],
-                     '@context': 'base.jsonld']
+        def graph = ['@graph': [
+                ['@id': '/foo',
+                    'sameAs': [['@id': '/bar'], ['@id': '/baz']],
+                    'third': ['@id': '/third']
+                ],
+                ['@id': '/second',
+                    'foo': '/foo',
+                    'some': 'value'],
+                ['@id': '/third',
+                    'external': ['@id': '/external']],
+                ['@id': '/fourth',
+                    'internal': ['@id': '/some_id']],
+                ['@graph': [['@id': '/some_id']]],
+                ['@graph': ['@id': '/some_other_id']]
+            ],
+            '@context': 'base.jsonld']
         def expected = ['/external']
 
         expect:
@@ -54,7 +61,7 @@ class JsonLdSpec extends Specification {
                                 'bar': ['@id': '/bar']],
                                 ['@graph': [['@id': '/quux',
                                              'some': 'value']]],
-		                        ['@graph': ['@id': '/some_id']]]]
+                                ['@graph': ['@id': '/some_id']]]]
         Set expected = ['/foo', '/baz', '/quux', '/some_id']
 
         expect:
@@ -244,7 +251,6 @@ class JsonLdSpec extends Specification {
             "foo": "bar"]
 
         Map displayData = [
-            "@context": ["@vocab": "http://example.org/ns/"],
             "lensGroups":
                     ["chips":
                             ["lenses":
@@ -261,7 +267,6 @@ class JsonLdSpec extends Specification {
                                                                     "hasTitle",
                                                                     "instanceOf"]]]]]]
 
-
         Map expected = ["@type": "Instance",
                       "mediaType": "foobar",
                       "instanceOf": ["@type": "Work",
@@ -273,9 +278,10 @@ class JsonLdSpec extends Specification {
                       "@aKey": "external-foobar",
                       "hasTitle": ["value1", "value2", "value3", ["@type": "Work"]]]
 
+        def ld = new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
 
         expect:
-        Map output = new JsonLd(displayData, VOCAB_DATA).toCard(input)
+        Map output = ld.toCard(input)
         output == expected
     }
 
@@ -290,7 +296,7 @@ class JsonLdSpec extends Specification {
                             ["lenses": [
                                 "Thing": ["showProperties": ["notation", "label", "note"]]]
                             ]]]
-        def ld = new JsonLd(displayData, null)
+        def ld = new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
         expect:
         def props = ld.displayData.lensGroups.chips.lenses.Thing.showProperties
         props == ['notation', 'label', 'labelByLang', 'note']
@@ -298,10 +304,7 @@ class JsonLdSpec extends Specification {
 
     def "use vocab to match a subclass to a base class"() {
         given:
-        Map displayData = [
-            "@context": ["@vocab": "http://example.org/ns/"]
-        ]
-        def ld = new JsonLd(displayData, VOCAB_DATA)
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
         expect:
         ld.isSubClassOf('Publication', 'ProvisionActivity')
         !ld.isSubClassOf('Work', 'ProvisionActivity')

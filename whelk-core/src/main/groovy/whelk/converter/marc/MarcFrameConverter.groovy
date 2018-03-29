@@ -132,7 +132,9 @@ class MarcConversion {
     boolean keepGroupIds = false
     Map marcTypeMap = [:]
     Map tokenMaps
+
     private Set missingTerms = [] as Set
+    private Set badRepeats = [] as Set
 
     URI baseUri = Document.BASE_URI
 
@@ -154,21 +156,31 @@ class MarcConversion {
         }
         addTypeMaps()
 
-        if (missingTerms) {
-            // log.warn? Though, this "should" not happen in prod...
-            missingTerms.each {
-                System.err.println "Missing: $it.key a $it.type"
-            }
+        // log.warn? Though, this "should" not happen in prod...
+        missingTerms.each {
+            System.err.println "Missing: $it.term a $it.type"
+        }
+        badRepeats.each {
+            if (it.term.startsWith(converter.ld.expand('marc:')))
+                return
+            if (it.shouldRepeat)
+                System.err.println "Expected to be repeatable: $it.term"
+            else
+                System.err.println "Unexpected repeat of: $it.term"
         }
     }
 
-    void checkTerm(key, type) {
+    void checkTerm(String key, String type, boolean repeatable) {
         if (!key || key == '@type' || !converter.ld)
             return
         def terms = converter.ld.vocabIndex.keySet()
         String term = converter.ld.expand((String) key)
         if (!(term in terms)) {
-            missingTerms << [key: term, type: type]
+            missingTerms << [term: term, type: type]
+        }
+        def shouldRepeat = key in converter.ld.repeatableTerms
+        if (repeatable != shouldRepeat) {
+            badRepeats << [term: term, shouldRepeat: shouldRepeat]
         }
     }
 
@@ -834,20 +846,20 @@ class ConversionPart {
         return ruleSet.conversion.converter.ld
     }
 
-    def propTerm(key) {
-        term(key, 'DatatypeProperty')
+    String propTerm(key, boolean repeatable) {
+        return term((String) key, 'DatatypeProperty', repeatable)
     }
 
-    def linkTerm(key) {
-        term(key, 'ObjectProperty')
+    String linkTerm(key, boolean repeatable) {
+        return term((String) key, 'ObjectProperty', repeatable)
     }
 
-    def typeTerm(key) {
-        term(key, 'Class')
+    String typeTerm(key) {
+        return term((String) key, 'Class', false)
     }
 
-    def term(key, type) {
-        ruleSet.conversion.checkTerm(key, type)
+    String term(String key, String type, boolean repeatable) {
+        ruleSet.conversion.checkTerm(key, type, repeatable)
         return key
     }
 
@@ -1003,8 +1015,8 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         }
         aboutEntityName = fieldDfn.aboutEntity ?: '?thing'
 
-        link = linkTerm(fieldDfn.link ?: fieldDfn.addLink)
         repeatable = fieldDfn.containsKey('addLink')
+        link = linkTerm(fieldDfn.link ?: fieldDfn.addLink, repeatable)
         resourceType = typeTerm(fieldDfn.resourceType)
         groupId = fieldDfn.groupId
         embedded = fieldDfn.embedded == true
@@ -1016,9 +1028,10 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
             onlySubsequentRepeated = true
         }
         if (dfn) {
+            def dfnRepeatable = dfn.containsKey('addLink')
             linkRepeated = [
-                    link        : linkTerm(dfn.addLink ?: dfn.link),
-                    repeatable  : dfn.containsKey('addLink'),
+                    link        : linkTerm(dfn.addLink ?: dfn.link, dfnRepeatable),
+                    repeatable  : dfnRepeatable,
                     resourceType: typeTerm(dfn.resourceType),
                     groupId     : dfn.groupId,
                     embedded    : dfn.embedded
@@ -1436,11 +1449,11 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     MarcSimpleFieldHandler(ruleSet, tag, fieldDfn) {
         super(ruleSet, tag, fieldDfn)
         super.setTokenMap(this, fieldDfn)
-        property = propTerm(fieldDfn.property ?: fieldDfn.addProperty)
         if (fieldDfn.addProperty) {
             // This is shared with repeated link in BaseMarcFieldHandler...
             repeatable = true
         }
+        property = propTerm(fieldDfn.property ?: fieldDfn.addProperty, repeatable)
 
         def parseDateTime = fieldDfn.parseDateTime
         if (parseDateTime) {
@@ -1663,9 +1676,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         ind2 = fieldDfn.i2 ? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2) : null
         pendingResources = fieldDfn.pendingResources
         pendingResources?.values().each {
-            linkTerm(it.link ?: it.addLink)
+            linkTerm(it.link ?: it.addLink, it.containsKey('addLink'))
             typeTerm(it.resourceType)
-            propTerm(it.property ?: it.addProperty)
+            propTerm(it.property ?: it.addProperty, it.containsKey('addProperty'))
         }
 
         aboutAlias = fieldDfn.aboutAlias
@@ -2302,11 +2315,11 @@ class MarcSubFieldHandler extends ConversionPart {
             about = subDfn.about
         }
 
-        link = linkTerm(subDfn.link ?: subDfn.addLink)
         repeatable = subDfn.containsKey('addLink')
+        link = linkTerm(subDfn.link ?: subDfn.addLink, repeatable)
 
-        property = propTerm(subDfn.property ?: subDfn.addProperty)
         repeatProperty = subDfn.containsKey('addProperty')
+        property = propTerm(subDfn.property ?: subDfn.addProperty, repeatProperty)
 
         resourceType = typeTerm(subDfn.resourceType)
 

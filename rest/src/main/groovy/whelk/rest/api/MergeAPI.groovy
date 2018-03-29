@@ -136,12 +136,12 @@ class MergeAPI extends HttpServlet {
         Graph withGraph = new Graph(withTriples)
 
         Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>()
-        for (String term : whelk.getJsonld().getForcedSetTerms())
+        for (String term : whelk.getJsonld().getRepeatableTerms())
             specialRules.put(term, Graph.PREDICATE_RULES.RULE_AGGREGATE)
 
         originalGraph.enrichWith(withGraph, specialRules)
 
-        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), whelk.getJsonld().getForcedSetTerms())
+        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), whelk.getJsonld().getRepeatableTerms())
         boolean deleteUnreferencedData = true
         JsonldSerializer.normalize(enrichedData, firstClassDocument.getShortId(), deleteUnreferencedData)
         return new Document(enrichedData)

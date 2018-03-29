@@ -21,6 +21,7 @@ class Whelk {
     ElasticSearch elastic
     Map displayData
     Map vocabData
+    Map contextData
     JsonLd jsonld
 
     // useAuthCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
@@ -28,8 +29,10 @@ class Whelk {
     // resulting in potential serving of stale data.
     boolean useAuthCache = false
 
-    String vocabDisplayUri = "https://id.kb.se/vocab/display" // TODO: encapsulate and configure (LXL-260)
-    String vocabUri = "https://id.kb.se/vocab/" // TODO: encapsulate and configure (LXL-260)
+    // TODO: encapsulate and configure (LXL-260)
+    String vocabContextUri = "https://id.kb.se/vocab/context"
+    String vocabDisplayUri = "https://id.kb.se/vocab/display"
+    String vocabUri = "https://id.kb.se/vocab/"
 
     private Map<String, Document> authCache
     private final int CACHE_MAX_SIZE = 1000
@@ -98,10 +101,15 @@ class Whelk {
     }
 
     void loadCoreData() {
+        loadContextData()
         loadDisplayData()
         loadVocabData()
-        jsonld = new JsonLd(displayData, vocabData)
+        jsonld = new JsonLd(contextData, displayData, vocabData)
         log.info("Loaded with core data")
+    }
+
+    void loadContextData() {
+        this.contextData = this.storage.locate(vocabContextUri, true).document.data
     }
 
     void loadDisplayData() {
