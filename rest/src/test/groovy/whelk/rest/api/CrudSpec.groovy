@@ -66,13 +66,12 @@ class CrudSpec extends Specification {
         accessControl = GroovySpy(AccessControl.class)
         whelk = new Whelk()
         whelk.storage = storage
-        whelk.displayData = ['@context': [
-                                 'examplevocab': 'http://example.com',
-                                 'some_term': 'some_value'
-                             ],
-                             'lensGroups': ['chips': [:]]]
+        whelk.contextData = ['@context': [
+                'examplevocab': 'http://example.com',
+                'some_term': 'some_value']]
+        whelk.displayData = ['lensGroups': ['chips': [:]]]
         whelk.vocabData = ['@graph': []]
-        whelk.jsonld = new JsonLd(whelk.displayData, whelk.vocabData)
+        whelk.jsonld = new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData)
         GroovySpy(LegacyIntegrationTools.class, global: true)
         crud = new Crud(whelk)
         crud.init()

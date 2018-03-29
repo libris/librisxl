@@ -66,7 +66,7 @@ public class JsonLd {
         def contextObj = contextData[CONTEXT_KEY]
         if (contextObj instanceof List) {
             contextObj.each { context.putAll(it) }
-        } else {
+        } else if (contextObj) {
             context.putAll(contextObj)
         }
 

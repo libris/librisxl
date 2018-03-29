@@ -11,7 +11,7 @@ import whelk.exception.InvalidQueryException
 
 class SearchUtilsSpec extends Specification {
 
-    @Shared SearchUtils search = new SearchUtils(new JsonLd(null, null))
+    @Shared SearchUtils search = new SearchUtils(new JsonLd([:], [:], [:]))
 
     def "aa"(){
         when:
