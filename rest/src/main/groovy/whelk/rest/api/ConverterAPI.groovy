@@ -18,6 +18,10 @@ class ConverterAPI extends HttpServlet {
 
     MarcFrameConverter marcFrameConverter
 
+    public ConverterAPI() {
+        // Do nothing - only here for Tomcat to have something to call
+    }
+
     public ConverterAPI(MarcFrameConverter marcFrameConverter) {
         this.marcFrameConverter = marcFrameConverter
     }

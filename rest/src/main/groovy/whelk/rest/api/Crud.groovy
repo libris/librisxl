@@ -84,6 +84,10 @@ class Crud extends HttpServlet {
     static final ObjectMapper mapper = new ObjectMapper()
     AccessControl accessControl = new AccessControl()
 
+    Crud() {
+        // Do nothing - only here for Tomcat to have something to call
+    }
+
     Crud(Whelk whelk) {
         this.whelk = whelk
     }
