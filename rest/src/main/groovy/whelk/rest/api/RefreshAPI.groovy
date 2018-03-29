@@ -27,6 +27,10 @@ class RefreshAPI extends HttpServlet
     public final static mapper = new ObjectMapper()
     private Whelk whelk
 
+    RefreshAPI() {
+        // Do nothing - only here for Tomcat to have something to call
+    }
+
     RefreshAPI(Whelk whelk) {
         this.whelk = whelk
     }

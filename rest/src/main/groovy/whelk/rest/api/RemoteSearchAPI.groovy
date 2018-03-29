@@ -40,6 +40,10 @@ class RemoteSearchAPI extends HttpServlet {
 
     private Whelk whelk
 
+    RemoteSearchAPI() {
+        // Do nothing - only here for Tomcat to have something to call
+    }
+
     RemoteSearchAPI(Whelk whelk) {
         this.whelk = whelk
     }

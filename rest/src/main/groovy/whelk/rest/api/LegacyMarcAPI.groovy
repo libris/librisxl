@@ -71,6 +71,10 @@ class LegacyMarcAPI extends HttpServlet {
             "authupdate=off\n" +
             "sab=off"
 
+    LegacyMarcAPI() {
+        // Do nothing - only here for Tomcat to have something to call
+    }
+
     LegacyMarcAPI(Whelk whelk) {
         this.whelk = whelk
     }

@@ -16,6 +16,10 @@ class MergeAPI extends HttpServlet {
 
     private Whelk m_whelk
 
+    MergeAPI() {
+        // Do nothing - only here for Tomcat to have something to call
+    }
+
     MergeAPI(Whelk whelk) {
         this.whelk = whelk
     }
