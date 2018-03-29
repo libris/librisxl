@@ -95,7 +95,7 @@ for col0 in 'gkor':
         [16], #contentType  (new: genreForm)
     ]
 
-# 006 Digital:
+# 006 Multimedia:
 for col0 in 'm':
     COLSPECS['bib']['006'][col0] = [
         [5], #audience  (new: intendedAudience)
@@ -312,35 +312,42 @@ for col0 in 'v':
 for rt in 'aht':
     for bl in 'acdm':
         COLSPECS['bib']['008'][rt + bl] = [
-            [18], [19], [20], [21], # marc:illustrations (new: illustrativeContent)
-            [23], #marc:additionalCarrierType  (new: carrierType)
-            [24], [25], [26], [27], #contentType
+            [18], [19], [20], [21], # illustrativeContent
+            [22], # intendedAudience
+            [23], # carrierType
+            [24], [25], [26], [27], # genreForm
+            [28], # genreForm
+            [29], # genreForm
+            [30], # genreForm
+            [31], # supplementaryContent
+            [33], # genreForm
+            [34], # genreForm
 
         ]
 
-# 008 Digital:
+# 008 Multimedia:
 for bl in '9abcdimps':
     COLSPECS['bib']['008']['m' + bl] = [
-        [18],    # marc:frequencyCategory  (UNUSED: remove?)
-        [19],    # marc:regularity                  (UNUSED: remove?)
+        [18], # marc:frequencyCategory
+        [19], # marc:regularity
+        [22], # intendedAudience
+        [23], # carrierType
+        [26], # genreForm
+        [28], # genreForm
     ]
 
 # 008 Cartography:
 for rt in 'ef':
     for bl in '9abcdimps':
         COLSPECS['bib']['008']['m' + bl] = [
-            [18], # marc:relief
-            [19], # marc:relief
-            [20], # marc:relief
-            [21], # marc:relief
-            [22,24], # projection
-            [24], #    marc:primeMeridian          (UNUSED: remove?)
-            [25], # marc:material
+            [18], [19], [20], [21], # marc:relief
+            #[22:24], # projection
+            [24], # marc:primeMeridian
+            [25], # genreForm
             [28], # genreForm
-            [29], #    marc:additionalCarrierType  (new: carrierType)
-            [31], #    marc:index                  (new: supplemantaryContent)
-            [33], #    additionalType
-            [34], #    additionalType              (UNUSED: remove?)
+            [29], # carrierType
+            [31], # supplementaryContent
+            [33], [34], # additionalType
         ]
 
 # 008 Mixed:
@@ -348,22 +355,21 @@ for rts, bls in [('b', '9acdimp'), ('p', 'acdimp')]:
     for rt in rts:
         for bl in bls:
             COLSPECS['bib']['008'][rt + bl] = [
-                [23], #    marc:additionalCarrierType  (new: carrierType)
+                [23], # carrierType
             ]
 
 # 008 Audio:
 for rt in 'cdij':
     for bl in '9abcdimps':
         COLSPECS['bib']['008'][rt + bl] = [
-            [21], #    marc:parts
-            [23], #    marc:additionalCarrierType  (new: carrierType)
-            [24], #    marc:matter                 (new: supplemantaryContent)
-            [25], #    marc:matter                 (new: supplemantaryContent)
-            [26], #    marc:matter                 (new: supplemantaryContent)
-            [27], #    marc:matter                 (new: supplemantaryContent)
-            [28], #    marc:matter                 (new: supplemantaryContent)
-            [29], #    marc:matter                 (new: supplemantaryContent)
-            [33], #    marc:transposition
+            #[18:20], # genreForm
+            [20], # musicFormat
+            [21], # marc:parts
+            [22], # intendedAudience
+            [23], # carrierType
+            [24], [25], [26], [27], [28], [29], # supplementaryContent
+            [30], [31], # genreForm
+            [33], # marc:transposition
         ]
 
 
@@ -372,18 +378,18 @@ for rts, bls in [('aht', '9bips'), ('b', 'bs'), ('p', 'bs')]:
     for rt in rts:
         for bl in bls:
             COLSPECS['bib']['008'][rt + bl] = [
-                [18], #    marc:frequencyCategory      (new: frequency)
-                [19], #    marc:regularity                      (new: frequency)
-                [20], #    marc:issn                              (ta bort? Undefined enl LC)
-                [21], #    contentType                          (new: genreForm)
-                [22], #    marc:originalItem
-                [23], #    marc:additionalCarrierType  (new: carrierType)
-                [24], #    marc:nature                          (new: genreForm)
-                [25], #    marc:contents                       (new: genreForm)
-                [26], #    marc:contents                       (new: genreForm)
-                [27], #    marc:contents                       (new: genreForm)
-                [33], #    marc:alphabet
-                [34], #    marc:typeOfEntry
+            [18], # frequency
+            [19], # frequency
+            [20], # marc:issn
+            [21], # genreForm
+            [22], # marc:originalItem
+            [23], # carrierType
+            [24], # genreForm
+            [25], [26], [27], # genreForm
+            [28], # genreForm
+            [29], # genreForm
+            [33], # marc:alphabet
+            [34], # marc:typeOfEntry
             ]
 
 # 008 Visual:
@@ -391,10 +397,12 @@ for rts, bls in [('gknor', '9abcdimps'), ('p', '9')]:
     for rt in rts:
         for bl in bls:
             COLSPECS['bib']['008'][rt + bl] = [
-                #[18:21]       marc:runningTime            (new duration)
-                [23], [24], [25], [26], [27],       # marc:matter (Undefined enl LC)
-                [29],     # marc:additionalCarrierType  (new: carrierType)
-                [34],     # marc:technique
+                [22], # intendedAudience
+                [23], [24], [25], [26], [27], # marc:matter
+                [28], # genreForm
+                [29], # carrierType
+                [33], # genreForm
+                [34], # marc:technique
             ]
 
 
@@ -635,7 +643,7 @@ class CounterDict:
         if self.floor:
             items = (item for item in items if item[1].total >= self.floor)
         return OrderedDict(sorted(items,
-                                  key=lambda (k, v): v.total, reverse=True))
+                                  key=lambda kv: kv[1].total, reverse=True))
 
 
 def compute_stats(marctype, stats_dest):

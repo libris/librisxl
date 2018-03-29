@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 import json
+from sys import argv
+from pathlib import Path
 
-import sys
-
-mf_path = sys.argv[1]
-
-print(mf_path)
+mf_path = argv[1] if len(argv) > 1 else str(Path(__file__).parent /
+        '../../whelk-core/src/main/resources/ext/marcframe.json')
 
 with open(mf_path) as f:
     mf = json.load(f)
