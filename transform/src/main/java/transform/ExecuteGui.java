@@ -424,6 +424,7 @@ public class ExecuteGui extends JFrame
         {
             ExecuteGui parent = (ExecuteGui) m_parent;
             String sqlString = parent.m_sqlTextArea.getText();
+            sqlString += " limit 100";
             if (isObviouslyBadSql(sqlString)) {
                 JOptionPane.showMessageDialog(m_parent, "Denied: Suspicious SQL statement.");
                 return;

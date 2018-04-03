@@ -2,26 +2,28 @@ package transform;
 
 import groovy.lang.Tuple2;
 import org.codehaus.jackson.map.ObjectMapper;
+import se.kb.libris.util.marc.MarcRecord;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.component.PostgreSQLComponent;
 import whelk.triples.JsonldSerializer;
+import whelk.util.ThreadPool;
 import whelk.util.TransformScript;
 
 import java.io.*;
+import java.net.URI;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class Main
 {
     private static ObjectMapper mapper = new ObjectMapper();
 
-    public static void main(String[] args) throws IOException, TransformScript.TransformSyntaxException, SQLException
+    public static void main(String[] args) throws Exception
     {
         if (args.length == 0)
         {
@@ -37,6 +39,8 @@ public class Main
             generateAndPrintTransform(args);
         else if (args[0].equals("execute"))
             executeScript(args);
+        else if (args[0].equals("executeEnv"))
+            executeScriptOnEnv(args);
         else
             System.err.println(
                     "Usage:\n" +
@@ -48,6 +52,9 @@ public class Main
                             "  the [from] env and find corresponding records in [to]. \"to\" means vice versa.\n" +
                             "  normally for a new release you want this: \n" +
                             "  java -jar transform.jar generate prodSecret.properties devSecret.properties [collection] to\n\n" +
+                            "java -jar transform.jar executeEnv [scriptfile] [secrectproperties-file] [collection]\n" +
+                            "  Execute the given script on each document in a live environment. Indexing is not covered,\n" +
+                            "  meaning every affected document must be re-indexed to be searchable in its new form.\n\n" +
                             "java -jar transform.jar execute [scriptfile] [file]\n" +
                             "  Execute the given script on each json document in [file], one document per line.\n\n");
     }
@@ -201,45 +208,6 @@ public class Main
         return new Whelk(props);
     }
 
-    /*
-    private static void generateAndPrintTransform(String[] args) throws IOException, TransformScript.TransformSyntaxException
-    {
-        BufferedReader json1Reader = new BufferedReader(new FileReader(args[1]));
-        BufferedReader json2Reader = new BufferedReader(new FileReader(args[2]));
-
-        String jsonString;
-
-        Syntax syntax1 = new Syntax();
-        while ( (jsonString = json1Reader.readLine()) != null)
-        {
-            Map data = mapper.readValue(jsonString, Map.class);
-            Document doc = new Document(data);
-            data = JsonLd.frame(doc.getCompleteId(), data);
-            syntax1.expandSyntaxToCover(data);
-        }
-        json1Reader.close();
-
-        Syntax syntax2 = new Syntax();
-        while ( (jsonString = json2Reader.readLine()) != null)
-        {
-            Map data = mapper.readValue(jsonString, Map.class);
-            Document doc = new Document(data);
-            data = JsonLd.frame(doc.getCompleteId(), data);
-            syntax2.expandSyntaxToCover(data);
-        }
-        json2Reader.close();
-
-        json1Reader = new BufferedReader(new FileReader(args[1]));
-        json2Reader = new BufferedReader(new FileReader(args[2]));
-
-        ScriptGenerator scriptGenerator = SyntaxDiffReduce.generateScript(syntax1, syntax2, json1Reader, json2Reader);
-
-        json1Reader.close();
-        json2Reader.close();
-
-        System.out.println(scriptGenerator);
-    }*/
-
     private static void executeScript(String[] args) throws IOException, TransformScript.TransformSyntaxException
     {
         BufferedReader scriptReader = new BufferedReader(new FileReader(args[1]));
@@ -259,6 +227,77 @@ public class Main
             transformed = JsonLd.flatten(transformed);
             JsonldSerializer.normalize(transformed, (String) Document._get(Document.getRecordIdPath(), data), true);
             System.out.println(mapper.writeValueAsString(transformed));
+        }
+    }
+
+    // Globals, to be accessible to all worker threads. Must be thread safe!
+    private static TransformScript s_script;
+    private static Whelk s_whelk;
+    private static PrintWriter s_failureWriter;
+
+    private static void executeScriptOnEnv(String[] args) throws Exception
+    {
+        // parameters: [scriptfile] [secrectproperties-file] [collection]
+
+        // Load the script
+        BufferedReader scriptReader = new BufferedReader(new FileReader(args[1]));
+        StringBuilder scriptText = new StringBuilder();
+        for(String line = scriptReader.readLine(); line != null; line = scriptReader.readLine())
+        {
+            scriptText.append(line + "\n");
+        }
+        s_script = new TransformScript(scriptText.toString());
+
+        // Load the whelk
+        InputStream propStream = new FileInputStream(args[2]);
+        Properties properties = new Properties();
+        properties.load(propStream);
+        Document.setBASE_URI( new URI( (String) properties.get("baseUri")) );
+        PostgreSQLComponent storage = new PostgreSQLComponent(properties);
+        s_whelk = new Whelk(storage);
+        s_whelk.loadCoreData();
+        s_failureWriter = new PrintWriter("transformations_failed " + new Date().toString() + ".log");
+
+        String collection = args[3];
+
+        // Execute
+        ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors() * 4);
+        final int BATCH_SIZE = 500;
+        long counter = 0;
+        long startTime = System.currentTimeMillis();
+        ArrayList<Document> batch = new ArrayList<>(BATCH_SIZE);
+        for (Document doc : s_whelk.getStorage().loadAll(collection))
+        {
+            batch.add(doc);
+            double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000));
+            counter++;
+            if (counter % BATCH_SIZE == 0) {
+                System.err.println("Transforming " + docsPerSec + " documents per second (running average since process start). Total count: " + counter + ".");
+                threadPool.executeOnThread(batch, Main::transformBatch);
+                batch = new ArrayList<>(BATCH_SIZE);
+            }
+        }
+        threadPool.executeOnThread(batch, Main::transformBatch);
+    }
+
+    private static void transformBatch(ArrayList<Document> batch, int threadIndex)
+    {
+        for (Document doc : batch)
+        {
+            String id = doc.getShortId();
+
+            try
+            {
+                doc.data = s_script.executeOn(doc.data);
+                doc.data = JsonLd.flatten(doc.data);
+                JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
+                s_whelk.getStorage().storeAtomicUpdate(id, false, "xl", "Libris admin (transform)", (Document _doc) ->
+                        _doc.data = doc.data
+                );
+            } catch (Throwable e)
+            {
+                s_failureWriter.println(id);
+            }
         }
     }
 }
