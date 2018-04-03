@@ -458,7 +458,7 @@ public class ExecuteGui extends JFrame
                 }
             } catch (SQLException e)
             {
-                JOptionPane.showMessageDialog(m_parent, e.toString() + " " + e.getStackTrace());
+                JOptionPane.showMessageDialog(m_parent, e.toString());
             }
         }
 
@@ -477,11 +477,23 @@ public class ExecuteGui extends JFrame
                 parent.m_transformedRecordArea.setText(formattedTransformed);
             } catch (Throwable e)
             {
-                JOptionPane.showMessageDialog(m_parent, e.toString());
+                JOptionPane.showMessageDialog(m_parent, e.toString() + " " + getFormattedCallStack(e.getStackTrace()));
             }
         }
 
-        private void resetTrySeries()
+        private String getFormattedCallStack(StackTraceElement[] callStackElementList)
+        {
+            StringBuilder callStack = new StringBuilder("");
+            for (StackTraceElement frame : callStackElementList)
+            {
+                callStack.append(frame.toString());
+                callStack.append("\n");
+            }
+            return callStack.toString();
+        }
+
+
+            private void resetTrySeries()
         {
             try { if (m_resultSet != null) m_resultSet.close(); } catch (SQLException e) { /* ignore */ }
             try { if (m_statement != null) m_statement.close(); } catch (SQLException e) { /* ignore */ }
