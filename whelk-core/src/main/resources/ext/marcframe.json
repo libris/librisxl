@@ -14823,7 +14823,7 @@
       "$l": {"property": "shelfLabel"},
       "$m": {"addProperty": "callNumberSuffix"},
       "$n": {"link": "country", "resourceType": "Country", "property": "code"},
-      "$p": {"property": "pieceDesignation"},
+      "$p": {"property": "marc:pieceDesignation"},
       "$q": {"property": "itemCondition"},
       "$s": {"addProperty": "copyrightArticleFeeCode"},
       "$t": {"property": "copyNumber"},
