@@ -3970,11 +3970,12 @@
     "066": {"ignored": true, "NOTE:record-count": 4905, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
     "070": {
       "aboutEntity": "?work",
-      "link": "marc:hasNationalAgriculturalLibraryCallNumber",
+      "link": "classification",
       "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
       "i1": {"marcDefault": " "},
-      "$a": {"addProperty": "marc:classificationNumber"},
-      "$b": {"property": "marc:itemNumber"}
+      "$a": {"addProperty": "classificationPortion"},
+      "$b": {"property": "itemPortion"},
+      "$1": {"property": "marc:rwoURI"}
     },
     "071": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
