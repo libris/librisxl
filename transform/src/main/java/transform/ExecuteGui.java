@@ -147,11 +147,16 @@ public class ExecuteGui extends JFrame
                 "# let x = contains abcde de # Returns true\n" +
                 "# let y = contains abcde be # Returns false\n" +
                 "#\n" +
-                "# indexOf originalString searchString\n" +
+                "# indexof originalString searchString\n" +
                 "# Returns the index of 'searchString' within 'originalString'\n" +
                 "# example:\n" +
                 "# let x = indexof abcde bc # Returns 1\n" +
                 "# let y = indexof abcde cde # Returns 2\n" +
+                "#\n" +
+                "# replace originalString searchString replacementString\n" +
+                "# Returns a new string where 'searchString' has been replaced with 'replacementString'  in 'originalString'\n" +
+                "# example:\n" +
+                "# let x = replace abcde cde x # Returns \"abx\"\n" +
                 "#\n" +
                 "\nmode normal\n", 35, 40, true);
         JComponent scriptArea = makeLeftAligned(new JScrollPane(m_scriptTextArea));
