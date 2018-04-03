@@ -196,7 +196,7 @@ public class TransformScript
         String from = symbols.pollFirst();
         String arrow = symbols.pollFirst();
         String to = symbols.pollFirst();
-        if (!arrow.equals("->") || !isValidPath(from) || !isValidPath(to))
+        if (arrow == null || to == null || from == null ||!arrow.equals("->") || !isValidPath(from) || !isValidPath(to))
             throw new TransformSyntaxException("'MOVE' must be followed by [pathFrom '->' pathTo]");
 
         return new MoveOperation(from, to);
@@ -210,7 +210,7 @@ public class TransformScript
         ValueOperation valueOp = parseValueStatement(symbols);
         String arrow = symbols.pollFirst();
         String to = symbols.pollFirst();
-        if (!arrow.equals("->") || !isValidPath(to))
+        if (arrow == null || to == null || !arrow.equals("->") || !isValidPath(to))
             throw new TransformSyntaxException("'SET' must be followed by [value_statement '->' pathTo]");
 
         return new SetOperation(valueOp, to);
@@ -726,7 +726,7 @@ public class TransformScript
             Object searchString = m_searchString.execute(json, context);
             Object replacementString = m_replacementString.execute(json, context);
 
-            if (completeString == null || searchString == null) // propagate nulls
+            if (completeString == null || searchString == null || replacementString == null) // propagate nulls
                 return null;
 
             if (!(searchString instanceof String) || !(completeString instanceof String))
