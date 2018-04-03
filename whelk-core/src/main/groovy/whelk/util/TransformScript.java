@@ -309,6 +309,12 @@ public class TransformScript
             ValueOperation completeStringParameter = parseValueStatement(symbols);
             ValueOperation searchStringParameter = parseValueStatement(symbols);
             return new StringIndexOfValueOperation(completeStringParameter, searchStringParameter);
+        } else if (symbol.equals("replace"))
+        {
+            ValueOperation completeStringParameter = parseValueStatement(symbols);
+            ValueOperation searchStringParameter = parseValueStatement(symbols);
+            ValueOperation replacementStringParameters = parseValueStatement(symbols);
+            return new StringReplaceValueOperation(completeStringParameter, searchStringParameter, replacementStringParameters);
         } else
         {
             return new LiteralValueOperation(symbol);
@@ -698,6 +704,35 @@ public class TransformScript
                 throw new RuntimeException("Type mismatch. Cannot call indexOf on non-strings");
 
             return ((String) completeString).indexOf( (String) searchString );
+        }
+    }
+
+    private class StringReplaceValueOperation extends ValueOperation
+    {
+        ValueOperation m_originalString;
+        ValueOperation m_searchString;
+        ValueOperation m_replacementString;
+
+        public StringReplaceValueOperation(ValueOperation originalString, ValueOperation searchString, ValueOperation replacement)
+        {
+            m_originalString = originalString;
+            m_searchString = searchString;
+            m_replacementString = replacement;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object completeString = m_originalString.execute(json, context);
+            Object searchString = m_searchString.execute(json, context);
+            Object replacementString = m_replacementString.execute(json, context);
+
+            if (completeString == null || searchString == null) // propagate nulls
+                return null;
+
+            if (!(searchString instanceof String) || !(completeString instanceof String))
+                throw new RuntimeException("Type mismatch. Cannot call indexOf on non-strings");
+
+            return ((String) completeString).replace( (String) searchString, (String) replacementString );
         }
     }
 

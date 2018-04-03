@@ -640,6 +640,22 @@ public class ScriptTest
         testScript(data, transformed, script);
     }
 
+    @Test
+    public void testStringReplace() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set replace abcde cde x -> key0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"abx\" " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
     private void testScript(String beforeTransformText, String expectedResultText, String transformScript) throws Exception
     {
         Map oldData = mapper.readValue(beforeTransformText, Map.class);
