@@ -477,7 +477,7 @@ public class ExecuteGui extends JFrame
                 parent.m_transformedRecordArea.setText(formattedTransformed);
             } catch (Throwable e)
             {
-                JOptionPane.showMessageDialog(m_parent, e.toString() + " " + getFormattedCallStack(e.getStackTrace()));
+                JOptionPane.showMessageDialog(m_parent, e.toString() + "\n\n" + getFormattedCallStack(e.getStackTrace()));
             }
         }
 
