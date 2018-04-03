@@ -379,8 +379,7 @@
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "$t": {"about": "_:title", "property": "mainTitle"},
-      "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
-      "$0": {"about": "_:work", "addProperty": "marc:uri"}
+      "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"}
     },
 
     "hasPartDataSansLabelledRole": {
@@ -388,7 +387,8 @@
       "addLink": "hasPart",
       "resourceType": "Work",
       "aboutAlias": "_:work",
-      "$x": {"about": "_:work", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"}
+      "$x": {"about": "_:work", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"},
+      "$0": {"about": "_:work", "addProperty": "marc:uri"}
     },
 
     "hasPartData": {
@@ -837,8 +837,7 @@
           "embedded": true
         }
       },
-      "$t": {"about": "_:title", "property": "mainTitle"},
-      "$0": {"about": "_:work", "addProperty": "marc:uri"}
+      "$t": {"about": "_:title", "property": "mainTitle"}
     },
 
     "contributionPerson": {
@@ -11833,32 +11832,28 @@
           "aboutEntity": "?thing",
           "aboutType": "Person",
           "aboutAlias": "_:agent",
-          "include": "agentdataPerson",
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "include": "agentdataPerson"
         },
         {
           "when": "i1=1",
           "aboutEntity": "?thing",
           "aboutType": "Person",
           "aboutAlias": "_:agent",
-          "include": "agentdataNameOfPerson",
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "include": "agentdataNameOfPerson"
         },
         {
           "when": "i1=3",
           "aboutEntity": "?thing",
           "aboutType": "Family",
           "aboutAlias": "_:agent",
-          "include": "agentdataFamily",
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "include": "agentdataFamily"
         },
         {
           "when": null,
           "aboutEntity": "?thing",
           "aboutType": "Person",
           "aboutAlias": "_:agent",
-          "include": "agentdataPerson",
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "include": "agentdataPerson"
         }
       ],
       "$6": {"property": "marc:fieldref"},
@@ -12097,7 +12092,6 @@
           },
           "aboutAlias": "_:agent",
           "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
           "i1": {"marcDefault": "2"}
         },
         {
@@ -12111,8 +12105,7 @@
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
           "aboutAlias": "_:agent",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "$b & i1=0",
@@ -12125,8 +12118,7 @@
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
           "aboutAlias": "_:agent",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "i1=0 | i1=2",
@@ -12140,7 +12132,6 @@
           "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
           "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
           "i1": {"marcDefault": "2"}
         },
         {
@@ -12154,8 +12145,7 @@
           },
           "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "$b",
@@ -12168,8 +12158,7 @@
           },
           "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": null,
@@ -12182,8 +12171,7 @@
           },
           "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         }
       ],
       "subfieldOrder": "a b n d c g e 4 t p l k f o v x y z",
@@ -12298,7 +12286,6 @@
           "aboutType": "Work",
           "aboutAlias": "_:work",
           "$t": {"property": "title"},
-          "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
             "_:contribution": {
               "addLink": "contribution",
@@ -12323,8 +12310,7 @@
           "pendingResources": {"_:agent": {"link": "agent", "resourceType": "Meeting"}},
           "aboutAlias": "_:agent",
           "include": "agentdataMeeting",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         }
       ],
       "pendingResources": {
