@@ -10483,7 +10483,7 @@
       "addLink": "isPartOf",
       "resourceType": "Aggregate",
       "$c": null,
-      "$p": {"property": "abbreviatedTitle", "TODO:targetMatch": "210"},
+      "$p": {"link": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210"},
       "$q": {"property": "marc:enumerationAndFirstPage"}
     },
     "774": {
