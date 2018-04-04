@@ -490,12 +490,14 @@ public class JsonLd {
 
     private static void assembleFramed(Map currentNode, Map idMap, Set passedIDs) {
         String id = currentNode.get("@id")
+
         if (id != null && !passedIDs.contains(id)) {
+            passedIDs = new HashSet(passedIDs)
             passedIDs.add(id)
             Map object = (Map) idMap.get(id)
             if (object != null) {
                 currentNode.clear()
-                currentNode.putAll( (Map) Document.deepCopy(object) )
+                currentNode.putAll( object )
             }
         }
 
