@@ -497,7 +497,7 @@ public class JsonLd {
             Map object = (Map) idMap.get(id)
             if (object != null) {
                 currentNode.clear()
-                currentNode.putAll( object )
+                currentNode.putAll( (Map) Document.deepCopy(object) )
             }
         }
 
