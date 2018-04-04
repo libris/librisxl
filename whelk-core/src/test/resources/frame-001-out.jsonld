@@ -1,0 +1,22 @@
+{
+  "@type": "Record",
+  "@id": "https://libris.kb.se/record/something",
+  "sameAs": ["/auth/1"],
+  "about": {
+    "@id": "/thing/something",
+    "@type": "Thing",
+    "sameAs": ["/resouce/auth/1", "http://dbpedia.org/resource/Thing"],
+    "name": "Something",
+    "creator": {
+      "@id": "/agent/somebody",
+      "name": "Somebody"
+    },
+    "publisher": {"@id": "/agent/everybody"},
+    "publication": {
+      "actor": {
+        "@id": "/agent/somebody",
+        "name": "Somebody"
+      }
+    }
+  }
+}
