@@ -13,7 +13,10 @@
       "about": "?thing",
       "TODO:link": "meta",
       "resourceType": "Record",
-      "uriTemplate": "http://libris.kb.se/{marcType}/{controlNumber}"
+      "uriTemplate": "http://libris.kb.se/{marcType}/{controlNumber}",
+      "matchUriTokens": {
+        "controlNumber": "^\\d{1,14}$"
+      }
     }
   },
 
@@ -588,7 +591,10 @@
     },
 
     "contributionRole_4": {
-      "$4": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "https://id.kb.se/relator/{_}", "matchUriToken": "^[\\w+]$"}
+      "$4": {
+        "about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code",
+        "uriTemplate": "https://id.kb.se/relator/{_}", "matchUriToken": "^\\w+$"
+      }
     },
 
     "contributionRole_4_e": {
@@ -1283,7 +1289,7 @@
         "resourceType": "Record",
         "property": "controlNumber",
         "uriTemplate": "http://libris.kb.se/bib/{_}",
-        "matchUriToken": "^[0-9a-z]+$"
+        "matchUriToken": "^\\d{1,14}$"
       }
     },
 
@@ -1314,7 +1320,7 @@
         "resourceType": "Record",
         "property": "controlNumber",
         "uriTemplate": "http://libris.kb.se/bib/{_}",
-        "matchUriToken": "^[0-9a-z]+$"
+        "matchUriToken": "^\\d{1,14}$"
       }
     }
 
@@ -1328,7 +1334,10 @@
         "link": "mainEntity",
         "resourceType": "Instance",
         "fragmentId": "it",
-        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
+        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}",
+        "matchUriTokens": {
+          "controlNumber": "^\\d{1,14}$"
+        }
       },
       "?work": {
         "about": "?thing",
@@ -1569,6 +1578,22 @@
               "@type": "Instance",
               "issuanceType": "Monograph",
               "@id": "http://libris.kb.se/resource/bib/0000000",
+              "instanceOf": {"@type": "Text"}
+            }
+          }
+        },
+        {
+          "name": "Non-legacy conformant controlNumber doesn't mint URIs",
+          "originalLeader": "00887cam a2200277 a 4500",
+          "source": {"leader": "     cam a        a 4500", "fields": [{"001": "fffffff"}]},
+          "result": {
+            "@type": "Record",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
+            "controlNumber": "fffffff",
+            "mainEntity": {
+              "@type": "Instance",
+              "issuanceType": "Monograph",
               "instanceOf": {"@type": "Text"}
             }
           }
@@ -2563,7 +2588,7 @@
         "uriTemplate": "https://id.kb.se/language/{_}",
         "matchUriToken": "^\\w{2,3}$",
         "fixedDefault": "   ",
-        "spec": {
+        "matchSpec": {
           "matches": ["swe", "sv"], "notMatches": ["N/A", " ", "---", "en-US", "en_us"]
         }
       },
@@ -2931,7 +2956,7 @@
               "instanceOf": {
                 "@type": "Text",
                 "genreForm": {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
-                "language": [{"@id": "https://id.kb.se/language/freeng", "code": "freeng"}]
+                "language": [{"code": "freeng"}]
               }
             }
           }
@@ -5065,7 +5090,8 @@
       "$0": {
         "aboutEntity": "?work",
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
-        "uriTemplate": "http://libris.kb.se/auth/{_}"
+        "uriTemplate": "http://libris.kb.se/auth/{_}",
+        "matchUriToken": "^\\d{1,14}$"
       },
       "$6": {"property": "marc:fieldref"},
       "_spec": [
@@ -11441,7 +11467,10 @@
         "link": "mainEntity",
         "resourceType": "Concept",
         "fragmentId": "it",
-        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
+        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}",
+        "matchUriTokens": {
+          "controlNumber": "^\\d{1,14}$"
+        }
       }
     },
 
@@ -11680,7 +11709,7 @@
     },
     "043" : {
       "aboutEntity": "?thing",
-      "$a": {"addLink": "nationality", "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$"},
+      "$a": {"addLink": "nationality", "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]+$"},
       "repeatable": false,
       "_spec": [
         {
@@ -14258,7 +14287,10 @@
         "link": "mainEntity",
         "resourceType": "Item",
         "fragmentId": "it",
-        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
+        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}",
+        "matchUriTokens": {
+          "controlNumber": "^\\d{1,14}$"
+        }
       }
     },
 
@@ -14266,7 +14298,8 @@
       "bibid": {
         "about": "?thing",
         "link": "itemOf",
-        "uriTemplate": "http://libris.kb.se/resource/bib/{_}"
+        "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
+        "matchUriToken": "^\\d{1,14}$"
       },
       "location": {
         "TODO:apply": "852-$b",
@@ -14423,6 +14456,7 @@
     "004": {
       "aboutType": "Item",
       "link": "itemOf", "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
+      "matchUriToken": "^\\d{1,14}$",
       "TODO:meta": {"property": "controlNumber"},
       "repeatable": false
     },

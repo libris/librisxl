@@ -782,7 +782,14 @@ class MarcRuleSet {
             def entityId = entity['@id']
             def builtEntityId = null
 
-            if (dfn.uriTemplate) {
+            boolean uriTokensOk = true
+            dfn.matchUriTokens?.each { recordKey, matchUriToken ->
+                if (!(record[recordKey] =~ matchUriToken)) {
+                    uriTokensOk = false
+                }
+            }
+
+            if (dfn.uriTemplate && uriTokensOk) {
                 try {
                     builtEntityId = conversion.resolve(
                             fromTemplate(dfn.uriTemplate)
@@ -1478,11 +1485,11 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         uriTemplate = fieldDfn.uriTemplate
         if (fieldDfn.matchUriToken) {
             matchUriToken = Pattern.compile(fieldDfn.matchUriToken)
-            if (fieldDfn.spec) {
-                fieldDfn.spec.matches.each {
+            if (fieldDfn.matchSpec) {
+                fieldDfn.matchSpec.matches.each {
                     assert matchUriToken.matcher(it).matches()
                 }
-                fieldDfn.spec.notMatches.each {
+                fieldDfn.matchSpec.notMatches.each {
                     assert !matchUriToken.matcher(it).matches()
                 }
             }
@@ -2284,6 +2291,7 @@ class MarcSubFieldHandler extends ConversionPart {
     boolean overwrite
     String resourceType
     String subUriTemplate
+    Pattern matchUriToken = null
     Pattern splitValuePattern
     List<String> splitValueProperties
     String rejoin
@@ -2332,6 +2340,9 @@ class MarcSubFieldHandler extends ConversionPart {
 
         if (subDfn.uriTemplate) {
             subUriTemplate = subDfn.uriTemplate
+        }
+        if (subDfn.matchUriToken) {
+            matchUriToken = Pattern.compile(subDfn.matchUriToken)
         }
 
         if (subDfn.splitValuePattern) {
@@ -2384,13 +2395,16 @@ class MarcSubFieldHandler extends ConversionPart {
 
         if (link) {
             String entId = null
-            if (subUriTemplate) {
+
+            if (subUriTemplate &&
+                (matchUriToken == null ||
+                 matchUriToken.matcher((String) subVal).matches())) {
                 try {
                     entId = subUriTemplate == '{+_}' ?
                         subVal : fromTemplate(subUriTemplate).expand(["_": subVal])
                 } catch (IllegalArgumentException|IndexOutOfBoundsException e) {
                     // Bad characters in what should have been a proper URI path ('+' expansion).
-                    ; // TODO: We just drop the attempt here if the uriTemplate fails...
+                    ; // NOTE: We just drop the attempt here if the uriTemplate fails...
                 }
             }
             def newEnt = newEntity(state, resourceType, entId)
