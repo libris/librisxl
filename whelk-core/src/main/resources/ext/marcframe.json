@@ -13,7 +13,10 @@
       "about": "?thing",
       "TODO:link": "meta",
       "resourceType": "Record",
-      "uriTemplate": "http://libris.kb.se/{marcType}/{controlNumber}"
+      "uriTemplate": "http://libris.kb.se/{marcType}/{controlNumber}",
+      "matchUriTokens": {
+        "controlNumber": "^\\d{1,14}$"
+      }
     }
   },
 
@@ -379,8 +382,7 @@
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "$t": {"about": "_:title", "property": "mainTitle"},
-      "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
-      "$0": {"about": "_:work", "addProperty": "marc:uri"}
+      "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"}
     },
 
     "hasPartDataSansLabelledRole": {
@@ -388,7 +390,8 @@
       "addLink": "hasPart",
       "resourceType": "Work",
       "aboutAlias": "_:work",
-      "$x": {"about": "_:work", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"}
+      "$x": {"about": "_:work", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"},
+      "$0": {"about": "_:work", "addProperty": "marc:uri"}
     },
 
     "hasPartData": {
@@ -588,7 +591,10 @@
     },
 
     "contributionRole_4": {
-      "$4": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code", "uriTemplate": "https://id.kb.se/relator/{_}", "matchUriToken": "^[\\w+]$"}
+      "$4": {
+        "about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code",
+        "uriTemplate": "https://id.kb.se/relator/{_}", "matchUriToken": "^\\w+$"
+      }
     },
 
     "contributionRole_4_e": {
@@ -837,8 +843,7 @@
           "embedded": true
         }
       },
-      "$t": {"about": "_:title", "property": "mainTitle"},
-      "$0": {"about": "_:work", "addProperty": "marc:uri"}
+      "$t": {"about": "_:title", "property": "mainTitle"}
     },
 
     "contributionPerson": {
@@ -1284,7 +1289,7 @@
         "resourceType": "Record",
         "property": "controlNumber",
         "uriTemplate": "http://libris.kb.se/bib/{_}",
-        "matchUriToken": "^[0-9a-z]+$"
+        "matchUriToken": "^\\d{1,14}$"
       }
     },
 
@@ -1315,7 +1320,7 @@
         "resourceType": "Record",
         "property": "controlNumber",
         "uriTemplate": "http://libris.kb.se/bib/{_}",
-        "matchUriToken": "^[0-9a-z]+$"
+        "matchUriToken": "^\\d{1,14}$"
       }
     }
 
@@ -1329,7 +1334,10 @@
         "link": "mainEntity",
         "resourceType": "Instance",
         "fragmentId": "it",
-        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
+        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}",
+        "matchUriTokens": {
+          "controlNumber": "^\\d{1,14}$"
+        }
       },
       "?work": {
         "about": "?thing",
@@ -1570,6 +1578,22 @@
               "@type": "Instance",
               "issuanceType": "Monograph",
               "@id": "http://libris.kb.se/resource/bib/0000000",
+              "instanceOf": {"@type": "Text"}
+            }
+          }
+        },
+        {
+          "name": "Non-legacy conformant controlNumber doesn't mint URIs",
+          "originalLeader": "00887cam a2200277 a 4500",
+          "source": {"leader": "     cam a        a 4500", "fields": [{"001": "fffffff"}]},
+          "result": {
+            "@type": "Record",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
+            "controlNumber": "fffffff",
+            "mainEntity": {
+              "@type": "Instance",
+              "issuanceType": "Monograph",
               "instanceOf": {"@type": "Text"}
             }
           }
@@ -2564,7 +2588,7 @@
         "uriTemplate": "https://id.kb.se/language/{_}",
         "matchUriToken": "^\\w{2,3}$",
         "fixedDefault": "   ",
-        "spec": {
+        "matchSpec": {
           "matches": ["swe", "sv"], "notMatches": ["N/A", " ", "---", "en-US", "en_us"]
         }
       },
@@ -2932,7 +2956,7 @@
               "instanceOf": {
                 "@type": "Text",
                 "genreForm": {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
-                "language": [{"@id": "https://id.kb.se/language/freeng", "code": "freeng"}]
+                "language": [{"code": "freeng"}]
               }
             }
           }
@@ -3971,11 +3995,12 @@
     "066": {"ignored": true, "NOTE:record-count": 4905, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
     "070": {
       "aboutEntity": "?work",
-      "link": "marc:hasNationalAgriculturalLibraryCallNumber",
+      "link": "classification",
       "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
       "i1": {"marcDefault": " "},
-      "$a": {"addProperty": "marc:classificationNumber"},
-      "$b": {"property": "marc:itemNumber"}
+      "$a": {"addProperty": "classificationPortion"},
+      "$b": {"property": "itemPortion"},
+      "$1": {"property": "marc:rwoURI"}
     },
     "071": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
@@ -5065,7 +5090,8 @@
       "$0": {
         "aboutEntity": "?work",
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
-        "uriTemplate": "http://libris.kb.se/auth/{_}"
+        "uriTemplate": "http://libris.kb.se/auth/{_}",
+        "matchUriToken": "^\\d{1,14}$"
       },
       "$6": {"property": "marc:fieldref"},
       "_spec": [
@@ -10483,7 +10509,7 @@
       "addLink": "isPartOf",
       "resourceType": "Aggregate",
       "$c": null,
-      "$p": {"property": "abbreviatedTitle", "TODO:targetMatch": "210"},
+      "$p": {"link": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210"},
       "$q": {"property": "marc:enumerationAndFirstPage"}
     },
     "774": {
@@ -11441,7 +11467,10 @@
         "link": "mainEntity",
         "resourceType": "Concept",
         "fragmentId": "it",
-        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
+        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}",
+        "matchUriTokens": {
+          "controlNumber": "^\\d{1,14}$"
+        }
       }
     },
 
@@ -11680,7 +11709,7 @@
     },
     "043" : {
       "aboutEntity": "?thing",
-      "$a": {"addLink": "nationality", "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]{7}$"},
+      "$a": {"addLink": "nationality", "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]+$"},
       "repeatable": false,
       "_spec": [
         {
@@ -11833,32 +11862,28 @@
           "aboutEntity": "?thing",
           "aboutType": "Person",
           "aboutAlias": "_:agent",
-          "include": "agentdataPerson",
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "include": "agentdataPerson"
         },
         {
           "when": "i1=1",
           "aboutEntity": "?thing",
           "aboutType": "Person",
           "aboutAlias": "_:agent",
-          "include": "agentdataNameOfPerson",
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "include": "agentdataNameOfPerson"
         },
         {
           "when": "i1=3",
           "aboutEntity": "?thing",
           "aboutType": "Family",
           "aboutAlias": "_:agent",
-          "include": "agentdataFamily",
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "include": "agentdataFamily"
         },
         {
           "when": null,
           "aboutEntity": "?thing",
           "aboutType": "Person",
           "aboutAlias": "_:agent",
-          "include": "agentdataPerson",
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "include": "agentdataPerson"
         }
       ],
       "$6": {"property": "marc:fieldref"},
@@ -12097,7 +12122,6 @@
           },
           "aboutAlias": "_:agent",
           "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
           "i1": {"marcDefault": "2"}
         },
         {
@@ -12111,8 +12135,7 @@
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
           "aboutAlias": "_:agent",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "$b & i1=0",
@@ -12125,8 +12148,7 @@
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
           "aboutAlias": "_:agent",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "i1=0 | i1=2",
@@ -12140,7 +12162,6 @@
           "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
           "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"},
           "i1": {"marcDefault": "2"}
         },
         {
@@ -12154,8 +12175,7 @@
           },
           "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": "$b",
@@ -12168,8 +12188,7 @@
           },
           "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         },
         {
           "when": null,
@@ -12182,8 +12201,7 @@
           },
           "aboutAlias": "_:agent",
           "include": "agentdataOrganization",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         }
       ],
       "subfieldOrder": "a b n d c g e 4 t p l k f o v x y z",
@@ -12298,7 +12316,6 @@
           "aboutType": "Work",
           "aboutAlias": "_:work",
           "$t": {"property": "title"},
-          "$0": {"addLink": "identifiedBy", "property": "value"},
           "pendingResources": {
             "_:contribution": {
               "addLink": "contribution",
@@ -12323,8 +12340,7 @@
           "pendingResources": {"_:agent": {"link": "agent", "resourceType": "Meeting"}},
           "aboutAlias": "_:agent",
           "include": "agentdataMeeting",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
-          "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         }
       ],
       "pendingResources": {
@@ -14271,7 +14287,10 @@
         "link": "mainEntity",
         "resourceType": "Item",
         "fragmentId": "it",
-        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}"
+        "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}",
+        "matchUriTokens": {
+          "controlNumber": "^\\d{1,14}$"
+        }
       }
     },
 
@@ -14279,7 +14298,8 @@
       "bibid": {
         "about": "?thing",
         "link": "itemOf",
-        "uriTemplate": "http://libris.kb.se/resource/bib/{_}"
+        "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
+        "matchUriToken": "^\\d{1,14}$"
       },
       "location": {
         "TODO:apply": "852-$b",
@@ -14436,6 +14456,7 @@
     "004": {
       "aboutType": "Item",
       "link": "itemOf", "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
+      "matchUriToken": "^\\d{1,14}$",
       "TODO:meta": {"property": "controlNumber"},
       "repeatable": false
     },
@@ -14823,7 +14844,7 @@
       "$l": {"property": "shelfLabel"},
       "$m": {"addProperty": "callNumberSuffix"},
       "$n": {"link": "country", "resourceType": "Country", "property": "code"},
-      "$p": {"property": "pieceDesignation"},
+      "$p": {"property": "marc:pieceDesignation"},
       "$q": {"property": "itemCondition"},
       "$s": {"addProperty": "copyrightArticleFeeCode"},
       "$t": {"property": "copyNumber"},
