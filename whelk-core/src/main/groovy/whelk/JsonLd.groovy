@@ -156,10 +156,11 @@ public class JsonLd {
         if (current instanceof Map) {
             def flattened = makeFlat(current, result)
             if (flattened.containsKey(ID_KEY) && flattened.size() > 1) {
-                result.add(flattened)
+                if (! result.contains(flattened))
+                    result.add(flattened)
             }
             def itemid = current.get(ID_KEY)
-            return (itemid ? [(ID_KEY): itemid] : current)
+            return (itemid ? [(ID_KEY): itemid] : flattened)
         }
         return current
     }
@@ -521,9 +522,7 @@ public class JsonLd {
     }
 
     public static Map frame(String mainId, Map originalData) {
-        if (mainId)
-            mainId = Document.BASE_URI.resolve(mainId)
-        else
+        if (!mainId)
             return originalData
 
         Map idMap = getIdMap(originalData)
