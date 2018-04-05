@@ -413,7 +413,7 @@ public class ExecuteGui extends JFrame
                         // This should be : doc.data = JsonLd.flatten(doc.data);
                         // but flatten() is unreliable and seems to introduce graph cycles. TODO
                         List<String[]> triples = new JsonldSerializer().deserialize(doc.data);
-                        doc.data = JsonldSerializer.serialize(triples, s_repeatableTerms);
+                        doc.data = JsonldSerializer.serialize(triples, m_repeatableTerms);
                         JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
 
                         JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
