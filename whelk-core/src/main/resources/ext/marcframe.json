@@ -3623,14 +3623,26 @@
       "aboutEntity": "?record",
       "match": [
         {
+          "when": "$9",
+          "addLink": "identifiedBy",
+          "resourceType": "LibrisIIINumber",
+          "$a": {"property": "marc:value"},
+          "$9": {"property": "value"}
+        },
+        {
           "when": "$a =~ ^http://dbpedia\\.org/.+",
           "aboutEntity": "?thing",
           "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"}
+        },
+        {
+          "when": null,
+          "addLink": "identifiedBy",
+          "resourceType": "SystemNumber"
         }
       ],
-      "$a": {"addLink": "identifiedBy", "resourceType": "SystemNumber", "property": "value"},
+      "$a": {"property": "value"},
       "TODO:a": "extract value from parantheses and source as rdfs:label",
-      "$z": {"addProperty": "marc:canceledInvalidControlNumber"},
+      "$z": {"addProperty": "marc:hiddenValue"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"addProperty": "marc:groupid"},
       "$9": {"property": "librisIIINumber"},
@@ -3641,6 +3653,11 @@
             {"035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "123"}]}},
             {"035": {"ind1": " ", "ind2": " ", "subfields": [
               {"a": "http://dbpedia.org/resource/August_Strindberg"}]}}
+          ],
+          "normalized": [
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "http://dbpedia.org/resource/August_Strindberg"}]}},
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "123"}]}}
           ],
           "result": {
             "identifiedBy": [
@@ -3660,7 +3677,75 @@
             {"035": {"ind1": " ", "ind2": " ", "subfields": [{"9": "123"}]}}
           ],
           "result": {
-            "librisIIINumber": "123"
+            "identifiedBy": [{
+              "@type": "LibrisIIINumber",
+              "value": "123"
+            }]
+          }
+        },
+        {
+          "source": [
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "(OCoLC)ocn959625562"}]}},
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "(OCoLC)959625562"},
+              {"z": "(OCoLC)945232529"}
+            ]}}
+          ],
+          "result": {
+            "identifiedBy" : [ {
+              "@type" : "SystemNumber",
+              "value" : "(OCoLC)ocn959625562"
+            },{
+              "@type" : "SystemNumber",
+              "value" : "(OCoLC)959625562",
+              "marc:hiddenValue" : [ "(OCoLC)945232529" ]
+            } ]
+          }
+        },
+        {
+          "source": [
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [
+              {"z": "Uk-ES)T105446"},
+              {"z": "T105447"},
+              {"z": "T105448"},
+              {"z": "P6545"}
+            ]}},
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "(CStRLIN)ESTCT105447"}]}}
+          ],
+          "result": {
+            "identifiedBy" : [ {
+              "@type" : "SystemNumber",
+              "marc:hiddenValue" : ["Uk-ES)T105446", "T105447", "T105448", "P6545"]
+            },{
+              "@type" : "SystemNumber",
+              "value" : "(CStRLIN)ESTCT105447"
+            } ]
+          }
+        },
+        {
+          "source": [
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "123"}]}},
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "http://dbpedia.org/resource/August_Strindberg"}, {"z": "(OCoLC)945232529"}, {"9": "999"}]}}
+          ],
+          "normalized": [
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "http://dbpedia.org/resource/August_Strindberg"}, {"z": "(OCoLC)945232529"}, {"9": "999"}]}},
+            {"035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "123"}]}}
+          ],
+          "result": {
+            "identifiedBy": [
+              {
+                "@type": "SystemNumber",
+                "value": "123"
+              },
+              {
+                "@type": "LibrisIIINumber",
+                "value": "999",
+                "marc:hiddenValue": ["(OCoLC)945232529"],
+                "marc:value": "http://dbpedia.org/resource/August_Strindberg"
+              }
+            ]
           }
         }
       ]
@@ -3710,7 +3795,10 @@
             {"040": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Js"}]}}
           ],
           "result": {
-            "librisIIINumber": "9927672551",
+            "identifiedBy": [{
+              "@type": "LibrisIIINumber",
+              "value": "9927672551"
+            }],
             "descriptionCreator": {"@type": "Organization", "name": "Js"},
             "mainEntity": {
               "instanceOf": {
