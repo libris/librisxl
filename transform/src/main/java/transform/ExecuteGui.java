@@ -21,10 +21,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.List;
 
 public class ExecuteGui extends JFrame
 {
@@ -32,6 +30,7 @@ public class ExecuteGui extends JFrame
     public JTextArea m_sqlTextArea;
     public JTextArea m_originalRecordArea;
     public JTextArea m_transformedRecordArea;
+    private Set<String> m_repeatableTerms;
 
     public ExecuteGui()
     {
@@ -303,6 +302,7 @@ public class ExecuteGui extends JFrame
                                     m_whelk = new Whelk(m_envProps);
                                     Document.setBASE_URI( new URI( (String) m_envProps.get("baseUri")) );
                                     m_whelk.loadCoreData();
+                                    m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
                                 } catch (IOException | URISyntaxException ioe)
                                 {
                                     JOptionPane.showMessageDialog(m_parent, ioe.toString());
@@ -409,7 +409,13 @@ public class ExecuteGui extends JFrame
                     try
                     {
                         doc.data = script.executeOn(doc.data);
-                        doc.data = JsonLd.flatten(doc.data);
+
+                        // This should be : doc.data = JsonLd.flatten(doc.data);
+                        // but flatten() is unreliable and seems to introduce graph cycles. TODO
+                        List<String[]> triples = new JsonldSerializer().deserialize(doc.data);
+                        doc.data = JsonldSerializer.serialize(triples, s_repeatableTerms);
+                        JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
+
                         JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
                     } catch (Throwable e)
                     {
