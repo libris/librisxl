@@ -3645,7 +3645,6 @@
       "$z": {"addProperty": "marc:hiddenValue"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"addProperty": "marc:groupid"},
-      "$9": {"property": "librisIIINumber"},
       "_spec": [
         {
           "name": "interpret dbpedia URI as sameAs of instance",
@@ -3672,7 +3671,7 @@
           }
         },
         {
-          "name": "librisIIINumber",
+          "name": "LibrisIIINumber",
           "source": [
             {"035": {"ind1": " ", "ind2": " ", "subfields": [{"9": "123"}]}}
           ],
@@ -3723,6 +3722,7 @@
           }
         },
         {
+          "NOTE": "Very unlikely that this combination with 'dbpedia' together with $z and $9 will happen. But if that does, it will look as follows",
           "source": [
             {"035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "123"}]}},
             {"035": {"ind1": " ", "ind2": " ", "subfields": [
