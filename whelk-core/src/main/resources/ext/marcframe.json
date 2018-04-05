@@ -14691,7 +14691,7 @@
     "014": {
       "aboutEntity": "?record",
       "i1": {"property": "marc:typeOfLinkageNumber"},
-      "$a": {"property": "librisIIINumber"},
+      "$a": {"link": "identifiedBy", "resourceType": "LibrisIIINumber", "property": "value"},
       "repeatable": true
     },
     "016": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
