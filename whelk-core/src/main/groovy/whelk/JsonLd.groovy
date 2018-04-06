@@ -12,7 +12,7 @@ import whelk.exception.ModelValidationException
 import java.util.regex.Matcher
 
 @CompileStatic
-public class JsonLd {
+class JsonLd {
 
     static final String GRAPH_KEY = "@graph"
     static final String CONTEXT_KEY = "@context"
@@ -137,52 +137,51 @@ public class JsonLd {
         return expand(ref, (Map) displayData[CONTEXT_KEY])
     }
 
-    /**
-     * This flatten-method does not create description-based flat json (i.e. with entry, items and quoted)
-     */
-    static Map flatten(Map framedJsonLd) {
-        if (isFlat(framedJsonLd) || !framedJsonLd.containsKey(ID_KEY)) {
-            return framedJsonLd
+
+    static URI findRecordURI(Map jsonLd) {
+        String foundIdentifier = findIdentifier(jsonLd)
+        if (foundIdentifier) {
+            return Document.BASE_URI.resolve(foundIdentifier)
         }
-
-        def flatList = []
-
-        storeFlattened(framedJsonLd, flatList)
-
-        return [(GRAPH_KEY): flatList.reverse()]
+        return null
     }
 
-    private static Object storeFlattened(Object current, List result) {
-        if (current instanceof Map) {
-            def flattened = makeFlat(current, result)
-            if (flattened.containsKey(ID_KEY) && flattened.size() > 1) {
-                result.add(flattened)
+    static String findFullIdentifier(Map jsonLd) {
+        String foundIdentifier = null
+
+        if (!jsonLd) {
+            return null
+        }
+
+        if (isFlat(jsonLd)) {
+            log.trace("Received json is flat")
+            if (jsonLd.containsKey(GRAPH_KEY)) {
+                foundIdentifier = ((Map)((List)jsonLd.get(GRAPH_KEY)).first()).get(ID_KEY)
             }
-            def itemid = current.get(ID_KEY)
-            return (itemid ? [(ID_KEY): itemid] : current)
         }
-        return current
+
+        if (isFramed(jsonLd)) {
+            foundIdentifier = jsonLd.get(ID_KEY)
+        }
+
+        return foundIdentifier
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP)
-    private static Map makeFlat(obj, result) {
-        def updated = [:]
-        obj.each { key, value ->
-            if (value instanceof List) {
-                def newvaluelist = []
-                for (o in value) {
-                    newvaluelist.add(storeFlattened(o, result))
-                }
-                value = newvaluelist
-            } else {
-                value = storeFlattened(value, result)
+    static String findIdentifier(Map jsonLd) {
+        String foundIdentifier = findFullIdentifier(jsonLd)
+
+        if (foundIdentifier) {
+            if (foundIdentifier.startsWith("/") || foundIdentifier.startsWith(Document.BASE_URI.toString())) {
+                // Assumes only identifier in uri path
+                return Document.BASE_URI.resolve(foundIdentifier).getPath().substring(1)
             }
-            updated[(key)] = value
+            return foundIdentifier
+        } else {
+            return null
         }
-        return updated
     }
 
-    public static List getExternalReferences(Map jsonLd){
+    static List getExternalReferences(Map jsonLd){
         Set allReferences = getAllReferences(jsonLd)
         Set localObjects = getLocalObjects(jsonLd)
         List externalRefs = allReferences.minus(localObjects) as List
@@ -279,7 +278,7 @@ public class JsonLd {
         }
     }
 
-    public static Set getAllReferences(Map jsonLd) {
+    static Set getAllReferences(Map jsonLd) {
         List items
         if (jsonLd.containsKey(GRAPH_KEY)) {
             items = jsonLd.get(GRAPH_KEY)
@@ -330,6 +329,86 @@ public class JsonLd {
         return result
     }
 
+
+    //==== Class-hierarchies ====
+
+    void getSuperClasses(String type, List<String> result) {
+        def termMap = vocabIndex[type]
+        if (termMap == null)
+            return
+
+        if (termMap["subClassOf"] != null) {
+            List superClasses = (List) termMap["subClassOf"]
+
+            for (superClass in superClasses) {
+                if (superClass == null || superClass[ID_KEY] == null) {
+                    continue
+                }
+                String superClassType = toTermKey( (String) superClass[ID_KEY] )
+                result.add(superClassType)
+                getSuperClasses(superClassType, result)
+            }
+        }
+    }
+
+    private generateSubClassesLists() {
+        superClassOf = [:]
+        for (String type : vocabIndex.keySet()) {
+            def termMap = vocabIndex[type]
+            def superClasses = termMap["subClassOf"]
+
+            // Make list if not list already.
+            if (!(superClasses instanceof List))
+                superClasses = [superClasses]
+
+            for (superClass in superClasses) {
+                if (superClass == null || superClass[ID_KEY] == null) {
+                    continue
+                }
+
+                String superClassType = toTermKey( (String) superClass[ID_KEY] )
+                if (superClassOf[superClassType] == null)
+                    superClassOf[superClassType] = []
+                ((List)superClassOf[superClassType]).add(type)
+            }
+        }
+    }
+
+    boolean isSubClassOf(String type, String baseType) {
+        if (type == baseType)
+            return true
+        Set<String> bases = getSubClasses(baseType)
+        return type in bases
+    }
+
+    Set<String> getSubClasses(String type) {
+        Set<String> subClasses = subClassesByType[type]
+        if (subClasses.is(null)) {
+            subClasses = new HashSet<String>()
+            getSubClasses(type, subClasses)
+            subClassesByType[type] = subClasses
+        }
+        return subClasses
+    }
+
+    void getSubClasses(String type, Collection<String> result) {
+        if (type == null)
+            return
+
+        List subClasses = (List) (superClassOf[type])
+        if (subClasses == null)
+            return
+
+        result.addAll(subClasses)
+
+        for (String subClass : subClasses) {
+            getSubClasses(subClass, result)
+        }
+    }
+
+
+    //==== Embellish ====
+
     Map embellish(Map jsonLd, Map additionalObjects, boolean filterOutNonChipTerms = true) {
         if (!jsonLd.get(GRAPH_KEY)) {
             return jsonLd
@@ -367,7 +446,7 @@ public class JsonLd {
      * Convert a post to card.
      *
      */
-    public Map toCard(Map thing) {
+    Map toCard(Map thing) {
         Map lensGroups = displayData.get("lensGroups")
         Map cardLensGroup = lensGroups.get("cards")
         Map result = [:]
@@ -383,7 +462,7 @@ public class JsonLd {
      * Convert a post to chip.
      *
      */
-    public Object toChip(Object object) {
+    Object toChip(Object object) {
         Map lensGroups = displayData.get("lensGroups")
         Map chipLensGroup = lensGroups.get("chips")
         Map itemsToKeep = [:]
@@ -459,6 +538,130 @@ public class JsonLd {
         return (key in propertiesToKeep || key.startsWith("@"))
     }
 
+
+    //==== Flattening ====
+
+    static boolean isFlat(Map jsonLd) {
+        if ((jsonLd.containsKey(GRAPH_KEY) && jsonLd.get(GRAPH_KEY) instanceof List)) {
+            return true
+        }
+        return false
+    }
+
+    /**
+     * This flatten-method does not create description-based flat json
+     * (i.e. with entry, items and quoted)
+     *
+     */
+    static Map flatten(Map framedJsonLd) {
+        if (isFlat(framedJsonLd) || !framedJsonLd.containsKey(ID_KEY)) {
+            return framedJsonLd
+        }
+
+        def flatList = []
+
+        storeFlattened(framedJsonLd, flatList)
+
+        return [(GRAPH_KEY): flatList.reverse()]
+    }
+
+    private static Object storeFlattened(Object current, List result) {
+        if (current instanceof Map) {
+            def flattened = makeFlat(current, result)
+            if (flattened.containsKey(ID_KEY) && flattened.size() > 1) {
+                if (!result.contains(flattened)) {
+                    result.add(flattened)
+                }
+            }
+            def itemid = current.get(ID_KEY)
+            return (itemid ? [(ID_KEY): itemid] : flattened)
+        }
+        return current
+    }
+
+    private static Map makeFlat(Map obj, List result) {
+        def updated = [:]
+        obj.each { key, value ->
+            if (value instanceof List) {
+                def newvaluelist = []
+                for (o in value) {
+                    newvaluelist.add(storeFlattened(o, result))
+                }
+                value = newvaluelist
+            } else {
+                value = storeFlattened(value, result)
+            }
+            updated[(key)] = value
+        }
+        return updated
+    }
+
+
+    //==== Framing ====
+
+    static boolean isFramed(Map jsonLd) {
+        if (jsonLd && !jsonLd.containsKey(GRAPH_KEY)) {
+            return true
+        }
+        return false
+    }
+
+    static Map frame(String mainId, Map inData) {
+        Map<String, Map> idMap = getIdMap(inData)
+
+        Map mainItem = idMap[mainId]
+
+        Map framedData
+        try {
+            framedData = embed(mainId, mainItem, idMap, new HashSet<String>())
+            if (!framedData) {
+                throw new FramingException("Failed to frame JSONLD ($inData)")
+            }
+        } catch (StackOverflowError sofe) {
+            throw new FramingException("Unable to frame JSONLD ($inData). Recursive loop?)", sofe)
+        }
+
+        cleanUp(framedData)
+
+        return framedData
+    }
+
+    private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain) {
+        embedChain.add(mainId)
+        Map newItem = [:]
+        mainItem.each { key, value ->
+            newItem.put(key, toEmbedded(value, idMap, embedChain))
+        }
+        return newItem
+    }
+
+    private static Object toEmbedded(Object o, Map idMap, Set embedChain) {
+        if (o instanceof List) {
+            def newList = []
+            o.each {
+                newList.add(toEmbedded(it, idMap, embedChain))
+            }
+            return newList
+        }
+        if (o instanceof Map) {
+            Map obj = null
+            String oId = o.get(ID_KEY)
+            if (!oId) {
+                obj = (Map) o
+            } else if (!embedChain.contains(oId)) {
+                Map fullObj = (Map) idMap.get(oId)
+                obj = fullObj ? [:] + fullObj : null
+            }
+            if (obj) {
+                return embed(oId, obj, idMap, new HashSet<String>(embedChain))
+            }
+        }
+        return o
+    }
+
+    /*
+     * Traverse the data and index all non-reference objects on their @id:s.
+     */
     private static Map getIdMap(Map data) {
         Map idMap = new HashMap()
         populateIdMap(data, idMap)
@@ -467,10 +670,15 @@ public class JsonLd {
 
     private static void populateIdMap(Map data, Map idMap) {
         for (Object key : data.keySet()) {
-
-            if (key.equals("@id") && data.keySet().size() > 1)
+            if (key.equals(ID_KEY)
+                // Don't index references (i.e. objects with only an @id).
+                && data.keySet().size() > 1
+                // Don't index graphs, since their @id:s do not denote them.
+                && !data.containsKey(GRAPH_KEY)
+               ) {
                 idMap.put(data.get(key), data)
-
+                continue
+            }
             Object obj = data.get(key)
             if (obj instanceof List)
                 populateIdMap( (List) obj, idMap )
@@ -488,71 +696,21 @@ public class JsonLd {
         }
     }
 
-    private static void assembleFramed(Map currentNode, Map idMap, Set passedIDs) {
-        String id = currentNode.get("@id")
-
-        if (id != null && !passedIDs.contains(id)) {
-            passedIDs = new HashSet(passedIDs)
-            passedIDs.add(id)
-            Map object = (Map) idMap.get(id)
-            if (object != null) {
-                currentNode.clear()
-                currentNode.putAll( (Map) Document.deepCopy(object) )
-            }
-        }
-
-        for (Object key : currentNode.keySet()) {
-            Object object = currentNode.get(key)
-            if (object instanceof Map)
-                assembleFramed( (Map) object, idMap, passedIDs )
-            else if (object instanceof List)
-                assembleFramed( (List) object, idMap, passedIDs )
-        }
-
-    }
-
-    private static void assembleFramed(List list, Map idMap, Set passedIDs){
-        for (Object element: list) {
-            if (element instanceof Map)
-                assembleFramed((Map) element, idMap, passedIDs)
-            else if (element instanceof List)
-                assembleFramed((List) element, idMap, passedIDs)
-        }
-    }
-
-    public static Map frame(String mainId, Map originalData) {
-        if (mainId)
-            mainId = Document.BASE_URI.resolve(mainId)
-        else
-            return originalData
-
-        Map idMap = getIdMap(originalData)
-
-        // preamble
-        HashMap mainObject = new HashMap()
-        mainObject.put("@id", mainId)
-
-        // assemble
-        assembleFramed(mainObject, idMap, new HashSet())
-
-        // clean up
+    private static void cleanUp(Map framedMap) {
         Set referencedBNodes = new HashSet()
-        getReferencedBNodes(mainObject, referencedBNodes)
-        cleanUnreferencedBNodeIDs(mainObject, referencedBNodes)
-
-
-        return mainObject
+        getReferencedBNodes(framedMap, referencedBNodes)
+        cleanUnreferencedBNodeIDs(framedMap, referencedBNodes)
     }
 
     /**
-     * Fills the referencedBNodes set with all "_:*" ids that are referenced anywhere in the structure/document
-     * (and thus cannot be safely removed)
+     * Fills the referencedBNodes set with all "_:*" ids that are referenced
+     * anywhere in the structure/document (and thus cannot be safely removed).
      */
-    public static void getReferencedBNodes(Map map, Set referencedBNodes) {
+    static void getReferencedBNodes(Map map, Set referencedBNodes) {
         // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
         if (map.size() == 1) {
             String key = map.keySet().getAt(0)
-            if (key.equals("@id")) {
+            if (key.equals(ID_KEY)) {
                 String id = map.get(key)
                 if (id.startsWith("_:"))
                     referencedBNodes.add(id)
@@ -569,20 +727,20 @@ public class JsonLd {
         }
     }
 
-    public static void getReferencedBNodes(List list, Set referencedBNodes) {
+    static void getReferencedBNodes(List list, Set referencedBNodes) {
         for (Object item : list) {
             if (item instanceof Map)
                 getReferencedBNodes((Map) item, referencedBNodes)
         }
     }
 
-    public static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes) {
+    static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes) {
         if (map.size() > 1) {
-            if (map.containsKey("@id")) {
-                String id = map.get("@id")
+            if (map.containsKey(ID_KEY)) {
+                String id = map.get(ID_KEY)
 
                 if (id.startsWith("_:") && !referencedBNodes.contains(id)) {
-                    map.remove("@id")
+                    map.remove(ID_KEY)
                 }
             }
         }
@@ -597,213 +755,10 @@ public class JsonLd {
         }
     }
 
-    public static void cleanUnreferencedBNodeIDs(List list, Set referencedBNodes) {
+    static void cleanUnreferencedBNodeIDs(List list, Set referencedBNodes) {
         for (Object item : list) {
             if (item instanceof Map)
                 cleanUnreferencedBNodeIDs((Map) item, referencedBNodes)
-        }
-    }
-
-    private static Map embed(String mainId, Map mainItemMap, Map idMap, Set embedChain) {
-        embedChain.add(mainId)
-        mainItemMap.each { key, value ->
-            mainItemMap.put(key, toEmbedded(value, idMap, embedChain))
-        }
-        return mainItemMap
-    }
-
-    private static Object toEmbedded(Object o, Map idMap, Set embedChain) {
-        if (o instanceof List) {
-            def newList = []
-            o.each {
-                newList.add(toEmbedded(it, idMap, embedChain))
-            }
-            return newList
-        }
-        if (o instanceof Map) {
-            Map obj = null
-            String oId = o.get(ID_KEY)
-            if (!oId) {
-                obj = (Map) o
-            } else if (!embedChain.contains(oId)) {
-                obj = (Map) idMap.get(oId)
-            }
-            if (obj) {
-                return embed(oId, obj, idMap, embedChain)
-            }
-        }
-        return o
-    }
-
-    static URI findRecordURI(Map jsonLd) {
-        String foundIdentifier = findIdentifier(jsonLd)
-        if (foundIdentifier) {
-            return Document.BASE_URI.resolve(foundIdentifier)
-        }
-        return null
-    }
-
-    static String findFullIdentifier(Map jsonLd) {
-        String foundIdentifier = null
-
-        if (!jsonLd) {
-            return null
-        }
-
-        if (isFlat(jsonLd)) {
-            log.trace("Received json is flat")
-            if (jsonLd.containsKey(GRAPH_KEY)) {
-                foundIdentifier = ((Map)((List)jsonLd.get(GRAPH_KEY)).first()).get(ID_KEY)
-            }
-        }
-
-        if (isFramed(jsonLd)) {
-            foundIdentifier = jsonLd.get(ID_KEY)
-        }
-
-        return foundIdentifier
-    }
-
-    static String findIdentifier(Map jsonLd) {
-        String foundIdentifier = findFullIdentifier(jsonLd)
-
-        if (foundIdentifier) {
-            if (foundIdentifier.startsWith("/") || foundIdentifier.startsWith(Document.BASE_URI.toString())) {
-                // Assumes only identifier in uri path
-                return Document.BASE_URI.resolve(foundIdentifier).getPath().substring(1)
-            }
-            return foundIdentifier
-        } else {
-            return null
-        }
-    }
-
-
-
-    static boolean isFlat(Map jsonLd) {
-        if ((jsonLd.containsKey(GRAPH_KEY) && jsonLd.get(GRAPH_KEY) instanceof List)) {
-            return true
-        }
-        return false
-    }
-
-    static boolean isFramed(Map jsonLd) {
-        if (jsonLd && !jsonLd.containsKey(GRAPH_KEY)) {
-            return true
-        }
-        return false
-    }
-
-    private static Map getIdMapRecursively(Object thing) {
-        if (thing instanceof List) {
-            return getIdMapFromList(thing)
-        } else if (thing instanceof Map) {
-            return getIdMapFromMap(thing)
-        } else {
-            throw new FramingException(
-                "Unexpected structure in flat JSON-LD: ${thing}")
-        }
-    }
-
-    private static Map getIdMapFromList(List objects) {
-        Map idMap = [:]
-
-        for (object in objects) {
-            idMap = idMap + getIdMapRecursively(object)
-        }
-
-        return idMap
-    }
-
-    private static Map getIdMapFromMap(Map item) {
-        Map idMap = [:]
-
-        if (item.containsKey(GRAPH_KEY)) {
-            idMap = idMap + getIdMapRecursively(item.get(GRAPH_KEY))
-        } else if (item.containsKey(ID_KEY)) {
-            def id = item.get(ID_KEY)
-            if (idMap.containsKey(id)) {
-                Map existing = idMap.get(id)
-                idMap.put(id, existing + item)
-            } else {
-                idMap.put(id, item)
-            }
-        }
-
-        return idMap
-    }
-
-    public void getSuperClasses(String type, List<String> result) {
-        def termMap = vocabIndex[type]
-        if (termMap == null)
-            return
-
-        if (termMap["subClassOf"] != null) {
-            List superClasses = (List) termMap["subClassOf"]
-
-            for (superClass in superClasses) {
-                if (superClass == null || superClass["@id"] == null) {
-                    continue
-                }
-                String superClassType = toTermKey( (String) superClass["@id"] )
-                result.add(superClassType)
-                getSuperClasses(superClassType, result)
-            }
-        }
-    }
-
-    private generateSubClassesLists() {
-        superClassOf = [:]
-        for (String type : vocabIndex.keySet()) {
-            def termMap = vocabIndex[type]
-            def superClasses = termMap["subClassOf"]
-
-            // Make list if not list already.
-            if (!(superClasses instanceof List))
-                superClasses = [superClasses]
-
-            for (superClass in superClasses) {
-                if (superClass == null || superClass["@id"] == null) {
-                    continue
-                }
-
-                String superClassType = toTermKey( (String) superClass["@id"] )
-                if (superClassOf[superClassType] == null)
-                    superClassOf[superClassType] = []
-                ((List)superClassOf[superClassType]).add(type)
-            }
-        }
-    }
-
-    public boolean isSubClassOf(String type, String baseType) {
-        if (type == baseType)
-            return true
-        Set<String> bases = getSubClasses(baseType)
-        return type in bases
-    }
-
-    public Set<String> getSubClasses(String type) {
-        Set<String> subClasses = subClassesByType[type]
-        if (subClasses.is(null)) {
-            subClasses = new HashSet<String>()
-            getSubClasses(type, subClasses)
-            subClassesByType[type] = subClasses
-        }
-        return subClasses
-    }
-
-    public void getSubClasses(String type, Collection<String> result) {
-        if (type == null)
-            return
-
-        List subClasses = (List) (superClassOf[type])
-        if (subClasses == null)
-            return
-
-        result.addAll(subClasses)
-
-        for (String subClass : subClasses) {
-            getSubClasses(subClass, result)
         }
     }
 
