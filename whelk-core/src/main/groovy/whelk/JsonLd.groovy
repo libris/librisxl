@@ -579,8 +579,7 @@ public class JsonLd {
         return current
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP)
-    private static Map makeFlat(obj, result) {
+    private static Map makeFlat(Map obj, List result) {
         def updated = [:]
         obj.each { key, value ->
             if (value instanceof List) {
