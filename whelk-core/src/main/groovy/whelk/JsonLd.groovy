@@ -12,7 +12,7 @@ import whelk.exception.ModelValidationException
 import java.util.regex.Matcher
 
 @CompileStatic
-public class JsonLd {
+class JsonLd {
 
     static final String GRAPH_KEY = "@graph"
     static final String CONTEXT_KEY = "@context"
@@ -181,7 +181,7 @@ public class JsonLd {
         }
     }
 
-    public static List getExternalReferences(Map jsonLd){
+    static List getExternalReferences(Map jsonLd){
         Set allReferences = getAllReferences(jsonLd)
         Set localObjects = getLocalObjects(jsonLd)
         List externalRefs = allReferences.minus(localObjects) as List
@@ -278,7 +278,7 @@ public class JsonLd {
         }
     }
 
-    public static Set getAllReferences(Map jsonLd) {
+    static Set getAllReferences(Map jsonLd) {
         List items
         if (jsonLd.containsKey(GRAPH_KEY)) {
             items = jsonLd.get(GRAPH_KEY)
@@ -332,7 +332,7 @@ public class JsonLd {
 
     //==== Class-hierarchies ====
 
-    public void getSuperClasses(String type, List<String> result) {
+    void getSuperClasses(String type, List<String> result) {
         def termMap = vocabIndex[type]
         if (termMap == null)
             return
@@ -374,14 +374,14 @@ public class JsonLd {
         }
     }
 
-    public boolean isSubClassOf(String type, String baseType) {
+    boolean isSubClassOf(String type, String baseType) {
         if (type == baseType)
             return true
         Set<String> bases = getSubClasses(baseType)
         return type in bases
     }
 
-    public Set<String> getSubClasses(String type) {
+    Set<String> getSubClasses(String type) {
         Set<String> subClasses = subClassesByType[type]
         if (subClasses.is(null)) {
             subClasses = new HashSet<String>()
@@ -391,7 +391,7 @@ public class JsonLd {
         return subClasses
     }
 
-    public void getSubClasses(String type, Collection<String> result) {
+    void getSubClasses(String type, Collection<String> result) {
         if (type == null)
             return
 
@@ -446,7 +446,7 @@ public class JsonLd {
      * Convert a post to card.
      *
      */
-    public Map toCard(Map thing) {
+    Map toCard(Map thing) {
         Map lensGroups = displayData.get("lensGroups")
         Map cardLensGroup = lensGroups.get("cards")
         Map result = [:]
@@ -462,7 +462,7 @@ public class JsonLd {
      * Convert a post to chip.
      *
      */
-    public Object toChip(Object object) {
+    Object toChip(Object object) {
         Map lensGroups = displayData.get("lensGroups")
         Map chipLensGroup = lensGroups.get("chips")
         Map itemsToKeep = [:]
@@ -606,7 +606,7 @@ public class JsonLd {
         return false
     }
 
-    public static Map frame(String mainId, Map inData) {
+    static Map frame(String mainId, Map inData) {
         //if (mainId) {
         //    mainId = Document.BASE_URI.resolve(mainId)
         //}
@@ -720,7 +720,7 @@ public class JsonLd {
      * Fills the referencedBNodes set with all "_:*" ids that are referenced
      * anywhere in the structure/document (and thus cannot be safely removed).
      */
-    public static void getReferencedBNodes(Map map, Set referencedBNodes) {
+    static void getReferencedBNodes(Map map, Set referencedBNodes) {
         // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
         if (map.size() == 1) {
             String key = map.keySet().getAt(0)
@@ -741,14 +741,14 @@ public class JsonLd {
         }
     }
 
-    public static void getReferencedBNodes(List list, Set referencedBNodes) {
+    static void getReferencedBNodes(List list, Set referencedBNodes) {
         for (Object item : list) {
             if (item instanceof Map)
                 getReferencedBNodes((Map) item, referencedBNodes)
         }
     }
 
-    public static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes) {
+    static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes) {
         if (map.size() > 1) {
             if (map.containsKey(ID_KEY)) {
                 String id = map.get(ID_KEY)
@@ -769,7 +769,7 @@ public class JsonLd {
         }
     }
 
-    public static void cleanUnreferencedBNodeIDs(List list, Set referencedBNodes) {
+    static void cleanUnreferencedBNodeIDs(List list, Set referencedBNodes) {
         for (Object item : list) {
             if (item instanceof Map)
                 cleanUnreferencedBNodeIDs((Map) item, referencedBNodes)
