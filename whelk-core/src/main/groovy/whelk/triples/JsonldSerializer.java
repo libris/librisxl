@@ -434,8 +434,22 @@ public class JsonldSerializer
             Map objectMap = (Map) object;
             if (objectMap.containsKey("@graph"))
             {
-                Map quotedObject = (Map) objectMap.get("@graph");
-                pullId(map, (String) quotedObject.get("@id"), quotedObject);
+                Object quotedList = objectMap.get("@graph");
+                if (!(quotedList instanceof List))
+                {
+                    ArrayList list = new ArrayList(1);
+                    list.add(quotedList);
+                    quotedList = list;
+                }
+
+                for (Object quotedListElement : (List) quotedList )
+                {
+                    if (quotedListElement instanceof Map)
+                    {
+                        Map quotedObject = (Map) quotedListElement;
+                        pullId(map, (String) quotedObject.get("@id"), quotedObject);
+                    }
+                }
             }
         }
     }

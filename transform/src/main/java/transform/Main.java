@@ -234,10 +234,11 @@ public class Main
     private static TransformScript s_script;
     private static Whelk s_whelk;
     private static PrintWriter s_failureWriter;
+    private static Set<String> s_repeatableTerms;
 
     private static void executeScriptOnEnv(String[] args) throws Exception
     {
-        // parameters: [scriptfile] [secrectproperties-file] [collection]
+        // parameters: [scriptfile] [secretproperties-file] [collection]
 
         // Load the script
         BufferedReader scriptReader = new BufferedReader(new FileReader(args[1]));
@@ -257,6 +258,7 @@ public class Main
         s_whelk = new Whelk(storage);
         s_whelk.loadCoreData();
         s_failureWriter = new PrintWriter("transformations_failed " + new Date().toString() + ".log");
+        s_repeatableTerms = s_whelk.getJsonld().getRepeatableTerms();
 
         String collection = args[3];
 
@@ -289,13 +291,19 @@ public class Main
             try
             {
                 doc.data = s_script.executeOn(doc.data);
-                doc.data = JsonLd.flatten(doc.data);
+
+                // This should be : doc.data = JsonLd.flatten(doc.data);
+                // but flatten() is unreliable and seems to introduce graph cycles. TODO
+                List<String[]> triples = new JsonldSerializer().deserialize(doc.data);
+                doc.data = JsonldSerializer.serialize(triples, s_repeatableTerms);
                 JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
+
                 s_whelk.getStorage().storeAtomicUpdate(id, false, "xl", "Libris admin (transform)", (Document _doc) ->
                         _doc.data = doc.data
                 );
             } catch (Throwable e)
             {
+                e.printStackTrace();
                 s_failureWriter.println(id);
             }
         }
