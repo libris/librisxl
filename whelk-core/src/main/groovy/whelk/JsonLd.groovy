@@ -341,10 +341,10 @@ public class JsonLd {
             List superClasses = (List) termMap["subClassOf"]
 
             for (superClass in superClasses) {
-                if (superClass == null || superClass["@id"] == null) {
+                if (superClass == null || superClass[ID_KEY] == null) {
                     continue
                 }
-                String superClassType = toTermKey( (String) superClass["@id"] )
+                String superClassType = toTermKey( (String) superClass[ID_KEY] )
                 result.add(superClassType)
                 getSuperClasses(superClassType, result)
             }
@@ -362,11 +362,11 @@ public class JsonLd {
                 superClasses = [superClasses]
 
             for (superClass in superClasses) {
-                if (superClass == null || superClass["@id"] == null) {
+                if (superClass == null || superClass[ID_KEY] == null) {
                     continue
                 }
 
-                String superClassType = toTermKey( (String) superClass["@id"] )
+                String superClassType = toTermKey( (String) superClass[ID_KEY] )
                 if (superClassOf[superClassType] == null)
                     superClassOf[superClassType] = []
                 ((List)superClassOf[superClassType]).add(type)
@@ -724,7 +724,7 @@ public class JsonLd {
         // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
         if (map.size() == 1) {
             String key = map.keySet().getAt(0)
-            if (key.equals("@id")) {
+            if (key.equals(ID_KEY)) {
                 String id = map.get(key)
                 if (id.startsWith("_:"))
                     referencedBNodes.add(id)
@@ -750,11 +750,11 @@ public class JsonLd {
 
     public static void cleanUnreferencedBNodeIDs(Map map, Set referencedBNodes) {
         if (map.size() > 1) {
-            if (map.containsKey("@id")) {
-                String id = map.get("@id")
+            if (map.containsKey(ID_KEY)) {
+                String id = map.get(ID_KEY)
 
                 if (id.startsWith("_:") && !referencedBNodes.contains(id)) {
-                    map.remove("@id")
+                    map.remove(ID_KEY)
                 }
             }
         }
