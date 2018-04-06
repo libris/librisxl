@@ -3,7 +3,6 @@ package transform;
 import groovy.lang.Tuple2;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
-import whelk.JsonLd;
 import whelk.util.TransformScript;
 
 import java.io.BufferedReader;
@@ -43,11 +42,11 @@ public class SyntaxDiffReduce
 
             Map oldData = mapper.readValue(recordPair.getFirst(), Map.class);
             Document oldDoc = new Document(oldData);
-            oldData = JsonLd.frame(oldDoc.getCompleteId(), oldData);
+            oldData = TransformScript.attemptFrame(oldDoc.getCompleteId(), oldData);
 
             Map newData = mapper.readValue(recordPair.getSecond(), Map.class);
             Document newDoc = new Document(newData);
-            newData = JsonLd.frame(newDoc.getCompleteId(), newData);
+            newData = TransformScript.attemptFrame(newDoc.getCompleteId(), newData);
 
             //System.err.println("Start with +diff: " + appearingRules);
             //System.err.println("Start with -diff: " + disappearingRules);

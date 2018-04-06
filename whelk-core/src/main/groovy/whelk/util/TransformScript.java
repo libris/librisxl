@@ -951,8 +951,9 @@ public class TransformScript
         ObjectMapper mapper = new ObjectMapper();
         Map data = mapper.readValue(json, Map.class);
         Document doc = new Document(data);
-        if (m_modeFramed)
-            data = JsonLd.frame(doc.getShortId(), data);
+        if (m_modeFramed) {
+            data = attemptFrame(doc.getCompleteSystemId(), data);
+        }
 
         HashMap<String, Object> context = new HashMap<>();
         m_rootStatement.execute(data, context);
@@ -962,11 +963,19 @@ public class TransformScript
     public Map executeOn(Map data)
     {
         Document doc = new Document(data);
-        if (m_modeFramed)
-            data = JsonLd.frame(doc.getShortId(), data);
+        if (m_modeFramed) {
+            data = attemptFrame(doc.getCompleteSystemId(), data);
+        }
 
         HashMap<String, Object> context = new HashMap<>();
         m_rootStatement.execute(data, context);
+        return data;
+    }
+
+    public static Map attemptFrame(String recordId, Map data) {
+        if (recordId != null) {
+            return JsonLd.frame(recordId, data);
+        }
         return data;
     }
 }
