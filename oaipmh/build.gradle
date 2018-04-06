@@ -36,3 +36,7 @@ dependencies {
     // Testing
     testCompile 'junit:junit:4.12'
 }
+
+gretty {
+    systemProperties 'xl.secret.properties': System.getProperty("xl.secret.properties")
+}
