@@ -109,10 +109,8 @@ class JsonLdSpec extends Specification {
    def "should frame flat jsonld"() {
         given:
         def id = "1234"
-        //def documentId = Document.BASE_URI.resolve(id).toString()
-        def documentId = id
-        def input = ["@graph": [["@id": documentId, "foo": "bar"]]]
-        def expected = ["@id": documentId, "foo": "bar"]
+        def input = ["@graph": [["@id": id, "foo": "bar"]]]
+        def expected = ["@id": id, "foo": "bar"]
         expect:
         assert JsonLd.frame(id, input) == expected
     }
@@ -120,8 +118,7 @@ class JsonLdSpec extends Specification {
     def "framing framed jsonld should preserve input"() {
         given:
         def id = "1234"
-        def documentId = id //Document.BASE_URI.resolve(id).toString()
-        def input = ["@id": documentId, "foo": "bar"]
+        def input = ["@id": id, "foo": "bar"]
         expect:
         assert JsonLd.frame(id, input) == input
     }
@@ -129,9 +126,8 @@ class JsonLdSpec extends Specification {
     def "should flatten framed jsonld"() {
         given:
         def id = "1234"
-        def documentId = id//Document.BASE_URI.resolve(id).toString()
-        def input = ["@id": documentId, "foo": "bar"]
-        def expected = ["@graph": [["@id": documentId, "foo": "bar"]]]
+        def input = ["@id": id, "foo": "bar"]
+        def expected = ["@graph": [["@id": id, "foo": "bar"]]]
         expect:
         assert JsonLd.flatten(input) == expected
     }
@@ -139,8 +135,7 @@ class JsonLdSpec extends Specification {
     def "flattening flat jsonld should preserve input"() {
         given:
         def id = "1234"
-        def documentId = id //Document.BASE_URI.resolve(id).toString()
-        def input = ["@graph": [["@id": documentId, "foo": "bar"]]]
+        def input = ["@graph": [["@id": id, "foo": "bar"]]]
         expect:
         assert JsonLd.flatten(input) == input
     }
