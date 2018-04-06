@@ -607,23 +607,9 @@ class JsonLd {
     }
 
     static Map frame(String mainId, Map inData) {
-        //if (mainId) {
-        //    mainId = Document.BASE_URI.resolve(mainId)
-        //}
-
         Map<String, Map> idMap = getIdMap(inData)
 
         Map mainItem = idMap[mainId]
-        if (!mainItem) {
-            log.debug("No main item map found for $mainId, trying to find an identifier")
-            // Try to find an identifier to frame around
-            String foundIdentifier = Document.BASE_URI.resolve(findIdentifier(inData))
-
-            log.debug("Result of findIdentifier: $foundIdentifier")
-            if (foundIdentifier) {
-                mainItem = idMap.get(foundIdentifier)
-            }
-        }
 
         Map framedData
         try {
