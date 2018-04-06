@@ -549,7 +549,9 @@ public class JsonLd {
     }
 
     /**
-     * This flatten-method does not create description-based flat json (i.e. with entry, items and quoted)
+     * This flatten-method does not create description-based flat json
+     * (i.e. with entry, items and quoted)
+     *
      */
     static Map flatten(Map framedJsonLd) {
         if (isFlat(framedJsonLd) || !framedJsonLd.containsKey(ID_KEY)) {
@@ -567,8 +569,9 @@ public class JsonLd {
         if (current instanceof Map) {
             def flattened = makeFlat(current, result)
             if (flattened.containsKey(ID_KEY) && flattened.size() > 1) {
-                if (! result.contains(flattened))
+                if (!result.contains(flattened)) {
                     result.add(flattened)
+                }
             }
             def itemid = current.get(ID_KEY)
             return (itemid ? [(ID_KEY): itemid] : flattened)
@@ -604,60 +607,43 @@ public class JsonLd {
         return false
     }
 
-    public static Map frame(String mainId, Map originalData) {
-        if (!mainId)
-            return originalData
+    public static Map frame(String mainId, Map inData) {
+        //if (mainId) {
+        //    mainId = Document.BASE_URI.resolve(mainId)
+        //}
 
-        Map idMap = getIdMap(originalData)
+        Map<String, Map> idMap = getIdMap(inData)
 
-        // preamble
-        HashMap mainObject = new HashMap()
-        mainObject.put("@id", mainId)
+        Map mainItem = idMap[mainId]
+        if (!mainItem) {
+            log.debug("No main item map found for $mainId, trying to find an identifier")
+            // Try to find an identifier to frame around
+            String foundIdentifier = Document.BASE_URI.resolve(findIdentifier(inData))
 
-        // assemble
-        assembleFramed(mainObject, idMap, new HashSet())
-
-        // clean up
-        Set referencedBNodes = new HashSet()
-        getReferencedBNodes(mainObject, referencedBNodes)
-        cleanUnreferencedBNodeIDs(mainObject, referencedBNodes)
-
-
-        return mainObject
-    }
-
-    private static void assembleFramed(Map currentNode, Map idMap, Set passedIDs) {
-        String id = currentNode.get("@id")
-
-        if (id != null && !passedIDs.contains(id)) {
-            passedIDs = new HashSet(passedIDs)
-            passedIDs.add(id)
-            Map object = (Map) idMap.get(id)
-            if (object != null) {
-                currentNode.clear()
-                currentNode.putAll( (Map) Document.deepCopy(object) )
+            log.debug("Result of findIdentifier: $foundIdentifier")
+            if (foundIdentifier) {
+                mainItem = idMap.get(foundIdentifier)
             }
         }
 
-        for (Object key : currentNode.keySet()) {
-            Object object = currentNode.get(key)
-            if (object instanceof Map)
-                assembleFramed( (Map) object, idMap, passedIDs )
-            else if (object instanceof List)
-                assembleFramed( (List) object, idMap, passedIDs )
+        Map framedData
+        try {
+            framedData = embed(mainId, mainItem, idMap, new HashSet<String>())
+            if (!framedData) {
+                throw new FramingException("Failed to frame JSONLD ($inData)")
+            }
+        } catch (StackOverflowError sofe) {
+            throw new FramingException("Unable to frame JSONLD ($inData). Recursive loop?)", sofe)
         }
 
+        cleanUp(framedData)
+
+        return framedData
     }
 
-    private static void assembleFramed(List list, Map idMap, Set passedIDs){
-        for (Object element: list) {
-            if (element instanceof Map)
-                assembleFramed((Map) element, idMap, passedIDs)
-            else if (element instanceof List)
-                assembleFramed((List) element, idMap, passedIDs)
-        }
-    }
-
+    /*
+     * Traverse the data and index all non-reference objects on their @id:s.
+     */
     private static Map getIdMap(Map data) {
         Map idMap = new HashMap()
         populateIdMap(data, idMap)
@@ -687,9 +673,15 @@ public class JsonLd {
         }
     }
 
+    private static void cleanUp(Map framedMap) {
+        Set referencedBNodes = new HashSet()
+        getReferencedBNodes(framedMap, referencedBNodes)
+        cleanUnreferencedBNodeIDs(framedMap, referencedBNodes)
+    }
+
     /**
-     * Fills the referencedBNodes set with all "_:*" ids that are referenced anywhere in the structure/document
-     * (and thus cannot be safely removed)
+     * Fills the referencedBNodes set with all "_:*" ids that are referenced
+     * anywhere in the structure/document (and thus cannot be safely removed).
      */
     public static void getReferencedBNodes(Map map, Set referencedBNodes) {
         // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
@@ -747,12 +739,13 @@ public class JsonLd {
         }
     }
 
-    private static Map embed(String mainId, Map mainItemMap, Map idMap, Set embedChain) {
+    private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain) {
         embedChain.add(mainId)
-        mainItemMap.each { key, value ->
-            mainItemMap.put(key, toEmbedded(value, idMap, embedChain))
+        Map newItem = [:]
+        mainItem.each { key, value ->
+            newItem.put(key, toEmbedded(value, idMap, embedChain))
         }
-        return mainItemMap
+        return newItem
     }
 
     private static Object toEmbedded(Object o, Map idMap, Set embedChain) {
@@ -769,53 +762,14 @@ public class JsonLd {
             if (!oId) {
                 obj = (Map) o
             } else if (!embedChain.contains(oId)) {
-                obj = (Map) idMap.get(oId)
+                Map fullObj = (Map) idMap.get(oId)
+                obj = fullObj ? [:] + fullObj : null
             }
             if (obj) {
-                return embed(oId, obj, idMap, embedChain)
+                return embed(oId, obj, idMap, new HashSet<String>(embedChain))
             }
         }
         return o
-    }
-
-
-    private static Map getIdMapRecursively(Object thing) {
-        if (thing instanceof List) {
-            return getIdMapFromList(thing)
-        } else if (thing instanceof Map) {
-            return getIdMapFromMap(thing)
-        } else {
-            throw new FramingException(
-                "Unexpected structure in flat JSON-LD: ${thing}")
-        }
-    }
-
-    private static Map getIdMapFromList(List objects) {
-        Map idMap = [:]
-
-        for (object in objects) {
-            idMap = idMap + getIdMapRecursively(object)
-        }
-
-        return idMap
-    }
-
-    private static Map getIdMapFromMap(Map item) {
-        Map idMap = [:]
-
-        if (item.containsKey(GRAPH_KEY)) {
-            idMap = idMap + getIdMapRecursively(item.get(GRAPH_KEY))
-        } else if (item.containsKey(ID_KEY)) {
-            def id = item.get(ID_KEY)
-            if (idMap.containsKey(id)) {
-                Map existing = idMap.get(id)
-                idMap.put(id, existing + item)
-            } else {
-                idMap.put(id, item)
-            }
-        }
-
-        return idMap
     }
 
 }
