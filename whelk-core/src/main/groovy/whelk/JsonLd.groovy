@@ -640,6 +640,39 @@ public class JsonLd {
         return framedData
     }
 
+    private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain) {
+        embedChain.add(mainId)
+        Map newItem = [:]
+        mainItem.each { key, value ->
+            newItem.put(key, toEmbedded(value, idMap, embedChain))
+        }
+        return newItem
+    }
+
+    private static Object toEmbedded(Object o, Map idMap, Set embedChain) {
+        if (o instanceof List) {
+            def newList = []
+            o.each {
+                newList.add(toEmbedded(it, idMap, embedChain))
+            }
+            return newList
+        }
+        if (o instanceof Map) {
+            Map obj = null
+            String oId = o.get(ID_KEY)
+            if (!oId) {
+                obj = (Map) o
+            } else if (!embedChain.contains(oId)) {
+                Map fullObj = (Map) idMap.get(oId)
+                obj = fullObj ? [:] + fullObj : null
+            }
+            if (obj) {
+                return embed(oId, obj, idMap, new HashSet<String>(embedChain))
+            }
+        }
+        return o
+    }
+
     /*
      * Traverse the data and index all non-reference objects on their @id:s.
      */
@@ -741,39 +774,6 @@ public class JsonLd {
             if (item instanceof Map)
                 cleanUnreferencedBNodeIDs((Map) item, referencedBNodes)
         }
-    }
-
-    private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain) {
-        embedChain.add(mainId)
-        Map newItem = [:]
-        mainItem.each { key, value ->
-            newItem.put(key, toEmbedded(value, idMap, embedChain))
-        }
-        return newItem
-    }
-
-    private static Object toEmbedded(Object o, Map idMap, Set embedChain) {
-        if (o instanceof List) {
-            def newList = []
-            o.each {
-                newList.add(toEmbedded(it, idMap, embedChain))
-            }
-            return newList
-        }
-        if (o instanceof Map) {
-            Map obj = null
-            String oId = o.get(ID_KEY)
-            if (!oId) {
-                obj = (Map) o
-            } else if (!embedChain.contains(oId)) {
-                Map fullObj = (Map) idMap.get(oId)
-                obj = fullObj ? [:] + fullObj : null
-            }
-            if (obj) {
-                return embed(oId, obj, idMap, new HashSet<String>(embedChain))
-            }
-        }
-        return o
     }
 
 }
