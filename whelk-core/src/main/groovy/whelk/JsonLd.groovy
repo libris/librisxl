@@ -652,10 +652,15 @@ public class JsonLd {
 
     private static void populateIdMap(Map data, Map idMap) {
         for (Object key : data.keySet()) {
-
-            if (key.equals("@id") && data.keySet().size() > 1)
+            if (key.equals(ID_KEY)
+                // Don't index references (i.e. objects with only an @id).
+                && data.keySet().size() > 1
+                // Don't index graphs, since their @id:s do not denote them.
+                && !data.containsKey(GRAPH_KEY)
+               ) {
                 idMap.put(data.get(key), data)
-
+                continue
+            }
             Object obj = data.get(key)
             if (obj instanceof List)
                 populateIdMap( (List) obj, idMap )
