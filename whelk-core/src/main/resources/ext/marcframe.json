@@ -359,7 +359,7 @@
     },
 
     "agentpartnumber": {
-      "$n": {"about": "_:agent", "addProperty": "numeration", "punctuationChars": ","}
+      "$n": {"about": "_:agent", "addProperty": "marc:numeration", "punctuationChars": ","}
     },
 
     "TODO:hasPlace:includeWhereThisPendingIsUsed": {
@@ -8058,7 +8058,7 @@
       },
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
-      "$n": {"about": "_:agent", "addProperty": "numeration", "punctuationChars": ","},
+      "$n": {"about": "_:agent", "addProperty": "marc:numeration", "punctuationChars": ","},
       "_spec": [
         {
           "source": {
@@ -8075,7 +8075,7 @@
                 {
                   "@type": "ComplexSubject",
                   "termComponentList": [
-                    {"@type": "Organization", "name": "Kungl. biblioteket", "numeration": ["14"]},
+                    {"@type": "Organization", "name": "Kungl. biblioteket", "marc:numeration": ["14"]},
                     {"@type": "TopicSubdivision", "prefLabel": "samlingar"}
                   ],
                   "inScheme": {
@@ -8109,7 +8109,7 @@
                     "@type" : "Jurisdiction",
                     "name" : "Sverige"
                   },
-                  "numeration": ["15"],
+                  "marc:numeration": ["15"],
                   "marc:subordinateUnit" : ["Riksdagen"],
                   "place" : [{
                     "@type" : "Place",
@@ -8312,7 +8312,7 @@
                       "@type": "Meeting",
                       "name": "Vatican Council",
                       "date": ["1962-1965 :"],
-                      "numeration": ["(2nd :"],
+                      "marc:numeration": ["(2nd :"],
                       "place": [{
                         "@type": "Place",
                         "label": "Basilica di San Pietro in Vaticano)."
@@ -9657,7 +9657,7 @@
                     "@type": "Organization",
                     "marc:subordinateUnit" : ["Quinquennial Meeting"],
                     "date": ["1904"],
-                    "numeration": ["(1st :"],
+                    "marc:numeration": ["(1st :"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "International Council of Nurses."
@@ -9691,7 +9691,7 @@
                     "agent": {
                       "@type": "Jurisdiction",
                       "name": "National Fire Protection Association.",
-                      "numeration": ["101"]
+                      "marc:numeration": ["101"]
                     }
                   }
                 ]
@@ -9722,7 +9722,7 @@
                   "agent":{
                     "@type": "Organization",
                     "marc:subordinateUnit" : ["Institutionen för ABM.", "Kulturgeografi"],
-                    "numeration": ["101"],
+                    "marc:numeration": ["101"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Umeå universitet."
@@ -10042,7 +10042,7 @@
                       "@type": "Place",
                       "label": "Montréal, Québec)."
                     }],
-                    "numeration": ["21st :"],
+                    "marc:numeration": ["21st :"],
                     "date": ["1976:"],
                     "marc:subordinateUnit": ["Organizing Committee." , "Arts and Culture Program." ,  "Visual Arts Section."]
                   },
@@ -10090,7 +10090,7 @@
                           "@type": "Place",
                           "label": "Basilica di San Pietro in Vaticano)."
                         }],
-                        "numeration": ["(2nd :"],
+                        "marc:numeration": ["(2nd :"],
                         "date": ["1962-1965 :"]}
                     }
                   ]
@@ -10125,7 +10125,7 @@
                     }],
                     "contribution": [
                       {"@type": "PrimaryContribution",
-                        "agent": {"@type": "Meeting", "name": "Westminster Assembly", "numeration": ["10"]}}
+                        "agent": {"@type": "Meeting", "name": "Westminster Assembly", "marc:numeration": ["10"]}}
                     ]
                   }
                 }
@@ -13300,7 +13300,7 @@
               "exactMatch": {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
-                "numeration": ["(13 :"],
+                "marc:numeration": ["(13 :"],
                 "date": ["1986)."],
                 "isPartOf": {
                   "@type": "Organization",
