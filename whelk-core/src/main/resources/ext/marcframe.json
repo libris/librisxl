@@ -538,38 +538,41 @@
       }
     },
 
-    "variantPerson": {
-      "pendingResources": {
-        "_:agent": {"addLink": "hasVariant", "resourceType": "Person", "required": true}
-      },
+    "variantAgent": {
+      "addLink": "hasVariant",
+      "aboutAlias": "_:agent",
       "include": ["agentData"]
+    },
+
+    "variantPerson": {
+      "include": ["variantAgent"],
+      "resourceType": "Person"
     },
 
     "variantFamily": {
-      "pendingResources": {
-        "_:agent": {"addLink": "hasVariant", "resourceType": "Family", "required": true}
-      },
-      "include": ["agentData"]
+      "include": ["variantAgent"],
+      "resourceType": "Family"
     },
 
     "variantOrganization": {
-      "include": ["agentData"],
+      "include": ["variantAgent"],
+      "resourceType": "Organization",
       "pendingResources": {
-        "_:agent": {"addLink": "hasVariant", "resourceType": "Organization", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
       }
     },
 
     "variantJurisdiction": {
-      "include": ["agentData"],
+      "include": ["variantAgent"],
+      "resourceType": "Jurisdiction",
       "pendingResources": {
-        "_:agent": {"addLink": "hasVariant", "resourceType": "Jurisdiction", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"}
       }
     },
 
     "variantMeeting": {
-      "include": ["agentData"],
+      "include": ["variantAgent"],
+      "resourceType": "Meeting",
       "pendingResources": {
         "_:agent": {"addLink": "hasVariant", "resourceType": "Meeting", "required": true},
         "TODO:_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"}
@@ -12838,6 +12841,31 @@
           }
         },
         {
+          "source": [
+            {"400": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "One, Some"}]}
+            },
+            {"400": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Body, Some"}]}
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Concept",
+              "hasVariant": [
+                {
+                  "@type": "Person",
+                  "familyName":  "One", "givenName":  "Some"
+                },
+                {
+                  "@type": "Person",
+                  "familyName":  "Body", "givenName":  "Some"
+                }
+              ]
+            }
+          }
+        },
+        {
           "source": {
             "400": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Alexander"},
@@ -13079,16 +13107,16 @@
               "@type": "Concept",
               "hasVariant": [ {
                 "@type": "Jurisdiction",
-                "marc:subordinateUnit": ["Direction nationale de la santé et des affaires sociales"],
                 "isPartOf": {
                   "@type": "Jurisdiction",
                   "name": "Suède."
-                }
-              } ],
-              "marc:relatedAs": [{
-                "@type": "Relation",
-                "label": "Franska:"
-              }]
+                },
+                "marc:subordinateUnit": ["Direction nationale de la santé et des affaires sociales"],
+                "marc:relatedAs": [{
+                  "@type": "Relation",
+                  "label": "Franska:"
+                }]
+              } ]
             }
           }
         },
