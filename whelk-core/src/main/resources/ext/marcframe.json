@@ -461,9 +461,9 @@
       }
     },
 
-    "hasVersionData": {
+    "variantWork": {
       "include": ["hasWork"],
-      "addLink": "hasVersion",
+      "addLink": "hasVariant",
       "resourceType": "Work",
       "aboutAlias": "_:work",
       "pendingResources": {
@@ -476,8 +476,8 @@
       "$z": {"about": "_:work", "property": "marc:geographicSubdivision"}
     },
 
-    "hasVersionPerson": {
-      "include": ["hasVersionData"],
+    "variantWorkWithPerson": {
+      "include": ["variantWork"],
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -488,8 +488,8 @@
       }
     },
 
-    "hasVersionFamily": {
-      "include": ["hasVersionData"],
+    "variantWorkWithFamily": {
+      "include": ["variantWork"],
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -500,8 +500,8 @@
       }
     },
 
-    "hasVersionOrganization": {
-      "include": ["hasVersionData"],
+    "variantWorkWithOrganization": {
+      "include": ["variantWork"],
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -513,8 +513,8 @@
       }
     },
 
-    "hasVersionJurisdiction": {
-      "include": ["hasVersionData"],
+    "variantWorkWithJurisdiction": {
+      "include": ["variantWork"],
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -526,8 +526,8 @@
       }
     },
 
-    "hasVersionMeeting": {
-      "include": ["hasVersionData"],
+    "variantWorkWithMeeting": {
+      "include": ["variantWork"],
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -538,40 +538,40 @@
       }
     },
 
-    "exactMatchPerson": {
+    "variantPerson": {
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Person", "required": true}
+        "_:agent": {"addLink": "hasVariant", "resourceType": "Person", "required": true}
       },
       "include": ["agentData"]
     },
 
-    "exactMatchFamily": {
+    "variantFamily": {
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Family", "required": true}
+        "_:agent": {"addLink": "hasVariant", "resourceType": "Family", "required": true}
       },
       "include": ["agentData"]
     },
 
-    "exactMatchOrganization": {
+    "variantOrganization": {
       "include": ["agentData"],
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Organization", "required": true},
+        "_:agent": {"addLink": "hasVariant", "resourceType": "Organization", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
       }
     },
 
-    "exactMatchJurisdiction": {
+    "variantJurisdiction": {
       "include": ["agentData"],
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Jurisdiction", "required": true},
+        "_:agent": {"addLink": "hasVariant", "resourceType": "Jurisdiction", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"}
       }
     },
 
-    "exactMatchMeeting": {
+    "variantMeeting": {
       "include": ["agentData"],
       "pendingResources": {
-        "_:agent": {"link": "exactMatch", "resourceType": "Meeting", "required": true},
+        "_:agent": {"addLink": "hasVariant", "resourceType": "Meeting", "required": true},
         "TODO:_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"}
       }
     },
@@ -764,10 +764,10 @@
       }
     },
 
-    "hasPersona": {
+    "seeAlsoPerson": {
       "include": ["agentData"],
       "pendingResources": {
-        "_:agent": {"link": "hasPersona", "resourceType": "Person", "required": true}
+        "_:agent": {"addLink": "seeAlso", "resourceType": "Person", "required": true}
       },
       "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
     },
@@ -12781,35 +12781,35 @@
       "match": [
         {
           "when": "$t & i1=0",
-          "include": ["hasContribution", "hasVersionPerson", "agentdataPerson", "titledetails"]
+          "include": ["hasContribution", "variantWorkWithPerson", "agentdataPerson", "titledetails"]
         },
         {
           "when": "$t & i1=1",
-          "include": ["hasContribution", "hasVersionPerson", "agentdataNameOfPerson", "titledetails"]
+          "include": ["hasContribution", "variantWorkWithPerson", "agentdataNameOfPerson", "titledetails"]
         },
         {
           "when": "$t & i1=3",
-          "include": ["hasContribution", "hasVersionFamily", "agentdataFamily", "titledetails"]
+          "include": ["hasContribution", "variantWorkWithFamily", "agentdataFamily", "titledetails"]
         },
         {
           "when": "$t",
-          "include": ["hasContribution", "hasVersionPerson", "agentdataNameOfPerson", "titledetails"]
+          "include": ["hasContribution", "variantWorkWithPerson", "agentdataNameOfPerson", "titledetails"]
         },
         {
           "when": "i1=0",
-          "include": ["exactMatchPerson", "agentdataPerson"]
+          "include": ["variantPerson", "agentdataPerson"]
         },
         {
           "when": "i1=1",
-          "include": ["exactMatchPerson", "agentdataNameOfPerson"]
+          "include": ["variantPerson", "agentdataNameOfPerson"]
         },
         {
           "when": "i1=3",
-          "include": ["exactMatchFamily", "agentdataFamily"]
+          "include": ["variantFamily", "agentdataFamily"]
         },
         {
           "when": null,
-          "include": ["exactMatchPerson", "agentdataNameOfPerson"]
+          "include": ["variantPerson", "agentdataNameOfPerson"]
         }
       ],
       "$h": {"ignored": true},
@@ -12829,11 +12829,11 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "exactMatch": {
+              "hasVariant": [ {
                 "@type": "Person",
                 "familyName":  "Singh", "givenName":  "Bhagat",
                 "lifeSpan": "1921-"
-              }
+              } ]
             }
           }
         },
@@ -12848,13 +12848,13 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "exactMatch": {
+              "hasVariant": [ {
                 "@type": "Person",
                 "name":  "Alexander",
                 "marc:numeration": "III,",
                 "marc:titlesAndOtherWordsAssociatedWithAName": ["kung i Makedonien,"],
                 "lifeSpan": "356 f.Kr.-323 f.Kr"
-              }
+              } ]
             }
           }
         },
@@ -12866,10 +12866,10 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "exactMatch": {
+              "hasVariant": [ {
                 "@type": "Family",
                 "name":  "Family X"
-              }
+              } ]
             }
           }
         },
@@ -12883,7 +12883,7 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "hasVersion": [
+              "hasVariant": [
                 {
                   "@type": "Work",
                   "hasTitle": [{
@@ -12914,11 +12914,11 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "exactMatch": {
+              "hasVariant": [ {
                 "@type": "Person",
                 "familyName":  "Singh", "givenName":  "Bhagat",
                 "lifeSpan": "1921-"
-              }
+              } ]
             }
           }
         },
@@ -12931,7 +12931,7 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "hasVersion": [
+              "hasVariant": [
                 {
                   "@type": "Work",
                   "hasTitle": [{
@@ -12956,7 +12956,7 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "hasVersion": [
+              "hasVariant": [
                 {
                   "@type": "Work",
                   "hasTitle": [{
@@ -12986,7 +12986,7 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "hasVersion": [
+              "hasVariant": [
                 {
                   "@type": "Work",
                   "hasTitle": [{
@@ -13011,58 +13011,58 @@
       "match": [
         {
           "when": "$b & $t & i1=2",
-          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganizationSubUnit", "titledetails"],
+          "include": ["hasContribution", "variantWorkWithOrganization", "agentdataOrganizationSubUnit", "titledetails"],
           "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
         },
         {
           "when": "$b & $t & i1=1",
-          "include": ["hasContribution", "hasVersionJurisdiction", "agentdataOrganizationSubUnit", "titledetails"],
+          "include": ["hasContribution", "variantWorkWithJurisdiction", "agentdataOrganizationSubUnit", "titledetails"],
           "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
         },
         {
           "when": "$b & $t & i1=0",
-          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganizationSubUnit", "titledetails"],
+          "include": ["hasContribution", "variantWorkWithOrganization", "agentdataOrganizationSubUnit", "titledetails"],
           "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
         },
         {
           "when": "$t & i1=2",
-          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganization", "titledetails"]
+          "include": ["hasContribution", "variantWorkWithOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$t & i1=1",
-          "include": ["hasContribution", "hasVersionJurisdiction", "agentdataOrganization", "titledetails"]
+          "include": ["hasContribution", "variantWorkWithJurisdiction", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$t & i1=0",
-          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganization", "titledetails"]
+          "include": ["hasContribution", "variantWorkWithOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$b & i1=2",
-          "include": ["exactMatchOrganization", "agentdataOrganizationSubUnit", "agentpartnumber"]
+          "include": ["variantOrganization", "agentdataOrganizationSubUnit", "agentpartnumber"]
         },
         {
           "when": "$b & i1=1",
-          "include": ["exactMatchJurisdiction", "agentdataOrganizationSubUnit", "agentpartnumber"]
+          "include": ["variantJurisdiction", "agentdataOrganizationSubUnit", "agentpartnumber"]
         },
         {
           "when": "$b & i1=0",
-          "include": ["exactMatchOrganization", "agentdataOrganizationSubUnit", "agentpartnumber"]
+          "include": ["variantOrganization", "agentdataOrganizationSubUnit", "agentpartnumber"]
         },
         {
           "when": "i1=0 | i1=2",
-          "include": ["exactMatchOrganization", "agentdataOrganization", "agentpartnumber"]
+          "include": ["variantOrganization", "agentdataOrganization", "agentpartnumber"]
         },
         {
           "when": "i1=1",
-          "include": ["exactMatchJurisdiction", "agentdataOrganization", "agentpartnumber"]
+          "include": ["variantJurisdiction", "agentdataOrganization", "agentpartnumber"]
         },
         {
           "when": "$t",
-          "include": ["hasContribution", "hasVersionOrganization", "agentdataOrganization", "titledetails"]
+          "include": ["hasContribution", "variantWorkWithOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": null,
-          "include": ["exactMatchOrganization", "agentdataOrganization", "agentpartnumber"]
+          "include": ["variantOrganization", "agentdataOrganization", "agentpartnumber"]
         }
       ],
       "$h": {"ignored": true},
@@ -13077,14 +13077,14 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "exactMatch": {
+              "hasVariant": [ {
                 "@type": "Jurisdiction",
                 "marc:subordinateUnit": ["Direction nationale de la santé et des affaires sociales"],
                 "isPartOf": {
                   "@type": "Jurisdiction",
                   "name": "Suède."
                 }
-              },
+              } ],
               "marc:relatedAs": [{
                 "@type": "Relation",
                 "label": "Franska:"
@@ -13101,7 +13101,7 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "hasVersion": [
+              "hasVariant": [
                 {
                   "@type": "Work",
                   "hasTitle": [{
@@ -13126,7 +13126,7 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "hasVersion": [
+              "hasVariant": [
                 {
                   "@type": "Work",
                   "hasTitle": [{
@@ -13156,7 +13156,7 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "hasVersion": [
+              "hasVariant": [
                 {
                   "@type": "Work",
                   "hasTitle": [{
@@ -13186,7 +13186,7 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "hasVersion": [
+              "hasVariant": [
                 {
                   "@type": "Work",
                   "hasTitle": [{
@@ -13212,7 +13212,7 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "hasVersion": [
+              "hasVariant": [
                 {
                   "@type": "Work",
                   "hasTitle": [{
@@ -13244,14 +13244,14 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "exactMatch": {
+              "hasVariant": [ {
                 "@type": "Jurisdiction",
                 "marc:subordinateUnit": ["Estudios Territoriales, Oficina de"],
                 "isPartOf": {
                   "@type": "Jurisdiction",
                   "name": "Honduras"
                 }
-              }
+              } ]
             }
           }
         },
@@ -13264,14 +13264,14 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "exactMatch": {
+              "hasVariant": [ {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["Europaparlamentet"],
                 "isPartOf": {
                   "@type": "Organization",
                   "name": "Europeiska unionen."
                 }
-              }
+              } ]
             }
           }
         },
@@ -13297,7 +13297,7 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "exactMatch": {
+              "hasVariant": [ {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
                 "marc:numeration": ["(13 :"],
@@ -13306,7 +13306,7 @@
                   "@type": "Organization",
                   "name": "United Nations"
                 }
-              }
+              } ]
             }
           }
         },
@@ -13318,7 +13318,7 @@
           "FIXME:revert-result": {
             "mainEntity": {
               "@type": "Concept",
-              "exactMatch": [
+              "hasVariant": [
                 {
                   "@type": "Organization",
                   "name": "CISNU"
@@ -13342,11 +13342,11 @@
       "match": [
         {
           "when": "$t",
-          "include": ["hasVersionMeeting", "agentdataMeeting", "titledetails", "contributionRole_4_j"]
+          "include": ["variantWorkWithMeeting", "agentdataMeeting", "titledetails", "contributionRole_4_j"]
         },
         {
           "when": null,
-          "include": ["exactMatchMeeting", "agentdataMeeting"],
+          "include": ["variantMeeting", "agentdataMeeting"],
           "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
         }
       ],
@@ -13368,7 +13368,7 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "hasVersion": [
+              "hasVariant": [
                 {
                   "@type": "Work",
                   "hasTitle": [{
@@ -13395,7 +13395,7 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "exactMatch": {
+              "hasVariant": [ {
                 "@type": "Meeting",
                 "name": "International Population Conference",
                 "date": ["(1959 :"],
@@ -13404,7 +13404,7 @@
                   "@type": "Place",
                   "label": "Vienna, Austria)."
                 }]
-              }
+              } ]
             }
           }
         }
@@ -13489,7 +13489,6 @@
       "TODO:remnants-of-inherit": "bib:100",
       "TODO": "this is really a link to other auth post..",
       "NOTE": "not really though - see 100",
-      "TODO:hasPersona": "Is this correct?",
       "match": [
         {
           "when": "$t & i1=0",
@@ -13509,22 +13508,22 @@
         },
         {
           "when": "i1=0",
-          "include": ["hasPersona", "agentdataPerson"]
+          "include": ["seeAlsoPerson", "agentdataPerson"]
         },
         {
           "when": "i1=1",
-          "include": ["hasPersona", "agentdataNameOfPerson"]
+          "include": ["seeAlsoPerson", "agentdataNameOfPerson"]
         },
         {
           "when": "i1=3",
           "pendingResources": {
-            "_:agent": {"link": "seeAlso", "resourceType": "Family", "required": true}
+            "_:agent": {"addLink": "seeAlso", "resourceType": "Family", "required": true}
           },
           "include": ["agentData", "agentdataFamily"]
         },
         {
           "when": null,
-          "include": ["hasPersona", "agentdataNameOfPerson"]
+          "include": ["seeAlsoPerson", "agentdataNameOfPerson"]
         }
       ],
       "subfieldOrder": "w i a b c q d j e 4 t g m n p r s l k f o v x y z",
@@ -13538,10 +13537,10 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "seeAlso": {
+              "seeAlso": [ {
                 "@type": "Family",
                 "name": "Horn Family"
-              }
+              } ]
             }
           }
         },
@@ -13554,12 +13553,12 @@
           "result": {
             "mainEntity": {
               "@type": "Concept",
-              "hasPersona": {
+              "seeAlso": [ {
                 "@type": "Person",
                 "familyName": "Oats",
                 "givenName": "Joyce Carol",
                 "lifeSpan": "1938-"
-              }
+              } ]
             }
           }
         },
@@ -13644,7 +13643,7 @@
           "FIXME:revert-result": {
             "mainEntity": {
               "@type": "Person",
-              "hasPersona": [
+              "seeAlso": [
                 {"@type": "Person", "familyName": "Ekegren", "givenName": "Staffan", "lifeSpan": "1947-"},
                 {"@type": "Person", "familyName": "Lundberg", "givenName": "Sten", "lifeSpan": "1957-"},
                 {"@type": "Person", "familyName": "Persson", "givenName": "Lasse", "lifeSpan": "1957-"},
