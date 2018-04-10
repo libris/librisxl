@@ -574,8 +574,7 @@
       "include": ["variantAgent"],
       "resourceType": "Meeting",
       "pendingResources": {
-        "_:agent": {"addLink": "hasVariant", "resourceType": "Meeting", "required": true},
-        "TODO:_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"}
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"}
       }
     },
 
