@@ -12754,8 +12754,6 @@
       "$l": {"addProperty": "label"}
     },
     "378": {
-      "link": "marc:hasAuth378",
-      "resourceType": "marc:Auth378",
       "NOTE:local": "Uppgiften avser personnamn i auktoritetspostens fält 100.",
       "$q": {"property": "marc:fullerFormOfPersonalName"}
     },
