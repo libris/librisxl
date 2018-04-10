@@ -14074,7 +14074,7 @@
 
     "667": {
       "aboutEntity": "?record",
-      "$a": {"addProperty": "editorialNote"}
+      "$a": {"addProperty": "cataloguersNote"}
     },
     "670": {
       "aboutEntity": "?record",
