@@ -12749,7 +12749,7 @@
       "TODO:i2": {},
       "aboutEntity": "?thing",
       "aboutType": "Agent",
-      "addLink": "language", "resourceType": "Language",
+      "addLink": "associatedLanguage", "resourceType": "Language",
       "$a": {"uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"},
       "$l": {"addProperty": "label"}
     },
