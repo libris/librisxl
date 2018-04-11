@@ -14651,7 +14651,7 @@
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}",
         "matchUriToken": "^\\w{2,3}$",
-        "fixedDefault": "und"
+        "fixedDefault": "|||"
       },
       "[25]": {
         "link": "marc:copyReport",
@@ -14682,7 +14682,10 @@
           "source": {"008": "900101||    |   ||||||und|000000"},
           "normalized": {"008": "900101||    ||||||||||und|000000"},
           "result": {
-            "created": "1990-01-01T00:00:00.0+01:00"
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "mainEntity": {
+              "language": [{"@id": "https://id.kb.se/language/und"}]
+            }
           }
         },
         {
@@ -14692,7 +14695,8 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
-              "inventoryLevel": 1
+              "inventoryLevel": 1,
+              "language": [{"@id": "https://id.kb.se/language/und"}]
             }
           }
         },
@@ -14703,14 +14707,15 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
-              "inventoryLevel": "NaN"
+              "inventoryLevel": "NaN",
+              "language": [{"@id": "https://id.kb.se/language/und"}]
             }
           }
         },
       {
           "name": "non-zero-padded inventoryLevel and odd dates",
           "source": {"008": "121102||0   |||||1  b ||| 0     "},
-          "normalized": {"008": "121102||    |||||001b|und|000000"},
+          "normalized": {"008": "121102||    |||||001b|||||000000"},
           "result": {
             "created": "2012-11-02T00:00:00.0+01:00",
             "mainEntity": {
