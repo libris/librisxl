@@ -12635,8 +12635,8 @@
     },
     "370": {
       "aboutEntity": "?thing",
-      "addLink": "associatedLocale",
-      "resourceType": "Place",
+      "addLink": "marc:hasAssociatedPlace",
+      "resourceType": "marc:AssociatedPlace",
       "TODO": "match and split $a&b",
       "$a": {"property": "marc:placeOfBirth"},
       "$b": {"property": "marc:placeOfDeath"},
