@@ -14620,7 +14620,7 @@
       },
       "[14]": {
         "property": "marc:retentionPolicyNumberOfUnits",
-        "fixedDefault": " "
+        "fixedDefault": "|"
       },
       "[15]": {
         "link": "marc:retentionPolicyUnitType",
@@ -14669,7 +14669,7 @@
       "_spec": [
         {
           "source": {"008": "900101||    |   ||||||swe|000000"},
-          "normalized": {"008": "900101||    ||  ||||||swe|000000"},
+          "normalized": {"008": "900101||    ||| ||||||swe|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14680,7 +14680,7 @@
         {
           "name": "keep broken date values verbatim",
           "source": {"008": "900101||    |   ||||||und|000000"},
-          "normalized": {"008": "900101||    ||  ||||||und|000000"},
+          "normalized": {"008": "900101||    ||| ||||||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00"
           }
@@ -14688,7 +14688,7 @@
         {
           "name": "parse zero padded inventoryLevel",
           "source": {"008": "900101||    |   |001||und|000000"},
-          "normalized": {"008": "900101||    ||  |001||und|000000"},
+          "normalized": {"008": "900101||    ||| |001||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14699,7 +14699,7 @@
         {
           "name": "broken inventoryLevel",
           "source": {"008": "900101||    |   |NaN||und|000000"},
-          "normalized": {"008": "900101||    ||  ||||||und|000000"},
+          "normalized": {"008": "900101||    ||| ||||||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14710,7 +14710,7 @@
       {
           "name": "non-zero-padded inventoryLevel and odd dates",
           "source": {"008": "121102||0   |||||1  b ||| 0     "},
-          "normalized": {"008": "121102||    ||  |001b|und|000000"},
+          "normalized": {"008": "121102||    ||| |001b|und|000000"},
           "result": {
             "created": "2012-11-02T00:00:00.0+01:00",
             "mainEntity": {
