@@ -14594,7 +14594,8 @@
       "[6]": {
         "link": "marc:acquisitionStatus",
         "uriTemplate": "https://id.kb.se/marc/AcquisitionStatusType-{_}",
-        "matchUriToken": "^[12345acdnp]$"
+        "matchUriToken": "^[12345acdnp]$",
+        "fixedDefault": "|"
       },
       "[7]": {
         "link": "marc:acquisitionMethod",
