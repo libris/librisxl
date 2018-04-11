@@ -14605,7 +14605,7 @@
       "[8:12]": {
         "property": "marc:expectedAcquisitionEndDate",
         "TODO:parseDateTime": "yyMM", "timeZone": "CET",
-        "fixedDefault": "    ",
+        "fixedDefault": "0000",
         "matchAsDefault": "^ *0+ *$|^ +$|^\\|+$"
       },
       "[12]": {
@@ -14631,7 +14631,8 @@
       },
       "[16]": {
         "link": "marc:completeness",
-        "uriTemplate": "https://id.kb.se/marc/CompletenessType-{_}"
+        "uriTemplate": "https://id.kb.se/marc/CompletenessType-{_}",
+        "fixedDefault": "|"
       },
       "[17:20]": {
         "property": "inventoryLevel",
@@ -14670,7 +14671,7 @@
       "_spec": [
         {
           "source": {"008": "900101||    |   ||||||swe|000000"},
-          "normalized": {"008": "900101||    ||||||||||swe|000000"},
+          "normalized": {"008": "900101||0000||||||||||swe|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14681,7 +14682,7 @@
         {
           "name": "keep broken date values verbatim",
           "source": {"008": "900101||    |   ||||||und|000000"},
-          "normalized": {"008": "900101||    ||||||||||und|000000"},
+          "normalized": {"008": "900101||0000||||||||||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14692,7 +14693,7 @@
         {
           "name": "parse zero padded inventoryLevel",
           "source": {"008": "900101||    |   |001||und|000000"},
-          "normalized": {"008": "900101||    |||||001||und|000000"},
+          "normalized": {"008": "900101||0000|||||001||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14704,7 +14705,7 @@
         {
           "name": "broken inventoryLevel",
           "source": {"008": "900101||    |   |NaN||und|000000"},
-          "normalized": {"008": "900101||    ||||||||||und|000000"},
+          "normalized": {"008": "900101||0000||||||||||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14716,12 +14717,49 @@
       {
           "name": "non-zero-padded inventoryLevel and odd dates",
           "source": {"008": "121102||0   |||||1  b ||| 0     "},
-          "normalized": {"008": "121102||    |||||001b|||||000000"},
+          "normalized": {"008": "121102||0000|||||001b|||||000000"},
           "result": {
             "created": "2012-11-02T00:00:00.0+01:00",
             "mainEntity": {
               "inventoryLevel": 1,
               "marc:lendingPolicy": {"@id": "https://id.kb.se/marc/LendingPolicyType-b"}
+            }
+          }
+        },
+        {
+          "name": "value of completeness will be kept after revert",
+          "source": {"008": "900101||    |   1|||||swe|000000"},
+          "normalized": {"008": "900101||0000||||1|||||swe|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "mainEntity": {
+              "language": [{"@id": "https://id.kb.se/language/swe"}],
+              "marc:completeness" : {
+                "@id" : "https://id.kb.se/marc/CompletenessType-1"
+              }
+            }
+          }
+        },
+        {
+          "name": "completeness will be set to fixedDefault",
+          "source": {"008": "900101||    |    |||||swe|000000"},
+          "normalized": {"008": "900101||0000||||||||||swe|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "mainEntity": {
+              "language": [{"@id": "https://id.kb.se/language/swe"}]
+            }
+          }
+        },
+        {
+          "name": "Keep value of expectedAcquisitionEndDate",
+          "source": {"008": "811001||8107|    |||||swe|000000"},
+          "normalized": {"008": "811001||8107||||||||||swe|000000"},
+          "result": {
+            "created": "1981-10-01T00:00:00.0+01:00",
+            "mainEntity": {
+              "language": [{"@id": "https://id.kb.se/language/swe"}],
+              "marc:expectedAcquisitionEndDate": "8107"
             }
           }
         }
