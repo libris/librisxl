@@ -771,7 +771,7 @@
       "pendingResources": {
         "_:agent": {"addLink": "seeAlso", "resourceType": "Person", "required": true}
       },
-      "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+      "$0": {"about": "_:agent", "addProperty": "marc:recordControlNumber"}
     },
 
     "seeAlsoOrganization": {
@@ -783,7 +783,7 @@
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
-      "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+      "$0": {"about": "_:agent", "addProperty": "marc:recordControlNumber"}
     },
 
     "seeAlsoJurisdiction": {
@@ -795,7 +795,7 @@
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
-      "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+      "$0": {"about": "_:agent", "addProperty": "marc:recordControlNumber"}
     },
 
     "seeAlsoMeeting": {
@@ -807,7 +807,7 @@
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
-      "$0": {"about": "_:agent", "addLink": "identifiedBy", "property": "value"}
+      "$0": {"about": "_:agent", "addProperty": "marc:recordControlNumber"}
     },
 
     "contributionOrganization": {
@@ -1203,7 +1203,7 @@
       ]
     },
 
-    "subjectbase": {
+    "subjectbaseSansUri": {
       "include": ["termbase_with_uri_from_i2"],
       "i2": {
         "link": "inScheme",
@@ -1220,8 +1220,12 @@
         "uriTemplate": "https://id.kb.se/term/{_}",
         "resourceType": "ConceptScheme",
         "property": "code"
-      },
-      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"}
+      }
+    },
+
+    "subjectbase": {
+      "include": ["subjectbaseSansUri"],
+      "$0": {"addProperty": "marc:uri"}
     },
 
     "worksubjectData": {
@@ -6380,7 +6384,7 @@
         "resourceType": "Polarity",
         "property": "label"
       },
-      "$0": { "ignored": "true" },
+      "$0": { "NOTE:ignored": "true" },
       "TODO:subfield$2": "Source (NR)",
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "TODO:subfield$6": "Linkage (NR)",
@@ -12762,7 +12766,7 @@
       "resourceType": "GenreForm",
       "TODO": "link to gf",
       "$a": {"addProperty": "label"},
-      "$0": {"addProperty": "marc:uri"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
       "$2": {"property": "marc:sourceOfTerm"}
     },
     "381": {"ignored": true, "NOTE:record-count": 0},
@@ -13917,7 +13921,7 @@
       "$x": {"addProperty": "marc:generalSubdivision"},
       "$y": {"addProperty": "marc:chronologicalSubdivision"},
       "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$0": {"addLink": "identifiedBy", "property": "value"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
       "TODO:$4": {},
       "TODO:$5": {},
       "$6": {"property": "marc:fieldref"},
@@ -13969,6 +13973,7 @@
       "include": ["termbase_with_id", "relation_from_w"],
       "resourceType": "Topic",
       "$a": {"property": "prefLabel"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
       "_spec": [
         {
           "source": [
@@ -14106,6 +14111,7 @@
 
     "700": {
       "ignored": true,
+      "$0": {"addProperty": "marc:recordControlNumber"},
       "TODO": "exactMatch a Person (external system)"
     },
     "710": {
@@ -14291,15 +14297,16 @@
       "match": [
         {
           "when": "@type = Work",
-          "include": ["subjectbase"],
+          "include": ["subjectbaseSansUri"],
           "addLink": "subject"
         },
         {
           "when": null,
-          "include": ["subjectbase"]
+          "include": ["subjectbaseSansUri"]
         }
       ],
       "$a": {"property": "prefLabel"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/subject.html",
       "_spec": [
         {
@@ -14322,7 +14329,7 @@
                     "@id": "https://id.kb.se/term/lcsh",
                     "code": "lcsh"
                   },
-                  "identifiedBy": [{"@type": "Identifier", "value": "(DLC)sh 85006507"}]
+                  "marc:recordControlNumber": ["(DLC)sh 85006507"]
                 }
               ]
             }
@@ -14338,15 +14345,16 @@
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$4": {"addProperty": "marc:relatorCode"},
-      "$0": {"addProperty": "marc:authorityRecordControlNumber"}
+      "$0": {"addProperty": "marc:recordControlNumber"}
     },
     "755": {
-      "include": ["subjectbase"],
+      "include": ["subjectbaseSansUri"],
       "i1": null,
       "addLink": "closeMatch",
       "resourceType": "GenreForm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "$a": {"property": "prefLabel"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
     },
     "762": {"ignored": true, "NOTE:record-count": 0},
