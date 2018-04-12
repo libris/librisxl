@@ -12,7 +12,7 @@ import javax.net.ssl.SSLSocketFactory
 @CompileStatic
 public class LongTermHttpConnection
 {
-    private final int TIMEOUT_MS = 480000
+    private final int TIMEOUT_MS = 900000
     private int m_responseCode
     private String m_responseData
     private HashMap<String, String> m_responseHeaders
@@ -56,7 +56,7 @@ public class LongTermHttpConnection
                 break // We're done, no need for retries
             } catch (SocketException | IOException se)
             {
-                if (attempts > 3)
+                if (attempts > 5)
                 {
                     println("Failed to receive response, contents of response buffer so far:\n" + m_completeResponse.toString("UTF-8").toLowerCase() + "[ENDOFBUFFER]")
                     throw se
