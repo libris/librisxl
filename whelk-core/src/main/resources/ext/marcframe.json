@@ -14644,7 +14644,8 @@
       "[12]": {
         "link": "marc:retentionPolicy",
         "uriTemplate": "https://id.kb.se/marc/RetentionPolicyType-{_}",
-        "matchUriToken": "^[12345678]$"
+        "matchUriToken": "^[12345678]$",
+        "fixedDefault": "|"
       },
       "[13]": {
         "link": "marc:specificRetentionPolicy",
@@ -14793,6 +14794,17 @@
             "mainEntity": {
               "language": [{"@id": "https://id.kb.se/language/swe"}],
               "marc:expectedAcquisitionEndDate": "8107"
+            }
+          }
+        },
+        {
+          "name": "empty retentionPolicy will be set to fixedDefault",
+          "source": {"008": "900101||         |||||swe|000000"},
+          "normalized": {"008": "900101||0000||||||||||swe|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "mainEntity": {
+              "language": [{"@id": "https://id.kb.se/language/swe"}]
             }
           }
         }
