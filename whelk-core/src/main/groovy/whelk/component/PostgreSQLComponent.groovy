@@ -1131,56 +1131,6 @@ class PostgreSQLComponent {
         return new Tuple2<>(jsonbPath.toString(), value)
     }
 
-    // TODO: Update to real locate
-    @Deprecated
-    @CompileStatic(SKIP)
-    Location locate(String identifier, boolean loadDoc) {
-        log.debug("Locating $identifier")
-        if (identifier) {
-            if (identifier.startsWith("/")) {
-                identifier = identifier.substring(1)
-            }
-
-            def doc = load(identifier)
-            if (doc) {
-                return new Location(doc)
-            }
-
-            URI uri = null
-            try {
-                uri = Document.BASE_URI.resolve(identifier)
-            } catch (IllegalArgumentException iae) {
-                log.warn("Locate called with invalid identifier " +
-                         "\"${StringEscapeUtils.escapeJava(identifier)}\": " +
-                         "${iae.getMessage()}")
-                return null
-            }
-
-            log.debug("Finding location status for $uri")
-
-            def docStatus = status(uri)
-            if (docStatus.exists && !docStatus.deleted) {
-                if (loadDoc) {
-                    return new Location(load((String) docStatus.id)).withResponseCode(301)
-                } else {
-                    return new Location().withId(docStatus.id).withURI(docStatus.uri).withResponseCode(301)
-                }
-            }
-
-            log.debug("Check sameAs identifiers.")
-            doc = loadBySameAsIdentifier(identifier)
-            if (doc) {
-                if (loadDoc) {
-                    return new Location(doc).withResponseCode(303)
-                } else {
-                    return new Location().withId(doc.getShortId()).withURI(doc.getURI()).withResponseCode(303)
-                }
-            }
-        }
-
-        return null
-    }
-
     /**
      * Load document using supplied identifier as main ID
      *

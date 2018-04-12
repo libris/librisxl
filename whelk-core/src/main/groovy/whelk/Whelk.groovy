@@ -109,15 +109,15 @@ class Whelk {
     }
 
     void loadContextData() {
-        this.contextData = this.storage.locate(vocabContextUri, true).document.data
+        this.contextData = this.storage.getDocumentByIri(vocabContextUri).data
     }
 
     void loadDisplayData() {
-        this.displayData = this.storage.locate(vocabDisplayUri, true).document.data
+        this.displayData = this.storage.getDocumentByIri(vocabDisplayUri).data
     }
 
     void loadVocabData() {
-        this.vocabData = this.storage.locate(vocabUri, true).document.data
+        this.vocabData = this.storage.getDocumentByIri(vocabUri).data
     }
 
     //private long hits = 0
@@ -139,10 +139,11 @@ class Whelk {
                 // Fetch from DB
                 if (id.startsWith(Document.BASE_URI.toString())) {
                     id = Document.BASE_URI.resolve(id).getPath().substring(1)
-                    doc = storage.load(id)
-                } else {
-                    doc = storage.locate(id, true)?.document
                 }
+                doc = storage.load(id)
+                if (doc == null)
+                    doc = storage.getDocumentByIri(id)
+
 
                 if (doc && !doc.deleted) {
 
