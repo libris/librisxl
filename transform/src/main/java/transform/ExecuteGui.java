@@ -244,6 +244,7 @@ public class ExecuteGui extends JFrame
         private PreparedStatement m_statement;
         private ResultSet m_resultSet;
         private Document m_lastDocument;
+        private boolean m_executeLoud;
 
         public ActionResponse(Component parent)
         {
@@ -332,9 +333,19 @@ public class ExecuteGui extends JFrame
                 case "ExecuteAll":
                     String confirmation = JOptionPane.showInputDialog(m_parent,
                             "Please understand that performing this operation will permanently alter data in Libris.\n" +
-                            "To show that you understand this and want to proceed, please answer \"DESTROY DATA\".");
-                    if (confirmation.equals("DESTROY DATA"))
+                                    "To show that you understand this and want to proceed, please answer \"DESTROY DATA SILENTLY\" or \n" +
+                                    "\"DESTROY DATA LOUDLY\".\n\n" +
+                                    "LOUDLY means modified timestamps will be updated and, as a consequence, export of touched records will be triggered.");
+                    if (confirmation.equals("DESTROY DATA SILENTLY"))
+                    {
+                        m_executeLoud = false;
                         executeUnderDialog("Running transformation", "Starting..", this::executeAll);
+                    }
+                    else if (confirmation.equals("DESTROY DATA LOUDLY"))
+                    {
+                        m_executeLoud = true;
+                        executeUnderDialog("Running transformation", "Starting..", this::executeAll);
+                    }
                     else
                         JOptionPane.showMessageDialog(m_parent, "You did not correctly type \"DESTROY DATA\", so no changes were made.");
                     break;
@@ -358,11 +369,14 @@ public class ExecuteGui extends JFrame
                 Date now = new Date();
                 ThreadPool threadPool = new ThreadPool(64);
 
+                String successLogFileName = "transformations_ok " + now.toString() + ".log";
+                String failLogFileName = "transformations_failed " + now.toString() + ".log";
+                PrintWriter successWriter = new PrintWriter(successLogFileName);
+                PrintWriter failureWriter = new PrintWriter(failLogFileName);
+
                 try(Connection connection = m_whelk.getStorage().getConnection();
                 PreparedStatement statement = connection.prepareStatement(sqlString);
-                ResultSet resultSet = statement.executeQuery();
-                PrintWriter successWriter = new PrintWriter("transformations_ok" + now.toString() + ".log");
-                PrintWriter failureWriter = new PrintWriter("transformations_failed" + now.toString() + ".log"))
+                ResultSet resultSet = statement.executeQuery())
                 {
                     long startTime = System.currentTimeMillis();
                     long count = 0;
@@ -385,16 +399,22 @@ public class ExecuteGui extends JFrame
                         {
                             long elapsedMillis = System.currentTimeMillis() - startTime;
                             double speed = ((double) count) / ((double) elapsedMillis) * 1000.0;
-                            m_progressLabel.setText("" + count + " transformed so far. Running average: " + speed + " records per second.");
+                            m_progressLabel.setText("" + count + " dispatched so far. Running average: " + ((int)speed) + " records per second.");
                         }
                     }
                     if (!batch.isEmpty())
                         executeAllIn(batch, script, successWriter, failureWriter);
+                    threadPool.joinAll();
+                    JOptionPane.showMessageDialog(m_parent, "Done!\n\nPlease examine \"" + failLogFileName + "\" (and \"" + successLogFileName + "\") to make sure everything went as expected.");
                 } catch (SQLException e)
                 {
                     JOptionPane.showMessageDialog(m_parent, "SQL failure: " + e);
                 }
-            } catch (TransformScript.TransformSyntaxException | FileNotFoundException e)
+                finally {
+                    successWriter.close();
+                    failureWriter.close();
+                }
+            } catch (TransformScript.TransformSyntaxException | FileNotFoundException | InterruptedException e)
             {
                 JOptionPane.showMessageDialog(m_parent, e.toString());
             }
@@ -404,7 +424,7 @@ public class ExecuteGui extends JFrame
         {
             for (String shortId : shortIds)
             {
-                m_whelk.storeAtomicUpdate(shortId, false, "xl", "Libris admin", (Document doc) ->
+                m_whelk.storeAtomicUpdate(shortId, !m_executeLoud, "xl", "Libris admin", (Document doc) ->
                 {
                     try
                     {
