@@ -14671,7 +14671,7 @@
       "[17:20]": {
         "property": "inventoryLevel",
         "parseZeroPaddedNumber": true,
-        "fixedDefault": "|||"
+        "fixedDefault": "000"
       },
       "[20]": {
         "link": "marc:lendingPolicy",
@@ -14706,7 +14706,7 @@
       "_spec": [
         {
           "source": {"008": "900101||    |   ||||||swe|000000"},
-          "normalized": {"008": "900101||0000||||||||||swe|000000"},
+          "normalized": {"008": "900101||0000|||||000||swe|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14717,7 +14717,7 @@
         {
           "name": "keep broken date values verbatim",
           "source": {"008": "900101||    |   ||||||und|000000"},
-          "normalized": {"008": "900101||0000||||||||||und|000000"},
+          "normalized": {"008": "900101||0000|||||000||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14740,7 +14740,7 @@
         {
           "name": "broken inventoryLevel",
           "source": {"008": "900101||    |   |NaN||und|000000"},
-          "normalized": {"008": "900101||0000||||||||||und|000000"},
+          "normalized": {"008": "900101||0000|||||000||und|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14764,7 +14764,7 @@
         {
           "name": "value of completeness will be kept after revert",
           "source": {"008": "900101||    |   1|||||swe|000000"},
-          "normalized": {"008": "900101||0000||||1|||||swe|000000"},
+          "normalized": {"008": "900101||0000||||1000||swe|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14778,7 +14778,7 @@
         {
           "name": "completeness will be set to fixedDefault",
           "source": {"008": "900101||    |    |||||swe|000000"},
-          "normalized": {"008": "900101||0000||||||||||swe|000000"},
+          "normalized": {"008": "900101||0000|||||000||swe|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14789,7 +14789,7 @@
         {
           "name": "Keep value of expectedAcquisitionEndDate",
           "source": {"008": "811001||8107|    |||||swe|000000"},
-          "normalized": {"008": "811001||8107||||||||||swe|000000"},
+          "normalized": {"008": "811001||8107|||||000||swe|000000"},
           "result": {
             "created": "1981-10-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -14801,7 +14801,7 @@
         {
           "name": "empty retentionPolicy will be set to fixedDefault",
           "source": {"008": "900101||         |||||swe|000000"},
-          "normalized": {"008": "900101||0000||||||||||swe|000000"},
+          "normalized": {"008": "900101||0000|||||000||swe|000000"},
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
