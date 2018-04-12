@@ -47,20 +47,10 @@ public class Utils
         s_toMarcConverter = new JsonLD2MarcXMLConverter(s_toJsonLdConverter);
     }
 
-    static String convertToMarcXml(Document document) throws TransformerException, IOException
+    static String convertToMarcXml(Document document)
     {
         try
         {
-            // Embellish data
-            List externalRefs = document.getExternalRefs();
-            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) s_whelk.getJsonld().getDisplayData().get(JsonLd.getCONTEXT_KEY()));
-            Map referencedData = s_whelk.bulkLoad(convertedExternalLinks);
-            Map referencedData2 = new HashMap();
-            for (Object key : referencedData.keySet())
-                referencedData2.put(key, ((Document)referencedData.get(key)).data );
-
-            s_whelk.getJsonld().embellish(document.data, referencedData2, false);
-
             return (String) s_toMarcConverter.convert(document.data, document.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY());
         }
         catch (Exception | Error e)
@@ -127,7 +117,7 @@ public class Utils
         String xlShortId = s_whelk.getStorage().getSystemIdByIri(xlUri);
         if (xlShortId == null)
             return null;
-        Document document = s_whelk.getStorage().load(xlShortId);
+        Document document = s_whelk.getStorage().loadEmbellished(xlShortId, s_whelk.getJsonld());
 
         if (document.getDeleted())
             return null;
