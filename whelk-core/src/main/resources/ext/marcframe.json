@@ -14692,7 +14692,8 @@
       "[25]": {
         "link": "marc:copyReport",
         "uriTemplate": "https://id.kb.se/marc/CopyReportType-{_}",
-        "matchUriToken": "^[01]$"
+        "matchUriToken": "^[01]$",
+        "fixedDefault": "|"
       },
       "[26:32]": {
         "aboutEntity": "?record",
