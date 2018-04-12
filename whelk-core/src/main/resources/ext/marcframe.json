@@ -14436,7 +14436,7 @@
         "type": "MappedProperty",
         "sourceEntity": "?thing",
         "sourceLink": "itemOf",
-        "sourceProperty": "@type",
+        "sourceProperty": "issuanceType",
         "targetEntity": "?record",
         "targetProperty": "marc:holdingType",
         "valueMap": {
@@ -14452,19 +14452,51 @@
         },
         "_spec": [
           {
-            "source": {
+            "name": "compute value if itemOf data is given (normally not on convert)",
+            "result": {
               "mainEntity": {
-                "itemOf": {
-                  "@type": "Monograph"
-                }
+                "itemOf": {"issuanceType": "Monograph"}
+              }
+            },
+            "back": {
+              "marc:holdingType": "marc:SinglePartItemHolding",
+              "mainEntity": {
+                "itemOf": {"issuanceType": "Monograph"}
+              }
+            }
+          },
+          {
+            "name": "If no holdingType is present on revert, but itemOf is given, compute value",
+            "result": {
+              "mainEntity": {
+                "itemOf": {"issuanceType": "Serial"}
+              }
+            },
+            "back": {
+              "marc:holdingType": "marc:SerialItemHolding",
+              "mainEntity": {
+                "itemOf": {"issuanceType": "Monograph"}
+              }
+            }
+          },
+          {
+            "name": "Preserve explicit holdingType even if not matching itemOf.issuanceType",
+            "source": {
+              "marc:holdingType": "marc:MultipartItemHolding",
+              "mainEntity": {
+                "itemOf": {"issuanceType": "Monograph"}
               }
             },
             "result": {
-              "marc:holdingType": "marc:SinglePartItemHolding",
+              "marc:holdingType": "marc:MultipartItemHolding",
               "mainEntity": {
-                "itemOf": {
-                  "@type": "Monograph"
-                }
+                "itemOf": {"issuanceType": "Monograph"}
+              }
+            },
+            "back": {
+              "marc:holdingType": "marc:MultipartItemHolding",
+              "mainEntity": {
+                "itemOf": {"issuanceType": "Monograph"}
               }
             }
           }
@@ -14508,7 +14540,8 @@
       "[6]": {
         "aboutEntity": "?record",
         "property": "marc:holdingType",
-        "tokenMap": "HoldingType"
+        "tokenMap": "HoldingType",
+        "fixedDefault": "u"
       },
       "[7]": {
         "NOTE": "Undefined in MARC21/Voyager",

@@ -243,7 +243,7 @@ class MarcFrameConverterSpec extends Specification {
         result.fields[1]["008"] == "900101s1977    sw |||||||||||000 1dswe| "
     }
 
-    def "should handle postprocessing"() {
+    def "should handle postprocessing on convert"() {
         given:
         def data = deepcopy(item.spec.source)
         def record = data
@@ -254,16 +254,27 @@ class MarcFrameConverterSpec extends Specification {
         then:
         data == item.spec.result
 
+        where:
+        item << postProcStepSpecs.findAll { it.spec.source }
+    }
+
+    def "should handle postprocessing on revert"() {
+        given:
+        def data = deepcopy(item.spec.result)
+        def record = data
+        def thing = item.thingLink in data? data[item.thingLink] : data
+
         when:
         item.step.unmodify(record, thing)
         then:
         if (item.spec.back) {
-            def expected = (item.spec.back == true? item.spec.source : item.spec.back)
+            def expected =
+                item.spec.back == true ? item.spec.source : item.spec.back
             assert data == expected
         }
 
         where:
-        item << postProcStepSpecs
+        item << postProcStepSpecs.findAll { it.spec.source }
     }
 
     def "should process extra data"() {
