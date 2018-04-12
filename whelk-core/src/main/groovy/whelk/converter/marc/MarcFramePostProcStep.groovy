@@ -140,15 +140,20 @@ class MappedPropertyStep implements MarcFramePostProcStep {
     Map<String, String> valueMap
 
     /**
-     * Sets computed value if missing. Overrides any given value.
+     * Sets computed value if missing. Leaves any given value as is.
      */
     void modify(Map record, Map thing) {
-        def source = sourceEntity == "?record"? record : thing
         def target = targetEntity == "?record"? record : thing
+        if (target[targetProperty]) {
+            return
+        }
+
+        def source = sourceEntity == "?record"? record : thing
         def values = source.get(sourceLink)?.get(sourceProperty)
         if (values instanceof String) {
             values = [values]
         }
+
         for (value in values) {
             def mapped = valueMap[value]
             if (mapped) {
