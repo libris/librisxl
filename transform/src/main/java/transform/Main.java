@@ -298,7 +298,7 @@ public class Main
                 doc.data = JsonldSerializer.serialize(triples, s_repeatableTerms);
                 JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
 
-                s_whelk.getStorage().storeAtomicUpdate(id, false, "xl", "Libris admin (transform)", (Document _doc) ->
+                s_whelk.getStorage().storeAtomicUpdate(id, true, "xl", "Libris admin (transform)", (Document _doc) ->
                         _doc.data = doc.data
                 );
             } catch (Throwable e)
