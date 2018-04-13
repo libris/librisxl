@@ -424,7 +424,10 @@ public class ExecuteGui extends JFrame
         {
             for (String shortId : shortIds)
             {
-                m_whelk.storeAtomicUpdate(shortId, !m_executeLoud, "xl", null, (Document doc) ->
+                String changedBy = null;
+                if (m_executeLoud)
+                    changedBy = "Libriskörning, globala ändringar";
+                m_whelk.storeAtomicUpdate(shortId, !m_executeLoud, "xl", changedBy, (Document doc) ->
                 {
                     try
                     {
