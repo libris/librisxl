@@ -53,6 +53,8 @@ class Document {
     static final List encLevelPath = ["@graph", 0, "encodingLevel"]
     static final List statusPath = ["@graph", 0, "recordStatus"]
     static final List sigelPath = ["@graph", 1, "heldBy", "@id"]
+    static final List generationProcessPath = ["@graph", 0, "generationProcess"]
+    static final List generationDatePath = ["@graph", 0, "generationDate"]
 
     public Map data = [:]
     public int version = 0
@@ -78,6 +80,10 @@ class Document {
     void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber, LinkedHashMap) }
 
     String getControlNumber() { get(controlNumberPath) }
+
+    void setGenerationProcess(process) { set(generationProcessPath, process, LinkedHashMap) }
+
+    String getGenerationProcess() { get(generationProcessPath) }
 
     void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor, LinkedHashMap) }
 
@@ -164,6 +170,15 @@ class Document {
     }
 
     String getModified() { get(modifiedPath) }
+
+    void setGenerationDate(Date generationDate) {
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(generationDate.toInstant(), ZoneId.systemDefault())
+        String formatedGenerationDate = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
+        set(generationDatePath, formatedGenerationDate, HashMap)
+        updateRecordStatus()
+    }
+
+    String getGenerationDate() { get(generationDatePath) }
 
     void setDeleted(boolean newValue) {
         if (newValue)
