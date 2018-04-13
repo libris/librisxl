@@ -274,6 +274,7 @@
       "$f": {"property": "date"},
       "$g": {"addProperty": "comment"},
       "$h": {"property": "marc:mediaTerm"},
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
       "$k": {"addProperty": "qualifier"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$m": {"addProperty": "musicPerformanceMedium"},
