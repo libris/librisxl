@@ -130,13 +130,7 @@ class LegacyMarcAPI extends HttpServlet {
             tempFile.delete()
 
             // Embellish data
-            List externalRefs = rootDocument.getExternalRefs()
-            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) whelk.getJsonld().getDisplayData().get(JsonLd.getCONTEXT_KEY()))
-            Map referencedData = whelk.bulkLoad(convertedExternalLinks)
-            Map referencedData2 = new HashMap()
-            for (Object key : referencedData.keySet())
-                referencedData2.put(key, ((Document)referencedData.get(key)).data )
-            whelk.getJsonld().embellish(rootDocument.data, referencedData2, false)
+            whelk.embellish(rootDocument, false)
 
             Vector<MarcRecord> result = compileVirtualMarcRecord(profile, rootDocument)
 
