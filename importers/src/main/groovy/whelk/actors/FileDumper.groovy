@@ -92,8 +92,15 @@ class FileDumper implements MySQLLoader.LoadHandler {
                 if (recordMap != null) {
                     List<String[]> externalDependencies = whelk.storage.calculateDependenciesSystemIDs(recordMap.document)
                     recordMap["dependencies"] = externalDependencies
-                    Date now = new Date()
-                    recordMap.document.setModified(now)
+
+                    String modifiedString = recordMap.document.getModified()
+                    if (modifiedString == null)
+                        modifiedString = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( ZonedDateTime.now(ZoneId.systemDefault()) )
+
+                    ZonedDateTime modifiedZoned = ZonedDateTime.parse(modifiedString, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                    Date modified = Date.from(modifiedZoned.toInstant())
+                    recordMap.document.setModified(modified)
+
                     boolean cacheAuthForever = true
                     converterPool[threadIndex].linkFinder.normalizeIdentifiers(recordMap.document, cacheAuthForever)
                     if (externalDependencies.size() > 0) {
@@ -105,12 +112,12 @@ class FileDumper implements MySQLLoader.LoadHandler {
 
                         Instant min = ((Timestamp) depMinMaxModified.get(0)).toInstant()
                         Instant max = ((Timestamp) depMinMaxModified.get(1)).toInstant()
-                        Instant nowInstant = now.toInstant()
+                        Instant modifiedInstant = modified.toInstant()
 
-                        if (nowInstant.isBefore(min))
-                            min = nowInstant
-                        if (nowInstant.isAfter(max))
-                            max = nowInstant
+                        if (modifiedInstant.isBefore(min))
+                            min = modifiedInstant
+                        if (modifiedInstant.isAfter(max))
+                            max = modifiedInstant
 
                         recordMap["depMinModified"] = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( ZonedDateTime.ofInstant(min, ZoneId.systemDefault()) )
                         recordMap["depMaxModified"] = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( ZonedDateTime.ofInstant(max, ZoneId.systemDefault()) )
