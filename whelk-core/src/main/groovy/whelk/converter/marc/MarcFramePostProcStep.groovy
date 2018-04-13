@@ -124,6 +124,7 @@ class FoldJoinedPropertiesStep extends MarcFramePostProcStepBase {
                 return
             thing[sourceProperties[i]] = v
         }
+        thing[statusFlag] = statusFlagValue
     }
 
 }

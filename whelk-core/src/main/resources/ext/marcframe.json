@@ -1341,6 +1341,60 @@
 
     "postProcessing": [
       {
+        "type": "FoldJoinedProperties",
+        "statusFlag": "marc:publicationStatus",
+        "statusFlagValue": "marc:ContinuingResourceCurrentlyPublished",
+        "sourceProperties": ["marc:publishedYear", "marc:otherYear"],
+        "matchValuePattern": "^[0-9u]{4}$",
+        "property": "temporalCoverage",
+        "separator": "-",
+        "_spec": [
+          {
+            "source": {
+              "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+              "marc:publishedYear": "1977",
+              "marc:otherYear": "9999"
+            },
+            "result": {
+              "temporalCoverage": "1977-"
+            },
+            "back": {
+              "temporalCoverage": "1977-",
+              "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+              "marc:publishedYear": "1977",
+              "marc:otherYear": "9999"
+            }
+          }
+        ]
+      },
+      {
+        "type": "FoldJoinedProperties",
+        "statusFlag": "marc:publicationStatus",
+        "statusFlagValue": "marc:ContinuingResourceCeasedPublication",
+        "sourceProperties": ["marc:publishedYear", "marc:otherYear"],
+        "matchValuePattern": "^[0-9u]{4}$",
+        "property": "temporalCoverage",
+        "separator": "-",
+        "_spec": [
+          {
+            "source": {
+              "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+              "marc:publishedYear": "1977",
+              "marc:otherYear": "2017"
+            },
+            "result": {
+              "temporalCoverage": "1977-2017"
+            },
+            "back": {
+              "temporalCoverage": "1977-2017",
+              "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+              "marc:publishedYear": "1977",
+              "marc:otherYear": "2017"
+            }
+          }
+        ]
+      },
+      {
         "type": "FoldLinkedProperty",
         "statusFlag": "marc:publicationStatus",
         "statusFlagValue": "marc:SingleKnownDateProbableDate",
@@ -1426,48 +1480,6 @@
             },
             "result": {
               "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
-            }
-          }
-        ]
-      },
-      {
-        "type": "FoldJoinedProperties",
-        "statusFlag": "marc:publicationStatus",
-        "statusFlagValue": "marc:ContinuingResourceCurrentlyPublished",
-        "sourceProperties": ["marc:publishedYear", "marc:otherYear"],
-        "matchValuePattern": "^[0-9u]{4}$",
-        "property": "temporalCoverage",
-        "separator": "-",
-        "_spec": [
-          {
-            "source": {
-              "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
-              "marc:publishedYear": "1977",
-              "marc:otherYear": "9999"
-            },
-            "result": {
-              "temporalCoverage": "1977-"
-            }
-          }
-        ]
-      },
-      {
-        "type": "FoldJoinedProperties",
-        "statusFlag": "marc:publicationStatus",
-        "statusFlagValue": "marc:ContinuingResourceCeasedPublication",
-        "sourceProperties": ["marc:publishedYear", "marc:otherYear"],
-        "matchValuePattern": "^[0-9u]{4}$",
-        "property": "temporalCoverage",
-        "separator": "-",
-        "_spec": [
-          {
-            "source": {
-              "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
-              "marc:publishedYear": "1977",
-              "marc:otherYear": "2017"
-            },
-            "result": {
-              "temporalCoverage": "1977-2017"
             }
           }
         ]
