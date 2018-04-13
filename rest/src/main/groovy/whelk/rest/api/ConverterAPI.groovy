@@ -23,10 +23,6 @@ class ConverterAPI extends HttpServlet {
         // Do nothing - only here for Tomcat to have something to call
     }
 
-    public ConverterAPI(MarcFrameConverter marcFrameConverter) {
-        this.marcFrameConverter = marcFrameConverter
-    }
-
     @Override
     void init() {
         log.info("Starting converterAPI")

@@ -38,7 +38,8 @@ class ConverterAPISpec extends Specification {
             void setHeader(String h, String v) { headers.put(h, v) }
             String getHeader(String h) { headers.get(h) }
         }
-        converterApi = new ConverterAPI(new MarcFrameConverter())
+        converterApi = new ConverterAPI(
+                marcFrameConverter: new MarcFrameConverter())
         converterApi.init()
     }
 
