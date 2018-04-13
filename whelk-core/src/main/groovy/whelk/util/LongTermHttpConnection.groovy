@@ -12,7 +12,7 @@ import javax.net.ssl.SSLSocketFactory
 @CompileStatic
 public class LongTermHttpConnection
 {
-    private final int TIMEOUT_MS = 900000
+    private final int TIMEOUT_MS = 1800000
     private int m_responseCode
     private String m_responseData
     private HashMap<String, String> m_responseHeaders
