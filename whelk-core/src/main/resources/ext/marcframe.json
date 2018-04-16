@@ -1033,37 +1033,20 @@
     },
 
     "classification-ddc": {
-      "NOTE:resourceType": "ClassificationDdc",
-      "match": [
-        {
-          "when": "i1=0 & $2 =~ ^full$",
-          "$2": {"property": "edition"}
-        },
-        {
-          "when": "i1=1 & $2 =~ ^abridged$",
-          "$2": {"property": "edition"}
-        },
-        {
-          "NOTE": "Given a $2, ignore i1 on convert and set i1=7 on revert",
-          "when": "$2",
-          "i1": {"marcDefault": "7"},
-          "$2": {"property": "edition"}
-        }
-      ],
+      "resourceType": "ClassificationDdc",
       "i1": {
+        "NOTE": "i1=7 will be reverted to i1=' '",
         "property": "edition",
+        "marcDefault": " ",
         "tokenMap": {
           "0": "full",
           "1": "abridged",
-          "7": null
-        },
-        "definedElsewhereToken": "7"
+          "7": "other",
+          " ": "other"
+        }
       },
       "$a": {"property": "code", "required": true},
-      "$2": {
-        "requires-i1": "7",
-        "property": "edition"
-      }
+      "$2": {"property": "editionEnumeration"}
     },
 
     "termid": {
@@ -4162,11 +4145,10 @@
     "082": {
       "aboutEntity": "?work",
       "addLink": "classification",
-      "resourceType": "ClassificationDdc",
       "match": [
         {
-          "include": ["classification-ddc"],
           "when": "i2=4 & $q",
+          "include": ["classification-ddc"],
           "$q": {
             "requires-i2": "4",
             "link": "source",
@@ -4183,8 +4165,7 @@
         "link": "source",
         "resourceType": "Source",
         "uriTemplate": "http://id.loc.gov/vocabulary/organizations/{_}",
-        "definedElsewhereToken": "4",
-        "marcDefault": " ",
+        "marcDefault": "4",
         "property": "code",
         "tokenMap": {
           "0": "dlc"
@@ -4198,25 +4179,7 @@
       "_spec": [
         {
           "source": {
-            "082": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "158.1"}
-            ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "classification": [
-                {
-                  "@type": "ClassificationDdc",
-                  "code": "158.1",
-                  "edition": "full"
-                }
-              ]
-            }
-          }}
-        },
-        {
-          "source": {
-            "082": {"ind1": "7", "ind2": "0", "subfields": [
+            "082": {"ind1": "0", "ind2": "0", "subfields": [
               {"a": "158.1"},
               {"2": "23"}
             ]}},
@@ -4227,7 +4190,8 @@
                 {
                   "@type": "ClassificationDdc",
                   "code": "158.1",
-                  "edition": "23",
+                  "editionEnumeration": "23",
+                  "edition": "full",
                   "source": {
                     "@type": "Source",
                     "@id": "http://id.loc.gov/vocabulary/organizations/dlc",
@@ -4240,33 +4204,14 @@
         },
         {
           "source": {
-            "082": {"ind1": "7", "ind2": "4", "subfields": [
+            "082": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "158.1"},
-              {"2": "23/swe"},
-              {"q": "KB"}
+              {"2": "23"}
             ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "classification": [
-                {
-                  "@type": "ClassificationDdc",
-                  "code": "158.1",
-                  "edition": "23/swe",
-                  "source": {
-                    "@type": "Source",
-                    "label": "KB"
-                  }
-                }
-              ]
-            }
-          }}
-        },
-        {
-          "source": {
+          "normalized": {
             "082": {"ind1": "0", "ind2": "4", "subfields": [
               {"a": "158.1"},
-              {"q": "KB"}
+              {"2": "23"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -4274,28 +4219,108 @@
               "classification": [
                 {
                   "@type": "ClassificationDdc",
-                  "edition": "full",
                   "code": "158.1",
+                  "editionEnumeration": "23",
+                  "edition": "full"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "082": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "158.1"},
+              {"2": "23/swe"},
+              {"q": "L"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "code": "158.1",
+                  "edition": "other",
+                  "editionEnumeration": "23/swe",
                   "source": {
                     "@type": "Source",
-                    "label": "KB"
+                    "label": "L"
                   }
                 }
               ]
             }
           }}
-        }
-      ],
-      "_spec": [
+        },
+        {
+          "source": {
+            "082": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "808"},
+              {"b": ".066"},
+              {"2": "21"}
+            ]}},
+          "normalized": {
+            "082": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "808"},
+              {"b": ".066"},
+              {"2": "21"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "code": "808",
+                  "edition": "other",
+                  "editionEnumeration": "21",
+                  "itemPortion": ".066"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "082": {"ind1": "7", "ind2": "4", "subfields": [
+              {"a": "158.1"},
+              {"2": "23"},
+              {"q": "L"}
+            ]}},
+          "source": {
+            "082": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "158.1"},
+              {"2": "23"},
+              {"q": "L"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "editionEnumeration": "23",
+                  "edition": "other",
+                  "code": "158.1",
+                  "source": {
+                    "@type": "Source",
+                    "label": "L"
+                  }
+                }
+              ]
+            }
+          }}
+        },
         {
           "source": {
             "082": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "344.485074"}
+              {"a": "344.485"},
+              {"2": "15"}
             ]}},
           "normalized": {
-            "082": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "344.485074"},
-              {"2": "abridged"}
+            "082": {"ind1": "1", "ind2": "4", "subfields": [
+              {"a": "344.485"},
+              {"2": "15"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -4304,55 +4329,8 @@
                 {
                   "@type": "ClassificationDdc",
                   "edition": "abridged",
-                  "code": "344.485074"
-                }
-              ]
-            }
-          }}
-        },
-        {
-          "source": {
-            "082": {"ind1": "7", "ind2": " ", "subfields": [
-              {"a": "344.485074"},
-              {"2": "abridged"}
-            ]}},
-          "normalized": {
-            "082": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "344.485074"},
-              {"2": "abridged"}
-            ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "classification": [
-                {
-                  "@type": "ClassificationDdc",
-                  "edition": "abridged",
-                  "code": "344.485074"
-                }
-              ]
-            }
-          }}
-        },
-        {
-          "source": {
-            "082": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "344.485074"},
-              {"2": "23/swe"}
-            ]}},
-          "normalized": {
-            "082": {"ind1": "7", "ind2": " ", "subfields": [
-              {"a": "344.485074"},
-              {"2": "23/swe"}
-            ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "classification": [
-                {
-                  "@type": "ClassificationDdc",
-                  "edition": "23/swe",
-                  "code": "344.485074"
+                  "editionEnumeration": "15",
+                  "code": "344.485"
                 }
               ]
             }
@@ -4363,7 +4341,6 @@
     "083": {
       "aboutEntity": "?work",
       "addLink": "additionalClassificationDdc",
-      "resourceType": "ClassificationDdc",
       "include": ["classification-ddc"],
       "$c": {"ignored": true, "NOTE:record-count": 1, "NOTE:local": "Används normalt ej"},
       "$m": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Används normalt ej"},
@@ -4376,11 +4353,6 @@
           "source": {
             "083": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "158.1"}
-            ]}},
-          "normalized": {
-            "083": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "158.1"},
-              {"2": "full"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -4402,15 +4374,21 @@
               {"q": "KB"},
               {"2": "23/nor"}
             ]}},
-          "TODO:result": {"mainEntity": {
-            "FIXME": "How to do with languages other than 'swe'",
+          "normalized": {
+            "083": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "598.0994"},
+              {"q": "KB"},
+              {"2": "23/nor"}
+            ]}},
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "additionalClassification": [
+              "additionalClassificationDdc": [
                 {
                   "@type": "ClassificationDdc",
                   "code": "598.0994",
-                  "edition": "23/nor",
+                  "edition": "other",
+                  "editionEnumeration": "23/nor",
                   "source": {
                     "@type": "Source",
                     "label": "KB"
