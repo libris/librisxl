@@ -10,8 +10,6 @@
 
   "pendingResources": {
     "?record": {
-      "about": "?thing",
-      "TODO:link": "meta",
       "resourceType": "Record",
       "uriTemplate": "http://libris.kb.se/{marcType}/{controlNumber}",
       "matchUriTokens": {

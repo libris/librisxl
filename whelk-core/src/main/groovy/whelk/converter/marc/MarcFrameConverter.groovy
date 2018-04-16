@@ -401,12 +401,13 @@ class MarcConversion {
             }
         }
 
-        def marc = [:]
-        def fields = []
+        Map state = [:]
+        Map marc = [:]
+        List fields = []
         marc['fields'] = fields
         marcRuleSet.revertFieldOrder.each { tag ->
             def handler = marcRuleSet.fieldHandlers[tag]
-            def value = handler.revert(data, marc)
+            def value = handler.revert(state, data, marc)
             if (tag == "000") {
                 marc.leader = value
             } else {
@@ -445,7 +446,7 @@ class MarcRuleSet {
     MarcConversion conversion
     String name
 
-    // TODO: too rigid, change to topPendingResourcesChain computed from topPendingResources
+    // NOTE: use of these is rather rigid. (Also see buildAboutMap.)
     String thingLink
     String definingTrait
 
@@ -460,6 +461,7 @@ class MarcRuleSet {
     Map<String, Set<String>> aboutTypeMap = new HashMap<String, Set<String>>()
 
     Map<String, Map> topPendingResources = [:]
+    List<String> topPendingKeys
 
     Map oaipmhSetSpecPrefixMap = [:]
 
@@ -537,6 +539,8 @@ class MarcRuleSet {
 
             fieldHandlers[tag] = handler
         }
+
+        topPendingKeys = Util.getSortedPendingKeys(topPendingResources)
 
         String defaultThingType = topPendingResources['?thing']?.resourceType
         if (defaultThingType) {
@@ -656,9 +660,10 @@ class MarcRuleSet {
     }
 
     boolean matchesData(Map data) {
-        // TODO:
-        // - Should be one of instanceOf, itemOf, focus? Must not collide.
-        // - Remove type-matching altogether?
+        // IMPROVE:
+        // - definingTrait now has to be one of instanceOf or itemOf or none.
+        // - Improvable now: use ld.isSubClassOf(thing[TYPE], thingType)
+        //   (and remove this crude type-check fallback).
         if (definingTrait && data[thingLink] && data[thingLink][definingTrait])
             return true
 
@@ -890,28 +895,23 @@ class ConversionPart {
         }
     }
 
-    Map getEntity(Map data) {
-        /* TODO: build topPendingResources once then revert all fields
-        for (linkStep in topPendingResourcesChain[aboutEntityName]) {
-            def child = data[linkStep]
-            if (child) {
-                data = child
-            } else {
-                return null
-            }
-        }
-        return data
-        */
-        if (aboutEntityName == '?record') {
+    Map getEntity(Map state, Map data, String aboutAlias = '?record') {
+        boolean dataIsRecord = ruleSet.thingLink in data
+        if (!dataIsRecord) {
             return data
         }
-        if (ruleSet.thingLink in data) {
-            data = (Map) data[ruleSet.thingLink]
-            if (aboutEntityName != '?thing' && ruleSet.definingTrait in data) {
-                data = (Map) data[ruleSet.definingTrait]
-            }
+
+        Map<String, List> aboutMap
+        if (!state.aboutMap) {
+            Tuple2 okAndMap = buildAboutMap(ruleSet.topPendingResources, ruleSet.topPendingKeys, data, aboutAlias)
+            assert okAndMap[0]
+            aboutMap = (Map<String, List>) okAndMap[1]
+            state.aboutMap = aboutMap
+        } else {
+            aboutMap = (Map<String, List>) state.aboutMap
         }
-        return data
+
+        return (Map) aboutMap[aboutEntityName]?.get(0) ?: data
     }
 
     def revertObject(obj) {
@@ -987,6 +987,58 @@ class ConversionPart {
                   : types.contains(baseType)
     }
 
+    @CompileStatic(SKIP)
+    Tuple2<Boolean, Map<String, List>> buildAboutMap(Map pendingResources, List<String> pendingKeys, Map entity, String aboutAlias) {
+        Map<String, List> aboutMap = [:]
+        boolean requiredOk = true
+
+        if (aboutAlias) {
+            aboutMap[aboutAlias] = [entity]
+        }
+
+        if (pendingResources) {
+            pendingKeys.each { String key ->
+                if (key in aboutMap) {
+                    return
+                }
+                Map pendingDfn = pendingResources[key]
+                def resourceType = pendingDfn.resourceType
+                def parents = pendingDfn.about == null ? [entity] :
+                    pendingDfn.about in aboutMap ? aboutMap[pendingDfn.about] : null
+
+                parents?.each {
+                    def about = it[pendingDfn.link ?: pendingDfn.addLink]
+                    if (!about && pendingDfn.absorbSingle) {
+                        if (isInstanceOf(it, pendingDfn.resourceType)) {
+                            about = it
+                        } else {
+                            requiredOk = false
+                        }
+                    }
+                    Util.asList(about).eachWithIndex { item, pos ->
+                        if (!item || (pendingDfn.resourceType && !isInstanceOf(item, pendingDfn.resourceType))) {
+                            return
+                        } else if (pos == 0 && pendingDfn.itemPos == 'rest') {
+                            return
+                        } else if (pos > 0 && pendingDfn.itemPos == 'first') {
+                            return
+                        }
+                        aboutMap.get(key, []).add(item)
+                    }
+                }
+            }
+        }
+        // TODO: we can now move this into the loop, yes?
+        boolean missingRequired = pendingResources?.find { key, pendingDfn ->
+            pendingDfn.required && !(key in aboutMap)
+        }
+        if (missingRequired) {
+            requiredOk = false
+        }
+
+        return new Tuple2<Boolean, Map>(requiredOk, aboutMap)
+    }
+
 }
 
 @CompileStatic
@@ -1049,7 +1101,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
 
     abstract ConvertResult convert(Map state, value)
 
-    abstract def revert(Map data, Map result)
+    abstract def revert(Map state, Map data, Map result)
 
     String getFieldId() {
         return "${ruleSet.name} ${tag}"
@@ -1183,12 +1235,12 @@ class MarcFixedFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    def revert(Map data, Map result, boolean keepEmpty = false) {
+    def revert(Map state, Map data, Map result, boolean keepEmpty = false) {
         def value = new StringBuilder(FIXED_NONE * fieldSize)
         def actualValue = false
         for (col in columns) {
             assert value.size() > col.start // columns must fit within value
-            String obj = (String) col.revert(data)
+            String obj = (String) col.revert(state, data)
             if (obj && col.width >= obj.size()) {
                 def end = col.start + obj.size() - 1
                 value[col.start..end] = obj
@@ -1259,8 +1311,8 @@ class MarcFixedFieldHandler {
         }
 
         @CompileStatic(SKIP)
-        def revert(Map data) {
-            def v = super.revert(data, null)
+        def revert(Map state, Map data) {
+            def v = super.revert(state, data, null)
             if ((v == null || v.every { it == null }) && fixedDefault)
                 return fixedDefault
 
@@ -1380,10 +1432,10 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         return new ConvertResult(baseOk && ok)
     }
 
-    def revert(Map data, Map result) {
-        def rootEntity = getEntity(data)
-        // TODO: using rootEntity instead of data fails when reverting bib 008
+    def revert(Map state, Map data, Map result) {
+        // NOTE: using rootEntity instead of data here fails on revert of bib 008
         def entities = [data]
+        def rootEntity = getEntity(state, data)
         if (link) {
             entities = rootEntity.get(link) ?: []
         }
@@ -1397,10 +1449,10 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
         for (entity in entities) {
             def value = null
             if (baseConverter)
-                value = baseConverter.revert(entity, result, true)
+                value = baseConverter.revert(state, entity, result, true)
             def tokenBasedConverter = handlerMap[getToken(result.leader, value)]
             if (tokenBasedConverter) {
-                def overlay = tokenBasedConverter.revert(entity, result, true)
+                def overlay = tokenBasedConverter.revert(state, entity, result, true)
                 if (value.size() == 1) {
                     value = value + overlay.substring(1)
                 } else {
@@ -1574,8 +1626,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    def revert(Map data, Map result) {
-        def entity = getEntity(data)
+    def revert(Map state, Map data, Map result) {
+        def entity = getEntity(state, data)
         if (link)
             entity = entity[link]
         if (property) {
@@ -1673,6 +1725,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     List<List<MarcSubFieldHandler>> orderedAndGroupedSubfields
     List<MatchRule> matchRules
     Map<String, Map> pendingResources
+    List<String> pendingKeys
     String aboutAlias
     List<String> onRevertPrefer
     Set<String> sharesGroupIdWith = new HashSet<String>()
@@ -1690,6 +1743,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             linkTerm(it.link ?: it.addLink, it.containsKey('addLink'))
             typeTerm(it.resourceType)
             propTerm(it.property ?: it.addProperty, it.containsKey('addProperty'))
+        }
+        if (pendingResources) {
+            pendingKeys = Util.getSortedPendingKeys(pendingResources)
         }
 
         aboutAlias = fieldDfn.aboutAlias
@@ -2003,20 +2059,20 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    def revert(Map data, Map result, List<MatchRule> usedMatchRules = []) {
+    def revert(Map state, Map data, Map result, List<MatchRule> usedMatchRules = []) {
 
         def matchedResults = []
 
         // NOTE: Each possible match rule might produce data from *different* entities.
         // If this overproduces, it's because _revertedBy fails to prevent it.
         for (rule in matchRules) {
-            def matchres = rule.handler.revert(data, result, usedMatchRules + [rule])
+            def matchres = rule.handler.revert(state, data, result, usedMatchRules + [rule])
             if (matchres) {
                 matchedResults += matchres
             }
         }
 
-        final Map topEntity = getEntity(data)
+        final Map topEntity = getEntity(state, data)
 
         if (definesDomainEntityType && !isInstanceOf(topEntity, definesDomainEntityType)) {
             return null
@@ -2069,9 +2125,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             useEntities.each {
-                def (boolean requiredOk, Map aboutMap) = buildAboutMap(aboutAlias, pendingResources, it)
+                def (boolean requiredOk, Map aboutMap) = buildAboutMap(pendingResources, pendingKeys, it, aboutAlias)
                 if (requiredOk) {
-                    def field = revertOne(data, topEntity, it, aboutMap, usedMatchRules)
+                    def field = revertOne(state, data, topEntity, it, aboutMap, usedMatchRules)
                     if (field) {
                         if (useLink.subfield) {
                             field.subfields << useLink.subfield
@@ -2086,59 +2142,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     @CompileStatic(SKIP)
-    Tuple2<Boolean, Map<String, List>> buildAboutMap(String aboutAlias, Map pendingResources, Map entity) {
-        Map<String, List> aboutMap = [:]
-        boolean requiredOk = true
-
-        if (aboutAlias) {
-            aboutMap[aboutAlias] = [entity]
-        }
-
-        if (pendingResources) {
-            // TODO: fatigue HACK; instead collect recursively...
-            for (int i = pendingResources.size(); i > 0; i--) {
-                pendingResources?.each { key, pending ->
-                    if (key in aboutMap) {
-                        return
-                    }
-                    def resourceType = pending.resourceType
-                    def parents = pending.about == null ? [entity] :
-                        pending.about in aboutMap ? aboutMap[pending.about] : null
-
-                    parents?.each {
-                        def about = it[pending.link ?: pending.addLink]
-                        if (!about && pending.absorbSingle) {
-                            if (isInstanceOf(it, pending.resourceType)) {
-                                about = it
-                            } else {
-                                requiredOk = false
-                            }
-                        }
-                        Util.asList(about).eachWithIndex { item, pos ->
-                            if (!item || (pending.resourceType && !isInstanceOf(item, pending.resourceType))) {
-                                return
-                            } else if (pos == 0 && pending.itemPos == 'rest') {
-                                return
-                            } else if (pos > 0 && pending.itemPos == 'first') {
-                                return
-                            }
-                            aboutMap.get(key, []).add(item)
-                        }
-                    }
-                }
-            }
-        }
-        pendingResources?.each { key, pending ->
-            if (pending.required && !(key in aboutMap)) {
-                requiredOk = false
-            }
-        }
-
-        return new Tuple2<Boolean, Map>(requiredOk, aboutMap)
-    }
-
-    @CompileStatic(SKIP)
-    def revertOne(Map data, Map topEntity, Map currentEntity, Map<String, List> aboutMap = null,
+    def revertOne(Map state, Map data, Map topEntity, Map currentEntity, Map<String, List> aboutMap = null,
                     List<MatchRule> usedMatchRules) {
 
         MatchRule usedMatchRule = usedMatchRules ? usedMatchRules?.last() : null
@@ -2146,8 +2150,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def i1Entities = ind1?.about ? aboutMap[ind1.about] : [currentEntity]
         def i2Entities = ind2?.about ? aboutMap[ind2.about] : [currentEntity]
 
-        def i1 = usedMatchRules.findResult { it.ind1 } ?: ind1 ? i1Entities.findResult { ind1.revert(data, it) } : ' '
-        def i2 = usedMatchRules.findResult { it.ind2 } ?: ind2 ? i2Entities.findResult { ind2.revert(data, it) } : ' '
+        def i1 = usedMatchRules.findResult { it.ind1 } ?: ind1 ? i1Entities.findResult { ind1.revert(state, data, it) } : ' '
+        def i2 = usedMatchRules.findResult { it.ind2 } ?: ind2 ? i2Entities.findResult { ind2.revert(state, data, it) } : ' '
 
         def subs = []
         def failedRequired = false
@@ -2210,7 +2214,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     //subs << ['DEBUG:blockedSinceRevertedBy': selectedEntity._revertedBy]
                 }
 
-                def value = subhandler.revert(data, selectedEntity)
+                def value = subhandler.revert(state, data, selectedEntity)
 
                 def justAdded = null
 
@@ -2475,8 +2479,8 @@ class MarcSubFieldHandler extends ConversionPart {
     }
 
     @CompileStatic(SKIP)
-    def revert(Map data, Map currentEntity) {
-        currentEntity = aboutEntityName ? getEntity(data) : currentEntity
+    def revert(Map state, Map data, Map currentEntity) {
+        currentEntity = aboutEntityName ? getEntity(state, data) : currentEntity
         if (currentEntity == null)
             return null
 
@@ -2733,6 +2737,25 @@ class Util {
                 }
             }
         }
+    }
+
+    static List<String> getSortedPendingKeys(Map<String, Map> pendingResources) {
+        Map<String, List> pendingDeps = getPendingDeps(pendingResources)
+        return pendingResources.keySet().sort().sort { pendingDeps[it].size() }
+    }
+
+    static Map<String, List> getPendingDeps(Map<String, Map> pendingResources) {
+        Map<String, List> pendingDeps = [:]
+        pendingResources.each { String key, Map pending ->
+            def deps = pendingDeps.get(key, [])
+            String about = pending.about
+            while (about) {
+                assert about != key
+                deps << about
+                about = pendingResources.get(about)?.about
+            }
+        }
+        return pendingDeps
     }
 
 }
