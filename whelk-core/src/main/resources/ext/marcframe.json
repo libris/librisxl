@@ -1306,6 +1306,8 @@
 
     "record_from_w": {
       "$w": {
+        "aboutEntity": "?thing",
+        "aboutAlias": "_:instance",
         "addLink": "describedBy",
         "resourceType": "Record",
         "property": "controlNumber",
@@ -10455,13 +10457,24 @@
     "767": {"inherit": "772", "addLink": "translation"},
     "770": {"inherit": "772", "addLink": "supplement"},
     "772": {
+      "aboutEntity": "?work",
       "include": "record_from_w",
       "addLink": "supplementTo",
       "resourceType": "Work",
-      "aboutAlias": "_:supplementTo",
       "pendingResources": {
+        "_:work": {
+          "link": "expressionOf",
+          "resourceType": "Work"
+        },
+        "_:instance": {
+          "link": "instanceOf",
+          "resourceType": "Work"
+        },
+        "_:hasInstance": {
+          "link": "hasInstance",
+          "resourceType": "Instance"
+        },
         "_:contribution": {
-          "about": "_:supplementTo",
           "addLink": "contribution",
           "resourceType": "PrimaryContribution",
           "embedded": true
@@ -10473,6 +10486,18 @@
         },
         "_:title": {
           "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        },
+        "_:hasInstanceTitle": {
+          "about": "_:hasInstance",
+          "addLink": "hasTitle",
+          "resourceType": "Title",
+          "embedded": true
+        },
+        "_:workTitle": {
+          "about": "_:work",
+          "addLink": "hasTitle",
+          "resourceType": "Title",
           "embedded": true
         }
       },
@@ -10487,32 +10512,32 @@
       "TOOO:i2": {},
       "$a": {
         "about": "_:agent",
-        "property": "name",
+        "property": "label",
         "TODO:targetMatch": "1xx"
       },
-      "$b": {"property": "editionStatement", "TODO:targetMatch": "250"},
-      "$c": {"about": "_:title", "addProperty": "qualifier", "NOTE:marc-repeatable": false},
-      "$d": {"property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
-      "$g": {"addProperty": "part"},
-      "$h": {"link": "extent", "resourceType": "Extent", "property": "label"},
+      "$b": {"about": "_:hasInstance", "property": "editionStatement", "TODO:targetMatch": "250"},
+      "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
+      "$d": {"about": "_:hasInstance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
+      "$g": {"about": "_:hasInstance", "addProperty": "part"},
+      "$h": {"about": "_:hasInstance", "link": "extent", "resourceType": "Extent", "property": "label"},
       "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
       "$i": {"addProperty": "marc:displayText"},
-      "$k": {"addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
-      "$m": {"property": "marc:materialSpecificDetails"},
-      "$n": {"addProperty": "note"},
+      "$k": {"about": "_:hasInstance", "addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
+      "$m": {"about": "_:hasInstance", "property": "marc:materialSpecificDetails"},
+      "$n": {"about": "_:hasInstance", "addLink": "note", "resourceType": "Note", "property": "label"},
       "$o": {"ignored": true, "NOTE:subfield-count": 0},
-      "$r": {"addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value", "TODO:targetMatch": "088"},
-      "$s": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "240"},
-      "$t": {"about": "_:title", "property": "title", "TODO:targetMatch": "222, 245"},
-      "$u": {"addLink": "identifiedBy", "resourceType": "STRN", "property": "value", "TODO:targetMatch": "027"},
+      "$r": {"about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value", "TODO:targetMatch": "088"},
+      "$s": {"about": "_:workTitle", "property": "mainTitle", "TODO:targetMatch": "240"},
+      "$t": {"about": "_:hasInstanceTitle", "property": "mainTitle", "TODO:targetMatch": "222, 245"},
+      "$u": {"about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "STRN", "property": "value", "TODO:targetMatch": "027"},
       "$x": {
         "TODO:targetMatch": "022",
-        "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"
+        "about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"
       },
-      "$y": {"addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
+      "$y": {"about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
       "$z": {
         "TODO:targetMatch": "020",
-        "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"
+        "about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"
       },
       "$6": {"property": "marc:fieldref"},
       "$7": {"property": "marc:controlSubfield"},
@@ -10529,19 +10554,26 @@
             {"z": "00-0-000000-0"}
           ]}},
           "result": {"mainEntity": {
-            "supplementTo": [
-              {
-                "@type": "Work",
-                "hasTitle": [{
-                  "@type": "Title",
-                  "mainTitle": "Main Thing"
-                }],
-                "identifiedBy": [{
-                  "@type": "ISBN",
-                  "value": "00-0-000000-0"
-                }]
-              }
-            ]
+            "instanceOf": {
+            "@type": "Text",
+            "supplementTo": [{
+              "@type": "Work",
+              "expressionOf": {
+                  "@type": "Work",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Main Thing"
+                  }]
+                },
+              "hasInstance": {
+                  "@type": "Instance",
+                  "identifiedBy": [{
+                      "@type": "ISBN",
+                      "value": "00-0-000000-0"
+                  }]  
+                }
+            }]
+            }
           }}
         },
         {
@@ -10556,23 +10588,27 @@
             {"t": "Briefec"}
           ]}},
           "result": {"mainEntity": {
-            "supplementTo": [
-              {
-                "@type": "Work",
-                "hasTitle": [{
-                  "@type": "Title",
-                  "title": "Briefec"
-                }],
-                "marc:controlSubfield": "p1",
-                "contribution": [{
+            "instanceOf": {
+              "@type": "Text",
+              "supplementTo": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Briefec"
+                    }]
+                  },
+                  "marc:controlSubfield": "p1",
+                  "contribution": [{
                   "@type": "PrimaryContribution",
                   "agent": [{
                     "@type": "Agent",
-                    "name": "Beckmann, Max"
+                    "label": "Beckmann, Max"
                   }]
                 }]
-              }
-            ]
+              }]
+            }
           }}
         }
       ]
@@ -10610,7 +10646,6 @@
     },
     "780": {
       "inherit": "772",
-      "aboutEntity": "?work",
       "addLink": "precededBy",
       "resourceType": "Work",
       "match": [
@@ -10632,16 +10667,17 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "continues": [
-                {
-                  "@type": "Work",
-                  "marc:toDisplayNote": true,
+              "continues": [{
+                "@type": "Work",
+                "marc:toDisplayNote": true,
+                "hasInstance": {
+                  "@type": "Instance",
                   "hasTitle": [{
                     "@type": "Title",
-                    "title": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
+                    "mainTitle": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
                   }]
                 }
-              ]
+              }]
             }
           }}
         },
@@ -10655,13 +10691,15 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "precededBy": [
-                {
+              "precededBy": [{
                   "@type": "Work",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "title": "Bulletin mensuel"
-                  }]
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Bulletin mensuel"
+                    }]
+                  }
                 }
               ]
             }
@@ -10671,7 +10709,6 @@
     },
     "785": {
       "inherit": "780",
-      "aboutEntity": "?work",
       "addLink": "succeededBy",
       "resourceType": "Work",
       "match": [
@@ -10695,27 +10732,27 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "continuedBy": [
-                {
-                  "@type": "Work",
+              "continuedBy": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
                   "hasTitle": [{
-                    "@type": "Title",
-                    "title": "Naysprayer"
+                      "@type": "Title",
+                      "mainTitle": "Naysprayer"
                   }],
                   "identifiedBy": [{
-                    "@type" : "ISSN",
-                    "value" : "1937-6545"
-                  }],
-                  "marc:toDisplayNote": true
-                }
-              ]
+                      "@type" : "ISSN",
+                      "value" : "1937-6545"
+                  }]
+                },
+                "marc:toDisplayNote": true
+              }]
             }
           }}
         }
       ]
     },
     "786": {
-      "aboutEntity": "?work",
       "inherit": "772",
       "addLink": "dataSource",
       "resourceType": "Dataset"
