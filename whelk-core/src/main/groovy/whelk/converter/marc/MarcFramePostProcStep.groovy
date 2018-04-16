@@ -27,6 +27,7 @@ class FoldLinkedPropertyStep extends MarcFramePostProcStepBase {
     String sourceProperty
     String property
     String defaultLink
+    String resourceType
     Map<String, String> typeLinkMap
 
     def getLink(thing) {
@@ -50,6 +51,9 @@ class FoldLinkedPropertyStep extends MarcFramePostProcStepBase {
             return
         for (object in thing[link]) {
             if (object[property] == value) {
+                // IMPROVE:
+                // && ((!resourceType || !object[TYPE]) ||
+                //     ld.isSubClassOf(resourceType, object[TYPE]))
                 thing.remove(statusFlag)
                 thing.remove(sourceProperty)
                 return
@@ -61,7 +65,11 @@ class FoldLinkedPropertyStep extends MarcFramePostProcStepBase {
         thing.remove(statusFlag)
         thing.remove(sourceProperty)
         thing[link] = []
-        thing[link] << [(property): value]
+        def newStruct = [(property): value]
+        if (resourceType) {
+            newStruct[TYPE] = resourceType
+        }
+        thing[link] << newStruct
     }
 
     void unmodify(Map record, Map thing) {
