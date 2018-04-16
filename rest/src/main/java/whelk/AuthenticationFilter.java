@@ -48,17 +48,20 @@ public class AuthenticationFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         if (!mockAuthMode && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
+            int response_code = 0;
             String json = null;
             try {
                 String token = httpRequest.getHeader("Authorization");
                 if (token == null) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Invalid accesstoken, Token is: "+token);
+                    response_code = httpResponse.SC_UNAUTHORIZED;
                     return;
                 }
                 log.debug("Verifying token " + token);
                 json = verifyToken(token.replace("Bearer ", ""));
                 if (json == null || json.isEmpty()) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Access token has expired");
+                    response_code = httpResponse.SC_UNAUTHORIZED;
                     return;
                 }
 
@@ -67,10 +70,12 @@ public class AuthenticationFilter implements Filter {
                 Object message = result.get("message");
                 if (message != null && message.toString().equals("Bearer token is expired.")) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Access token has expired");
+                    response_code = httpResponse.SC_UNAUTHORIZED;
                     return;
                 }
                 if (message != null && message.toString().equals("Bearer token not found.")) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Missing access token.");
+                    response_code = httpResponse.SC_UNAUTHORIZED;
                     return;
                 }
 
@@ -84,14 +89,23 @@ public class AuthenticationFilter implements Filter {
                     chain.doFilter(request, response);
                 }else {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED);
+                    response_code = httpResponse.SC_UNAUTHORIZED;
                 }
             } catch (org.codehaus.jackson.JsonParseException jpe) {
                 log.error("JsonParseException. Failed to parse:" + json, jpe);
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
+                response_code = httpResponse.SC_INTERNAL_SERVER_ERROR;
             } catch (Exception e) {
                 log.error("Exception: " + e);
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
+                response_code = httpResponse.SC_INTERNAL_SERVER_ERROR;
                 e.printStackTrace();
+            } finally {
+                if (response_code != 0) {
+                    String method = httpRequest.getMethod();
+                    String endpoint = httpRequest.getRequestURI();
+                    log.info("Request " + method + " " + endpoint + " blocked: " + response_code);
+                }
             }
         } else {
             if (mockAuthMode) {
