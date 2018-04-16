@@ -11587,7 +11587,7 @@
       "?thing": {
         "about": "?record",
         "link": "mainEntity",
-        "resourceType": "Concept",
+        "resourceType": "Identity",
         "fragmentId": "it",
         "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}",
         "matchUriTokens": {
@@ -11624,7 +11624,7 @@
             "mainEntity": { }
           },
           "addOnRevert": {
-            "mainEntity": {"@type": "Concept"}
+            "mainEntity": {"@type": "Identity"}
           }
         }
       ]
@@ -11807,7 +11807,7 @@
           "source": {"040": {"ind1":" ","ind2":" ", "subfields": [{"f":"barn"}]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "inScheme":  {
                 "@type": "ConceptScheme",
                 "@id": "https://id.kb.se/term/barn",
@@ -11838,7 +11838,7 @@
           "source":
             {"043": {"ind1": " ", "ind2": " ", "subfields": [{"a": "e-sw---v"}, {"a": "e-xr---"}]}},
           "result": {"mainEntity": {
-            "@type": "Concept",
+            "@type": "Identity",
             "nationality": [
               {"@id" : "https://id.kb.se/nationality/e-sw---v"},
               {"@id" : "https://id.kb.se/nationality/e-xr---"}
@@ -11940,7 +11940,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "closeMatch": [{
                 "@type": "ClassificationDdc",
                 "code":  "085",
@@ -12699,7 +12699,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "fieldOfActivity": [
                 {
                   "@type": "FieldOfActivity",
@@ -12737,7 +12737,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasOccupation": [
                 {
                   "@type": "Occupation",
@@ -12765,7 +12765,7 @@
           ]}},
         "result": {
           "mainEntity": {
-            "@type": "Concept",
+            "@type": "Identity",
             "hasTypeOfFamily": [
                     {
                       "@type": "TypeOfFamily",
@@ -12860,7 +12860,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Person",
                 "familyName":  "Singh", "givenName":  "Bhagat",
@@ -12880,7 +12880,7 @@
           ],
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Person",
@@ -12904,7 +12904,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Person",
                 "name":  "Alexander",
@@ -12922,7 +12922,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Family",
                 "name":  "Family X"
@@ -12939,7 +12939,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -12970,7 +12970,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Person",
                 "familyName":  "Singh", "givenName":  "Bhagat",
@@ -12987,7 +12987,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13012,7 +13012,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13042,7 +13042,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13133,7 +13133,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Jurisdiction",
                 "isPartOf": {
@@ -13157,7 +13157,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13182,7 +13182,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13212,7 +13212,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13242,7 +13242,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13268,7 +13268,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13300,7 +13300,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Jurisdiction",
                 "marc:subordinateUnit": ["Estudios Territoriales, Oficina de"],
@@ -13320,7 +13320,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["Europaparlamentet"],
@@ -13353,7 +13353,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
@@ -13374,7 +13374,7 @@
           ],
           "FIXME:revert-result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Organization",
@@ -13424,7 +13424,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13451,7 +13451,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Meeting",
                 "name": "International Population Conference",
@@ -13593,7 +13593,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "seeAlso": [ {
                 "@type": "Family",
                 "name": "Horn Family"
@@ -13609,7 +13609,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "seeAlso": [ {
                 "@type": "Person",
                 "familyName": "Oats",
@@ -13634,7 +13634,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "relatedTo": [
                 {
                   "@type": "Work",
@@ -13667,7 +13667,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "relatedTo": [{
                 "@type": "Work",
                 "contribution": [ {
@@ -13786,7 +13786,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "seeAlso": [{
                 "@type": "Organization",
                 "name": "Oklahoma Council on Juvenile Delinquency",
@@ -13802,7 +13802,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "seeAlso": [{
                 "@type": "Organization",
                 "name": "Five Pieces (reportagegrupp)"}]
@@ -13818,7 +13818,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "seeAlso": [{
                 "@type": "Jurisdiction",
                 "marc:controlSubfield": "a",
@@ -13867,7 +13867,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "seeAlso": [{
                 "@type": "Meeting",
                 "marc:controlSubfield" : "a",
@@ -13885,7 +13885,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "relatedTo": [{
                 "@type": "Work",
                 "hasTitle": [{
@@ -13965,7 +13965,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "relatedTo": [{
                 "@type": "Work",
                 "hasTitle": [{
@@ -14010,7 +14010,7 @@
           ],
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "inScheme": {
                 "@id": "https://id.kb.se/term/sao",
                 "@type": "ConceptScheme",
@@ -14030,7 +14030,7 @@
           ],
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "inScheme": {
                 "@id": "https://id.kb.se/term/sao",
                 "@type": "ConceptScheme",
@@ -14346,7 +14346,7 @@
           },
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "closeMatch": [
                 {
                   "@id": "http://id.loc.gov/authorities/label/Archaeology",
