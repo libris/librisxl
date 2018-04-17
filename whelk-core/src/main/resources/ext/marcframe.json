@@ -10798,6 +10798,11 @@
           "about": "_:instance",
           "addLink": "hasTitle",
           "resourceType": "Title"
+        },
+        "_:provisionActivity": {
+          "about": "_:hasInstance",
+          "link": "provisionActivity",
+          "resourceType": "ProvisionActivity"
         }
       },
       "i1": {
@@ -10928,7 +10933,7 @@
       "TODO:note": "uncommon",
       "addLink": "otherEdition",
       "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "TODO:inherit": "008:[35:38]"},
-      "$f": {"addLink": "publicationCountry", "resourceType": "Country",  "NOTE:marc-repeatable": false, "property": "code", "TODO:inherit": "008:[15:18]"}
+      "$f": {"about": "_:provisionActivity", "link": "place", "resourceType": "Place", "property": "code", "NOTE:marc-repeatable": false, "TODO:inherit": "008:[15:18]"}
     },
     "776": {
       "NOTE": "We deviate from BF2 as we do not link from the Work with hasInstance.",
