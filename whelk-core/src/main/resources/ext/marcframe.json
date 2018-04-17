@@ -10646,9 +10646,55 @@
       "$f": {"addLink": "publicationCountry", "resourceType": "Country",  "NOTE:marc-repeatable": false, "property": "code", "TODO:inherit": "008:[15:18]"}
     },
     "776": {
+      "NOTE": "We deviate from BF2 as we do not link from the Work with hasInstance.",
       "inherit": "772",
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
-      "resourceType": "Instance"
+      "resourceType": "Instance",
+      "i2": {"link": null, "marcDefault": "8"},
+      "$b": {"property": "editionStatement"},
+      "$d": {"property": "provisionActivityStatement"},
+      "$g": {"addProperty": "part"},
+      "$h": {"link": "extent", "resourceType": "Extent", "property": "label"},
+      "$k": {"addProperty": "seriesStatement"},
+      "$m": {"property": "marc:materialSpecificDetails"},
+      "$n": {"addLink": "note", "resourceType": "Note", "property": "label"},
+      "$r": {"addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value"},
+      "$t": {"about": "_:title", "property": "mainTitle"},
+      "$u": {"addLink": "identifiedBy", "resourceType": "STRN", "property": "value"},
+      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"},
+      "$y": {"addLink": "identifiedBy", "resourceType": "CODEN", "property": "value"},
+      "$z": {"addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"},
+      "_spec": [
+        {
+          "source": {"776": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "Print"},
+            {"t": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"},
+            {"z": "978-90-8964-412-1"}
+          ]}},
+          "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+            {"i": "Print"},
+            {"t": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"},
+            {"z": "978-90-8964-412-1"}
+          ]}},
+          "result": {"mainEntity": {
+              "otherPhysicalFormat": [{
+                  "@type": "Instance",
+                  "marc:toDisplayNote": true,
+                  "marc:displayText": ["Print"],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISBN",
+                    "value": "978-90-8964-412-1"
+                  }]
+              }]
+          }}
+        }
+      ]
     },
     "777": {
       "inherit": "772",
