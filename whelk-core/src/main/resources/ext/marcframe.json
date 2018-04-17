@@ -10664,8 +10664,84 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
 
-    "760": {"aboutEntity": "?work", "NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "subseriesOf"},
-    "762": {"aboutEntity": "?work","NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSubseries"},
+    "760": {
+      "aboutEntity": "?thing",
+      "NOTE:domainIncludes": "Serial",
+      "inherit": "772",
+      "addLink": "hasSeries",
+      "resourceType": "Instance",
+      "$a": {"about": "_:workAgent", "property": "label", "TODO:targetMatch": "1xx"},
+      "$b": {"property": "editionStatement", "TODO:targetMatch": "250"},
+      "$c": {"about": "_:instanceTitle", "property": "qualifier", "NOTE:marc-repeatable": false},
+      "$d": {"property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
+      "$g": {"addProperty": "part"},
+      "$h": {"link": "extent", "resourceType": "Extent", "property": "label"},
+      "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
+      "$i": {"about": "_:instance", "addProperty": "marc:displayText"},
+      "$k": null,
+      "$m": {"property": "marc:materialSpecificDetails"},
+      "$n": {"addLink": "note", "resourceType": "Note", "property": "label"},
+      "$o": {"ignored": true, "NOTE:LC": "ignore"},
+      "$r": null,
+      "$s": {"about": "_:instanceTitle", "property": "mainTitle", "TODO:targetMatch": "240"},
+      "$t": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "222, 245"},
+      "$u": null,
+      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
+      "$y": {"addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
+      "$z": null,
+      "_spec": [
+        {
+          "source": {"760": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Publikation"},
+            {"x": "1401-9612"}
+          ]}},
+          "normalized": {"760": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Publikation"},
+            {"x": "1401-9612"}
+          ]}},
+          "result": {"mainEntity": {
+              "hasSeries": [{
+                  "@type": "Instance",
+                  "marc:toDisplayNote": true,
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Publikation"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "1401-9612"
+                  }]
+              }]
+          }}
+        }
+      ]
+    },
+    "762": {
+      "aboutEntity": "?thing",
+      "NOTE:domainIncludes": "Serial",
+      "inherit": "760",
+      "addLink": "hasSubseries",
+      "_spec": [
+        {
+          "source": {"762": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Rätt fart"}
+          ]}},
+          "normalized": {"762": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Rätt fart"}
+          ]}},
+          "result": {"mainEntity": {
+              "hasSubseries": [{
+                  "@type": "Instance",
+                  "marc:toDisplayNote": true,
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Rätt fart"
+                  }]
+              }]
+          }}
+        }
+      ]
+    },
     "765": {"inherit": "772", "addLink": "translationOf"},
     "767": {"inherit": "772", "addLink": "translation"},
     "770": {"inherit": "772", "addLink": "supplement"},
@@ -10712,6 +10788,16 @@
           "addLink": "hasTitle",
           "resourceType": "Title",
           "embedded": true
+        },
+        "_:workAgent": {
+          "link": "instanceOf",
+          "resourceType": "Work",
+          "about": "_:agent"
+        },
+        "_:instanceTitle": {
+          "about": "_:instance",
+          "addLink": "hasTitle",
+          "resourceType": "Title"
         }
       },
       "i1": {
@@ -10723,11 +10809,7 @@
         "marcDefault": 0
       },
       "TOOO:i2": {},
-      "$a": {
-        "about": "_:agent",
-        "property": "label",
-        "TODO:targetMatch": "1xx"
-      },
+      "$a": {"about": "_:agent", "property": "label", "TODO:targetMatch": "1xx"},
       "$b": {"about": "_:hasInstance", "property": "editionStatement", "TODO:targetMatch": "250"},
       "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
       "$d": {"about": "_:hasInstance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
