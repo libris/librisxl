@@ -10628,8 +10628,8 @@
       "addLink": "isPartOf",
       "resourceType": "Aggregate",
       "$c": null,
-      "$p": {"link": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210"},
-      "$q": {"property": "marc:enumerationAndFirstPage"}
+      "$p": {"about": "_:hasInstance", "link": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore"},
+      "$q": {"about": "_:hasInstance", "property": "marc:enumerationAndFirstPage", "NOTE:LC":"ignore"}
     },
     "774": {
       "inherit": "772",
