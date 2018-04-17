@@ -8337,53 +8337,218 @@
       ]
     },
     "630": {
-      "TOOO:i1": {},
-      "TOOO:i2": {},
-      "inherit": "130",
+      "include": ["subjectbase", "titledetails", "i1-nonfiling"],
       "aboutEntity": "?work",
-      "link": null,
-      "addLink": "subject", "resourceType": "Work",
+      "aboutAlias": "_:work",
+      "addLink": "subject",
+      "resourceType": "Work",
+      "pendingResources": {
+        "_:term": {
+          "addLink": "termComponentList",
+          "resourceType": "Work",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        },
+        "_:title": {
+          "about": "_:term", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "$a": {"about": "_:title", "property": "mainTitle"},
+      "$d": {"property": "date"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "_spec": [
         {
-          "source": {
-            "630": {"ind1": " ", "ind2": "0", "subfields":[
-              {"a": "Talmud"},
-              {"p": "Bava meẓia"}]
-            }
+          "source": {"630": {"ind1": " ", "ind2": "0",
+            "subfields": [{"a": "Talmud"}, {"p": "Bava meẓia"}]}
           },
-          "TODO:result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "subject": [
-                {
-                  "@type": "Topic",
-                  "@id": "http://id.loc.gov/authorities/names/n81048431.html"
-                }
-              ],
-              "prefLabel": "Talmud--Bava meẓia",
-              "inScheme": {
-                "@id": "http://id.loc.gov/authorities/names",
-                "@type": "ConceptScheme",
-                "code": "lcsh"
-              },
-                "@type": "ComplexSubject",
-              "termComponentList": [
-                {
-                  "@type": "Topic",
-                  "prefLabel": "Talmud"
-                },
-                {
-                  "@type": "PartName",
-                  "prefLabel": "Bava meẓia"
-                }
-              ]
+          "result":{
+            "mainEntity": {
+              "instanceOf" : {
+                "@type" : "Text",
+                "subject" : [ {
+                  "@type" : "Work",
+                  "hasTitle" : [ {
+                    "@type" : "Title",
+                    "mainTitle" : "Talmud",
+                    "partName" : [ "Bava meẓia" ],
+                    "marc:nonfilingChars" : " "
+                  } ],
+                  "inScheme" : {
+                    "@id" : "https://id.kb.se/term/lcsh",
+                    "@type" : "ConceptScheme",
+                    "code" : "lcsh"
+                  }
+                } ]
+              }
             }
-          }}
+          }
+        },
+        {
+          "source": {"630": {"ind1": "0", "ind2": "7", "subfields": [
+            {"a": "Koranen"},
+            {"x": "kommentarer"},
+            {"x": "historia"},
+            {"2": "sao"}
+          ]}},
+          "result":{
+            "mainEntity": {
+              "instanceOf" : {
+                "@type" : "Text",
+                "subject" : [ {
+                  "@type" : "ComplexSubject",
+                  "inScheme" : {
+                    "@id" : "https://id.kb.se/term/sao",
+                    "@type" : "ConceptScheme",
+                    "code" : "sao"
+                  },
+                  "termComponentList" : [ {
+                    "@type" : "Work",
+                    "hasTitle" : [ {
+                      "@type" : "Title",
+                      "mainTitle" : "Koranen"
+                    } ]
+                  }, {
+                    "@type" : "TopicSubdivision",
+                    "prefLabel" : "kommentarer"
+                  }, {
+                    "@type" : "TopicSubdivision",
+                    "prefLabel" : "historia"
+                  } ]
+                } ]
+              }
+            }
+          }
+        },
+        {
+          "source": {"630": {"ind1": "0", "ind2": "0", "subfields": [
+            {"a": "Bible"},
+            {"p": "Prophets"},
+            {"x": "Commentaries"},
+            {"x": "Early works to 1800"}
+          ]}},
+          "result":{
+            "mainEntity": {
+              "instanceOf" : {
+                "@type" : "Text",
+                "subject" : [ {
+                  "@type" : "ComplexSubject",
+                  "inScheme" : {
+                    "@id" : "https://id.kb.se/term/lcsh",
+                    "@type" : "ConceptScheme",
+                    "code" : "lcsh"
+                  },
+                  "termComponentList" : [ {
+                    "@type" : "Work",
+                    "hasTitle" : [ {
+                      "@type" : "Title",
+                      "mainTitle" : "Bible",
+                      "partName" : [ "Prophets" ]
+                    } ]
+                  }, {
+                    "@type" : "TopicSubdivision",
+                    "prefLabel" : "Commentaries"
+                  }, {
+                    "@type" : "TopicSubdivision",
+                    "prefLabel" : "Early works to 1800"
+                  } ]
+                } ]
+              }
+            }
+          }
+        },
+        {
+          "source": {"630": {"ind1": "0", "ind2": "4", "subfields": [
+            {"a": "Knýtlinga saga"},
+            {"d": "(1979)"}
+          ]}},
+          "result":{
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "subject": [{
+                  "@type": "Work",
+                  "date": "(1979)",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Knýtlinga saga"
+                  }]
+                }]
+              }
+            }
+          }
+        },
+        {
+          "source": {"630": {"ind1": "0", "ind2": "4", "subfields": [
+            {"a": "Bible."},
+            {"p": "N.T."},
+            {"p": "Galatians VI, 10"},
+            {"v": "Sermons."}
+          ]}},
+          "result":{
+            "mainEntity": {
+              "instanceOf" : {
+                "@type" : "Text",
+                "subject" : [ {
+                  "@type" : "ComplexSubject",
+                  "termComponentList" : [ {
+                    "@type" : "Work",
+                    "hasTitle" : [ {
+                      "@type" : "Title",
+                      "mainTitle" : "Bible.",
+                      "partName" : [ "N.T.", "Galatians VI, 10" ]
+                    } ]
+                  }, {
+                    "@type" : "GenreForm",
+                    "prefLabel" : "Sermons."
+                  } ]
+                } ]
+              }
+            }
+          }
+        },
+        {
+          "source": {"630": {"ind1": "0", "ind2": "6", "subfields": [
+            {"a": "Bible."},
+            {"p": "A.T."},
+            {"x": "Critique textuelle"},
+            {"v": "Pâeriodiques."}
+          ]}},
+          "result":{
+            "mainEntity": {
+              "instanceOf" : {
+                "@type" : "Text",
+                "subject" : [ {
+                  "@type" : "ComplexSubject",
+                  "inScheme" : {
+                    "@id" : "https://id.kb.se/term/rvm",
+                    "@type" : "ConceptScheme",
+                    "code" : "rvm"
+                  },
+                  "termComponentList" : [ {
+                    "@type" : "Work",
+                    "hasTitle" : [ {
+                      "@type" : "Title",
+                      "mainTitle" : "Bible.",
+                      "partName" : [ "A.T." ]
+                    } ]
+                  }, {
+                    "@type" : "TopicSubdivision",
+                    "prefLabel" : "Critique textuelle"
+                  }, {
+                    "@type" : "GenreForm",
+                    "prefLabel" : "Pâeriodiques."
+                  } ]
+                } ]
+              }
+            }
+          }
         }
       ]
     },
+
     "647": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "648": {
       "include": ["subjectbase"],
@@ -8699,6 +8864,44 @@
                   "prefLabel": "RVM-term"
                 }
               ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "650": {"ind1": " ", "ind2": "7", "subfields": [
+              {"a": "Vitryssar"},
+              {"x": "vardagsliv"},
+              {"x": "traditioner"},
+              {"z": "Ryssland"},
+              {"2": "sao"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [{
+                "@id": "https://id.kb.se/term/sao/Vitryssar--vardagsliv--traditioner--Ryssland",
+                "@type": "ComplexSubject",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/sao",
+                  "@type": "ConceptScheme",
+                  "code": "sao"
+                },
+                "prefLabel": "Vitryssar--vardagsliv--traditioner--Ryssland",
+                "termComponentList": [{
+                  "@type": "Topic",
+                  "prefLabel": "Vitryssar"
+                }, {
+                  "@type": "TopicSubdivision",
+                  "prefLabel": "vardagsliv"
+                },{
+                  "@type": "TopicSubdivision",
+                  "prefLabel": "traditioner"
+                },{
+                  "@type": "Geographic",
+                  "prefLabel": "Ryssland"
+                }]
+              }]
             }
           }}
         }
