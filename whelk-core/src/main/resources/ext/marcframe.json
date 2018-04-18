@@ -1317,6 +1317,12 @@
           "controlNumber": "^\\d{1,14}$"
         }
       },
+      "_:provision": {
+        "about": "?thing",
+        "link": "provisionActivity",
+        "resourceType": "PrimaryProvisionActivity",
+        "embedded": true
+      },
       "?work": {
         "about": "?thing",
         "link": "instanceOf",
@@ -1327,146 +1333,210 @@
 
     "postProcessing": [
       {
-        "type": "FoldJoinedProperties",
-        "statusFlag": "marc:publicationStatus",
-        "statusFlagValue": "marc:ContinuingResourceCurrentlyPublished",
-        "sourceProperties": ["marc:publishedYear", "marc:otherYear"],
+        "type": "RestructOnMatchFlag",
+        "sourceLink": "provisionActivity",
+        "overwriteType": "PrimaryProvisionActivity",
+        "valueProperties": ["date", "endDate"],
         "matchValuePattern": "^[0-9u]{4}$",
-        "property": "temporalCoverage",
-        "separator": "-",
-        "_spec": [
-          {
-            "source": {
-              "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
-              "marc:publishedYear": "1977",
-              "marc:otherYear": "9999"
-            },
-            "result": {
-              "temporalCoverage": "1977-"
-            },
-            "back": {
-              "temporalCoverage": "1977-",
-              "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
-              "marc:publishedYear": "1977",
-              "marc:otherYear": "9999"
-            }
+        "nullValue": "9999",
+        "replaceInValue": {"[uU]": "X"},
+        "flagProperty": "marc:publicationStatus",
+        "flagMatch": {
+          "marc:SingleKnownDateProbableDate": {
+            "mergeFirstLink": "publication",
+            "resourceType": "PrimaryPublication"
+          },
+          "marc:InclusiveDatesOfCollection": {
+            "mergeFirstLink": "production",
+            "resourceType": "PrimaryProduction"
+          },
+          "marc:RangeOfYearsOfBulkOfCollection": {
+            "mergeFirstLink": "production",
+            "resourceType": "PrimaryBulkProduction"
+          },
+          "marc:DateOfDistributionReleaseIssueAndProductionRecordingSessionWhenDifferent": {
+            "mergeFirstLink": "production",
+            "resourceType": "DistributionAndProduction",
+            "remapProperty": {"date": "distributionDate", "endDate": "date"}
+          },
+          "marc:ContinuingResourceCurrentlyPublished": {
+            "mergeFirstLink": "publication",
+            "resourceType": "CurrentPublicationPeriod",
+            "remapProperty": {"date": "startDate", "endDate": null}
+          },
+          "marc:ContinuingResourceCeasedPublication": {
+            "mergeFirstLink": "publication",
+            "resourceType": "CeasedPublicationPeriod",
+            "remapProperty": {"date": "startDate", "endDate": "endDate"}
+          },
+          "marc:ContinuingResourceStatusUnknown": {
+            "mergeFirstLink": "publication",
+            "resourceType": "PublicationPeriod",
+            "remapProperty": {"date": "startDate", "endDate": "endDate"},
+            "keepFlag": true
+          },
+          "marc:PublicationDateAndCopyrightDate": {
+            "mergeFirstLink": "publication",
+            "resourceType": "PrimaryPublication",
+            "remapProperty": {"endDate": "copyrightDate"}
           }
-        ]
-      },
-      {
-        "type": "FoldJoinedProperties",
-        "statusFlag": "marc:publicationStatus",
-        "statusFlagValue": "marc:ContinuingResourceCeasedPublication",
-        "sourceProperties": ["marc:publishedYear", "marc:otherYear"],
-        "matchValuePattern": "^[0-9u]{4}$",
-        "property": "temporalCoverage",
-        "separator": "-",
-        "_spec": [
-          {
-            "source": {
-              "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
-              "marc:publishedYear": "1977",
-              "marc:otherYear": "2017"
-            },
-            "result": {
-              "temporalCoverage": "1977-2017"
-            },
-            "back": {
-              "temporalCoverage": "1977-2017",
-              "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
-              "marc:publishedYear": "1977",
-              "marc:otherYear": "2017"
-            }
-          }
-        ]
-      },
-      {
-        "type": "FoldLinkedProperty",
-        "statusFlag": "marc:publicationStatus",
-        "statusFlagValue": "marc:SingleKnownDateProbableDate",
-        "sourceProperty": "marc:publishedYear",
-        "matchValuePattern": "^[0-9u]{4}$",
-        "property": "date",
-        "defaultLink": "publication",
-        "typeLinkMap": {
-          "Manuscript": "manufacture"
         },
-        "_name": "fold publication date",
         "_spec": [
           {
+            "name":  "NOOP",
             "source": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977"
+              "provisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:QuestionableDate",
+                "date": "1977",
+                "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+              }
             },
-            "result": {
-              "publication": [ {"date": "1977"} ]
-            }
+            "result": "source",
+            "back": "source"
           },
           {
             "source": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977",
+              "provisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977",
+                "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+              }
+            },
+            "result": {
+              "publication": [
+                {
+                  "@type": "PrimaryPublication",
+                  "date": "1977",
+                  "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+                }
+              ]
+            },
+            "back": "both"
+          },
+          {
+            "TODO:source": {
+              "provisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977"
+              },
               "publication": [ {"@type": "Publication", "date": "1977"} ]
             },
             "result": {
-              "publication": [ {"@type": "Publication", "date": "1977"} ]
-            }
+              "publication": [ {"@type": "PrimaryPublication", "date": "1977"} ]
+            },
+            "back": "both"
           },
           {
             "source": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977",
+              "provisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977"
+              },
               "publication": [ {"@type": "Publication", "date": "ca 1977"} ]
             },
             "result": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977",
+              "publication": [
+                {"@type": "PrimaryPublication", "date": "1977"},
+                {"@type": "Publication", "date": "ca 1977"}
+              ]
+            },
+            "back": "both"
+          },
+          {
+            "source": {
+              "publication": [ {"@type": "Publication", "date": "1977"} ]
+            },
+            "result": {
+              "publication": [ {"@type": "Publication", "date": "1977"} ]
+            }
+          },
+          {
+            "TODO:source": {
+              "@type": "ManuscriptText",
+              "provisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977"
+              }
+            },
+            "TODO:result": {
+              "@type": "ManuscriptText",
+              "production": [ {
+                "@type": "PrimaryPublication",
+                "date": "1977"
+              } ]
+            },
+            "back": "both"
+          },
+          {
+            "source": {
+              "provisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977"
+              },
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            },
+            "result": {
+              "publication": [
+                {"@type": "PrimaryPublication", "date": "1977"},
+                {"@type": "Publication", "date": ["1977", "1978"]}
+              ]
+            },
+            "back": "both"
+          },
+          {
+            "source": {
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            },
+            "result": {
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            }
+          },
+          {
+            "source": {
+              "provisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+                "date": "1977",
+                "endDate": "9999",
+                "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+              }
+            },
+            "result": {
               "publication": [
                 {
-                  "@type": "Publication",
-                  "date": "ca 1977"
+                  "@type": "CurrentPublicationPeriod",
+                  "startDate": "1977",
+                  "country": [ {"@id": "https://id.kb.se/country/sw"} ]
                 }
               ]
-            }
+            },
+            "back": "both"
           },
           {
             "source": {
-              "@type": "ManuscriptText",
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977"
+              "provisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+                "date": "1977",
+                "endDate": "2017"
+              }
             },
             "result": {
-              "@type": "ManuscriptText",
-              "manufacture": [ {"date": "1977"} ]
-            }
-          },
-          {
-            "source": {
-              "publication": [ {"@type": "Publication", "date": "1977"} ]
+              "publication": [
+                {
+                  "@type": "CeasedPublicationPeriod",
+                  "startDate": "1977",
+                  "endDate": "2017"
+                }
+              ]
             },
-            "result": {
-              "publication": [ {"@type": "Publication", "date": "1977"} ]
-            }
-          },
-          {
-            "source": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977",
-              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
-            },
-            "result": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977",
-              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
-            }
-          },
-          {
-            "source": {
-              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
-            },
-            "result": {
-              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
-            }
+            "back": "both"
           }
         ]
       }
@@ -2541,27 +2611,27 @@
         "parseDateTime": "yyMMdd", "timeZone": "CET"
       },
       "[6]": {
+        "aboutEntity": "_:provision",
         "property": "marc:publicationStatus",
-        "tokenMap": "PublicationStatusType"
+        "tokenMap": "PublicationStatusType",
+        "NOTE": "See postProcessing."
       },
       "[7:11]": {
-        "TODO:addLink": "provisionActivity",
-        "TODO:resourceType": "ProvisionActivity",
-        "TODO:embedded": "true",
-        "TODO:pendingResources": {
-          "_:publication": {"addLink": "publication", "resourceType": "Publication", "embedded": true}
-        },
+        "aboutEntity": "_:provision",
         "TODO:appendToExistingEntity": "If entity provisionActivity already exists don't create new provisionActivity",
-        "property": "marc:publishedYear",
-        "fixedDefault": "    "
+        "property": "date",
+        "fixedDefault": "    ",
+        "NOTE": "See postProcessing."
       },
       "[11:15]": {
-        "property": "marc:otherYear",
-        "fixedDefault": "    "
+        "aboutEntity": "_:provision",
+        "property": "endDate",
+        "fixedDefault": "    ",
+        "NOTE": "See postProcessing."
       },
       "[15:18]": {
-        "TODO:addLink": "provisionActivity, see [7:11]",
-        "addLink": "publicationCountry",
+        "aboutEntity": "_:provision",
+        "addLink": "country",
         "uriTemplate": "https://id.kb.se/country/{_}",
         "TODO:linkedEntity": {
           "link": "place",
@@ -2570,7 +2640,8 @@
             "resourceType": "Country",
             "uriTemplate": "https://id.kb.se/country/{_}"
           }
-        }
+        },
+        "NOTE": "See postProcessing."
       },
       "[35:38]": {
         "aboutEntity": "?work",
@@ -2917,9 +2988,12 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear":  "1977",
-              "publicationCountry": [{"@id": "https://id.kb.se/country/sw"}],
+              "provisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977",
+                "country": [{"@id": "https://id.kb.se/country/sw"}]
+              },
               "instanceOf": {
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],
@@ -2940,9 +3014,12 @@
             "created": "2016-04-20T00:00:00.0+02:00",
             "marc:catalogingSource": {"@id": "https://id.kb.se/marc/CatalogingSourceType-c"},
             "mainEntity": {
-              "marc:publishedYear": "1995",
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "publicationCountry": [{"@id": "https://id.kb.se/country/fr"}],
+              "provisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1995",
+                "country": [{"@id": "https://id.kb.se/country/fr"}]
+              },
               "instanceOf": {
                 "@type": "Text",
                 "genreForm": {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
@@ -2962,9 +3039,12 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear":  "1977",
-              "publicationCountry": [{"@id": "https://id.kb.se/country/sw"}],
+              "provisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977",
+                "country": [{"@id": "https://id.kb.se/country/sw"}]
+              },
               "instanceOf": {
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],

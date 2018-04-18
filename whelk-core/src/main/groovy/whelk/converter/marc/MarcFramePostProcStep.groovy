@@ -3,9 +3,13 @@ package whelk.converter.marc
 import java.util.regex.Pattern
 import groovy.util.logging.Log4j2 as Log
 
+import whelk.JsonLd
+
 interface MarcFramePostProcStep {
     def ID = '@id'
     def TYPE = '@type'
+    void setLd(JsonLd ld)
+    void init()
     void modify(Map record, Map thing)
     void unmodify(Map record, Map thing)
 }
@@ -14,132 +18,17 @@ interface MarcFramePostProcStep {
 abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
     String type
     Pattern matchValuePattern
+    JsonLd ld
     void setMatchValuePattern(String pattern) {
         matchValuePattern = Pattern.compile(pattern)
     }
-}
-
-
-class FoldLinkedPropertyStep extends MarcFramePostProcStepBase {
-
-    String statusFlag
-    String statusFlagValue
-    String sourceProperty
-    String property
-    String defaultLink
-    String resourceType
-    Map<String, String> typeLinkMap
-
-    def getLink(thing) {
-        def useLink = defaultLink
-        typeLinkMap.each { type, link ->
-            if ((thing[TYPE] instanceof List &&
-                        thing[TYPE].find { it.startsWith(type) })
-                    || thing[TYPE]?.startsWith(type)) {
-                useLink = link
-            }
-        }
-        return useLink
-    }
-
-    void modify(Map record, Map thing) {
-        def link = getLink(thing)
-        if (thing[statusFlag] != statusFlagValue)
-            return
-        def value = thing[sourceProperty]
-        if (!(value instanceof String) || !matchValuePattern.matcher(value))
-            return
-        for (object in thing[link]) {
-            if (object[property] == value) {
-                // IMPROVE:
-                // && ((!resourceType || !object[TYPE]) ||
-                //     ld.isSubClassOf(resourceType, object[TYPE]))
-                thing.remove(statusFlag)
-                thing.remove(sourceProperty)
-                return
-            }
-        }
-        if (thing[link]) {
-            return
-        }
-        thing.remove(statusFlag)
-        thing.remove(sourceProperty)
-        thing[link] = []
-        def newStruct = [(property): value]
-        if (resourceType) {
-            newStruct[TYPE] = resourceType
-        }
-        thing[link] << newStruct
-    }
-
-    void unmodify(Map record, Map thing) {
-        if (thing[statusFlag])
-            return
-        if (thing[sourceProperty])
-            return
-        def link = getLink(thing)
-        for (object in thing[link]) {
-            def value = object[property]
-            if (!(value instanceof String) || !matchValuePattern.matcher(value))
-                continue
-            thing[statusFlag] = statusFlagValue
-            thing[sourceProperty] = value
-            break
-        }
-    }
-
-}
-
-
-class FoldJoinedPropertiesStep extends MarcFramePostProcStepBase {
-    static String INFINITY_YEAR = "9999"
-    String statusFlag
-    String statusFlagValue
-    List<String> sourceProperties
-    String property
-    String separator
-
-    void modify(Map record, Map thing) {
-        if (thing[statusFlag] != statusFlagValue)
-            return
-        def values = []
-        for (prop in sourceProperties) {
-            def value = thing[prop]
-            if (value && !matchValuePattern.matcher(value))
-                return
-            values << (value == INFINITY_YEAR? "" : value)
-        }
-        thing.remove(statusFlag)
-        sourceProperties.each { thing.remove(it) }
-        thing[property] = values.join(separator)
-    }
-
-    void unmodify(Map record, Map thing) {
-        if (thing[statusFlag])
-            return
-        if (sourceProperties.find { thing[it] })
-            return
-        def value = thing[property]
-        if (!value)
-            return
-        if (value.endsWith(separator))
-            value += INFINITY_YEAR
-        def values = value.split(separator)
-        if (values.size() != sourceProperties.size())
-            return
-        values.eachWithIndex { v, i ->
-            if (!matchValuePattern.matcher(v))
-                return
-            thing[sourceProperties[i]] = v
-        }
-        thing[statusFlag] = statusFlagValue
-    }
-
+    void init() { }
 }
 
 
 class MappedPropertyStep implements MarcFramePostProcStep {
 
+    JsonLd ld
     String type
     String sourceEntity
     String sourceLink
@@ -147,6 +36,8 @@ class MappedPropertyStep implements MarcFramePostProcStep {
     String targetEntity
     String targetProperty
     Map<String, String> valueMap
+
+    void init() { }
 
     /**
      * Sets computed value if missing. Leaves any given value as is.
@@ -222,6 +113,124 @@ class VerboseRevertDataStep extends MarcFramePostProcStepBase {
             }
 
         }
+    }
+
+}
+
+
+class RestructOnMatchFlagStep extends MarcFramePostProcStepBase {
+
+    String sourceLink
+    String overwriteType
+    String nullValue
+    List<String> valueProperties
+    Map<String, String> replaceInValue
+    String flagProperty
+    Map<String, FlagMatchRule> flagMatch = [:]
+
+    private Map<String, List<FlagMatchRule>> flagMatchByLink = [:]
+
+    void setFlagMatch(Map flagMatch) {
+        flagMatch.each { flag, ruleDfn ->
+            if (ruleDfn instanceof Map) {
+                def flagRule = new FlagMatchRule(ruleDfn)
+                flagRule.flag = flag
+                this.flagMatch[(String) flag] = flagRule
+                if (flagRule.mergeFirstLink) {
+                    flagMatchByLink.get(flagRule.mergeFirstLink, []) << flagRule
+                }
+            }
+        }
+    }
+
+    void modify(Map record, Map thing) {
+        def obj = thing[sourceLink]
+        if (!obj) return
+
+        String flag = obj[flagProperty]
+        FlagMatchRule flagRule = flagMatch[flag]
+        if (!flagRule) return
+
+        if (flagRule.resourceType && obj[TYPE] == overwriteType) {
+            obj[TYPE] = flagRule.resourceType
+        }
+        if (flagRule.remapProperty) {
+            flagRule.remapProperty.each { srcProp, destProp ->
+                def src = obj.remove(srcProp)
+                if (src) {
+                    //if (destProp in obj) ...
+                    if (destProp != null) {
+                        obj[destProp] = src
+                    }
+                }
+            }
+        }
+        if (flagRule.mergeFirstLink) {
+            List list = thing[flagRule.mergeFirstLink]
+            if (!list) {
+                list = thing[flagRule.mergeFirstLink] = []
+            }
+            //if (list[0]) {
+            //    if (!ld.softMerge(obj, into)) list.add(0, obj)
+            //}
+            list.add(0, obj)
+            thing.remove(sourceLink)
+        }
+        if (!flagRule.keepFlag) {
+            obj.remove(flagProperty)
+        }
+    }
+
+    void unmodify(Map record, Map thing) {
+        flagMatchByLink.each { link, candidates ->
+            def list = thing[link]
+            if (list) {
+                def obj = list[0]
+                if (!(obj instanceof Map))
+                    return
+
+                def flagRule = candidates.find { it.resourceType == obj[TYPE] }
+                if (!flagRule)
+                    return
+
+                obj = [:] + obj
+                if (obj[TYPE] == flagRule.resourceType) {
+                    obj[TYPE] = overwriteType
+                    obj[flagProperty] = flagRule.flag
+
+                    if (flagRule.remapProperty) {
+                        flagRule.remapProperty.each { srcProp, destProp ->
+                            if (destProp == null) {
+                                obj[srcProp] = nullValue
+                            } else {
+                                def src = obj.remove(destProp)
+                                if (src) {
+                                    obj[srcProp] = src
+                                }
+                            }
+                        }
+                    }
+
+                    if (valueProperties) {
+                        for (prop in valueProperties) {
+                            def value = obj[prop]
+                            if (value && !matchValuePattern.matcher(value))
+                                return
+                        }
+                    }
+
+                    thing[sourceLink] = obj
+                }
+            }
+        }
+    }
+
+    class FlagMatchRule {
+        String flag
+        String resourceType
+        String mergeFirstLink
+        Map<String, String> remapProperty
+        Boolean keepFlag
     }
 
 }

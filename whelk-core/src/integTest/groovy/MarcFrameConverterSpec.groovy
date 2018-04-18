@@ -223,9 +223,6 @@ class MarcFrameConverterSpec extends Specification {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": [
                 "@type": "Instance",
-                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-                "marc:publishedYear":  "1977",
-                "publicationCountry": [["@id": "https://id.kb.se/country/sw"]],
                 "issuanceType": "Monograph",
                 "instanceOf": [
                     "@type": "Text",
@@ -240,7 +237,7 @@ class MarcFrameConverterSpec extends Specification {
         when:
         def result = converter.conversion.revert(jsonld)
         then:
-        result.fields[1]["008"] == "900101s1977    sw |||||||||||000 1dswe| "
+        result.fields[1]["008"] == "900101|        |  |||||||||||000 1dswe| "
     }
 
     def "should handle postprocessing on convert"() {
@@ -248,11 +245,12 @@ class MarcFrameConverterSpec extends Specification {
         def data = deepcopy(item.spec.source)
         def record = data
         def thing = item.thingLink in data? data[item.thingLink] : data
+        def expected = getSpecPiece(item.spec, 'result')
 
         when:
         item.step.modify(record, thing)
         then:
-        data == item.spec.result
+        assertJsonEquals(data, expected)
 
         where:
         item << postProcStepSpecs.findAll { it.spec.source }
@@ -260,7 +258,7 @@ class MarcFrameConverterSpec extends Specification {
 
     def "should handle postprocessing on revert"() {
         given:
-        def data = deepcopy(item.spec.result)
+        def data = getSpecPiece(item.spec, 'result')
         def record = data
         def thing = item.thingLink in data? data[item.thingLink] : data
 
@@ -268,13 +266,24 @@ class MarcFrameConverterSpec extends Specification {
         item.step.unmodify(record, thing)
         then:
         if (item.spec.back) {
-            def expected =
-                item.spec.back == true ? item.spec.source : item.spec.back
-            assert data == expected
+            def expected = getSpecPiece(item.spec, 'back')
+            assertJsonEquals(data, expected)
         }
 
         where:
         item << postProcStepSpecs.findAll { it.spec.source }
+    }
+
+    private getSpecPiece(spec, pieceKey) {
+        def piece = spec[pieceKey]
+        if (piece instanceof String) {
+            pieceKey = piece
+        }
+        if (pieceKey == "both") {
+            return deepcopy(spec.source + spec.result)
+        } else {
+            return deepcopy(spec[pieceKey])
+        }
     }
 
     def "should process extra data"() {

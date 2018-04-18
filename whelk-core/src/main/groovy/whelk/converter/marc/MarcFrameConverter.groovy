@@ -189,12 +189,20 @@ class MarcConversion {
         for (k in stepDfn.keySet())
             if (k[0] == '_')
                 props.remove(k)
+        def procStep
         switch (stepDfn.type) {
-            case 'FoldLinkedProperty': new FoldLinkedPropertyStep(props); break
-            case 'FoldJoinedProperties': new FoldJoinedPropertiesStep(props); break
-            case 'MappedProperty': new MappedPropertyStep(props); break
-            case 'VerboseRevertData': new VerboseRevertDataStep(props); break
+            case 'RestructOnMatchFlag':
+            procStep = new RestructOnMatchFlagStep(props); break
+            case 'MappedProperty':
+            procStep = new MappedPropertyStep(props); break
+            case 'VerboseRevertData':
+            procStep = new VerboseRevertDataStep(props); break
+            default:
+            return null
         }
+        procStep.ld = converter.ld
+        procStep.init()
+        return procStep
     }
 
     void addTypeMaps() {
@@ -268,15 +276,6 @@ class MarcConversion {
             record._marcFailedFixedFields = marcRemains.failedFixedFields
         }
 
-        if (doPostProcessing) {
-            sharedPostProcSteps.each {
-                it.modify(record, thing)
-            }
-            marcRuleSet.postProcSteps.each {
-                it.modify(record, thing)
-            }
-        }
-
         // NOTE: use minted ("pretty") uri as primary @id
         if (recordId != null) {
             if (record["@id"]) {
@@ -317,6 +316,15 @@ class MarcConversion {
             }
         } else {
             record[marcRuleSet.thingLink] = thing
+        }
+
+        if (doPostProcessing) {
+            sharedPostProcSteps.each {
+                it.modify(record, thing)
+            }
+            marcRuleSet.postProcSteps.each {
+                it.modify(record, thing)
+            }
         }
 
         if (flatLinkedForm) {
