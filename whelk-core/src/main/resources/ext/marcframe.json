@@ -1300,18 +1300,6 @@
 
     "relation_from_w": {
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
-    },
-
-    "record_from_w": {
-      "$w": {
-        "aboutEntity": "?thing",
-        "aboutAlias": "_:instance",
-        "addLink": "describedBy",
-        "resourceType": "Record",
-        "property": "controlNumber",
-        "uriTemplate": "http://libris.kb.se/bib/{_}",
-        "matchUriToken": "^\\d{1,14}$"
-      }
     }
 
   },
@@ -10670,14 +10658,14 @@
       "inherit": "772",
       "addLink": "hasSeries",
       "resourceType": "Instance",
-      "$a": {"about": "_:workAgent", "property": "label", "TODO:targetMatch": "1xx"},
+      "$a": {"about": "_:instanceOfContribution", "link": "agent", "resourceType": "Agent", "property": "label", "TODO:targetMatch": "1xx"},
       "$b": {"property": "editionStatement", "TODO:targetMatch": "250"},
       "$c": {"about": "_:instanceTitle", "property": "qualifier", "NOTE:marc-repeatable": false},
       "$d": {"property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
       "$g": {"addProperty": "part"},
       "$h": {"link": "extent", "resourceType": "Extent", "property": "label"},
       "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
-      "$i": {"about": "_:instance", "addProperty": "marc:displayText"},
+      "$i": {"about": "_:instanceOf", "addProperty": "marc:displayText"},
       "$k": null,
       "$m": {"property": "marc:materialSpecificDetails"},
       "$n": {"addLink": "note", "resourceType": "Note", "property": "label"},
@@ -10689,6 +10677,8 @@
       "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
       "$y": {"addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
       "$z": null,
+      "$w": {"about": "_:describedBy", "property": "controlNumber", "uriTemplate": "http://libris.kb.se/bib/{_}", "matchUriToken": "^\\d{1,14}$"
+      },
       "_spec": [
         {
           "source": {"760": {"ind1": "0", "ind2": " ", "subfields": [
@@ -10724,10 +10714,12 @@
       "_spec": [
         {
           "source": {"762": {"ind1": "0", "ind2": " ", "subfields": [
-            {"t": "Rätt fart"}
+            {"t": "Rätt fart"},
+            {"w": "9823877"}
           ]}},
           "normalized": {"762": {"ind1": "0", "ind2": " ", "subfields": [
-            {"t": "Rätt fart"}
+            {"t": "Rätt fart"},
+            {"w": "9823877"}
           ]}},
           "result": {"mainEntity": {
               "hasSubseries": [{
@@ -10736,6 +10728,10 @@
                   "hasTitle": [{
                     "@type": "Title",
                     "mainTitle": "Rätt fart"
+                  }],
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "9823877"
                   }]
               }]
           }}
@@ -10747,7 +10743,6 @@
     "770": {"inherit": "772", "addLink": "supplement"},
     "772": {
       "aboutEntity": "?work",
-      "include": "record_from_w",
       "addLink": "supplementTo",
       "resourceType": "Work",
       "pendingResources": {
@@ -10755,7 +10750,7 @@
           "link": "expressionOf",
           "resourceType": "Work"
         },
-        "_:instance": {
+        "_:instanceOf": {
           "link": "instanceOf",
           "resourceType": "Work"
         },
@@ -10789,13 +10784,14 @@
           "resourceType": "Title",
           "embedded": true
         },
-        "_:workAgent": {
-          "link": "instanceOf",
-          "resourceType": "Work",
-          "about": "_:agent"
+        "_:instanceOfContribution": {
+          "about": "_:instanceOf",
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
         },
         "_:instanceTitle": {
-          "about": "_:instance",
+          "about": "_:instanceOf",
           "addLink": "hasTitle",
           "resourceType": "Title"
         },
@@ -10803,8 +10799,18 @@
           "about": "_:hasInstance",
           "link": "provisionActivity",
           "resourceType": "ProvisionActivity"
-        }
+        },
+      "_:hasInstanceDescribedBy": {
+          "about": "_:hasInstance",
+          "addLink": "describedBy",
+          "resourceType": "Record"
+        },
+        "_:describedBy": {
+            "addLink": "describedBy",
+            "resourceType": "Record"
+          }
       },
+
       "i1": {
         "property": "marc:toDisplayNote",
         "tokenMap": {
@@ -10838,6 +10844,8 @@
       "$z": {
         "TODO:targetMatch": "020",
         "about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"
+      },
+      "$w": {"about": "_:hasInstanceDescribedBy", "property": "controlNumber", "uriTemplate": "http://libris.kb.se/bib/{_}", "matchUriToken": "^\\d{1,14}$"
       },
       "$6": {"property": "marc:fieldref"},
       "$7": {"property": "marc:controlSubfield"},
@@ -10939,7 +10947,7 @@
       "NOTE": "We deviate from BF2 as we do not link from the Work with hasInstance.",
       "inherit": "772",
       "aboutEntity": "?thing",
-      "aboutAlias": "_:instance",
+      "aboutAlias": "_:instanceOf",
       "addLink": "otherPhysicalFormat",
       "resourceType": "Instance",
       "i2": {"link": null, "marcDefault": "8"},
