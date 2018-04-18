@@ -11782,7 +11782,7 @@
       "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"addProperty": "marc:linkText"},
-      "$z": {"addProperty": "note"},
+      "$z": {"addProperty": "marc:copyNote"},
       "TODO": "subfieldOrder",
       "_spec": [
         {
@@ -11827,6 +11827,21 @@
               "@type": "MediaObject",
               "uri": ["http://www.framtidsstudier.se/filebank/files/20051201$133251$fil$048Ti3PL2UIwRJQEBbDG.pdf"],
               "marc:electronicLocatorType": "http"}]
+          }}
+        },
+        {
+          "source": {
+            "856": {"ind1": "4", "ind2": "1", "subfields": [
+              {"u": "http://www.vr.se/tvarsnitt"},
+              {"z": "Tidskriftens webbplats"}
+            ]}},
+          "result": {"mainEntity": {
+            "otherPhysicalFormat": [{
+              "@type": "Electronic",
+              "marc:electronicLocatorType": "http",
+              "marc:copyNote": ["Tidskriftens webbplats"],
+              "uri": ["http://www.vr.se/tvarsnitt"]
+            }]
           }}
         }
       ]
