@@ -2410,7 +2410,7 @@
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/SoundTapeWidthType-{_}",
-        "matchUriToken": "^[_lmop]$"
+          "matchUriToken": "^[_lmop]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
@@ -2425,7 +2425,7 @@
         },
         "[10]": {
           "TODO": "Depending on value of tokenMap, map to appliedMaterial or baseMaterial?",
-          "link": "marc:soundKindOfMaterial",
+          "link": "baseMaterial",
           "uriTemplate": "https://id.kb.se/marc/SoundKindOfMaterialType-{_}",
           "matchUriToken": "^[_abcgilmprsw]$"
         },
