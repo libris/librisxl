@@ -10964,9 +10964,11 @@
       "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "$y": {"addLink": "identifiedBy", "resourceType": "CODEN", "property": "value"},
       "$z": {"addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"},
+      "$w": {"about": "_:describedBy", "property": "controlNumber", "uriTemplate": "http://libris.kb.se/bib/{_}", "matchUriToken": "^\\d{1,14}$"
+      },
       "_spec": [
         {
-          "source": {"776": {"ind1": "0", "ind2": " ", "subfields": [
+          "source": {"776": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "Print"},
             {"t": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"},
             {"z": "978-90-8964-412-1"}
@@ -10988,6 +10990,36 @@
                   "identifiedBy": [{
                     "@type": "ISBN",
                     "value": "978-90-8964-412-1"
+                  }]
+              }]
+          }}
+        },
+        {
+          "source": {"776": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Hemmets journal (Online)"},
+            {"x": "2002-9659"},
+            {"w": "22176030"}
+          ]}},
+          "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+            {"t": "Hemmets journal (Online)"},
+            {"x": "2002-9659"},
+            {"w": "22176030"}
+          ]}},
+          "result": {"mainEntity": {
+              "otherPhysicalFormat": [{
+                  "@type": "Instance",
+                  "marc:toDisplayNote": true,
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Hemmets journal (Online)"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "2002-9659"
+                  }],
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "22176030"
                   }]
               }]
           }}
