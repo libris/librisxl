@@ -178,6 +178,27 @@ class MarcFrameConverterUtilsSpec extends Specification {
          '[0] [1] [2:4]'  | [[0, 1], [1, 2], [2,4]]
     }
 
+    def "should get keys sorted by dependency from pendingResources"() {
+        given:
+        def pendingResources = [
+            'b2': [about: 'a', link: 'b2', resourceType: 'B"'],
+            'c': [about: 'd', link: 'c', resourceType: 'C'],
+            'a': [link: 'a', resourceType: 'A'],
+            'b1': [about: 'a', link: 'b1', resourceType: 'B1'],
+            'd': [about: 'b1', link: 'c', resourceType: 'C'],
+        ]
+        expect:
+        Util.getPendingDeps(pendingResources) == [
+            'a': [],
+            'b1': ['a'],
+            'b2': ['a'],
+            'd': ['b1', 'a'],
+            'c': ['d', 'b1', 'a'],
+        ]
+        and:
+        Util.getSortedPendingKeys(pendingResources) == ['a', 'b1', 'b2', 'd', 'c']
+    }
+
     def newMarcFieldHandler() {
         new MarcFieldHandler(new MarcRuleSet(new MarcConversion(null, [:], [:]), 'blip'), 'xxx', [:])
     }
