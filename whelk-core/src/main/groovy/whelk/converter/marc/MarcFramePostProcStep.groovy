@@ -124,7 +124,6 @@ class RestructOnMatchFlagStep extends MarcFramePostProcStepBase {
     String overwriteType
     String nullValue
     List<String> valueProperties
-    Map<String, String> replaceInValue
     String flagProperty
     Map<String, FlagMatchRule> flagMatch = [:]
 
@@ -185,6 +184,7 @@ class RestructOnMatchFlagStep extends MarcFramePostProcStepBase {
         flagMatchByLink.each { link, candidates ->
             def list = thing[link]
             if (list) {
+                // FIXME: find first obj that matches a flagRule
                 def obj = list[0]
                 if (!(obj instanceof Map))
                     return

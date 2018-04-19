@@ -1336,10 +1336,9 @@
         "type": "RestructOnMatchFlag",
         "sourceLink": "provisionActivity",
         "overwriteType": "PrimaryProvisionActivity",
-        "valueProperties": ["date", "endDate"],
+        "valueProperties": ["date", "otherDate"],
         "matchValuePattern": "^[0-9u]{4}$",
         "nullValue": "9999",
-        "replaceInValue": {"[uU]": "X"},
         "flagProperty": "marc:publicationStatus",
         "flagMatch": {
           "marc:SingleKnownDateProbableDate": {
@@ -1352,33 +1351,34 @@
           },
           "marc:RangeOfYearsOfBulkOfCollection": {
             "mergeFirstLink": "production",
-            "resourceType": "PrimaryBulkProduction"
-          },
-          "marc:DateOfDistributionReleaseIssueAndProductionRecordingSessionWhenDifferent": {
-            "mergeFirstLink": "production",
-            "resourceType": "DistributionAndProduction",
-            "remapProperty": {"date": "distributionDate", "endDate": "date"}
+            "resourceType": "PrimaryBulkProduction",
+            "remapProperty": {"date": "startDate", "otherDate": "endDate"}
           },
           "marc:ContinuingResourceCurrentlyPublished": {
             "mergeFirstLink": "publication",
             "resourceType": "CurrentPublicationPeriod",
-            "remapProperty": {"date": "startDate", "endDate": null}
+            "remapProperty": {"date": "startDate", "otherDate": null}
           },
           "marc:ContinuingResourceCeasedPublication": {
             "mergeFirstLink": "publication",
             "resourceType": "CeasedPublicationPeriod",
-            "remapProperty": {"date": "startDate", "endDate": "endDate"}
+            "remapProperty": {"date": "startDate", "otherDate": "endDate"}
           },
           "marc:ContinuingResourceStatusUnknown": {
             "mergeFirstLink": "publication",
             "resourceType": "PublicationPeriod",
-            "remapProperty": {"date": "startDate", "endDate": "endDate"},
+            "remapProperty": {"date": "startDate", "otherDate": "endDate"},
             "keepFlag": true
           },
           "marc:PublicationDateAndCopyrightDate": {
             "mergeFirstLink": "publication",
             "resourceType": "PrimaryPublication",
-            "remapProperty": {"endDate": "copyrightDate"}
+            "remapProperty": {"otherDate": "copyrightDate"}
+          },
+          "marc:DateOfDistributionReleaseIssueAndProductionRecordingSessionWhenDifferent": {
+            "mergeFirstLink": "production",
+            "resourceType": "marc:DistributionAndProduction",
+            "remapProperty": {"date": "marc:distributionDate", "otherDate": "marc:productionDate"}
           }
         },
         "_spec": [
@@ -1503,7 +1503,7 @@
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
                 "date": "1977",
-                "endDate": "9999",
+                "otherDate": "9999",
                 "country": [ {"@id": "https://id.kb.se/country/sw"} ]
               }
             },
@@ -1524,7 +1524,7 @@
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
                 "date": "1977",
-                "endDate": "2017"
+                "otherDate": "2017"
               }
             },
             "result": {
@@ -2625,7 +2625,7 @@
       },
       "[11:15]": {
         "aboutEntity": "_:provision",
-        "property": "endDate",
+        "property": "otherDate",
         "fixedDefault": "    ",
         "NOTE": "See postProcessing."
       },
