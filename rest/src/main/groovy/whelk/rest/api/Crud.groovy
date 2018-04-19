@@ -639,6 +639,8 @@ class Crud extends HttpServlet {
 
         Document newDoc = new Document(requestBody)
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
+        // TODO https://jira.kb.se/browse/LXL-1263
+        newDoc.setControlNumber(newDoc.getShortId())
 
         String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
         if ( !(collection in ["auth", "bib", "hold"]) ) {
