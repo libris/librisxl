@@ -6247,6 +6247,7 @@
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
+        "TODO:groupId": "#part-$seq",
         "embedded": true
       },
       "pendingResources": {
@@ -6375,6 +6376,11 @@
     },
 
     "340": {
+      "linkSubsequentRepeated": {
+        "addLink": "hasPart",
+        "resourceType": "Instance",
+        "groupId": "#part-$seq"
+      },
       "aboutEntity": "?thing",
       "$a": {
         "TODO": "Add the separate lists used for cataloging, as enumerations",
@@ -6458,6 +6464,11 @@
     "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "344": {
       "NOTE:record-count": 0,
+      "linkSubsequentRepeated": {
+        "addLink": "hasPart",
+        "resourceType": "Instance",
+        "groupId": "#part-$seq"
+      },
       "$a": {"addLink": "soundCharacteristic", "resourceType": "RecordingMethod", "property": "label"},
       "$b": {"addLink": "soundCharacteristic", "resourceType": "RecordingMedium", "property": "label"},
       "$c": {"addLink": "soundCharacteristic", "resourceType": "PlayingSpeed", "property": "label"},
@@ -6471,6 +6482,11 @@
     },
     "345": {
       "NOTE:record-count": 0,
+      "linkSubsequentRepeated": {
+        "addLink": "hasPart",
+        "resourceType": "Instance",
+        "groupId": "#part-$seq"
+      },
       "$a": {"addLink": "projectionCharacteristic", "resourceType": "PresentationFormat", "property": "label"},
       "$b": {"addLink": "projectionCharacteristic", "resourceType": "ProjectionSpeed", "property": "label"},
       "$2": {"link": "source", "resourceType": "Source", "property": "code"},
@@ -6478,6 +6494,11 @@
     },
     "346": {
       "NOTE:record-count": 0,
+      "linkSubsequentRepeated": {
+        "addLink": "hasPart",
+        "resourceType": "Instance",
+        "groupId": "#part-$seq"
+      },
       "$a": {"addLink": "videoCharacteristic", "resourceType": "VideoFormat", "property": "label"},
       "$b": {"addLink": "videoCharacteristic", "resourceType": "BroadcastStandard", "property": "label"},
       "$2": {"link": "source", "resourceType": "Source", "property": "code"},
@@ -6488,6 +6509,7 @@
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
+        "TODO:groupId": "#part-$seq",
         "embedded": true
       },
       "$a": {"addLink": "digitalCharacteristic", "resourceType": "FileType", "property": "label"},
