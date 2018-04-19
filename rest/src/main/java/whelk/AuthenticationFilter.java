@@ -26,6 +26,7 @@ public class AuthenticationFilter implements Filter {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final String XL_ACTIVE_SIGEL_HEADER = "XL-Active-Sigel";
     private List<String> supportedMethods;
+    private List<String> whitelistedPostEndpoints;
     private boolean mockAuthMode = false;
     private String url = null;
 
@@ -41,13 +42,16 @@ public class AuthenticationFilter implements Filter {
         }
         log.debug("Mock auth mode: " + mockAuthMode);
         supportedMethods = splitInitParameters(initParams);
+        whitelistedPostEndpoints = splitInitParameters(filterConfig.getInitParameter("whitelistedPostEndpoints"));
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        if (!mockAuthMode && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
+        if (httpRequest.getMethod() == "POST" && whitelistedPostEndpoints.contains(httpRequest.getRequestURI())) {
+            chain.doFilter(request, response);
+        } else if (!mockAuthMode && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
             int response_code = 0;
             String json = null;
             try {
