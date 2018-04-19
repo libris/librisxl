@@ -7788,7 +7788,7 @@
                 {
                   "@type": "Person",
                   "familyName": "Lindgren",
-                "givenName": "Astrid",
+                  "givenName": "Astrid",
                   "lifeSpan": "1907-2002",
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/mesh",
@@ -9264,19 +9264,19 @@
       "match": [
         {
           "when": "$t & i1=0 & i2=2",
-          "include": ["hasPartPerson", "agentdataPerson", "titledetails"]
+          "include": ["hasPartPerson", "agentdataPerson", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i1=1 & i2=2",
-          "include": ["hasPartPerson", "agentdataNameOfPerson", "titledetails"]
+          "include": ["hasPartPerson", "agentdataNameOfPerson", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i1=3 & i2=2",
-          "include": ["hasPartFamily", "agentdataFamily", "titledetails"]
+          "include": ["hasPartFamily", "agentdataFamily", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i2=2",
-          "include": ["hasPartPerson", "agentdataPerson", "titledetails"]
+          "include": ["hasPartPerson", "agentdataPerson", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i1=0",
@@ -9325,23 +9325,37 @@
       ],
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
-      "subfieldOrder": " i a b c q d j e u 4 t g m n p r s l k f o",
+      "subfieldOrder": "8 6 i a b c q d j g u t m n r p k l s f o x e 4 1 0",
       "_spec": [
         {
-          "source": {"700": {"ind1": "1", "ind2": " ", "subfields": [ {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}]}
+          "source": {"700": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Lindman, Mervi"},
+            {"d": "1971-"},
+            {"4": "ill"},
+            {"4": "9pu"}
+          ]}
           },
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "contribution": [
-                {
-                  "@type": "Contribution",
-                  "agent": {"@type": "Person",
-                    "familyName":  "Pietilä",
-                    "givenName":  "Tuulikki",
-                    "lifeSpan":  "1917-"}
-                }
-              ]
+              "contribution": [{
+                "@type": "Contribution",
+                "agent": {
+                  "@type": "Person",
+                  "familyName": "Lindman",
+                  "givenName": "Mervi",
+                  "lifeSpan": "1971-"
+                },
+                "role": [{
+                  "@id": "https://id.kb.se/relator/ill",
+                  "@type": "Role",
+                  "code": "ill"
+                }, {
+                  "@id": "https://id.kb.se/relator/9pu",
+                  "@type": "Role",
+                  "code": "9pu"
+                }]
+              }]
             }
           }}
         },
@@ -9350,8 +9364,8 @@
             "700": {"ind1": "1", "ind2": " ", "subfields": [
               {"i": "Parafraserar"},
               {"a": "Jansson, Tove"},
-              {"e": "Skapad av"},
-              {"t": "Anteckningar från en ö"}
+              {"t": "Anteckningar från en ö"},
+              {"e": "Skapad av"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9383,7 +9397,8 @@
           "source": {
             "700": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Jansson, Tove"},
-              {"t": "Anteckningar från en ö"}
+              {"t": "Anteckningar från en ö"},
+              {"4": "aut"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9400,7 +9415,12 @@
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
-                        "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                        "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"},
+                        "role": [{
+                          "@id": "https://id.kb.se/relator/aut",
+                          "@type": "Role",
+                          "code": "aut"
+                        }]
                       }
                     ]
                   }
@@ -9415,8 +9435,9 @@
               {"a": "Munro, Alice"},
               {"d": "1931-"},
               {"t": "Progress of love."},
+              {"k": "Urval"},
               {"l": "Svenska."},
-              {"k": "Urval"}
+              {"4": "aut"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9438,7 +9459,12 @@
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
-                        "agent": {"@type": "Person", "familyName":  "Munro", "givenName":  "Alice", "lifeSpan":  "1931-"}
+                        "agent": {"@type": "Person", "familyName":  "Munro", "givenName":  "Alice", "lifeSpan":  "1931-"},
+                        "role": [{
+                          "@id": "https://id.kb.se/relator/aut",
+                          "@type": "Role",
+                          "code": "aut"
+                        }]
                       }
                     ]
                   }
@@ -9452,7 +9478,8 @@
             "700": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Cyprianus av Kartago,"},
               {"d": "1914-1987"},
-              {"t": "De idolorum vanitate."}
+              {"t": "De idolorum vanitate."},
+              {"4": "ill"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9473,7 +9500,12 @@
                           "@type": "Person",
                           "name":  "Cyprianus av Kartago,",
                           "lifeSpan": "1914-1987"
-                        }
+                        },
+                        "role": [{
+                          "@id": "https://id.kb.se/relator/ill",
+                          "@type": "Role",
+                          "code": "ill"
+                        }]
                       }
                     ]
                   }
@@ -9488,7 +9520,8 @@
               {"a": "Schubert, Franz"},
               {"d": "1797-1828"},
               {"t": "Neue Ausgabe sämtlicher Werke"},
-              {"x": "99-0014962-9"}
+              {"x": "99-0014962-9"},
+              {"4": "aut"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9511,7 +9544,12 @@
                         "@type": "Person",
                         "familyName":  "Schubert",
                         "givenName":  "Franz",
-                        "lifeSpan":  "1797-1828"}
+                        "lifeSpan":  "1797-1828"},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/aut",
+                        "@type": "Role",
+                        "code": "aut"
+                      }]
                     }
                   ]
                 }
@@ -9522,7 +9560,8 @@
         {
           "source": {
             "700": {"ind1": "1", "ind2": "2", "subfields": [
-              {"a": "Jansson, Tove"}
+              {"a": "Jansson, Tove"},
+              {"4": "aut"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9533,7 +9572,12 @@
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
-                      "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                      "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/aut",
+                        "@type": "Role",
+                        "code": "aut"
+                      }]
                     }
                   ]
                 }
@@ -9576,7 +9620,8 @@
         {
           "source": {
             "700": {"ind1": "3", "ind2": "2", "subfields": [
-              {"a": "Family X."}
+              {"a": "Family X."},
+              {"4": "ctb"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9587,7 +9632,12 @@
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
-                      "agent": {"@type": "Family", "name":  "Family X."}
+                      "agent": {"@type": "Family", "name":  "Family X."},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/ctb",
+                        "@type": "Role",
+                        "code": "ctb"
+                      }]
                     }
                   ]
                 }
@@ -9598,7 +9648,8 @@
         {
           "source": {
             "700": {"ind1": "0", "ind2": "2", "subfields": [
-              {"a": "Tove Jansson"}
+              {"a": "Tove Jansson"},
+              {"4": "aut"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9609,7 +9660,12 @@
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
-                      "agent": {"@type": "Person", "name":  "Tove Jansson"}
+                      "agent": {"@type": "Person", "name":  "Tove Jansson"},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/aut",
+                        "@type": "Role",
+                        "code": "aut"
+                      }]
                     }
                   ]
                 }
@@ -9660,12 +9716,57 @@
         },
         {
           "source": [
-            {"700": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Breitholtz, Lennart,"}, {"d": "1909-1998"}, {"4": "edt"}]}},
-            {"700": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Breitholtz, Lennart,"}, {"d": "1909-1998"}, {"4": "oth"}]}}
+            {"700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Hindemith, Paul,"},
+              {"d": "1895-1963"},
+              {"t": "Kvartett,"},
+              {"m": "stråkar,"},
+              {"n": "nr 4, op. 22"},
+              {"4": "cmp"},
+              {"0": "111111111111"}
+            ]}}
           ],
-          "TODO:result": {"mainEntity": {
+          "normalized": [
+            {"700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Hindemith, Paul"},
+              {"d": "1895-1963"},
+              {"t": "Kvartett,"},
+              {"m": "stråkar,"},
+              {"n": "nr 4, op. 22"},
+              {"4": "cmp"},
+              {"0": "111111111111"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
             "instanceOf": {
-              "@type": "Text"
+              "@type": "Text",
+              "relationship" : [ {
+                "@type" : "Relationship",
+                "entity" : {
+                  "@type" : "Work",
+                  "contribution" : [ {
+                    "@type" : "PrimaryContribution",
+                    "agent" : {
+                      "@type" : "Person",
+                      "familyName" : "Hindemith",
+                      "givenName" : "Paul",
+                      "lifeSpan" : "1895-1963"
+                    },
+                    "role" : [ {
+                      "@id" : "https://id.kb.se/relator/cmp",
+                      "@type" : "Role",
+                      "code" : "cmp"
+                    } ]
+                  } ],
+                  "hasTitle" : [ {
+                    "@type" : "Title",
+                    "mainTitle" : "Kvartett,",
+                    "partNumber" : [ "nr 4, op. 22" ]
+                  } ],
+                  "marc:uri" : [ "111111111111" ],
+                  "musicMedium" : [ "stråkar," ]
+                }
+              } ]
             }
           }}
         }
@@ -9749,7 +9850,7 @@
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
 
-      "subfieldOrder": "i a b c d g u e 4 t m n p r s l k f o x",
+      "subfieldOrder": "6 i a b d c g u t n m r p k l s f o x e 4 1 0",
       "TOOO:i2": "How to map when no $t?",
       "_spec": [
         {
@@ -9757,7 +9858,8 @@
             "710": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "National Fire Protection Association."},
               {"t": "National electrical code (1993)"},
-              {"x": "1111-1111"}
+              {"x": "1111-1111"},
+              {"4": "oth"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9779,7 +9881,12 @@
                       {
                         "@type": "PrimaryContribution",
                         "agent":
-                          {"@type": "Jurisdiction", "name": "National Fire Protection Association."}
+                        {"@type": "Jurisdiction", "name": "National Fire Protection Association."},
+                        "role": [{
+                          "@id": "https://id.kb.se/relator/oth",
+                          "@type": "Role",
+                          "code": "oth"
+                        }]
                       }
                     ]
                   }
@@ -9831,6 +9938,7 @@
           "source": {
             "710": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Nationell gammaldags organisation."},
+              {"4": "oth"},
               {"t": "Handlingar 1920-1950"},
               {"n": "10"}
             ]}},
@@ -9838,7 +9946,8 @@
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Nationell gammaldags organisation."},
               {"t": "Handlingar 1920-1950"},
-              {"n": "10"}
+              {"n": "10"},
+              {"4": "oth"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9857,7 +9966,12 @@
                       {
                         "@type": "PrimaryContribution",
                         "agent":
-                        {"@type": "Organization", "name": "Nationell gammaldags organisation."}
+                        {"@type": "Organization", "name": "Nationell gammaldags organisation."},
+                        "role": [{
+                          "@id": "https://id.kb.se/relator/oth",
+                          "@type": "Role",
+                          "code": "oth"
+                        }]
                       }
                     ]
                   }
@@ -9871,7 +9985,8 @@
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "National Fire Protection Association."},
               {"t": "National electrical code (1993)"},
-              {"n": "42"}
+              {"n": "42"},
+              {"4": "aut"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9890,7 +10005,12 @@
                       {
                         "@type": "PrimaryContribution",
                         "agent":
-                          {"@type": "Organization", "name": "National Fire Protection Association."}
+                          {"@type": "Organization", "name": "National Fire Protection Association."},
+                        "role": [{
+                          "@id": "https://id.kb.se/relator/aut",
+                          "@type": "Role",
+                          "code": "aut"
+                        }]
                       }
                     ]
                   }
@@ -9904,9 +10024,9 @@
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "International Council of Nurses."},
               {"b": "Quinquennial Meeting"},
-              {"n": "(1st :"},
               {"d": "1904"},
               {"c": "Berlin, Germany)"},
+              {"n": "(1st :"},
               {"e": "author."}
             ]}},
           "result": {"mainEntity": {
@@ -9966,6 +10086,7 @@
               {"a": "Umeå universitet."},
               {"b": "Institutionen för ABM."},
               {"b": "Kulturgeografi"},
+              {"4": "fnd"},
               {"n": "101"}
             ]}},
           "normalized": {
@@ -9973,7 +10094,8 @@
               {"a": "Umeå universitet."},
               {"b": "Institutionen för ABM."},
               {"b": "Kulturgeografi"},
-              {"n": "101"}
+              {"n": "101"},
+              {"4": "fnd"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9989,7 +10111,42 @@
                       "@type": "Organization",
                       "name": "Umeå universitet."
                     }
-                  }
+                  },
+                  "role": [{
+                    "@id": "https://id.kb.se/relator/fnd",
+                    "@type": "Role",
+                    "code": "fnd"
+                  }]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Palmblad & C."},
+              {"4": "prt"},
+              {"4": "oth"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent":
+                  {"@type": "Jurisdiction", "name": "Palmblad & C."},
+                  "role": [
+                    {
+                      "@id": "https://id.kb.se/relator/prt",
+                      "@type": "Role",
+                      "code": "prt"
+                    }, {
+                      "@id": "https://id.kb.se/relator/oth",
+                      "@type": "Role",
+                      "code": "oth"
+                    }]
                 }
               ]
             }
@@ -10075,8 +10232,9 @@
             "710": {"ind1": "1", "ind2": "2", "subfields": [
               {"a": "Sverige."},
               {"t": "Lagen om vissa kommunala befogenheter"},
+              {"n": "9"},
               {"x": "2222-2222"},
-              {"n": "9"}
+              {"4": "oth"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -10098,7 +10256,12 @@
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Jurisdiction",
-                        "name":  "Sverige."}
+                        "name":  "Sverige."},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/oth",
+                        "@type": "Role",
+                        "code": "oth"
+                      }]
                     }
                   ]
                 }
@@ -10111,7 +10274,8 @@
             "710": {"ind1": "2", "ind2": "2", "subfields": [
               {"a": "Arbetsmarknadsverket."},
               {"t": "Arbetsmiljölagen"},
-              {"n": "9"}
+              {"n": "9"},
+              {"4": "oth"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -10129,7 +10293,12 @@
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Organization",
-                        "name":  "Arbetsmarknadsverket."}
+                        "name":  "Arbetsmarknadsverket."},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/oth",
+                        "@type": "Role",
+                        "code": "oth"
+                      }]
                     }
                   ]
                 }
@@ -10142,13 +10311,15 @@
             "710": {"ind1": "0", "ind2": "2", "subfields": [
               {"a": "Namngalen organisation."},
               {"t": "Söderbykyrka"},
-              {"n": "9"}
+              {"n": "9"},
+              {"4": "oth"}
             ]}},
           "normalized": {
             "710": {"ind1": "2", "ind2": "2", "subfields": [
               {"a": "Namngalen organisation."},
               {"t": "Söderbykyrka"},
-              {"n": "9"}
+              {"n": "9"},
+              {"4": "oth"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -10166,7 +10337,12 @@
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Organization",
-                        "name":  "Namngalen organisation."}
+                        "name":  "Namngalen organisation."},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/oth",
+                        "@type": "Role",
+                        "code": "oth"
+                      }]
                     }
                   ]
                 }
@@ -10257,7 +10433,7 @@
       ],
       "i1": {"marcDefault": "2"},
       "$6": {"property": "marc:fieldref"},
-      "subfieldOrder": "i a n d c e g u j 4 t n s l k f x",
+      "subfieldOrder": "6 i a q d g c e u t n p k l s f x j 4 1 0",
       "_spec": [
         {
           "source": {
@@ -10283,12 +10459,12 @@
           "source": {
             "711": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Olympic Games."},
-              {"n": "21st :"},
               {"d": "1976:"},
               {"c": "Montréal, Québec)."},
               {"e": "Organizing Committee."},
               {"e": "Arts and Culture Program."},
               {"e": "Visual Arts Section."},
+              {"n": "21st :"},
               {"j": "author."}
             ]}},
           "result": {"mainEntity": {
@@ -10326,6 +10502,16 @@
               {"c": "Basilica di San Pietro in Vaticano)."},
               {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
               {"i": "Facsimile (manifestation):"},
+              {"x": "1111-1111"}
+            ]}},
+          "normalized": {
+            "711": {"ind1": "2", "ind2": "2", "subfields": [
+              {"i": "Facsimile (manifestation):"},
+              {"a": "Vatican Council"},
+              {"d": "1962-1965 :"},
+              {"c": "Basilica di San Pietro in Vaticano)."},
+              {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
+              {"n": "(2nd :"},
               {"x": "1111-1111"}
             ]}},
           "result": {"mainEntity": {
