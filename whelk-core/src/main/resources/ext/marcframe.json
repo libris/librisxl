@@ -3702,7 +3702,9 @@
         {
           "when": "$a =~ ^http://dbpedia\\.org/.+",
           "aboutEntity": "?thing",
-          "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"}
+          "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"},
+          "$6": null,
+          "$8": null
         },
         {
           "when": null,
@@ -3958,8 +3960,8 @@
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
+      "$6": {"property": "marc:bib041-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 2},
+      "$8": {"property": "marc:bib041-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 0},
       "TODO": "add _spec?"
     },
     "042": {
@@ -5619,9 +5621,12 @@
       },
       "$a": {"property": "editionStatement", "punctuationChars": "/"},
       "$b": {"property": "editionStatementRemainder"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
+      "$3": {
+        "link": "marc:editionStatement-appliesTo", "resourceType": "Resource", "property": "label",
+        "NOTE": "Qualified with related property to avoid collision when put directly on top-level resource!"
+      },
+      "$6": {"property": "marc:bib250-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 2},
+      "$8": {"property": "marc:bib250-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 0},
       "_spec": [
         {
           "source": {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "New ed."}, {"b": "2. pr."}]}},
@@ -5722,8 +5727,8 @@
       "$e": {"aboutNew": "_:manufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:;", "surroundingChars" : "()"},
       "$f": {"about": "_:manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :", "punctuationChars": ",:;)"},
       "$g": {"about": "_:manufacture", "property": "date", "leadingPunctuation": ",", "punctuationChars": ",:;"},
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
+      "$6": {"about": "_:publication", "property": "marc:fieldref"},
+      "$8": {"about": "_:publication", "property": "marc:groupid"},
       "_spec": [
         {
           "source": [
@@ -6253,7 +6258,7 @@
       "pendingResources": {
         "_:extent": {"addLink": "extent", "resourceType": "Extent"}
       },
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$3": {"about": "_:extent", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$a": {
         "about": "_:extent",
         "property": "label",
@@ -6288,8 +6293,8 @@
         "about": "_:extent",
         "property": "marc:sizeOfUnit"
       },
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"}
+      "$6": {"about": "_:extent", "property": "marc:fieldref"},
+      "$8": {"about": "_:extent", "property": "marc:groupid"}
     },
 
     "306": {},
@@ -6451,7 +6456,10 @@
       },
       "$0": { "NOTE:ignored": "true" },
       "TODO:subfield$2": "Source (NR)",
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$3": {
+        "link": "appliesTo", "resourceType": "Resource", "property": "label",
+        "NOTE": "record-count: 0. If this would appear, we unconditionally expect it ONLY to be used in subsequent 340 (see linkSubsequentRepeated)."
+      },
       "TODO:subfield$6": "Linkage (NR)",
       "$g": {
         "NOTE": "New subfield",
@@ -6520,7 +6528,10 @@
       "$f": {"addLink": "digitalCharacteristic", "resourceType": "EncodedBitrate", "property": "label"},
       "$0": {"TODO:ignored": "true???"},
       "$2": {"link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {
+        "link": "appliesTo", "resourceType": "Resource", "property": "label",
+        "NOTE": "record-count: 0. If this would appear, we unconditionally expect it ONLY to be used in subsequent 347 (see linkSubsequentRepeated)."
+      }
     },
     "348": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "musicFormat", "NOTE": "Not in generated marcframe"},
     "351": {
@@ -11877,8 +11888,8 @@
       "$d": {"about": "_:work", "addProperty": "legalDate"},
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"about": "_:work", "addProperty": "marc:uri"},
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
+      "$6": {"about": "_:title", "property": "marc:fieldref"},
+      "$8": {"about": "_:title", "property": "marc:groupid"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "subfieldorder": "3 a d g h s m n p l r k f o v w x",
       "_spec": [
@@ -15596,8 +15607,11 @@
       "NOTE:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster. Remove i1 when revert",
       "i1": {"ignored": true,"marcDefault": " "},
       "$a": {"property": "custodialHistory"},
-      "FIXME:not-directly-on-top:$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "FIXME:not-directly-on-top:$8": {"property": "marc:groupid"},
+      "$3": {
+        "link": "marc:custodialHistory-appliesTo", "resourceType": "Resource", "property": "label",
+        "NOTE": "Qualified with related property to avoid collision when put directly on top-level resource!"
+      },
+      "$8": {"property": "marc:hold561-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
       "_spec": [
         {
           "source": {"561": {"ind1": "0", "ind2": " ","subfields": [{"a": "xxx"}]}},
@@ -15722,8 +15736,8 @@
       "i2": {"property": "marc:shelvingOrder", "marcDefault": " "},
       "$2": {"property": "marc:sourceOfClassificationOrShelfMarkScheme"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
+      "$6": {"property": "marc:fieldref", "NOTE": "This is the ONLY allowed mapping to this property on the top-level resource (works since 'linkEveryIfRepeated' is in place)."},
+      "$8": {"property": "marc:groupid", "NOTE": "This is the ONLY allowed mapping to this property on the top-level resource (works since 'linkEveryIfRepeated' is in place)."},
       "$9": {"addProperty": "organizationalUnit"},
       "$a": {"property": "location"},
       "$b": {
