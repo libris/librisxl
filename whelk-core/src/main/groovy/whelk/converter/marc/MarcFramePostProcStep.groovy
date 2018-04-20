@@ -164,19 +164,22 @@ class RestructOnMatchFlagStep extends MarcFramePostProcStepBase {
                 }
             }
         }
+        if (!flagRule.keepFlag) {
+            obj.remove(flagProperty)
+        }
         if (flagRule.mergeFirstLink) {
             List list = thing[flagRule.mergeFirstLink]
             if (!list) {
                 list = thing[flagRule.mergeFirstLink] = []
             }
-            //if (list[0]) {
-            //    if (!ld.softMerge(obj, into)) list.add(0, obj)
-            //}
-            list.add(0, obj)
+            boolean mergeOk = false
+            if (ld && list[0]) {
+                mergeOk = ld.softMerge(obj, list[0])
+            }
+            if (!mergeOk) {
+                list.add(0, obj)
+            }
             thing.remove(sourceLink)
-        }
-        if (!flagRule.keepFlag) {
-            obj.remove(flagProperty)
         }
     }
 

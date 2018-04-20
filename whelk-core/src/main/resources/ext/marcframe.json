@@ -1416,7 +1416,7 @@
             "back": "both"
           },
           {
-            "TODO:source": {
+            "source": {
               "provisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
