@@ -477,14 +477,18 @@ class JsonLd {
      * Convert a post to card.
      *
      */
-    Map toCard(Map thing) {
+    Map toCard(Map thing, boolean chipsify = true) {
         Map lensGroups = displayData.get("lensGroups")
         Map cardLensGroup = lensGroups.get("cards")
         Map result = [:]
 
         Map card = removeProperties(thing, cardLensGroup)
-        card.each {key, value ->
-            result[key] = toChip(value)
+        if (chipsify) {
+            card.each {key, value ->
+                result[key] = toChip(value)
+            }
+        } else {
+            return card
         }
         return result
     }
