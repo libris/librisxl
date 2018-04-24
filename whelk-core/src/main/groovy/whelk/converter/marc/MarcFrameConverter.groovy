@@ -2263,7 +2263,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         failedRequired = true
                     }
                 }
-                if (!failedRequired) {
+                if (!failedRequired && justAdded) {
                     usedEntities << selectedEntity
                     if (prevAdded && justAdded &&  subhandler.leadingPunctuation) {
                         def (prevCode, prevSub) = prevAdded
