@@ -8,7 +8,7 @@ class MarcFrameConverterUtilsSpec extends Specification {
 
     def "should extract #token from #uri"() {
         expect:
-        MarcSimpleFieldHandler.extractToken(tplt, uri) == token
+        ConversionPart.extractToken(tplt, '{_}', uri) == token
         where:
         tplt            | uri               | token
         "/item/{_}"     | "/item/thing"     | "thing"
