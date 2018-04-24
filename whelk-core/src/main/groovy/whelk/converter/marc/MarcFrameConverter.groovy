@@ -2119,7 +2119,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (linkRepeated) {
-            useLinks << [link: linkRepeated.link, resourceType: linkRepeated.resourceType]
+            if (!onlySubsequentRepeated && linkRepeated.link in topEntity) {
+                useLinks = [linkRepeated]
+            } else {
+                useLinks << linkRepeated
+            }
         }
 
         String uriTemplateBase = uriTemplate
