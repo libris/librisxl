@@ -3977,7 +3977,8 @@
       "$9": {
         "about": "_:bibliography",
         "uriTemplate": "https://libris.kb.se/library/{_}",
-        "property": "sigel"
+        "property": "sigel",
+        "extractPropertyFromLinkIfMissing": true
       },
       "_spec": [
         {
@@ -15747,6 +15748,7 @@
         "uriTemplate": "https://libris.kb.se/library/{_}",
         "matchUriToken": "^\\S+$",
         "property": "code",
+        "extractPropertyFromLinkIfMissing": true,
         "TODO": "move to mainEntity and auto-repeat here",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
       },
@@ -15825,6 +15827,23 @@
               ]
             }
           }
+        },
+        {
+          "TODO": "a revert-only case",
+          "jsonLd": {
+            "mainEntity": {
+              "@type": "Item",
+              "copyNumber": "1",
+              "heldBy": {"@id": "https://libris.kb.se/library/H"},
+              "shelfControlNumber": "65.465",
+              "physicalLocation": ["MAG"]
+            }
+          },
+          "resultMarc": {"852": {
+            "ind1": " ",
+            "ind2": " ",
+            "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
+          }}
         }
       ]
     },

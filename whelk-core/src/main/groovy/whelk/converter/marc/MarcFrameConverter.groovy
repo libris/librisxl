@@ -770,7 +770,7 @@ class MarcRuleSet {
                 target[dfn.property] = value
             }
             if (dfn.uriTemplate) {
-                def uri = dfn.uriTemplate == '{+_}' ?
+                def uri = dfn.uriTemplate == ConversionPart.UNESCAPED_URI_SLOT ?
                     value
                     : conversion.resolve(fromTemplate(
                         dfn.uriTemplate).set('_', value).set(target).expand())
@@ -854,6 +854,9 @@ class MarcRuleSet {
 @Log
 @CompileStatic
 class ConversionPart {
+
+    static final String URI_SLOT = '{_}'
+    static final String UNESCAPED_URI_SLOT = '{+_}'
 
     MarcRuleSet ruleSet
     String aboutEntityName
@@ -1045,6 +1048,45 @@ class ConversionPart {
         }
 
         return new Tuple2<Boolean, Map>(requiredOk, aboutMap)
+    }
+
+    static String findTokenFromId(Object node, String uriTemplate,
+            Pattern matchUriToken) {
+        def id = node instanceof Map ? node['@id'] : node
+        if (!(id instanceof String)) {
+            return null
+        }
+
+        String token = extractToken(uriTemplate, URI_SLOT, (String) id)
+        if (token != null) {
+            token = URLDecoder.decode(token)
+        } else {
+            token = extractToken(uriTemplate, UNESCAPED_URI_SLOT, (String) id)
+        }
+
+        if (token == null) {
+            return null
+        }
+        if (matchUriToken && !matchUriToken.matcher(token).matches()) {
+            return null
+        }
+        return token
+    }
+
+    static String extractToken(String tplt, String slot, String link) {
+        if (!link) {
+            return null
+        }
+        def i = tplt.indexOf(slot)
+        if (i == -1) {
+            return
+        }
+        def before = tplt.substring(0, i)
+        def after = tplt.substring(i + URI_SLOT.size())
+        if (link.startsWith(before) && link.endsWith(after)) {
+            def part = link.substring(before.size())
+            return part.substring(0, part.size() - after.size())
+        }
     }
 
 }
@@ -1497,7 +1539,6 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     static final DateTimeFormatter DT_FORMAT_FALLBACK =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XX")
 
-    static final String URI_SLOT = '{_}'
     static final String COLUMN_STRING_PROPERTY = 'code'
 
     String property
@@ -1622,6 +1663,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             if (!matchUriToken || matchUriToken.matcher(strValue).matches()) {
                 ent['@id'] = uriTemplate.replace(URI_SLOT, strValue.trim())
             } else {
+                // FIXME: Throw away? Or sameAs "broken link"?
                 ent[COLUMN_STRING_PROPERTY] = value
             }
             //} else if (linkedHandler) {
@@ -1664,13 +1706,13 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         } else {
             return (entity instanceof List ? entity : [entity]).collect {
                 if (uriTemplate) {
-                    def token = findTokenFromId(it)
+                    def token = findTokenFromId(it, uriTemplate, matchUriToken)
                     if (token) {
                         return revertObject(token)
                     }
                     if (it instanceof Map) {
                         for (same in Util.asList(it['sameAs'])) {
-                            token = findTokenFromId(same)
+                            token = findTokenFromId(same, uriTemplate, matchUriToken)
                             if (token) {
                                 return revertObject(token)
                             }
@@ -1681,38 +1723,11 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         }
     }
 
-    String findTokenFromId(node) {
-        def id = node instanceof Map ? node['@id'] : node
-        if (id instanceof String) {
-            String token = extractToken(uriTemplate, (String) id)
-            if (token != null && (!matchUriToken || matchUriToken.matcher(token).matches())) {
-                return token
-            }
-        }
-        return null
-    }
-
     static ZonedDateTime parseDate(String s) {
         try {
             return ZonedDateTime.parse(s, DT_FORMAT)
         } catch (DateTimeParseException e) {
             return ZonedDateTime.parse(s, DT_FORMAT_FALLBACK)
-        }
-    }
-
-    static String extractToken(String tplt, String value) {
-        if (!value)
-            return null
-        def i = tplt.indexOf(URI_SLOT)
-        if (i > -1) {
-            def before = tplt.substring(0, i)
-            def after = tplt.substring(i + URI_SLOT.size())
-            if (value.startsWith(before) && value.endsWith(after)) {
-                def part = value.substring(before.size())
-                return part.substring(0, part.size() - after.size())
-            }
-        } else {
-            return null
         }
     }
 
@@ -2300,6 +2315,7 @@ class MarcSubFieldHandler extends ConversionPart {
     boolean repeatable
     String property
     boolean repeatProperty
+    boolean extractPropertyFromLinkIfMissing
     boolean overwrite
     String resourceType
     String subUriTemplate
@@ -2342,20 +2358,25 @@ class MarcSubFieldHandler extends ConversionPart {
         repeatable = subDfn.containsKey('addLink')
         link = linkTerm(subDfn.link ?: subDfn.addLink, repeatable)
 
-        repeatProperty = subDfn.containsKey('addProperty')
-        property = propTerm(subDfn.property ?: subDfn.addProperty, repeatProperty)
-
-        resourceType = typeTerm(subDfn.resourceType)
-
-        required = subDfn.required == true
-        overwrite = subDfn.overwrite == true
-
         if (subDfn.uriTemplate) {
             subUriTemplate = subDfn.uriTemplate
         }
         if (subDfn.matchUriToken) {
             matchUriToken = Pattern.compile(subDfn.matchUriToken)
         }
+
+        repeatProperty = subDfn.containsKey('addProperty')
+        property = propTerm(subDfn.property ?: subDfn.addProperty, repeatProperty)
+
+        extractPropertyFromLinkIfMissing = subDfn.extractPropertyFromLinkIfMissing == true
+        if (extractPropertyFromLinkIfMissing) {
+            assert subUriTemplate
+        }
+
+        resourceType = typeTerm(subDfn.resourceType)
+
+        required = subDfn.required == true
+        overwrite = subDfn.overwrite == true
 
         if (subDfn.splitValuePattern) {
             /*TODO: assert subDfn.splitValuePattern=~ /^\^.+\$$/,
@@ -2412,7 +2433,7 @@ class MarcSubFieldHandler extends ConversionPart {
                 (matchUriToken == null ||
                  matchUriToken.matcher((String) subVal).matches())) {
                 try {
-                    entId = subUriTemplate == '{+_}' ?
+                    entId = subUriTemplate == UNESCAPED_URI_SLOT ?
                         subVal : fromTemplate(subUriTemplate).expand(["_": subVal])
                 } catch (IllegalArgumentException|IndexOutOfBoundsException e) {
                     // Bad characters in what should have been a proper URI path ('+' expansion).
@@ -2511,8 +2532,21 @@ class MarcSubFieldHandler extends ConversionPart {
             } else if (itemPos == "first")
                 break
 
-            if (resourceType && !isInstanceOf(entity, resourceType))
+            String entityId = entity['@id']
+            def propertyValue = property ? entity[property] : null
+            boolean checkResourceType = true
+
+            if (property && !propertyValue && extractPropertyFromLinkIfMissing) {
+                propertyValue = findTokenFromId(entityId, subUriTemplate, matchUriToken)
+                if (propertyValue) {
+                    checkResourceType = false
+                }
+            }
+
+            if (checkResourceType && resourceType
+                    && !isInstanceOf(entity, resourceType)) {
                 continue
+            }
 
             if (splitValueProperties && rejoin) {
                 def vs = []
@@ -2536,22 +2570,13 @@ class MarcSubFieldHandler extends ConversionPart {
 
             def value = null
             if (property) {
-                value = revertObject(entity[property])
+                value = revertObject(propertyValue)
             } else if (link) {
-                def obj = entity['@id']
+                def obj = entityId
                 if (obj && subUriTemplate) {
-                    // NOTE: requires variable slot to be at end of template
-                    // TODO: unify with extractToken
-                    def exprIdx = subUriTemplate.indexOf('{_}')
-                    if (exprIdx > -1) {
-                        assert subUriTemplate.size() == exprIdx + 3
-                        obj = URLDecoder.decode(obj.substring(exprIdx))
-                    } else {
-                        exprIdx = subUriTemplate.indexOf('{+_}')
-                        if (exprIdx > -1) {
-                            assert subUriTemplate.size() == exprIdx + 4
-                            obj = obj.substring(exprIdx)
-                        }
+                    def token = findTokenFromId(obj, subUriTemplate, matchUriToken)
+                    if (token) {
+                        obj = token
                     }
                 }
                 value = revertObject(obj)
