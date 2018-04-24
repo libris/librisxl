@@ -9,6 +9,7 @@ import whelk.Document
 import org.codehaus.jackson.map.ObjectMapper
 
 @Log
+@Deprecated
 class JsonLDLinkCompleterFilter {
 
     static String BNODE_ID_PREFIX = "_:"
