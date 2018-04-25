@@ -12064,7 +12064,7 @@
       },
       "match": [
         {"when": "i2=0", "addLink": "associatedMedia", "resourceType": "MediaObject"},
-        {"when": "i2=1", "addLink": "otherPhysicalFormat", "resourceType": "Electronic"},
+        {"when": "i2=1", "addLink": "marc:versionOfResource", "resourceType": "Electronic"},
         {"when": "i2=2", "addLink": "isPrimaryTopicOf", "resourceType": "Document"},
         {"when": "i2=8", "addLink": "relatedTo", "resourceType": "Document"}
       ],
@@ -12135,7 +12135,7 @@
               {"z": "Tidskriftens webbplats"}
             ]}},
           "result": {"mainEntity": {
-            "otherPhysicalFormat": [{
+            "marc:versionOfResource": [{
               "@type": "Electronic",
               "marc:electronicLocatorType": "http",
               "marc:copyNote": ["Tidskriftens webbplats"],
