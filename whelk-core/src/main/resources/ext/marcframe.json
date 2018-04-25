@@ -12253,7 +12253,7 @@
     "976": {
       "aboutEntity": "?work",
       "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{code}",
-      "addLink": "classification",
+      "addLink": "marc:hasBib976",
       "resourceType": "Classification",
       "i2": {
         "link": "inScheme", "resourceType": "ConceptScheme",
