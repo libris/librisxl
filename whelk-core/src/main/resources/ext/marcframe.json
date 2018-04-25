@@ -3977,8 +3977,7 @@
       "$9": {
         "about": "_:bibliography",
         "uriTemplate": "https://libris.kb.se/library/{_}",
-        "property": "sigel",
-        "extractPropertyFromLinkIfMissing": true
+        "property": "sigel"
       },
       "_spec": [
         {
@@ -15748,7 +15747,6 @@
         "uriTemplate": "https://libris.kb.se/library/{_}",
         "matchUriToken": "^\\S+$",
         "property": "code",
-        "extractPropertyFromLinkIfMissing": true,
         "TODO": "move to mainEntity and auto-repeat here",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
       },

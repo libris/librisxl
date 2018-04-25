@@ -2319,7 +2319,6 @@ class MarcSubFieldHandler extends ConversionPart {
     boolean repeatable
     String property
     boolean repeatProperty
-    boolean extractPropertyFromLinkIfMissing
     boolean overwrite
     String resourceType
     String subUriTemplate
@@ -2371,11 +2370,6 @@ class MarcSubFieldHandler extends ConversionPart {
 
         repeatProperty = subDfn.containsKey('addProperty')
         property = propTerm(subDfn.property ?: subDfn.addProperty, repeatProperty)
-
-        extractPropertyFromLinkIfMissing = subDfn.extractPropertyFromLinkIfMissing == true
-        if (extractPropertyFromLinkIfMissing) {
-            assert subUriTemplate
-        }
 
         resourceType = typeTerm(subDfn.resourceType)
 
@@ -2540,7 +2534,10 @@ class MarcSubFieldHandler extends ConversionPart {
             def propertyValue = property ? entity[property] : null
             boolean checkResourceType = true
 
-            if (property && !propertyValue && extractPropertyFromLinkIfMissing) {
+            boolean extractPropertyFromLinkIfMissing =
+                    property && !propertyValue && !entity['@type'] && subUriTemplate
+
+            if (extractPropertyFromLinkIfMissing) {
                 propertyValue = findTokenFromId(entityId, subUriTemplate, matchUriToken)
                 if (propertyValue) {
                     checkResourceType = false
