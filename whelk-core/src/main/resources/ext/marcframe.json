@@ -1319,7 +1319,7 @@
       },
       "_:provision": {
         "about": "?thing",
-        "link": "provisionActivity",
+        "link": "primaryProvisionActivity",
         "resourceType": "PrimaryProvisionActivity",
         "embedded": true
       },
@@ -1334,7 +1334,7 @@
     "postProcessing": [
       {
         "type": "RestructOnMatchFlag",
-        "sourceLink": "provisionActivity",
+        "sourceLink": "primaryProvisionActivity",
         "overwriteType": "PrimaryProvisionActivity",
         "valueProperties": ["date", "otherDate"],
         "matchValuePattern": "^[0-9u]{4}$",
@@ -1385,7 +1385,7 @@
           {
             "name":  "NOOP",
             "source": {
-              "provisionActivity": {
+              "primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:QuestionableDate",
                 "date": "1977",
@@ -1397,7 +1397,7 @@
           },
           {
             "source": {
-              "provisionActivity": {
+              "primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "date": "1977",
@@ -1417,7 +1417,7 @@
           },
           {
             "source": {
-              "provisionActivity": {
+              "primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "date": "1977"
@@ -1431,7 +1431,7 @@
           },
           {
             "source": {
-              "provisionActivity": {
+              "primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "date": "1977"
@@ -1457,7 +1457,7 @@
           {
             "TODO:source": {
               "@type": "ManuscriptText",
-              "provisionActivity": {
+              "primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "date": "1977"
@@ -1474,7 +1474,7 @@
           },
           {
             "source": {
-              "provisionActivity": {
+              "primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "date": "1977"
@@ -1499,7 +1499,7 @@
           },
           {
             "source": {
-              "provisionActivity": {
+              "primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
                 "date": "1977",
@@ -1520,7 +1520,7 @@
           },
           {
             "source": {
-              "provisionActivity": {
+              "primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
                 "date": "1977",
@@ -2988,7 +2988,7 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
-              "provisionActivity": {
+              "primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "date": "1977",
@@ -3014,7 +3014,7 @@
             "created": "2016-04-20T00:00:00.0+02:00",
             "marc:catalogingSource": {"@id": "https://id.kb.se/marc/CatalogingSourceType-c"},
             "mainEntity": {
-              "provisionActivity": {
+              "primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "date": "1995",
@@ -3039,7 +3039,7 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
-              "provisionActivity": {
+              "primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "date": "1977",
