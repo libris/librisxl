@@ -11181,12 +11181,14 @@
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
             {"7": "p1"},
             {"a": "Beckmann, Max"},
-            {"t": "Briefec"}
+            {"t": "Briefec"},
+            {"w": "000"}
           ]}},
           "normalized": {"772": {"ind1": "0", "ind2": " ", "subfields": [
             {"7": "p1"},
             {"a": "Beckmann, Max"},
-            {"t": "Briefec"}
+            {"t": "Briefec"},
+            {"w": "000"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -11198,6 +11200,10 @@
                     "hasTitle": [{
                       "@type": "Title",
                       "mainTitle": "Briefec"
+                    }],
+                    "describedBy": [{
+                      "@type": "Record",
+                      "controlNumber": "000"
                     }]
                   },
                   "marc:controlSubfield": "p1",
