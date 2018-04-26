@@ -101,7 +101,7 @@ class FileDumper implements MySQLLoader.LoadHandler {
                     Date modified = Date.from(modifiedZoned.toInstant())
                     recordMap.document.setModified(modified)
 
-                    recordMap.document.setGenerationProcess("Conversion from MARC21 to Linked Data")
+                    recordMap.document.setGenerationProcess('https://id.kb.se/generator/marcframe')
                     recordMap.document.setGenerationDate(new Date())
 
                     boolean cacheAuthForever = true

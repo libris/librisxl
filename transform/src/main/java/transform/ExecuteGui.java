@@ -439,7 +439,7 @@ public class ExecuteGui extends JFrame
                         doc.data = JsonldSerializer.serialize(triples, m_repeatableTerms);
                         JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
                         doc.setGenerationDate(new Date());
-                        doc.setGenerationProcess("Libriskörning, globala ändringar");
+                        doc.setGenerationProcess("https://id.kb.se/generator/globalchanges");
                     } catch (Throwable e)
                     {
                         failureWriter.println(shortId);

@@ -53,7 +53,7 @@ class Document {
     static final List encLevelPath = ["@graph", 0, "encodingLevel"]
     static final List statusPath = ["@graph", 0, "recordStatus"]
     static final List sigelPath = ["@graph", 1, "heldBy", "@id"]
-    static final List generationProcessPath = ["@graph", 0, "generationProcess"]
+    static final List generationProcessPath = ["@graph", 0, "generationProcess", "@id"]
     static final List generationDatePath = ["@graph", 0, "generationDate"]
 
     public Map data = [:]

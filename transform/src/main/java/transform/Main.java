@@ -302,7 +302,7 @@ public class Main
                         {
                             _doc.data = doc.data;
                             _doc.setGenerationDate(new Date());
-                            _doc.setGenerationProcess("Libriskörning, globala ändringar");
+                            _doc.setGenerationProcess("https://id.kb.se/generator/globalchanges");
                         }
                 );
             } catch (Throwable e)
