@@ -5199,7 +5199,7 @@
     },
 
     "222": {
-      "aboutEntity": "?work",
+      "aboutEntity": "?thing",
       "NOTE:domainIncludes": "Serial/Periodical",
       "addLink": "hasTitle",
       "embedded": true,
@@ -5217,14 +5217,11 @@
               {"b": "(Faridabad)"}
             ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasTitle": [{
-                "@type": "KeyTitle",
-                "mainTitle": "Plant prot. bull.",
-                "qualifier": ["(Faridabad)"]
-              }]
-            }
+            "hasTitle": [{
+              "@type": "KeyTitle",
+              "mainTitle": "Plant prot. bull.",
+              "qualifier": ["(Faridabad)"]
+            }]
           }}
         }
       ]
