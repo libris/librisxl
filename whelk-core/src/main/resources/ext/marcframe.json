@@ -39,6 +39,10 @@
         "5": "csh",
         "6": "rvm",
         "7": null
+      },
+      "sequenceStatus": {
+        "2": "marc:InBetweenInSequence",
+        "3": "marc:LatestInSequence"
       }
     },
 
@@ -5699,6 +5703,12 @@
     "260": {
       "aboutEntity": "?thing",
       "onRevertPrefer": "264",
+      "i1": {
+        "about": "_:publication",
+        "property": "marc:sequenceStatus",
+        "tokenMap": "sequenceStatus",
+        "marcDefault": " "
+      },
       "TODO:appendToExistingEntity": "When repeated field, exist to existing provisionActivity and don't create new provisionActivity",
       "pendingResources": {
         "_:publication": {"addLink": "publication", "resourceType": "Publication", "embedded": true},
@@ -5707,12 +5717,6 @@
       },
       "TODO:groupByRepetitionAndPunctuationPattern": "$3 $a $b $c $e $f $g",
       "TODO": "Need to handle when both $ef together with $ab is repeated for Serials. See ex. 8257615",
-      "i1": {
-        "about": "_:publication",
-        "property": "marc:isLatest",
-        "tokenMap": {"2": null, "3": true},
-        "marcDefault": " "
-      },
       "$3": {
         "about": "_:publication",
         "link": "appliesTo",
@@ -5987,7 +5991,7 @@
             },
             {
               "264": {
-                "ind1": " ", "ind2": "1",
+                "ind1": "2", "ind2": "1",
                 "subfields": [
                   {"a": "Lund :"}, {"b": "Svenska Clartéavdelningen ,"}, {"c": "1926-1927"}
                 ]
@@ -5995,7 +5999,7 @@
             },
             {
               "264": {
-                "ind1": " ", "ind2": "1",
+                "ind1": "2", "ind2": "1",
                 "subfields": [
                   {"a": "Stockholm :"}, {"b": "Svenska Clartéavdelningen ,"}, {"c": "1928-1931"}
                 ]
@@ -6003,7 +6007,7 @@
             },
             {
               "264": {
-                "ind1": " ", "ind2": "1",
+                "ind1": "2", "ind2": "1",
                 "subfields": [
                   {"a": "Stockholm :"}, {"b": "Svenska Clartéförbundet ,"}, {"c": "1932-1953"}
                 ]
@@ -6011,7 +6015,7 @@
             },
             {
               "264": {
-                "ind1": " ", "ind2": "1",
+                "ind1": "2", "ind2": "1",
                 "subfields": [
                   {"a": "Hägersten :"}, {"b": "Clarté ,"}, {"c": "1991-1995"}
                 ]
@@ -6019,7 +6023,7 @@
             },
             {
               "264": {
-                "ind1": " ", "ind2": "1",
+                "ind1": "3", "ind2": "1",
                 "subfields": [
                   {"a": "Stockholm :"}, {"b": "Clarté ,"}, {"c": "1953-1991, 1995-"}
                 ]
@@ -6055,31 +6059,35 @@
                 },
                 {
                   "@type": "Publication",
+                  "marc:sequenceStatus": "marc:InBetweenInSequence",
                   "date": "1926-1927",
                   "place": {"@type": "Place", "label": "Lund"},
                   "agent": {"@type": "Agent", "label": "Svenska Clartéavdelningen"}
                 },
                 {
                   "@type": "Publication",
+                  "marc:sequenceStatus": "marc:InBetweenInSequence",
                   "date": "1928-1931",
                   "place": {"@type": "Place", "label": "Stockholm"},
                   "agent": {"@type": "Agent", "label": "Svenska Clartéavdelningen"}
                 },
                 {
                   "@type": "Publication",
+                  "marc:sequenceStatus": "marc:InBetweenInSequence",
                   "date": "1932-1953",
                   "place": {"@type": "Place", "label": "Stockholm"},
                   "agent": {"@type": "Agent", "label": "Svenska Clartéförbundet"}
                 },
                 {
                   "@type": "Publication",
+                  "marc:sequenceStatus": "marc:InBetweenInSequence",
                   "date": "1991-1995",
                   "place": {"@type": "Place", "label": "Hägersten"},
                   "agent": {"@type": "Agent", "label": "Clarté"}
                 },
                 {
                   "@type": "Publication",
-                  "marc:isLatest": true,
+                  "marc:sequenceStatus": "marc:LatestInSequence",
                   "date": "1953-1991, 1995-",
                   "place": {"@type": "Place", "label": "Stockholm"},
                   "agent": {"@type": "Agent", "label": "Clarté"}
@@ -6106,7 +6114,11 @@
     },
 
     "264": {
-      "TOOO:i1": {},
+      "i1": {
+        "property": "marc:sequenceStatus",
+        "tokenMap": "sequenceStatus",
+        "marcDefault": " "
+      },
       "match": [
         {
           "when": "i2=0",
