@@ -298,8 +298,12 @@ public class Main
                 doc.data = JsonldSerializer.serialize(triples, s_repeatableTerms);
                 JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
 
-                s_whelk.getStorage().storeAtomicUpdate(id, true, "xl", "Libris admin (transform)", (Document _doc) ->
-                        _doc.data = doc.data
+                s_whelk.getStorage().storeAtomicUpdate(id, true, "xl", null, (Document _doc) ->
+                        {
+                            _doc.data = doc.data;
+                            _doc.setGenerationDate(new Date());
+                            _doc.setGenerationProcess("https://id.kb.se/generator/globalchanges");
+                        }
                 );
             } catch (Throwable e)
             {

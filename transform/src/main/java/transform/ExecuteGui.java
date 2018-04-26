@@ -424,7 +424,10 @@ public class ExecuteGui extends JFrame
         {
             for (String shortId : shortIds)
             {
-                m_whelk.storeAtomicUpdate(shortId, !m_executeLoud, "xl", "Libris admin", (Document doc) ->
+                String changedBy = null;
+                if (m_executeLoud)
+                    changedBy = "Libriskörning, globala ändringar";
+                m_whelk.storeAtomicUpdate(shortId, !m_executeLoud, "xl", changedBy, (Document doc) ->
                 {
                     try
                     {
@@ -435,8 +438,8 @@ public class ExecuteGui extends JFrame
                         List<String[]> triples = new JsonldSerializer().deserialize(doc.data);
                         doc.data = JsonldSerializer.serialize(triples, m_repeatableTerms);
                         JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
-
-                        JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
+                        doc.setGenerationDate(new Date());
+                        doc.setGenerationProcess("https://id.kb.se/generator/globalchanges");
                     } catch (Throwable e)
                     {
                         failureWriter.println(shortId);

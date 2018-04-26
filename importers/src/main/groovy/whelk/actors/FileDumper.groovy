@@ -101,6 +101,9 @@ class FileDumper implements MySQLLoader.LoadHandler {
                     Date modified = Date.from(modifiedZoned.toInstant())
                     recordMap.document.setModified(modified)
 
+                    recordMap.document.setGenerationProcess('https://id.kb.se/generator/marcframe')
+                    recordMap.document.setGenerationDate(new Date())
+
                     boolean cacheAuthForever = true
                     converterPool[threadIndex].linkFinder.normalizeIdentifiers(recordMap.document, cacheAuthForever)
                     if (externalDependencies.size() > 0) {
